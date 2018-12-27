@@ -6,6 +6,7 @@ from django.db import models
 # pylint: disable=E1120
 from django.db import models
 
+from tournaments import LAKES
 from users.models import Angler
 
 
@@ -20,24 +21,11 @@ class Tournament(models.Model):
         (TYPE_INDIVIDUAL, 'individual'),
     )
 
-    LAKE_TRAVIS = 'travis'
-    LAKE_DECKER = 'decker'
-    LAKE_AUSTIN = 'austin'
-    LAKE_BELTON = 'belton'
-    LAKE_FAYETTE = 'fayette'
-    LAKE_CHOICES = (
-        (LAKE_TRAVIS, 'travis'),
-        (LAKE_DECKER, 'decker'),
-        (LAKE_AUSTIN, 'austin'),
-        (LAKE_BELTON, 'belton'),
-        (LAKE_FAYETTE, 'fayette'),
-    )
-
     type = models.CharField(max_length=10, choices=TYPE_CHOICES)
     name = models.CharField(max_length=128)
     date = models.DateField()
     ramp = models.CharField(max_length=128)
-    lake = models.CharField(max_length=48, choices=LAKE_CHOICES)
+    lake = models.CharField(max_length=48, choices=LAKES)
     city = models.CharField(max_length=64)
     state = models.CharField(max_length=128)
     paper = models.BooleanField(default=False)
