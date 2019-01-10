@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Tournaments"""
+"""Results"""
 
 from __future__ import unicode_literals
 
-
 from django.contrib import admin
 
-from .models import Tournament
+from .models import TournamentResult
 
-admin.site.register(Tournament)
+
+admin.site.register([TournamentResult])

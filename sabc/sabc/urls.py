@@ -16,9 +16,11 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 
-from users.views import index
+from users import views as user_views
+
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'', index, name='sabc-home'),
+    url(r'', user_views.index, name='sabc-home'),
+    url(r'join/', user_views.register, name='join')
 ]
