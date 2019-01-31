@@ -19,6 +19,7 @@ class TournamentResult(models.Model):
     num_fish_dead = models.IntegerField(default=0)
     num_fish_alive = models.IntegerField(default=0)
     big_bass_weight = models.FloatField(default=0.0)
+    dead_fish_penalty = models.FloatField(default=0.25)
 
     class Meta:
         verbose_name_plural = 'Tournament Results'
@@ -35,39 +36,40 @@ class Tournament(models.Model):
     """One Day Tournamen model"""
     type = models.CharField(max_length=48, choices=TOURNAMENT_TYPES)
     paper = models.BooleanField(default=False)
-    results = models.ManyToManyField(TournamentResult)
-    time_end = models.DateTimeField(null=True, blank=True)
-    time_start = models.DateTimeField(null=True, blank=True)
-    organization = models.CharField(max_length=128, default='SABC', choices=Profile.CLUBS)
-    
-
+    results = models.ManyToManyField(TournamentResult, blank=True)
+    time_start = models.TimeField(blank=True, null=True)
+    time_end = models.TimeField(blank=True, null=True)
     deleted = models.BooleanField(default=False)
 
     def __str__(self):
-        return '%s: LAKE %s-%s' % (self.name, self.lake.__str__().upper(),
-                                   self.type.__str__().upper())
+        return '%s Tournament - %s ID: %d' % (
+            self.type.upper(), 
+            ('', 'paper')[self.paper], 
+            self.id)
 
     class Meta:
         verbose_name_plural = 'Tournaments'
-        unique_together = ('organization', 'type')
 
 
 class Event(models.Model):
     """Event model to facilitate multi-day tournaments"""
+    deleted = models.BooleanField(default=False)
+    cancelled = models.BooleanField(default=False)
+
     name = models.CharField(max_length=128)
     ramp = models.CharField(max_length=128)
     lake = models.CharField(max_length=10, choices=LAKES)
     city = models.CharField(max_length=64)
     state = models.CharField(max_length=16, choices=STATES, default='TX')
-    date_end = models.DateField()
-    date_start = models.DateField()
-    tournaments = models.ManyToManyField(Tournament, null=True, blank=True)
+    start = models.DateField()
+    end = models.DateField()
+    tournaments = models.ManyToManyField(Tournament, blank=True)
+    organization = models.CharField(max_length=128, default='SABC', choices=Profile.CLUBS)
     
-    deleted = models.BooleanField(default=False)
 
     def __str__(self):
-        return '%s: LAKE %s-%s' % (self.name, self.lake.__str__().upper(),
-                                self.type.__str__().upper())
+
+        return '%s - %s' % (self.organization, self.name.upper())
 
     class Meta:
         verbose_name_plural = 'Events'
