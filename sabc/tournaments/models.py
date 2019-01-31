@@ -10,7 +10,6 @@ from users.models import Profile
 class TournamentResult(models.Model):
     """This model represents an individuals performance in a tournament"""
     deleted = models.BooleanField(default=False)
-
     angler = models.ForeignKey(Profile, null=True, blank=True)
     day_num = models.IntegerField(default=1)
     bought_in = models.BooleanField(default=False)
@@ -54,8 +53,6 @@ class Tournament(models.Model):
 class Event(models.Model):
     """Event model to facilitate multi-day tournaments"""
     deleted = models.BooleanField(default=False)
-    cancelled = models.BooleanField(default=False)
-
     name = models.CharField(max_length=128)
     ramp = models.CharField(max_length=128)
     lake = models.CharField(max_length=10, choices=LAKES)
@@ -63,12 +60,12 @@ class Event(models.Model):
     state = models.CharField(max_length=16, choices=STATES, default='TX')
     start = models.DateField()
     end = models.DateField()
+
+    created_by = models.ForeignKey(Profile, null=True, blank=True)
     tournaments = models.ManyToManyField(Tournament, blank=True)
     organization = models.CharField(max_length=128, default='SABC', choices=Profile.CLUBS)
-    
 
     def __str__(self):
-
         return '%s - %s' % (self.organization, self.name.upper())
 
     class Meta:

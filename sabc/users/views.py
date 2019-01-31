@@ -3,8 +3,10 @@ from __future__ import unicode_literals
 
 import json
 
-from django.shortcuts import render
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib import messages
+from django.shortcuts import render, redirect
+
+from .forms import UserRegisterForm
 
 
 events = [
@@ -28,5 +30,12 @@ def index(request):
 
 
 def register(request):
-    """Allows a user to register with the site"""
-    return render(request, 'register.html', {'title': 'User Registration', 'form': UserCreationForm()})
+    if request.method == 'POST':
+        form = UserRegisterForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Account created for %s!' % form.cleaned_data.get('username'))
+            return redirect('sabc-home')
+    else:
+        form = UserRegisterForm()
+    return render(request, 'register.html', {'form': form})

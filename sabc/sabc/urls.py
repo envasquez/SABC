@@ -21,9 +21,12 @@ from users import views as user_views
 
 
 urlpatterns = [
+    # Admin site
     url(r'^admin/', admin.site.urls),
-    url(r'', user_views.index, name='sabc-home'),
-    url(r'register/', user_views.register, name='register')
+    # Home
+    url(r'^$', user_views.index, name='sabc-home'),
+    # Registration
+    url(r'^register', user_views.register, name='register')
 ]
 
 admin.site.site_title = _('SABC')

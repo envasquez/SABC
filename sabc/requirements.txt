@@ -6,6 +6,7 @@ backports.shutil-get-terminal-size==1.0.0
 configparser==3.5.0
 decorator==4.3.0
 Django==1.11
+django-crispy-forms==1.7.2
 enum34==1.1.6
 Faker==1.0.1
 futures==3.2.0
