@@ -66,37 +66,34 @@ def get_args():
 
 
 def generate_result(tournament, profile, args):
-    """Generates an individual result for a participant
-    
-    angler = models.ForeignKey(Profile, null=True, blank=True)
-    bought_in = models.BooleanField(default=False)
-    is_boater = models.BooleanField(default=False)
-    total_weight = models.FloatField(default=0.0)
-    num_fish_dead = models.IntegerField(default=0)
-    num_fish_alive = models.IntegerField(default=0)
-    big_bass_weight = models.FloatField(default=0.0)
-    penalty_deduction = models.FloatField(default=0.0)    
-    """
+    """Generates an individual result for a participant"""
     global BUY_IN_COUNT
 
-    result = {}
     buyin_count = 0
     angler = 'ID-%s %s %s' % (profile.id, profile.user.first_name, profile.user.last_name)
-    print 'Generating individual results for: %s' % angler
-    if BUY_IN_COUNT < args.buy_ins: 
+    if BUY_IN_COUNT < args.buy_ins:
         buying_in = not random.getrandbits(1)
         if buying_in:
-            print '%s is buying in' % angler
             BUY_IN_COUNT += 1
+            print 'Generating individual results for: %s - BOUGHT IN' % angler
             return TournamentResult.objects.create(
                 angler=profile,
                 bought_in=buying_in,
-                is_boater=not random.getrandbits(1),
+                is_boater=True,
                 tournament=tournament
             )
-
     
-
+    print 'Generating individual results for: %s' % angler
+    return TournamentResult.objects.create(
+        angler=profile,
+        bought_in=False,
+        is_boater=True,
+        tournament=tournament,
+        total_weight=round(random.uniform(1.0, 27.0), 2),
+        num_fish_dead=random.choice([1, 2] + [0] * 25),
+        num_fish_alive=random.randint(1, 5),
+        big_bass_weight=round(random.uniform(1.0, 20.0), 2),
+    )    
 
 def generate_tournaments(args):
     """Generate :num: of tournaments"""
@@ -123,6 +120,9 @@ def generate_tournaments(args):
         participants = Profile.objects.filter(organization=args.club)
         for participant in participants:
             results[participant.id] = generate_result(tournament, participant, args)
+        
+        import pprint
+        pprint.pprint(results)
 
 
 def main():
