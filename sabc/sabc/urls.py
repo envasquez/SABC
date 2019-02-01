@@ -13,9 +13,11 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.contrib import admin
 from django.conf.urls import url
 from django.contrib.auth import views as auth_views
+from django.conf.urls.static import static
 from django.utils.translation import ugettext_lazy as _
 
 from users import views as user_views
@@ -34,6 +36,8 @@ urlpatterns = [
     url(r'^profile', user_views.profile, name='profile'),
     url(r'^register', user_views.register, name='register'),
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 admin.site.site_title = _('SABC')
 admin.site.site_header = _('South Austin Bass Club Administration')

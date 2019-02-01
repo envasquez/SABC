@@ -23,7 +23,7 @@ class Profile(models.Model):
     phone_number = models.CharField(max_length=15)
     organization = models.CharField(
         max_length=100, null=True, blank=True, choices=CLUBS, default='SABC')
-    image = models.ImageField(default='default.jpg', upload_to='profile_pics')
+    image = models.ImageField(default='profile_pics/default.jpg', upload_to='profile_pics')
 
     deleted = models.BooleanField(default=False)
     class Meta:
