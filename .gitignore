@@ -105,3 +105,4 @@ venv.bak/
 .mypy_cache/
 sabc/users/migrations/*
 sabc/tournaments/migrations/*
+sabc/profile_pics

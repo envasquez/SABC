@@ -18,18 +18,20 @@ class Profile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.PROTECT)
 
-    type = models.CharField(max_length=10, choices=MEMBER_CHOICES)
+    type = models.CharField(max_length=10, choices=MEMBER_CHOICES, default='member')
     date_joined = models.DateTimeField(default=timezone.now)
     phone_number = models.CharField(max_length=15)
     organization = models.CharField(
         max_length=100, null=True, blank=True, choices=CLUBS, default='SABC')
+    image = models.ImageField(default='default.jpg', upload_to='profile_pics')
 
     deleted = models.BooleanField(default=False)
     class Meta:
         verbose_name_plural = 'Profiles'
 
     def __str__(self):
-        return '%s, %s - %s' % (self.user.last_name, self.user.first_name, self.type)
-
-    def __unicode__(self):
-        return '%s, %s - %s' % (self.user.last_name, self.user.first_name, self.type)
+        return '%s, %s - %s : %s' % (
+            self.user.last_name,
+            self.user.first_name,
+            self.user.username,
+            self.type)
