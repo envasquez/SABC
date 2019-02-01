@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.conf.urls import url
+from django.contrib.auth import views as auth_views
 from django.utils.translation import ugettext_lazy as _
 
 from users import views as user_views
@@ -23,10 +24,14 @@ from users import views as user_views
 urlpatterns = [
     # Admin site
     url(r'^admin/', admin.site.urls),
-    # Home
+    # Global Pages
     url(r'^$', user_views.index, name='sabc-home'),
-    # Registration
-    url(r'^register', user_views.register, name='register')
+    url(r'^about', user_views.about, name='about'),
+    # User Views
+    url(r'^login', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    url(r'^logout', auth_views.LogoutView.as_view(template_name='logout.html'), name='logout'),
+    url(r'^profile', user_views.profile, name='profile'),
+    url(r'^register', user_views.register, name='register'),
 ]
 
 admin.site.site_title = _('SABC')
