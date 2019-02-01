@@ -32,8 +32,13 @@ def index(request):
 
 
 def about(request):
-    """Landing page"""
+    """About page"""
     return render(request, 'about.html', {'title': 'SABC - About', 'posts': events})
+
+
+def bilaws(request):
+    """Bi Laws page"""
+    return render(request, 'bilaws.html', {'title': 'SABC - Bi Laws'})
 
 
 def register(request):

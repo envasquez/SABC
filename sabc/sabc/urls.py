@@ -26,6 +26,7 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     # Global Pages
     url(r'^$', user_views.index, name='sabc-home'),
+    url(r'^bilaws', user_views.bilaws, name='bilaws'),
     url(r'^about', user_views.about, name='about'),
     # User Views
     url(r'^login', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
