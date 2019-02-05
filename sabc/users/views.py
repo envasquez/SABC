@@ -33,13 +33,20 @@ def index(request):
 
 def about(request):
     """About page"""
-    return render(request, 'about.html', {'title': 'SABC - About', 'posts': events})
+    return render(request, 'about.html', {'title': 'SABC - About'})
 
 
 def bilaws(request):
     """Bi Laws page"""
     return render(request, 'bilaws.html', {'title': 'SABC - Bi Laws'})
 
+
+def gallery(request):
+    return render(request, 'gallery.html', {'title': 'SABC - Gallery'})
+
+
+def gallery(request):
+    return render(request, 'calendar.html', {'title': 'SABC - Calendar'})
 
 def register(request):
     """User registration/validation"""
