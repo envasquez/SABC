@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
+# pylint: disable=invalid-name, import-error
 from django.conf import settings
 from django.contrib import admin
 from django.conf.urls import url
@@ -31,16 +32,20 @@ urlpatterns = [
     url(r'^bilaws', user_views.bilaws, name='bilaws'),
     url(r'^about', user_views.about, name='about'),
     # User Views
-    url(r'^login', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
-    url(r'^logout', auth_views.LogoutView.as_view(template_name='logout.html'), name='logout'),
+    url(r'^login', auth_views.LoginView.as_view(
+        template_name='login.html'), name='login'),
+    url(r'^logout', auth_views.LogoutView.as_view(
+        template_name='logout.html'), name='logout'),
     url(r'^profile', user_views.profile, name='profile'),
-    url(r'^gallery', user_views.register, name='gallery'),
+    url(r'^gallery', user_views.gallery, name='gallery'),
     url(r'^register', user_views.register, name='register'),
-    url(r'^calendar', user_views.register, name='calendar'),
+    url(r'^calendar', user_views.calendar, name='calendar'),
 ]
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)
 
+# Admin site customizations
 admin.site.site_title = _('SABC')
 admin.site.site_header = _('South Austin Bass Club Administration')
 admin.site.index_title = _('Tournaments')

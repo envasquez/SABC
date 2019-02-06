@@ -1,3 +1,5 @@
+"""Model Constants"""
+
 
 TOURNAMENT_TYPES = [
     ('team', 'TEAM'),

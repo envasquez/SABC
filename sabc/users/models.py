@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=no-member
+"""Profile Models"""
+# pylint: disable=import-error
 from __future__ import unicode_literals
 
 from django.db import models
@@ -14,19 +15,23 @@ class Profile(models.Model):
     CLUB_MEMBER = 'member'
     CLUB_OFFICER = 'officer'
     MEMBER_CHOICES = ((CLUB_GUEST, 'guest'), (CLUB_MEMBER, 'member'),
-                    (CLUB_OFFICER, 'officer'))
+                      (CLUB_OFFICER, 'officer'))
 
     user = models.OneToOneField(User, on_delete=models.PROTECT)
 
-    type = models.CharField(max_length=10, choices=MEMBER_CHOICES, default='member')
+    type = models.CharField(
+        max_length=10, choices=MEMBER_CHOICES, default='member')
     date_joined = models.DateTimeField(default=timezone.now)
     phone_number = models.CharField(max_length=15)
     organization = models.CharField(
         max_length=100, null=True, blank=True, choices=CLUBS, default='SABC')
-    image = models.ImageField(default='profile_pics/default.jpg', upload_to='profile_pics')
+    image = models.ImageField(
+        default='profile_pics/default.jpg', upload_to='profile_pics')
 
     deleted = models.BooleanField(default=False)
+
     class Meta:
+        """Profile metadata"""
         verbose_name_plural = 'Profiles'
 
     def __str__(self):

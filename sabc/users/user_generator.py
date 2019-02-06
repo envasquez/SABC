@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=no-member, wrong-import-position
+# pylint: disable=all
+from tournaments import STATES
+from users.models import Profile
+from django.contrib.auth.models import User
+from django.utils import timezone
+import django
+from manage import DEFAULT_SETTINGS_MODULE
 from __future__ import unicode_literals
 
 import os
@@ -11,18 +17,9 @@ from datetime import datetime, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from manage import DEFAULT_SETTINGS_MODULE
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", DEFAULT_SETTINGS_MODULE)
 
-import django
 django.setup()
-
-from django.utils import timezone
-from django.contrib.auth.models import User
-
-from users.models import Profile
-
-from tournaments import STATES
 
 
 MAX_GUESTS = 3
@@ -31,12 +28,13 @@ MAX_OFFICERS = 6
 
 def generate_users(num_users):
     """Generates fake Profiles"""
-    print 'Generating %s test users' % num_users
+    print('Generating %s test users' % num_users)
     users = []
     guest_count = 0
     officer_count = 0
     for _ in xrange(0, num_users):
-        first_name = names.get_first_name(gender=random.choice(['male', 'female']))
+        first_name = names.get_first_name(
+            gender=random.choice(['male', 'female']))
         last_name = names.get_last_name()
         user = User.objects.create(
             first_name=first_name,
@@ -64,8 +62,9 @@ def generate_users(num_users):
                 datetime(
                     random.randint(1985, 2019), random.randint(1, 12), random.randint(1, 28)),
                 organization='SABC'
-        ))
-        print 'Created Profile: %s %s %s' % (first_name, last_name, member_type)
+            ))
+        print('Created Profile: %s %s %s' %
+              (first_name, last_name, member_type))
 
     return users
 

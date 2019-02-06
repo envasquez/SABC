@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+"""Tournament Models"""
+# pylint: disable=import-error
 from __future__ import unicode_literals
 
 from django.db import models
@@ -21,6 +23,7 @@ class TournamentResult(models.Model):
     dead_fish_penalty = models.FloatField(default=0.25)
 
     class Meta:
+        """Tournament Results meta data"""
         verbose_name_plural = 'Tournament Results'
 
     def __str__(self):
@@ -30,6 +33,7 @@ class TournamentResult(models.Model):
             self.bought_in,
             self.total_weight
         )
+
 
 class Tournament(models.Model):
     """One Day Tournamen model"""
@@ -42,11 +46,12 @@ class Tournament(models.Model):
 
     def __str__(self):
         return '%s Tournament - %s ID: %d' % (
-            self.type.upper(), 
-            ('', 'paper')[self.paper], 
+            self.type.upper(),
+            ('', 'paper')[self.paper],
             self.id)
 
     class Meta:
+        """Tournament metadata"""
         verbose_name_plural = 'Tournaments'
 
 
@@ -63,11 +68,13 @@ class Event(models.Model):
 
     created_by = models.ForeignKey(Profile, null=True, blank=True)
     tournaments = models.ManyToManyField(Tournament, blank=True)
-    organization = models.CharField(max_length=128, default='SABC', choices=Profile.CLUBS)
+    organization = models.CharField(
+        max_length=128, default='SABC', choices=Profile.CLUBS)
 
     def __str__(self):
         return '%s - %s' % (self.organization, self.name.upper())
 
     class Meta:
+        """Event Metadata"""
         verbose_name_plural = 'Events'
         unique_together = ('name', 'lake', 'city')

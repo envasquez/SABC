@@ -42,11 +42,14 @@ def bilaws(request):
 
 
 def gallery(request):
+    """Gallery page"""
     return render(request, 'gallery.html', {'title': 'SABC - Gallery'})
 
 
-def gallery(request):
+def calendar(request):
+    """Calendar page"""
     return render(request, 'calendar.html', {'title': 'SABC - Calendar'})
+
 
 def register(request):
     """User registration/validation"""
