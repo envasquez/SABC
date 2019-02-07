@@ -36,12 +36,21 @@ class TournamentResult(models.Model):
 
 
 class Tournament(models.Model):
-    """One Day Tournamen model"""
+    """Tournament model"""
     type = models.CharField(max_length=48, choices=TOURNAMENT_TYPES)
+    name = models.CharField(null=True, max_length=128)
+    lake = models.CharField(blank=True, max_length=10, choices=LAKES)
+    date = models.DateField(null=True)
+    ramp = models.CharField(blank=True, max_length=128)
+    state = models.CharField(max_length=16, choices=STATES, default='TX')
     paper = models.BooleanField(default=False)
     results = models.ManyToManyField(TournamentResult, blank=True)
-    time_start = models.TimeField(blank=True, null=True)
-    time_end = models.TimeField(blank=True, null=True)
+    start = models.TimeField(blank=True, null=True)
+    finish = models.TimeField(blank=True, null=True)
+    deleted = models.BooleanField(default=False)
+    created_by = models.ForeignKey(Profile, null=True, blank=True)
+    organization = models.CharField(
+        max_length=128, default='SABC', choices=Profile.CLUBS)
     deleted = models.BooleanField(default=False)
 
     def __str__(self):
@@ -53,28 +62,3 @@ class Tournament(models.Model):
     class Meta:
         """Tournament metadata"""
         verbose_name_plural = 'Tournaments'
-
-
-class Event(models.Model):
-    """Event model to facilitate multi-day tournaments"""
-    deleted = models.BooleanField(default=False)
-    name = models.CharField(max_length=128)
-    ramp = models.CharField(max_length=128)
-    lake = models.CharField(max_length=10, choices=LAKES)
-    city = models.CharField(max_length=64)
-    state = models.CharField(max_length=16, choices=STATES, default='TX')
-    start = models.DateField()
-    end = models.DateField()
-
-    created_by = models.ForeignKey(Profile, null=True, blank=True)
-    tournaments = models.ManyToManyField(Tournament, blank=True)
-    organization = models.CharField(
-        max_length=128, default='SABC', choices=Profile.CLUBS)
-
-    def __str__(self):
-        return '%s - %s' % (self.organization, self.name.upper())
-
-    class Meta:
-        """Event Metadata"""
-        verbose_name_plural = 'Events'
-        unique_together = ('name', 'lake', 'city')
