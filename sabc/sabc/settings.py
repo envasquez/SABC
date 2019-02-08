@@ -32,7 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'users',
-    'tournaments'
+    'tournaments',
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

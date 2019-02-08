@@ -5,31 +5,19 @@ import json
 
 from django.contrib import messages
 from django.shortcuts import render, redirect
+from django.views.generic import ListView
 from django.contrib.auth.decorators import login_required
 
-from .forms import UserRegisterForm
-
-
-events = [
-    {
-        'name': 'Lake Travis Tournament 1 - Jan 27, 2019',
-        'ramp': 'Tatum',
-        'time_start': '7am',
-        'time_end': '4pm'
-    },
-    {
-        'name': 'Lake Richland Chambers 2019 Tournament 2 - Feb 23 & 24',
-        'ramp': 'Cottonwood Shores',
-        'time_start': '7am',
-        'time_end': '3pm'
-    }
-]
+from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm
+from tournaments.models import Tournament
 
 
 def index(request):
     """Landing page"""
-    return render(request, 'index.html', {'title': 'South Austin Bass Club', 'posts': events})
+    return render(request, 'index.html', {'title': 'South Austin Bass Club', 'tournaments': Tournament.objects.all().order_by('-date')})
 
+class TournamentListView(ListView):
+    model = Tournament
 
 def about(request):
     """About page"""
@@ -67,4 +55,16 @@ def register(request):
 @login_required
 def profile(request):
     """Profile/Account settings"""
-    return render(request, 'profile.html', {'title': 'Angler Profile'})
+    if request.method == 'POST':
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+            messages.success(request, 'Your profile has been updated!')
+            return redirect('profile')
+    else:
+        u_form = UserUpdateForm(instance=request.user)
+        p_form = ProfileUpdateForm(instance=request.user.profile)
+
+    return render(request, 'profile.html', {'title': 'Angler Profile', 'u_form': u_form, 'p_form': p_form})

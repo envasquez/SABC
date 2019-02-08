@@ -39,25 +39,32 @@ class Tournament(models.Model):
     """Tournament model"""
     type = models.CharField(max_length=48, choices=TOURNAMENT_TYPES)
     name = models.CharField(null=True, max_length=128)
-    lake = models.CharField(blank=True, max_length=10, choices=LAKES)
     date = models.DateField(null=True)
+    
+    lake = models.CharField(blank=True, max_length=100, choices=LAKES)
     ramp = models.CharField(blank=True, max_length=128)
+    ramp_url = models.CharField(max_length=1024, blank=True)
     state = models.CharField(max_length=16, choices=STATES, default='TX')
+    
     paper = models.BooleanField(default=False)
-    results = models.ManyToManyField(TournamentResult, blank=True)
+    
     start = models.TimeField(blank=True, null=True)
     finish = models.TimeField(blank=True, null=True)
-    deleted = models.BooleanField(default=False)
+    
     created_by = models.ForeignKey(Profile, null=True, blank=True)
-    organization = models.CharField(
-        max_length=128, default='SABC', choices=Profile.CLUBS)
+    organization = models.CharField(max_length=128, default='SABC', choices=Profile.CLUBS)
+    
+    results = models.ManyToManyField(TournamentResult, blank=True)
     deleted = models.BooleanField(default=False)
-
+    
     def __str__(self):
-        return '%s Tournament - %s ID: %d' % (
+        return '%s Tournament - %s ID: %d %s %s %s' % (
             self.type.upper(),
             ('', 'paper')[self.paper],
-            self.id)
+            self.id,
+            self.organization,
+            self.name,
+            self.lake.upper())
 
     class Meta:
         """Tournament metadata"""

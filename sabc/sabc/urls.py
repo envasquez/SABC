@@ -23,19 +23,16 @@ from django.utils.translation import ugettext_lazy as _
 
 from users import views as user_views
 
-
 urlpatterns = [
     # Admin site
     url(r'^admin/', admin.site.urls),
     # Global Pages
-    url(r'^$', user_views.index, name='sabc-home'),
+    url(r'^$', user_views.TournamentListView.as_view(), name='sabc-home'),
     url(r'^bilaws', user_views.bilaws, name='bilaws'),
     url(r'^about', user_views.about, name='about'),
     # User Views
-    url(r'^login', auth_views.LoginView.as_view(
-        template_name='login.html'), name='login'),
-    url(r'^logout', auth_views.LogoutView.as_view(
-        template_name='logout.html'), name='logout'),
+    url(r'^login', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    url(r'^logout', auth_views.LogoutView.as_view(template_name='logout.html'), name='logout'),
     url(r'^profile', user_views.profile, name='profile'),
     url(r'^gallery', user_views.gallery, name='gallery'),
     url(r'^register', user_views.register, name='register'),

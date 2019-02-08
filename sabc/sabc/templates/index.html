@@ -1,16 +1,26 @@
 {% extends "base.html" %}
 {% block content %}
-    {% for post in posts %}
+    {% for tournament in tournaments %}
         <article class="media content-section">
           <div class="media-body">
             <div class="article-metadata">
-              <a class="mr-2" href="#">{{ post.name }}</a>
+              {{ tournament.name }}
             </div>
-            <h2><a class="article-title" href="#">{{ post.Lake }}</a></h2>
+            <h2>Lake: {{ tournament.lake | upper }}</h2>
             <p class="article-content">
-              Start: {{ post.time_start }}
-              Weigh-in: {{ post.time_end }}
-              Ramp: {{ post.ramp }}
+              <table class="table">
+                <tbody>
+                  <tr>
+                    <td align="right">Date:</td><td align="left">{{ tournament.date }}</td>
+                    <td align="right">Start time:</td><td align="left">{{ tournament.start }}</td>
+                  </tr>
+                  <tr>
+                    <td align="right">Ramp:</td><td align="left">{{ tournament.ramp }}</td>
+                    <td align="right">Weigh-in:</td><td align="left">{{ tournament.finish }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              {{ tournament.ramp_url | safe}}
             </p>
           </div>
         </article>
