@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "users/base.html" %}
 {% block content %}
     {% for tournament in tournaments %}
         <article class="media content-section">
@@ -17,6 +17,10 @@
                   <tr>
                     <td align="right">Ramp:</td><td align="left">{{ tournament.ramp }}</td>
                     <td align="right">Weigh-in:</td><td align="left">{{ tournament.finish }}</td>
+                  </tr>
+                  <tr>
+                    <td align="right">Type:</td><td align="left">{{ tournament.type | title }}</td>
+                    <td align="right">Posted by:</td><td align="left">{{ tournament.created_by }}</td>
                   </tr>
                 </tbody>
               </table>

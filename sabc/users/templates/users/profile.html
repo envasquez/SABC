@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "users/base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
     <div class="content-section">
@@ -14,7 +14,13 @@
       </div>
       <form method="POST" enctype="multipart/form-data">
           {% csrf_token %}
-          <fieldset class="form-group">
+          {% comment %} 
+          Here we need to say:
+            if created_by == CURRENT_USER:
+                allow_edit
+            else:
+                display_only
+          {% endcomment %}
               <legend class="border-bottom mb-4">Edit Angler Information</legend>
               {{ u_form|crispy }}
               {{ p_form|crispy }}

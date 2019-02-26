@@ -33,15 +33,11 @@ class Profile(models.Model):
         verbose_name_plural = 'Profiles'
 
     def __str__(self):
-        return '%s, %s - %s : %s' % (
-            self.user.last_name,
-            self.user.first_name,
-            self.user.username,
-            self.type)
+        return '%s : %s' % (self.user.username, self.type)
 
     def save(self, *args, **kwargs):
         super(Profile, self).save(*args, **kwargs)
-        # Re-size lagre images ...
+        # Re-size large images ... because
         img = Image.open(self.image.path)
         if img.height > 300 or img.width > 300: # pixels
             output_size = (300, 300)

@@ -15,7 +15,7 @@ from tournaments.models import Tournament
 class TournamentListView(ListView):
     model = Tournament
     ordering = ['-date']
-    template_name = 'index.html'
+    template_name = 'users/index.html'
     context_object_name = 'tournaments'
 
 class TournamentDetailView(DetailView):
@@ -25,22 +25,22 @@ class TournamentDetailView(DetailView):
 
 def about(request):
     """About page"""
-    return render(request, 'about.html', {'title': 'SABC - About'})
+    return render(request, 'users/about.html', {'title': 'SABC - About'})
 
 
 def bilaws(request):
     """Bi Laws page"""
-    return render(request, 'bilaws.html', {'title': 'SABC - Bi Laws'})
+    return render(request, 'users/bilaws.html', {'title': 'SABC - Bi Laws'})
 
 
 def gallery(request):
     """Gallery page"""
-    return render(request, 'gallery.html', {'title': 'SABC - Gallery'})
+    return render(request, 'users/gallery.html', {'title': 'SABC - Gallery'})
 
 
 def calendar(request):
     """Calendar page"""
-    return render(request, 'calendar.html', {'title': 'SABC - Calendar'})
+    return render(request, 'users/calendar.html', {'title': 'SABC - Calendar'})
 
 
 def register(request):
@@ -53,7 +53,7 @@ def register(request):
             return redirect('login')
     else:
         form = UserRegisterForm()
-    return render(request, 'register.html', {'title':'SABC - Registration', 'form': form})
+    return render(request, 'users/register.html', {'title':'SABC - Registration', 'form': form})
 
 
 @login_required
@@ -71,4 +71,4 @@ def profile(request):
         u_form = UserUpdateForm(instance=request.user)
         p_form = ProfileUpdateForm(instance=request.user.profile)
 
-    return render(request, 'profile.html', {'title': 'Angler Profile', 'u_form': u_form, 'p_form': p_form})
+    return render(request, 'users/profile.html', {'title': 'Angler Profile', 'u_form': u_form, 'p_form': p_form})
