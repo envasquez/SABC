@@ -5,19 +5,23 @@ import json
 
 from django.contrib import messages
 from django.shortcuts import render, redirect
-from django.views.generic import ListView
+from django.views.generic import ListView, DetailView
 from django.contrib.auth.decorators import login_required
 
 from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm
 from tournaments.models import Tournament
 
 
-def index(request):
-    """Landing page"""
-    return render(request, 'index.html', {'title': 'South Austin Bass Club', 'tournaments': Tournament.objects.all().order_by('-date')})
-
 class TournamentListView(ListView):
     model = Tournament
+    ordering = ['-date']
+    template_name = 'index.html'
+    context_object_name = 'tournaments'
+
+class TournamentDetailView(DetailView):
+    model = Tournament
+
+
 
 def about(request):
     """About page"""

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+    <article class="media content-section">
+        <div class="media-body">
+        <div class="article-metadata">
+            {{ object.name }}
+        </div>
+        <h2>Lake: {{ object.lake | upper }}</h2>
+        <p class="article-content">
+            <table class="table">
+            <tbody>
+                <tr>
+                <td align="right">Date:</td><td align="left">{{ object.date }}</td>
+                <td align="right">Start time:</td><td align="left">{{ object.start }}</td>
+                </tr>
+                <tr>
+                <td align="right">Ramp:</td><td align="left">{{ object.ramp }}</td>
+                <td align="right">Weigh-in:</td><td align="left">{{ object.finish }}</td>
+                </tr>
+            </tbody>
+            </table>
+            {{ object.ramp_url | safe}}
+        </p>
+        </div>
+    </article>
+{% endblock content %}

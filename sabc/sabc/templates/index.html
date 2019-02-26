@@ -6,7 +6,7 @@
             <div class="article-metadata">
               {{ tournament.name }}
             </div>
-            <h2>Lake: {{ tournament.lake | upper }}</h2>
+            <h2><a class="article-title" href="{% url 'detail-view' tournament.id %}">Lake: {{ tournament.lake | upper }}</a></h2>
             <p class="article-content">
               <table class="table">
                 <tbody>
