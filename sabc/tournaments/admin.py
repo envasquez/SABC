@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from django.contrib import admin
 
-from .models import Tournament
+from .models import Tournament, Team, Result
 
-admin.site.register([Tournament])
+
+admin.site.register([Tournament, Team, Result])
