@@ -6,7 +6,7 @@
             <div class="article-metadata">
               {{ tournament.name }}
             </div>
-            <h2><a class="article-title" href="{% url 'detail-view' tournament.id %}">Lake: {{ tournament.lake | upper }}</a></h2>
+            <h2><a class="article-title" href="{% url 'tournament-details' tournament.id %}">Lake: {{ tournament.lake | upper }}</a></h2>
             <p class="article-content">
               <table class="table">
                 <tbody>
@@ -20,11 +20,17 @@
                   </tr>
                   <tr>
                     <td align="right">Type:</td><td align="left">{{ tournament.type | title }}</td>
-                    <td align="right">Posted by:</td><td align="left">{{ tournament.created_by }}</td>
+                    {% if tournament.type == 'team' %}
+                      <td align="right">Entry Fee:</td><td align="left">${{ tournament.entry_fee }} per boat</td>
+                    {% else %}
+                      <td align="right">Entry Fee:</td><td align="left">${{ tournament.entry_fee }} per angler</td>
+                    {% endif %}
                   </tr>
                 </tbody>
               </table>
               {{ tournament.ramp_url | safe}}
+              <br />
+              <b>Facebook Event Link Goes Here!!!</b>
             </p>
           </div>
         </article>
