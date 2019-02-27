@@ -28,9 +28,9 @@ def about(request):
     return render(request, 'users/about.html', {'title': 'SABC - About'})
 
 
-def bilaws(request):
-    """Bi Laws page"""
-    return render(request, 'users/bilaws.html', {'title': 'SABC - Bi Laws'})
+def bylaws(request):
+    """Bylaws page"""
+    return render(request, 'users/bylaws.html', {'title': 'SABC - Bylaws'})
 
 
 def gallery(request):

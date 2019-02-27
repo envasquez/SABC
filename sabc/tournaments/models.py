@@ -17,7 +17,12 @@ class Tournament(models.Model):
     deleted = models.BooleanField(default=False)
 
     type = models.CharField(default=TOURNAMENT_TYPES[1][0], max_length=48, choices=TOURNAMENT_TYPES)
-    name = models.CharField(default='%s %s Tournament - %s' % (time.strftime('%B'), time.strftime('%Y'), time.strftime('%m')), null=True, max_length=128)
+    name = models.CharField(
+        default='%s %s Tournament - %s' % (
+            time.strftime('%B'),  # Month Name
+            time.strftime('%Y'),  # Year
+            time.strftime('%m')), # Month/Tournament # for the year
+            null=True, max_length=128)
     date = models.DateField(null=True)
     lake = models.CharField(blank=True, max_length=100, choices=LAKES)
     ramp = models.CharField(blank=True, max_length=128)
@@ -28,6 +33,7 @@ class Tournament(models.Model):
     ramp_url = models.CharField(max_length=1024, blank=True)
     entry_fee = models.IntegerField(default=20)
     organization = models.CharField(max_length=128, default='SABC', choices=Profile.CLUBS)
+    dead_fish_penalty = models.FloatField(default=0.25)
 
     def __str__(self):
         return self.name

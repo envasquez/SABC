@@ -26,6 +26,14 @@
                       <td align="right">Entry Fee:</td><td align="left">${{ tournament.entry_fee }} per angler</td>
                     {% endif %}
                   </tr>
+                  <tr>
+                    {% if tournament.type == 'team' %}
+                      <td align="right">Limit:</td><td align="left"> 5 fish per boat</td>
+                    {% else %}
+                      <td align="right">Limit:</td><td align="left"> 10 fish per boat</td>
+                    {% endif %}
+                    <td align="right">Dead Fish Penalty:</td><td align="left">{{ tournament.dead_fish_penalty }}lb</td>
+                  </tr>
                 </tbody>
               </table>
               {{ tournament.ramp_url | safe}}
