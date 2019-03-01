@@ -12,7 +12,7 @@ from users.models import Profile
 class Tournament(models.Model):
     """Tournament model"""
     deleted = models.BooleanField(default=False)
-    type = models.CharField(default=TOURNAMENT_TYPES[1][0], max_length=48, choices=TOURNAMENT_TYPES)
+    type = models.CharField(default=TOURNAMENT_TYPES[1][1], max_length=48, choices=TOURNAMENT_TYPES)
     name = models.CharField(
         default='%s %s Tournament - %s' % (
             time.strftime('%B'),  # Month Name
@@ -75,9 +75,6 @@ class Result(models.Model):
         return '%s: %s %.2flbs' % (self.angler.user.get_full_name(), t_name, self.total_weight)
 
     def save(self, *args, **kwargs):
-        #
-        # Calculate penalty weight and subtract it from the total weight
-        #
         if self.bought_in is True:
             self.total_weight = 0.0
             self.num_fish_dead = 0.0
@@ -85,7 +82,6 @@ class Result(models.Model):
         else:
             self.pentalty_weight = self.num_fish_dead * self.pentalty_weight
             self.total_weight = self.total_weight - self.pentalty_weight
-
         super(Result, self).save(*args, **kwargs)
 
 
@@ -103,18 +99,12 @@ class PaperResult(Result):
     fish_5_weight = models.FloatField(default=0.0)
 
     def save(self, *args, **kwargs):
-        #
-        # Convert lengths to weights
-        #
+        self.total_weight = 0.0
         self.fish_1_weight = PAPER_LENGTH_TO_WT.get(self.fish_1_length, 0.0)
         self.fish_2_weight = PAPER_LENGTH_TO_WT.get(self.fish_2_length, 0.0)
         self.fish_3_weight = PAPER_LENGTH_TO_WT.get(self.fish_3_length, 0.0)
         self.fish_4_weight = PAPER_LENGTH_TO_WT.get(self.fish_4_length, 0.0)
         self.fish_5_weight = PAPER_LENGTH_TO_WT.get(self.fish_5_length, 0.0)
-        #
-        # Calculate total weight
-        #
-        self.total_weight = 0.0
         if self.bought_in is False:
             self.total_weight += self.fish_1_weight
             self.total_weight += self.fish_2_weight
