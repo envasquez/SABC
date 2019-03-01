@@ -2,37 +2,37 @@
 {% block content %}
     <article class="media content-section">
         <div class="media-body">
-        <div class="article-metadata">
-            {{ object.name }}
-        </div>
-        <h2>Lake: {{ object.lake | upper }}<img class="rounded-circle account-img" src="static/fb_logo_26px_blk.png"></h2>
-        <p class="article-content">
-            Description:<br />
-            {{ object.description }}<br />
-            <table class="table">
-            <tbody>
-                <tr>
-                    <td align="right">Date:</td><td align="left">{{ object.date }}</td>
-                    <td align="right">Start time:</td><td align="left">{{ object.start }}</td>
-                </tr>
-                <tr>
-                    <td align="right">Ramp:</td><td align="left">{{ object.ramp }}</td>
-                    <td align="right">Weigh-in:</td><td align="left">{{ object.finish }}</td>
-                </tr>
-                <tr>
-                    {% if tournament.type == 'team' %}
-                      <td align="right">Entry Fee:</td><td align="left">${{ tournament.entry_fee }} per boat</td>
-                    {% else %}
-                      <td align="right">Entry Fee:</td><td align="left">${{ tournament.entry_fee }} per angler</td>
-                    {% endif %}
-                </tr>
-            </tbody>
-            </table>
+            <div class="article-metadata">
+                {{ object.name }}
+            </div>
+            <h2>Lake: {{ object.lake | upper }}</h2>
+            <a href="{{ object.facebook_url }}" target="_blank"><img src="../../static/fb_logo_26px_blk.png" /></a><br /><br />
             {{ object.ramp_url | safe}}
-            <br />
-            <br /><br /><br />
-            Rules:
-        </p>
+            <p class="article-content">
+                {{ object.description }}
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <td align="right">Date:</td><td align="left">{{ object.date }}</td>
+                                <td align="right">Start time:</td><td align="left">{{ object.start }}</td>
+                            </tr>
+                            <tr>
+                                <td align="right">Ramp:</td><td align="left">{{ object.ramp }}</td>
+                                <td align="right">Weigh-in:</td><td align="left">{{ object.finish }}</td>
+                            </tr>
+                            <tr>
+                                {% if object.type == 'team' %}
+                                    <td align="right">Type:</td><td align="left">{{ object.type | title }} - 5 fish per boat</td>
+                                    <td align="right">Entry Fee:</td><td align="left">${{ object.entry_fee }} per boat</td>
+                                {% else %}
+                                    <td align="right">Type:</td><td align="left">{{ object.type | title }} - 10 fish per boat</td>
+                                    <td align="right">Entry Fee:</td><td align="left">${{ object.entry_fee }} per angler</td>
+                                {% endif %}
+                            </tr>
+                        </tbody>
+                    </table>
+                Tournament Rules:
+            </p>
         </div>
     </article>
 {% endblock content %}
