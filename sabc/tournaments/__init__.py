@@ -3,7 +3,7 @@
 
 TOURNAMENT_TYPES = [
     ('team', 'TEAM'),
-    ('indv', 'INDIVIDUAL')
+    ('individual', 'INDIVIDUAL')
 ]
 LAKES = [
     ('lbj', 'LBJ'),
