@@ -6,6 +6,7 @@ TOURNAMENT_TYPES = [
     ('individual', 'INDIVIDUAL')
 ]
 LAKES = [
+    ('tbd', 'TBD'),
     ('lbj', 'LBJ'),
     ('travis', 'TRAVIS'),
     ('belton', 'BELTON'),

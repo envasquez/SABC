@@ -21,8 +21,8 @@ class Tournament(models.Model):
             time.strftime('%m')), # Tournament # for the year
             null=True, max_length=128)
     date = models.DateField(null=True)
-    lake = models.CharField(blank=True, max_length=100, choices=LAKES)
-    ramp = models.CharField(blank=True, max_length=128)
+    lake = models.CharField(default='TBD', max_length=100, choices=LAKES)
+    ramp = models.CharField(default='TBD', max_length=128)
 
     days = models.IntegerField(default=1)
     start = models.TimeField(blank=True, null=True)
@@ -30,9 +30,9 @@ class Tournament(models.Model):
     state = models.CharField(max_length=16, choices=STATES, default='TX')
     points = models.BooleanField(default=True)
     entry_fee = models.IntegerField(default=20)
-    description = models.TextField(null=True, blank=True)
+    description = models.TextField(default='')
     organization = models.CharField(max_length=128, default='SABC', choices=Profile.CLUBS)
-    ramp_url = models.CharField(max_length=1024, blank=True)
+    ramp_url = models.CharField(default='', max_length=1024, blank=True)
     facebook_url = models.CharField(max_length=1024, blank=True)
 
     def __str__(self):
