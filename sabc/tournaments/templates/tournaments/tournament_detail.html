@@ -5,21 +5,33 @@
         <div class="article-metadata">
             {{ object.name }}
         </div>
-        <h2>Lake: {{ object.lake | upper }}</h2>
+        <h2>Lake: {{ object.lake | upper }}<img class="rounded-circle account-img" src="static/fb_logo_26px_blk.png"></h2>
         <p class="article-content">
+            Description:<br />
+            {{ object.description }}<br />
             <table class="table">
             <tbody>
                 <tr>
-                <td align="right">Date:</td><td align="left">{{ object.date }}</td>
-                <td align="right">Start time:</td><td align="left">{{ object.start }}</td>
+                    <td align="right">Date:</td><td align="left">{{ object.date }}</td>
+                    <td align="right">Start time:</td><td align="left">{{ object.start }}</td>
                 </tr>
                 <tr>
-                <td align="right">Ramp:</td><td align="left">{{ object.ramp }}</td>
-                <td align="right">Weigh-in:</td><td align="left">{{ object.finish }}</td>
+                    <td align="right">Ramp:</td><td align="left">{{ object.ramp }}</td>
+                    <td align="right">Weigh-in:</td><td align="left">{{ object.finish }}</td>
+                </tr>
+                <tr>
+                    {% if tournament.type == 'team' %}
+                      <td align="right">Entry Fee:</td><td align="left">${{ tournament.entry_fee }} per boat</td>
+                    {% else %}
+                      <td align="right">Entry Fee:</td><td align="left">${{ tournament.entry_fee }} per angler</td>
+                    {% endif %}
                 </tr>
             </tbody>
             </table>
             {{ object.ramp_url | safe}}
+            <br />
+            <br /><br /><br />
+            Rules:
         </p>
         </div>
     </article>

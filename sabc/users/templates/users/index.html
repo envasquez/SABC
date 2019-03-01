@@ -7,6 +7,7 @@
               {{ tournament.name }}
             </div>
             <h2><a class="article-title" href="{% url 'tournament-details' tournament.id %}">Lake: {{ tournament.lake | upper }}</a></h2>
+            <a href="{{ tournament.facebook_url }}" target="_blank"><img src="static/fb_logo_26px_blk.png" /></a>
             <p class="article-content">
               <table class="table">
                 <tbody>
@@ -26,19 +27,12 @@
                       <td align="right">Entry Fee:</td><td align="left">${{ tournament.entry_fee }} per angler</td>
                     {% endif %}
                   </tr>
-                  <tr>
-                    {% if tournament.type == 'team' %}
-                      <td align="right">Limit:</td><td align="left"> 5 fish per boat</td>
-                    {% else %}
-                      <td align="right">Limit:</td><td align="left"> 10 fish per boat</td>
-                    {% endif %}
-                    <td align="right">Dead Fish Penalty:</td><td align="left">{{ tournament.dead_fish_penalty }}lb</td>
-                  </tr>
                 </tbody>
               </table>
               {{ tournament.ramp_url | safe}}
               <br />
-              <b>Facebook Event Link Goes Here!!!</b>
+              {{ tournament.description | default_if_none:"" }}
+              <br />
             </p>
           </div>
         </article>
