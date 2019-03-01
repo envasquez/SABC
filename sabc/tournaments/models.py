@@ -12,6 +12,7 @@ from users.models import Profile
 class Tournament(models.Model):
     """Tournament model"""
     deleted = models.BooleanField(default=False)
+
     type = models.CharField(default=TOURNAMENT_TYPES[1][1], max_length=48, choices=TOURNAMENT_TYPES)
     name = models.CharField(
         default='%s %s Tournament - %s' % (

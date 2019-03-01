@@ -28,6 +28,7 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^$', user_views.TournamentListView.as_view(), name='sabc-home'),
     url(r'^tournament/(?P<pk>\d+)/$', user_views.TournamentDetailView.as_view(), name='tournament-details'),
+    url(r'^tournament/new/$', user_views.TournamentCreateView.as_view(), name='tournament-create'),
     url(r'^bylaws', user_views.bylaws, name='bylaws'),
     url(r'^about', user_views.about, name='about'),
     url(r'^login', auth_views.LoginView.as_view(template_name='users/login.html'), name='login'),
