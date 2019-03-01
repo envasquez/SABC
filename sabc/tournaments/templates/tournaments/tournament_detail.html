@@ -6,10 +6,12 @@
                 {{ object.name }}
             </div>
             <h2>Lake: {{ object.lake | upper }}</h2>
-            <a href="{{ object.facebook_url }}" target="_blank"><img src="../../static/fb_logo_26px_blk.png" /></a><br /><br />
+            {% if object.lake != 'tbd' %}
+                <a href="{{ object.facebook_url }}" target="_blank"><img src="../../static/fb_logo_26px_blk.png" /></a><br /><br />
+            {% endif %}
             {{ object.ramp_url | safe}}
             <p class="article-content">
-                {{ object.description }}
+                {{ object.description | linebreaks }}
                     <table class="table">
                         <tbody>
                             <tr>

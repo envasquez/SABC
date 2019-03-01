@@ -7,8 +7,10 @@
             {{ tournament.name }}
           </div>
           <h2><a class="article-title" href="{% url 'tournament-details' tournament.id %}">Lake: {{ tournament.lake | upper }}</a></h2>
-          <a href="{{ tournament.facebook_url }}" target="_blank"><img src="static/fb_logo_26px_blk.png" /></a><br /><br />
-          {{ tournament.ramp_url | safe}}
+          {% if tournament.lake != 'tbd' %}
+            <a href="{{ tournament.facebook_url }}" target="_blank"><img src="static/fb_logo_26px_blk.png" /></a><br /><br />
+          {% endif %}
+          {{ tournament.ramp_url | default:'<img src="static/tbd.jpg" height="250">'| safe}}
           <p class="article-content">
             <table class="table">
               <tbody>
@@ -31,7 +33,7 @@
                 </tr>
               </tbody>
             </table>
-            <br />{{ tournament.description | default_if_none:"" }}<br />
+            <br />{{ tournament.description | truncatechars:100 | linebreaks}}<br />
           </p>
         </div>
       </article>
