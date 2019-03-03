@@ -36,6 +36,7 @@ class TournamentCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
     def test_func(self):
         return self.request.user.profile.type == 'officer'
 
+
 class TournamentUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Tournament
     form_class = TournamentForm
