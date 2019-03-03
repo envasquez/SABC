@@ -4,14 +4,17 @@ from __future__ import unicode_literals
 import time
 
 from django.db import models
+from django.urls import reverse
+
+from users import CLUBS
+from users.models import Profile
 
 from tournaments import LAKES, TOURNAMENT_TYPES, STATES, PAPER_LENGTH_TO_WT
-from users.models import Profile
 
 
 class Tournament(models.Model):
     """Tournament model"""
-    deleted = models.BooleanField(default=False)
+    complete = models.BooleanField(default=False)
 
     type = models.CharField(default=TOURNAMENT_TYPES[1][1], max_length=48, choices=TOURNAMENT_TYPES)
     name = models.CharField(
@@ -23,20 +26,24 @@ class Tournament(models.Model):
     date = models.DateField(null=True)
     lake = models.CharField(default='TBD', max_length=100, choices=LAKES)
     ramp = models.CharField(default='TBD', max_length=128)
-
     days = models.IntegerField(default=1)
     start = models.TimeField(blank=True, null=True)
     finish = models.TimeField(blank=True, null=True)
     state = models.CharField(max_length=16, choices=STATES, default='TX')
     points = models.BooleanField(default=True)
     entry_fee = models.IntegerField(default=20)
-    description = models.TextField(default='')
-    organization = models.CharField(max_length=128, default='SABC', choices=Profile.CLUBS)
+    created_by = models.ForeignKey(Profile)
+    updated_by = models.ForeignKey(Profile, null=True, related_name='+')
+    description = models.TextField(default='Tournament #%s of the %s season for South Austin Bass Club!' % (time.strftime('%m'), time.strftime('%Y')))
+    organization = models.CharField(max_length=128, default='SABC', choices=CLUBS)
     ramp_url = models.CharField(default='', max_length=1024, blank=True)
     facebook_url = models.CharField(max_length=1024, blank=True)
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return reverse('tournament-details', kwargs={'pk': self.pk})
 
     def save(self, *args, **kwargs):
         self.fee_per_boat = True if self.type == TOURNAMENT_TYPES[0][0] else False
