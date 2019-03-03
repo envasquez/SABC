@@ -22,10 +22,12 @@ from django.conf.urls.static import static
 from django.utils.translation import ugettext_lazy as _
 
 from users import views as user_views
+from tournaments import views as tournament_views
+
 
 urlpatterns = [
     # Admin site
-    url(r'^$', user_views.TournamentListView.as_view(), name='sabc-home'),
+    url(r'^$', tournament_views.TournamentListView.as_view(), name='sabc-home'),
     url(r'^about', user_views.about, name='about'),
     url(r'^login', auth_views.LoginView.as_view(template_name='users/login.html'), name='login'),
     url(r'^logout', auth_views.LogoutView.as_view(template_name='users/logout.html'), name='logout'),
@@ -35,10 +37,10 @@ urlpatterns = [
     url(r'^gallery', user_views.gallery, name='gallery'),
     url(r'^register', user_views.register, name='register'),
     url(r'^calendar', user_views.calendar, name='calendar'),
-    url(r'^tournament/new/$', user_views.TournamentCreateView.as_view(), name='tournament-create'),
-    url(r'^tournament/(?P<pk>\d+)/$', user_views.TournamentDetailView.as_view(), name='tournament-details'),
-    url(r'^tournament/(?P<pk>\d+)/update/$', user_views.TournamentUpdateView.as_view(), name='tournament-update'),
-    url(r'^tournament/(?P<pk>\d+)/delete/$', user_views.TournamentDeleteView.as_view(), name='tournament-delete'),
+    url(r'^tournament/new/$', tournament_views.TournamentCreateView.as_view(), name='tournament-create'),
+    url(r'^tournament/(?P<pk>\d+)/$', tournament_views.TournamentDetailView.as_view(), name='tournament-details'),
+    url(r'^tournament/(?P<pk>\d+)/update/$', tournament_views.TournamentUpdateView.as_view(), name='tournament-update'),
+    url(r'^tournament/(?P<pk>\d+)/delete/$', tournament_views.TournamentDeleteView.as_view(), name='tournament-delete'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
