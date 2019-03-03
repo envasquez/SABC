@@ -25,8 +25,8 @@
             <div class="navbar-nav mr-auto">
               <a class="nav-item nav-link" href="{% url 'about' %}">About</a>
               <a class="nav-item nav-link" href="{% url 'bylaws' %}">Bylaws</a>
-              <a class="nav-item nav-link" href="{% url 'gallery' %}">Gallery</a> 
-              <a class="nav-item nav-link" href="{% url 'calendar' %}">Calendars</a> 
+              <a class="nav-item nav-link" href="{% url 'gallery' %}">Gallery</a>
+              <a class="nav-item nav-link" href="{% url 'calendar' %}">Calendars</a>
             </div>
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
@@ -58,8 +58,11 @@
           <div class="col-md-4">
             <div class="content-section">
                 <ul class="list-group">
-                  <li class="list-group-item list-group-item-light">Latest News</li>
-                  <li class="list-group-item list-group-item-light">Tournament Results</li>
+                  {% if user.profile.type == 'officer'%}
+                    <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="{% url 'tournament-create' %}">Create Tournament</a></li>
+                  {% endif %}
+                  <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="#">Tournament Results</a></li>
+
                 </ul>
               </p>
             </div>
