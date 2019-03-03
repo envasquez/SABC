@@ -9,24 +9,16 @@ from django.contrib.auth.models import User
 
 from PIL import Image
 
+from . import MEMBER_CHOICES, CLUBS
 
 class Profile(models.Model):
     """This model represents an individual angler"""
     user = models.OneToOneField(User, on_delete=models.PROTECT)
-
-    CLUBS = (('SABC', 'South Austin Bass Club'),)
-    CLUB_GUEST = 'guest'
-    CLUB_MEMBER = 'member'
-    CLUB_OFFICER = 'officer'
-    MEMBER_CHOICES = ((CLUB_GUEST, 'guest'), (CLUB_MEMBER, 'member'), (CLUB_OFFICER, 'officer'))
-
-    type = models.CharField(max_length=10, choices=MEMBER_CHOICES, default='member')
+    type = models.CharField(max_length=10, choices=MEMBER_CHOICES, default='guest')
     date_joined = models.DateTimeField(default=timezone.now)
     phone_number = models.CharField(max_length=15, blank=True)
     organization = models.CharField(max_length=100, null=True, blank=True, choices=CLUBS, default='SABC')
     image = models.ImageField(default='profile_pics/default.jpg', upload_to='profile_pics')
-
-    deleted = models.BooleanField(default=False)
 
     class Meta:
         """Profile metadata"""
