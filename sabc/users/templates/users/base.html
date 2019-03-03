@@ -54,15 +54,22 @@
           {% endif %}
           {% block content %}{% endblock %}
         </div>
-        {% if user.is_authenticated %}
+        {% if user.is_authenticated and user.profile.type != 'guest' %}
           <div class="col-md-4">
             <div class="content-section">
+              <h4>SABC Members</h4>
+              <p>
                 <ul class="list-group">
-                  {% if user.profile.type == 'officer'%}
+                  {% if user.is_authenticated and user.profile.type == 'officer' %}
+                    <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="#">Email Members</a></li>
+                    <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="#">Email Officers</a></li>
+                    <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="#">Add New Member</a></li>
                     <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="{% url 'tournament-create' %}">Create Tournament</a></li>
                   {% endif %}
-                  <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="#">Tournament Results</a></li>
-
+                  <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="#">My Pictures</a></li>
+                  <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="#">My AOY Standings</a></li>
+                  <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="#">My Tournament Results</a></li>
+                  <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="#">Officer Contact Info</a></li>
                 </ul>
               </p>
             </div>
