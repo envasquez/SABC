@@ -9,13 +9,11 @@ from django.urls import reverse
 from users import CLUBS
 from users.models import Profile
 
-from tournaments import LAKES, TOURNAMENT_TYPES, STATES, PAPER_LENGTH_TO_WT
+from . import PAPER_LENGTH_TO_WT, LAKES, TOURNAMENT_TYPES, STATES
 
 
 class Tournament(models.Model):
     """Tournament model"""
-    complete = models.BooleanField(default=False)
-
     type = models.CharField(default=TOURNAMENT_TYPES[1][1], max_length=48, choices=TOURNAMENT_TYPES)
     name = models.CharField(
         default='%s %s Tournament - %s' % (
@@ -36,6 +34,7 @@ class Tournament(models.Model):
     updated_by = models.ForeignKey(Profile, null=True, related_name='+')
     description = models.TextField(default='Tournament #%s of the %s season for South Austin Bass Club!' % (time.strftime('%m'), time.strftime('%Y')))
     organization = models.CharField(max_length=128, default='SABC', choices=CLUBS)
+    complete = models.BooleanField(default=False)
     ramp_url = models.CharField(default='', max_length=1024, blank=True)
     facebook_url = models.CharField(max_length=1024, blank=True)
 
@@ -50,18 +49,8 @@ class Tournament(models.Model):
         super(Tournament, self).save(*args, **kwargs)
 
 
-class Team(models.Model):
-    """This model represents a team in a tournament"""
-    angler_1 = models.ForeignKey(Profile)
-    angler_2 = models.ForeignKey(Profile, null=True, related_name='+')
-    tournament = models.ForeignKey(Tournament)
-
-    def __str__(self):
-        t_name = '' if self.tournament is None else self.tournament.name
-        return 'Team: %s & %s %s ' % (
-            self.angler_1.user.last_name,
-            self.angler_2.user.last_name,
-            t_name)
+class Rules(models.Model):
+    dead_fish_penalty = models.FloatField(default=0.25)
 
 
 class Result(models.Model):
@@ -129,3 +118,17 @@ class PaperResult(Result):
             self.num_fish_dead = 0.0
             self.num_fish_alive = 0.0
         super(Result, self).save(*args, **kwargs)
+
+
+class Team(models.Model):
+    """This model represents a team in a tournament"""
+    angler_1 = models.ForeignKey(Profile)
+    angler_2 = models.ForeignKey(Profile, null=True, related_name='+')
+    tournament = models.ForeignKey(Tournament)
+
+    def __str__(self):
+        t_name = '' if self.tournament is None else self.tournament.name
+        return 'Team: %s & %s %s ' % (
+            self.angler_1.user.last_name,
+            self.angler_2.user.last_name,
+            t_name)

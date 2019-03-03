@@ -5,7 +5,10 @@
             {% if user.profile.type == "officer" %}
                 <div class="edit-tournament" align="right">
                     <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'tournament-update' object.id %}">Edit</a>
-                    <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'tournament-delete' object.id %}">Delete</a>
+                    <a class="btn btn-secondary btn-sm mt-1 mb-1" href="#">Add Results</a>{% comment %} {% url 'results-create' object.id %} {% endcomment %}
+                    {% if object.complete is False %}
+                        <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'tournament-delete' object.id %}">Delete</a>
+                    {% endif %}
                 </div>
             {% endif %}
             <div class="article-metadata">

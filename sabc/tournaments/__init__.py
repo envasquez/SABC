@@ -83,7 +83,6 @@ STATES = [
     ('WY', 'Wyoming')
 ]
 
-
 PAPER_LENGTH_TO_WT = {
     12.0: 1.13,
     13.0: 1.25,

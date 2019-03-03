@@ -3,10 +3,10 @@
 # pylint: disable=import-error
 from __future__ import unicode_literals
 
-
 from django.contrib import admin
 
-from .models import Tournament, Team, Result, PaperResult
+from .models import Tournament, Result, PaperResult, Team, Rules
 
 
-admin.site.register([Tournament, Team, Result, PaperResult])
+for model in [Tournament, Result, PaperResult, Team, Rules]:
+    admin.site.register(model)
