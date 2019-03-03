@@ -21,6 +21,7 @@ from tournaments.models import Tournament
 class TournamentListView(ListView):
     model = Tournament
     ordering = ['-date'] # Newest tournament first
+    paginate_by = 1
     template_name = 'users/index.html'
     context_object_name = 'tournaments'
 
