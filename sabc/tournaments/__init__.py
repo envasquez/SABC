@@ -128,7 +128,10 @@ DEFAULT_RULES = """1. All Federal, State and local laws must be observed. Illega
 
 7. Tournament Lake is off limits for Fishing 12 hours prior to tournament start time.
 
-8. There is a five (5) fish limit per person. Each person may weigh-in only those five fish that they caught. (No exchange of fish between team members!) Keep your fish separated or mark when caught. (Note: exceptions--(a) Two-day tournaments--5 fish per day, and/or (b) Local lake law allows less than five fish stringers.)
+8. There is a five (5) fish limit per person. Each person may weigh-in only those five fish that they caught. No exchange of fish between team members. Keep your fish separated or mark when caught.
+Exceptions:
+    (a) Two-day tournaments--5 fish per day, and/or
+    (b) Local lake law allows less than five fish stringers.
 
 9. No trolling with gas engine will be allowed.
 
@@ -140,7 +143,7 @@ DEFAULT_RULES = """1. All Federal, State and local laws must be observed. Illega
 
 13. Start time: You may not make your first cast until the designated start time.
 
-14. Team may consist of 1 member, but he may weigh-in only five (5) fish--against the other teams with Ten (10) fish.
+14. Team may consist of 1 member, but he may weigh-in only 5 fish--against the other teams with 10 fish.
 """
 DEFAULT_PAYOUT = """Moneys paid to winners will be based on total weight of combined stringers of both team members.
 Individual stringer weights are recorded to determine the points awarded for the year-end awards.

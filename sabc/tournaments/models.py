@@ -73,7 +73,6 @@ class Tournament(models.Model):
 
 class Result(models.Model):
     """This model represents an individuals performance in a tournament"""
-    deleted = models.BooleanField(default=False)
     tournament = models.ForeignKey(Tournament, null=True)
     angler = models.ForeignKey(Profile, null=True)
     boater = models.BooleanField(default=False)
@@ -88,6 +87,9 @@ class Result(models.Model):
     def __str__(self):
         t_name = '' if self.tournament is None else self.tournament.name
         return '%s: %s %.2flbs' % (self.angler.user.get_full_name(), t_name, self.total_weight)
+
+    def get_absolute_url(self):
+        return reverse('result-add', kwargs={'pk': self.tournament.pk})
 
     def save(self, *args, **kwargs):
         if self.bought_in is True:

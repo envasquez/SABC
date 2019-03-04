@@ -41,6 +41,7 @@ urlpatterns = [
     url(r'^tournament/(?P<pk>\d+)/$', tournament_views.TournamentDetailView.as_view(), name='tournament-details'),
     url(r'^tournament/(?P<pk>\d+)/update/$', tournament_views.TournamentUpdateView.as_view(), name='tournament-update'),
     url(r'^tournament/(?P<pk>\d+)/delete/$', tournament_views.TournamentDeleteView.as_view(), name='tournament-delete'),
+    url(r'^tournament/(?P<pk>\d+)/add_result/$', tournament_views.ResultCreateView.as_view(), name='result-add'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

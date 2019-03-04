@@ -7,7 +7,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 
-from .forms import TournamentForm
+from .forms import TournamentForm, ResultForm, TeamForm
 from .models import Tournament
 
 
@@ -64,3 +64,31 @@ class TournamentDeleteView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTe
         messages.success(self.request, self.success_message % obj.__dict__.get('name', 'UNKNOWN'))
 
         return super(TournamentDeleteView, self).delete(request, *args, **kwargs)
+
+
+class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
+    model = Tournament
+    form_class = ResultForm
+    template_name = 'tournaments/add_result.html'
+    extra_context = {'team_form': TeamForm}
+    success_message = 'Results for %s Successfully Added!'
+
+    def test_func(self):
+        return self.request.user.profile.type == 'officer'
+
+    def save(self, *args, **kwargs):
+        obj = self.get_object()
+        messages.success(self.request, self.success_message % obj)
+
+
+class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
+    model = Tournament
+    form_class = TeamForm
+    success_message = '%s Successfully Added!'
+
+    def test_func(self):
+        return self.request.user.profile.type == 'officer'
+
+    def save(self, *args, **kwargs):
+        obj = self.get_object()
+        messages.success(self.request, self.success_message % obj.__dict__.get('name', 'UNKNOWN'))
