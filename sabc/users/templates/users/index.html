@@ -25,10 +25,10 @@
                 <tr>
                   {% if tournament.type == 'team' %}
                     <td align="right">Type:</td><td align="left">{{ tournament.type | title }} - 5 fish per boat</td>
-                    <td align="right">Entry Fee:</td><td align="left">${{ tournament.entry_fee }} per boat</td>
+                    <td align="right">Entry Fee:</td><td align="left">${{ tournament.rules.entry_fee }} per boat</td>
                   {% else %}
                     <td align="right">Type:</td><td align="left">{{ tournament.type | title }} - 10 fish per boat</td>
-                    <td align="right">Entry Fee:</td><td align="left">${{ tournament.entry_fee }} per angler</td>
+                    <td align="right">Entry Fee:</td><td align="left">${{ tournament.rules.entry_fee }} per angler</td>
                   {% endif %}
                 </tr>
               </tbody>

@@ -3,7 +3,7 @@
     <article class="media content-section">
         <div class="media-body">
             {% if user.profile.type == "officer" %}
-                <div class="edit-tournament" align="right">
+                <div align="right">
                     <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'tournament-update' object.id %}">Edit</a>
                     <a class="btn btn-secondary btn-sm mt-1 mb-1" href="#">Add Results</a>{% comment %} {% url 'results-create' object.id %} {% endcomment %}
                     {% if object.complete is False %}
@@ -34,16 +34,30 @@
                             <tr>
                                 {% if object.type == 'team' %}
                                     <td align="right">Type:</td><td align="left">{{ object.type | title }} - 5 fish per boat</td>
-                                    <td align="right">Entry Fee:</td><td align="left">${{ object.entry_fee }} per boat</td>
+                                    <td align="right">Entry Fee:</td><td align="left">${{ object.rules.entry_fee }} per boat</td>
                                 {% else %}
                                     <td align="right">Type:</td><td align="left">{{ object.type | title }} - 10 fish per boat</td>
-                                    <td align="right">Entry Fee:</td><td align="left">${{ object.entry_fee }} per angler</td>
+                                    <td align="right">Entry Fee:</td><td align="left">${{ object.rules.entry_fee }} per angler</td>
                                 {% endif %}
                             </tr>
                         </tbody>
                     </table>
                 Tournament Rules:
-            </p>
+                <article class="media content-section">
+                    <div class="media-body">
+                        <div class="article-metadata">ENTRY FEES & PAYOUT:</div>
+                        <h6 class="small">{{ object.rules.fee_breakdown | linebreaks }}</h6>
+                        <h6 class="small">{{ object.rules.payout | linebreaks}}</h6>
+                        <div class="article-metadata">BIG BASS POT</div>
+                        <h6 class="small">{{ object.rules.big_bass_breakdown | linebreaks }}</h6>
+                        <div class="article-metadata">WEIGH-IN</div>
+                        <h6 class="small">{{ object.rules.weigh_in | linebreaks }}</h6>
+                        <div class="article-metadata">RULES</div>
+                        <h6 class="small">{{ object.rules.rules | linebreaks }}</h6>
+                        <div class="article-metadata">DEAD FISH PENALTY</div>
+                        <h6 class="small">{{ object.rules.dead_fish_penalty }}lb per fish</h6>
+                    </div>
+                </article>
         </div>
     </article>
 {% endblock content %}

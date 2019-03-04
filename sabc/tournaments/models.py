@@ -9,7 +9,29 @@ from django.urls import reverse
 from users import CLUBS
 from users.models import Profile
 
-from . import PAPER_LENGTH_TO_WT, LAKES, TOURNAMENT_TYPES, STATES
+from . import PAPER_LENGTH_TO_WT, LAKES, TOURNAMENT_TYPES, STATES, \
+    DEFAULT_RULES, DEFAULT_PAYOUT, DEFAULT_WEIGH_IN, DEFAULT_FEE_BREAKDOWN, \
+    DEFAULT_BIG_BASS_BREAKDOWN
+
+
+class RuleSet(models.Model):
+    """Rules model for tournaments"""
+    name = models.CharField(max_length=100, unique=True)
+    rules = models.TextField(default=DEFAULT_RULES)
+    payout = models.TextField(default=DEFAULT_PAYOUT)
+    weigh_in = models.TextField(default=DEFAULT_WEIGH_IN)
+    entry_fee = models.IntegerField(default=20)
+    fee_breakdown = models.TextField(default=DEFAULT_FEE_BREAKDOWN)
+    big_bass_breakdown = models.TextField(default=DEFAULT_BIG_BASS_BREAKDOWN)
+    dead_fish_penalty = models.FloatField(default=0.25)
+
+    def save(self, *args, **kwargs):
+        if not self.name:
+            self.name = 'RuleSet-%d' % self.id
+        super(RuleSet, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
 
 
 class Tournament(models.Model):
@@ -25,11 +47,11 @@ class Tournament(models.Model):
     lake = models.CharField(default='TBD', max_length=100, choices=LAKES)
     ramp = models.CharField(default='TBD', max_length=128)
     days = models.IntegerField(default=1)
+    rules = models.ForeignKey(RuleSet, null=True)
+    state = models.CharField(max_length=16, choices=STATES, default='TX')
     start = models.TimeField(blank=True, null=True)
     finish = models.TimeField(blank=True, null=True)
-    state = models.CharField(max_length=16, choices=STATES, default='TX')
     points = models.BooleanField(default=True)
-    entry_fee = models.IntegerField(default=20)
     created_by = models.ForeignKey(Profile)
     updated_by = models.ForeignKey(Profile, null=True, related_name='+')
     description = models.TextField(default='Tournament #%s of the %s season for South Austin Bass Club!' % (time.strftime('%m'), time.strftime('%Y')))
@@ -47,10 +69,6 @@ class Tournament(models.Model):
     def save(self, *args, **kwargs):
         self.fee_per_boat = True if self.type == TOURNAMENT_TYPES[0][0] else False
         super(Tournament, self).save(*args, **kwargs)
-
-
-class Rules(models.Model):
-    dead_fish_penalty = models.FloatField(default=0.25)
 
 
 class Result(models.Model):
