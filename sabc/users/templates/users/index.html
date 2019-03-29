@@ -6,7 +6,16 @@
           <div class="article-metadata">
             <a class="article-title" href="{% url 'tournament-details' tournament.id %}">{{ tournament.name }}</a>
           </div>
-          <h2><a class="article-title" href="{% url 'tournament-details' tournament.id %}">Lake: {{ tournament.lake | upper }}</a></h2>
+          <h2>
+            <a class="article-title" href="{% url 'tournament-details' tournament.id %}">
+              Lake: {{ tournament.lake | upper }}
+            </a>
+            {% if tournament.complete %}
+              <small class="text-muted ml-2">
+                [Complete]
+              </small>
+            {% endif %}
+          </h2>
           {% if tournament.lake != 'tbd' %}
             <a href="{{ tournament.facebook_url }}" target="_blank"><img src="static/fb_logo_26px_blk.png" /></a><br /><br />
           {% endif %}

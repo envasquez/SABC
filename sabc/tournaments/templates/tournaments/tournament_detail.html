@@ -15,7 +15,13 @@
             <div class="article-metadata">
                 {{ object.name }}
             </div>
-            <h2>Lake: {{ object.lake | upper }}</h2>
+            <h2>Lake: {{ object.lake | upper }}
+                {% if object.complete %}
+                    <small class="text-muted ml-2">
+                        [Complete]
+                    </small>
+                {% endif %}
+            </h2>
             {% if object.lake != 'tbd' %}
                 <a href="{{ object.facebook_url }}" target="_blank"><img src="../../static/fb_logo_26px_blk.png" /></a><br /><br />
             {% endif %}
