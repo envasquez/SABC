@@ -2,13 +2,14 @@
 from __future__ import unicode_literals
 
 from django.contrib import messages
-from django.shortcuts import render, redirect
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.shortcuts import render
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, \
+    TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 
 from .forms import TournamentForm, ResultForm, TeamForm
-from .models import Tournament
+from .models import Tournament, Result, PaperResult
 
 
 class TournamentListView(ListView):
@@ -67,18 +68,17 @@ class TournamentDeleteView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTe
 
 
 class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
-    model = Tournament
-    form_class = ResultForm
-    template_name = 'tournaments/add_result.html'
-    extra_context = {'team_form': TeamForm}
-    success_message = 'Results for %s Successfully Added!'
-
-    def test_func(self):
-        return self.request.user.profile.type == 'officer'
+    model = Result
+    form_class = TeamForm
+    form_class2 = ResultForm
+    success_message = 'Results Successfully Added: %s'
 
     def save(self, *args, **kwargs):
         obj = self.get_object()
         messages.success(self.request, self.success_message % obj)
+
+    def test_func(self):
+        return self.request.user.profile.type == 'officer'
 
 
 class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):

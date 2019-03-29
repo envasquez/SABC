@@ -26,11 +26,18 @@ from tournaments import views as tournament_views
 
 
 urlpatterns = [
-    # Admin site
-    url(r'^$', tournament_views.TournamentListView.as_view(), name='sabc-home'),
-    url(r'^about', user_views.about, name='about'),
     url(r'^login', auth_views.LoginView.as_view(template_name='users/login.html'), name='login'),
     url(r'^logout', auth_views.LogoutView.as_view(template_name='users/logout.html'), name='logout'),
+    url(r'^password-reset/$',
+        auth_views.PasswordResetView.as_view(template_name='users/password_reset.html'), name='password-reset'),
+    url(r'^password-reset/done',
+        auth_views.PasswordChangeDoneView.as_view(template_name='users/password_reset_done.html'), name='password_reset_done'),
+    url(r'^password-reset-confirm/(?P<uidb64>[0-9A-Za-z]+)-(?P<token>.+)/$',
+        auth_views.PasswordResetConfirmView.as_view(template_name='users/password_reset_confirm.html'), name='password_reset_confirm'),
+    url(r'^password-reset-complete/$',
+        auth_views.PasswordResetCompleteView.as_view(template_name='users/password_reset_complete.html'), name='password_reset_complete'),
+    url(r'^$', tournament_views.TournamentListView.as_view(), name='sabc-home'),
+    url(r'^about', user_views.about, name='about'),
     url(r'^admin/', admin.site.urls),
     url(r'^bylaws', user_views.bylaws, name='bylaws'),
     url(r'^profile', user_views.profile, name='profile'),
@@ -41,7 +48,8 @@ urlpatterns = [
     url(r'^tournament/(?P<pk>\d+)/$', tournament_views.TournamentDetailView.as_view(), name='tournament-details'),
     url(r'^tournament/(?P<pk>\d+)/update/$', tournament_views.TournamentUpdateView.as_view(), name='tournament-update'),
     url(r'^tournament/(?P<pk>\d+)/delete/$', tournament_views.TournamentDeleteView.as_view(), name='tournament-delete'),
-    url(r'^tournament/(?P<pk>\d+)/add_result/$', tournament_views.ResultCreateView.as_view(), name='result-add'),
+    url(r'^tournament/(?P<pk>\d+)/add_team/$', tournament_views.TeamCreateView.as_view(), name='team-create'),
+    url(r'^tournament/(?P<pk>\d+)/add_result/$', tournament_views.ResultCreateView.as_view(), name='result-create'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -6,7 +6,8 @@
                 <div align="right">
                     <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'tournament-update' object.id %}">Edit</a>
                     {% if object.complete is False %}
-                        <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'result-add' object.id%}">Add Results</a>
+                        <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'team-create' object.id %}">Add Team</a>
+                        <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'result-create' object.id %}">Add Results</a>
                         <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'tournament-delete' object.id %}">Delete</a>
                     {% endif %}
                 </div>
