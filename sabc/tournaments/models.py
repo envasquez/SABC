@@ -68,6 +68,7 @@ class Tournament(models.Model):
 
     def save(self, *args, **kwargs):
         self.fee_per_boat = True if self.type == TOURNAMENT_TYPES[0][0] else False
+        self.ramp_url = self.ramp_url.replace('width="450"', 'width="350"')
         super(Tournament, self).save(*args, **kwargs)
 
 
