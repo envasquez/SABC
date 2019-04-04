@@ -67,8 +67,8 @@ class Tournament(models.Model):
         return reverse('tournament-details', kwargs={'pk': self.pk})
 
     def save(self, *args, **kwargs):
+        self.ramp_url = self.ramp_url.replace('height="450"', 'height="350"')
         self.fee_per_boat = True if self.type == TOURNAMENT_TYPES[0][0] else False
-        self.ramp_url = self.ramp_url.replace('width="450"', 'width="350"')
         super(Tournament, self).save(*args, **kwargs)
 
 
