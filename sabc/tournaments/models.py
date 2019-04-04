@@ -143,12 +143,15 @@ class PaperResult(Result):
 class Team(models.Model):
     """This model represents a team in a tournament"""
     angler_1 = models.ForeignKey(Profile)
-    angler_2 = models.ForeignKey(Profile, null=True, related_name='+')
+    angler_2 = models.ForeignKey(Profile, null=True, blank=True, related_name='+')
     tournament = models.ForeignKey(Tournament)
 
     def __str__(self):
-        t_name = '' if self.tournament is None else self.tournament.name
-        return 'Team: %s & %s %s ' % (
-            self.angler_1.user.last_name,
-            self.angler_2.user.last_name,
-            t_name)
+        return 'Team: %s & %s' % (
+            self.angler_1.user.get_full_name(),
+            self.angler_2.user.get_full_name(),
+        ) if self.angler_2 is not None else 'Team: %s - SOLO' % (
+                self.angler_1.user.get_full_name())
+
+    def get_absolute_url(self):
+        return reverse('team-details', kwargs={'pk': self.id})

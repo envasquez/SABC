@@ -1,0 +1,33 @@
+{% extends "users/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <div class="content-section">
+      <div class="media">
+        <img class="rounded-circle account-img" src="{{ team.angler_1.profile.image.url }}">
+        <div class="media-body">
+          <h2 class="account-heading">{{ team.angler_1.profile.user.first_name }} {{ team.angler_1.profile.user.last_name }}</h2>
+          <p class="text-secondary">{{ team.angler_1.profile.type }}</p>
+          <p class="text-secondary">username: {{ team.angler_1.profile.user.username }}</p>
+          <p class="text-secondary">phone number: {{ team.angler_1.profile.user.profile.phone_number }}</p>
+          <p class="text-secondary">email address: {{ team.angler_1.profile.user.email }}</p>
+        </div>
+      </div>
+      {% comment %} <form method="POST" enctype="multipart/form-data">
+          {% csrf_token %} {% endcomment %}
+          {% comment %}
+          Here we need to say:
+            if created_by == CURRENT_USER:
+                allow_edit
+            else:
+                display_only
+          {% endcomment %}
+              {% comment %} <legend class="border-bottom mb-4">Edit Angler Information</legend>
+              {{ u_form|crispy }}
+              {{ p_form|crispy }}
+          </fieldset>
+          <div class="form-group">
+              <button class="btn btn-outline-info" type="submit">update</button>
+          </div>
+      </form> {% endcomment %}
+    </div>
+{% endblock content %}

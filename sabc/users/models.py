@@ -25,7 +25,7 @@ class Profile(models.Model):
         verbose_name_plural = 'Profiles'
 
     def __str__(self):
-        return '%s : %s' % (self.user.get_full_name(), self.type)
+        return self.user.get_full_name()
 
     def save(self, *args, **kwargs):
         super(Profile, self).save(*args, **kwargs)
