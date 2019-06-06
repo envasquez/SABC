@@ -82,7 +82,7 @@ class Result(models.Model):
     num_fish_alive = models.IntegerField(default=0)
     big_bass_weight = models.FloatField(default=0.0)
     num_fish_dead = models.IntegerField(default=0)
-    pentalty_weight = models.FloatField(default=0.0)
+    #pentalty_weight = models.FloatField(default=0.0)
     total_weight = models.FloatField(default=0.0)
 
     def __str__(self):
@@ -98,7 +98,7 @@ class Result(models.Model):
             self.num_fish_dead = 0.0
             self.num_fish_alive = 0.0
         else:
-            self.pentalty_weight = self.num_fish_dead * self.pentalty_weight
+            self.pentalty_weight = self.num_fish_dead * self.rules.dead_fish_penalty
             self.total_weight = self.total_weight - self.pentalty_weight
         super(Result, self).save(*args, **kwargs)
 
@@ -154,5 +154,5 @@ class Team(models.Model):
         ) if self.angler_2 is not None else 'Team: %s - SOLO' % (
                 self.angler_1.user.get_full_name())
 
-    def get_absolute_url(self):
-        return reverse('team-details', kwargs={'pk': self.id})
+    # def get_absolute_url(self):
+    #     return reverse('team-details', kwargs={'pk': self.id})

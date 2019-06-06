@@ -50,7 +50,7 @@ urlpatterns = [
     url(r'^tournament/(?P<pk>\d+)/delete/$', tournament_views.TournamentDeleteView.as_view(), name='tournament-delete'),
     url(r'^tournament/(?P<pk>\d+)/add_team/$', tournament_views.TeamCreateView.as_view(), name='team-create'),
     url(r'^tournament/(?P<pk>\d+)/list_teams/$', tournament_views.TeamListView.as_view(), name='team-list'),
-    url(r'^tournament/(?P<pk>\d+)/team_details/$', tournament_views.TeamDetailView.as_view(), name='team-details'),
+    url(r'^team/(?P<pk>\d+)/$', tournament_views.TeamDetailView.as_view(), name='team-details'),
     url(r'^tournament/(?P<pk>\d+)/add_result/$', tournament_views.ResultCreateView.as_view(), name='result-create'),
 ]
 if settings.DEBUG:
