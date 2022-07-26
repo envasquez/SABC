@@ -9,4 +9,4 @@ class UsersConfig(AppConfig):
     name = 'users'
 
     def ready(self):
-        import user.signals
+        from . import signals

@@ -1,0 +1,15 @@
+version: '3.7'
+
+services:
+  sabc:
+    build:
+      context: .
+    container_name: sabc
+    command: python sabc/manage.py runserver 0.0.0.0:8000
+    restart: unless-stopped
+    volumes:
+      - sabc-app:/app
+    ports:
+      - 8000:8000
+volumes:
+  sabc-app:

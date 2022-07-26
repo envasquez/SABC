@@ -21,7 +21,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'p0rqn_!ymi_(+cg^ff)h!!%_3@&*tj*(qbqen&3x3fjvl-_o#w'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -66,6 +66,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        # 'USER': os.environ.get('POSTGRES_USER'),
+        # 'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
+        # 'HOST': os.environ.get('POSTGRES_HOST'),
+        # 'PORT': 5432,
     }
 }
 # Password validation
@@ -110,3 +114,4 @@ EMAIL_USE_TLS = True
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST_USER = os.environ.get('EMAIL_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASS')
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
