@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Angler Models"""
-# pylint: disable=import-error
 from __future__ import unicode_literals
 
 from django.db import models

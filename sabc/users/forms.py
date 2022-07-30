@@ -4,6 +4,8 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 
+from phonenumber_field.modelfields import PhoneNumberField
+
 from .models import Angler
 
 
@@ -29,6 +31,8 @@ class UserUpdateForm(forms.ModelForm):
 
 
 class AnglerUpdateForm(forms.ModelForm):
+    phone_number = PhoneNumberField(blank=True)
+
     class Meta:
         model = Angler
         fields = ['phone_number', 'image', 'private_info']

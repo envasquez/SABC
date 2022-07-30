@@ -21,9 +21,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'p0rqn_!ymi_(+cg^ff)h!!%_3@&*tj*(qbqen&3x3fjvl-_o#w'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*', '127.0.0.1']
 # Application definition
 INSTALLED_APPS = [
+    'phonenumber_field',
     'django.contrib.admin',
     'crispy_forms',
     'django.contrib.auth',
@@ -33,7 +34,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'users',
     'tournaments',
-    'phonenumber_field',
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
