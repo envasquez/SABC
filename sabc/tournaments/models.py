@@ -7,7 +7,7 @@ from django.db import models
 from django.urls import reverse
 
 from users import CLUBS
-from users.models import Profile
+from users.models import Angler
 
 from . import PAPER_LENGTH_TO_WT, LAKES, TOURNAMENT_TYPES, STATES, \
     DEFAULT_RULES, DEFAULT_PAYOUT, DEFAULT_WEIGH_IN, DEFAULT_FEE_BREAKDOWN, \
@@ -52,8 +52,8 @@ class Tournament(models.Model):
     start = models.TimeField(blank=True, null=True)
     finish = models.TimeField(blank=True, null=True)
     points = models.BooleanField(default=True)
-    created_by = models.ForeignKey(Profile, on_delete=models.DO_NOTHING)
-    updated_by = models.ForeignKey(Profile, null=True, related_name='+', on_delete=models.DO_NOTHING)
+    created_by = models.ForeignKey(Angler, on_delete=models.DO_NOTHING)
+    updated_by = models.ForeignKey(Angler, null=True, related_name='+', on_delete=models.DO_NOTHING)
     description = models.TextField(default='Tournament #%s of the %s season for South Austin Bass Club!' % (time.strftime('%m'), time.strftime('%Y')))
     organization = models.CharField(max_length=128, default='SABC', choices=CLUBS)
     complete = models.BooleanField(default=False)
@@ -75,7 +75,7 @@ class Tournament(models.Model):
 class Result(models.Model):
     """This model represents an individuals performance in a tournament"""
     tournament = models.ForeignKey(Tournament, null=True, on_delete=models.DO_NOTHING)
-    angler = models.ForeignKey(Profile, null=True, on_delete=models.DO_NOTHING)
+    angler = models.ForeignKey(Angler, null=True, on_delete=models.DO_NOTHING)
     boater = models.BooleanField(default=False)
     day_num = models.IntegerField(default=1)
     bought_in = models.BooleanField(default=False)
@@ -143,8 +143,8 @@ class PaperResult(Result):
 
 class Team(models.Model):
     """This model represents a team in a tournament"""
-    angler_1 = models.ForeignKey(Profile, on_delete=models.DO_NOTHING)
-    angler_2 = models.ForeignKey(Profile, null=True, blank=True, related_name='+', on_delete=models.DO_NOTHING)
+    angler_1 = models.ForeignKey(Angler, on_delete=models.DO_NOTHING)
+    angler_2 = models.ForeignKey(Angler, null=True, blank=True, related_name='+', on_delete=models.DO_NOTHING)
     tournament = models.ForeignKey(Tournament, on_delete=models.DO_NOTHING)
 
     def __str__(self):

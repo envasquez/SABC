@@ -6,6 +6,6 @@ from django.apps import apps
 
 from django.contrib import admin
 
-from users.models import Profile
+from users.models import Angler
 
-admin.site.register(Profile)
+admin.site.register(Angler)
