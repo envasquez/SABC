@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'users',
     'tournaments',
+    'phonenumber_field',
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
