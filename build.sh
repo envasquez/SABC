@@ -6,5 +6,5 @@ find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
 find . -name "db.sqlite3" -type f -delete
 
 docker-compose down
-docker volume rm sabc_sabc-app
+docker volume rm sabc_sabc-app || true
 docker-compose up -d --build --force-recreate sabc
