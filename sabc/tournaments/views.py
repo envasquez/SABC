@@ -37,7 +37,7 @@ class TournamentCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
         return super(CreateView, self).form_valid(form)
 
     def test_func(self):
-        return self.request.user.profile.type == 'officer'
+        return self.request.user.angler.type == 'officer'
 
 
 class TournamentUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -50,7 +50,7 @@ class TournamentUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTe
         return super(UpdateView, self).form_valid(form)
 
     def test_func(self):
-        return self.request.user.profile.type == 'officer'
+        return self.request.user.angler.type == 'officer'
 
 
 class TournamentDeleteView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView):
@@ -85,7 +85,7 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
         messages.success(self.request, self.success_message % obj)
 
     def test_func(self):
-        return self.request.user.profile.type == 'officer'
+        return self.request.user.angler.type == 'officer'
 
 
 #
@@ -101,7 +101,7 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
         return initial
 
     def test_func(self):
-        if self.request.user.profile.type != 'officer':
+        if self.request.user.angler.type != 'officer':
             return False
 
     def get_success_message(self, *args, **kwargs):
@@ -132,7 +132,7 @@ class TeamListView(SuccessMessageMixin, LoginRequiredMixin, ListView):
         return qs.filter(tournament=self.kwargs.get('pk'))
 
     def test_func(self):
-        return self.request.user.profile.type == 'officer'
+        return self.request.user.angler.type == 'officer'
 
 
 class TeamDetailView(SuccessMessageMixin, LoginRequiredMixin, DetailView):
@@ -150,7 +150,7 @@ class TeamDetailView(SuccessMessageMixin, LoginRequiredMixin, DetailView):
         return qs.filter(tournament=self.kwargs.get('pk'))
 
     def test_func(self):
-        return self.request.user.profile.type == 'officer'
+        return self.request.user.angler.type == 'officer'
 
 
 # class TeamUpdateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
@@ -164,7 +164,7 @@ class TeamDetailView(SuccessMessageMixin, LoginRequiredMixin, DetailView):
 #         return initial
 
 #     def test_func(self):
-#         return self.request.user.profile.type == 'officer'
+#         return self.request.user.angler.type == 'officer'
 
 #     def save(self, *args, **kwargs):
 #         obj = self.get_object()
