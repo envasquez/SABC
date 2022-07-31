@@ -2,7 +2,7 @@
 {% block content %}
     <article class="media content-section">
         <div class="media-body">
-            {% if user.profile.type == "officer" %}
+            {% if user.angler.type == "officer" %}
                 <div align="right">
                     <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'tournament-update' object.id %}">Edit Tournament</a>
                     {% if object.complete is False %}
