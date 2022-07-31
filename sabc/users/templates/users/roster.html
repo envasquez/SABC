@@ -1,0 +1,28 @@
+{% extends "users/base.html" %}
+{% block content %}
+    <table>
+      <tr>
+          <th>Field 1</th>
+          ...
+          <th>Field N</th>
+      </tr>
+      {% for officer in officers %}
+      <tr> 
+          <td>{{ officer.first_name }}</td>
+          <td>{{ officer.last_name }}</td>
+      </tr>
+      {% endfor %}
+      {% for member in members %}
+      <tr> 
+          <td>{{ member.first_name }}</td>
+          <td>{{ member.last_name }}</td>
+      </tr>
+      {% endfor %}
+      {% for guest in guests %}
+      <tr> 
+          <td>{{ guest.first_name }}</td>
+          <td>{{ guest.last_name }}</td>
+      </tr>
+      {% endfor %}
+  </table>
+{% endblock content %}
