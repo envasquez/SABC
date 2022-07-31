@@ -7,6 +7,9 @@
         <div class="media-body">
           <h2 class="account-heading">{{ user.first_name }} {{ user.last_name }}</h2>
           <p class="text-secondary">{{ user.angler.type }}</p>
+          {% if user.is_authenticated and user.angler.type == 'officer' %}
+              <p class="text-secondary">{{ user.angler.officer_type }}</p>
+          {% endif %}
           <p class="text-secondary">username: {{ user.username }}</p>
           <p class="text-secondary">phone number: {{ user.angler.phone_number }}</p>
           <p class="text-secondary">email address: {{ user.email }}</p>

@@ -3,7 +3,7 @@
 import os
 import sys
 
-DEFAULT_SETTINGS_MODULE = 'sabc.settings'
+DEFAULT_SETTINGS_MODULE = "sabc.settings"
 
 
 if __name__ == "__main__":
