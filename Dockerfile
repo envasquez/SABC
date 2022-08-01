@@ -13,4 +13,3 @@ ADD requirements.txt /app/
 RUN pip install -r requirements.txt
 RUN chown -R sabc:sabc /app
 USER sabc
-#CMD ["./entrypoint.sh"]

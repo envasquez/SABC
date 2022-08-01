@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-# pylint: disable=all
 import os
 import sys
+
 
 DEFAULT_SETTINGS_MODULE = "sabc.settings"
 
@@ -23,4 +23,5 @@ if __name__ == "__main__":
                 "forget to activate a virtual environment?"
             )
         raise
+
     execute_from_command_line(sys.argv)
