@@ -27,14 +27,10 @@ from tournaments import views as tournament_views
 
 urlpatterns = [
     re_path(
-        r"^login",
-        auth_views.LoginView.as_view(template_name="users/login.html"),
-        name="login",
+        r"^login", auth_views.LoginView.as_view(template_name="users/login.html"), name="login"
     ),
     re_path(
-        r"^logout",
-        auth_views.LogoutView.as_view(template_name="users/logout.html"),
-        name="logout",
+        r"^logout", auth_views.LogoutView.as_view(template_name="users/logout.html"), name="logout"
     ),
     re_path(
         r"^password-reset/$",
@@ -70,14 +66,9 @@ urlpatterns = [
     re_path(r"^calendar", user_views.calendar, name="calendar"),
     re_path(r"^members", user_views.list_members, name="list-members"),
     re_path(r"^officers", user_views.list_officers, name="list-officers"),
-    #
-    # Creates some users so we can visualize the site with data (Goes away in production)
-    #
     re_path(r"^gen_member", user_views.gen_member, name="gen-member"),
     re_path(r"^gen_officers", user_views.gen_officers, name="gen-officers"),
-    #
-    # End auto-gen data URLs
-    #
+    re_path(r"^add_guest", user_views.add_guest, name="add-guest"),
     re_path(
         r"^tournament/new/$",
         tournament_views.TournamentCreateView.as_view(),
@@ -108,11 +99,7 @@ urlpatterns = [
         tournament_views.TeamListView.as_view(),
         name="team-list",
     ),
-    re_path(
-        r"^team/(?P<pk>\d+)/$",
-        tournament_views.TeamDetailView.as_view(),
-        name="team-details",
-    ),
+    re_path(r"^team/(?P<pk>\d+)/$", tournament_views.TeamDetailView.as_view(), name="team-details"),
     re_path(
         r"^tournament/(?P<pk>\d+)/add_result/$",
         tournament_views.ResultCreateView.as_view(),

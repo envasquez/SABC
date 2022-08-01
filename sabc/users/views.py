@@ -44,6 +44,12 @@ class MemberListView(SingleTableView):
     template_name = "users/roster_list.html"
 
 
+class GuestListView(SingleTableView):
+    model = Angler
+    query_set = Angler.objects.filter(type="guest")
+    template_name = "users/roster_list.html"
+
+
 def about(request):
     """About page"""
     return render(request, "users/about.html", {"title": "SABC - About"})
@@ -136,6 +142,20 @@ def list_members(request):
     )
 
 
+@login_required
+def list_guests(request):
+    """Members roster page"""
+    table = GuestTable(Angler.objects.filter(type="guest"))
+    return render(
+        request,
+        "users/roster_list.html",
+        {
+            "title": "SABC - Guests",
+            "table": table,
+        },
+    )
+
+
 def create_angler(member_type=CLUB_GUEST, officer_type=None):
     """Creates an angler"""
     first_name = get_first_name()
@@ -148,10 +168,10 @@ def create_angler(member_type=CLUB_GUEST, officer_type=None):
         email=email,
     )
     a = Angler.objects.get(user=u)
-    a.phone_number = "+12345678901"
-    a.type = member_type
     if officer_type:
         a.officer_type = officer_type
+    a.phone_number = "+15121234567"
+    a.type = member_type
     a.private_info = (True, False)[randint(0, 1)]
     a.save()
 
@@ -182,3 +202,10 @@ def gen_member(request):
     """Creates member angler"""
     create_angler(member_type=CLUB_MEMBER)
     return list_members(request)
+
+
+@login_required
+def add_guest(request):
+    """Creates guest angler"""
+    create_angler(member_type=CLUB_MEMBER)
+    return list_guests(request)
