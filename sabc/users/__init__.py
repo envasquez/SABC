@@ -1,3 +1,4 @@
+"""User defines for SABC """
 CLUBS = (("SABC", "South Austin Bass Club"),)
 
 CLUB_GUEST = "guest"

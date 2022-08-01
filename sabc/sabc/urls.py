@@ -66,9 +66,10 @@ urlpatterns = [
     re_path(r"^calendar", user_views.calendar, name="calendar"),
     re_path(r"^members", user_views.list_members, name="list-members"),
     re_path(r"^officers", user_views.list_officers, name="list-officers"),
+    re_path(r"^guests", user_views.list_guests, name="list-guests"),
     re_path(r"^gen_member", user_views.gen_member, name="gen-member"),
     re_path(r"^gen_officers", user_views.gen_officers, name="gen-officers"),
-    re_path(r"^add_guest", user_views.add_guest, name="add-guest"),
+    re_path(r"^gen_guest", user_views.gen_guest, name="gen-guest"),
     re_path(
         r"^tournament/new/$",
         tournament_views.TournamentCreateView.as_view(),

@@ -54,22 +54,22 @@
           {% endif %}
           {% block content %}{% endblock %}
         </div>
-        {% if user.is_authenticated and user.angler.type != 'guest' %}
+        {% if user.is_authenticated and user.angler.type != 'guest' or user.is_superuser %}
           <div class="col-md-4">
             <div class="content-section">
               <h4>SABC Members</h4>
               <p>
                 <ul class="list-group">
-                  <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="{% url 'list-officers' %}">Officers</a></li>
-                  <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="{% url 'list-members' %}">Members</a></li>
-                  {% if user.is_authenticated and user.angler.type == 'officer' %}
-                    <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="{% url 'tournament-create' %}">Create Tournament</a></li>
-                    <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="{% url 'add-guest' %}">Add Guest</a></li>
+                  <li class="list-group-item list-group-item-primary"><a class="nav-item nav-link" href="{% url 'list-officers' %}">Officers</a></li>
+                  <li class="list-group-item list-group-item-primary"><a class="nav-item nav-link" href="{% url 'list-members' %}">Members</a></li>
+                  <li class="list-group-item list-group-item-primary"><a class="nav-item nav-link" href="{% url 'list-guests' %}">Past Guests</a></li>
+                  {% if user.is_authenticated and user.angler.type == 'officer' or user.is_superuser %}
+                    <li class="list-group-item list-group-item-warning"><a class="nav-item nav-link" href="{% url 'tournament-create' %}">Create Tournament</a></li>
                   {% endif %}
                   {% if user.is_superuser %}
-                      <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="{% url 'gen-officers' %}">Generate Officers</a></li>
-                      <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="{% url 'gen-member' %}">Generate Member</a></li>
-                      <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="{% url 'add-guest' %}">Add Guest</a></li>
+                      <li class="list-group-item list-group-item-danger"><a class="nav-item nav-link" href="{% url 'gen-officers' %}">Generate Officers</a></li>
+                      <li class="list-group-item list-group-item-danger"><a class="nav-item nav-link" href="{% url 'gen-member' %}">Generate Member</a></li>
+                      <li class="list-group-item list-group-item-danger"><a class="nav-item nav-link" href="{% url 'gen-guest' %}">Generate Guest</a></li>
                   {% endif%}
                 </ul>
               </p>

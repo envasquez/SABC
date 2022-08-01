@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+# Using pylint at a file level, since it does not like django models (objects.foo())
+# pylint: disable=no-member
+"""User/Angler views"""
 from __future__ import unicode_literals
 
 from random import randint
@@ -8,9 +11,6 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 
 from django.shortcuts import render, redirect
-from django.views.generic.base import TemplateView
-
-from django_tables2 import tables, SingleTableView
 
 from names import get_first_name, get_last_name
 
@@ -30,24 +30,6 @@ from . import (
 from .forms import UserRegisterForm, UserUpdateForm, AnglerUpdateForm
 from .models import Angler
 from .tables import OfficerTable, MemberTable, GuestTable
-
-
-class OfficerListView(SingleTableView):
-    model = Angler
-    query_set = Angler.objects.filter(type="officer")
-    template_name = "users/roster_list.html"
-
-
-class MemberListView(SingleTableView):
-    model = Angler
-    query_set = Angler.objects.filter(type="member")
-    template_name = "users/roster_list.html"
-
-
-class GuestListView(SingleTableView):
-    model = Angler
-    query_set = Angler.objects.filter(type="guest")
-    template_name = "users/roster_list.html"
 
 
 def about(request):
@@ -76,21 +58,24 @@ def register(request):
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(
-                request,
-                "Account created for %s, you can now login" % form.cleaned_data.get("username"),
-            )
+            clean_username = form.cleaned_data.get("username")
+            messages.success(request, f"Account created for {clean_username}, you can now login")
+
             return redirect("login")
     else:
         form = UserRegisterForm()
 
-    return render(request, "users/register.html", {"title": "SABC - Registration", "form": form})
+    return render(
+        request,
+        "users/register.html",
+        {"title": "SABC - Registration", "form": form, "form_name": "Member Registration"},
+    )
 
 
 @login_required
 def profile(request):
     """Angler/Account settings"""
-    profile = Angler.objects.get_or_create(user=request.user)
+    # profile = Angler.objects.get_or_create(user=request.user)
     if request.method == "POST":
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = AnglerUpdateForm(request.POST, request.FILES, instance=request.user.angler)
@@ -136,6 +121,7 @@ def list_members(request):
         "users/roster_list.html",
         {
             "title": "SABC - Members",
+            "roster_name": "Active Members",
             "table": table,
         },
     )
@@ -144,35 +130,41 @@ def list_members(request):
 @login_required
 def list_guests(request):
     """Members roster page"""
-    table = GuestTable(Angler.objects.filter(type="guest"))
+    table = GuestTable(
+        Angler.objects.filter(type="guest").exclude(user__first_name="").exclude(user__last_name="")
+    )
     return render(
         request,
         "users/roster_list.html",
         {
-            "title": "SABC - Guests",
+            "title": "SABC - Past Guests",
+            "roster_name": "Past Guests",
             "table": table,
         },
     )
 
 
+#
+# Site-admin Functions
+#
 def create_angler(member_type=CLUB_GUEST, officer_type=None):
     """Creates an angler"""
     first_name = get_first_name()
     last_name = get_last_name()
     email = f"{first_name}.{last_name}@gmail.com"
-    u = User.objects.create(
+    user = User.objects.create(
         username=first_name[0].lower() + last_name.lower(),
         first_name=first_name,
         last_name=last_name,
         email=email,
     )
-    a = Angler.objects.get(user=u)
+    angler = Angler.objects.get(user=user)
     if officer_type:
-        a.officer_type = officer_type
-    a.phone_number = "+15121234567"
-    a.type = member_type
-    a.private_info = (True, False)[randint(0, 1)]
-    a.save()
+        angler.officer_type = officer_type
+    angler.phone_number = "+15121234567"
+    angler.type = member_type
+    angler.private_info = (True, False)[randint(0, 1)]
+    angler.save()
 
 
 @login_required
@@ -190,7 +182,7 @@ def gen_officers(request):
     for officer_type in officers:
         try:
             Angler.objects.get(officer_type=officer_type)
-        except:
+        except Angler.DoesNotExist:
             create_angler(member_type=CLUB_OFFICER, officer_type=officer_type)
 
     return list_officers(request)
@@ -204,7 +196,7 @@ def gen_member(request):
 
 
 @login_required
-def add_guest(request):
+def gen_guest(request):
     """Creates guest angler"""
     create_angler(member_type=CLUB_GUEST)
     return list_guests(request)
