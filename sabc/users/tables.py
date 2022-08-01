@@ -33,4 +33,4 @@ class GuestTable(tables.Table):
     class Meta:
         model = Angler
         template_name = "django_tables2/bootstrap.html"
-        fields = ("first_name", "last_name", "email", "date_joined")
+        fields = ("first_name", "last_name", "email")
