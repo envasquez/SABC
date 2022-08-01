@@ -26,7 +26,7 @@ docker-rebuild: clean-all
 	docker-compose up -d --build --force-recreate sabc
 
 lint:
-	pylint --verbose --exit-zero --rcfile=.pylintrc --reports=no --output-format=parseable --ignore=tests $(PROJECT)/sabc $(PROJECT)/tournaments $(PROJECT)/users
+	pylint --verbose --rcfile=.pylintrc $(PROJECT)/sabc $(PROJECT)/tournaments $(PROJECT)/users
 
 
 help:
