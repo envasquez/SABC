@@ -206,5 +206,5 @@ def gen_member(request):
 @login_required
 def add_guest(request):
     """Creates guest angler"""
-    create_angler(member_type=CLUB_MEMBER)
+    create_angler(member_type=CLUB_GUEST)
     return list_guests(request)
