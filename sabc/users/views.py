@@ -150,7 +150,8 @@ def create_angler(member_type=CLUB_GUEST, officer_type=None):
     a = Angler.objects.get(user=u)
     a.phone_number = "+12345678901"
     a.type = member_type
-    a.officer_type = officer_type
+    if officer_type:
+        a.officer_type = officer_type
     a.private_info = (True, False)[randint(0, 1)]
     a.save()
 
