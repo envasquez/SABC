@@ -75,7 +75,6 @@ def register(request):
 @login_required
 def profile(request):
     """Angler/Account settings"""
-    # profile = Angler.objects.get_or_create(user=request.user)
     if request.method == "POST":
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = AnglerUpdateForm(request.POST, request.FILES, instance=request.user.angler)
@@ -114,7 +113,7 @@ def list_officers(request):
 @login_required
 def list_members(request):
     """Members roster page"""
-    table = MemberTable(Angler.objects.filter(type="member"))
+    table = MemberTable(Angler.objects.filter(type__in=["member", "officer"]))
     table.order_by = "date_joined"
     return render(
         request,

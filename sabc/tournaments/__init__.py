@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Tournament definitions and enums"""
 from __future__ import unicode_literals
 
 TOURNAMENT_TYPES = [("team", "TEAM"), ("individual", "INDIVIDUAL")]
@@ -178,3 +179,5 @@ DEFAULT_BIG_BASS_BREAKDOWN = """Big Bass Pot is paid to the heaviest bass caught
 
 - ONLY MEMBERS in good standing are eligible for Big Bass Award.
 """
+DECIMAL_PLACES = 2
+MAX_PRICE_DIGITS = (6, DECIMAL_PLACES)  # 1234.56

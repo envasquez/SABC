@@ -25,17 +25,14 @@ class Angler(models.Model):
     organization = models.CharField(max_length=100, blank=True, choices=CLUBS, default="SABC")
     private_info = models.BooleanField(default=True)
 
-    # pylint: disable=too-few-public-methods
     class Meta:
         """Angler metadata"""
 
         verbose_name_plural = "Anglers"
 
-    # pylint: disable=no-member
     def __str__(self):
         return self.user.get_full_name()
 
-    # pylint: disable=no-member
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         # Re-size large images ... because

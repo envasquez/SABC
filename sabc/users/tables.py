@@ -1,6 +1,5 @@
 """Tables for the Angler/User model"""
 # Using file level pylint disable because pylint doesn't like ClassBasedView-like definitions
-# pylint: disable=too-few-public-methods
 
 import django_tables2 as tables
 

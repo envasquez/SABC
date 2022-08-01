@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""AppConfig file"""
 # pylint: disable=all
 from __future__ import unicode_literals
 
