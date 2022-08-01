@@ -43,9 +43,7 @@ urlpatterns = [
     ),
     re_path(
         r"^password-reset/done",
-        auth_views.PasswordChangeDoneView.as_view(
-            template_name="users/password_reset_done.html"
-        ),
+        auth_views.PasswordChangeDoneView.as_view(template_name="users/password_reset_done.html"),
         name="password_reset_done",
     ),
     re_path(
@@ -70,17 +68,16 @@ urlpatterns = [
     re_path(r"^gallery", user_views.gallery, name="gallery"),
     re_path(r"^register", user_views.register, name="register"),
     re_path(r"^calendar", user_views.calendar, name="calendar"),
-    re_path(r"^roster", user_views.roster, name="roster"),
+    re_path(r"^members", user_views.list_members, name="list-members"),
+    re_path(r"^officers", user_views.list_officers, name="list-officers"),
     #
     # Creates some users so we can visualize the site with data (Goes away in production)
     #
-    re_path(
-        r"^generate_users",
-        user_views.generate_all_officers,
-        name="generate-all-officers",
-    ),
-    re_path(r"^generate_users", user_views.generate_member, name="generate-member"),
-    re_path(r"^generate_users", user_views.generate_guest, name="generate-guest"),
+    re_path(r"^gen_member", user_views.gen_member, name="gen-member"),
+    re_path(r"^gen_officers", user_views.gen_officers, name="gen-officers"),
+    #
+    # End auto-gen data URLs
+    #
     re_path(
         r"^tournament/new/$",
         tournament_views.TournamentCreateView.as_view(),

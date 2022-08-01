@@ -7,4 +7,6 @@ find . -name "db.sqlite3" -type f -delete
 
 docker-compose down
 docker volume rm sabc_sabc-app || true
+docker image rm sabc_sabc || true
+docker image prune -f || true
 docker-compose up -d --build --force-recreate sabc

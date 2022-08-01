@@ -3,30 +3,45 @@ from __future__ import unicode_literals
 
 from random import randint
 
-from names import get_first_name, get_last_name
-
 from django.contrib import messages
-from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+
+from django.shortcuts import render, redirect
+from django.views.generic.base import TemplateView
+
+from django_tables2 import tables, SingleTableView
+
+from names import get_first_name, get_last_name
 
 from . import (
     CLUB_GUEST,
     CLUB_MEMBER,
     CLUB_OFFICER,
-    SITE_ADMIN,
     CLUB_PRESIDENT,
     CLUB_VICE_PRESIDENT,
     CLUB_SECRETARY,
     CLUB_TREASURER,
-    CLUB_TOURNAMENT_DIRECTOR,
     CLUB_SOCIAL_MEDIA,
+    CLUB_TOURNAMENT_DIRECTOR,
     CLUB_ASSISTANT_TOURNAMENT_DIRECTOR,
 )
 
-from .models import Angler
-
 from .forms import UserRegisterForm, UserUpdateForm, AnglerUpdateForm
+from .models import Angler
+from .tables import OfficerTable, MemberTable
+
+
+class OfficerListView(SingleTableView):
+    model = Angler
+    query_set = Angler.objects.filter(type="officer")
+    template_name = "users/roster_list.html"
+
+
+class MemberListView(SingleTableView):
+    model = Angler
+    query_set = Angler.objects.filter(type="member")
+    template_name = "users/roster_list.html"
 
 
 def about(request):
@@ -57,16 +72,13 @@ def register(request):
             form.save()
             messages.success(
                 request,
-                "Account created for %s, you can now login"
-                % form.cleaned_data.get("username"),
+                "Account created for %s, you can now login" % form.cleaned_data.get("username"),
             )
             return redirect("login")
     else:
         form = UserRegisterForm()
 
-    return render(
-        request, "users/register.html", {"title": "SABC - Registration", "form": form}
-    )
+    return render(request, "users/register.html", {"title": "SABC - Registration", "form": form})
 
 
 @login_required
@@ -75,9 +87,7 @@ def profile(request):
     profile = Angler.objects.get_or_create(user=request.user)
     if request.method == "POST":
         u_form = UserUpdateForm(request.POST, instance=request.user)
-        p_form = AnglerUpdateForm(
-            request.POST, request.FILES, instance=request.user.angler
-        )
+        p_form = AnglerUpdateForm(request.POST, request.FILES, instance=request.user.angler)
         if u_form.is_valid() and p_form.is_valid():
             u_form.save()
             p_form.save()
@@ -96,25 +106,37 @@ def profile(request):
 
 
 @login_required
-def roster(request):
-    """Roster page"""
-    guests = Angler.objects.filter(type="guest")
-    members = Angler.objects.filter(type="member")
-    officers = Angler.objects.filter(type="officer")
-
+def list_officers(request):
+    """Officers roster page"""
+    table = OfficerTable(Angler.objects.filter(type="officer"))
+    table.order_by = "officer_order"
     return render(
         request,
-        "users/roster.html",
+        "users/roster_list.html",
         {
-            "title": "SABC - Roster",
-            "guests": guests,
-            "members": members,
-            "officers": officers,
+            "title": "SABC - Officers",
+            "roster_name": "Current Officers",
+            "table": table,
         },
     )
 
 
-def create_angler(member_type=CLUB_GUEST, officer_type=SITE_ADMIN):
+@login_required
+def list_members(request):
+    """Members roster page"""
+    table = MemberTable(Angler.objects.filter(type="member"))
+    table.order_by = "date_joined"
+    return render(
+        request,
+        "users/roster_list.html",
+        {
+            "title": "SABC - Members",
+            "table": table,
+        },
+    )
+
+
+def create_angler(member_type=CLUB_GUEST, officer_type=None):
     """Creates an angler"""
     first_name = get_first_name()
     last_name = get_last_name()
@@ -134,7 +156,7 @@ def create_angler(member_type=CLUB_GUEST, officer_type=SITE_ADMIN):
 
 
 @login_required
-def generate_all_officers(request):
+def gen_officers(request):
     """Creates One of every officer type"""
     officers = [
         CLUB_PRESIDENT,
@@ -146,20 +168,16 @@ def generate_all_officers(request):
         CLUB_ASSISTANT_TOURNAMENT_DIRECTOR,
     ]
     for officer_type in officers:
-        create_angler(member_type=CLUB_OFFICER, officer_type=officer_type)
+        try:
+            Angler.objects.get(officer_type=officer_type)
+        except:
+            create_angler(member_type=CLUB_OFFICER, officer_type=officer_type)
 
-    return roster(request)
+    return list_officers(request)
 
 
 @login_required
-def generate_member(request):
+def gen_member(request):
     """Creates member angler"""
     create_angler(member_type=CLUB_MEMBER)
-    return roster(request)
-
-
-@login_required
-def generate_guest(request):
-    """Creates a guest angler"""
-    create_angler(member_type=CLUB_GUEST)
-    return roster(request)
+    return list_members(request)

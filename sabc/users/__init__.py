@@ -1,4 +1,5 @@
 CLUBS = (("SABC", "South Austin Bass Club"),)
+
 CLUB_GUEST = "guest"
 CLUB_MEMBER = "member"
 CLUB_OFFICER = "officer"
@@ -8,7 +9,6 @@ MEMBER_CHOICES = (
     (CLUB_OFFICER, "officer"),
 )
 
-SITE_ADMIN = "site-admin"
 CLUB_PRESIDENT = "president"
 CLUB_VICE_PRESIDENT = "vice-president"
 CLUB_SECRETARY = "secretary"
@@ -18,7 +18,6 @@ CLUB_TOURNAMENT_DIRECTOR = "tournament-director"
 CLUB_ASSISTANT_TOURNAMENT_DIRECTOR = "assistant-tournament-director"
 
 CLUB_OFFICERS_TYPES = (
-    (SITE_ADMIN, "site-admin"),
     (CLUB_PRESIDENT, "president"),
     (CLUB_VICE_PRESIDENT, "vice-president"),
     (CLUB_SECRETARY, "secretary"),
