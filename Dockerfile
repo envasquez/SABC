@@ -8,7 +8,6 @@ WORKDIR /app
 
 RUN addgroup -S sabc && adduser -S sabc -G sabc
 COPY sabc sabc
-ADD entrypoint.sh /app/
 ADD requirements.txt /app/
 RUN pip install -r requirements.txt
 RUN chown -R sabc:sabc /app
