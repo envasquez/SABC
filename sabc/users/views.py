@@ -29,7 +29,7 @@ from . import (
 
 from .forms import UserRegisterForm, UserUpdateForm, AnglerUpdateForm
 from .models import Angler
-from .tables import OfficerTable, MemberTable
+from .tables import OfficerTable, MemberTable, GuestTable
 
 
 class OfficerListView(SingleTableView):
@@ -115,7 +115,6 @@ def profile(request):
 def list_officers(request):
     """Officers roster page"""
     table = OfficerTable(Angler.objects.filter(type="officer"))
-    table.order_by = "officer_order"
     return render(
         request,
         "users/roster_list.html",
