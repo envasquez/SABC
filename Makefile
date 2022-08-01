@@ -28,7 +28,6 @@ docker-rebuild: clean-all
 lint:
 	pylint --verbose --rcfile=.pylintrc $(PROJECT)/sabc $(PROJECT)/tournaments $(PROJECT)/users
 
-
 help:
 	@echo -e "\t make clean"
 	@echo -e "\t\t clean pycache, pyc files"
