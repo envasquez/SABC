@@ -25,14 +25,8 @@ clean-all: clean clean-db clean-docker
 docker-rebuild: clean-all
 	docker-compose up -d --build --force-recreate sabc
 
-
-lint-users:
-	pylint --exit-zero --rcfile=.pylintrc --reports=no --output-format=parseable --ignore=tests $(PROJECT)/users
-
-lint-tournaments:
-	pylint --exit-zero --rcfile=.pylintrc --reports=no --output-format=parseable --ignore=tests $(PROJECT)/tournaments
-
-lint: lint-tournaments lint-users
+lint:
+	pylint --verbose --exit-zero --rcfile=.pylintrc --reports=no --output-format=parseable --ignore=tests $(PROJECT)/sabc $(PROJECT)/tournaments $(PROJECT)/users
 
 
 help:
