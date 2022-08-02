@@ -11,6 +11,7 @@ from users import CLUBS
 from users.models import Angler
 
 from . import (
+    DEFAULT_TOURNAMENT_FEE,
     PAPER_LENGTH_TO_WT,
     LAKES,
     STATES,
@@ -63,7 +64,7 @@ class Tournament(models.Model):
     start = models.TimeField(blank=True, null=True)
     finish = models.TimeField(blank=True, null=True)
     points = models.BooleanField(default=True)
-    created_by = models.ForeignKey(Angler, on_delete=models.DO_NOTHING)
+    created_by = models.ForeignKey(Angler, on_delete=models.DO_NOTHING, null=True, blank=True)
     updated_by = models.ForeignKey(Angler, null=True, related_name="+", on_delete=models.DO_NOTHING)
     description = models.TextField(
         default=f"Tournament #{strftime('%m')} of the {strftime('%Y')} season"
@@ -72,7 +73,11 @@ class Tournament(models.Model):
     complete = models.BooleanField(default=False)
     ramp_url = models.CharField(default="", max_length=1024, blank=True)
     facebook_url = models.CharField(max_length=1024, blank=True)
-    fee = models.DecimalField(max_digits=MAX_PRICE_DIGITS[0], decimal_places=MAX_PRICE_DIGITS[1])
+    fee = models.DecimalField(
+        default=DEFAULT_TOURNAMENT_FEE,
+        max_digits=MAX_PRICE_DIGITS[0],
+        decimal_places=MAX_PRICE_DIGITS[1],
+    )
 
     def __str__(self):
         """Return the name of the tournament"""

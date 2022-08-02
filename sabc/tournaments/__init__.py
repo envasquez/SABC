@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 
 TOURNAMENT_TYPES = [("team", "TEAM"), ("individual", "INDIVIDUAL")]
+DEFAULT_TOURNAMENT_FEE = 20.00
 LAKES = [
     ("tbd", "TBD"),
     ("lbj", "LBJ"),

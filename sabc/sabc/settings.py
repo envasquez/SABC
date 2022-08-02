@@ -24,6 +24,7 @@ DEBUG = True
 ALLOWED_HOSTS = ["*", "127.0.0.1"]
 # Application definition
 INSTALLED_APPS = [
+    "django_nose",
     "django_tables2",
     "phonenumber_field",
     "django.contrib.admin",
@@ -68,10 +69,6 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-        # 'USER': os.environ.get('POSTGRES_USER'),
-        # 'PASSWORD': os.environ.get('POSTGRES_PASSWORD'),
-        # 'HOST': os.environ.get('POSTGRES_HOST'),
-        # 'PORT': 5432,
     }
 }
 # Password validation
@@ -117,3 +114,7 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST_USER = os.environ.get("EMAIL_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_PASS")
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+# django-nose settings
+TEST_RUNNER = "django_nose.NoseTestSuiteRunner"
+NOSE_ARGS = ["--verbosity=3"]

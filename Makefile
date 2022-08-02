@@ -28,6 +28,13 @@ docker-rebuild: clean-all
 lint:
 	pylint --verbose --rcfile=.pylintrc $(PROJECT)/sabc $(PROJECT)/tournaments $(PROJECT)/users
 
+test: clean clean-db
+	python sabc/manage.py makemigrations && python sabc/manage.py migrate
+	coverage run --branch --source=sabc/tournaments sabc/./manage.py test --exe sabc/tournaments/tests.py
+	coverage report
+
+
+
 help:
 	@echo -e "\t make clean"
 	@echo -e "\t\t clean pycache, pyc files"
