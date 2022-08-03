@@ -4,6 +4,7 @@
 
 [![CodeQL](https://github.com/envasquez/SABC/actions/workflows/codeql-analysis.yml/badge.svg?branch=master)](https://github.com/envasquez/SABC/actions/workflows/codeql-analysis.yml)
 [![Django CI](https://github.com/envasquez/SABC/actions/workflows/django.yml/badge.svg)](https://github.com/envasquez/SABC/actions/workflows/django.yml)
+[![Pylint](https://github.com/envasquez/SABC/actions/workflows/pylint.yml/badge.svg)](https://github.com/envasquez/SABC/actions/workflows/pylint.yml)
 
 ---
 
