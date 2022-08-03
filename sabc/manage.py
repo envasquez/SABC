@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# pylint: disable-all
+"""Django's managment untility entrypoint"""
 import os
 import sys
 
@@ -16,7 +18,7 @@ if __name__ == "__main__":
         # exceptions on Python 2.
         try:
             import django
-        except ImportError:
+        except ImportError as err:
             raise ImportError(
                 "Couldn't import Django. Are you sure it's installed and "
                 "available on your PYTHONPATH environment variable? Did you "

@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=line-too-long
 """Unittests for Tournaments, Results and TeamsResults"""
 from django.test import TestCase
 
-from .models import RuleSet, Tournament, TOURNAMENT_TYPES
+from .models import Tournament, TOURNAMENT_TYPES
 
 #
 # Tournament model data (for reference)
 #
+
 
 # type = models.CharField(default=TOURNAMENT_TYPES[1][1], max_length=48, choices=TOURNAMENT_TYPES)
 # name = models.CharField(default=f"{strftime('%B')} {strftime('%Y')} Tournament - {strftime('%m')}", null=True, max_length=128)
@@ -33,7 +35,9 @@ class TestIndividialTournament(TestCase):
     """Unit tests for Tournament Creation"""
 
     def setUp(self):
+        """Default per test setup"""
         self.indiv_t = Tournament.objects.create()
 
     def test_tournament_type(self):
+        """Test Tournament type"""
         self.assertEqual(self.indiv_t.type, TOURNAMENT_TYPES[1][1])
