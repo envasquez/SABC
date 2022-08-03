@@ -2,7 +2,7 @@ SHELL := /bin/bash
 SETUP := SETUP
 PROJECT := sabc
 
-.PHONY: clean
+.PHONY: clean clean-db clean-docker clean-all docker lint test
 .DEFAULT_GOAL: help
 export PYTHONPATH=$(shell pwd)/sabc
 
@@ -22,11 +22,11 @@ clean-docker:
 
 clean-all: clean clean-db clean-docker
 
-docker-rebuild: clean-all
+docker: clean-all
 	docker-compose up -d --build --force-recreate sabc
 
-lint:
-	pylint --verbose --rcfile=.pylintrc $(PROJECT)/sabc $(PROJECT)/tournaments $(PROJECT)/users
+lint: clean clean-db
+	pylint --verbose --rcfile=.pylintrc --output=pylint.out sabc/tournaments
 
 test: clean clean-db
 	python sabc/manage.py makemigrations && python sabc/manage.py migrate

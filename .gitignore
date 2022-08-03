@@ -107,3 +107,6 @@ sabc/users/migrations/*
 sabc/tournaments/migrations/*
 .DS_store
 .coverage
+
+# Plyint
+pylint.out
