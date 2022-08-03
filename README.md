@@ -28,5 +28,9 @@ The goal of this website application are to:
 
 We hope to increase member participation by modernizing our model of interaction and providing data analytics & insights. Also by allowing members to participate remotely vs. in-person exclusively will hopefully increase tournament attendance which should increase commradrie and growth.
 
+Please see the [Wiki](https://github.com/envasquez/SABC/wiki/Site-Design) for an informal write-up to capture some requirements, this site's purpose, solution space and design decisions.
+
+***
+
 # Questions / Comments
 If you happened upon this repo and have questions, comments, concerns or suggestions; Please feel free to post them to the discussion board or contact me at: envasquez@icloud.com
