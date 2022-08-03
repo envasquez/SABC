@@ -30,6 +30,8 @@ We hope to increase member participation by modernizing our model of interaction
 
 Please see the [Wiki](https://github.com/envasquez/SABC/wiki/Site-Design) for an informal write-up to capture some requirements, this site's purpose, solution space and design decisions.
 
+Initially, to learn more about some of Django's more modern features, I followed many of the recommendations from [this Tutorial from Corey Schafer](https://youtu.be/UmljXZIypDc) for writing a web application, and modified it to suite the club's needs.
+
 ***
 
 # Questions / Comments
