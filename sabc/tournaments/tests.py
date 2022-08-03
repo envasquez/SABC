@@ -36,4 +36,4 @@ class TestIndividialTournament(TestCase):
         self.indiv_t = Tournament.objects.create()
 
     def test_tournament_type(self):
-        self.assertEqual(self.indiv_t.type, TOURNAMENT_TYPES[0][1])
+        self.assertEqual(self.indiv_t.type, TOURNAMENT_TYPES[1][1])
