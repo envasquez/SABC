@@ -28,7 +28,7 @@ The goal of this website application are to:
 
 We hope to increase member participation by modernizing our model of interaction and providing data analytics & insights. Also by allowing members to participate remotely vs. in-person exclusively will hopefully increase tournament attendance which should increase commradrie and growth.
 
-Please see the [Wiki](https://github.com/envasquez/SABC/wiki/Site-Design) for an informal write-up to capture some requirements, this site's purpose, solution space and design decisions.
+Please see the [Wiki](https://github.com/envasquez/SABC/wiki/Requirements,-Design-notes-and-misc-info-in-a-single-page!) for an informal write-up to capture some requirements, this site's purpose, solution space and design decisions.
 
 Initially, to learn more about some of Django's more modern features, I followed many of the recommendations from [this Tutorial from Corey Schafer](https://youtu.be/UmljXZIypDc) for writing a web application, and modified it to suite the club's needs.
 
