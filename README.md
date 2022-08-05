@@ -35,4 +35,4 @@ Initially, to learn more about some of Django's more modern features, I followed
 ***
 
 # Questions / Comments
-If you happened upon this repo and have questions, comments, concerns or suggestions; Please feel free to post them to the discussion board or contact me at: envasquez@icloud.com
+If you happened upon this repo and have questions, comments, concerns or suggestions; Please feel free to post them to the discussion board or open a GitHub issue.
