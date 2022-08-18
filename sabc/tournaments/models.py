@@ -19,8 +19,6 @@ from django.urls import reverse
 
 from users.models import Angler
 
-from .exceptions import TournamentNotComplete
-
 from . import (
     DEFAULT_DEAD_FISH_PENALTY,
     LAKES,
@@ -114,6 +112,7 @@ class Tournament(Model):
         super().save(*args, **kwargs)
 
 
+# pylint: disable=too-many-instance-attributes
 class Result(Model):
     """This model represents an individuals performance in a tournament
 

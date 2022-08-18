@@ -14,7 +14,9 @@ B. Determine AoY points for 1 - last + buy-ins
 C. Determine the largest bass caught
 D. Calculate Payout to winners, club and charity
 """
-from random import choices, randint, uniform, choices
+from random import choices, randint, uniform
+
+from names import get_first_name, get_last_name
 
 from django.test import TestCase
 
@@ -22,14 +24,14 @@ from django.contrib.auth.models import User
 
 from users.models import Angler
 
+from .models import Result
+
+
 from . import get_length_from_weight, get_weight_from_length
-
-from .models import Tournament, Result
-
-from names import get_first_name, get_last_name
 
 
 def create_random_angler():
+    """Creates an Angler object, that is of member status"""
     first_name = get_first_name()
     last_name = get_last_name()
     user = User.objects.create(
@@ -49,7 +51,7 @@ def create_random_angler():
 def generate_tournament_results(tournament, num_results=10, num_buy_ins=2):
     """Create 10 result objects in the database and associate it to the given tournament"""
 
-    for num in range(num_results - num_buy_ins):
+    for _ in range(num_results - num_buy_ins):
         num_fish_weighed = choices(
             [0, 1, 2, 3, 4, 5],
             [0.25, 0.15, 0.10, 0.25, 0.20, 0.05],
@@ -73,7 +75,7 @@ def generate_tournament_results(tournament, num_results=10, num_buy_ins=2):
         }
         Result.objects.create(**kwargs)
 
-    for num in range(num_buy_ins):
+    for _ in range(num_buy_ins):
         Result.objects.create(
             **{
                 "angler": create_random_angler(),
@@ -101,23 +103,18 @@ class TestTournaments(TestCase):
         complete = True
         multi_day = False
         """
-        ...
 
     def test_tounament_winner_multiday(self):
         """Tests calculating the winner from a tounament"""
-        ...
 
     def test_aoy_points(self):
         """Tests points calculation from 1-last place are accurate"""
-        ...
 
     def test_big_bass_winner(self):
         """Tests that big bass winner calculation is correct"""
-        ...
 
     def test_payouts(self):
         """Tests that the payout calculations are correct"""
-        ...
 
     def test_get_weight_by_length(self):
         """Tests that the get_weight_by_length algorithm is accurate
