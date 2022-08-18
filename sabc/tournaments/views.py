@@ -17,7 +17,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 
 from .forms import TournamentForm, ResultForm, TeamForm
-from .models import Tournament, Result, Team
+from .models import Tournament, Result, TeamResult
 
 #
 # Tournaments
@@ -125,7 +125,7 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
 class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
     """Team creation view"""
 
-    model = Team
+    model = TeamResult
     form_class = TeamForm
 
     def get_initial(self, *args, **kwargs):
@@ -156,7 +156,7 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
 class TeamListView(SuccessMessageMixin, LoginRequiredMixin, ListView):
     """Team list view"""
 
-    model = Team
+    model = TeamResult
     form_class = TeamForm
     paginate_by = 10
     template_name = "tournaments/team_list.html"
@@ -181,7 +181,7 @@ class TeamListView(SuccessMessageMixin, LoginRequiredMixin, ListView):
 class TeamDetailView(SuccessMessageMixin, LoginRequiredMixin, DetailView):
     """Team detail view"""
 
-    model = Team
+    model = TeamResult
     form_class = TeamForm
     context_object_name = "team"
 

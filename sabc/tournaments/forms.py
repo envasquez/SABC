@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 from django import forms
 
-from .models import Tournament, Result, Team
+from .models import Tournament, Result, TeamResult
 
 
 class TournamentForm(forms.ModelForm):
@@ -34,5 +34,5 @@ class TeamForm(forms.ModelForm):
     class Meta:
         """Team metadata"""
 
-        model = Team
+        model = TeamResult
         fields = "__all__"

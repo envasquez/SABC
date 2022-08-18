@@ -5,4 +5,4 @@ omit =
     */tournaments/admin.py
     */tournaments/forms.py
     */tournaments/tests.py
-    */tournaments/__init__.py
+
