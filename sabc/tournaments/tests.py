@@ -17,6 +17,8 @@ D. Calculate Payout to winners, club and charity
 from django.test import TestCase
 
 from . import get_length_from_weight, get_weight_from_length
+from .models import Tournament
+from .tests_utils import generate_tournament_results
 
 
 class TestTournaments(TestCase):
@@ -40,6 +42,9 @@ class TestTournaments(TestCase):
 
     def test_tounament_winner_multiday(self):
         """Tests calculating the winner from a tounament"""
+        tournament = Tournament.objects.create()
+        generate_tournament_results(tournament=tournament, num_results=10, num_buy_ins=0)
+        # self.assertEqual(True, False)
 
     def test_aoy_points(self):
         """Tests points calculation from 1-last place are accurate"""

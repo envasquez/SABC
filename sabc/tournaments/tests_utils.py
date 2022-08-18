@@ -1,5 +1,5 @@
 """Utilities used for aiding in unit tests"""
-from random import choices, randint, uniform
+from random import choices, choice, randint, uniform
 
 from names import get_first_name, get_last_name
 
@@ -48,18 +48,35 @@ def generate_tournament_results(tournament, num_results=10, num_buy_ins=2):
             "num_fish_alive": num_fish_alive,
             # 0.87 would be the smallest "legal" fish - a 12" Guadalupe Bass
             "fish_1_wt": round(uniform(0.87, 21.0), 2) if num_fish_weighed >= 1 else 0.0,
+            "fish_1_alive": True,
             "fish_2_wt": round(uniform(0.87, 21.0), 2) if num_fish_weighed >= 2 else 0.0,
+            "fish_2_alive": True,
             "fish_3_wt": round(uniform(0.87, 21.0), 2) if num_fish_weighed >= 3 else 0.0,
+            "fish_3_alive": True,
             "fish_4_wt": round(uniform(0.87, 21.0), 2) if num_fish_weighed >= 4 else 0.0,
+            "fish_4_alive": True,
             "fish_5_wt": round(uniform(0.87, 21.0), 2) if num_fish_weighed >= 5 else 0.0,
+            "fish_5_alive": True,
         }
-        Result.objects.create(**kwargs)
+        # Apply any dead fish, randomly
+        fish = ["fish_1_alive", "fish_2_alive", "fish_3_alive", "fish_4_alive", "fish_5_alive"][
+            0 : tournament.limit_num - 1
+        ]
+        for _ in range(num_fish_dead):
+            chosen = choice(fish)
+            kwargs[chosen] = False
+            fish.pop(fish.index(chosen))
 
+        result = Result.objects.create(**kwargs)
+        result.save()
+
+    # Create the buy-ins
     for _ in range(num_buy_ins):
-        Result.objects.create(
+        result = Result.objects.create(
             **{
                 "angler": create_random_angler(),
                 "tournament": tournament,
                 "buy_in": True,
             }
         )
+        result.save()

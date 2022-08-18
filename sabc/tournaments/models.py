@@ -150,14 +150,19 @@ class Result(Model):
     num_fish_weighed = IntegerField(default=0)
     fish_1_wt = FloatField(default=0.0)
     fish_1_len = FloatField(default=0.0)
+    fish_1_alive = BooleanField(default=False)
     fish_2_wt = FloatField(default=0.0)
     fish_2_len = FloatField(default=0.0)
+    fish_2_alive = BooleanField(default=False)
     fish_3_wt = FloatField(default=0.0)
     fish_3_len = FloatField(default=0.0)
+    fish_3_alive = BooleanField(default=False)
     fish_4_wt = FloatField(default=0.0)
     fish_4_len = FloatField(default=0.0)
+    fish_4_alive = BooleanField(default=False)
     fish_5_wt = FloatField(default=0.0)
     fish_5_len = FloatField(default=0.0)
+    fish_5_alive = BooleanField(default=False)
 
     def __str__(self):
         """String representation of a Result object"""
