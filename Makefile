@@ -26,7 +26,7 @@ docker: clean-all
 	docker-compose up -d --build --force-recreate sabc
 
 lint: clean clean-db
-	pylint --verbose --rcfile=.pylintrc --output=pylint.out sabc/tournaments
+	pylint --verbose --rcfile=.pylintrc --output=pylint.out sabc/tournaments; cat pylint.out
 
 test: clean clean-db
 	python sabc/manage.py makemigrations && python sabc/manage.py migrate
