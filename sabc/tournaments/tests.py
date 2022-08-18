@@ -22,7 +22,7 @@ from django.contrib.auth.models import User
 
 from users.models import Angler
 
-from . import get_length_from_weight, get_weight_from_length, get_tournament_winners
+from . import get_length_from_weight, get_weight_from_length
 
 from .models import Tournament, Result
 

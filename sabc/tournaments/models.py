@@ -204,11 +204,11 @@ class Result(Model):
             self.fish_5_len = get_length_from_weight(self.fish_5_wt)
         # 3. Generate the fish weight based on the length if the length is entered
         elif sum(weighed_fish) == 0.0 and sum(measured_fish) > 0.0:  # Lengths, not weights entered
-            self.fish_1_wt = get_length_from_weight(self.fish_1_len)
-            self.fish_2_wt = get_length_from_weight(self.fish_2_len)
-            self.fish_3_wt = get_length_from_weight(self.fish_3_len)
-            self.fish_4_wt = get_length_from_weight(self.fish_4_len)
-            self.fish_5_wt = get_length_from_weight(self.fish_5_len)
+            self.fish_1_wt = get_weight_from_length(self.fish_1_len)
+            self.fish_2_wt = get_weight_from_length(self.fish_2_len)
+            self.fish_3_wt = get_weight_from_length(self.fish_3_len)
+            self.fish_4_wt = get_weight_from_length(self.fish_4_len)
+            self.fish_5_wt = get_weight_from_length(self.fish_5_len)
         # 1. Calcualte total weight
         for idx in range(self.tournament.limit_num):
             self.total_weight += weighed_fish[idx]
