@@ -40,7 +40,7 @@ from . import (
     get_length_from_weight,
     get_weight_from_length,
 )
-from .exceptions import TournamentNotComplete
+from .exceptions import TournamentNotComplete, IncorrectTournamentType
 
 
 class RuleSet(Model):
@@ -80,7 +80,6 @@ class RuleSet(Model):
         """
         if not self.name:
             self.name = f"RuleSet-{self.id}"
-
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -95,35 +94,35 @@ class TournamentManager(Manager):
     it to data that can be used in the views.
 
     Attributes:
-        Tournament.results.calculate_points(Tournament)
-        Tournament.results.calculate_payouts(Tournament)
-        Tournament.results.set_individual_places(Tournament)
-        Tournament.result.get_big_bass_winner(Tournament)
-        Tournament.result.get_current_aoy(year)
-        Tournament.result.get_current_big_bass(year)
+        Tournament.results.set_aoy_points(Tournament) (#57)
+        Tournament.results.get_payouts(Tournament) (#58)
+        Tournament.results.set_individual_places(Tournament) (#60)
+        Tournament.results.set_team_places(Tournament) (#59)
+        Tournament.result.get_big_bass_winner(Tournament) (#61)
     """
 
-    def calculate_points(self, tournament):
-        """Calculates the points for each result (place) and applies them to the Result
+    def set_aoy_points(self, tournament):
+        """Calculates the AoY points for a tournament and sets the points attribute for each Result
+        1st = 100 - (1 - 1) = 100
+        2nd = 100 - (2 - 1) = 99
+        3rd = 100 - (3 - 1) = 98
+        ... and so on ...
+        For all anglers that did not weigh in fish, they receive 2 less points than the
+        last place_finish of anglers that weighed in fish.
 
         Args:
             tournament (Tournament) The tournament to calculate points for
-
-        Returns:
-            A dict mapping the points awarded, to the Result object
-
         Raises:
             TournamentNotComplete if the tournament is not completed
         """
         if not tournament.complete:
             raise TournamentNotComplete(f"{tournament} is not complete!")
 
-    def calculate_payouts(self, tournament):
+    def get_payouts(self, tournament):
         """Calculates amount of funds to be applied to the club, charity and winners
 
         Args:
             tournament (Tournament) The tournament to calculate payouts for
-
         Returns:
             A dict mapping the amounts paid to places, chairty and big bass
             Example:
@@ -132,44 +131,72 @@ class TournamentManager(Manager):
               'place_3': 100.00,
               'charity': 100.00,
               'big_bass': 100.00,}
+        Raises:
+            TournamentNotComplete if the tournament is not completed
         """
         if not tournament.complete:
             raise TournamentNotComplete(f"{tournament} is not complete!")
 
     def set_individual_places(self, tournament):
-        """Retrieves the winners up to the number of specified places for a particular tournament
-
-        Winners are determined to be:
-        1 - N: with 1 being the highest total weight: N being results where total_weight != 0
-
+        """Sets the place_finish attribute for a completed individual tournament
         Args:
             tournament (Tournament) The tournament to get winners from
+        Raises:
+            TournamentNotComplete if the tournament is not completed
+        """
+
+        def _set_single_day_places():
+            """Sets the place_finish attribute for a Result for single day tournament"""
+            place = 1
+            query = Result.objects.filter(tournament=tournament)
+            for idx, result in enumerate(query, start=1):
+                result.place_finish = place
+                result.save()
+                same_wt = result.total_weight != query[idx - 1].total_weight
+                paid_place = idx <= tournament.paid_places
+                if any([not same_wt, paid_place]):
+                    place += 1
+
+        def _set_multi_day_places():
+            """Sets the place_finish attribute for a Result for multi-day tournament"""
+            # Get all of the results for day 1 & day 2
+            day_1 = Result.objects.filter(tournament=tournament, day_num=1)
+            day_2 = Result.objects.filter(tournament=tournament, day_num=2)
+            results = {r.angler: [r] for r in day_1}
+            for result in day_2:
+                if result.angler in results:
+                    results[result.angler].append(result)
+                else:
+                    results[result.angler] = [result]
+            # Add them together
+            for angler, result in results.items():
+
+            # Determine the winner
+            # Set the place_finish
+
+        if not tournament.complete:
+            raise TournamentNotComplete(f"{tournament} is not complete!")
+        if not tournament.multi_day:
+            _set_single_day_places()
+        else:
+            _set_multi_day_places()
+
+    def set_team_places(self, tournament):
+        """Sets the place_finish for a TeamResult"""
+        if not tournament.complete:
+            raise TournamentNotComplete(f"{tournament} is not complete!")
+        if not tournament.team:
+            raise IncorrectTournamentType(f"Error: {tournament} is not a Team Tournament")
+
+    def get_big_bass_winner(self, tournament):
+        """Returns the Result object that contains the big bass winner
+        Args:
+            tournament (Tournament) The tournament to get the big bass winner for
+        Raises:
+            TournamentNotComplete if the tournament is not completed
         """
         if not tournament.complete:
             raise TournamentNotComplete(f"{tournament} is not complete!")
-
-        place = 1
-        query = Result.objects.filter(tournament=tournament)
-        for idx, result in enumerate(query, start=1):
-            result.place_finish = place
-            result.save()
-            same_wt = result.total_weight != query[idx - 1].total_weight
-            paid_place = idx <= tournament.paid_places
-            if any([not same_wt, paid_place]):
-                place += 1
-
-    def get_big_bass_winner(self, tournament):
-        """Returns the Result object that contains the big bass winner"""
-        if not tournament.complete:
-            raise TournamentNotComplete(f"{tournament} is not complete!")
-
-    # def get_current_aoy(self, num_places=6):
-    #     """Returns the Angler who is the current AoY for this tourament year"""
-    #     return {}
-
-    # def get_current_big_bass(self, year, num_places=1):
-    #     """Returns the Result with the biggest bass (bass over 5lbs) for this tournament year"""
-    #     return {}
 
 
 class Tournament(Model):
@@ -187,7 +214,6 @@ class Tournament(Model):
         points (BooleanField) True if the tournament counts towards AoY points.
         complete (BooleanField) True if the tournament is over, False otherwise.
         ramp_url (CharField) Google maps embedable link for weigh-in location.
-        num_days (IntegerField) Number of days.
         limit_num (IntegerField) The number of weighed fish that comprise a limit.
         multi_day (BooleanField) True if num_days > 1 False otherwise.
         description (TextField) A description of the tournament details.
@@ -209,7 +235,6 @@ class Tournament(Model):
     points = BooleanField(default=True)
     complete = BooleanField(default=False)
     ramp_url = CharField(default="", max_length=1024, blank=True)
-    num_days = IntegerField(default=1)
     limit_num = IntegerField(default=5)
     multi_day = BooleanField(default=False)
     paid_places = IntegerField(default=DEFAULT_PAID_PLACES)
@@ -323,10 +348,10 @@ class Result(Model):
         """Save the result
 
         Upon save() ... we should do a few things:
-        1. Calculate the total weight (applying the appropriate penalty)
-        2. Calculate the number of fish alive (if not entered)
-        3. Generate the fish weight based on the length if the length is entered
-        4. Generate the fish length based on the weight if the weight is entered
+        * Calculate the total weight (applying the appropriate penalty)
+        * Calculate the number of fish alive (if not entered)
+        * Generate the fish weight based on the length if the length is entered
+        * Generate the fish length based on the weight if the weight is entered
         """
         self.pentalty_weight = self.num_fish_dead * self.tournament.rules.dead_fish_penalty
         # Calculate the number of fish alive
@@ -383,6 +408,7 @@ class TeamResult(Model):
     boater = ForeignKey(Angler, related_name="+", on_delete=DO_NOTHING)
     result_1 = ForeignKey(Result, on_delete=DO_NOTHING)
     result_2 = ForeignKey(Result, null=True, blank=True, related_name="+", on_delete=DO_NOTHING)
+    place_finish = IntegerField(default=0)
 
     def __str__(self):
         angler_1 = self.result_1.angler.user.get_full_name()

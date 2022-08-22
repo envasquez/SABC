@@ -2,23 +2,12 @@
 """Unittests for Tournaments, Results and TeamResults
 
 The goal is to test the functionality of our models and ensure our formulas work.
-
-1. Create a Tournament
-2. Create some results
-3. Create some teams
-- Have some results buy-in
-- Have some results penalize (dead fish)
-
-A. Determine the winner - last place
-B. Determine AoY points for 1 - last + buy-ins
-C. Determine the largest bass caught
-D. Calculate Payout to winners, club and charity
 """
 from django.test import TestCase
 
 from .. import get_length_from_weight, get_weight_from_length
 from ..models import Tournament, Result
-from ..exceptions import TournamentNotComplete
+from ..exceptions import TournamentNotComplete, IncorrectTournamentType
 
 
 from . import (
@@ -38,6 +27,8 @@ class TestTournaments(TestCase):
     - Calculating the winner of the Big Bass award works
     - Calculating the winner of a multi-day tournament works
     * Calculating the winner of an individual tournament works
+    - Calculating the winner of a Team tournament works
+    - Calculating the winner of a Team multi-day tournament works
     """
 
     def test_get_weight_by_length(self):
@@ -88,3 +79,16 @@ class TestTournaments(TestCase):
         query = Result.objects.filter(tournament=tournament).order_by("place_finish")[:2]
         for idx, result in enumerate(query):
             self.assertEqual(winners[idx].angler, result.angler)
+
+    def test_incorrect_tournament_type(self):
+        """ "Tests that you cannot set team places on an individual tournament"""
+        with self.assertRaises(IncorrectTournamentType):
+            tournament = Tournament.objects.create(**{"complete": True, "team": False})
+            Tournament.results.set_team_places(tournament=tournament)
+
+    def test_multi_day_set_individual_places(self):
+        """Tests that setting the individual places for a multi-day tournament works"""
+        tournament = Tournament.objects.create(**{"complete": True, "multi_day": True})
+        generate_tournament_results(
+            tournament=tournament, num_results=10, num_buy_ins=2, multi_day=True
+        )

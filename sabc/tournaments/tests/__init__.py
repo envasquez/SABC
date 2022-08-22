@@ -41,15 +41,17 @@ def create_random_angler():
     return angler
 
 
-def generate_tournament_results(tournament, num_results=10, num_buy_ins=2):
+def generate_tournament_results(tournament, num_results=10, num_buy_ins=2, multi_day=False):
     """Create Result objects in the database and associate it to the given tournament
 
     Args:
         tournament (Tournament) The tournament to generate results for
         num_results (int) The number of results to create
         num_buy_ins (int) The number of buy-in results to generate
+        multi_day (bool) Create mutli-day results if True single day if False
     """
-    for _ in range(num_results - num_buy_ins):
+
+    def _gen_results():
         num_fish_weighed = choices(
             [0, 1, 2, 3, 4, 5],
             # Weighted choice
@@ -82,17 +84,32 @@ def generate_tournament_results(tournament, num_results=10, num_buy_ins=2):
             fish = ["fish_1_alive", "fish_2_alive", "fish_3_alive", "fish_4_alive", "fish_5_alive"]
             for idx in range(num_fish_dead):
                 kwargs[fish[idx]] = False
-        Result.objects.create(**kwargs).save()
 
-    # Create the buy-ins
+        return kwargs
+
+    #
+    # Create random results
+    #
+    for _ in range(num_results - num_buy_ins):
+        attrs = _gen_results()
+        Result.objects.create(**attrs).save()
+        if multi_day:
+            attrs = _gen_results()
+            attrs["day_num"] = 2
+            Result.objects.create(**attrs).save()
+    #
+    # Create the buy-ins (if any)
+    #
     for _ in range(num_buy_ins):
-        Result.objects.create(
-            **{
-                "angler": create_random_angler(),
-                "tournament": tournament,
-                "buy_in": True,
-            }
-        ).save()
+        attrs = {
+            "angler": create_random_angler(),
+            "tournament": tournament,
+            "buy_in": True,
+        }
+        Result.objects.create(**attrs).save()
+        if multi_day:
+            attrs["day_num"] = 2
+            Result.objects.create(**attrs).save()
 
 
 def create_tie(tournament, total_weight, win_by="big_bass"):
