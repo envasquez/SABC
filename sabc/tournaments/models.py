@@ -170,7 +170,7 @@ class TournamentManager(Manager):
                     results[result.angler] = [result]
             # Add them together
             for angler, result in results.items():
-
+                pass
             # Determine the winner
             # Set the place_finish
 
