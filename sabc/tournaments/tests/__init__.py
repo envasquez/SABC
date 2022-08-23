@@ -104,7 +104,6 @@ def generate_tournament_results(tournament, num_results=10, num_buy_ins=2, multi
     # Create the buy-ins (if any)
     #
     for _ in range(num_buy_ins):
-        print("Creating buy-ins!!!")
         attrs = {
             "angler": create_random_angler(),
             "tournament": tournament,
