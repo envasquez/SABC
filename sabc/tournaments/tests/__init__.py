@@ -49,9 +49,10 @@ def generate_tournament_results(tournament, num_results=10, num_buy_ins=2, multi
         num_results (int) The number of results to create
         num_buy_ins (int) The number of buy-in results to generate
         multi_day (bool) Create mutli-day results if True single day if False
+    NOTE: If multi_day is True, then 2x the amount of results are generated. (day 1 & day 2)
     """
 
-    def _gen_results():
+    def _gen_attrs():
         num_fish_weighed = choices(
             [0, 1, 2, 3, 4, 5],
             # Weighted choice
@@ -91,16 +92,19 @@ def generate_tournament_results(tournament, num_results=10, num_buy_ins=2, multi
     # Create random results
     #
     for _ in range(num_results - num_buy_ins):
-        attrs = _gen_results()
+        attrs = _gen_attrs()
         Result.objects.create(**attrs).save()
         if multi_day:
-            attrs = _gen_results()
+            angler = attrs["angler"]
+            attrs = _gen_attrs()
+            attrs["angler"] = angler
             attrs["day_num"] = 2
             Result.objects.create(**attrs).save()
     #
     # Create the buy-ins (if any)
     #
     for _ in range(num_buy_ins):
+        print("Creating buy-ins!!!")
         attrs = {
             "angler": create_random_angler(),
             "tournament": tournament,
