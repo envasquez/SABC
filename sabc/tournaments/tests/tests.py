@@ -43,3 +43,19 @@ class TestTournaments(TestCase):
         """
         for weight, expected_length in WEIGHT_TO_LENGTH:
             self.assertEqual(expected_length, get_length_from_weight(weight))
+
+    def test_indiv_1day_bb_wins_tie(self):
+        """Tests that the angler with the biggest bass wins on a single day tournament"""
+        pass
+
+    def test_indiv_1day_most_fish_wins_tie(self):
+        """Tests that the angler with the most fish weighed wins on a single day tournament"""
+        pass
+
+    def test_set_aoy_points(self):
+        """Tests that AoY points are set properly"""
+        pass
+
+    def test_get_payouts(self):
+        """Tests the get_payouts function: funds are calculated properly"""
+        pass
