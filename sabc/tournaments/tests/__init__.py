@@ -13,7 +13,7 @@ from django.contrib.auth.models import User
 
 from users.models import Angler
 
-from ..models import Result
+from ..models import MultidayResult, Result
 
 
 def create_random_angler():
@@ -115,7 +115,7 @@ def generate_tournament_results(tournament, num_results=10, num_buy_ins=2, multi
             Result.objects.create(**attrs).save()
 
 
-def create_tie(tournament, total_weight, win_by="big_bass"):
+def create_tie(tournament, total_weight, win_by="big_bass", multi_day=False):
     """Creates a set of results that are equal in total weight, big_bass, and num_fish_weighed.
 
     Args:
@@ -123,6 +123,7 @@ def create_tie(tournament, total_weight, win_by="big_bass"):
         total_weight (float) The total weght to create (distribute across 5 catches)
         win_by (str) The option to win by: "big_bass" or "num_catch"
                      (no other string value is honored)
+        multi_day (bool) If True, duplicates the results from day 1 to day 2 for each angler.
     """
     people = []
     weight = round(total_weight / 5, 2)
@@ -132,7 +133,8 @@ def create_tie(tournament, total_weight, win_by="big_bass"):
     kwargs.update({f"fish_{i}_alive": True for i in range(1, 6)})
     for count in range(1, 3):
         kwargs["angler"] = create_random_angler()
-        people.append(kwargs["angler"])
+        if kwargs["angler"] not in people:
+            people.append(kwargs["angler"])
         if count == 2:  # Second angler
             if win_by == "big_bass":
                 kwargs["fish_1_wt"] = kwargs["fish_1_wt"] - 0.5
@@ -143,6 +145,17 @@ def create_tie(tournament, total_weight, win_by="big_bass"):
                 kwargs["fish_1_alive"] = False
 
         Result.objects.create(**kwargs).save()
+        day_1 = Result.objects.filter(**kwargs).first()
+        if multi_day:
+            kwargs["day_num"] = 2
+            Result.objects.create(**kwargs).save()
+            day_2 = Result.objects.filter(**kwargs).first()
+            MultidayResult.objects.create(
+                angler=kwargs["angler"],
+                tournament=tournament,
+                day_1=day_1,
+                day_2=day_2,
+            )
 
     return Result.objects.filter(angler__in=people)
 

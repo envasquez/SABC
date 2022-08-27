@@ -6,13 +6,12 @@ The goal is to test the functionality of our models and ensure our formulas work
 from django.test import TestCase
 
 from .. import get_length_from_weight, get_weight_from_length
-from ..models import Tournament, Result
-from ..exceptions import TournamentNotComplete, IncorrectTournamentType
+
+# from ..models import MultidayResult, Tournament, Result
+# from ..exceptions import TournamentNotComplete, IncorrectTournamentType
 
 
 from . import (
-    create_tie,
-    generate_tournament_results,
     LENGTH_TO_WEIGHT,
     WEIGHT_TO_LENGTH,
 )
@@ -25,8 +24,6 @@ class TestTournaments(TestCase):
     - AoY points calculations work
     - Payout calculations work
     - Calculating the winner of the Big Bass award works
-    - Calculating the winner of a multi-day tournament works
-    * Calculating the winner of an individual tournament works
     - Calculating the winner of a Team tournament works
     - Calculating the winner of a Team multi-day tournament works
     """
@@ -46,49 +43,3 @@ class TestTournaments(TestCase):
         """
         for weight, expected_length in WEIGHT_TO_LENGTH:
             self.assertEqual(expected_length, get_length_from_weight(weight))
-
-    def test_incomplete_tournament_fails(self):
-        """Ensures you cannot set places for tournaments that are not marked complete"""
-        with self.assertRaises(TournamentNotComplete):
-            tournament = Tournament.objects.create(**{"complete": False})
-            generate_tournament_results(tournament=tournament, num_results=1, num_buy_ins=0)
-            Tournament.results.set_individual_places(tournament=tournament)
-
-    def test_set_individual_places_big_bass_wins(self):
-        """Tests that set_individual_places sets the proper values when:
-        - A tie exists, and one angler has a single bigger bass
-        """
-        tournament = Tournament.objects.create(**{"complete": True})
-        generate_tournament_results(tournament=tournament, num_results=10, num_buy_ins=2)
-        target = max(r.total_weight for r in Result.objects.filter(tournament=tournament)) + 2
-        winners = create_tie(tournament=tournament, total_weight=target, win_by="big_bass")
-        Tournament.results.set_individual_places(tournament=tournament)
-        query = Result.objects.filter(tournament=tournament).order_by("place_finish")[:2]
-        for idx, result in enumerate(query):
-            self.assertEqual(winners[idx].angler, result.angler)
-
-    def test_set_individual_places_most_catches_wins(self):
-        """Tests that set_individual_places sets the proper values when:
-        - A tie exists, and one angler has the most weighed fish wins (if big bass is the same size)
-        """
-        tournament = Tournament.objects.create(**{"complete": True})
-        generate_tournament_results(tournament=tournament, num_results=10, num_buy_ins=2)
-        target = max(r.total_weight for r in Result.objects.filter(tournament=tournament)) + 2
-        winners = create_tie(tournament=tournament, total_weight=target, win_by="num_catch")
-        Tournament.results.set_individual_places(tournament=tournament)
-        query = Result.objects.filter(tournament=tournament).order_by("place_finish")[:2]
-        for idx, result in enumerate(query):
-            self.assertEqual(winners[idx].angler, result.angler)
-
-    def test_incorrect_tournament_type(self):
-        """ "Tests that you cannot set team places on an individual tournament"""
-        with self.assertRaises(IncorrectTournamentType):
-            tournament = Tournament.objects.create(**{"complete": True, "team": False})
-            Tournament.results.set_team_places(tournament=tournament)
-
-    def test_multi_day_set_individual_places(self):
-        """Tests that setting the individual places for a multi-day tournament works"""
-        tournament = Tournament.objects.create(**{"complete": True, "multi_day": True})
-        generate_tournament_results(
-            tournament=tournament, num_results=10, num_buy_ins=2, multi_day=True
-        )
