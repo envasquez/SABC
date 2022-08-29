@@ -3,72 +3,88 @@
 
 The goal is to test the functionality of our models and ensure our formulas work.
 """
+import pprint
+from random import choice
 from django.test import TestCase
 
-from sabc.tournaments.models import Tournament, Result
+from .. import LAKES
+from ..models import MultidayResult, Tournament, Result
 
-from .. import get_length_from_weight, get_weight_from_length
-
-from . import (
-    LENGTH_TO_WEIGHT,
-    WEIGHT_TO_LENGTH,
-    create_tie,
-    generate_tournament_results,
-)
+from . import generate_tournament_results, create_tie
 
 
 class TestTournaments(TestCase):
     """Key things about a tournament and its results that we need to test:
 
-    * Conversions for weight->length & length->weight are accurate/correct
     - AoY points calculations work
     - Payout calculations work
     - Calculating the winner of the Big Bass award works
+    * Calculating the winner of a Individual tournament works (single & multi-day)
     - Calculating the winner of a Team tournament works
     - Calculating the winner of a Team multi-day tournament works
+    - Conversions for weight->length & length->weight are accurate/correct
     """
 
     def setUp(self):
         """Pre-test set up"""
-        self.multi_day_team = {"team": True, "multi_day": True}
-        self.single_day_team = {"team": True, "multi_day": False}
-        self.multi_day_indiv = {"team": False, "multi_day": True}
-        self.single_day_indiv = {"team": False, "multi_day": False}
+        lakes = [(l[0], l[1]) for l in LAKES if l[0] != "tbd" and l[1] != "TBD"]
+        self.multi_day_team = {"team": True, "multi_day": True, "lake": choice(lakes)[1]}
+        self.single_day_team = {"team": True, "multi_day": False, "lake": choice(lakes)[1]}
+        self.multi_day_indiv = {"team": False, "multi_day": True, "lake": choice(lakes)[1]}
+        self.single_day_indiv = {"team": False, "multi_day": False, "lake": choice(lakes)[1]}
 
-    def test_get_weight_by_length(self):
-        """Tests that the get_weight_by_length algorithm is accurate
-
-        Test min/max and most common length/weight combos
-        """
-        for length, expected_weight in LENGTH_TO_WEIGHT:
-            self.assertEqual(expected_weight, get_weight_from_length(length))
-
-    def test_get_length_by_weight(self):
-        """Tests that the get_length_by_weight algorithm is accurate
-
-        Test min/max and most common length/weight combos
-        """
-        for weight, expected_length in WEIGHT_TO_LENGTH:
-            self.assertEqual(expected_length, get_length_from_weight(weight))
-
-    def test_indiv_1day_bb_wins_tie(self):
+    def test_indiv_bb_wins_tie(self):
         """Tests that the angler with the biggest bass wins on a single day tournament"""
-        tournament = Tournament.objects.create(self.single_day_indiv)
+        tournament = Tournament.objects.create(**self.single_day_indiv)
+        generate_tournament_results(tournament, num_results=10, num_buy_ins=5)
+        winners = create_tie(tournament, win_by="BB", multi_day=False)
+        Tournament.results.set_individual_places(tournament)
+        first = {"tournament": tournament, "place_finish": 1, "day_num": 1}
+        second = {"tournament": tournament, "place_finish": 2, "day_num": 1}
+        self.assertEqual(winners[0], Result.objects.get(**first))
+        self.assertEqual(winners[1], Result.objects.get(**second))
 
-    def test_indiv_1day_most_fish_wins_tie(self):
-        """Tests that the angler with the most fish weighed wins on a single day tournament"""
-        tournament = Tournament.objects.create(self.single_day_indiv)
-        generate_tournament_results(tournament, num_results=5, num_buy_ins=0, multi_day=False)
-        highest_wt = max([r.total_weight for r in Result.objects.filter(tournament)])
-        winners = create_tie(tournament, total_wieght=highest_wt * 2, win_by="big_bass")
+    def test_indiv_most_fish_wins_tie(self):
+        """Tests that the angler with the most fish weighed wins on a single day tournament tiebreaker"""
+        tournament = Tournament.objects.create(**self.single_day_indiv)
+        generate_tournament_results(tournament, num_results=10, num_buy_ins=5)
+        winners = create_tie(tournament, win_by="MOST_FISH")
+        Tournament.results.set_individual_places(tournament)
+        first = {"tournament": tournament, "place_finish": 1, "day_num": 1}
+        second = {"tournament": tournament, "place_finish": 2, "day_num": 1}
+        self.assertEqual(winners[0], Result.objects.get(**first))
+        self.assertEqual(winners[1], Result.objects.get(**second))
+
+    def test_indiv_bb_wins_tie_multi_day(self):
+        """Tests that the angler with the biggest fish weighed wins on a multi day tournament tiebreaker"""
+        tournament = Tournament.objects.create(**self.multi_day_indiv)
+        generate_tournament_results(tournament, num_results=20, num_buy_ins=3, multi_day=True)
+        winners = create_tie(tournament, win_by="BB", multi_day=True)
+        Tournament.results.set_individual_places(tournament)
+        first = {"tournament": tournament, "place_finish": 1}
+        second = {"tournament": tournament, "place_finish": 2}
+        self.assertEqual(winners[0], MultidayResult.objects.get(**first))
+        self.assertEqual(winners[1], MultidayResult.objects.get(**second))
+
+    def test_indiv_most_fish_wins_tie_multi_day(self):
+        """Tests that the angler with the biggest fish weighed wins on a multi day tournament tiebreaker"""
+        tournament = Tournament.objects.create(**self.multi_day_indiv)
+        generate_tournament_results(tournament, num_results=20, num_buy_ins=3, multi_day=True)
+        winners = create_tie(tournament, win_by="MOST_FISH", multi_day=True)
+        Tournament.results.set_individual_places(tournament)
+        first = {"tournament": tournament, "place_finish": 1}
+        second = {"tournament": tournament, "place_finish": 2}
+        self.assertEqual(winners[0], MultidayResult.objects.get(**first))
+        self.assertEqual(winners[1], MultidayResult.objects.get(**second))
+
+    def test_team_bb_wins(self):
+        """Tests that a team with the biggest bass wins on a single day tournament"""
+
+    def test_team_most_fish_wins(self):
+        """Tests that a team with the most fish wins on a single day tournament tiebreaker"""
 
     def test_set_aoy_points(self):
         """Tests that AoY points are set properly"""
-        tournament = Tournament.objects.create(self.single_day_indiv)
-        generate_tournament_results(tournament, num_results=5, num_buy_ins=0, multi_day=False)
-        highest_wt = max([r.total_weight for r in Result.objects.filter(tournament)])
-        winners = create_tie(tournament, total_wieght=highest_wt * 2, win_by="big_bass")
 
     def test_get_payouts(self):
         """Tests the get_payouts function: funds are calculated properly"""
-        pass
