@@ -375,7 +375,7 @@ class MultidayResult(Model):
         This is essentially our tie breaker process implemented with Django query
         """
 
-        ordering = ("place_finish, -total_weight", "-big_bass_weight", "-num_fish")
+        ordering = ("place_finish", "-total_weight", "-big_bass_weight", "-num_fish")
 
     tournament = ForeignKey(Tournament, on_delete=DO_NOTHING)
     day_1 = ForeignKey(Result, null=True, related_name="+", on_delete=DO_NOTHING)
