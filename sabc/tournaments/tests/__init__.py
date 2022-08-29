@@ -160,7 +160,6 @@ def create_tie(tournament, win_by="BB", multi_day=False):
     def _create_tie(query):
         """Create tied results based on the win_by strategy"""
         for idx, result in enumerate(query):
-            result.day_num
             result.num_fish = 5
             if idx == 0 and win_by != "BB":
                 result.num_fish = 4

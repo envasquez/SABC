@@ -244,7 +244,7 @@ class Tournament(Model):
 
     def __str__(self):
         """Return the name of the tournament"""
-        return self.name
+        return str(self.name)
 
     def get_absolute_url(self):
         """Get the absolute url of the tournament details"""
@@ -311,7 +311,7 @@ class Result(Model):
         """String representation of a Result object"""
         weight = f"{self.num_fish} fish {self.total_weight}lbs" if not self.buy_in else "Buy-in"
         big_bass = f"{self.big_bass_weight}lb big bass" if not self.buy_in else ""
-        day_number = f"{'Day %d' % self.day_num if self.tournament.multi_day else ''}"
+        day_number = f"{'Day: ' + self.day_num if self.tournament.multi_day else ''}"
         tournament = f"{self.tournament.name} Lake: {self.tournament.lake}"
         return (
             f"{self.angler.user.get_full_name()} | {tournament} | {weight} {big_bass} {day_number}"

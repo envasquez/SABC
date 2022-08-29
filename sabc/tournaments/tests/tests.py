@@ -3,7 +3,6 @@
 
 The goal is to test the functionality of our models and ensure our formulas work.
 """
-import pprint
 from random import choice
 from django.test import TestCase
 
@@ -45,7 +44,7 @@ class TestTournaments(TestCase):
         self.assertEqual(winners[1], Result.objects.get(**second))
 
     def test_indiv_most_fish_wins_tie(self):
-        """Tests that the angler with the most fish weighed wins on a single day tournament tiebreaker"""
+        """Tests that the angler with the most fish weighed wins on a single day tiebreaker"""
         tournament = Tournament.objects.create(**self.single_day_indiv)
         generate_tournament_results(tournament, num_results=10, num_buy_ins=5)
         winners = create_tie(tournament, win_by="MOST_FISH")
@@ -56,7 +55,7 @@ class TestTournaments(TestCase):
         self.assertEqual(winners[1], Result.objects.get(**second))
 
     def test_indiv_bb_wins_tie_multi_day(self):
-        """Tests that the angler with the biggest fish weighed wins on a multi day tournament tiebreaker"""
+        """Tests that the angler with the biggest fish weighed wins on a multi day tiebreaker"""
         tournament = Tournament.objects.create(**self.multi_day_indiv)
         generate_tournament_results(tournament, num_results=20, num_buy_ins=3, multi_day=True)
         winners = create_tie(tournament, win_by="BB", multi_day=True)
@@ -67,7 +66,7 @@ class TestTournaments(TestCase):
         self.assertEqual(winners[1], MultidayResult.objects.get(**second))
 
     def test_indiv_most_fish_wins_tie_multi_day(self):
-        """Tests that the angler with the biggest fish weighed wins on a multi day tournament tiebreaker"""
+        """Tests that the angler with the biggest fish weighed wins on a multi-day tiebreaker"""
         tournament = Tournament.objects.create(**self.multi_day_indiv)
         generate_tournament_results(tournament, num_results=20, num_buy_ins=3, multi_day=True)
         winners = create_tie(tournament, win_by="MOST_FISH", multi_day=True)
