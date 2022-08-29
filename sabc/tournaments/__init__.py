@@ -2,7 +2,6 @@
 """Tournament definitions and enums"""
 from __future__ import unicode_literals
 
-from time import strftime
 
 LAKES = [
     ("tbd", "TBD"),
@@ -13,6 +12,7 @@ LAKES = [
     ("canyon", "CANYON"),
     ("medina", "MEDINA"),
     ("austin", "AUSTIN"),
+    ("oh-ivie", "OH-IVIE"),
     ("bastrop", "BASTROP"),
     ("fayette", "FAYETTE"),
     ("buchanan", "BUCHANAN"),
@@ -93,20 +93,6 @@ BIG_BASS_BREAKDOWN = """Big Bass Pot is paid to the heaviest bass caught at the 
 - ONLY MEMBERS in good standing are eligible for Big Bass Award.
 """
 DEFAULT_PAID_PLACES = 3
-
-
-def get_tournament_name():
-    """Returns a default tournament name, based on the current date"""
-    return f"Tournament #{strftime('%m')} of {strftime('%Y')}"
-    #: {strftime('%B')}"
-
-
-def get_tournament_description():
-    """Returns a default tournament description, based on the current date"""
-    description = [
-        f"Tournament #{strftime('%m')} of the {strftime('%Y')} season",
-    ]
-    return "\n".join(description)
 
 
 # TPW Length-weight Conversion Table for Texas Largemouth Bass
