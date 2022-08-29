@@ -171,7 +171,9 @@ def create_tie(tournament, win_by="BB", multi_day=False):
             result.penalty_weight = Decimal("0.00")
             result.save()
 
+    #
     # Get the day1 leaders & create a tie, duplicate the results if multi_day
+    #
     winners = Result.objects.filter(tournament=tournament, day_num=1)[:2]
     _create_tie(winners)
     if multi_day:

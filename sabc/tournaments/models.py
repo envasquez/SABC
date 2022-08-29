@@ -118,6 +118,8 @@ class TournamentManager(Manager):
         """
         if not tournament.complete:
             raise TournamentNotComplete(f"{tournament} is not complete!")
+        if not tournament.points:
+            raise IncorrectTournamentType(f"{tournament.name} - not count for AoY points")
 
     def get_payouts(self, tournament):
         """Calculates amount of funds to be applied to the club, charity and winners
@@ -160,17 +162,19 @@ class TournamentManager(Manager):
         if tournament.team:
             msg = f"{tournament} is a Team Tournament - try calling Tournament.set_team_places()"
             raise IncorrectTournamentType(msg)
-
+        #
         # Set Individual Places
+        #
         if not tournament.multi_day:
             _set_places(query=Result.objects.filter(tournament=tournament))
+            tournament.complete = True
+            tournament.save()
             return
 
         # Create a MultidayResult to determine the overall tournament winner
         day_1 = Result.objects.filter(tournament=tournament, day_num=1)
         for result in day_1:
             kwargs = {
-                # "angler": result.angler,
                 "tournament": tournament,
                 "day_1": result,
                 "day_2": Result.objects.get(angler=result.angler, day_num=2, tournament=tournament),
