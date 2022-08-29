@@ -84,6 +84,15 @@ class TestTournaments(TestCase):
 
     def test_set_aoy_points(self):
         """Tests that AoY points are set properly"""
+        tournament = Tournament.objects.create(**self.single_day_indiv)
+        generate_tournament_results(tournament, num_results=20, num_buy_ins=5)
+        Tournament.results.set_individual_places(tournament)
+        Tournament.results.set_aoy_points(tournament)
+        for result in Result.objects.filter(tournament=tournament, buy_in=False):
+            self.assertEqual(result.points, 100 - (result.place_finish - 1))
+        expected = Result.objects.filter(tournament=tournament, buy_in=False).last().points - 2
+        for result in Result.objects.filter(tournament=tournament, buy_in=True):
+            self.assertEqual(expected, result.points)
 
     def test_get_payouts(self):
         """Tests the get_payouts function: funds are calculated properly"""

@@ -103,23 +103,35 @@ class TournamentManager(Manager):
     """
 
     def set_aoy_points(self, tournament):
-        """Calculates the AoY points for a tournament and sets the points attribute for each Result
+        """Calculates the AoY points for a tournament and sets the points attribute for each Result.
+
         1st = 100 - (1 - 1) = 100
         2nd = 100 - (2 - 1) = 99
         3rd = 100 - (3 - 1) = 98
         ... and so on ...
-        For all anglers that did not weigh in fish, they receive 2 less points than the
-        last place_finish of anglers that weighed in fish.
+        NOTE: Buy-ins receive 2 less points than the last place_finish of anglers that weighed
+              in fish.
 
         Args:
-            tournament (Tournament) The tournament to calculate points for
+            tournament (Tournament) The tournament to calculate points for.
         Raises:
-            TournamentNotComplete if the tournament is not completed
+            TournamentNotComplete if the tournament is not completed.
+            IncorrectTournamentType if the tournament does not count for AoY points.
         """
         if not tournament.complete:
             raise TournamentNotComplete(f"{tournament} is not complete!")
         if not tournament.points:
             raise IncorrectTournamentType(f"{tournament.name} - not count for AoY points")
+
+        for result in Result.objects.filter(tournament=tournament):
+            result.points = 100 - (result.place_finish - 1)
+            result.save()
+        # Buy-ins get 2pts less than the last place physical tournament participant
+        lowest_points = Result.objects.filter(tournament=tournament, buy_in=False).last().points
+        buy_in_points = lowest_points - 2
+        for result in Result.objects.filter(tournament=tournament, buy_in=True):
+            result.points = buy_in_points
+            result.save()
 
     def get_payouts(self, tournament):
         """Calculates amount of funds to be applied to the club, charity and winners
@@ -290,7 +302,7 @@ class Result(Model):
         This is essentially our tie breaker process implemented with Django query
         """
 
-        ordering = ("-total_weight", "-big_bass_weight", "-num_fish")
+        ordering = ("place_finish", "-total_weight", "-big_bass_weight", "-num_fish")
 
     angler = ForeignKey(Angler, null=True, on_delete=DO_NOTHING)
     buy_in = BooleanField(default=False, null=False, blank=False)
@@ -313,12 +325,15 @@ class Result(Model):
 
     def __str__(self):
         """String representation of a Result object"""
+        place = f"{self.place_finish}" if self.tournament.complete else ""
+        points = f"{self.points} Points" if self.tournament.complete else ""
         weight = f"{self.num_fish} fish {self.total_weight}lbs" if not self.buy_in else "Buy-in"
         big_bass = f"{self.big_bass_weight}lb big bass" if not self.buy_in else ""
         day_number = f"{'Day: ' + self.day_num if self.tournament.multi_day else ''}"
         tournament = f"{self.tournament.name} Lake: {self.tournament.lake}"
         return (
-            f"{self.angler.user.get_full_name()} | {tournament} | {weight} {big_bass} {day_number}"
+            f"{place}. {self.angler.user.get_full_name()}"
+            + f"| {tournament} | {weight} {big_bass} {points}{day_number}"
         )
 
     def get_absolute_url(self):

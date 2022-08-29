@@ -93,7 +93,7 @@ BIG_BASS_BREAKDOWN = """Big Bass Pot is paid to the heaviest bass caught at the 
 - ONLY MEMBERS in good standing are eligible for Big Bass Award.
 """
 DEFAULT_PAID_PLACES = 3
-
+# ORDINAL_PLACES = {p for p in range(1,)}
 
 # TPW Length-weight Conversion Table for Texas Largemouth Bass
 # https://tpwd.texas.gov/fishboat/fish/recreational/catchrelease/bass_length_weight.phtml
