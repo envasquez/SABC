@@ -6,6 +6,9 @@ and team tournaments.
 """
 from __future__ import unicode_literals
 
+from time import strftime
+from decimal import Decimal
+
 from django.db.models import (
     Model,
     Manager,
@@ -16,7 +19,6 @@ from django.db.models import (
     IntegerField,
     DecimalField,
     BooleanField,
-    FloatField,
     DateField,
     DO_NOTHING,
 )
@@ -35,10 +37,6 @@ from . import (
     DEAD_FISH_PENALTY,
     BIG_BASS_BREAKDOWN,
     DEFAULT_PAID_PLACES,
-    get_tournament_name,
-    get_tournament_description,
-    get_length_from_weight,
-    get_weight_from_length,
 )
 from .exceptions import TournamentNotComplete, IncorrectTournamentType
 
@@ -51,25 +49,27 @@ class RuleSet(Model):
 
     Attributes:
         name (CharField) The name of the rule set
-        fee (FloatField) The dollar amount of the entry fee
+        fee (DecimalField) The dollar amount of the entry fee
         rules (TextField) Description of the rules to be followed
         payout (TextField) Description of the payouts
         weigh_in (TextField) Description of the weigh-in procedures
         entry_fee (IntegerField) Description of the entry fee
         fee_breakdown (TextField) Description of how the payouts breakdown
-        dead_fish_penalty (FloatField) Decimal amount of weight penalized per fish
+        dead_fish_penalty (DecimalField) Decimal amount of weight penalized per fish
         big_bass_breakdown (TextField) Description of the big bass criteria
     """
 
-    name = CharField(default="SABC Default Rules", max_length=100, unique=True)
-    fee = FloatField(default=ENTRY_FEE_DOLLARS)
+    name = CharField(default="SABC Default Rules", max_length=100)
+    fee = DecimalField(default=Decimal(str(ENTRY_FEE_DOLLARS)), max_digits=5, decimal_places=2)
     rules = TextField(default=RULES)
     payout = TextField(default=PAYOUT)
     weigh_in = TextField(default=WEIGH_IN)
     entry_fee = TextField(default=ENTRY_FEE)
     fee_breakdown = TextField(default=FEE_BREAKDOWN)
     big_bass_breakdown = TextField(default=BIG_BASS_BREAKDOWN)
-    dead_fish_penalty = FloatField(default=DEAD_FISH_PENALTY)
+    dead_fish_penalty = DecimalField(
+        default=Decimal(str(DEAD_FISH_PENALTY)), max_digits=4, decimal_places=2
+    )
 
     def save(self, *args, **kwargs):
         """Saves a the current instance of a rule set
@@ -170,7 +170,7 @@ class TournamentManager(Manager):
         day_1 = Result.objects.filter(tournament=tournament, day_num=1)
         for result in day_1:
             kwargs = {
-                "angler": result.angler,
+                # "angler": result.angler,
                 "tournament": tournament,
                 "day_1": result,
                 "day_2": Result.objects.get(angler=result.angler, day_num=2, tournament=tournament),
@@ -221,11 +221,11 @@ class Tournament(Model):
         results = TournamentManager() Manager of results (i.e. Tournament.results.<something>)
     """
 
-    name = CharField(default=get_tournament_name(), max_length=512)
-    fee = DecimalField(default=20, max_digits=7, decimal_places=2)
+    name = CharField(default=f"Event #{strftime('%m')} {strftime('%Y')}", max_length=512)
+    fee = DecimalField(default=Decimal("20.00"), max_digits=6, decimal_places=2)
     date = DateField(null=True)
     team = BooleanField(default=True)
-    lake = CharField(default="TBD", max_length=100, choices=LAKES)
+    lake = CharField(default="TBD", null=False, blank=False, max_length=100, choices=LAKES)
     rules = ForeignKey(RuleSet, null=True, on_delete=DO_NOTHING)
     start = TimeField(blank=True, null=True)
     finish = TimeField(blank=True, null=True)
@@ -235,7 +235,7 @@ class Tournament(Model):
     limit_num = IntegerField(default=5)
     multi_day = BooleanField(default=False)
     paid_places = IntegerField(default=DEFAULT_PAID_PLACES)
-    description = TextField(default=get_tournament_description())
+    description = TextField(default="TBD")
     facebook_url = CharField(max_length=1024, blank=True)
     instagram_url = CharField(max_length=1024, blank=True)
 
@@ -244,7 +244,7 @@ class Tournament(Model):
 
     def __str__(self):
         """Return the name of the tournament"""
-        return str(self.name)
+        return self.name
 
     def get_absolute_url(self):
         """Get the absolute url of the tournament details"""
@@ -266,31 +266,17 @@ class Result(Model):
 
     Attributes:
         angler (ForeignKey) The Angler object these results are associated with.
-        buy_in (BooleanField) True is the angler bougt in, False otherwise.
+        buy_in (BooleanField) True if the angler bougt in, False otherwise.
         points (IntegerField) The number of points awarded from the tournament.
         day_num (IntegerField) Day number results for the tournament (default=1).
         tournament (ForeignKey) The tournament these results are associated with.
-        total_weight (FloatField) The total amount of fish weighed (in pounds).
+        place_finish (IntegerField) The place number the results finish overall.
+        num_fish (IntegerField) The number of fish brought to the scales (weighed).
+        total_weight (DecimalField) The total amount of fish weighed (in pounds).
         num_fish_dead (IntegerField) Number of fish weighed that were dead.
+        penalty_weight (DecimalField) The total amount of weight in penalty.
         num_fish_alive (IntegerField) Number of fish weighed that were alive.
-        big_bass_weight (FloatField) The weight of the biggest bass weighed.
-        penalty_weight (FloatField) The total amount of weight in penalty.
-        num_fish_weighed (IntegerField) Number of fish weighed.
-        fish_1_wt (FloatField) The weight of fish number 1.
-        fish_1_len (FloatField) The length of fish number 1.
-        fish_1_alive (BooleanField) True if a fish_1 is alive, False if it is dead.
-        fish_2_wt (FloatField) The weight of fish number 2.
-        fish_2_len (FloatField) The length of fish number 2.
-        fish_2_alive (BooleanField) True if a fish_2 is alive, False if it is dead.
-        fish_3_wt (FloatField) The weight of fish number 3.
-        fish_3_len (FloatField) The length of fish number 3.
-        fish_3_alive (BooleanField) True if a fish_3 is alive, False if it is dead.
-        fish_4_wt (FloatField) The weight of fish number 4.
-        fish_4_len (FloatField) The length of fish number 4.
-        fish_4_alive (BooleanField) True if a fish_4 is alive, False if it is dead.
-        fish_5_wt (FloatField) The weight of fish number 5.
-        fish_5_len (FloatField) The length of fish number 5.
-        fish_5_alive (BooleanField) True if a fish_5 is alive, False if it is dead.
+        big_bass_weight (DecimalField) The weight of the biggest bass weighed.
     """
 
     class Meta:
@@ -300,107 +286,68 @@ class Result(Model):
         This is essentially our tie breaker process implemented with Django query
         """
 
-        ordering = ("-total_weight", "-big_bass_weight", "-num_fish_weighed")
+        ordering = ("-total_weight", "-big_bass_weight", "-num_fish")
 
     angler = ForeignKey(Angler, null=True, on_delete=DO_NOTHING)
-    buy_in = BooleanField(default=False)
-    points = IntegerField(default=0)
+    buy_in = BooleanField(default=False, null=False, blank=False)
+    points = IntegerField(default=0, null=True, blank=True)
     day_num = IntegerField(default=1)
-    tournament = ForeignKey(Tournament, on_delete=DO_NOTHING)
-    total_weight = FloatField(default=0.0)
+    tournament = ForeignKey(Tournament, on_delete=DO_NOTHING, null=False, blank=False)
     place_finish = IntegerField(default=0)
-    num_fish_dead = IntegerField(default=0)
-    num_fish_alive = IntegerField(default=0)
-    big_bass_weight = FloatField(default=0.0)
-    penalty_weight = FloatField(default=0.0)
-    num_fish_weighed = IntegerField(default=0)
-    fish_1_wt = FloatField(default=0.0)
-    fish_1_len = FloatField(default=0.0)
-    fish_1_alive = BooleanField(default=False)
-    fish_2_wt = FloatField(default=0.0)
-    fish_2_len = FloatField(default=0.0)
-    fish_2_alive = BooleanField(default=False)
-    fish_3_wt = FloatField(default=0.0)
-    fish_3_len = FloatField(default=0.0)
-    fish_3_alive = BooleanField(default=False)
-    fish_4_wt = FloatField(default=0.0)
-    fish_4_len = FloatField(default=0.0)
-    fish_4_alive = BooleanField(default=False)
-    fish_5_wt = FloatField(default=0.0)
-    fish_5_len = FloatField(default=0.0)
-    fish_5_alive = BooleanField(default=False)
+    num_fish = IntegerField(default=0, null=False, blank=False)
+    total_weight = DecimalField(
+        default=Decimal("0.00"), null=False, blank=False, max_digits=5, decimal_places=2
+    )
+    num_fish_dead = IntegerField(default=0, null=False, blank=False)
+    num_fish_alive = IntegerField(default=0, null=True, blank=True)
+    penalty_weight = DecimalField(
+        default=Decimal("0.00"), null=True, blank=True, max_digits=5, decimal_places=2
+    )
+    big_bass_weight = DecimalField(
+        default=Decimal("0.00"), null=True, blank=True, max_digits=4, decimal_places=2
+    )
 
     def __str__(self):
         """String representation of a Result object"""
-        tourney = "" if self.tournament is None else self.tournament.name
-        tw_stats = f"{self.angler.user.get_full_name()} {tourney} | {self.total_weight:.2f}lbs TW"
-        bb_stats = f"{self.big_bass_weight:.2f}lbs BB" if not self.buy_in else "Buy-In"
-        return f"{tw_stats} | {bb_stats}"
+        weight = f"{self.num_fish} fish {self.total_weight}lbs" if not self.buy_in else "Buy-in"
+        big_bass = f"{self.big_bass_weight}lb big bass" if not self.buy_in else ""
+        day_number = f"{'Day %d' % self.day_num if self.tournament.multi_day else ''}"
+        tournament = f"{self.tournament.name} Lake: {self.tournament.lake}"
+        return (
+            f"{self.angler.user.get_full_name()} | {tournament} | {weight} {big_bass} {day_number}"
+        )
 
     def get_absolute_url(self):
         """Get url of the result"""
         return reverse("result-add", kwargs={"pk": self.tournament.pk})
 
     def save(self, *args, **kwargs):
-        """Save the result
-
-        Upon save() ... we should do a few things:
-        * Calculate the total weight (applying the appropriate penalty)
-        * Calculate the number of fish alive (if not entered)
-        * Generate the fish weight based on the length if the length is entered
-        * Generate the fish length based on the weight if the weight is entered
-        """
-        self.penalty_weight = self.num_fish_dead * self.tournament.rules.dead_fish_penalty
-        # Calculate the number of fish alive
-        self.num_fish_alive = self.num_fish_weighed - self.num_fish_dead
-
-        # Generate the fish length based on the weight if the weight is entered
-        # Generate the fish weight based on the length if the length is entered
-        weighed_fish = [
-            self.fish_1_wt,
-            self.fish_2_wt,
-            self.fish_3_wt,
-            self.fish_4_wt,
-            self.fish_5_wt,
-        ]
-        measured_fish = [
-            self.fish_1_len,
-            self.fish_2_len,
-            self.fish_3_len,
-            self.fish_4_len,
-            self.fish_5_len,
-        ]
-        if sum(weighed_fish) > 0.0 and sum(measured_fish) == 0.0:  # Weights, not lengths entered
-            self.fish_1_len = get_length_from_weight(self.fish_1_wt)
-            self.fish_2_len = get_length_from_weight(self.fish_2_wt)
-            self.fish_3_len = get_length_from_weight(self.fish_3_wt)
-            self.fish_4_len = get_length_from_weight(self.fish_4_wt)
-            self.fish_5_len = get_length_from_weight(self.fish_5_wt)
-        elif sum(weighed_fish) == 0.0 and sum(measured_fish) > 0.0:  # Lengths, not weights entered
-            self.fish_1_wt = get_weight_from_length(self.fish_1_len)
-            self.fish_2_wt = get_weight_from_length(self.fish_2_len)
-            self.fish_3_wt = get_weight_from_length(self.fish_3_len)
-            self.fish_4_wt = get_weight_from_length(self.fish_4_len)
-            self.fish_5_wt = get_weight_from_length(self.fish_5_len)
-
-        # Calcualte total weight
-        self.total_weight = round(sum(weighed_fish) - self.penalty_weight, 2)
-        if self.num_fish_weighed > 0:
-            catches = [
-                (self.fish_1_wt, self.fish_1_alive),
-                (self.fish_2_wt, self.fish_2_alive),
-                (self.fish_3_wt, self.fish_3_alive),
-                (self.fish_4_wt, self.fish_4_alive),
-                (self.fish_5_wt, self.fish_5_alive),
-            ]
-            eligible_fish = [weight for weight, alive in catches if alive is True]
-            self.big_bass_weight = max(eligible_fish) if eligible_fish else 0.0
-
+        """Save the result"""
+        if self.penalty_weight == Decimal("0.00"):  # In case it was not entered
+            self.penalty_weight = Decimal(str(self.num_fish_dead)) * Decimal(
+                str(self.tournament.rules.dead_fish_penalty)
+            )
+        self.num_fish_alive = self.num_fish - self.num_fish_dead
+        self.total_weight = Decimal(str(self.total_weight)) - Decimal(str(self.penalty_weight))
         super().save(*args, **kwargs)
 
 
 class MultidayResult(Model):
-    """Creates a sum of two results from a multi-day tournament"""
+    """Creates a sum of two results from a multi-day tournament
+
+    Attributes:
+        tournament (ForeignKey)
+        day_1 (ForeignKey) Result for day 1.
+        day_2 (ForeignKey) Result for day 2.
+        buy_in (BooleanField) True if the angler bougt in, False otherwise.
+        place_finish (IntegerField) The place number the results finish overall.
+        num_fish (IntegerField) The number of fish brought to the scales (weighed).
+        total_weight (DecimalField) The total amount of fish weighed (in pounds).
+        num_fish_dead (IntegerField) Number of fish weighed that were dead.
+        num_fish_alive (IntegerField) Number of fish weighed that were alive.
+        penalty_weight (DecimalField) The total amount of weight in penalty.
+        big_bass_weight (DecimalField) The weight of the biggest bass weighed.
+    """
 
     class Meta:
         """Meta class to ensure ordering of results by the largest:
@@ -409,29 +356,26 @@ class MultidayResult(Model):
         This is essentially our tie breaker process implemented with Django query
         """
 
-        ordering = ("-total_weight", "-big_bass_weight", "-num_fish_weighed")
+        ordering = ("-total_weight", "-big_bass_weight", "-num_fish")
 
-    angler = ForeignKey(Angler, null=True, on_delete=DO_NOTHING)
     tournament = ForeignKey(Tournament, on_delete=DO_NOTHING)
-
     day_1 = ForeignKey(Result, null=True, related_name="+", on_delete=DO_NOTHING)
     day_2 = ForeignKey(Result, null=True, on_delete=DO_NOTHING)
-
     buy_in = BooleanField(default=False)
-    total_weight = FloatField(default=0.0)
     place_finish = IntegerField(default=0)
+    num_fish = IntegerField(default=0)
+    total_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
     num_fish_dead = IntegerField(default=0)
     num_fish_alive = IntegerField(default=0)
-    big_bass_weight = FloatField(default=0.0)
-    penalty_weight = FloatField(default=0.0)
-    num_fish_weighed = IntegerField(default=0)
+    penalty_weight = DecimalField(default=Decimal("0.00"), max_digits=4, decimal_places=2)
+    big_bass_weight = DecimalField(default=Decimal("0.00"), max_digits=4, decimal_places=2)
 
     def __str__(self):
         """String representation of a MultidayResult"""
-        tourney = "" if self.tournament is None else self.tournament.name
-        tw_stats = f"{self.angler.user.get_full_name()} {tourney} | {self.total_weight:.2f}lbs TW"
-        bb_stats = f"{self.big_bass_weight:.2f}lbs BB" if not self.buy_in else "Buy-In"
-        return f"{tw_stats} | {bb_stats}"
+        weight = f"{self.num_fish} fish {self.total_weight}lbs" if not self.buy_in else "Buy-in"
+        big_bass = f"{self.big_bass_weight}lb big bass" if not self.buy_in else ""
+        tournament = f"{self.tournament.name} Lake: {self.tournament.lake}"
+        return f"{self.day_1.angler.user.get_full_name()} | {tournament} | {weight} {big_bass}"
 
     def save(self, *args, **kwargs):
         """Saves a MultidayResult object
@@ -443,18 +387,25 @@ class MultidayResult(Model):
         if all([self.day_1.buy_in, self.day_2.buy_in]):
             self.buy_in = True
         if not self.buy_in:
-            self.total_weight = round(self.day_1.total_weight + self.day_2.total_weight, 2)
+            self.num_fish = self.day_1.num_fish + self.day_2.num_fish
+            self.total_weight = self.day_1.total_weight + self.day_2.total_weight
             self.num_fish_dead = self.day_1.num_fish_dead + self.day_2.num_fish_dead
+            self.penalty_weight = self.day_1.penalty_weight + self.day_2.penalty_weight
             self.num_fish_alive = self.day_1.num_fish_alive + self.day_2.num_fish_alive
             self.big_bass_weight = max([self.day_1.big_bass_weight, self.day_2.big_bass_weight])
-            self.penalty_weight = self.day_1.penalty_weight + self.day_2.penalty_weight
-            self.num_fish_weighed = self.day_1.num_fish_weighed + self.day_2.num_fish_weighed
 
         super().save(*args, **kwargs)
 
 
 class TeamResult(Model):
-    """This model represents a team result in a tournament"""
+    """This model represents a team result in a tournament.
+
+    Attributes:
+        boater (ForeignKey) Pointer to the Angler that was the boater.
+        result_1 (ForeignKey) Result for Angler #1.
+        result_2 (ForeignKey) Result for Angler #2.
+        place_finish (IntegerField) The place number the results finish overall.
+    """
 
     boater = ForeignKey(Angler, related_name="+", on_delete=DO_NOTHING)
     result_1 = ForeignKey(Result, null=True, blank=True, on_delete=DO_NOTHING)
@@ -462,6 +413,7 @@ class TeamResult(Model):
     place_finish = IntegerField(default=0)
 
     def __str__(self):
+        """String representation of a TeamResult"""
         angler_1 = self.result_1.angler.user.get_full_name()
         if self.result_2:
             angler_2 = self.result_2.angler.user.get_full_name()
