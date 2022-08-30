@@ -136,6 +136,15 @@ class TournamentManager(Manager):
     def get_payouts(self, tournament):
         """Calculates amount of funds to be applied to the club, charity and winners
 
+        From the wiki ...
+        TOTAL_RESULT_COUNT = NUM_WT_RESULTS + NUM_BUY_IN_RESULTS
+        1ST_PLACE = 6 * TOTAL_RESULT_COUNT
+        2ND_PLACE = 4 * TOTAL_RESULT_COUNT
+        3RD_PLACE = 3 * TOTAL_RESULT_COUNT
+        CLUB_FUNDS = 3 * TOTAL_RESULT_COUNT
+        BIG_BASS_POT = 2 * TOTAL_RESULT_COUNT
+        CHARITY_FUNDS = 2 * TOTAL_RESULT_COUNT
+
         Args:
             tournament (Tournament) The tournament to calculate payouts for
         Returns:
@@ -145,12 +154,33 @@ class TournamentManager(Manager):
               'place_2': 100.00,
               'place_3': 100.00,
               'charity': 100.00,
-              'big_bass': 100.00,}
+              'big_bass': 100.00,
+              'total': 500.00,
+              'bb_cary_over: False}
         Raises:
             TournamentNotComplete if the tournament is not completed
         """
         if not tournament.complete:
             raise TournamentNotComplete(f"{tournament} is not complete!")
+
+        bb_query = {"tournament": tournament, "big_bass_weight__gte": 5.0}
+        bb_exists = Result.objects.filter(**bb_query).count() > 0
+        num_anglers = Decimal(str(Result.objects.filter(tournament=tournament).count()))
+        if tournament.multi_day:
+            day_1 = Result.objects.filter(tournament=tournament, day_num=1).count()
+            day_2 = Result.objects.filter(tournament=tournament, day_num=2).count()
+            num_anglers = Decimal(str(day_1 + day_2))
+
+        return {
+            "club": Decimal("3.00") * num_anglers,
+            "total": Decimal(str(tournament.fee)) * num_anglers,
+            "place_1": Decimal("6.00") * num_anglers,
+            "place_2": Decimal("4.00") * num_anglers,
+            "place_3": Decimal("3.00") * num_anglers,
+            "charity": Decimal("2.00") * num_anglers,
+            "big_bass": Decimal("2.00") * num_anglers,
+            "bb_carry_over": not bb_exists,
+        }
 
     def set_individual_places(self, tournament):
         """Sets the place_finish attribute for a completed individual tournament

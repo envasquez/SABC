@@ -3,11 +3,13 @@
 
 The goal is to test the functionality of our models and ensure our formulas work.
 """
+from decimal import Decimal
 from random import choice
 from django.test import TestCase
 
 from .. import LAKES
 from ..models import MultidayResult, Tournament, Result
+from ..exceptions import TournamentNotComplete
 
 from . import generate_tournament_results, create_tie
 
@@ -15,8 +17,8 @@ from . import generate_tournament_results, create_tie
 class TestTournaments(TestCase):
     """Key things about a tournament and its results that we need to test:
 
-    - AoY points calculations work
-    - Payout calculations work
+    * AoY points calculations work
+    * Payout calculations work
     - Calculating the winner of the Big Bass award works
     * Calculating the winner of a Individual tournament works (single & multi-day)
     - Calculating the winner of a Team tournament works
@@ -94,5 +96,49 @@ class TestTournaments(TestCase):
         for result in Result.objects.filter(tournament=tournament, buy_in=True):
             self.assertEqual(expected, result.points)
 
-    def test_get_payouts(self):
+    def test_get_payouts_indiv(self):
         """Tests the get_payouts function: funds are calculated properly"""
+        tournament = Tournament.objects.create(**self.single_day_indiv)
+        generate_tournament_results(tournament, num_results=100, num_buy_ins=10, multi_day=False)
+        Tournament.results.set_individual_places(tournament)  # Completes the tournament!
+        payouts = Tournament.results.get_payouts(tournament)
+        yes_bb = Result.objects.filter(tournament=tournament, big_bass_weight__gte=5.0).count() > 0
+        self.assertEqual(payouts["club"], Decimal("300.00"))
+        self.assertEqual(payouts["total"], Decimal("2000.00"))
+        self.assertEqual(payouts["place_1"], Decimal("600.00"))
+        self.assertEqual(payouts["place_2"], Decimal("400.00"))
+        self.assertEqual(payouts["place_3"], Decimal("300.00"))
+        self.assertEqual(payouts["charity"], Decimal("200.00"))
+        self.assertEqual(payouts["bb_carry_over"], not yes_bb)
+
+        tournament.complete = False
+        tournament.save()
+        with self.assertRaises(TournamentNotComplete):
+            Tournament.results.get_payouts(tournament)
+
+    def test_get_payouts_multi_day(self):
+        """Tests the get_payouts function: funds are calculated properly for multiday_events"""
+        tournament = Tournament.objects.create(**self.single_day_indiv)
+        generate_tournament_results(tournament, num_results=100, num_buy_ins=10, multi_day=True)
+        Tournament.results.set_individual_places(tournament)  # Completes the tournament!
+        payouts = Tournament.results.get_payouts(tournament)
+        day_1_bb = (
+            Result.objects.filter(
+                tournament=tournament, day_num=1, big_bass_weight__gte=5.0
+            ).count()
+            > 0
+        )
+        day_2_bb = (
+            Result.objects.filter(
+                tournament=tournament, day_num=2, big_bass_weight__gte=5.0
+            ).count()
+            > 0
+        )
+        yes_bb = any([day_1_bb, day_2_bb])
+        self.assertEqual(payouts["club"], Decimal("600.00"))
+        self.assertEqual(payouts["total"], Decimal("4000.00"))
+        self.assertEqual(payouts["place_1"], Decimal("1200.00"))
+        self.assertEqual(payouts["place_2"], Decimal("800.00"))
+        self.assertEqual(payouts["place_3"], Decimal("600.00"))
+        self.assertEqual(payouts["charity"], Decimal("400.00"))
+        self.assertEqual(payouts["bb_carry_over"], not yes_bb)
