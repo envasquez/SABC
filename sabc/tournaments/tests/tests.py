@@ -9,7 +9,7 @@ from django.test import TestCase
 
 from .. import LAKES
 from ..models import MultidayResult, Tournament, Result
-from ..exceptions import TournamentNotComplete
+from ..exceptions import IncorrectTournamentType, TournamentNotComplete
 
 from . import generate_tournament_results, create_tie
 
@@ -55,6 +55,12 @@ class TestTournaments(TestCase):
         second = {"tournament": tournament, "place_finish": 2, "day_num": 1}
         self.assertEqual(winners[0], Result.objects.get(**first))
         self.assertEqual(winners[1], Result.objects.get(**second))
+
+    def test_incorrect_tournament_type(self):
+        """Tests that an exception is raised when setting individual places on a team tournament"""
+        tournament = Tournament.objects.create(**self.single_day_team)
+        with self.assertRaises(IncorrectTournamentType):
+            Tournament.results.set_individual_places(tournament=tournament)
 
     def test_indiv_bb_wins_tie_multi_day(self):
         """Tests that the angler with the biggest fish weighed wins on a multi day tiebreaker"""
