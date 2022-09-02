@@ -2,6 +2,7 @@
 omit =
     */migrations/*.py
     */tournaments/apps.py
+    */tournaments/views.py
     */tournaments/admin.py
     */tournaments/forms.py
     */tournaments/tests/*
