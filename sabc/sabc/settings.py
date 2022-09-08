@@ -21,7 +21,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-ALLOWED_HOSTS = ["*", "127.0.0.1"]
+ALLOWED_HOSTS = ["*"]
 # Application definition
 INSTALLED_APPS = [
     "django_nose",
@@ -67,8 +67,12 @@ WSGI_APPLICATION = "sabc.wsgi.application"
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": os.environ.get("POSTGRES_DB", "env"),
+        "USER": os.environ.get("POSTGRES_USER", os.environ.get("USER")),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "sabc"),
+        "HOST": os.environ.get("db", "localhost"),
+        "PORT": 5432,
     }
 }
 # Password validation

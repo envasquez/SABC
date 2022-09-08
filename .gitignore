@@ -110,3 +110,5 @@ sabc/tournaments/migrations/*
 
 # Plyint
 pylint.out
+# Docker Data
+data/
