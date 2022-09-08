@@ -8,6 +8,7 @@ Contains functions to:
 from decimal import Decimal
 
 from random import choices, randint, uniform
+from sys import get_coroutine_origin_tracking_depth
 
 from names import get_first_name, get_last_name
 
@@ -15,7 +16,7 @@ from django.contrib.auth.models import User
 
 from users.models import Angler
 
-from ..models import MultidayResult, Result
+from ..models import MultidayResult, Result, TeamResult, MultidayTeamResult
 
 LAKE_BB_SCORES = {
     "LBJ": 5,
@@ -37,9 +38,11 @@ LAKE_BB_SCORES = {
 }
 
 
-def create_random_angler():
+def create_random_angler(angler_type="member"):
     """Creates an Angler object, that is of member status
 
+    Args:
+        angler_type (str) Angler type - member or guest
     Returns:
         An Angler object that was created with random names and other information
 
@@ -56,13 +59,22 @@ def create_random_angler():
     )
     angler = Angler.objects.get(user=user)
     angler.phone_number = "+15121234567"
-    angler.type = "member"
+    angler.type = angler_type
     angler.save()
 
     return angler
 
 
-def generate_tournament_results(tournament, num_results=10, num_buy_ins=0, multi_day=False):
+# pylint: disable=too-many-arguments, too-many-statements
+def generate_tournament_results(
+    tournament,
+    num_results=10,
+    num_buy_ins=0,
+    multi_day=False,
+    guests=True,
+    team=False,
+    num_zeros=0,
+):
     """Create Result objects in the database and associate it to the given tournament
 
     Args:
@@ -70,16 +82,21 @@ def generate_tournament_results(tournament, num_results=10, num_buy_ins=0, multi
         num_results (int) The number of results to create
         num_buy_ins (int) The number of buy-in results to generate
         multi_day (bool) Create mutli-day results if True single day if False
+        guests (bool) Generate guests accounts if true, make the results all members if false
+        team (bool) Generate TeamResults if true, Result otherwise
+        num_zeros (int) Number of 0 fish weigh-ins to create
+
     NOTE: If multi_day is True, then 2x the amount of results are generated. (day 1 & day 2)
     """
 
-    def _gen_attrs():
+    def _gen_attrs(zero_weight=False):
+        """Generate Result attributes"""
         num_fish = choices(
             # An angler can weigh in 0 - 5 legal fish
-            [0, 1, 2, 3, 4, 5],
+            [1, 2, 3, 4, 5],
             # Weighted Choices: The % of time an angler weighs in 0 - 5 fish
             # 0 fish 10%, 1 fish 20%, 2 fish 20%, 3 fish 20%, 4 fish 15%, 5 fish 15% = 100%
-            [0.10, 0.20, 0.20, 0.20, 0.15, 0.15],
+            [0.25, 0.25, 0.20, 0.15, 0.15],
         )[0]
         num_fish_dead = choices(
             # An angler can weigh in 0 - 5 dead fish of legal size
@@ -89,33 +106,89 @@ def generate_tournament_results(tournament, num_results=10, num_buy_ins=0, multi
             [0.55, 0.35, 0.05, 0.03, 0.01, 0.01],
         )[0]
         num_fish_alive = num_fish - num_fish_dead if num_fish > 0 else 0
+        angler_type = (
+            choices(
+                # Create a member or a guest
+                ["member", "guest"],
+                # Member: 85% of the time, Guest: 15%
+                [0.85, 0.15],
+            )[0]
+            if guests
+            else "member"  # Just create members!
+        )
         kwargs = {
-            "angler": create_random_angler(),
+            "angler": create_random_angler(angler_type),
             "tournament": tournament,
             "buy_in": False,
+            "day_num": 1,
             "num_fish": num_fish,
             "num_fish_dead": num_fish_dead,
             "num_fish_alive": num_fish_alive,
         }
+        if zero_weight:
+            return {
+                "angler": create_random_angler(angler_type),
+                "tournament": tournament,
+                "buy_in": False,
+                "day_num": 1,
+                "num_fish": 0,
+                "num_fish_dead": 0,
+                "num_fish_alive": 0,
+            }
+        if kwargs["num_fish"] == 0:
+            kwargs["total_weight"] = Decimal("0.00")
+            kwargs["big_bass_weight"] = Decimal("0.00")
+            return kwargs
+
         tot_wt, bb_wt = 0.0, 0.0
         if LAKE_BB_SCORES[tournament.lake] <= 3:
             tot_wt = uniform(1.5, 14.75)
-            bb_wt = 0.0 if tot_wt < 13.50 else uniform(5.0, 9.5)
         elif LAKE_BB_SCORES[tournament.lake] == 4:
             tot_wt = uniform(3.25, 20.0)
-            bb_wt = 0.0 if tot_wt < 12.0 else uniform(5.0, 10.5)
         elif LAKE_BB_SCORES[tournament.lake] == 5:
             tot_wt = uniform(3.5, 15.0)
-            bb_wt = 0.0 if tot_wt < 10.0 else uniform(5.0, 14.0)
-        kwargs["total_weight"] = Decimal(str(tot_wt)) + Decimal(str(bb_wt))
-        kwargs["big_bass_weight"] = Decimal(str(bb_wt))
+        kwargs["total_weight"] = Decimal(str(tot_wt + bb_wt))
+        bb_wt = round(tot_wt / kwargs["num_fish"], 2)
+        if bb_wt >= 5.0:
+            kwargs["big_bass_weight"] = Decimal(str(bb_wt))
 
         return kwargs
+
+    def create_team_results():
+        """Choose pairs of anglers and create teams of non-buy-ins"""
+
+        def _create(day):
+            TeamResult.objects.create(
+                tournament=tournament,
+                boater=result.angler,
+                result_1=result,
+                day_num=day,
+                result_2=Result.objects.get(
+                    tournament=tournament, day_num=1, angler=grp_b[idx].angler
+                ),
+            ).save()
+
+        day_1 = Result.objects.filter(tournament=tournament, day_num=1)
+        grp_a = day_1[len(day_1) // 2 :]
+        grp_b = day_1[: len(day_1) // 2]
+        for idx, result in enumerate(grp_a):
+            if idx < len(grp_b):
+                _create(day=1)
+                if multi_day:
+                    _create(day=2)
+                continue
+            TeamResult.objects.create(
+                tournament=tournament, boater=result.angler, result_1=result
+            ).save()
+            if multi_day:
+                TeamResult.objects.create(
+                    tournament=tournament, boater=result.angler, result_1=result, day_num=2
+                ).save()
 
     #
     # Create random results
     #
-    for _ in range(num_results - num_buy_ins):
+    for _ in range(num_results - num_buy_ins - num_zeros):
         attrs = _gen_attrs()
         Result.objects.create(**attrs).save()
         if multi_day:
@@ -137,6 +210,15 @@ def generate_tournament_results(tournament, num_results=10, num_buy_ins=0, multi
         if multi_day:
             attrs["day_num"] = 2
             Result.objects.create(**attrs).save()
+    for _ in range(num_zeros):
+        attrs = _gen_attrs(zero_weight=True)
+        Result.objects.create(**attrs).save()
+        if multi_day:
+            attrs["day_num"] = 2
+            Result.objects.create(**attrs).save()
+
+    if team:
+        create_team_results()
 
 
 def create_tie(tournament, win_by="BB", multi_day=False):
@@ -171,21 +253,56 @@ def create_tie(tournament, win_by="BB", multi_day=False):
             result.penalty_weight = Decimal("0.00")
             result.save()
 
+    def _create_team_tie(query):
+        """Create tied results based on the win_by strategy"""
+        for idx, result in enumerate(query):
+            result.result_1.num_fish = 5
+            result.result_2.num_fish = 5
+            if idx == 0 and win_by != "BB":
+                result.result_1.num_fish = 4
+                result.result_2.num_fish = 4
+            result.result_1.big_bass_weight = Decimal("10.00")
+            result.result_2.big_bass_weight = Decimal("10.00")
+            if idx == 0 and win_by == "BB":
+                result.result_1.big_bass_weight = Decimal("9.99")
+                result.result_2.big_bass_weight = Decimal("9.99")
+            result.result_1.total_weight = Decimal("100.00")
+            result.result_2.total_weight = Decimal("100.00")
+            result.result_1.num_dish_dead = 0
+            result.result_2.num_fish_dead = 0
+            result.result_1.penalty_weight = Decimal("0.00")
+            result.result_2.penalty_weight = Decimal("0.00")
+            result.result_1.save()
+            result.result_2.save()
+            result.save()
+
     #
     # Get the day1 leaders & create a tie, duplicate the results if multi_day
     #
-    winners = Result.objects.filter(tournament=tournament, day_num=1)[:2]
-    _create_tie(winners)
-    if multi_day:
+    order = ("-total_weight", "-big_bass_weight", "-num_fish")
+    if not multi_day and not tournament.team:
+        _create_tie(Result.objects.filter(tournament=tournament, day_num=1).order_by(*order)[:2])
+        return Result.objects.filter(tournament=tournament).order_by(*order)[:2]
+    if multi_day and not tournament.team:
+        winners = Result.objects.filter(tournament=tournament, day_num=1).order_by(*order)[:2]
+        _create_tie(winners)
         first = Result.objects.get(tournament=tournament, angler=winners[0].angler, day_num=2)
         second = Result.objects.get(tournament=tournament, angler=winners[1].angler, day_num=2)
         _create_tie([first, second])
+        return MultidayResult.objects.filter(tournament=tournament).order_by(*order)[:2]
+    if tournament.team and not multi_day:
+        _create_team_tie(
+            TeamResult.objects.filter(tournament=tournament, day_num=1).order_by(*order)[:2]
+        )
+        return TeamResult.objects.filter(tournament=tournament, day_num=1).order_by(*order)[:2]
 
-    return (
-        Result.objects.filter(tournament=tournament, day_num=1)[:2]
-        if not multi_day
-        else MultidayResult.objects.filter(tournament=tournament)[:2]
-    )
+    winners = TeamResult.objects.filter(tournament=tournament, day_num=1).order_by(*order)[:2]
+    _create_team_tie(winners)
+    first = TeamResult.objects.get(tournament=tournament, day_num=2, boater=winners[0].boater)
+    second = TeamResult.objects.get(tournament=tournament, day_num=2, boater=winners[1].boater)
+    _create_team_tie([first, second])
+
+    return TeamResult.objects.filter(tournament=tournament).order_by(*order)[:4]
 
 
 # TPW Length-weight Conversion Table for Texas Largemouth Bass

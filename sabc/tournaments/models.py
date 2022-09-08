@@ -38,7 +38,6 @@ from . import (
     BIG_BASS_BREAKDOWN,
     DEFAULT_PAID_PLACES,
 )
-from .exceptions import TournamentNotComplete, IncorrectTournamentType
 
 
 class RuleSet(Model):
@@ -60,16 +59,14 @@ class RuleSet(Model):
     """
 
     name = CharField(default="SABC Default Rules", max_length=100)
-    fee = DecimalField(default=Decimal(str(ENTRY_FEE_DOLLARS)), max_digits=5, decimal_places=2)
+    fee = DecimalField(default=ENTRY_FEE_DOLLARS, max_digits=5, decimal_places=2)
     rules = TextField(default=RULES)
     payout = TextField(default=PAYOUT)
     weigh_in = TextField(default=WEIGH_IN)
     entry_fee = TextField(default=ENTRY_FEE)
     fee_breakdown = TextField(default=FEE_BREAKDOWN)
+    dead_fish_penalty = DecimalField(default=DEAD_FISH_PENALTY, max_digits=5, decimal_places=2)
     big_bass_breakdown = TextField(default=BIG_BASS_BREAKDOWN)
-    dead_fish_penalty = DecimalField(
-        default=Decimal(str(DEAD_FISH_PENALTY)), max_digits=4, decimal_places=2
-    )
 
     def save(self, *args, **kwargs):
         """Saves a the current instance of a rule set
@@ -111,27 +108,59 @@ class TournamentManager(Manager):
         ... and so on ...
         NOTE: Buy-ins receive 2 less points than the last place_finish of anglers that weighed
               in fish.
+              Guests, do NOT recieve AoY points
 
         Args:
             tournament (Tournament) The tournament to calculate points for.
-        Raises:
-            TournamentNotComplete if the tournament is not completed.
-            IncorrectTournamentType if the tournament does not count for AoY points.
         """
-        if not tournament.complete:
-            raise TournamentNotComplete(f"{tournament} is not complete!")
-        if not tournament.points:
-            raise IncorrectTournamentType(f"{tournament.name} - not count for AoY points")
 
-        for result in Result.objects.filter(tournament=tournament):
-            result.points = 100 - (result.place_finish - 1)
-            result.save()
-        # Buy-ins get 2pts less than the last place physical tournament participant
-        lowest_points = Result.objects.filter(tournament=tournament, buy_in=False).last().points
-        buy_in_points = lowest_points - 2
-        for result in Result.objects.filter(tournament=tournament, buy_in=True):
-            result.points = buy_in_points
-            result.save()
+        def _set_member_pts():
+            """Set points for members who weighed in fish"""
+            points = tournament.max_points
+            member_results = Result.objects.filter(
+                tournament=tournament,
+                buy_in=False,
+                angler__type="member",
+                num_fish__gt=0,
+                day_num=1,
+            ).order_by("place_finish")
+            for idx, result in enumerate(member_results):
+                result.points = points
+                result.save()
+                prev_wt = member_results[idx - 1].total_weight if idx > 0 else 0
+                prev_finish = member_results[idx - 1].place_finish if idx > 0 else 0
+                tie_exists = prev_finish == result.place_finish and prev_wt == result.total_weight
+                if not tie_exists:
+                    points -= 1
+
+        def _set_zeroed_pts():
+            """Set points for members who fished, but didn't weigh in any fish"""
+            # Anglers that didn't weigh in any fish get lowest_pts - 2
+            zeroed_results = Result.objects.filter(
+                tournament=tournament, buy_in=False, angler__type="member", num_fish=0, day_num=1
+            )
+            for result in zeroed_results:
+                result.points = lowest_points - 2
+                result.save()
+
+        def _set_buy_in_pts():
+            """Set points for members who bought in"""
+            for result in Result.objects.filter(tournament=tournament, day_num=1, buy_in=True):
+                result.points = lowest_points - 4
+                result.save()
+
+        self.set_places(tournament)
+        _set_member_pts()
+        lowest_points = (
+            Result.objects.filter(
+                tournament=tournament, day_num=1, angler__type="member", points__gt=0
+            )
+            .order_by("points")
+            .first()
+            .points
+        )
+        _set_zeroed_pts()
+        _set_buy_in_pts()
 
     def get_payouts(self, tournament):
         """Calculates amount of funds to be applied to the club, charity and winners
@@ -150,30 +179,27 @@ class TournamentManager(Manager):
         Returns:
             A dict mapping the amounts paid to places, chairty and big bass
             Example:
-            { 'place_1': 100.00,
-              'place_2': 100.00,
-              'place_3': 100.00,
-              'charity': 100.00,
-              'big_bass': 100.00,
-              'total': 500.00,
+            { 'place_1': Decimal("100.00"),
+              'place_2': Decimal("100.00"),
+              'place_3': Decimal("100.00"),
+              'charity': Decimal("100.00"),
+              'big_bass': Decimal("100.0")",
+              'total': Decimal("500.00"),
               'bb_cary_over: False}
         Raises:
             TournamentNotComplete if the tournament is not completed
         """
-        if not tournament.complete:
-            raise TournamentNotComplete(f"{tournament} is not complete!")
-
         bb_query = {"tournament": tournament, "big_bass_weight__gte": 5.0}
         bb_exists = Result.objects.filter(**bb_query).count() > 0
-        num_anglers = Decimal(str(Result.objects.filter(tournament=tournament).count()))
+        num_anglers = Result.objects.filter(tournament=tournament).count()
         if tournament.multi_day:
             day_1 = Result.objects.filter(tournament=tournament, day_num=1).count()
             day_2 = Result.objects.filter(tournament=tournament, day_num=2).count()
-            num_anglers = Decimal(str(day_1 + day_2))
+            num_anglers = day_1 + day_2
 
         return {
             "club": Decimal("3.00") * num_anglers,
-            "total": Decimal(str(tournament.fee)) * num_anglers,
+            "total": tournament.fee * num_anglers,
             "place_1": Decimal("6.00") * num_anglers,
             "place_2": Decimal("4.00") * num_anglers,
             "place_3": Decimal("3.00") * num_anglers,
@@ -182,54 +208,76 @@ class TournamentManager(Manager):
             "bb_carry_over": not bb_exists,
         }
 
-    def set_individual_places(self, tournament):
-        """Sets the place_finish attribute for a completed individual tournament
+    def set_places(self, tournament):
+        """Sets the place_finish attribute for a complete tournament
         Args:
             tournament (Tournament) The tournament to get winners from
-        Raises:
-            IncorrectTournamentType if the tournament is a Team tournament, not an individual one
         """
 
         def _set_places(query):
-            """Sets the place_fish attribute for a given query"""
             place = 1
-            for idx, result in enumerate(query, start=1):
+            weighed_fish = [q for q in query if not q.buy_in and q.total_weight > Decimal("0.00")]
+            for idx, result in enumerate(weighed_fish):
                 result.place_finish = place
                 result.save()
-                same_wt = result.total_weight == query[idx - 1].total_weight
-                paid_place = idx <= tournament.paid_places
-                if any([not same_wt, paid_place, not result.buy_in]):
+                tie = result.total_weight == query[idx - 1].total_weight if idx != 0 else -999
+                if not tie or place < tournament.paid_places:
                     place += 1
 
-        if tournament.team:
-            msg = f"{tournament} is a Team Tournament - try calling Tournament.set_team_places()"
-            raise IncorrectTournamentType(msg)
-        #
-        # Set Individual Places
-        #
-        if not tournament.multi_day:
-            _set_places(query=Result.objects.filter(tournament=tournament))
-            tournament.complete = True
-            tournament.save()
-            return
+            zero_fish = [q for q in query if not q.total_weight]
+            for result in zero_fish:
+                result.place_finish = place
+                result.save()
 
-        # Create a MultidayResult to determine the overall tournament winner
-        day_1 = Result.objects.filter(tournament=tournament, day_num=1)
-        for result in day_1:
-            kwargs = {
-                "tournament": tournament,
-                "day_1": result,
-                "day_2": Result.objects.get(angler=result.angler, day_num=2, tournament=tournament),
-            }
-            MultidayResult.objects.create(**kwargs).save()
-        _set_places(query=MultidayResult.objects.filter(tournament=tournament))
+            place += 1
+            buy_ins = [q for q in query if q.buy_in]
+            for result in buy_ins:
+                result.place_finish = place
+                result.save()
 
-    def set_team_places(self, tournament):
-        """Sets the place_finish for a TeamResult"""
-        if not tournament.complete:
-            raise TournamentNotComplete(f"{tournament} is not complete!")
-        if not tournament.team:
-            raise IncorrectTournamentType(f"Error: {tournament} is not a Team Tournament")
+        def _set_multi_day_places():
+            for day_1 in first_day:
+                angler = day_1.angler
+                day_2 = Result.objects.filter(
+                    tournament=tournament, day_num=2, angler=angler
+                ).first()
+                MultidayResult.objects.create(
+                    tournament=tournament, day_1=day_1, day_2=day_2
+                ).save()
+                _set_places(MultidayResult.objects.filter(tournament=tournament).order_by(*order))
+
+        def _set_multi_day_team_places():
+            for day_1 in TeamResult.objects.filter(tournament=tournament, day_num=1):
+                boater = day_1.boater
+                day_2 = TeamResult.objects.filter(
+                    tournament=tournament, day_num=2, boater=boater
+                ).first()
+                MultidayTeamResult.objects.create(
+                    tournament=tournament, day_1=day_1, day_2=day_2
+                ).save()
+                _set_places(
+                    MultidayTeamResult.objects.filter(tournament=tournament).order_by(*order)
+                )
+
+        #
+        # Set Places
+        #
+        order = ("-total_weight", "-big_bass_weight", "-num_fish")
+        first_day = Result.objects.filter(tournament=tournament, day_num=1).order_by(*order)
+        _set_places(first_day)
+        if tournament.multi_day and not tournament.team:
+            second_day = Result.objects.filter(tournament=tournament, day_num=2).order_by(*order)
+            _set_places(second_day)
+            _set_multi_day_places()
+        elif tournament.team and not tournament.multi_day:
+            _set_places(
+                TeamResult.objects.filter(tournament=tournament, day_num=1).order_by(*order)
+            )
+        else:
+            _set_multi_day_team_places()
+
+        tournament.complete = True
+        tournament.save()
 
     def get_big_bass_winner(self, tournament):
         """Returns the Result object that contains the big bass winner
@@ -238,8 +286,35 @@ class TournamentManager(Manager):
         Raises:
             TournamentNotComplete if the tournament is not completed
         """
-        if not tournament.complete:
-            raise TournamentNotComplete(f"{tournament} is not complete!")
+        if not tournament.multi_day and not tournament.team:
+            return (
+                Result.objects.filter(tournament=tournament, big_bass_weight__gte=Decimal("5.00"))
+                .order_by("-big_bass_weight")
+                .first()
+            )
+        if not tournament.multi_day and tournament.team:
+            return (
+                TeamResult.objects.filter(
+                    tournament=tournament, big_bass_weight__gte=Decimal("5.00")
+                )
+                .order_by("-big_bass_weight")
+                .first()
+            )
+        if tournament.multi_day and not tournament.team:
+            return (
+                MultidayResult.objects.filter(
+                    tournament=tournament, big_bass_weight__gte=Decimal("5.00")
+                )
+                .order_by("-big_bass_weight")
+                .first()
+            )
+        return (
+            MultidayTeamResult.objects.filter(
+                tournament=tournament, big_bass_weight__gte=Decimal("5.00")
+            )
+            .order_by("-big_bass_weight")
+            .first()
+        )
 
 
 class Tournament(Model):
@@ -259,6 +334,7 @@ class Tournament(Model):
         ramp_url (CharField) Google maps embedable link for weigh-in location.
         limit_num (IntegerField) The number of weighed fish that comprise a limit.
         multi_day (BooleanField) True if num_days > 1 False otherwise.
+        max_points (IntegerField) Maximim number of points for AoY to count down from (default 100)
         description (TextField) A description of the tournament details.
         facebook_url (CharField) URL to the Facebok even or page.
         instagram_url (CharField) URL to the Instagram event or page.
@@ -268,7 +344,7 @@ class Tournament(Model):
     """
 
     name = CharField(default=f"Event #{strftime('%m')} {strftime('%Y')}", max_length=512)
-    fee = DecimalField(default=Decimal("20.00"), max_digits=6, decimal_places=2)
+    fee = DecimalField(default=Decimal("20.00"), max_digits=5, decimal_places=2)
     date = DateField(null=True)
     team = BooleanField(default=True)
     lake = CharField(default="TBD", null=False, blank=False, max_length=100, choices=LAKES)
@@ -280,6 +356,7 @@ class Tournament(Model):
     ramp_url = CharField(default="", max_length=1024, blank=True)
     limit_num = IntegerField(default=5)
     multi_day = BooleanField(default=False)
+    max_points = IntegerField(default=100)
     paid_places = IntegerField(default=DEFAULT_PAID_PLACES)
     description = TextField(default="TBD")
     facebook_url = CharField(max_length=1024, blank=True)
@@ -325,15 +402,6 @@ class Result(Model):
         big_bass_weight (DecimalField) The weight of the biggest bass weighed.
     """
 
-    class Meta:
-        """Meta class to ensure ordering of results by the largest:
-        total_weight, big_bass_weight, and number of fish_weighed
-
-        This is essentially our tie breaker process implemented with Django query
-        """
-
-        ordering = ("place_finish", "-total_weight", "-big_bass_weight", "-num_fish")
-
     angler = ForeignKey(Angler, null=True, on_delete=DO_NOTHING)
     buy_in = BooleanField(default=False, null=False, blank=False)
     points = IntegerField(default=0, null=True, blank=True)
@@ -350,20 +418,23 @@ class Result(Model):
         default=Decimal("0.00"), null=True, blank=True, max_digits=5, decimal_places=2
     )
     big_bass_weight = DecimalField(
-        default=Decimal("0.00"), null=True, blank=True, max_digits=4, decimal_places=2
+        default=Decimal("0.00"), null=True, blank=True, max_digits=5, decimal_places=2
     )
 
     def __str__(self):
         """String representation of a Result object"""
-        place = f"{self.place_finish}" if self.tournament.complete else ""
-        points = f"{self.points} Points" if self.tournament.complete else ""
-        weight = f"{self.num_fish} fish {self.total_weight}lbs" if not self.buy_in else "Buy-in"
-        big_bass = f"{self.big_bass_weight}lb big bass" if not self.buy_in else ""
-        day_number = f"{'Day: ' + self.day_num if self.tournament.multi_day else ''}"
-        tournament = f"{self.tournament.name} Lake: {self.tournament.lake}"
+        place = f"{self.place_finish}."
+        weight = f"{self.num_fish} @ {self.total_weight}lbs"
+        points = f"{self.points} Points"
+        if self.buy_in:
+            weight = "Buy-in N/A lbs"
+            big_bass = "N/A lb BB"
+        big_bass = f"{self.big_bass_weight}lb BB"
+        day_number = f"{'Day: ' + str(self.day_num) if self.tournament.multi_day else ''}"
+
         return (
-            f"{place}. {self.angler.user.get_full_name()}"
-            + f"| {tournament} | {weight} {big_bass} {points}{day_number}"
+            f"{place}{self.angler}{' ' * (30 - len(str(self.angler)))}"
+            f"{weight}\t{big_bass}\t{points}\t{day_number}"
         )
 
     def get_absolute_url(self):
@@ -372,12 +443,12 @@ class Result(Model):
 
     def save(self, *args, **kwargs):
         """Save the result"""
-        if self.penalty_weight == Decimal("0.00"):  # In case it was not entered
-            self.penalty_weight = Decimal(str(self.num_fish_dead)) * Decimal(
-                str(self.tournament.rules.dead_fish_penalty)
-            )
+        if self.penalty_weight:
+            self.penalty_weight = self.num_fish_dead * self.tournament.rules.dead_fish_penalty
+        self.total_weight = Decimal(str(self.total_weight - self.penalty_weight))
         self.num_fish_alive = self.num_fish - self.num_fish_dead
-        self.total_weight = Decimal(str(self.total_weight)) - Decimal(str(self.penalty_weight))
+        self.big_bass_weight = self.big_bass_weight
+
         super().save(*args, **kwargs)
 
 
@@ -398,33 +469,31 @@ class MultidayResult(Model):
         big_bass_weight (DecimalField) The weight of the biggest bass weighed.
     """
 
-    class Meta:
-        """Meta class to ensure ordering of results by the largest:
-        total_weight, big_bass_weight, and number of fish_weighed
-
-        This is essentially our tie breaker process implemented with Django query
-        """
-
-        ordering = ("place_finish", "-total_weight", "-big_bass_weight", "-num_fish")
-
     tournament = ForeignKey(Tournament, on_delete=DO_NOTHING)
     day_1 = ForeignKey(Result, null=True, related_name="+", on_delete=DO_NOTHING)
     day_2 = ForeignKey(Result, null=True, on_delete=DO_NOTHING)
-    buy_in = BooleanField(default=False)
-    place_finish = IntegerField(default=0)
+
+    buy_in = BooleanField(default=False, null=False, blank=False)
     num_fish = IntegerField(default=0)
+    place_finish = IntegerField(default=0)
     total_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
     num_fish_dead = IntegerField(default=0)
     num_fish_alive = IntegerField(default=0)
-    penalty_weight = DecimalField(default=Decimal("0.00"), max_digits=4, decimal_places=2)
-    big_bass_weight = DecimalField(default=Decimal("0.00"), max_digits=4, decimal_places=2)
+    penalty_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
+    big_bass_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
 
     def __str__(self):
         """String representation of a MultidayResult"""
-        weight = f"{self.num_fish} fish {self.total_weight}lbs" if not self.buy_in else "Buy-in"
-        big_bass = f"{self.big_bass_weight}lb big bass" if not self.buy_in else ""
-        tournament = f"{self.tournament.name} Lake: {self.tournament.lake}"
-        return f"{self.day_1.angler.user.get_full_name()} | {tournament} | {weight} {big_bass}"
+        name = self.day_1.angler
+        place = f"{self.place_finish}."
+        weight = f"2 day total: {self.total_weight}lbs"
+        num_fish = f"{self.num_fish} fish"
+        big_bass = f"{self.big_bass_weight}lb big bass"
+
+        return (
+            f"{place}{name}{' ' * (30 - len(str(name)))}"
+            f"2 day total: {num_fish}: {weight}\t\t{big_bass}"
+        )
 
     def save(self, *args, **kwargs):
         """Saves a MultidayResult object
@@ -433,15 +502,24 @@ class MultidayResult(Model):
             *args (list) A list of arguments
             **kwargs (dict) A dictionary of keyword arguments
         """
-        if all([self.day_1.buy_in, self.day_2.buy_in]):
-            self.buy_in = True
-        if not self.buy_in:
+        if self.day_2:
             self.num_fish = self.day_1.num_fish + self.day_2.num_fish
             self.total_weight = self.day_1.total_weight + self.day_2.total_weight
             self.num_fish_dead = self.day_1.num_fish_dead + self.day_2.num_fish_dead
             self.penalty_weight = self.day_1.penalty_weight + self.day_2.penalty_weight
             self.num_fish_alive = self.day_1.num_fish_alive + self.day_2.num_fish_alive
             self.big_bass_weight = max([self.day_1.big_bass_weight, self.day_2.big_bass_weight])
+        else:
+            for attr in [
+                "buy_in",
+                "num_fish",
+                "total_weight",
+                "big_bass_weight",
+                "num_fish_alive",
+                "num_fish_dead",
+                "penalty_weight",
+            ]:
+                setattr(self, attr, getattr(self.day_1, attr))
 
         super().save(*args, **kwargs)
 
@@ -453,23 +531,146 @@ class TeamResult(Model):
         boater (ForeignKey) Pointer to the Angler that was the boater.
         result_1 (ForeignKey) Result for Angler #1.
         result_2 (ForeignKey) Result for Angler #2.
+        tournament (ForeignKey) Pointer to the tournament for this TeamResult
+        num_fish (IntegerField) Total number of fish wieghed in.
         place_finish (IntegerField) The place number the results finish overall.
+        total_weight (DecimalField) The total team weight.
+        num_fish_dead (IntegerField) The total number of fish dead.
+        num_fish_alive (IntegerField) The total number of fish alive.
+        penalty_weight (DecimalField) The penalty weight multiplier.
+        big_bass_weight (DecimalField) The weight of the biggest bass caught by the team.
     """
 
     boater = ForeignKey(Angler, related_name="+", on_delete=DO_NOTHING)
     result_1 = ForeignKey(Result, null=True, blank=True, on_delete=DO_NOTHING)
     result_2 = ForeignKey(Result, null=True, blank=True, related_name="+", on_delete=DO_NOTHING)
+    tournament = ForeignKey(Tournament, on_delete=DO_NOTHING)
+
+    buy_in = BooleanField(default=False, null=False, blank=False)
+    day_num = IntegerField(default=1)
+    num_fish = IntegerField(default=0)
     place_finish = IntegerField(default=0)
+    total_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
+    num_fish_dead = IntegerField(default=0)
+    num_fish_alive = IntegerField(default=0)
+    penalty_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
+    big_bass_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
 
     def __str__(self):
         """String representation of a TeamResult"""
-        angler_1 = self.result_1.angler.user.get_full_name()
+        name = f"Team: {self.result_1.angler} - SOLO"
         if self.result_2:
-            angler_2 = self.result_2.angler.user.get_full_name()
-            return f"Team: {angler_1} & {angler_2}"
+            name = f"Team: {self.result_1.angler} & {self.result_2.angler}"
+        place = f"{self.place_finish}."
+        weight = f"{self.num_fish} @ {self.total_weight}lbs"
+        if self.buy_in:
+            weight = "Buy-in N/A lbs"
+            big_bass = "N/A lb BB"
+        big_bass = f"{self.big_bass_weight}lb BB"
+        day_number = f"{'Day: ' + str(self.day_num) if self.tournament.multi_day else ''}"
 
-        return f"Team: {angler_1} - SOLO"
+        return f"{place}{name}{' ' * (60 - len(str(name)))}{weight}\t\t{big_bass}\t{day_number}"
 
     def get_absolute_url(self):
         """Returns the absolute url for this model"""
         return reverse("team-details", kwargs={"pk": self.id})
+
+    def save(self, *args, **kwargs):
+        """Saves a MultidayResult object
+
+        Args:
+            *args (list) A list of arguments
+            **kwargs (dict) A dictionary of keyword arguments
+        """
+        if self.result_2:
+            self.num_fish = sum([self.result_1.num_fish, self.result_2.num_fish])
+            self.total_weight = sum([self.result_1.total_weight, self.result_2.total_weight])
+            self.num_fish_dead = sum([self.result_1.num_fish, self.result_2.num_fish_dead])
+            self.penalty_weight = sum([self.result_1.penalty_weight, self.result_2.penalty_weight])
+            self.num_fish_alive = sum([self.result_1.num_fish_alive, self.result_2.num_fish_alive])
+            self.big_bass_weight = max(
+                [self.result_1.big_bass_weight, self.result_2.big_bass_weight]
+            )
+        else:
+            for attr in [
+                "buy_in",
+                "num_fish",
+                "total_weight",
+                "big_bass_weight",
+                "num_fish_alive",
+                "num_fish_dead",
+                "penalty_weight",
+            ]:
+                setattr(self, attr, getattr(self.result_1, attr))
+
+        super().save(*args, **kwargs)
+
+
+class MultidayTeamResult(Model):
+    """This model represents a MultidayTeamResult
+
+    Attributes:
+        day_1 (ForeignKey) Day one TeamResult.
+        day_2 (ForeignKey) Day two TeamResult.
+        tournament (ForeignKey) The tournment related to this result.
+        buy_in (BooleanField) Whether or not the result is a buy-in.
+        num_fish (IntegerField) Number of fish weiged in.
+        place_finish (IntegerField) The place finish for this result.
+        total_weight (DecimalField) Total weight for the team, both days.
+        num_fish_dead (IntegerField) Total number of fish dead.
+        num_fish_alive (IntegerField) Total number of fish alive.
+        penalty_weight (DecimalField) The penalty weight multiplier.
+        big_bass_weight (DecimalField) Largest bass caught over both days for the team.
+    """
+
+    day_1 = ForeignKey(TeamResult, null=True, related_name="+", on_delete=DO_NOTHING)
+    day_2 = ForeignKey(TeamResult, null=True, on_delete=DO_NOTHING)
+    tournament = ForeignKey(Tournament, on_delete=DO_NOTHING)
+
+    buy_in = BooleanField(default=False, null=False, blank=False)
+    num_fish = IntegerField(default=0)
+    place_finish = IntegerField(default=0)
+    total_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
+    num_fish_dead = IntegerField(default=0)
+    num_fish_alive = IntegerField(default=0)
+    penalty_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
+    big_bass_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
+
+    def __str__(self):
+        name = f"Team: {self.day_1.result_1.angler} - SOLO"
+        if self.day_2:
+            name = f"Team: {self.day_1.result_1.angler} & {self.day_2.result_1.angler}"
+        place = f"{self.place_finish}."
+        num_fish = f"{self.num_fish} fish"
+        big_bass = f"{self.big_bass_weight}lb big bass"
+        weight = f"2 day total: {self.total_weight}lbs"
+
+        return f"{place}{name}{' ' * (60 - len(str(name)))} {num_fish}: {weight}\t\t{big_bass}"
+
+    def save(self, *args, **kwargs):
+        """Saves a MultidayResult object
+
+        Args:
+            *args (list) A list of arguments
+            **kwargs (dict) A dictionary of keyword arguments
+        """
+        if self.day_2:
+            self.num_fish = sum([self.day_1.num_fish, self.day_2.num_fish])
+            self.total_weight = sum([self.day_1.total_weight, self.day_2.total_weight])
+            self.num_fish_dead = sum([self.day_1.num_fish, self.day_2.num_fish_dead])
+            self.penalty_weight = sum([self.day_1.penalty_weight, self.day_2.penalty_weight])
+            self.num_fish_alive = sum([self.day_1.num_fish_alive, self.day_2.num_fish_alive])
+            self.big_bass_weight = max([self.day_1.big_bass_weight, self.day_1.big_bass_weight])
+        else:
+            for attr in [
+                "buy_in",
+                "num_fish",
+                "total_weight",
+                "big_bass_weight",
+                "num_fish_alive",
+                "num_fish_dead",
+                "penalty_weight",
+            ]:
+                setattr(self, attr, getattr(self.day_1, attr))
+
+        super().save(*args, **kwargs)
