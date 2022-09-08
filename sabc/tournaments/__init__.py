@@ -2,6 +2,7 @@
 """Tournament definitions and enums"""
 from __future__ import unicode_literals
 
+from decimal import Decimal
 
 LAKES = [
     ("tbd", "TBD"),
@@ -86,8 +87,8 @@ FEE_BREAKDOWN = """Breakdown of $20.00 Entry Fee:
 - $3.00 will go towards Clubs Funds
 - $2.00 Club Charity – Charity give back will be decided by a vote of club members present at the December club meeting.
 """
-ENTRY_FEE_DOLLARS = 20.00
-DEAD_FISH_PENALTY = 0.25
+ENTRY_FEE_DOLLARS = Decimal("20.00")
+DEAD_FISH_PENALTY = Decimal("0.25")
 BIG_BASS_BREAKDOWN = """Big Bass Pot is paid to the heaviest bass caught at the tournament OVER 5lbs. If fishing a Slot Limit Lake or a Paper Tournament and no bass is brought in over the slot limit, this pot will be carried over to the next tournament.
 
 - ONLY MEMBERS in good standing are eligible for Big Bass Award.
