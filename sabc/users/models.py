@@ -31,7 +31,8 @@ class Angler(models.Model):
         verbose_name_plural = "Anglers"
 
     def __str__(self):
-        return self.user.get_full_name()
+        full_name = self.user.get_full_name()
+        return full_name if self.type == "member" else f"{full_name} (G)"
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
