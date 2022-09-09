@@ -28,3 +28,6 @@ jobs:
     - name: Run Tests
       run: |
         make test
+      env:
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: ${{ job.services.postgres.port[5432] }}
