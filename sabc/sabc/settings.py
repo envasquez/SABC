@@ -68,7 +68,7 @@ WSGI_APPLICATION = "sabc.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": os.environ.get("POSTGRES_DB", os.environ.get("USER"),
+        "NAME": os.environ.get("POSTGRES_DB", os.environ.get("USER")),
         "USER": os.environ.get("POSTGRES_USER", os.environ.get("USER")),
         "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "sabc"),
         "HOST": os.environ.get("db", "localhost"),
