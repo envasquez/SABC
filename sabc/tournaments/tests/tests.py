@@ -8,7 +8,7 @@ from random import choice, randint
 from django.test import TestCase
 
 from .. import LAKES, get_length_from_weight, get_weight_from_length
-from ..models import MultidayResult, MultidayTeamResult, TeamResult, Tournament, Result
+from ..models import MultidayResult, MultidayTeamResult, PaperResult, TeamResult, Tournament, Result
 
 from . import generate_tournament_results, create_tie, LENGTH_TO_WEIGHT, WEIGHT_TO_LENGTH
 
@@ -32,6 +32,12 @@ class TestTournaments(TestCase):
         self.single_day_team = {"team": True, "multi_day": False, "lake": choice(lakes)[1]}
         self.multi_day_indiv = {"team": False, "multi_day": True, "lake": choice(lakes)[1]}
         self.single_day_indiv = {"team": False, "multi_day": False, "lake": choice(lakes)[1]}
+        self.paper_tournament = {
+            "team": False,
+            "multi_day": False,
+            "lake": choice(lakes)[1],
+            "paper": True,
+        }
         self.num_results = randint(25, 250)
         self.num_buy_ins = randint(2, 15)
 
@@ -255,9 +261,7 @@ class TestTournaments(TestCase):
         )
 
     def test_set_aoy_points(self):
-        """Tests that AoY points are set properly"""
-        self.num_results = 100
-        self.num_buy_ins = 5
+        """Tests that AoY points are set properly for individual tournaments"""
         tournament = Tournament.objects.create(**self.single_day_indiv)
         generate_tournament_results(tournament, self.num_results, self.num_buy_ins, num_zeros=5)
         Tournament.results.set_aoy_points(tournament)
@@ -283,6 +287,57 @@ class TestTournaments(TestCase):
                 self.assertEqual(lowest_points - 2, result.points)
             if result.buy_in:
                 self.assertEqual(lowest_points - 4, result.points)
+        member_results = Result.objects.filter(
+            tournament=tournament, angler__type="member"
+        ).order_by("place_finish")
+        self.assertEqual(member_results[0].points, 100)
+        self.assertEqual(member_results[1].points, 99)
+        self.assertEqual(member_results[2].points, 98)
+        for idx, result in enumerate(member_results[2:], start=3):
+            if result.place_finish != member_results[idx - 1].place_finish:
+                self.assertEqual(result.points + 1, member_results[idx - 1].points)
+
+    def test_set_aoy_pts_paper_tournament(self):
+        """Tests that AoY points are set properly for individual paper tournaments"""
+        tournament = Tournament.objects.create(**self.paper_tournament)
+        generate_tournament_results(
+            tournament,
+            num_results=self.num_results,
+            num_buy_ins=self.num_buy_ins,
+            num_zeros=3,
+            paper=True,
+        )
+        Tournament.results.set_aoy_points(tournament)
+        lowest_points = (
+            Result.objects.filter(
+                tournament=tournament,
+                day_num=1,
+                angler__type="member",
+                points__gt=0,
+                buy_in=False,
+                num_fish__gt=0,
+            )
+            .order_by("points")
+            .first()
+            .points
+        )
+        for result in PaperResult.objects.filter(tournament=tournament).order_by("place_finish"):
+            if result.angler.type == "guest":
+                self.assertEqual(result.points, 0)
+                continue
+            if result.num_fish == 0 and not result.buy_in:
+                self.assertEqual(lowest_points - 2, result.points)
+            if result.buy_in:
+                self.assertEqual(lowest_points - 4, result.points)
+        member_results = PaperResult.objects.filter(
+            tournament=tournament, angler__type="member"
+        ).order_by("place_finish")
+        self.assertEqual(member_results[0].points, 100)
+        self.assertEqual(member_results[1].points, 99)
+        self.assertEqual(member_results[2].points, 98)
+        for idx, result in enumerate(member_results[2:], start=3):
+            if result.place_finish != member_results[idx - 1].place_finish:
+                self.assertEqual(result.points + 1, member_results[idx - 1].points)
 
     def test_get_payouts_indiv(self):
         """Tests the get_payouts function: funds are calculated properly"""

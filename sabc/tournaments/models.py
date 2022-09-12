@@ -37,6 +37,7 @@ from . import (
     DEAD_FISH_PENALTY,
     BIG_BASS_BREAKDOWN,
     DEFAULT_PAID_PLACES,
+    get_weight_from_length,
 )
 
 
@@ -318,7 +319,7 @@ class TournamentManager(Manager):
 
 
 class Tournament(Model):
-    """Tournament model
+    """This model represents a Tournament.
 
     Attributes:
         name (CharField) Name of the tournament.
@@ -349,6 +350,7 @@ class Tournament(Model):
     team = BooleanField(default=True)
     lake = CharField(default="TBD", null=False, blank=False, max_length=100, choices=LAKES)
     rules = ForeignKey(RuleSet, null=True, on_delete=DO_NOTHING)
+    paper = BooleanField(default=False)
     start = TimeField(blank=True, null=True)
     finish = TimeField(blank=True, null=True)
     points = BooleanField(default=True)
@@ -384,7 +386,7 @@ class Tournament(Model):
 
 # pylint: disable=too-many-instance-attributes
 class Result(Model):
-    """This model represents an individuals performance in a tournament
+    """This model represents an individuals performance in a tournament.
 
 
     Attributes:
@@ -448,6 +450,58 @@ class Result(Model):
         self.total_weight = Decimal(str(self.total_weight - self.penalty_weight))
         self.num_fish_alive = self.num_fish - self.num_fish_dead
         self.big_bass_weight = self.big_bass_weight
+
+        super().save(*args, **kwargs)
+
+
+class PaperResult(Result):
+    """This model represents a Paper Tournament result.
+
+    Attributes:
+        fish1_wt (DecimalField) Length of fish1.
+        fish2_wt (DecimalField) Length of fish2.
+        fish3_wt (DecimalField) Length of fish3.
+        fish4_wt (DecimalField) Length of fish4.
+        fish5_wt (DecimalField) Length of fish4.
+        fish1_len (DecimalField) Weight of fish1.
+        fish2_len (DecimalField) Weight of fish2.
+        fish3_len (DecimalField) Weight of fish3.
+        fish4_len (DecimalField) Weight of fish4.
+        fish5_len (DecimalField) Weight of fish5.
+    """
+
+    fish1_wt = DecimalField(default=Decimal("0.00"), decimal_places=2, max_digits=5)
+    fish2_wt = DecimalField(default=Decimal("0.00"), decimal_places=2, max_digits=5)
+    fish3_wt = DecimalField(default=Decimal("0.00"), decimal_places=2, max_digits=5)
+    fish4_wt = DecimalField(default=Decimal("0.00"), decimal_places=2, max_digits=5)
+    fish5_wt = DecimalField(default=Decimal("0.00"), decimal_places=2, max_digits=5)
+    fish1_len = DecimalField(default=Decimal("0.00"), decimal_places=2, max_digits=5)
+    fish2_len = DecimalField(default=Decimal("0.00"), decimal_places=2, max_digits=5)
+    fish3_len = DecimalField(default=Decimal("0.00"), decimal_places=2, max_digits=5)
+    fish4_len = DecimalField(default=Decimal("0.00"), decimal_places=2, max_digits=5)
+    fish5_len = DecimalField(default=Decimal("0.00"), decimal_places=2, max_digits=5)
+
+    def get_absolute_url(self):
+        """Get url of the result"""
+        return reverse("result-add", kwargs={"pk": self.tournament.pk})
+
+    def save(self, *args, **kwargs):
+        """Save the result"""
+        self.fish1_wt = Decimal(str(get_weight_from_length(self.fish1_len)))
+        self.fish2_wt = Decimal(str(get_weight_from_length(self.fish2_len)))
+        self.fish3_wt = Decimal(str(get_weight_from_length(self.fish3_len)))
+        self.fish4_wt = Decimal(str(get_weight_from_length(self.fish4_len)))
+        self.fish5_wt = Decimal(str(get_weight_from_length(self.fish5_len)))
+        self.total_weight = sum(
+            [self.fish1_wt, self.fish2_wt, self.fish3_wt, self.fish4_wt, self.fish5_wt]
+        )
+        big_fish = [
+            fish
+            for fish in [self.fish1_wt, self.fish2_wt, self.fish3_wt, self.fish4_wt, self.fish5_wt]
+            if fish >= Decimal("5.00")
+        ]
+        if any(big_fish):
+            self.big_bass_weight = max(big_fish)
 
         super().save(*args, **kwargs)
 

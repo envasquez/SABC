@@ -16,7 +16,7 @@ from django.contrib.auth.models import User
 
 from users.models import Angler
 
-from ..models import MultidayResult, Result, TeamResult, MultidayTeamResult
+from ..models import MultidayResult, PaperResult, Result, TeamResult, MultidayTeamResult
 
 LAKE_BB_SCORES = {
     "LBJ": 5,
@@ -74,6 +74,7 @@ def generate_tournament_results(
     guests=True,
     team=False,
     num_zeros=0,
+    paper=False,
 ):
     """Create Result objects in the database and associate it to the given tournament
 
@@ -85,9 +86,17 @@ def generate_tournament_results(
         guests (bool) Generate guests accounts if true, make the results all members if false
         team (bool) Generate TeamResults if true, Result otherwise
         num_zeros (int) Number of 0 fish weigh-ins to create
+        paper (bool) Generate Paper results (5 fish wieghts from lengths)
 
     NOTE: If multi_day is True, then 2x the amount of results are generated. (day 1 & day 2)
     """
+
+    def _paper_kwargs(kwargs_):
+        """Returns results for a paper"""
+        for num in range(1, kwargs_["num_fish"] + 1):
+            kwargs_[f"fish{num}_len"] = Decimal(str(randint(12, 25)))
+
+        return kwargs_
 
     def _gen_attrs(zero_weight=False):
         """Generate Result attributes"""
@@ -126,7 +135,7 @@ def generate_tournament_results(
             "num_fish_alive": num_fish_alive,
         }
         if zero_weight:
-            return {
+            kwargs = {
                 "angler": create_random_angler(angler_type),
                 "tournament": tournament,
                 "buy_in": False,
@@ -135,6 +144,9 @@ def generate_tournament_results(
                 "num_fish_dead": 0,
                 "num_fish_alive": 0,
             }
+        if paper:
+            return _paper_kwargs(kwargs)
+
         if kwargs["num_fish"] == 0:
             kwargs["total_weight"] = Decimal("0.00")
             kwargs["big_bass_weight"] = Decimal("0.00")
@@ -190,6 +202,9 @@ def generate_tournament_results(
     #
     for _ in range(num_results - num_buy_ins - num_zeros):
         attrs = _gen_attrs()
+        if paper:
+            PaperResult.objects.create(**attrs).save()
+            continue
         Result.objects.create(**attrs).save()
         if multi_day:
             angler = attrs["angler"]
@@ -206,12 +221,19 @@ def generate_tournament_results(
             "tournament": tournament,
             "buy_in": True,
         }
+        if paper:
+            PaperResult.objects.create(**attrs).save()
+            continue
         Result.objects.create(**attrs).save()
         if multi_day:
             attrs["day_num"] = 2
             Result.objects.create(**attrs).save()
+
     for _ in range(num_zeros):
         attrs = _gen_attrs(zero_weight=True)
+        if paper:
+            PaperResult.objects.create(**attrs).save()
+            continue
         Result.objects.create(**attrs).save()
         if multi_day:
             attrs["day_num"] = 2
