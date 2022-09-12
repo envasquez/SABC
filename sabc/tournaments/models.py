@@ -349,7 +349,7 @@ class Tournament(Model):
     date = DateField(null=True)
     team = BooleanField(default=True)
     lake = CharField(default="TBD", null=False, blank=False, max_length=100, choices=LAKES)
-    rules = ForeignKey(RuleSet, null=True, on_delete=DO_NOTHING)
+    rules = ForeignKey(RuleSet, null=True, blank=True, on_delete=DO_NOTHING)
     paper = BooleanField(default=False)
     start = TimeField(blank=True, null=True)
     finish = TimeField(blank=True, null=True)
