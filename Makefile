@@ -5,14 +5,15 @@ PROJECT := sabc
 .PHONY: clean clean-db clean-docker clean-all docker lint test
 .DEFAULT_GOAL: help
 export PYTHONPATH=$(shell pwd)/sabc
+export DEPLOYMENT_HOST=db
 
 clean:
 	find $(PROJECT) -name "*.pyc" -type f -delete
 	find $(PROJECT) -name "__pycache__" -type d -delete
 
 clean-db: clean
-	find $(PROJECT) -name "db.sqlite3" -type f -delete
 	find $(PROJECT) -path "*/migrations/*.py" -not -name "__init__.py" -delete
+	rm -rf data/db
 
 clean-docker:
 	docker-compose down
