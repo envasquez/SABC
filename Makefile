@@ -5,7 +5,6 @@ PROJECT := sabc
 .PHONY: clean clean-db clean-docker clean-all docker lint test
 .DEFAULT_GOAL: help
 export PYTHONPATH=$(shell pwd)/sabc
-export DEPLOYMENT_HOST=db
 
 clean:
 	find $(PROJECT) -name "*.pyc" -type f -delete
@@ -13,24 +12,32 @@ clean:
 
 clean-db: clean
 	find $(PROJECT) -path "*/migrations/*.py" -not -name "__init__.py" -delete
-	rm -rf data/db
 
 clean-docker:
 	docker-compose down
-	docker volume rm sabc_sabc-app || true
+	docker volume rm sabc_sabc_app || true
+	docker volume rm sabc_postgres_data || true
 	docker image rm sabc_sabc || true
 	docker image prune -f
 
-clean-all: clean clean-db clean-docker
+clean-all: clean-docker clean clean-db
 
+docker: DEPLOYMENT_HOST=db
 docker: clean-all
 	docker-compose up -d --build --force-recreate sabc
+
+docker-test-webapp: DEPLOYMENT_HOST=db
+docker-test-webapp:
+	docker-compose down
+	docker volume rm sabc_sabc_app || true
+	docker image rm sabc_sabc || true
+	docker-compose up -d --build sabc
 
 lint: clean clean-db
 	pylint --verbose --rcfile=.pylintrc --output=pylint.out sabc/tournaments; cat pylint.out
 
 test: clean clean-db
-	python sabc/manage.py makemigrations && python sabc/manage.py migrate
+	python3 sabc/manage.py makemigrations && python3 sabc/manage.py migrate
 	coverage run --branch --source=sabc/tournaments sabc/./manage.py test --verbosity=2 sabc
 	coverage report
 
