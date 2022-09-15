@@ -215,5 +215,7 @@ def get_length_from_weight(weight):
 
 def get_last_sunday():
     """Returns the last sunday of the month when called"""
+    month = date.today().month if date.today().month >= 10 else f"0{date.today().month}"
     sunday = max(week[-1] for week in monthcalendar(date.today().year, date.today().month))
-    return f"{date.today().month}/{sunday}/{date.today().year}"
+    sunday = sunday if sunday >= 10 else f"0{sunday}"
+    return f"{date.today().year}-{month}-{sunday}"

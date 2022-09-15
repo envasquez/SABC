@@ -38,8 +38,8 @@ lint: clean clean-db
 
 test: clean clean-db
 	python3 sabc/manage.py makemigrations && python3 sabc/manage.py migrate
-	coverage run --branch --source=sabc/tournaments sabc/./manage.py test --verbosity=2 sabc
-	coverage report
+	python3 -m coverage run --branch --source=sabc/tournaments sabc/./manage.py test --verbosity=2 sabc
+	python3 -m coverage report
 
 help:
 	@echo -e "\t make clean"
