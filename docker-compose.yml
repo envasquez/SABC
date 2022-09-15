@@ -4,7 +4,7 @@ services:
   db:
     image: postgres
     volumes:
-    - ./data/db:/var/lib/postgresql/data
+    - postgres_data:/var/lib/postgresql/data
     env_file:
       - db_vars.env
   sabc:
@@ -17,15 +17,16 @@ services:
             sh -c "
             python sabc/manage.py makemigrations
             && python sabc/manage.py migrate --run-syncdb --noinput
-            && python sabc/manage.py createsuperuser --noinput
+            && ./create_superuser.sh
             && python sabc/manage.py runserver 0.0.0.0:8000
             "
     restart: unless-stopped
     volumes:
-      - sabc-app:/app
+      - sabc_app:/app
     ports:
       - 8000:8000
     depends_on:
       - db
 volumes:
-  sabc-app:
+  sabc_app:
+  postgres_data:
