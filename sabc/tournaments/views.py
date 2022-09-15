@@ -19,6 +19,16 @@ from django.contrib.messages.views import SuccessMessageMixin
 from .forms import TournamentForm, ResultForm, TeamForm
 from .models import Tournament, Result, TeamResult
 
+OFFICERS = [
+    "president",
+    "vice-president",
+    "secretary",
+    "treasurer",
+    "social-media",
+    "tournament-director",
+    "assistant-tournament-director",
+]
+
 #
 # Tournaments
 #
@@ -47,11 +57,17 @@ class TournamentCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         """Form validator"""
-        return self.form_valid(form)
+        # pylint: disable=useless-super-delegation
+        return super().form_valid(form)
 
     def test_func(self):
         """Test function for values"""
-        return self.request.user.angler.type == "officer"
+        return any(
+            [
+                self.request.user.angler.officer_type in OFFICERS,
+                self.request.user.is_staff,
+            ]
+        )
 
 
 class TournamentUpdateView(
@@ -65,12 +81,17 @@ class TournamentUpdateView(
 
     def form_valid(self, form):
         """Form validator"""
-        form.instance.updated_by = self.request.user.profile
+        form.instance.updated_by = self.request.user.angler
         return super().form_valid(form)
 
     def test_func(self):
         """Test function for values"""
-        return self.request.user.angler.type == "officer"
+        return any(
+            [
+                self.request.user.angler.officer_type in OFFICERS,
+                self.request.user.is_staff,
+            ]
+        )
 
 
 class TournamentDeleteView(
@@ -101,7 +122,7 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
 
     model = Result
     form_class = ResultForm
-    success_message = "Results Successfully Added: %s"
+    success_message = "Results Successfully Added for: %s"
 
     def get_initial(self, *args, **kwargs):
         """Get initial result"""
@@ -112,11 +133,16 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
     def save(self, *args, **kwargs):
         """Save a result"""
         obj = self.get_object()
-        messages.success(self.request, self.success_message % obj)
+        messages.success(self.request, self.success_message % obj.angler)
 
     def test_func(self):
         """Test function for values"""
-        return self.request.user.angler.type == "officer"
+        return any(
+            [
+                self.request.user.angler.officer_type in OFFICERS,
+                self.request.user.is_staff,
+            ]
+        )
 
 
 #
@@ -136,10 +162,12 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
 
     def test_func(self):
         """Test function for values"""
-        if self.request.user.angler.type != "officer":
-            return False
-
-        return True
+        return any(
+            [
+                self.request.user.angler.officer_type in OFFICERS,
+                self.request.user.is_staff,
+            ]
+        )
 
     def get_success_message(self, *args, **kwargs):
         """Get success message"""
@@ -175,7 +203,12 @@ class TeamListView(SuccessMessageMixin, LoginRequiredMixin, ListView):
 
     def test_func(self):
         """Test function for values"""
-        return self.request.user.angler.type == "officer"
+        return any(
+            [
+                self.request.user.angler.officer_type in OFFICERS,
+                self.request.user.is_staff,
+            ]
+        )
 
 
 class TeamDetailView(SuccessMessageMixin, LoginRequiredMixin, DetailView):
@@ -198,7 +231,12 @@ class TeamDetailView(SuccessMessageMixin, LoginRequiredMixin, DetailView):
 
     def test_func(self):
         """Test function for values"""
-        return self.request.user.angler.type == "officer"
+        return any(
+            [
+                self.request.user.angler.officer_type in OFFICERS,
+                self.request.user.is_staff,
+            ]
+        )
 
 
 # class TeamUpdateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):

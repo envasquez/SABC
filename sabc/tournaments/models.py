@@ -12,15 +12,15 @@ from decimal import Decimal
 from django.db.models import (
     Model,
     Manager,
-    ForeignKey,
     TimeField,
     CharField,
     TextField,
-    IntegerField,
-    DecimalField,
-    BooleanField,
     DateField,
     DO_NOTHING,
+    ForeignKey,
+    DecimalField,
+    BooleanField,
+    SmallIntegerField,
 )
 from django.urls import reverse
 
@@ -28,15 +28,20 @@ from users.models import Angler
 
 from . import (
     LAKES,
-    RULES,
+    RULE_INFO,
     PAYOUT,
     WEIGH_IN,
-    ENTRY_FEE,
+    PAYMENT,
     FEE_BREAKDOWN,
+    DEFAULT_END_TIME,
     ENTRY_FEE_DOLLARS,
     DEAD_FISH_PENALTY,
+    DEFAULT_START_TIME,
     BIG_BASS_BREAKDOWN,
     DEFAULT_PAID_PLACES,
+    DEFAULT_FACEBOOK_URL,
+    DEFAULT_INSTAGRAM_URL,
+    get_last_sunday,
     get_weight_from_length,
 )
 
@@ -53,7 +58,7 @@ class RuleSet(Model):
         rules (TextField) Description of the rules to be followed
         payout (TextField) Description of the payouts
         weigh_in (TextField) Description of the weigh-in procedures
-        entry_fee (IntegerField) Description of the entry fee
+        entry_fee (SmallIntegerField) Description of the entry fee
         fee_breakdown (TextField) Description of how the payouts breakdown
         dead_fish_penalty (DecimalField) Decimal amount of weight penalized per fish
         big_bass_breakdown (TextField) Description of the big bass criteria
@@ -61,10 +66,10 @@ class RuleSet(Model):
 
     name = CharField(default="SABC Default Rules", max_length=100)
     fee = DecimalField(default=ENTRY_FEE_DOLLARS, max_digits=5, decimal_places=2)
-    rules = TextField(default=RULES)
+    rules = TextField(default=RULE_INFO)
     payout = TextField(default=PAYOUT)
     weigh_in = TextField(default=WEIGH_IN)
-    entry_fee = TextField(default=ENTRY_FEE)
+    entry_fee = TextField(default=PAYMENT)
     fee_breakdown = TextField(default=FEE_BREAKDOWN)
     dead_fish_penalty = DecimalField(default=DEAD_FISH_PENALTY, max_digits=5, decimal_places=2)
     big_bass_breakdown = TextField(default=BIG_BASS_BREAKDOWN)
@@ -322,8 +327,8 @@ class Tournament(Model):
     """This model represents a Tournament.
 
     Attributes:
-        name (CharField) Name of the tournament.
         fee (DecimalField) Entry fee amount.
+        name (CharField) Name of the tournament.
         date (DateField) Start date of the tournament.
         team (BooleanField) True if the tournament is a team tournament False otherwise.
         lake (CharField) Lake on which the event will take place.
@@ -333,9 +338,9 @@ class Tournament(Model):
         points (BooleanField) True if the tournament counts towards AoY points.
         complete (BooleanField) True if the tournament is over, False otherwise.
         ramp_url (CharField) Google maps embedable link for weigh-in location.
-        limit_num (IntegerField) The number of weighed fish that comprise a limit.
+        limit_num (SmallIntegerField) The number of weighed fish that comprise a limit.
         multi_day (BooleanField) True if num_days > 1 False otherwise.
-        max_points (IntegerField) Maximim number of points for AoY to count down from (default 100)
+        max_points (SmallIntegerField) Maximim number of points for AoY (default=100)
         description (TextField) A description of the tournament details.
         facebook_url (CharField) URL to the Facebok even or page.
         instagram_url (CharField) URL to the Instagram event or page.
@@ -344,25 +349,25 @@ class Tournament(Model):
         results = TournamentManager() Manager of results (i.e. Tournament.results.<something>)
     """
 
-    name = CharField(default=f"Event #{strftime('%m')} {strftime('%Y')}", max_length=512)
     fee = DecimalField(default=Decimal("20.00"), max_digits=5, decimal_places=2)
-    date = DateField(null=True)
+    name = CharField(default=f"Event #{strftime('%m')} {strftime('%Y')}", max_length=512)
+    date = DateField(null=False, blank=False, default=get_last_sunday)
     team = BooleanField(default=True)
     lake = CharField(default="TBD", null=False, blank=False, max_length=100, choices=LAKES)
     rules = ForeignKey(RuleSet, null=True, blank=True, on_delete=DO_NOTHING)
     paper = BooleanField(default=False)
-    start = TimeField(blank=True, null=True)
-    finish = TimeField(blank=True, null=True)
+    start = TimeField(blank=False, null=False, default=DEFAULT_START_TIME)
+    finish = TimeField(blank=False, null=False, default=DEFAULT_END_TIME)
     points = BooleanField(default=True)
     complete = BooleanField(default=False)
     ramp_url = CharField(default="", max_length=1024, blank=True)
-    limit_num = IntegerField(default=5)
+    limit_num = SmallIntegerField(default=5)
     multi_day = BooleanField(default=False)
-    max_points = IntegerField(default=100)
-    paid_places = IntegerField(default=DEFAULT_PAID_PLACES)
+    max_points = SmallIntegerField(default=100)
+    paid_places = SmallIntegerField(default=DEFAULT_PAID_PLACES)
     description = TextField(default="TBD")
-    facebook_url = CharField(max_length=1024, blank=True)
-    instagram_url = CharField(max_length=1024, blank=True)
+    facebook_url = CharField(max_length=512, default=DEFAULT_FACEBOOK_URL)
+    instagram_url = CharField(max_length=512, default=DEFAULT_INSTAGRAM_URL)
 
     objects = Manager()
     results = TournamentManager()
@@ -392,30 +397,30 @@ class Result(Model):
     Attributes:
         angler (ForeignKey) The Angler object these results are associated with.
         buy_in (BooleanField) True if the angler bougt in, False otherwise.
-        points (IntegerField) The number of points awarded from the tournament.
-        day_num (IntegerField) Day number results for the tournament (default=1).
+        points (SmallIntegerField) The number of points awarded from the tournament.
+        day_num (SmallIntegerField) Day number results for the tournament (default=1).
         tournament (ForeignKey) The tournament these results are associated with.
-        place_finish (IntegerField) The place number the results finish overall.
-        num_fish (IntegerField) The number of fish brought to the scales (weighed).
+        place_finish (SmallIntegerField) The place number the results finish overall.
+        num_fish (SmallIntegerField) The number of fish brought to the scales (weighed).
         total_weight (DecimalField) The total amount of fish weighed (in pounds).
-        num_fish_dead (IntegerField) Number of fish weighed that were dead.
+        num_fish_dead (SmallIntegerField) Number of fish weighed that were dead.
         penalty_weight (DecimalField) The total amount of weight in penalty.
-        num_fish_alive (IntegerField) Number of fish weighed that were alive.
+        num_fish_alive (SmallIntegerField) Number of fish weighed that were alive.
         big_bass_weight (DecimalField) The weight of the biggest bass weighed.
     """
 
     angler = ForeignKey(Angler, null=True, on_delete=DO_NOTHING)
     buy_in = BooleanField(default=False, null=False, blank=False)
-    points = IntegerField(default=0, null=True, blank=True)
-    day_num = IntegerField(default=1)
+    points = SmallIntegerField(default=0, null=True, blank=True)
+    day_num = SmallIntegerField(default=1)
     tournament = ForeignKey(Tournament, on_delete=DO_NOTHING, null=False, blank=False)
-    place_finish = IntegerField(default=0)
-    num_fish = IntegerField(default=0, null=False, blank=False)
+    place_finish = SmallIntegerField(default=0)
+    num_fish = SmallIntegerField(default=0, null=False, blank=False)
     total_weight = DecimalField(
         default=Decimal("0.00"), null=False, blank=False, max_digits=5, decimal_places=2
     )
-    num_fish_dead = IntegerField(default=0, null=False, blank=False)
-    num_fish_alive = IntegerField(default=0, null=True, blank=True)
+    num_fish_dead = SmallIntegerField(default=0, null=False, blank=False)
+    num_fish_alive = SmallIntegerField(default=0, null=True, blank=True)
     penalty_weight = DecimalField(
         default=Decimal("0.00"), null=True, blank=True, max_digits=5, decimal_places=2
     )
@@ -441,7 +446,7 @@ class Result(Model):
 
     def get_absolute_url(self):
         """Get url of the result"""
-        return reverse("result-add", kwargs={"pk": self.tournament.pk})
+        return reverse("result-create", kwargs={"pk": self.tournament.pk})
 
     def save(self, *args, **kwargs):
         """Save the result"""
@@ -483,7 +488,7 @@ class PaperResult(Result):
 
     def get_absolute_url(self):
         """Get url of the result"""
-        return reverse("result-add", kwargs={"pk": self.tournament.pk})
+        return reverse("result-create", kwargs={"pk": self.tournament.pk})
 
     def save(self, *args, **kwargs):
         """Save the result"""
@@ -514,11 +519,11 @@ class MultidayResult(Model):
         day_1 (ForeignKey) Result for day 1.
         day_2 (ForeignKey) Result for day 2.
         buy_in (BooleanField) True if the angler bougt in, False otherwise.
-        place_finish (IntegerField) The place number the results finish overall.
-        num_fish (IntegerField) The number of fish brought to the scales (weighed).
+        place_finish (SmallIntegerField) The place number the results finish overall.
+        num_fish (SmallIntegerField) The number of fish brought to the scales (weighed).
         total_weight (DecimalField) The total amount of fish weighed (in pounds).
-        num_fish_dead (IntegerField) Number of fish weighed that were dead.
-        num_fish_alive (IntegerField) Number of fish weighed that were alive.
+        num_fish_dead (SmallIntegerField) Number of fish weighed that were dead.
+        num_fish_alive (SmallIntegerField) Number of fish weighed that were alive.
         penalty_weight (DecimalField) The total amount of weight in penalty.
         big_bass_weight (DecimalField) The weight of the biggest bass weighed.
     """
@@ -528,11 +533,11 @@ class MultidayResult(Model):
     day_2 = ForeignKey(Result, null=True, on_delete=DO_NOTHING)
 
     buy_in = BooleanField(default=False, null=False, blank=False)
-    num_fish = IntegerField(default=0)
-    place_finish = IntegerField(default=0)
+    num_fish = SmallIntegerField(default=0)
+    place_finish = SmallIntegerField(default=0)
     total_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
-    num_fish_dead = IntegerField(default=0)
-    num_fish_alive = IntegerField(default=0)
+    num_fish_dead = SmallIntegerField(default=0)
+    num_fish_alive = SmallIntegerField(default=0)
     penalty_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
     big_bass_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
 
@@ -586,11 +591,11 @@ class TeamResult(Model):
         result_1 (ForeignKey) Result for Angler #1.
         result_2 (ForeignKey) Result for Angler #2.
         tournament (ForeignKey) Pointer to the tournament for this TeamResult
-        num_fish (IntegerField) Total number of fish wieghed in.
-        place_finish (IntegerField) The place number the results finish overall.
+        num_fish (SmallIntegerField) Total number of fish wieghed in.
+        place_finish (SmallIntegerField) The place number the results finish overall.
         total_weight (DecimalField) The total team weight.
-        num_fish_dead (IntegerField) The total number of fish dead.
-        num_fish_alive (IntegerField) The total number of fish alive.
+        num_fish_dead (SmallIntegerField) The total number of fish dead.
+        num_fish_alive (SmallIntegerField) The total number of fish alive.
         penalty_weight (DecimalField) The penalty weight multiplier.
         big_bass_weight (DecimalField) The weight of the biggest bass caught by the team.
     """
@@ -601,12 +606,12 @@ class TeamResult(Model):
     tournament = ForeignKey(Tournament, on_delete=DO_NOTHING)
 
     buy_in = BooleanField(default=False, null=False, blank=False)
-    day_num = IntegerField(default=1)
-    num_fish = IntegerField(default=0)
-    place_finish = IntegerField(default=0)
+    day_num = SmallIntegerField(default=1)
+    num_fish = SmallIntegerField(default=0)
+    place_finish = SmallIntegerField(default=0)
     total_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
-    num_fish_dead = IntegerField(default=0)
-    num_fish_alive = IntegerField(default=0)
+    num_fish_dead = SmallIntegerField(default=0)
+    num_fish_alive = SmallIntegerField(default=0)
     penalty_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
     big_bass_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
 
@@ -668,11 +673,11 @@ class MultidayTeamResult(Model):
         day_2 (ForeignKey) Day two TeamResult.
         tournament (ForeignKey) The tournment related to this result.
         buy_in (BooleanField) Whether or not the result is a buy-in.
-        num_fish (IntegerField) Number of fish weiged in.
-        place_finish (IntegerField) The place finish for this result.
+        num_fish (SmallIntegerField) Number of fish weiged in.
+        place_finish (SmallIntegerField) The place finish for this result.
         total_weight (DecimalField) Total weight for the team, both days.
-        num_fish_dead (IntegerField) Total number of fish dead.
-        num_fish_alive (IntegerField) Total number of fish alive.
+        num_fish_dead (SmallIntegerField) Total number of fish dead.
+        num_fish_alive (SmallIntegerField) Total number of fish alive.
         penalty_weight (DecimalField) The penalty weight multiplier.
         big_bass_weight (DecimalField) Largest bass caught over both days for the team.
     """
@@ -682,11 +687,11 @@ class MultidayTeamResult(Model):
     tournament = ForeignKey(Tournament, on_delete=DO_NOTHING)
 
     buy_in = BooleanField(default=False, null=False, blank=False)
-    num_fish = IntegerField(default=0)
-    place_finish = IntegerField(default=0)
+    num_fish = SmallIntegerField(default=0)
+    place_finish = SmallIntegerField(default=0)
     total_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
-    num_fish_dead = IntegerField(default=0)
-    num_fish_alive = IntegerField(default=0)
+    num_fish_dead = SmallIntegerField(default=0)
+    num_fish_alive = SmallIntegerField(default=0)
     penalty_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
     big_bass_weight = DecimalField(default=Decimal("0.00"), max_digits=5, decimal_places=2)
 

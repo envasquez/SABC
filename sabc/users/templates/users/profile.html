@@ -7,6 +7,12 @@
         <div class="media-body">
           <h2 class="account-heading">{{ user.first_name }} {{ user.last_name }}</h2>
           <p class="text-secondary">{{ user.angler.type }}</p>
+          {% if user.is_authenticated and user.is_staff %}
+              <p class="text-secondary">Site Staff</p>
+              {% if user.is_authenticated and user.is_superuser %}
+                <p class="text-secondary">SUPERUSER</p>
+              {% endif %}
+          {% endif %}
           {% if user.is_authenticated and user.angler.type == 'officer' %}
               <p class="text-secondary">{{ user.angler.officer_type }}</p>
           {% endif %}
@@ -17,7 +23,7 @@
       </div>
       <form method="POST" enctype="multipart/form-data">
           {% csrf_token %}
-          {% comment %} 
+          {% comment %}
           Here we need to say:
             if created_by == CURRENT_USER:
                 allow_edit

@@ -4,7 +4,7 @@
       <article class="media content-section">
         <div class="media-body">
           <div class="article-metadata">
-            <a class="article-title" href="{% url 'tournament-details' tournament.id %}">{{ tournament.name }}</a>
+            <a class="article-title" href="{% url 'tournament-details' tournament.id %}">{{ tournament.date }} - {{ tournament.name }}</a>
           </div>
           <h2>
             <a class="article-title" href="{% url 'tournament-details' tournament.id %}">
@@ -12,37 +12,47 @@
             </a>
             {% if tournament.complete %}
               <small class="text-muted ml-2">
-                [Complete]
+                [complete]
               </small>
             {% endif %}
           </h2>
-          {% if tournament.lake != 'tbd' %}
-            <a href="{{ tournament.facebook_url }}" target="_blank"><img src="static/fb_logo_26px_blk.png" /></a><br /><br />
-          {% endif %}
           {{ tournament.ramp_url | default:'<img src="static/tbd.jpg" height="250">'| safe}}
           <p class="article-content">
             <table class="table">
               <tbody>
                 <tr>
-                  <td align="right">Date:</td><td align="left">{{ tournament.date }}</td>
-                  <td align="right">Start time:</td><td align="left">{{ tournament.start }}</td>
+                  {{ tournament.description | truncatechars:100 | linebreaks}}
                 </tr>
                 <tr>
-                  <td align="right">Ramp:</td><td align="left">{{ tournament.ramp }}</td>
+                  <td align="right">Start time:</td><td align="left">{{ tournament.start }}</td>
                   <td align="right">Weigh-in:</td><td align="left">{{ tournament.finish }}</td>
                 </tr>
                 <tr>
                   {% if tournament.type == 'team' %}
-                    <td align="right">Type:</td><td align="left">{{ tournament.type | title }} - 5 fish per boat</td>
-                    <td align="right">Entry Fee:</td><td align="left">${{ tournament.rules.entry_fee }} per boat</td>
+                    <td align="right">Type:</td><td align="left">{{ tournament.type | title }} 5 fish per boat</td>
+                    <td align="right">Entry Fee:</td><td align="left">${{ tournament.fee }} per boat</td>
                   {% else %}
-                    <td align="right">Type:</td><td align="left">{{ tournament.type | title }} - 10 fish per boat</td>
-                    <td align="right">Entry Fee:</td><td align="left">${{ tournament.rules.entry_fee }} per angler</td>
+                    <td align="right">Type:</td><td align="left">{{ tournament.type | title }} 10 fish per boat</td>
+                    <td align="right">Entry Fee:</td><td align="left">${{ tournament.fee }} per angler</td>
+                  {% endif %}
+                </tr>
+                <tr>
+                  {% if tournament.points %}
+                    <td align="right">AoY Points:</td>
+                    <td align="left">Yes</td>
+                    <td align="left"></td>
+                    <td align="left"></td>
+                  {% else %}
+                    <td align="right">AoY Points:</td>
+                    <td align="left">No</td>
+                    {% if tournament.paper %}
+                      <td align="right">Paper Tournament:</td>
+                      <td align="left">Yes</td>
+                    {% endif %}
                   {% endif %}
                 </tr>
               </tbody>
             </table>
-            <br />{{ tournament.description | truncatechars:100 | linebreaks}}<br />
           </p>
         </div>
       </article>

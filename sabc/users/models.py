@@ -18,7 +18,9 @@ class Angler(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.PROTECT)
     type = models.CharField(max_length=10, choices=MEMBER_CHOICES, default="guest")
-    officer_type = models.CharField(max_length=32, choices=CLUB_OFFICERS_TYPES, blank=True)
+    officer_type = models.CharField(
+        max_length=64, choices=CLUB_OFFICERS_TYPES, blank=True, null=True, default=""
+    )
     image = models.ImageField(default="profile_pics/default.jpg", upload_to="profile_pics")
     date_joined = models.DateField(default=timezone.now)
     phone_number = PhoneNumberField(blank=True)
