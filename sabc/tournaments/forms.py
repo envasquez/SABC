@@ -27,7 +27,6 @@ class ResultForm(forms.ModelForm):
             angler (ForeignKey) The Angler object these results are associated with.
             buy_in (BooleanField) True if the angler bougt in, False otherwise.
             points (SmallIntegerField) The number of points awarded from the tournament.
-            day_num (SmallIntegerField) Day number results for the tournament (default=1).
             tournament (ForeignKey) The tournament these results are associated with.
             place_finish (SmallIntegerField) The place number the results finish overall.
             num_fish (SmallIntegerField) The number of fish brought to the scales (weighed).
@@ -39,7 +38,15 @@ class ResultForm(forms.ModelForm):
         """
 
         model = Result
-        fields = ("angler", "tournament", "buy_in", "day_num", "num_fish", "num_fish_dead", "big_bass_weight", "total_weight")
+        fields = (
+            "tournament",
+            "angler",
+            "buy_in",
+            "num_fish",
+            "num_fish_dead",
+            "big_bass_weight",
+            "total_weight",
+        )
 
 
 class TeamForm(forms.ModelForm):

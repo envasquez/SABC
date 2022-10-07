@@ -4,382 +4,46 @@
 The goal is to test the functionality of our models and ensure our formulas work.
 """
 from decimal import Decimal
-from random import choice, randint
+from random import choice
+
+import inflect
+
 from django.test import TestCase
+from django.contrib.auth.models import User
 
 from .. import LAKES, get_length_from_weight, get_weight_from_length
-from ..models import MultidayResult, MultidayTeamResult, PaperResult, TeamResult, Tournament, Result
+from ..models import TeamResult, Tournament, Result
 
-from . import generate_tournament_results, create_tie, LENGTH_TO_WEIGHT, WEIGHT_TO_LENGTH
+from . import (
+    create_angler,
+    LENGTH_TO_WEIGHT,
+    WEIGHT_TO_LENGTH,
+    RESULTS_NO_TIE,
+    RESULTS_TIE_BB_WINS,
+    TEAM_RESULTS_NO_TIE,
+)
 
-# pylint: disable=too-many-public-methods
+
 class TestTournaments(TestCase):
     """Key things about a tournament and its results that we need to test:
 
     * AoY points calculations work
     * Payout calculations work
     - Calculating the winner of the Big Bass award works
-    * Calculating the winner of a Individual tournament works (single & multi-day)
     - Calculating the winner of a Team tournament works
-    - Calculating the winner of a Team multi-day tournament works
     * Conversions for weight->length & length->weight are accurate/correct
     """
 
     def setUp(self):
         """Pre-test set up"""
         lakes = [(l[0], l[1]) for l in LAKES if l[0] != "tbd" and l[1] != "TBD"]
-        self.multi_day_team = {"team": True, "multi_day": True, "lake": choice(lakes)[1]}
-        self.single_day_team = {"team": True, "multi_day": False, "lake": choice(lakes)[1]}
-        self.multi_day_indiv = {"team": False, "multi_day": True, "lake": choice(lakes)[1]}
-        self.single_day_indiv = {"team": False, "multi_day": False, "lake": choice(lakes)[1]}
-        self.paper_tournament = {
+        self.team = {"team": True, "lake": choice(lakes)[1]}
+        self.indiv = {"team": False, "lake": choice(lakes)[1]}
+        self.paper = {
             "team": False,
-            "multi_day": False,
             "lake": choice(lakes)[1],
             "paper": True,
         }
-        self.num_results = randint(25, 250)
-        self.num_buy_ins = randint(2, 15)
-
-    def test_set_places_indiv_single_day(self):
-        """Tests the set_places() function: Single Day Individual Tournament"""
-        tournament = Tournament.objects.create(**self.single_day_indiv)
-        generate_tournament_results(tournament, num_results=25, num_buy_ins=3)
-        Tournament.results.set_places(tournament)
-        results = Result.objects.filter(tournament=tournament).order_by("place_finish")
-        for idx, result in enumerate(results, start=1):
-            self.assertLessEqual(result.total_weight, results[idx - 1].total_weight)
-            self.assertGreaterEqual(result.place_finish, results[idx - 1].place_finish)
-
-    def test_set_places_indiv_multi_day(self):
-        """Tests the set_places() function: Multi Day Individual Tournament"""
-        tournament = Tournament.objects.create(**self.multi_day_indiv)
-        generate_tournament_results(tournament, num_results=25, num_buy_ins=3)
-        Tournament.results.set_places(tournament)
-        results = MultidayResult.objects.filter(tournament=tournament).order_by("place_finish")
-        for idx, result in enumerate(results, start=1):
-            self.assertLessEqual(result.total_weight, results[idx - 1].total_weight)
-            self.assertGreaterEqual(result.place_finish, results[idx - 1].place_finish)
-
-    def test_set_places_team_single_day(self):
-        """Tests the set_places() function: Single Day Team Tournament"""
-        tournament = Tournament.objects.create(**self.single_day_team)
-        generate_tournament_results(tournament, num_results=25, num_buy_ins=3)
-        Tournament.results.set_places(tournament)
-        results = TeamResult.objects.filter(tournament=tournament).order_by("place_finish")
-        for idx, result in enumerate(results, start=1):
-            self.assertLessEqual(result.total_weight, results[idx - 1].total_weight)
-            self.assertGreaterEqual(result.place_finish, results[idx - 1].place_finish)
-
-    def test_set_places_team_multi_day(self):
-        """Tests the set_places() function: Multi Day Team Tournament"""
-        tournament = Tournament.objects.create(**self.multi_day_team)
-        generate_tournament_results(tournament, num_results=25, num_buy_ins=3)
-        Tournament.results.set_places(tournament)
-        results = MultidayTeamResult.objects.filter(tournament=tournament).order_by("place_finish")
-        for idx, result in enumerate(results, start=1):
-            self.assertLessEqual(result.total_weight, results[idx - 1].total_weight)
-            self.assertGreaterEqual(result.place_finish, results[idx - 1].place_finish)
-
-    def test_indiv_bb_wins_tie(self):
-        """Tests that the angler with the biggest bass wins on a single day tournament"""
-        tournament = Tournament.objects.create(**self.single_day_indiv)
-        generate_tournament_results(tournament, self.num_results, self.num_buy_ins)
-        create_tie(tournament, win_by="BB", multi_day=False)
-        Tournament.results.set_places(tournament)
-        # They should have the same total weight
-        self.assertEqual(
-            Result.objects.get(tournament=tournament, place_finish=1).total_weight,
-            Result.objects.get(tournament=tournament, place_finish=2).total_weight,
-        )
-        # Second place should have a smaller big bass
-        self.assertLess(
-            Result.objects.get(tournament=tournament, place_finish=2).big_bass_weight,
-            Result.objects.get(tournament=tournament, place_finish=1).big_bass_weight,
-        )
-
-    def test_indiv_most_fish_wins_tie(self):
-        """Tests that the angler with the most fish weighed wins on a single day tiebreaker"""
-        tournament = Tournament.objects.create(**self.single_day_indiv)
-        generate_tournament_results(tournament, self.num_results, self.num_buy_ins)
-        create_tie(tournament, win_by="MOST_FISH")
-        Tournament.results.set_places(tournament)
-        # They should have the same total weight
-        self.assertEqual(
-            Result.objects.get(tournament=tournament, place_finish=1).total_weight,
-            Result.objects.get(tournament=tournament, place_finish=2).total_weight,
-        )
-        # They should have the same big bass weight
-        self.assertEqual(
-            Result.objects.get(tournament=tournament, place_finish=1).big_bass_weight,
-            Result.objects.get(tournament=tournament, place_finish=2).big_bass_weight,
-        )
-        # First place should have more num_fish
-        self.assertLess(
-            Result.objects.get(tournament=tournament, place_finish=2).num_fish,
-            Result.objects.get(tournament=tournament, place_finish=1).num_fish,
-        )
-
-    def test_indiv_bb_wins_tie_multi_day(self):
-        """Tests that the angler with the biggest fish weighed wins on a multi day tiebreaker"""
-        tournament = Tournament.objects.create(**self.multi_day_indiv)
-        generate_tournament_results(tournament, self.num_results, self.num_buy_ins, multi_day=True)
-        create_tie(tournament, win_by="BB", multi_day=True)
-        Tournament.results.set_places(tournament)
-        # They should have the same total weight
-        self.assertEqual(
-            MultidayResult.objects.get(tournament=tournament, place_finish=1).total_weight,
-            MultidayResult.objects.get(tournament=tournament, place_finish=2).total_weight,
-        )
-        # Second place should have a smaller big bass
-        self.assertLess(
-            MultidayResult.objects.get(tournament=tournament, place_finish=2).big_bass_weight,
-            MultidayResult.objects.get(tournament=tournament, place_finish=1).big_bass_weight,
-        )
-
-    def test_indiv_most_fish_wins_tie_multi_day(self):
-        """Tests that the angler with the biggest fish weighed wins on a multi-day tiebreaker"""
-        tournament = Tournament.objects.create(**self.multi_day_indiv)
-        generate_tournament_results(tournament, self.num_results, self.num_buy_ins, multi_day=True)
-        create_tie(tournament, win_by="MOST_FISH", multi_day=True)
-        Tournament.results.set_places(tournament)
-        # They should have the same total weight
-        self.assertEqual(
-            MultidayResult.objects.get(tournament=tournament, place_finish=1).total_weight,
-            MultidayResult.objects.get(tournament=tournament, place_finish=2).total_weight,
-        )
-        # They should have the same big bass weight
-        self.assertEqual(
-            MultidayResult.objects.get(tournament=tournament, place_finish=1).big_bass_weight,
-            MultidayResult.objects.get(tournament=tournament, place_finish=2).big_bass_weight,
-        )
-        # First place should have more num_fish
-        self.assertLess(
-            MultidayResult.objects.get(tournament=tournament, place_finish=2).num_fish,
-            MultidayResult.objects.get(tournament=tournament, place_finish=1).num_fish,
-        )
-
-    def test_indiv_bb_winner(self):
-        """Tests that an angler with the biggest bass wins big bass on a single day tournament"""
-        tournament = Tournament.objects.create(**self.single_day_indiv)
-        generate_tournament_results(tournament, self.num_results, self.num_buy_ins)
-        # Pick a random result in the Top 3
-        Tournament.results.set_places(tournament)
-        result = Result.objects.get(tournament=tournament, place_finish=2)
-        # Create a big bass larger than our generator would, guarantee this result wins BB
-        result.big_bass_weight = Decimal("25.00")
-        result.save()
-        self.assertEqual(result, Tournament.results.get_big_bass_winner(tournament))
-
-    def test_indiv_bb_winner_multi_day(self):
-        """Tests that an angler with the largest bass wins big bass on a multi-day tournament"""
-        tournament = Tournament.objects.create(**self.multi_day_indiv)
-        generate_tournament_results(tournament, self.num_results, self.num_buy_ins, multi_day=True)
-        Tournament.results.set_places(tournament)
-        # Pick the tenth place and modify the result to force a win
-        result = MultidayResult.objects.get(tournament=tournament, place_finish=3)
-        # Create a big bass larger than our generator would, guarantee this result wins BB
-        result.day_1.big_bass_weight = Decimal("25.00")
-        result.day_2.big_bass_weight = Decimal("10.00")
-        result.save()
-        self.assertEqual(result, Tournament.results.get_big_bass_winner(tournament))
-
-    def test_team_bb_winner_single_day(self):
-        """Tests that a team with the largest bass wins big on a single day tournament"""
-        tournament = Tournament.objects.create(**self.single_day_team)
-        generate_tournament_results(tournament, self.num_results, self.num_buy_ins, team=True)
-        Tournament.results.set_places(tournament)
-        result = TeamResult.objects.get(tournament=tournament, place_finish=2)
-        result.result_1.big_bass_weight = Decimal("25.00")
-        result.save()
-        self.assertEqual(Tournament.results.get_big_bass_winner(tournament), result)
-
-    def test_team_bb_wins_tie_single_day(self):
-        """Tests that a team with the biggest bass wins a tie breaker on a single day tournament"""
-        tournament = Tournament.objects.create(**self.single_day_team)
-        generate_tournament_results(tournament, self.num_results, self.num_buy_ins, team=True)
-        winners = create_tie(tournament, win_by="BB", multi_day=False)
-        Tournament.results.set_places(tournament)
-        self.assertEqual(winners[0], TeamResult.objects.get(tournament=tournament, place_finish=1))
-        self.assertEqual(winners[1], TeamResult.objects.get(tournament=tournament, place_finish=2))
-
-    def test_team_bb_wins_tie_multi_day(self):
-        """Tests that a team with the biggest bass wins a tie breaker on a multi-day tournament"""
-        tournament = Tournament.objects.create(**self.multi_day_team)
-        generate_tournament_results(
-            tournament, self.num_results, self.num_buy_ins, multi_day=True, team=True, num_zeros=2
-        )
-        create_tie(tournament, win_by="BB", multi_day=True)
-        Tournament.results.set_places(tournament)
-        self.assertEqual(
-            MultidayTeamResult.objects.get(tournament=tournament, place_finish=1).total_weight,
-            MultidayTeamResult.objects.get(tournament=tournament, place_finish=2).total_weight,
-        )
-        self.assertGreater(
-            MultidayTeamResult.objects.get(tournament=tournament, place_finish=1).big_bass_weight,
-            MultidayTeamResult.objects.get(tournament=tournament, place_finish=2).big_bass_weight,
-        )
-
-    def test_team_most_fish_wins_tie_single_day(self):
-        """Tests that a team with the most fish wins on a tie breaker on a single day tournament"""
-        tournament = Tournament.objects.create(**self.single_day_team)
-        generate_tournament_results(tournament, self.num_results, self.num_buy_ins, team=True)
-        create_tie(tournament, win_by="MOST_FISH", multi_day=False)
-        Tournament.results.set_places(tournament)
-        self.assertEqual(
-            TeamResult.objects.get(tournament=tournament, place_finish=1).total_weight,
-            TeamResult.objects.get(tournament=tournament, place_finish=2).total_weight,
-        )
-        self.assertEqual(
-            TeamResult.objects.get(tournament=tournament, place_finish=1).big_bass_weight,
-            TeamResult.objects.get(tournament=tournament, place_finish=2).big_bass_weight,
-        )
-        self.assertGreater(
-            TeamResult.objects.get(tournament=tournament, place_finish=1).num_fish,
-            TeamResult.objects.get(tournament=tournament, place_finish=2).num_fish,
-        )
-
-    def test_team_most_fish_wins_tie_multi_day(self):
-        """Tests that a team with the most fish wins on a tie breaker on a multi day tournament"""
-        tournament = Tournament.objects.create(**self.multi_day_team)
-        generate_tournament_results(
-            tournament, self.num_results, self.num_buy_ins, team=True, multi_day=True
-        )
-        create_tie(tournament, win_by="MOST_FISH", multi_day=True)
-        Tournament.results.set_places(tournament)
-        self.assertEqual(
-            MultidayTeamResult.objects.get(tournament=tournament, place_finish=1).total_weight,
-            MultidayTeamResult.objects.get(tournament=tournament, place_finish=2).total_weight,
-        )
-        self.assertEqual(
-            MultidayTeamResult.objects.get(tournament=tournament, place_finish=1).big_bass_weight,
-            MultidayTeamResult.objects.get(tournament=tournament, place_finish=2).big_bass_weight,
-        )
-        self.assertGreater(
-            MultidayTeamResult.objects.get(tournament=tournament, place_finish=1).num_fish,
-            MultidayTeamResult.objects.get(tournament=tournament, place_finish=2).num_fish,
-        )
-
-    def test_set_aoy_points(self):
-        """Tests that AoY points are set properly for individual tournaments"""
-        tournament = Tournament.objects.create(**self.single_day_indiv)
-        generate_tournament_results(tournament, self.num_results, self.num_buy_ins, num_zeros=5)
-        Tournament.results.set_aoy_points(tournament)
-        lowest_points = (
-            Result.objects.filter(
-                tournament=tournament,
-                day_num=1,
-                angler__type="member",
-                points__gt=0,
-                buy_in=False,
-                num_fish__gt=0,
-            )
-            .order_by("points")
-            .first()
-            .points
-        )
-        for result in Result.objects.filter(tournament=tournament).order_by("place_finish"):
-            print(result)
-            if result.angler.type == "guest":
-                self.assertEqual(result.points, 0)
-                continue
-            if result.num_fish == 0 and not result.buy_in:
-                self.assertEqual(lowest_points - 2, result.points)
-            if result.buy_in:
-                self.assertEqual(lowest_points - 4, result.points)
-        member_results = Result.objects.filter(
-            tournament=tournament, angler__type="member"
-        ).order_by("place_finish")
-        self.assertEqual(member_results[0].points, 100)
-        self.assertEqual(member_results[1].points, 99)
-        self.assertEqual(member_results[2].points, 98)
-        for idx, result in enumerate(member_results[2:], start=3):
-            if result.place_finish != member_results[idx - 1].place_finish:
-                self.assertEqual(result.points + 1, member_results[idx - 1].points)
-
-    def test_set_aoy_pts_paper_tournament(self):
-        """Tests that AoY points are set properly for individual paper tournaments"""
-        tournament = Tournament.objects.create(**self.paper_tournament)
-        generate_tournament_results(
-            tournament,
-            num_results=self.num_results,
-            num_buy_ins=self.num_buy_ins,
-            num_zeros=3,
-            paper=True,
-        )
-        Tournament.results.set_aoy_points(tournament)
-        lowest_points = (
-            Result.objects.filter(
-                tournament=tournament,
-                day_num=1,
-                angler__type="member",
-                points__gt=0,
-                buy_in=False,
-                num_fish__gt=0,
-            )
-            .order_by("points")
-            .first()
-            .points
-        )
-        for result in PaperResult.objects.filter(tournament=tournament).order_by("place_finish"):
-            if result.angler.type == "guest":
-                self.assertEqual(result.points, 0)
-                continue
-            if result.num_fish == 0 and not result.buy_in:
-                self.assertEqual(lowest_points - 2, result.points)
-            if result.buy_in:
-                self.assertEqual(lowest_points - 4, result.points)
-        member_results = PaperResult.objects.filter(
-            tournament=tournament, angler__type="member"
-        ).order_by("place_finish")
-        self.assertEqual(member_results[0].points, 100)
-        self.assertEqual(member_results[1].points, 99)
-        self.assertEqual(member_results[2].points, 98)
-        for idx, result in enumerate(member_results[2:], start=3):
-            if result.place_finish != member_results[idx - 1].place_finish:
-                self.assertEqual(result.points + 1, member_results[idx - 1].points)
-
-    def test_get_payouts_indiv(self):
-        """Tests the get_payouts function: funds are calculated properly"""
-        tournament = Tournament.objects.create(**self.single_day_indiv)
-        generate_tournament_results(tournament, num_results=100, num_buy_ins=10, multi_day=False)
-        Tournament.results.set_places(tournament)
-        payouts = Tournament.results.get_payouts(tournament)
-        yes_bb = Result.objects.filter(tournament=tournament, big_bass_weight__gte=5.0).count() > 0
-        self.assertEqual(payouts["club"], 300.00)
-        self.assertEqual(payouts["total"], 2000.00)
-        self.assertEqual(payouts["place_1"], 600.00)
-        self.assertEqual(payouts["place_2"], 400.00)
-        self.assertEqual(payouts["place_3"], 300.00)
-        self.assertEqual(payouts["charity"], 200.00)
-        self.assertEqual(payouts["bb_carry_over"], not yes_bb)
-
-    def test_get_payouts_multi_day(self):
-        """Tests the get_payouts function: funds are calculated properly for multiday_events"""
-        tournament = Tournament.objects.create(**self.single_day_indiv)
-        generate_tournament_results(tournament, num_results=100, num_buy_ins=10, multi_day=True)
-        Tournament.results.set_places(tournament)
-        payouts = Tournament.results.get_payouts(tournament)
-        day_1_bb = (
-            Result.objects.filter(
-                tournament=tournament, day_num=1, big_bass_weight__gte=5.0
-            ).count()
-            > 0
-        )
-        day_2_bb = (
-            Result.objects.filter(
-                tournament=tournament, day_num=2, big_bass_weight__gte=5.0
-            ).count()
-            > 0
-        )
-        yes_bb = any([day_1_bb, day_2_bb])
-        self.assertEqual(payouts["club"], 600.00)
-        self.assertEqual(payouts["total"], 4000.00)
-        self.assertEqual(payouts["place_1"], 1200.00)
-        self.assertEqual(payouts["place_2"], 800.00)
-        self.assertEqual(payouts["place_3"], 600.00)
-        self.assertEqual(payouts["charity"], 400.00)
-        self.assertEqual(payouts["bb_carry_over"], not yes_bb)
 
     def test_get_weight_by_length(self):
         """Tests that the get_weight_by_length algorithm is accurate
@@ -396,3 +60,261 @@ class TestTournaments(TestCase):
         """
         for weight, expected_length in WEIGHT_TO_LENGTH:
             self.assertEqual(expected_length, get_length_from_weight(weight))
+
+    def test_penalty_weight(self):
+        """Test that the penalty weight per dead fish is accurate"""
+        tournament = Tournament.objects.create(**self.indiv)
+        angler = create_angler()
+        data = {
+            "angler": angler,
+            "num_fish": 5,
+            "tournament": tournament,
+            "total_weight": Decimal("10"),
+            "num_fish_dead": 5,
+        }
+        Result.objects.create(**data)
+
+        actual = Result.objects.get(tournament=tournament, angler=angler).total_weight
+        expected = Decimal("8.75")
+        self.assertEqual(expected, actual)
+
+    def test_no_guests_points(self):
+        """Test setting places for all members, no guests with points"""
+        tournament = Tournament.objects.create(**self.indiv)
+        for data in RESULTS_NO_TIE.values():
+            angler = create_angler(data["first_name"], data["last_name"], "member")
+            if data.get("buy_in"):
+                Result.objects.create(tournament=tournament, angler=angler, buy_in=True)
+                continue
+            Result.objects.create(
+                tournament=tournament,
+                angler=angler,
+                num_fish=data["num_fish"],
+                total_weight=data["total_weight"],
+                num_fish_dead=data["num_fish_dead"],
+                big_bass_weight=data.get("big_bass_weight", Decimal("0")),
+            )
+        Tournament.results.set_points(tournament)
+
+        pts = 0
+        query = {"tournament": tournament, "num_fish__gt": 0}
+        for result in Result.objects.filter(**query).order_by("place_finish"):
+            result = Result.objects.get(tournament=tournament, place_finish=result.place_finish)
+            self.assertEqual(RESULTS_NO_TIE[result.place_finish]["points"], result.points)
+            pts = result.points
+        query = {"tournament": tournament, "num_fish": 0, "buy_in": False}
+        for result in Result.objects.filter(**query):
+            self.assertEqual(result.points, pts - 2)
+        query = {"tournament": tournament, "buy_in": True}
+        for result in Result.objects.filter(**query):
+            self.assertEqual(result.points, pts - 4)
+
+    def test_no_guest_no_points(self):
+        """Test setting places for all members, no guests with no points"""
+        tournament = Tournament.objects.create(**self.indiv)
+        tournament.points = False
+        tournament.save()
+        for data in RESULTS_NO_TIE.values():
+            if data.get("buy_in"):
+                continue
+            angler = create_angler(data["first_name"], data["last_name"], "member")
+            Result.objects.create(
+                tournament=tournament,
+                angler=angler,
+                num_fish=data["num_fish"],
+                total_weight=data["total_weight"],
+                num_fish_dead=data["num_fish_dead"],
+                big_bass_weight=data.get("big_bass_weight", Decimal("0")),
+            )
+
+        Tournament.results.set_places(tournament)
+        query = Result.objects.filter(tournament=tournament, num_fish__gt=0).order_by(
+            "place_finish"
+        )
+        for result in query:
+            self.assertEqual(
+                RESULTS_NO_TIE[result.place_finish]["first_name"],
+                User.objects.get(pk=result.angler_id).get_short_name(),
+            )
+            self.assertEqual(0, result.points)
+
+    def test_all_guest_no_points(self):
+        """Tests that no points are awarded when points=False"""
+        tournament = Tournament.objects.create(**self.indiv)
+        tournament.points = False
+        tournament.save()
+
+        for data in RESULTS_NO_TIE.values():
+            if data.get("buy_in"):  # Guests don't buy-in
+                continue
+            angler = create_angler(data["first_name"], data["last_name"], "guest")
+            Result.objects.create(
+                tournament=tournament,
+                angler=angler,
+                num_fish=data["num_fish"],
+                total_weight=data["total_weight"],
+                num_fish_dead=data["num_fish_dead"],
+                big_bass_weight=data.get("big_bass_weight", Decimal("0")),
+            )
+
+        Tournament.results.set_points(tournament)
+        for result in Result.objects.filter(tournament=tournament).order_by("place_finish"):
+            if result.buy_in:
+                continue
+            self.assertEqual(0, result.points)
+
+    def test_bb_indiv(self):
+        """Tests that BB wins in a tie"""
+        tournament = Tournament.objects.create(**self.indiv)
+        for data in RESULTS_TIE_BB_WINS.values():
+            angler = create_angler(data["first_name"], data["last_name"])
+            Result.objects.create(
+                angler=angler,
+                num_fish=data["num_fish"],
+                tournament=tournament,
+                total_weight=data["total_weight"],
+                num_fish_dead=data["num_fish_dead"],
+                big_bass_weight=data["big_bass_weight"],
+            )
+        Tournament.results.set_places(tournament)
+        self.assertEqual(
+            Tournament.results.get_big_bass_winner(tournament),
+            Result.objects.get(tournament=tournament, place_finish=1),
+        )
+
+    def test_guest_doesnt_win_bb(self):
+        """Tests that a guest cannot win big bass"""
+        tournament = Tournament.objects.create(**self.indiv)
+        for idx, data in RESULTS_TIE_BB_WINS.items():
+            member_type = "member" if idx != 2 else "guest"
+            Result.objects.create(
+                angler=create_angler(data["first_name"], data["last_name"], member_type),
+                num_fish=data["num_fish"],
+                tournament=tournament,
+                total_weight=data["total_weight"],
+                num_fish_dead=data["num_fish_dead"],
+                big_bass_weight=data["big_bass_weight"],
+            )
+        Tournament.results.set_places(tournament)
+        bb_winner = Tournament.results.get_big_bass_winner(tournament)
+        second_place = Result.objects.get(tournament=tournament, place_finish=2)
+        self.assertEqual(bb_winner, second_place)
+        self.assertNotEqual(bb_winner.angler.type, "guest")
+
+    # pylint: disable=invalid-name
+    def test_bb_team(self):
+        """Tests the Big Bass winner function for a team tournament"""
+        p = inflect.engine()
+        tournament = Tournament.objects.create(**self.team)
+        for idx, data in TEAM_RESULTS_NO_TIE.items():
+            boater = create_angler(
+                first_name=p.number_to_words(p.ordinal(idx)).capitalize(), last_name="Place"
+            )
+            one = {"tournament": tournament, "angler": boater} | data["result_1"]
+            two = {
+                "tournament": tournament,
+                "angler": create_angler(
+                    first_name=f"{p.number_to_words(p.ordinal(idx)).capitalize()} Place",
+                    last_name="Partner",
+                ),
+            } | data["result_2"]
+            result_1 = Result.objects.create(**one)
+            result_2 = Result.objects.create(**two)
+            TeamResult.objects.create(
+                **{
+                    "boater": boater,
+                    "result_1": result_1,
+                    "result_2": result_2,
+                    "tournament": tournament,
+                }
+            )
+        Tournament.results.set_places(tournament)
+        bb_winner = Tournament.results.get_big_bass_winner(tournament)
+        self.assertEqual(bb_winner.total_weight, Decimal("49"))
+        self.assertEqual(bb_winner.big_bass_weight, Decimal("5"))
+
+    def test_get_payouts_indiv(self):
+        """Tests the get_payouts function: funds are calculated properly"""
+        tournament = Tournament.objects.create(**self.indiv)
+        for data in RESULTS_NO_TIE.values():
+            angler = create_angler(data["first_name"], data["last_name"], "member")
+            if data.get("buy_in"):
+                Result.objects.create(tournament=tournament, angler=angler, buy_in=True)
+                continue
+            Result.objects.create(
+                tournament=tournament,
+                angler=angler,
+                num_fish=data.get("num_fish", 0),
+                total_weight=data.get("total_weight", 0),
+                num_fish_dead=data.get("num_fish_dead", 0),
+                big_bass_weight=data.get("big_bass_weight", Decimal("0")),
+            )
+        Tournament.results.set_places(tournament)
+        payouts = Tournament.results.get_payouts(tournament)
+        yes_bb = Result.objects.filter(tournament=tournament, big_bass_weight__gte=5.0).count() > 0
+        self.assertEqual(payouts["club"], Decimal("45"))
+        self.assertEqual(payouts["total"], Decimal("300"))
+        self.assertEqual(payouts["place_1"], Decimal("90"))
+        self.assertEqual(payouts["place_2"], Decimal("60"))
+        self.assertEqual(payouts["place_3"], Decimal("45"))
+        self.assertEqual(payouts["charity"], Decimal("30"))
+        self.assertEqual(payouts["bb_carry_over"], not yes_bb)
+
+    def test_guest_every_other_place_points(self):
+        """Tests that points are adjusted for guests in ever other place"""
+        tournament = Tournament.objects.create(**self.indiv)
+        for idx, data in RESULTS_NO_TIE.items():
+            member = "guest" if idx % 2 == 0 else "member"
+            angler = create_angler(data["first_name"], data["last_name"], member)
+            if data.get("buy_in"):
+                Result.objects.create(tournament=tournament, angler=angler, buy_in=True)
+                continue
+            Result.objects.create(
+                tournament=tournament,
+                angler=angler,
+                num_fish=data["num_fish"],
+                total_weight=data["total_weight"],
+                num_fish_dead=data["num_fish_dead"],
+                big_bass_weight=data.get("big_bass_weight", Decimal("0")),
+            )
+        Tournament.results.set_points(tournament)
+
+        query = Result.objects.filter(tournament=tournament, num_fish__gt=0).order_by(
+            "place_finish"
+        )
+        points = tournament.max_points
+        for result in query:
+            result = Result.objects.get(tournament=tournament, place_finish=result.place_finish)
+            if result.place_finish % 2 == 0:
+                self.assertEqual(result.points, 0)
+                continue
+            self.assertEqual(points, result.points)
+            points -= 1
+
+    def test_guest_top_3_points(self):
+        """Tests that points are adjusted for guests winning the top 3 places"""
+        tournament = Tournament.objects.create(**self.indiv)
+        for idx, data in RESULTS_NO_TIE.items():
+            member_type = "guest" if idx <= 3 else "member"
+            angler = create_angler(data["first_name"], data["last_name"], member_type)
+            if data.get("buy_in"):
+                Result.objects.create(tournament=tournament, angler=angler, buy_in=True)
+                continue
+            Result.objects.create(
+                tournament=tournament,
+                angler=angler,
+                num_fish=data["num_fish"],
+                total_weight=data["total_weight"],
+                num_fish_dead=data["num_fish_dead"],
+                big_bass_weight=data.get("big_bass_weight", Decimal("0")),
+            )
+        Tournament.results.set_points(tournament)
+        points = tournament.max_points
+        for result in Result.objects.filter(tournament=tournament, num_fish__gt=0).order_by(
+            "place_finish"
+        ):
+            if result.place_finish <= 3:
+                self.assertEqual(result.points, 0)
+                continue
+            self.assertEqual(result.points, points)
+            points -= 1

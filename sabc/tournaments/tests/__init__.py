@@ -5,18 +5,16 @@ Contains functions to:
 - Generate random tournament results
 - Generate a tie where the winner wins by: big bass and number of weighed fish
 """
+from typing import Iterable
+from random import randint
 from decimal import Decimal
 
-from random import choices, randint, uniform
-from sys import get_coroutine_origin_tracking_depth
-
 from names import get_first_name, get_last_name
-
 from django.contrib.auth.models import User
 
 from users.models import Angler
 
-from ..models import MultidayResult, PaperResult, Result, TeamResult, MultidayTeamResult
+from ..models import Tournament, PaperResult, Result, TeamResult
 
 LAKE_BB_SCORES = {
     "LBJ": 5,
@@ -38,24 +36,23 @@ LAKE_BB_SCORES = {
 }
 
 
-def create_random_angler(angler_type="member"):
-    """Creates an Angler object, that is of member status
+def create_angler(first_name=None, last_name=None, angler_type="member"):
+    """Creates an Angler object.
 
     Args:
+        first_name (str) The first name of the angler to create.
+        last_name (str) The last name of the angler to create.
         angler_type (str) Angler type - member or guest
     Returns:
-        An Angler object that was created with random names and other information
-
-    NOTE: Should be pretty safe, the username should have a very low collision rate due to the
-    random int selection and first_name char + lastname
+        (Angler) An Angler object that was created with random names and other information
     """
-    first_name = get_first_name()
-    last_name = get_last_name()
+    last_name = get_last_name() if not last_name else last_name
+    first_name = get_first_name() if not first_name else first_name
     user = User.objects.create(
         username=first_name[0].lower() + last_name.lower() + str(randint(1000, 9999)),
         first_name=first_name,
         last_name=last_name,
-        email=f"{first_name}.{last_name}@gmail.com",
+        email=f"{first_name}.{last_name}@unittest.com",
     )
     angler = Angler.objects.get(user=user)
     angler.phone_number = "+15121234567"
@@ -65,267 +62,199 @@ def create_random_angler(angler_type="member"):
     return angler
 
 
-# pylint: disable=too-many-arguments, too-many-statements
-def generate_tournament_results(
-    tournament,
-    num_results=10,
-    num_buy_ins=0,
-    multi_day=False,
-    guests=True,
-    team=False,
-    num_zeros=0,
-    paper=False,
-):
-    """Create Result objects in the database and associate it to the given tournament
+RESULTS_NO_TIE = {
+    1: {
+        "first_name": "First",
+        "last_name": "Place",
+        "num_fish": 5,
+        "total_weight": Decimal("21.00"),
+        "num_fish_dead": 0,
+        "big_bass_weight": Decimal("5.00"),
+        "points": 100,
+    },
+    2: {
+        "first_name": "Second",
+        "last_name": "Place",
+        "num_fish": 5,
+        "total_weight": Decimal("20.00"),
+        "num_fish_dead": 0,
+        "big_bass_weight": Decimal("7.00"),
+        "points": 99,
+    },
+    3: {
+        "first_name": "Third",
+        "last_name": "Place",
+        "num_fish": 5,
+        "total_weight": Decimal("19.00"),
+        "num_fish_dead": 0,
+        "points": 98,
+    },
+    4: {
+        "first_name": "Fourth",
+        "last_name": "Place",
+        "num_fish": 5,
+        "total_weight": Decimal("18.00"),
+        "num_fish_dead": 0,
+        "points": 97,
+    },
+    5: {
+        "first_name": "Fifth",
+        "last_name": "Place",
+        "num_fish": 5,
+        "total_weight": Decimal("17.00"),
+        "num_fish_dead": 0,
+        "points": 96,
+    },
+    6: {
+        "first_name": "Sixth",
+        "last_name": "Place",
+        "num_fish": 5,
+        "total_weight": Decimal("16.00"),
+        "num_fish_dead": 0,
+        "points": 95,
+    },
+    7: {
+        "first_name": "Seventh",
+        "last_name": "Place",
+        "num_fish": 5,
+        "total_weight": Decimal("15.00"),
+        "num_fish_dead": 0,
+        "points": 94,
+    },
+    8: {
+        "first_name": "Eigth",
+        "last_name": "Place",
+        "num_fish": 5,
+        "total_weight": Decimal("14.00"),
+        "num_fish_dead": 0,
+        "points": 93,
+    },
+    9: {
+        "first_name": "Ninth",
+        "last_name": "Place",
+        "num_fish": 5,
+        "total_weight": Decimal("13.00"),
+        "num_fish_dead": 0,
+        "points": 92,
+    },
+    10: {
+        "first_name": "Tenth",
+        "last_name": "Place",
+        "num_fish": 5,
+        "total_weight": Decimal("12.00"),
+        "num_fish_dead": 0,
+        "points": 91,
+    },
+    11: {
+        "first_name": "Eleventh",
+        "last_name": "Place",
+        "num_fish": 0,
+        "total_weight": Decimal("0"),
+        "num_fish_dead": 0,
+        "points": 89,
+    },
+    12: {
+        "first_name": "Twelfth",
+        "last_name": "Place",
+        "num_fish": 0,
+        "total_weight": Decimal("0"),
+        "num_fish_dead": 0,
+        "points": 89,
+    },
+    13: {
+        "first_name": "Thrteenth",
+        "last_name": "Place",
+        "num_fish": 0,
+        "total_weight": Decimal("0"),
+        "num_fish_dead": 0,
+        "points": 89,
+    },
+    14: {
+        "first_name": "Fourteenth",
+        "last_name": "Place",
+        "buy_in": True,
+        "points": 87,
+    },
+    15: {
+        "first_name": "Fifteenth",
+        "last_name": "Place",
+        "buy_in": True,
+        "points": 87,
+    },
+}
 
-    Args:
-        tournament (Tournament) The tournament to generate results for
-        num_results (int) The number of results to create
-        num_buy_ins (int) The number of buy-in results to generate
-        multi_day (bool) Create mutli-day results if True single day if False
-        guests (bool) Generate guests accounts if true, make the results all members if false
-        team (bool) Generate TeamResults if true, Result otherwise
-        num_zeros (int) Number of 0 fish weigh-ins to create
-        paper (bool) Generate Paper results (5 fish wieghts from lengths)
+RESULTS_TIE_BB_WINS = {
+    1: {
+        "first_name": "Third",
+        "last_name": "Place",
+        "num_fish": 5,
+        "total_weight": Decimal("21.00"),
+        "num_fish_dead": 0,
+        "big_bass_weight": Decimal("5.00"),
+        "points": 99,
+    },
+    2: {
+        "first_name": "First",
+        "last_name": "Place",
+        "num_fish": 5,
+        "total_weight": Decimal("21.00"),
+        "num_fish_dead": 0,
+        "big_bass_weight": Decimal("7.00"),
+        "points": 100,
+    },
+    3: {
+        "first_name": "Second",
+        "last_name": "Place",
+        "num_fish": 5,
+        "total_weight": Decimal("21.00"),
+        "num_fish_dead": 0,
+        "big_bass_weight": Decimal("6.00"),
+        "points": 98,
+    },
+}
 
-    NOTE: If multi_day is True, then 2x the amount of results are generated. (day 1 & day 2)
-    """
-
-    def _paper_kwargs(kwargs_):
-        """Returns results for a paper"""
-        for num in range(1, kwargs_["num_fish"] + 1):
-            kwargs_[f"fish{num}_len"] = Decimal(str(randint(12, 25)))
-
-        return kwargs_
-
-    def _gen_attrs(zero_weight=False):
-        """Generate Result attributes"""
-        num_fish = choices(
-            # An angler can weigh in 0 - 5 legal fish
-            [1, 2, 3, 4, 5],
-            # Weighted Choices: The % of time an angler weighs in 0 - 5 fish
-            # 0 fish 10%, 1 fish 20%, 2 fish 20%, 3 fish 20%, 4 fish 15%, 5 fish 15% = 100%
-            [0.25, 0.25, 0.20, 0.15, 0.15],
-        )[0]
-        num_fish_dead = choices(
-            # An angler can weigh in 0 - 5 dead fish of legal size
-            [0, 1, 2, 3, 4, 5],
-            # Weighted Choices: The % of time an angler weighs in 0 - 5 dead fish (5 dead is RARE)
-            # 0 fish  55% 1 fish 35% 2 fish 5% 3 fish 3% 4 fish 1% 5 fish 1%
-            [0.55, 0.35, 0.05, 0.03, 0.01, 0.01],
-        )[0]
-        num_fish_alive = num_fish - num_fish_dead if num_fish > 0 else 0
-        angler_type = (
-            choices(
-                # Create a member or a guest
-                ["member", "guest"],
-                # Member: 85% of the time, Guest: 15%
-                [0.85, 0.15],
-            )[0]
-            if guests
-            else "member"  # Just create members!
-        )
-        kwargs = {
-            "angler": create_random_angler(angler_type),
-            "tournament": tournament,
-            "buy_in": False,
-            "day_num": 1,
-            "num_fish": num_fish,
-            "num_fish_dead": num_fish_dead,
-            "num_fish_alive": num_fish_alive,
-        }
-        if zero_weight:
-            kwargs = {
-                "angler": create_random_angler(angler_type),
-                "tournament": tournament,
-                "buy_in": False,
-                "day_num": 1,
-                "num_fish": 0,
-                "num_fish_dead": 0,
-                "num_fish_alive": 0,
-            }
-        if paper:
-            return _paper_kwargs(kwargs)
-
-        if kwargs["num_fish"] == 0:
-            kwargs["total_weight"] = Decimal("0.00")
-            kwargs["big_bass_weight"] = Decimal("0.00")
-            return kwargs
-
-        tot_wt, bb_wt = 0.0, 0.0
-        if LAKE_BB_SCORES[tournament.lake] <= 3:
-            tot_wt = uniform(1.5, 14.75)
-        elif LAKE_BB_SCORES[tournament.lake] == 4:
-            tot_wt = uniform(3.25, 20.0)
-        elif LAKE_BB_SCORES[tournament.lake] == 5:
-            tot_wt = uniform(3.5, 15.0)
-        kwargs["total_weight"] = Decimal(str(tot_wt + bb_wt))
-        bb_wt = round(tot_wt / kwargs["num_fish"], 2)
-        if bb_wt >= 5.0:
-            kwargs["big_bass_weight"] = Decimal(str(bb_wt))
-
-        return kwargs
-
-    def create_team_results():
-        """Choose pairs of anglers and create teams of non-buy-ins"""
-
-        def _create(day):
-            TeamResult.objects.create(
-                tournament=tournament,
-                boater=result.angler,
-                result_1=result,
-                day_num=day,
-                result_2=Result.objects.get(
-                    tournament=tournament, day_num=1, angler=grp_b[idx].angler
-                ),
-            ).save()
-
-        day_1 = Result.objects.filter(tournament=tournament, day_num=1)
-        grp_a = day_1[len(day_1) // 2 :]
-        grp_b = day_1[: len(day_1) // 2]
-        for idx, result in enumerate(grp_a):
-            if idx < len(grp_b):
-                _create(day=1)
-                if multi_day:
-                    _create(day=2)
-                continue
-            TeamResult.objects.create(
-                tournament=tournament, boater=result.angler, result_1=result
-            ).save()
-            if multi_day:
-                TeamResult.objects.create(
-                    tournament=tournament, boater=result.angler, result_1=result, day_num=2
-                ).save()
-
-    #
-    # Create random results
-    #
-    for _ in range(num_results - num_buy_ins - num_zeros):
-        attrs = _gen_attrs()
-        if paper:
-            PaperResult.objects.create(**attrs).save()
-            continue
-        Result.objects.create(**attrs).save()
-        if multi_day:
-            angler = attrs["angler"]
-            attrs = _gen_attrs()
-            attrs["angler"] = angler
-            attrs["day_num"] = 2
-            Result.objects.create(**attrs).save()
-    #
-    # Create the buy-ins (if any)
-    #
-    for _ in range(num_buy_ins):
-        attrs = {
-            "angler": create_random_angler(),
-            "tournament": tournament,
-            "buy_in": True,
-        }
-        if paper:
-            PaperResult.objects.create(**attrs).save()
-            continue
-        Result.objects.create(**attrs).save()
-        if multi_day:
-            attrs["day_num"] = 2
-            Result.objects.create(**attrs).save()
-
-    for _ in range(num_zeros):
-        attrs = _gen_attrs(zero_weight=True)
-        if paper:
-            PaperResult.objects.create(**attrs).save()
-            continue
-        Result.objects.create(**attrs).save()
-        if multi_day:
-            attrs["day_num"] = 2
-            Result.objects.create(**attrs).save()
-
-    if team:
-        create_team_results()
-
-
-def create_tie(tournament, win_by="BB", multi_day=False):
-    """Creates a set of results that are equal in total weight, big_bass, and num_fish_weighed.
-
-    Args:
-        tournament (Tournament) The tournament to create a tie for
-        win_by (str) The option to win by: "BB" (big bass) otherwise num_weighed_fish wins
-        multi_day (bool) Create a multi-day tie
-    Returns:
-        A QuerySet of results equal to the num_results
-        Result QuerySet if not multi_day
-        MultiDayResult QuerySet if multi_day
-
-    Chose the first two anglers.
-    Create equivalent weight
-    Make one have a larger big bass than the other (if win_by=BB)
-    Make one have more fish weighed than the other (if not win_by=BB)
-    """
-
-    def _create_tie(query):
-        """Create tied results based on the win_by strategy"""
-        for idx, result in enumerate(query):
-            result.num_fish = 5
-            if idx == 0 and win_by != "BB":
-                result.num_fish = 4
-            result.big_bass_weight = Decimal("10.00")
-            if idx == 0 and win_by == "BB":
-                result.big_bass_weight = Decimal("9.99")
-            result.total_weight = Decimal("100.00")
-            result.num_fish_dead = 0
-            result.penalty_weight = Decimal("0.00")
-            result.save()
-
-    def _create_team_tie(query):
-        """Create tied results based on the win_by strategy"""
-        for idx, result in enumerate(query):
-            result.result_1.num_fish = 5
-            result.result_2.num_fish = 5
-            if idx == 0 and win_by != "BB":
-                result.result_1.num_fish = 4
-                result.result_2.num_fish = 4
-            result.result_1.big_bass_weight = Decimal("10.00")
-            result.result_2.big_bass_weight = Decimal("10.00")
-            if idx == 0 and win_by == "BB":
-                result.result_1.big_bass_weight = Decimal("9.99")
-                result.result_2.big_bass_weight = Decimal("9.99")
-            result.result_1.total_weight = Decimal("100.00")
-            result.result_2.total_weight = Decimal("100.00")
-            result.result_1.num_dish_dead = 0
-            result.result_2.num_fish_dead = 0
-            result.result_1.penalty_weight = Decimal("0.00")
-            result.result_2.penalty_weight = Decimal("0.00")
-            result.result_1.save()
-            result.result_2.save()
-            result.save()
-
-    #
-    # Get the day1 leaders & create a tie, duplicate the results if multi_day
-    #
-    order = ("-total_weight", "-big_bass_weight", "-num_fish")
-    if not multi_day and not tournament.team:
-        _create_tie(Result.objects.filter(tournament=tournament, day_num=1).order_by(*order)[:2])
-        return Result.objects.filter(tournament=tournament).order_by(*order)[:2]
-    if multi_day and not tournament.team:
-        winners = Result.objects.filter(tournament=tournament, day_num=1).order_by(*order)[:2]
-        _create_tie(winners)
-        first = Result.objects.get(tournament=tournament, angler=winners[0].angler, day_num=2)
-        second = Result.objects.get(tournament=tournament, angler=winners[1].angler, day_num=2)
-        _create_tie([first, second])
-        return MultidayResult.objects.filter(tournament=tournament).order_by(*order)[:2]
-    if tournament.team and not multi_day:
-        _create_team_tie(
-            TeamResult.objects.filter(tournament=tournament, day_num=1).order_by(*order)[:2]
-        )
-        return TeamResult.objects.filter(tournament=tournament, day_num=1).order_by(*order)[:2]
-
-    winners = TeamResult.objects.filter(tournament=tournament, day_num=1).order_by(*order)[:2]
-    _create_team_tie(winners)
-    first = TeamResult.objects.get(tournament=tournament, day_num=2, boater=winners[0].boater)
-    second = TeamResult.objects.get(tournament=tournament, day_num=2, boater=winners[1].boater)
-    _create_team_tie([first, second])
-
-    return TeamResult.objects.filter(tournament=tournament).order_by(*order)[:4]
-
+TEAM_RESULTS_NO_TIE = {
+    1: {
+        "result_1": {"num_fish": 5, "total_weight": Decimal("25"), "big_bass_weight": Decimal("5")},
+        "result_2": {"num_fish": 5, "total_weight": Decimal("24"), "big_bass_weight": Decimal("0")},
+    },
+    2: {
+        "result_1": {"num_fish": 5, "total_weight": Decimal("24"), "big_bass_weight": Decimal("0")},
+        "result_2": {"num_fish": 5, "total_weight": Decimal("23"), "big_bass_weight": Decimal("0")},
+    },
+    3: {
+        "result_1": {"num_fish": 5, "total_weight": Decimal("23"), "big_bass_weight": Decimal("0")},
+        "result_2": {"num_fish": 5, "total_weight": Decimal("22"), "big_bass_weight": Decimal("0")},
+    },
+    4: {
+        "result_1": {"num_fish": 5, "total_weight": Decimal("22"), "big_bass_weight": Decimal("0")},
+        "result_2": {"num_fish": 5, "total_weight": Decimal("21"), "big_bass_weight": Decimal("0")},
+    },
+    5: {
+        "result_1": {"num_fish": 5, "total_weight": Decimal("21"), "big_bass_weight": Decimal("0")},
+        "result_2": {"num_fish": 5, "total_weight": Decimal("20"), "big_bass_weight": Decimal("0")},
+    },
+    6: {
+        "result_1": {"num_fish": 5, "total_weight": Decimal("20"), "big_bass_weight": Decimal("0")},
+        "result_2": {"num_fish": 5, "total_weight": Decimal("19"), "big_bass_weight": Decimal("0")},
+    },
+    7: {
+        "result_1": {"num_fish": 5, "total_weight": Decimal("19"), "big_bass_weight": Decimal("0")},
+        "result_2": {"num_fish": 5, "total_weight": Decimal("18"), "big_bass_weight": Decimal("0")},
+    },
+    8: {
+        "result_1": {"num_fish": 5, "total_weight": Decimal("18"), "big_bass_weight": Decimal("0")},
+        "result_2": {"num_fish": 5, "total_weight": Decimal("17"), "big_bass_weight": Decimal("0")},
+    },
+    9: {
+        "result_1": {"num_fish": 5, "total_weight": Decimal("17"), "big_bass_weight": Decimal("0")},
+        "result_2": {"num_fish": 5, "total_weight": Decimal("16"), "big_bass_weight": Decimal("0")},
+    },
+    10: {
+        "result_1": {"num_fish": 5, "total_weight": Decimal("16"), "big_bass_weight": Decimal("0")},
+        "result_2": {"num_fish": 5, "total_weight": Decimal("15"), "big_bass_weight": Decimal("0")},
+    },
+}
 
 # TPW Length-weight Conversion Table for Texas Largemouth Bass
 # https://tpwd.texas.gov/fishboat/fish/recreational/catchrelease/bass_length_weight.phtml

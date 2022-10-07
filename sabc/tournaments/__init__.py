@@ -213,9 +213,18 @@ def get_length_from_weight(weight):
     return inches + fractions[index]
 
 
-def get_last_sunday():
-    """Returns the last sunday of the month when called"""
-    month = date.today().month if date.today().month >= 10 else f"0{date.today().month}"
-    sunday = max(week[-1] for week in monthcalendar(date.today().year, date.today().month))
+def get_last_sunday(month=None):
+    """Returns the date of the last Sunday of the month passed in.
+
+    If no month is passed in, then the current (when called) month is used.
+
+    Args:
+        month (int) The month to get the last Sunday from.
+    Raises:
+        ValueError if the month is less than 0 for greater than 12 or not an int.
+    """
+    if month is None:
+        month = date.today().month
+    sunday = max(week[-1] for week in monthcalendar(date.today().year, month))
     sunday = sunday if sunday >= 10 else f"0{sunday}"
     return f"{date.today().year}-{month}-{sunday}"
