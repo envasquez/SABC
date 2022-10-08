@@ -153,6 +153,7 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
 
     model = TeamResult
     form_class = TeamForm
+    template_name = "tournaments/team_form.html"
 
     def get_initial(self, *args, **kwargs):
         """Get intital team create view"""

@@ -56,4 +56,4 @@ class TeamForm(forms.ModelForm):
         """Team metadata"""
 
         model = TeamResult
-        fields = "__all__"
+        fields = ("boater", "result_1", "result_2", "tournament")
