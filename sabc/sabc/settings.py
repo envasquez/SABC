@@ -129,7 +129,7 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST_USER = os.environ.get("EMAIL_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_PASS")
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
-
+DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
 # django-nose settings
 TEST_RUNNER = "django_nose.NoseTestSuiteRunner"
 NOSE_ARGS = ["--verbosity=3"]
