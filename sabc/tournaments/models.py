@@ -134,14 +134,14 @@ class TournamentManager(Manager):
                 prev = result
                 logging.debug(result)
             # Set places & points for anglers who weighed in zero fish
-            place = prev.place_finish + 1
+            place = prev.place_finish + 1 if prev else 1
             for result in zeros:
                 result.place_finish = place
                 result.save()
                 logging.debug(result)
                 prev = result
             # Set places & points for the anglers that bought-in
-            place = prev.place_finish + 1 if len(zeros) != 0 else prev.place_finish
+            place = place + 1 if len(zeros) != 0 else place
             for result in buy_ins:
                 result.place_finish = place
                 result.save()
@@ -316,11 +316,6 @@ class Tournament(Model):
         self.ramp_url = self.ramp_url.replace('height="450"', 'height="350"')
         if not self.rules:
             self.rules = RuleSet.objects.create()
-
-        if self.complete:
-            # This will set places, and points if points=True
-            # otherwise it just sets places ...
-            self.results.set_points(tournament=self)
 
         super().save(*args, **kwargs)
 
