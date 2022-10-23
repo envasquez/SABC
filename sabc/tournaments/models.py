@@ -164,6 +164,10 @@ class TournamentManager(Manager):
             tournament (Tournament) The tournament to apply points to.
         """
         Tournament.results.set_places(tournament)
+        if not tournament.points:
+            logging.debug(f"Tournament points set to Flase - skipping!")
+            return
+
         query = {"tournament": tournament, "angler__type": "member", "total_weight__gt": 0}
         points = tournament.max_points
         previous = None
@@ -313,6 +317,11 @@ class Tournament(Model):
         if not self.rules:
             self.rules = RuleSet.objects.create()
 
+        if self.complete:
+            # This will set places, and points if points=True
+            # otherwise it just sets places ...
+            self.results.set_points(tournament=self)
+
         super().save(*args, **kwargs)
 
 
@@ -379,6 +388,11 @@ class Result(Model):
             self.penalty_weight = self.num_fish_dead * self.tournament.rules.dead_fish_penalty
             self.total_weight = self.total_weight - self.penalty_weight
             self.num_fish_alive = self.num_fish - self.num_fish_dead
+
+        # If results are being added, then the tournament is over.
+        self.tournament.complete = True
+        self.tournament.save()
+
         super().save(*args, **kwargs)
 
 
