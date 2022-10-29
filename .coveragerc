@@ -6,4 +6,5 @@ omit =
     */tournaments/admin.py
     */tournaments/forms.py
     */tournaments/tests/*
+    */tournaments/tables.py
 
