@@ -27,6 +27,11 @@
               <a class="nav-item nav-link" href="{% url 'bylaws' %}">Bylaws</a>
               <a class="nav-item nav-link" href="{% url 'gallery' %}">Gallery</a>
               <a class="nav-item nav-link" href="{% url 'calendar' %}">Calendars</a>
+              {% if user.is_authenticated and user.angler_type != 'guest' or user.is_superuser %}
+                <a class="nav-item nav-link" href="{% url 'list-officers' %}">Officers</a></li>
+                <a class="nav-item nav-link" href="{% url 'list-members' %}">Members</a></li>
+                <a class="nav-item nav-link" href="{% url 'list-guests' %}">Past Guests</a></li>
+              {% endif %}
             </div>
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
@@ -55,14 +60,10 @@
           {% block content %}{% endblock %}
         </div>
         {% if user.is_authenticated and user.angler.type != 'guest' or user.is_superuser %}
-          <div class="col-md-4">
+          <div class="col-sm-4">
             <div class="content-section">
-              <h4>SABC Members</h4>
               <p>
                 <ul class="list-group">
-                  <li class="list-group-item list-group-item-primary"><a class="nav-item nav-link" href="{% url 'list-officers' %}">Officers</a></li>
-                  <li class="list-group-item list-group-item-primary"><a class="nav-item nav-link" href="{% url 'list-members' %}">Members</a></li>
-                  <li class="list-group-item list-group-item-primary"><a class="nav-item nav-link" href="{% url 'list-guests' %}">Past Guests</a></li>
                   {% if user.is_authenticated and user.angler.type == 'officer' or user.is_superuser %}
                     <li class="list-group-item list-group-item-warning"><a class="nav-item nav-link" href="{% url 'tournament-create' %}">Create Tournament</a></li>
                   {% endif %}
