@@ -4,7 +4,7 @@ import django_tables2 as tables
 
 from .models import Angler
 
-DEFAULT_TABLE_TEMPLATE = "django_tables2/bootstrap.html"
+DEFAULT_TABLE_TEMPLATE = "django_tables2/bootstrap4.html"
 
 
 class OfficerTable(tables.Table):
