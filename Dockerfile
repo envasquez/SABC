@@ -9,11 +9,11 @@ WORKDIR /app
 
 RUN addgroup -S sabc && adduser -S sabc -G sabc
 COPY sabc sabc
-ADD requirements.txt /app/
+ADD requirements-docker.txt /app/
 ADD django_vars.env /app/
 ADD create_superuser.sh /app/
 ADD db_vars.env /app/
 
-RUN pip install -r requirements.txt
+RUN pip install -r requirements-docker.txt
 RUN chown -R sabc:sabc /app
 USER sabc
