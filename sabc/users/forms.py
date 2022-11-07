@@ -21,14 +21,14 @@ class UserRegisterForm(UserCreationForm):
         """UserRegisterForm metadata"""
 
         model = User
-        fields = [
+        fields = (
             "username",
             "email",
             "password1",
             "password2",
             "first_name",
             "last_name",
-        ]
+        )
 
 
 class GuestRegisterForm(UserCreationForm):
@@ -42,11 +42,7 @@ class GuestRegisterForm(UserCreationForm):
         """UserRegisterForm metadata"""
 
         model = User
-        fields = [
-            "email",
-            "first_name",
-            "last_name",
-        ]
+        fields = ("email", "first_name", "last_name")
 
 
 class UserUpdateForm(forms.ModelForm):
@@ -58,7 +54,7 @@ class UserUpdateForm(forms.ModelForm):
         """UserRegisterForm metadata"""
 
         model = User
-        fields = ["username", "email"]
+        fields = ("username", "email")
 
 
 class AnglerUpdateForm(forms.ModelForm):
@@ -70,4 +66,4 @@ class AnglerUpdateForm(forms.ModelForm):
         """AnglerUpdateForm metadata"""
 
         model = Angler
-        fields = ["phone_number", "image", "private_info"]
+        fields = ("phone_number", "image", "private_info")
