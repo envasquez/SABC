@@ -55,7 +55,7 @@ def create_angler(first_name=None, last_name=None, angler_type="member"):
         email=f"{first_name}.{last_name}@unittest.com",
     )
     angler = Angler.objects.get(user=user)
-    angler.phone_number = "+15121234567"
+    angler.phone_number = f"+{randint(10000000000, 99999999999)}"
     angler.type = angler_type
     angler.save()
 
