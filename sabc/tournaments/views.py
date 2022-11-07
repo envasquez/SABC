@@ -4,7 +4,6 @@
 """Tournament Views"""
 from __future__ import unicode_literals
 
-
 from django.contrib import messages
 from django.views.generic import (
     ListView,
@@ -16,7 +15,10 @@ from django.views.generic import (
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 
+from users.models import Angler
+
 from .forms import TournamentForm, ResultForm, TeamForm
+from .tables import ResultTable, TeamResultTable
 from .models import Tournament, Result, TeamResult
 
 OFFICERS = [
@@ -42,10 +44,41 @@ class TournamentListView(ListView):
     context_object_name = "tournaments"
 
 
-class TournamentDetailView(DetailView):
+class ExtraContext(object):
+    extra_context = {}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        #
+        # Get the tournament results if any
+        #
+        t = Tournament.objects.get(id=self.get_object().id)
+        Tournament.results.set_places(tournament=t)
+        if t.points:
+            Tournament.results.set_points(tournament=t)
+        self.extra_context["results"] = ResultTable(
+            Result.objects.filter(tournament=t).order_by("place_finish")
+        )
+        self.extra_context["team_results"] = TeamResult.objects.filter(tournament=t).order_by(
+            "place_finish"
+        )
+        #
+        # Add the Tournament payout info
+        #
+        self.extra_context["payouts"] = {}
+        for key, val in Tournament.results.get_payouts(t).items():
+            self.extra_context["payouts"][key] = val
+
+        context.update(self.extra_context)
+
+        return context
+
+
+class TournamentDetailView(ExtraContext, DetailView):
     """Tournament detail view"""
 
     model = Tournament
+    context_object_name = "tournament"
 
 
 class TournamentCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
@@ -128,6 +161,7 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
         """Get initial result"""
         initial = super().get_initial(**kwargs)
         initial["tournament"] = self.kwargs.get("pk")
+
         return initial
 
     def save(self, *args, **kwargs):
@@ -159,6 +193,7 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
         """Get intital team create view"""
         initial = super().get_initial(**kwargs)
         initial["tournament"] = self.kwargs.get("pk")
+
         return initial
 
     def test_func(self):
@@ -240,19 +275,19 @@ class TeamDetailView(SuccessMessageMixin, LoginRequiredMixin, DetailView):
         )
 
 
-# class TeamUpdateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
-#     model = Tournament
-#     form_class = TeamForm
-#     success_message = '%s Successfully Updated!'
+class TeamUpdateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
+    model = Tournament
+    form_class = TeamForm
+    success_message = "%s Successfully Updated!"
 
-#     def get_initial(self, *args, **kwargs):
-#         initial = super(TeamUpdateView, self).get_initial(**kwargs)
-#         initial['tournament'] = self.kwargs.get('pk')
-#         return initial
+    def get_initial(self, *args, **kwargs):
+        initial = super(TeamUpdateView, self).get_initial(**kwargs)
+        initial["tournament"] = self.kwargs.get("pk")
+        return initial
 
-#     def test_func(self):
-#         return self.request.user.angler.type == 'officer'
+    def test_func(self):
+        return self.request.user.angler.type == "officer"
 
-#     def save(self, *args, **kwargs):
-#         obj = self.get_object()
-#         messages.success(self.request, self.success_message % obj.__dict__.get('name', 'UNKNOWN'))
+    def save(self, *args, **kwargs):
+        obj = self.get_object()
+        messages.success(self.request, self.success_message % obj.__dict__.get("name", "UNKNOWN"))
