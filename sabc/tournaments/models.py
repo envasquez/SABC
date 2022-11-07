@@ -236,7 +236,7 @@ class TournamentManager(Manager):
               'charity': Decimal("100"),
               'big_bass': Decimal("100.0")",
               'total': Decimal("500"),
-              'bb_cary_over: False}
+              'bb_carry_over: False}
         Raises:
             TournamentNotComplete if the tournament is not completed
         """
@@ -466,6 +466,7 @@ class TeamResult(Model):
 
     buy_in = BooleanField(default=False, null=False, blank=False)
     num_fish = SmallIntegerField(default=0)
+    team_name = CharField(max_length=512, default="")
     place_finish = SmallIntegerField(default=0)
     total_weight = DecimalField(default=Decimal("0"), max_digits=5, decimal_places=2)
     num_fish_dead = SmallIntegerField(default=0)
@@ -475,9 +476,7 @@ class TeamResult(Model):
 
     def __str__(self):
         """String representation of a TeamResult"""
-        name = f"Team: {self.result_1.angler} - SOLO"
-        if self.result_2:
-            name = f"Team: {self.result_1.angler} & {self.result_2.angler}"
+        name = self.get_team_name()
         place = f"{self.place_finish}."
         weight = f"{self.num_fish} @ {self.total_weight}lbs"
         if self.buy_in:
@@ -489,6 +488,14 @@ class TeamResult(Model):
     def get_absolute_url(self):
         """Returns the absolute url for this model"""
         return reverse("team-details", kwargs={"pk": self.id})
+
+    def get_team_name(self):
+        """Gets the team name"""
+        name = f"Team: {self.result_1.angler} - SOLO"
+        if self.result_2:
+            name = f"Team: {self.result_1.angler} & {self.result_2.angler}"
+
+        return name
 
     def save(self, *args, **kwargs):
         """Saves a MultidayResult object
