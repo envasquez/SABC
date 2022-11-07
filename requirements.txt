@@ -37,3 +37,4 @@ typing_extensions==4.3.0
 wrapt==1.14.1
 backports.zoneinfo;python_version<"3.9"
 Pillow>=9.0.1
+pip==22.3.1
