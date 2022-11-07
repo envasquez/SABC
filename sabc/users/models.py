@@ -23,7 +23,7 @@ class Angler(models.Model):
     )
     image = models.ImageField(default="profile_pics/default.jpg", upload_to="profile_pics")
     date_joined = models.DateField(default=timezone.now)
-    phone_number = PhoneNumberField(blank=True)
+    phone_number = PhoneNumberField(null=False, blank=False, unique=True, help_text="Contact Phone Number")
     organization = models.CharField(max_length=100, blank=True, choices=CLUBS, default="SABC")
     private_info = models.BooleanField(default=True)
 
@@ -34,7 +34,7 @@ class Angler(models.Model):
 
     def __str__(self):
         full_name = self.user.get_full_name()
-        return full_name if self.type == "member" else f"{full_name} (G)"
+        return full_name if self.type in ["member", "officer"] else f"{full_name} (G)"
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
