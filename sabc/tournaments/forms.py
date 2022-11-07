@@ -15,7 +15,7 @@ class TournamentForm(forms.ModelForm):
 
         model = Tournament
         fields = "__all__"
-        exclude = ["created_by", "updated_by"]
+        exclude = ("created_by", "updated_by")
 
 
 class ResultForm(forms.ModelForm):
@@ -23,6 +23,7 @@ class ResultForm(forms.ModelForm):
 
     class Meta:
         """Result metadata
+
         Attributes:
             angler (ForeignKey) The Angler object these results are associated with.
             buy_in (BooleanField) True if the angler bougt in, False otherwise.
@@ -38,15 +39,7 @@ class ResultForm(forms.ModelForm):
         """
 
         model = Result
-        fields = (
-            "tournament",
-            "angler",
-            "buy_in",
-            "num_fish",
-            "num_fish_dead",
-            "big_bass_weight",
-            "total_weight",
-        )
+        fields = "__all__"
 
 
 class TeamForm(forms.ModelForm):
@@ -56,4 +49,4 @@ class TeamForm(forms.ModelForm):
         """Team metadata"""
 
         model = TeamResult
-        fields = ("boater", "result_1", "result_2", "tournament")
+        fields = ("tournament", "boater", "result_1", "result_2")
