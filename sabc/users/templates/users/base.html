@@ -27,10 +27,14 @@
               <a class="nav-item nav-link" href="{% url 'bylaws' %}">Bylaws</a>
               <a class="nav-item nav-link" href="{% url 'gallery' %}">Gallery</a>
               <a class="nav-item nav-link" href="{% url 'calendar' %}">Calendars</a>
-              {% if user.is_authenticated and user.angler_type != 'guest' or user.is_superuser %}
-                <a class="nav-item nav-link" href="{% url 'list-officers' %}">Officers</a></li>
-                <a class="nav-item nav-link" href="{% url 'list-members' %}">Members</a></li>
-                <a class="nav-item nav-link" href="{% url 'list-guests' %}">Past Guests</a></li>
+              {% if user.is_authenticated and user.angler.type != 'guest' %}
+                <a class="nav-item nav-link" href="{% url 'list-officers' %}">Officers</a>
+                <a class="nav-item nav-link" href="{% url 'list-members' %}">Members</a>
+                <a class="nav-item nav-link" href="{% url 'list-guests' %}">Past Guests</a>
+                {% if user.angler.type == "officer" or user.is_superuser %}
+                  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                  <a href="{% url 'tournament-create' %}" class="btn btn-dark" role="button">Add Tournament</a>
+                {% endif %}
               {% endif %}
             </div>
             <!-- Navbar Right Side -->
@@ -59,19 +63,15 @@
           {% endif %}
           {% block content %}{% endblock %}
         </div>
-        {% if user.is_authenticated and user.angler.type != 'guest' or user.is_superuser %}
-          <div class="col-sm-4">
+        {% if user.is_authenticated and user.is_superuser %}
+          <div class="col-md-4">
             <div class="content-section">
+              <h4>Generate Random</h4>
               <p>
                 <ul class="list-group">
-                  {% if user.is_authenticated and user.angler.type == 'officer' or user.is_superuser %}
-                    <li class="list-group-item list-group-item-warning"><a class="nav-item nav-link" href="{% url 'tournament-create' %}">Create Tournament</a></li>
-                  {% endif %}
-                  {% if user.is_superuser %}
-                      <li class="list-group-item list-group-item-danger"><a class="nav-item nav-link" href="{% url 'gen-officers' %}">Generate Officers</a></li>
-                      <li class="list-group-item list-group-item-danger"><a class="nav-item nav-link" href="{% url 'gen-member' %}">Generate Member</a></li>
-                      <li class="list-group-item list-group-item-danger"><a class="nav-item nav-link" href="{% url 'gen-guest' %}">Generate Guest</a></li>
-                  {% endif%}
+                  <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="{% url 'gen-officers' %}">Generate Officers</a></li>
+                  <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="{% url 'gen-member' %}">Generate Member</a></li>
+                  <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="{% url 'gen-guest' %}">Generate Guest</a></li>
                 </ul>
               </p>
             </div>
