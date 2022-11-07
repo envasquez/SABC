@@ -60,21 +60,19 @@ def register(request):
             form.save()
             clean_username = form.cleaned_data.get("username")
             messages.success(request, f"Account created for {clean_username}, you can now login")
-
             return redirect("login")
     else:
         form = UserRegisterForm()
 
-    return render(
-        request,
-        "users/register.html",
-        {"title": "SABC - Registration", "form": form, "form_name": "Member Registration"},
-    )
+    context = {"title": "SABC - Registration", "form": form, "form_name": "Member Registration"}
+
+    return render(request, "users/register.html", context)
 
 
 @login_required
 def profile(request):
     """Angler/Account settings"""
+    angler = Angler.objects.get(user=request.user)
     if request.method == "POST":
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = AnglerUpdateForm(request.POST, request.FILES, instance=request.user.angler)
@@ -82,17 +80,14 @@ def profile(request):
             u_form.save()
             p_form.save()
             messages.success(request, "Your profile has been updated!")
-
             return redirect("profile")
     else:
         u_form = UserUpdateForm(instance=request.user)
         p_form = AnglerUpdateForm(instance=request.user.angler)
 
-    return render(
-        request,
-        "users/profile.html",
-        {"title": "Angler Profile", "u_form": u_form, "p_form": p_form},
-    )
+    context = {"title": "Angler Profile", "u_form": u_form, "p_form": p_form}
+
+    return render(request, "users/profile.html", context)
 
 
 @login_required
@@ -120,7 +115,7 @@ def list_members(request):
         "users/roster_list.html",
         {
             "title": "SABC - Members",
-            "roster_name": "Active Members",
+            "roster_name": f"Active Members",
             "table": table,
         },
     )
@@ -160,7 +155,7 @@ def create_angler(member_type=CLUB_GUEST, officer_type=None):
     angler = Angler.objects.get(user=user)
     if officer_type:
         angler.officer_type = officer_type
-    angler.phone_number = "+15121234567"
+    angler.phone_number = f"+{randint(10000000000, 99999999999)}"
     angler.type = member_type
     angler.private_info = (True, False)[randint(0, 1)]
     angler.save()
