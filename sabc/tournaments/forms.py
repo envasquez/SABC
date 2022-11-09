@@ -39,7 +39,15 @@ class ResultForm(forms.ModelForm):
         """
 
         model = Result
-        fields = "__all__"
+        fields = (
+            "angler",
+            "buy_in",
+            "num_fish",
+            "tournament",
+            "total_weight",
+            "num_fish_dead",
+            "big_bass_weight",
+        )
 
 
 class TeamForm(forms.ModelForm):
