@@ -21,10 +21,16 @@ class Angler(models.Model):
     officer_type = models.CharField(
         max_length=64, choices=CLUB_OFFICERS_TYPES, blank=True, null=True, default=""
     )
-    image = models.ImageField(default="profile_pics/default.jpg", upload_to="profile_pics")
+    image = models.ImageField(
+        default="profile_pics/default.jpg", upload_to="profile_pics"
+    )
     date_joined = models.DateField(default=timezone.now)
-    phone_number = PhoneNumberField(null=False, blank=False, unique=True, help_text="Contact Phone Number")
-    organization = models.CharField(max_length=100, blank=True, choices=CLUBS, default="SABC")
+    phone_number = PhoneNumberField(
+        null=False, blank=False, help_text="Contact Phone Number"
+    )
+    organization = models.CharField(
+        max_length=100, blank=True, choices=CLUBS, default="SABC"
+    )
     private_info = models.BooleanField(default=True)
 
     class Meta:

@@ -67,3 +67,7 @@ class AnglerUpdateForm(forms.ModelForm):
 
         model = Angler
         fields = ("phone_number", "image", "private_info")
+
+
+class CsvImportForm(forms.Form):
+    csv_upload = forms.FileField()
