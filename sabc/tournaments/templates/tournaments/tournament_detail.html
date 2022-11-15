@@ -1,119 +1,139 @@
 {% extends "users/base.html" %}
 {% load django_tables2 %}
 {% block content %}
-    <article class="media content-section">
-        <div class="media-body">
-            {% if user.angler.type == "officer" or user.is_staff %}
-                <div align="right">
-                    <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'tournament-update' tournament.id %}">Edit Tournament</a>
-                    <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'team-create' tournament.id %}">Add Team</a>
-                    <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'team-list' tournament.id %}">List Teams</a>
-                    <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'result-create' tournament.id %}">Add Results</a>
-                    <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'tournament-delete' tournament.id %}">Delete</a>
-                </div>
-            {% endif %}
-            <div class="article-metadata">
-                {{ tournament.name }}
+    <div class="media-body">
+        {% if user.angler.type == "officer" or user.is_staff %}
+            <div align="center">
+                <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'tournament-update' tournament.id %}">Edit Tournament</a>
+                <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'team-create' tournament.id %}">Add Team</a>
+                <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'team-list' tournament.id %}">List Teams</a>
+                <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'result-create' tournament.id %}">Add Results</a>
+                <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'tournament-delete' tournament.id %}">Delete</a>
             </div>
-            <h2>Lake: {{ tournament.lake | upper }}
-                {% if tournament.complete %}
-                    <small class="text-muted ml-2">
-                        - Complete
-                    </small>
-                {% endif %}
-            </h2>
-            {% if tournament.lake != 'tbd' %}
-                <a href="{{ tournament.facebook_url }}" target="_blank"><img src="../../static/fb_logo_26px_blk.png" /></a><br /><br />
+        {% endif %}
+        <div class="article-metadata">
+            {{ tournament.name }}
+        </div>
+        <h2>Lake: {{ tournament.lake | upper }}
+            {% if tournament.complete %}
+                <small class="text-muted ml-2">
+                    - Complete
+                </small>
             {% endif %}
-            {{ tournament.ramp_url | safe}}
+        </h2>
+        {% if tournament.lake != 'tbd' %}
+            <a href="{{ tournament.facebook_url }}" target="_blank"><img src="../../static/fb_logo_26px_blk.png" /></a>
+        {% endif %}
+        {{ tournament.ramp_url | safe}}
+        {% if not tournament.complete %}
             <p class="article-content">
                 {{ tournament.description | linebreaks }}
             </p>
-            <table class="table">
-                <tbody>
+        {% endif %}
+        <table class="table">
+            <tbody>
+                {% if not tournament.complete %}
                     <tr>
-                        <td align="right">Date:</td><td align="left">{{ tournament.date }}</td>
-                        <td align="right">Start time:</td><td align="left">{{ tournament.start }}</td>
-                        <td align="right">Weigh-in:</td><td align="left">{{ tournament.finish }}</td>
+                        <td align="right">Date:</td>
+                        <td align="left">{{ tournament.date }}</td>
+                        <td align="right">Start time:</td>
+                        <td align="left">{{ tournament.start }}</td>
+                        <td align="right">Weigh-in:</td>
+                        <td align="left">{{ tournament.finish }}</td>
+                        <td align="right">Team Payout:</td>
+                        {% if tournament.team %}
+                            <td align="left">Yes</td>
+                        {% else %}
+                            <td align="left">No</td>
+                        {% endif %}
                     </tr>
-                    {% if not tournament.complete %}
-                        <tr>
-                        {% if tournament.type == 'team' %}
-                                <td align="right">Type:</td><td align="left">5 fish per boat</td>
-                                <td align="right">Entry Fee:</td><td align="left">${{ tournament.rules.fee }} per boat</td>
+                    <tr>
+                        <td align="right">Limit:</td>
+                        <td align="left">5 fish per angler</td>
+                        <td align="right">Entry Fee:</td>
+                        <td align="left">${{ tournament.rules.fee }}/boat</td>
+                        <td align="right">AoY Points:</td>
+                        {% if tournament.points %}
+                            <td align="left">Yes</td>
                         {% else %}
-                                <td align="right">Type:</td><td align="left">10 fish per boat</td>
-                                <td align="right">Entry Fee:</td><td align="left">${{ tournament.fee }} per angler</td>
+                            <td align="left">No</td>
                         {% endif %}
-                            <td></td><td></td><td></td><td></td><td></td>
-                        </tr>
-                    {% endif %}
-                    {% if tournament.complete %}
-                        <tr>
-                            <td align="left"><b>Payouts</b></td><td></td><td></td><td></td><td></td><td></td>
-                        </tr>
-                        <tr>
-                            <td align="right">Total:</td><td align="left">$ {{ payouts.total | floatformat:2 }}</td>
-                            <td align="right">Club:</td><td align="left">$ {{ payouts.club | floatformat:2}}</td>
-                            <td align="right">Charity:</td><td align="left">$ {{ payouts.charity | floatformat:2}}</td>
-                        </tr>
-                        <tr>
-                            <td align="right">1st Place:</td><td align="left">$ {{ payouts.place_1 | floatformat:2}}</td>
-                            <td align="right">2nd Place:</td><td align="left">$ {{ payouts.place_2 | floatformat:2}}</td>
-                            <td align="right">3rd Place:</td><td align="left">$ {{ payouts.place_3 | floatformat:2}}</td>
-                        </tr>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                {% endif %}
+                {% if tournament.complete %}
+                    <tr>
+                        <td align="left"><b>Payouts</b></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td align="right">Total:</td>
+                        <td align="left">$ {{ payouts.total | floatformat:2 }}</td>
+                        <td align="right">Club:</td>
+                        <td align="left">$ {{ payouts.club | floatformat:2}}</td>
+                        <td align="right">Charity:</td>
+                        <td align="left">$ {{ payouts.charity | floatformat:2}}</td>
+                    </tr>
+                    <tr>
+                        <td align="right">1st Place:</td>
+                        <td align="left">$ {{ payouts.place_1 | floatformat:2}}</td>
+                        <td align="right">2nd Place:</td>
+                        <td align="left">$ {{ payouts.place_2 | floatformat:2}}</td>
+                        <td align="right">3rd Place:</td>
+                        <td align="left">$ {{ payouts.place_3 | floatformat:2}}</td>
+                    </tr>
+                    <tr>
                         {% if not payouts.bb_carry_over %}
-                            <tr>
-                                <td align="right">Big Bass:</td><td align="left">$ {{ payouts.big_bass | floatformat:2}}</td>
-                                <td></td><td></td><td></td><td></td><td></td>
-                            </tr>
+                            <td align="right">Big Bass:</td>
                         {% else %}
-                            <tr>
-                                <td align="right">BB carry over:</td><td align="left">$ {{ payouts.big_bass | floatformat:2}}</td>
-                                <td></td><td></td><td></td><td></td><td></td>
-                            </tr>
+                            <td align="right">BB Carry-over:</td>
                         {% endif %}
-                    {% endif %}
-                </tbody>
-            </table>
-            {% if not tournament.complete %}
-                <h2>Tournament Rules:</h2>
-                    <article class="media content-section">
-                        <div class="media-body">
-                            <div class="article-metadata">ENTRY FEES & PAYOUT:</div>
-                            <h6 class="small">{{ tournament.rules.fee_breakdown | linebreaks }}</h6>
-                            <h6 class="small">{{ tournament.rules.payout | linebreaks}}</h6>
-                            <div class="article-metadata">BIG BASS POT</div>
-                            <h6 class="small">{{ tournament.rules.big_bass_breakdown | linebreaks }}</h6>
-                            <div class="article-metadata">WEIGH-IN</div>
-                            <h6 class="small">{{ tournament.rules.weigh_in | linebreaks }}</h6>
-                            <div class="article-metadata">RULES</div>
-                            <h6 class="small">{{ tournament.rules.rules | linebreaks }}</h6>
-                            <div class="article-metadata">DEAD FISH PENALTY</div>
-                            <h6 class="small">{{ tournament.rules.dead_fish_penalty }}lb per fish</h6>
-                        </div>
-                    </article>
-            {% else %}
-                <h2>Individual Results</h2>
-                <article class="media content-section">
-                    <div class="media-body">
-                        <div class="row">
-                            <div class="col-lg-12">{% render_table results %}</div>
-                        </div>
-                        <!-- <div class="article-metadata">ENTRY FEES & PAYOUT:</div>
-                        <h6 class="small">{{ tournament.rules.fee_breakdown | linebreaks }}</h6>
-                        <h6 class="small">{{ tournament.rules.payout | linebreaks}}</h6>
-                        <div class="article-metadata">BIG BASS POT</div>
-                        <h6 class="small">{{ tournament.rules.big_bass_breakdown | linebreaks }}</h6>
-                        <div class="article-metadata">WEIGH-IN</div>
-                        <h6 class="small">{{ tournament.rules.weigh_in | linebreaks }}</h6>
-                        <div class="article-metadata">RULES</div>
-                        <h6 class="small">{{ tournament.rules.rules | linebreaks }}</h6>
-                        <div class="article-metadata">DEAD FISH PENALTY</div>
-                        <h6 class="small">{{ tournament.rules.dead_fish_penalty }}lb per fish</h6> -->
+                            <td align="left">$ {{ payouts.big_bass | floatformat:2}}</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        {% if not tournament.complete %}
+        <br /><br />
+            <h2>Tournament Rules:</h2>
+            <div class="media-body">
+                <div class="article-metadata">ENTRY FEES & PAYOUT:</div>
+                <h6 class="small">{{ tournament.rules.fee_breakdown | linebreaks }}</h6>
+                <h6 class="small">{{ tournament.rules.payout | linebreaks}}</h6>
+                <div class="article-metadata">BIG BASS POT</div>
+                <h6 class="small">{{ tournament.rules.big_bass_breakdown | linebreaks }}</h6>
+                <div class="article-metadata">WEIGH-IN</div>
+                <h6 class="small">{{ tournament.rules.weigh_in | linebreaks }}</h6>
+                <div class="article-metadata">RULES</div>
+                <h6 class="small">{{ tournament.rules.rules | linebreaks }}</h6>
+                <div class="article-metadata">DEAD FISH PENALTY</div>
+                <h6 class="small">{{ tournament.rules.dead_fish_penalty }}lb per fish</h6>
+            </div>
+        {% else %}
+            <br /><br /><br />
+            {% if tournament.team %}
+                <h2>Team Results</h2>
+                <div class="media-body">
+                    <div class="row">
+                        <div class="col-lg-12">{% render_table team_results %}</div>
                     </div>
-                </article>
+                </div>
             {% endif %}
-        </div>
-    </article>
+            <h2>Individual Results</h2>
+            <div class="media-body">
+                <div class="row">
+                    <div class="col-lg-12">{% render_table results %}</div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
 {% endblock content %}
