@@ -9,6 +9,7 @@ from calendar import monthcalendar
 LAKES = [
     ("tbd", "TBD"),
     ("lbj", "LBJ"),
+    ("inks", "INKS"),
     ("travis", "TRAVIS"),
     ("belton", "BELTON"),
     ("decker", "DECKER"),
