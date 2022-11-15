@@ -2,7 +2,6 @@
 # Using pylint at a file level, since it does not like django models (objects.foo())
 # pylint: disable=no-member
 """User/Angler views"""
-from __future__ import unicode_literals
 
 from random import randint
 
@@ -22,7 +21,7 @@ from . import (
     CLUB_VICE_PRESIDENT,
     CLUB_SECRETARY,
     CLUB_TREASURER,
-    CLUB_SOCIAL_MEDIA,
+    CLUB_TECHNOLOGY,
     CLUB_TOURNAMENT_DIRECTOR,
     CLUB_ASSISTANT_TOURNAMENT_DIRECTOR,
 )
@@ -142,7 +141,7 @@ def list_guests(request):
 # Site-admin Functions
 #
 def create_angler(member_type=CLUB_GUEST, officer_type=None):
-    """Creates an angler"""
+    """Creates an angler with random data (for testing)"""
     first_name = get_first_name()
     last_name = get_last_name()
     email = f"{first_name}.{last_name}@gmail.com"
@@ -169,8 +168,8 @@ def gen_officers(request):
         CLUB_VICE_PRESIDENT,
         CLUB_SECRETARY,
         CLUB_TREASURER,
+        CLUB_TECHNOLOGY,
         CLUB_TOURNAMENT_DIRECTOR,
-        CLUB_SOCIAL_MEDIA,
         CLUB_ASSISTANT_TOURNAMENT_DIRECTOR,
     ]
     for officer_type in officers:
