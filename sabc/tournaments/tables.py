@@ -1,3 +1,5 @@
+"""Tables for tournament results data"""
+
 import django_tables2 as tables
 
 from .models import Result, TeamResult
@@ -47,7 +49,6 @@ class TeamResultTable(tables.Table):
     """Table for displaying Officers
 
     Model Attributes:
-        boater (ForeignKey) Pointer to the Angler that was the boater.
         result_1 (ForeignKey) Result for Angler #1.
         result_2 (ForeignKey) Result for Angler #2.
         tournament (ForeignKey) Pointer to the tournament for this TeamResult
@@ -62,15 +63,15 @@ class TeamResultTable(tables.Table):
     """
 
     class Meta:
-        """Default OfficerTable settings"""
+        """Default TeamResultTable settings"""
 
         model = TeamResult
         template_name = DEFAULT_TABLE_TEMPLATE
-
         fields = (
             "place_finish",
             "team_name",
-            "num_fish" "penalty_weight",
+            "num_fish",
+            "penalty_weight",
             "big_bass_weight",
             "total_weight",
         )

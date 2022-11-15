@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Using a file level pylint disable because of Django objects
-# pylint: disable=no-member, unused-argument
+# pylint: disable=unused-argument
 """Tournament Views"""
 from __future__ import unicode_literals
 
@@ -14,8 +14,6 @@ from django.views.generic import (
 )
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
-
-from users.models import Angler
 
 from .forms import TournamentForm, ResultForm, TeamForm
 from .tables import ResultTable, TeamResultTable
@@ -44,31 +42,42 @@ class TournamentListView(ListView):
     context_object_name = "tournaments"
 
 
-class ExtraContext(object):
+class ExtraContext:
+    """Additional tournament data - namely results for a completed tournament"""
+
     extra_context = {}
 
     def get_context_data(self, **kwargs):
+        """Override of get_context_data
+
+        Args:
+            kwargs (dict): Keyword arguments
+
+        Returns:
+            context (dict): Updated tournament context
+        """
         context = super().get_context_data(**kwargs)
         #
         # Get the tournament results if any
         #
-        t = Tournament.objects.get(id=self.get_object().id)
-        Tournament.results.set_places(tournament=t)
-        if t.points:
-            Tournament.results.set_points(tournament=t)
+        tmnt = Tournament.objects.get(id=self.get_object().id)
+        Tournament.results.set_places(tournament=tmnt)
+        if tmnt.points:
+            Tournament.results.set_points(tournament=tmnt)
         self.extra_context["results"] = ResultTable(
-            Result.objects.filter(tournament=t).order_by("place_finish")
+            Result.objects.filter(tournament=tmnt).order_by("place_finish")
         )
-        self.extra_context["team_results"] = TeamResult.objects.filter(tournament=t).order_by(
-            "place_finish"
+        self.extra_context["team_results"] = TeamResultTable(
+            TeamResult.objects.filter(tournament=tmnt).order_by("place_finish")
         )
         #
         # Add the Tournament payout info
         #
         self.extra_context["payouts"] = {}
-        for key, val in Tournament.results.get_payouts(t).items():
+        for key, val in Tournament.results.get_payouts(tmnt).items():
             self.extra_context["payouts"][key] = val
 
+        self.extra_context["bb_winner"] = Tournament.results.get_big_bass_winner(tournament=tmnt)
         context.update(self.extra_context)
 
         return context
@@ -155,7 +164,7 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
 
     model = Result
     form_class = ResultForm
-    success_message = "Results Successfully Added for: %s"
+    success_message = "Results Added for: %s"
 
     def get_initial(self, *args, **kwargs):
         """Get initial result"""
@@ -165,9 +174,13 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
         return initial
 
     def save(self, *args, **kwargs):
-        """Save a result"""
-        obj = self.get_object()
-        messages.success(self.request, self.success_message % obj.angler)
+        """Save a result - Trigger a re-setting of places and points when a result is saved"""
+        tmnt = Tournament.objects.get(self.get_initial(*args, **kwargs)["tournament"])
+        Tournament.results.set_places(tournament=tmnt)
+        if tmnt.points:
+            Tournament.results.set_points(tournament=tmnt)
+
+        messages.success(self.request, self.success_message % self.get_object())
 
     def test_func(self):
         """Test function for values"""
@@ -252,6 +265,7 @@ class TeamDetailView(SuccessMessageMixin, LoginRequiredMixin, DetailView):
 
     model = TeamResult
     form_class = TeamForm
+    template_name = "tournaments/team_detail.html"
     context_object_name = "team"
 
     def get_initial(self, *args, **kwargs):
@@ -276,18 +290,24 @@ class TeamDetailView(SuccessMessageMixin, LoginRequiredMixin, DetailView):
 
 
 class TeamUpdateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
+    """Team update View"""
+
     model = Tournament
     form_class = TeamForm
     success_message = "%s Successfully Updated!"
 
     def get_initial(self, *args, **kwargs):
-        initial = super(TeamUpdateView, self).get_initial(**kwargs)
+        """Get an intial TeamUpdateView state for a tournament"""
+        initial = super().get_initial(**kwargs)
         initial["tournament"] = self.kwargs.get("pk")
+
         return initial
 
     def test_func(self):
+        """Test that only officers can update team info"""
         return self.request.user.angler.type == "officer"
 
     def save(self, *args, **kwargs):
+        """Save a team record"""
         obj = self.get_object()
         messages.success(self.request, self.success_message % obj.__dict__.get("name", "UNKNOWN"))

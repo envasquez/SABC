@@ -207,10 +207,13 @@ class TestTournaments(TestCase):
         p = inflect.engine()
         tournament = Tournament.objects.create(**self.team)
         for idx, data in TEAM_RESULTS_NO_TIE.items():
-            boater = create_angler(
-                first_name=p.number_to_words(p.ordinal(idx)).capitalize(), last_name="Place"
-            )
-            one = {"tournament": tournament, "angler": boater} | data["result_1"]
+            one = {
+                "tournament": tournament,
+                "angler": create_angler(
+                    first_name=f"{p.number_to_words(p.ordinal(idx)).capitalize()}",
+                    last_name="Boater",
+                ),
+            } | data["result_1"]
             two = {
                 "tournament": tournament,
                 "angler": create_angler(
@@ -221,16 +224,11 @@ class TestTournaments(TestCase):
             result_1 = Result.objects.create(**one)
             result_2 = Result.objects.create(**two)
             TeamResult.objects.create(
-                **{
-                    "boater": boater,
-                    "result_1": result_1,
-                    "result_2": result_2,
-                    "tournament": tournament,
-                }
+                **{"result_1": result_1, "result_2": result_2, "tournament": tournament}
             )
         Tournament.results.set_places(tournament)
         bb_winner = Tournament.results.get_big_bass_winner(tournament)
-        self.assertEqual(bb_winner.total_weight, Decimal("49"))
+        self.assertEqual(bb_winner.total_weight, Decimal("25"))
         self.assertEqual(bb_winner.big_bass_weight, Decimal("5"))
 
     def test_get_payouts_indiv(self):
