@@ -22,6 +22,7 @@ from django.db.models import (
     ForeignKey,
     DecimalField,
     BooleanField,
+    OneToOneField,
     SmallIntegerField,
 )
 from django.urls import reverse
@@ -110,7 +111,7 @@ class TournamentManager(Manager):
     """
 
     def set_places(self, tournament):
-        """Sets the place_finish attribute for a complete tournament
+        """Sets the place_finish attribute for a tournament
         Args:
             tournament (Tournament) The tournament to get winners from
         """
@@ -154,7 +155,6 @@ class TournamentManager(Manager):
         if tournament.team:
             _set_places(TeamResult.objects.filter(tournament=tournament).order_by(*order))
         _set_places(Result.objects.filter(tournament=tournament).order_by(*order))
-        tournament.complete = True
         tournament.save()
 
     def set_points(self, tournament):
@@ -165,10 +165,14 @@ class TournamentManager(Manager):
         """
         Tournament.results.set_places(tournament)
         if not tournament.points:
-            logging.debug(f"Tournament points set to Flase - skipping!")
+            logging.debug("Tournament points set to Flase - skipping!")
             return
 
-        query = {"tournament": tournament, "angler__type": "member", "total_weight__gt": 0}
+        query = {
+            "tournament": tournament,
+            "angler__type__in": ["officer", "member"],
+            "total_weight__gt": 0,
+        }
         points = tournament.max_points
         previous = None
         for result in Result.objects.filter(**query).order_by("place_finish"):
@@ -179,7 +183,7 @@ class TournamentManager(Manager):
             points -= 1
             logging.debug(result)
 
-        query = {"tournament": tournament, "angler__type": "member", "num_fish": 0}
+        query = {"tournament": tournament, "angler__type__in": ["officer", "member"], "num_fish": 0}
         for result in Result.objects.filter(**query):
             result.points = previous.points - 2
             if result.buy_in:
@@ -191,22 +195,11 @@ class TournamentManager(Manager):
         """Returns the Result object that contains the big bass winner
         Args:
             tournament (Tournament) The tournament to get the big bass winner for
-        Raises:
-            TournamentNotComplete if the tournament is not completed
         """
-        if tournament.team:
-            return (
-                TeamResult.objects.filter(
-                    tournament=tournament,
-                    big_bass_weight__gte=Decimal("5"),
-                )
-                .order_by("-big_bass_weight")
-                .first()
-            )
         return (
             Result.objects.filter(
                 tournament=tournament,
-                angler__type="member",
+                angler__type__in=["officer", "member"],
                 big_bass_weight__gte=Decimal("5"),
             )
             .order_by("-big_bass_weight")
@@ -240,7 +233,11 @@ class TournamentManager(Manager):
         Raises:
             TournamentNotComplete if the tournament is not completed
         """
-        bb_query = {"tournament": tournament, "big_bass_weight__gte": 5.0}
+        bb_query = {
+            "tournament": tournament,
+            "big_bass_weight__gte": 5.0,
+            "angler__type__in": ["officer", "member"],
+        }
         bb_exists = Result.objects.filter(**bb_query).count() > 0
         num_anglers = Result.objects.filter(tournament=tournament).count()
         return {
@@ -313,10 +310,9 @@ class Tournament(Model):
 
     def save(self, *args, **kwargs):
         """Save the tournament"""
-        self.ramp_url = self.ramp_url.replace('height="450"', 'height="350"')
         if not self.rules:
             self.rules = RuleSet.objects.create()
-
+        self.ramp_url = self.ramp_url.replace('width="600"', 'width="700"')
         super().save(*args, **kwargs)
 
 
@@ -339,7 +335,7 @@ class Result(Model):
         big_bass_weight (DecimalField) The weight of the biggest bass weighed.
     """
 
-    angler = ForeignKey(Angler, null=True, on_delete=DO_NOTHING)
+    angler = OneToOneField(Angler, null=True, on_delete=DO_NOTHING)
     buy_in = BooleanField(default=False, null=False, blank=False)
     points = SmallIntegerField(default=0, null=True, blank=True)
     num_fish = SmallIntegerField(default=0, null=False, blank=False)
@@ -383,10 +379,6 @@ class Result(Model):
             self.penalty_weight = self.num_fish_dead * self.tournament.rules.dead_fish_penalty
             self.total_weight = self.total_weight - self.penalty_weight
             self.num_fish_alive = self.num_fish - self.num_fish_dead
-
-        # If results are being added, then the tournament is over.
-        self.tournament.complete = True
-        self.tournament.save()
 
         super().save(*args, **kwargs)
 
@@ -446,7 +438,6 @@ class TeamResult(Model):
     """This model represents a team result in a tournament.
 
     Attributes:
-        boater (ForeignKey) Pointer to the Angler that was the boater.
         result_1 (ForeignKey) Result for Angler #1.
         result_2 (ForeignKey) Result for Angler #2.
         tournament (ForeignKey) Pointer to the tournament for this TeamResult
@@ -459,29 +450,31 @@ class TeamResult(Model):
         big_bass_weight (DecimalField) The weight of the biggest bass caught by the team.
     """
 
-    boater = ForeignKey(Angler, related_name="+", on_delete=DO_NOTHING)
-    result_1 = ForeignKey(Result, null=True, blank=True, on_delete=DO_NOTHING)
+    result_1 = ForeignKey(Result, null=False, blank=False, on_delete=DO_NOTHING)
     result_2 = ForeignKey(Result, null=True, blank=True, related_name="+", on_delete=DO_NOTHING)
     tournament = ForeignKey(Tournament, on_delete=DO_NOTHING)
 
-    buy_in = BooleanField(default=False, null=False, blank=False)
-    num_fish = SmallIntegerField(default=0)
-    team_name = CharField(max_length=512, default="")
-    place_finish = SmallIntegerField(default=0)
-    total_weight = DecimalField(default=Decimal("0"), max_digits=5, decimal_places=2)
-    num_fish_dead = SmallIntegerField(default=0)
-    num_fish_alive = SmallIntegerField(default=0)
-    penalty_weight = DecimalField(default=Decimal("0"), max_digits=5, decimal_places=2)
-    big_bass_weight = DecimalField(default=Decimal("0"), max_digits=5, decimal_places=2)
+    buy_in = BooleanField(default=False, null=True, blank=True)
+    num_fish = SmallIntegerField(default=0, null=True, blank=True)
+    team_name = CharField(default="", max_length=1024, null=True, blank=True)
+    place_finish = SmallIntegerField(default=0, null=True, blank=True)
+    total_weight = DecimalField(
+        default=Decimal("0"), max_digits=5, decimal_places=2, null=True, blank=True
+    )
+    num_fish_dead = SmallIntegerField(default=0, null=True, blank=True)
+    num_fish_alive = SmallIntegerField(default=0, null=True, blank=True)
+    penalty_weight = DecimalField(
+        default=Decimal("0"), max_digits=5, decimal_places=2, null=True, blank=True
+    )
+    big_bass_weight = DecimalField(
+        default=Decimal("0"), max_digits=5, decimal_places=2, null=True, blank=True
+    )
 
     def __str__(self):
         """String representation of a TeamResult"""
         name = self.get_team_name()
         place = f"{self.place_finish}."
         weight = f"{self.num_fish} @ {self.total_weight}lbs"
-        if self.buy_in:
-            weight = "Buy-in N/A lbs"
-            big_bass = "N/A lb BB"
         big_bass = f"{self.big_bass_weight}lb BB"
         return f"{place}{name}{' ' * (60 - len(str(name)))}{weight}\t\t{big_bass}"
 
@@ -490,12 +483,12 @@ class TeamResult(Model):
         return reverse("team-details", kwargs={"pk": self.id})
 
     def get_team_name(self):
-        """Gets the team name"""
-        name = f"Team: {self.result_1.angler} - SOLO"
-        if self.result_2:
-            name = f"Team: {self.result_1.angler} & {self.result_2.angler}"
+        """Returns a team's name"""
+        name = ""
+        if self.result_1 and not self.result_2:
+            return f"{self.result_1.angler.user.get_full_name()} - solo"
 
-        return name
+        return f"{name} & {self.result_2.angler.user.get_full_name()}"
 
     def save(self, *args, **kwargs):
         """Saves a MultidayResult object
@@ -515,6 +508,7 @@ class TeamResult(Model):
                 self.num_fish_alive = sum(
                     [self.result_1.num_fish_alive, self.result_2.num_fish_alive]
                 )
+
                 self.big_bass_weight = max(
                     [self.result_1.big_bass_weight, self.result_2.big_bass_weight]
                 )
@@ -522,6 +516,7 @@ class TeamResult(Model):
                 for attr in [
                     "buy_in",
                     "num_fish",
+                    "team_name",
                     "total_weight",
                     "big_bass_weight",
                     "num_fish_alive",
@@ -529,5 +524,7 @@ class TeamResult(Model):
                     "penalty_weight",
                 ]:
                     setattr(self, attr, getattr(self.result_1, attr))
+
+        self.team_name = self.get_team_name()
 
         super().save(*args, **kwargs)
