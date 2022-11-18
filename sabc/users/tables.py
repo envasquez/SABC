@@ -7,6 +7,11 @@ from .models import Angler
 DEFAULT_TABLE_TEMPLATE = "django_tables2/bootstrap4.html"
 
 
+def render_phone_number(number):
+    num = f"{number}".replace("+1", "")
+    return f"({num[:3]}){num[3:6]}-{num[6:]}"
+
+
 class OfficerTable(tables.Table):
     """Table for displaying Officers"""
 
@@ -18,8 +23,15 @@ class OfficerTable(tables.Table):
         """Default OfficerTable settings"""
 
         model = Angler
+        fields = ("officer_type", "first_name", "last_name", "email")
+        orderable = False
         template_name = DEFAULT_TABLE_TEMPLATE
-        fields = ("officer_type", "first_name", "last_name", "email", "phone_number")
+
+    def render_phone_number(self, record):
+        return render_phone_number(record.phone_number)
+
+    def render_officer_type(self, record):
+        return record.officer_type.replace("-", " ").title()
 
 
 class MemberTable(tables.Table):
@@ -33,13 +45,12 @@ class MemberTable(tables.Table):
         """Default MemberTable settings"""
 
         model = Angler
-        template_name = DEFAULT_TABLE_TEMPLATE
         fields = ("last_name", "first_name", "email", "phone_number")
+        orderable = False
+        template_name = DEFAULT_TABLE_TEMPLATE
 
     def render_phone_number(self, record):
-        num = f"{record.phone_number}".replace("+1", "")
-        a_code, prefix, suffix = num[:3], num[3:6], num[6:]
-        return f"({a_code}){prefix}-{suffix}"
+        return render_phone_number(record.phone_number)
 
 
 class GuestTable(tables.Table):
@@ -53,5 +64,6 @@ class GuestTable(tables.Table):
         """Default GuestTable settings"""
 
         model = Angler
-        template_name = DEFAULT_TABLE_TEMPLATE
         fields = ("first_name", "last_name", "email")
+        orderable = False
+        template_name = DEFAULT_TABLE_TEMPLATE
