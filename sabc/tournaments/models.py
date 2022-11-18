@@ -4,8 +4,6 @@
 This file contains the models used to track Tournament events and their Results for individual
 and team tournaments.
 """
-from __future__ import unicode_literals
-
 import logging
 
 from time import strftime
@@ -117,7 +115,6 @@ class TournamentManager(Manager):
         """
 
         def _set_places(query):
-            logging.debug("\n")
             prev = None
             zeros = [q for q in query if not q.buy_in and q.total_weight == Decimal("0")]
             buy_ins = [q for q in query if q.buy_in]
