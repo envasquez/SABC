@@ -34,7 +34,12 @@ class MemberTable(tables.Table):
 
         model = Angler
         template_name = DEFAULT_TABLE_TEMPLATE
-        fields = ("first_name", "last_name", "email", "date_joined")
+        fields = ("last_name", "first_name", "email", "phone_number")
+
+    def render_phone_number(self, record):
+        num = f"{record.phone_number}".replace("+1", "")
+        a_code, prefix, suffix = num[:3], num[3:6], num[6:]
+        return f"({a_code}){prefix}-{suffix}"
 
 
 class GuestTable(tables.Table):

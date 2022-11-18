@@ -6,6 +6,7 @@
 from random import randint
 
 from django.contrib import messages
+from django.db.models import Q
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 
@@ -107,7 +108,11 @@ def list_officers(request):
 @login_required
 def list_members(request):
     """Members roster page"""
-    table = MemberTable(Angler.objects.filter(type__in=["member", "officer"]))
+    table = MemberTable(
+        Angler.objects.filter(~Q(user__username="sabc"), type__in=["member", "officer"]).order_by(
+            "user__last_name"
+        )
+    )
     table.order_by = "date_joined"
     return render(
         request,
