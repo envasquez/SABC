@@ -31,6 +31,7 @@ class ResultTable(tables.Table):
         """Default OfficerTable settings"""
 
         model = Result
+        orderable = False
         template_name = DEFAULT_TABLE_TEMPLATE
         fields = (
             "place_finish",
@@ -66,6 +67,7 @@ class TeamResultTable(tables.Table):
         """Default TeamResultTable settings"""
 
         model = TeamResult
+        orderable = False
         template_name = DEFAULT_TABLE_TEMPLATE
         fields = (
             "place_finish",
