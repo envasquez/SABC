@@ -14,7 +14,7 @@ clean-db: clean
 	find $(PROJECT) -path "*/migrations/*.py" -not -name "__init__.py" -delete
 
 clean-docker:
-	docker-compose down
+	docker compose down
 	docker volume rm sabc_sabc_app || true
 	docker volume rm sabc_postgres_data || true
 	docker image rm sabc_sabc || true
@@ -24,14 +24,14 @@ clean-all: clean-docker clean clean-db
 
 docker: DEPLOYMENT_HOST=db
 docker: clean-all
-	docker-compose up -d --build --force-recreate sabc
+	docker compose up --abort-on-container-exit --build --force-recreate sabc
 
 docker-test-webapp: DEPLOYMENT_HOST=db
 docker-test-webapp:
 	docker-compose down
 	docker volume rm sabc_sabc_app || true
 	docker image rm sabc_sabc || true
-	docker-compose up -d --build sabc
+	docker compose up --abort-on-container-exit --build sabc
 
 lint: clean clean-db
 	python3 -m pylint --verbose --rcfile=.pylintrc --output=pylint.out sabc/tournaments; cat pylint.out
