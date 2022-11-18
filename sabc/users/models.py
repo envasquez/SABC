@@ -2,8 +2,21 @@
 """Angler Models"""
 from __future__ import unicode_literals
 
-from django.db import models
 from django.utils import timezone
+from django.db.models import (
+    Q,
+    When,
+    Case,
+    Value,
+    Model,
+    PROTECT,
+    Manager,
+    DateField,
+    CharField,
+    ImageField,
+    BooleanField,
+    OneToOneField,
+)
 from django.contrib.auth.models import User
 
 from phonenumber_field.modelfields import PhoneNumberField
@@ -13,25 +26,60 @@ from PIL import Image
 from . import MEMBER_CHOICES, CLUBS, CLUB_OFFICERS_TYPES
 
 
-class Angler(models.Model):
+class OfficerManager(Manager):
+    """Officer Manager class - used for custom functionality related to Officers"""
+
+    def get(self, *args, **kwargs):
+        """Get officers, defined by a custom ordering hierarchy
+
+        CLUB_PRESIDENT = "president"
+        CLUB_VICE_PRESIDENT = "vice-president"
+        CLUB_SECRETARY = "secretary"
+        CLUB_TREASURER = "treasurer"
+        CLUB_TOURNAMENT_DIRECTOR = "tournament-director"
+        CLUB_ASSISTANT_TOURNAMENT_DIRECTOR = "assistant-tournament-director"
+        CLUB_TECHNOLOGY = "technology"
+        """
+        query = Angler.objects.filter(type="officer", user__is_active=True)
+        return query.annotate(
+            custom_order=Case(
+                When(officer_type="president", then=Value(0)),
+                When(officer_type="vice-president", then=Value(1)),
+                When(officer_type="secretary", then=Value(2)),
+                When(officer_type="treasurer", then=Value(3)),
+                When(officer_type="tournament-director", then=Value(4)),
+                When(officer_type="assistant-tournament-director", then=Value(5)),
+                When(officer_type="technology", then=Value(6)),
+            )
+        ).order_by("custom_order")
+
+
+class MemberManager(Manager):
+    """Manager for dealing with member queries"""
+
+    def get_active_members(self):
+        return Angler.objects.filter(
+            ~Q(user__username="sabc"),
+            type__in=["member", "officer"],
+            user__is_active=True,
+        ).order_by("user__last_name")
+
+
+class Angler(Model):
     """This model represents an individual angler"""
 
-    user = models.OneToOneField(User, on_delete=models.PROTECT)
-    type = models.CharField(max_length=10, choices=MEMBER_CHOICES, default="guest")
-    officer_type = models.CharField(
+    user = OneToOneField(User, on_delete=PROTECT)
+    type = CharField(max_length=10, choices=MEMBER_CHOICES, default="guest")
+    officer_type = CharField(
         max_length=64, choices=CLUB_OFFICERS_TYPES, blank=True, null=True, default=""
     )
-    image = models.ImageField(
-        default="profile_pics/default.jpg", upload_to="profile_pics"
-    )
-    date_joined = models.DateField(default=timezone.now)
+    image = ImageField(default="profile_pics/default.jpg", upload_to="profile_pics")
+    date_joined = DateField(default=timezone.now)
     phone_number = PhoneNumberField(
         null=False, blank=False, help_text="Contact Phone Number"
     )
-    organization = models.CharField(
-        max_length=100, blank=True, choices=CLUBS, default="SABC"
-    )
-    private_info = models.BooleanField(default=True)
+    organization = CharField(max_length=100, blank=True, choices=CLUBS, default="SABC")
+    private_info = BooleanField(default=True)
 
     class Meta:
         """Angler metadata"""
@@ -50,3 +98,7 @@ class Angler(models.Model):
             output_size = (300, 300)
             img.thumbnail(output_size)
             img.save(self.image.path)
+
+    objects = Manager()
+    members = MemberManager()
+    officers = OfficerManager()
