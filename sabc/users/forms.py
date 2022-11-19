@@ -1,21 +1,20 @@
 """User Forms"""
-# Using file level pylint disable because of Django form objects
-# pylint: disable=too-few-public-methods
-from django import forms
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
 
-from phonenumber_field.modelfields import PhoneNumberField
+from django.forms import CharField, EmailField, FileField, ModelForm, Form
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+
+from phonenumber_field.formfields import PhoneNumberField
 
 from .models import Angler
 
 
 class UserRegisterForm(UserCreationForm):
-    """UserRegistrationForm"""
+    """UserRegistrationForm for registering new Users"""
 
-    email = forms.EmailField()
-    first_name = forms.CharField(max_length=100)
-    last_name = forms.CharField(max_length=100)
+    email = EmailField()
+    first_name = CharField(max_length=100)
+    last_name = CharField(max_length=100)
 
     class Meta:
         """UserRegisterForm metadata"""
@@ -31,24 +30,20 @@ class UserRegisterForm(UserCreationForm):
         )
 
 
-class GuestRegisterForm(UserCreationForm):
-    """UserRegistrationForm"""
-
-    email = forms.EmailField()
-    first_name = forms.CharField(max_length=100)
-    last_name = forms.CharField(max_length=100)
+class AnglerRegisterForm(ModelForm):
+    """AnglerRegisterForm for registering new Anglers"""
 
     class Meta:
-        """UserRegisterForm metadata"""
+        """Model and field designations for Anglers registering"""
 
-        model = User
-        fields = ("email", "first_name", "last_name")
+        model = Angler
+        fields = ("phone_number", "image")
 
 
-class UserUpdateForm(forms.ModelForm):
+class UserUpdateForm(ModelForm):
     """User update form"""
 
-    email = forms.EmailField()
+    email = EmailField()
 
     class Meta:
         """UserRegisterForm metadata"""
@@ -57,17 +52,17 @@ class UserUpdateForm(forms.ModelForm):
         fields = ("username", "email")
 
 
-class AnglerUpdateForm(forms.ModelForm):
+class AnglerUpdateForm(ModelForm):
     """Angler update form"""
 
-    phone_number = PhoneNumberField(blank=True)
+    phone_number = PhoneNumberField()
 
     class Meta:
         """AnglerUpdateForm metadata"""
 
         model = Angler
-        fields = ("phone_number", "image", "private_info")
+        fields = ("phone_number", "image")
 
 
-class CsvImportForm(forms.Form):
-    csv_upload = forms.FileField()
+class CsvImportForm(Form):
+    csv_upload = FileField()
