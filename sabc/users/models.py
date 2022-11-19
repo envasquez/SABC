@@ -75,9 +75,7 @@ class Angler(Model):
     )
     image = ImageField(default="profile_pics/default.jpg", upload_to="profile_pics")
     date_joined = DateField(default=timezone.now)
-    phone_number = PhoneNumberField(
-        null=False, blank=False, help_text="Contact Phone Number"
-    )
+    phone_number = PhoneNumberField(null=False, blank=False)
     organization = CharField(max_length=100, blank=True, choices=CLUBS, default="SABC")
     private_info = BooleanField(default=True)
 
@@ -92,7 +90,8 @@ class Angler(Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        # Re-size large images ... because
+
+        # Re-size large images ... because ...
         img = Image.open(self.image.path)
         if img.height > 300 or img.width > 300:  # pixels
             output_size = (300, 300)
