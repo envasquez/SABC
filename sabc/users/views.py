@@ -5,8 +5,8 @@
 
 from random import randint
 
-from django.contrib import messages
 from django.db.models import Q
+from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 
@@ -72,7 +72,6 @@ def register(request):
 @login_required
 def profile(request):
     """Angler/Account settings"""
-    angler = Angler.objects.get(user=request.user)
     if request.method == "POST":
         u_form = UserUpdateForm(request.POST, instance=request.user)
         p_form = AnglerUpdateForm(request.POST, request.FILES, instance=request.user.angler)
@@ -93,7 +92,7 @@ def profile(request):
 @login_required
 def list_officers(request):
     """Officers roster page"""
-    table = OfficerTable(Angler.objects.filter(type="officer"))
+    table = OfficerTable(Angler.officers.get())
     return render(
         request,
         "users/roster_list.html",
@@ -108,11 +107,7 @@ def list_officers(request):
 @login_required
 def list_members(request):
     """Members roster page"""
-    table = MemberTable(
-        Angler.objects.filter(~Q(user__username="sabc"), type__in=["member", "officer"]).order_by(
-            "user__last_name"
-        )
-    )
+    table = MemberTable(Angler.members.get_active_members())
     table.order_by = "date_joined"
     return render(
         request,
@@ -129,7 +124,9 @@ def list_members(request):
 def list_guests(request):
     """Members roster page"""
     table = GuestTable(
-        Angler.objects.filter(type="guest").exclude(user__first_name="").exclude(user__last_name="")
+        Angler.objects.filter(~Q(user__username="test_guest"), type="guest")
+        .exclude(user__first_name="")
+        .exclude(user__last_name="")
     )
     return render(
         request,
