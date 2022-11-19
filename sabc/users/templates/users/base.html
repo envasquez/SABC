@@ -63,21 +63,6 @@
           {% endif %}
           {% block content %}{% endblock %}
         </div>
-        <!-- Turn this off for now - It was useful when first developing templates/tables, etc.
-          {% if user.is_authenticated and user.is_superuser %}
-          <div class="col-md-4">
-            <div class="content-section">
-              <h4>Generate Random</h4>
-              <p>
-                <ul class="list-group">
-                  <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="{% url 'gen-officers' %}">Generate Officers</a></li>
-                  <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="{% url 'gen-member' %}">Generate Member</a></li>
-                  <li class="list-group-item list-group-item-light"><a class="nav-item nav-link" href="{% url 'gen-guest' %}">Generate Guest</a></li>
-                </ul>
-              </p>
-            </div>
-          </div>
-        {% endif %} -->
       </div>
         {% if is_paginated %}
           {% if page_obj.has_previous %}
