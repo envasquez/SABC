@@ -1,13 +1,14 @@
 """Tables for tournament results data"""
 
-import django_tables2 as tables
+from django_tables2.tables import Table
+from django_tables2.columns import Column
 
 from .models import Result, TeamResult
 
 DEFAULT_TABLE_TEMPLATE = "django_tables2/bootstrap4.html"
 
 
-class ResultTable(tables.Table):
+class ResultTable(Table):
     """Table for displaying Officers
 
     Model Attributes:
@@ -24,8 +25,8 @@ class ResultTable(tables.Table):
         big_bass_weight (DecimalField) The weight of the biggest bass weighed.
     """
 
-    first_name = tables.Column(accessor="angler.user.first_name")
-    last_name = tables.Column(accessor="angler.user.last_name")
+    first_name = Column(accessor="angler.user.first_name")
+    last_name = Column(accessor="angler.user.last_name")
 
     class Meta:
         """Default OfficerTable settings"""
@@ -46,7 +47,7 @@ class ResultTable(tables.Table):
         )
 
 
-class TeamResultTable(tables.Table):
+class TeamResultTable(Table):
     """Table for displaying Officers
 
     Model Attributes:
