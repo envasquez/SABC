@@ -1,6 +1,7 @@
 """Tables for the Angler/User model"""
 
-import django_tables2 as tables
+from django_tables2.tables import Table
+from django_tables2.columns import Column
 
 from .models import Angler
 
@@ -12,12 +13,12 @@ def render_phone_number(number):
     return f"({num[:3]}){num[3:6]}-{num[6:]}"
 
 
-class OfficerTable(tables.Table):
+class OfficerTable(Table):
     """Table for displaying Officers"""
 
-    first_name = tables.Column(accessor="user.first_name")
-    last_name = tables.Column(accessor="user.last_name")
-    email = tables.Column(accessor="user.email")
+    first_name = Column(accessor="user.first_name")
+    last_name = Column(accessor="user.last_name")
+    email = Column(accessor="user.email")
 
     class Meta:
         """Default OfficerTable settings"""
@@ -34,12 +35,12 @@ class OfficerTable(tables.Table):
         return record.officer_type.replace("-", " ").title()
 
 
-class MemberTable(tables.Table):
+class MemberTable(Table):
     """Table for displaying Members"""
 
-    first_name = tables.Column(accessor="user.first_name")
-    last_name = tables.Column(accessor="user.last_name")
-    email = tables.Column(accessor="user.email")
+    first_name = Column(accessor="user.first_name")
+    last_name = Column(accessor="user.last_name")
+    email = Column(accessor="user.email")
 
     class Meta:
         """Default MemberTable settings"""
@@ -53,12 +54,12 @@ class MemberTable(tables.Table):
         return render_phone_number(record.phone_number)
 
 
-class GuestTable(tables.Table):
+class GuestTable(Table):
     """Table for displaying guests"""
 
-    first_name = tables.Column(accessor="user.first_name")
-    last_name = tables.Column(accessor="user.last_name")
-    email = tables.Column(accessor="user.email")
+    first_name = Column(accessor="user.first_name")
+    last_name = Column(accessor="user.last_name")
+    email = Column(accessor="user.email")
 
     class Meta:
         """Default GuestTable settings"""
