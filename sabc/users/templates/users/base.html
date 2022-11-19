@@ -63,7 +63,8 @@
           {% endif %}
           {% block content %}{% endblock %}
         </div>
-        {% if user.is_authenticated and user.is_superuser %}
+        <!-- Turn this off for now - It was useful when first developing templates/tables, etc.
+          {% if user.is_authenticated and user.is_superuser %}
           <div class="col-md-4">
             <div class="content-section">
               <h4>Generate Random</h4>
@@ -76,8 +77,8 @@
               </p>
             </div>
           </div>
-        {% endif %}
-        </div>
+        {% endif %} -->
+      </div>
         {% if is_paginated %}
           {% if page_obj.has_previous %}
             <a class="btn btn-outline-info mb-4" href="?page=1">First</a>
