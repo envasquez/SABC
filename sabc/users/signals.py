@@ -12,8 +12,7 @@ from .models import Angler
 def create_profile(sender, instance, created, **kwargs):
     """Creates an Angler everytime a User is created"""
     if created:
-        # pylint: disable=no-member
-        Angler.objects.create(user=instance)
+        Angler.objects.update_or_create(user=instance)
 
 
 @receiver(post_save, sender=User)
