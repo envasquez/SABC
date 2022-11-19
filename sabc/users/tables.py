@@ -8,11 +8,6 @@ from .models import Angler
 DEFAULT_TABLE_TEMPLATE = "django_tables2/bootstrap4.html"
 
 
-def render_phone_number(number):
-    num = f"{number}".replace("+1", "")
-    return f"({num[:3]}){num[3:6]}-{num[6:]}"
-
-
 class OfficerTable(Table):
     """Table for displaying Officers"""
 
@@ -29,10 +24,10 @@ class OfficerTable(Table):
         template_name = DEFAULT_TABLE_TEMPLATE
 
     def render_phone_number(self, record):
-        return render_phone_number(record.phone_number)
+        return record.phone_number.as_national
 
     def render_officer_type(self, record):
-        return record.officer_type.replace("-", " ").title()
+        return record.officer_type.replace("-", " ").replace("assistant", "asst.").title()
 
 
 class MemberTable(Table):
@@ -51,7 +46,7 @@ class MemberTable(Table):
         template_name = DEFAULT_TABLE_TEMPLATE
 
     def render_phone_number(self, record):
-        return render_phone_number(record.phone_number)
+        return record.phone_number.as_national
 
 
 class GuestTable(Table):
