@@ -27,7 +27,7 @@ from . import (
     CLUB_ASSISTANT_TOURNAMENT_DIRECTOR,
 )
 
-from .forms import UserRegisterForm, UserUpdateForm, AnglerUpdateForm
+from .forms import UserRegisterForm, AnglerRegisterForm, UserUpdateForm, AnglerUpdateForm
 from .models import Angler
 from .tables import OfficerTable, MemberTable, GuestTable
 
@@ -55,16 +55,25 @@ def calendar(request):
 def register(request):
     """User registration/validation"""
     if request.method == "POST":
-        form = UserRegisterForm(request.POST)
-        if form.is_valid():
-            form.save()
-            clean_username = form.cleaned_data.get("username")
-            messages.success(request, f"Account created for {clean_username}, you can now login")
+        u_form = UserRegisterForm(request.POST)
+        a_form = AnglerRegisterForm(request.POST)
+        if u_form.is_valid():
+            u_form.save()
+            messages.success(
+                request,
+                f"Account created for {u_form.cleaned_data.get('username')}, you can now login",
+            )
             return redirect("login")
     else:
-        form = UserRegisterForm()
+        u_form = UserRegisterForm()
+        a_form = AnglerRegisterForm()
 
-    context = {"title": "SABC - Registration", "form": form, "form_name": "Member Registration"}
+    context = {
+        "title": "SABC - Angler Registration",
+        "u_form": u_form,
+        "a_form": a_form,
+        "form_name": "Angler Registration",
+    }
 
     return render(request, "users/register.html", context)
 
@@ -74,17 +83,17 @@ def profile(request):
     """Angler/Account settings"""
     if request.method == "POST":
         u_form = UserUpdateForm(request.POST, instance=request.user)
-        p_form = AnglerUpdateForm(request.POST, request.FILES, instance=request.user.angler)
-        if u_form.is_valid() and p_form.is_valid():
+        a_form = AnglerUpdateForm(request.POST, request.FILES, instance=request.user.angler)
+        if u_form.is_valid():
             u_form.save()
-            p_form.save()
+            a_form.save()
             messages.success(request, "Your profile has been updated!")
             return redirect("profile")
     else:
         u_form = UserUpdateForm(instance=request.user)
-        p_form = AnglerUpdateForm(instance=request.user.angler)
+        a_form = AnglerUpdateForm(instance=request.user.angler)
 
-    context = {"title": "Angler Profile", "u_form": u_form, "p_form": p_form}
+    context = {"title": "Angler Profile", "u_form": u_form, "a_form": a_form}
 
     return render(request, "users/profile.html", context)
 
@@ -142,56 +151,49 @@ def list_guests(request):
 #
 # Site-admin Functions
 #
-def create_angler(member_type=CLUB_GUEST, officer_type=None):
-    """Creates an angler with random data (for testing)"""
-    first_name = get_first_name()
-    last_name = get_last_name()
-    email = f"{first_name}.{last_name}@gmail.com"
-    user = User.objects.create(
-        username=first_name[0].lower() + last_name.lower(),
-        first_name=first_name,
-        last_name=last_name,
-        email=email,
-    )
-    angler = Angler.objects.get(user=user)
-    if officer_type:
-        angler.officer_type = officer_type
-    angler.phone_number = f"+{randint(10000000000, 99999999999)}"
-    angler.type = member_type
-    angler.private_info = (True, False)[randint(0, 1)]
-    angler.save()
-
-
-@login_required
-def gen_officers(request):
-    """Creates One of every officer type"""
-    officers = [
-        CLUB_PRESIDENT,
-        CLUB_VICE_PRESIDENT,
-        CLUB_SECRETARY,
-        CLUB_TREASURER,
-        CLUB_TECHNOLOGY,
-        CLUB_TOURNAMENT_DIRECTOR,
-        CLUB_ASSISTANT_TOURNAMENT_DIRECTOR,
-    ]
-    for officer_type in officers:
-        try:
-            Angler.objects.get(officer_type=officer_type)
-        except Angler.DoesNotExist:
-            create_angler(member_type=CLUB_OFFICER, officer_type=officer_type)
-
-    return list_officers(request)
-
-
-@login_required
-def gen_member(request):
-    """Creates member angler"""
-    create_angler(member_type=CLUB_MEMBER)
-    return list_members(request)
-
-
-@login_required
-def gen_guest(request):
-    """Creates guest angler"""
-    create_angler(member_type=CLUB_GUEST)
-    return list_guests(request)
+# def create_angler(member_type=CLUB_GUEST, officer_type=None):
+#     """Creates an angler with random data (for testing)"""
+#     first_name = get_first_name()
+#     last_name = get_last_name()
+#     email = f"{first_name}.{last_name}@gmail.com"
+#     user = User.objects.create(
+#         username=first_name[0].lower() + last_name.lower(),
+#         first_name=first_name,
+#         last_name=last_name,
+#         email=email,
+#     )
+#     angler = Angler.objects.get(user=user)
+#     if officer_type:
+#         angler.officer_type = officer_type
+#     angler.phone_number = f"+{randint(10000000000, 99999999999)}"
+#     angler.type = member_type
+#     angler.private_info = (True, False)[randint(0, 1)]
+#     angler.save()
+# @login_required
+# def gen_officers(request):
+#     """Creates One of every officer type"""
+#     officers = [
+#         CLUB_PRESIDENT,
+#         CLUB_VICE_PRESIDENT,
+#         CLUB_SECRETARY,
+#         CLUB_TREASURER,
+#         CLUB_TECHNOLOGY,
+#         CLUB_TOURNAMENT_DIRECTOR,
+#         CLUB_ASSISTANT_TOURNAMENT_DIRECTOR,
+#     ]
+#     for officer_type in officers:
+#         try:
+#             Angler.objects.get(officer_type=officer_type)
+#         except Angler.DoesNotExist:
+#             create_angler(member_type=CLUB_OFFICER, officer_type=officer_type)
+#     return list_officers(request)
+# @login_required
+# def gen_member(request):
+#     """Creates member angler"""
+#     create_angler(member_type=CLUB_MEMBER)
+#     return list_members(request)
+# @login_required
+# def gen_guest(request):
+#     """Creates guest angler"""
+#     create_angler(member_type=CLUB_GUEST)
+#     return list_guests(request)
