@@ -82,6 +82,7 @@ class Angler(Model):
     class Meta:
         """Angler metadata"""
 
+        ordering = ("user__first_name",)
         verbose_name_plural = "Anglers"
 
     def __str__(self):
