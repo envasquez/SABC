@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from decimal import Decimal
+
 from django.contrib import messages
 from django.views.generic import (
     ListView,
@@ -12,7 +14,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 
 from .forms import TournamentForm, ResultForm, TeamForm
-from .tables import ResultTable, TeamResultTable
+from .tables import ResultTable, TeamResultTable, PayoutSummary, TournamentSummary
 from .models import Tournament, Result, TeamResult
 
 OFFICERS = [
@@ -39,22 +41,54 @@ class TournamentListView(ListView):
 class ExtraContext:
     extra_context = {}
 
-    def get_context_data(self):
-        context = super().get_context_data()
+    def get_payout_table(self, tid):
+        payouts = Tournament.results.get_payouts(tid)
+        for key, val in payouts.items():
+            payouts[key] = f"${val:.2f}"
+
+        return PayoutSummary([payouts])
+
+    def get_stats_table(self, tid):
+        limits = Result.objects.filter(tournament=tid, num_fish=5).count()
+        zeroes = Result.objects.filter(tournament=tid, num_fish=0, buy_in=False).count()
+        buy_ins = Result.objects.filter(tournament=tid, buy_in=True).count()
+        bb_result = Tournament.results.get_big_bass_winner(tournament=tid)
+        hs_result = Result.objects.get(tournament=tid, place_finish=1)
+        heavy_stringer = f"{hs_result.angler} {hs_result.total_weight}lbs"
+
+        total_fish, total_weight = 0, Decimal("0")
+        for result in Result.objects.filter(tournament=tid, num_fish__gt=0):
+            total_fish += result.num_fish
+            total_weight += result.total_weight
+
+        big_bass = "--"
+        if bb_result:
+            big_bass = f"{bb_result.angler} {bb_result.big_bass_weight: .2f}lbs"
+        data = {
+            "limits": limits,
+            "zeros": zeroes,
+            "buy_ins": buy_ins,
+            "total_fish": total_fish,
+            "total_weight": f"{total_weight: .2f}lbs",
+            "big_bass": big_bass,
+            "heavy_stringer": heavy_stringer,
+        }
+
+        return TournamentSummary([data])
+
+    def get_context_data(self, **kwargs):
         tmnt = Tournament.objects.get(id=self.get_object().id)
-        if tmnt.points:
-            Tournament.results.set_points(tournament=tmnt)
+        context = super().get_context_data(**kwargs)
+
+        Tournament.results.set_points(tournament=tmnt)
         self.extra_context["results"] = ResultTable(
             Result.objects.filter(tournament=tmnt).order_by("place_finish")
         )
         self.extra_context["team_results"] = TeamResultTable(
             TeamResult.objects.filter(tournament=tmnt).order_by("place_finish")
         )
-        self.extra_context["payouts"] = {}
-        for key, val in Tournament.results.get_payouts(tmnt).items():
-            self.extra_context["payouts"][key] = val
-
-        self.extra_context["bb_winner"] = Tournament.results.get_big_bass_winner(tournament=tmnt)
+        self.extra_context["payouts"] = self.get_payout_table(tmnt)
+        self.extra_context["catch_stats"] = self.get_stats_table(tmnt)
         context.update(self.extra_context)
 
         return context
@@ -88,6 +122,7 @@ class TournamentUpdateView(
 
     def form_valid(self, form):
         form.instance.updated_by = self.request.user.angler
+
         return super().form_valid(form)
 
     def test_func(self):
@@ -117,6 +152,7 @@ class TournamentDeleteView(
     def delete(self, request, *args, **kwargs):
         obj = self.get_object()
         messages.success(self.request, self.success_message % obj.__dict__.get("name", "UNKNOWN"))
+
         return super().delete(request, *args, **kwargs)
 
 
@@ -130,6 +166,7 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
     def get_initial(self):
         initial = super().get_initial()
         initial["tournament"] = self.kwargs.get("pk")
+
         return initial
 
     def test_func(self):
@@ -140,15 +177,22 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
             ]
         )
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["tournament"] = Tournament.objects.get(id=self.kwargs.get("pk"))
+
+        return context
+
     def form_valid(self, form):
         tid = self.kwargs.get("pk")
         duplicate = form.instance.angler in [
             r.angler for r in Result.objects.filter(tournament=tid)
         ]
-        if duplicate:
+        if duplicate:  # Don't add duplicate records!
             result = Result.objects.get(tournament=tid, angler=form.instance.angler)
             messages.error(self.request, message=f"ERROR Result exists! {result}")
             return super().form_invalid(form)
+
         Tournament.results.set_points(Tournament.objects.get(id=tid))
         msg = f"{form.instance.angler} Buy-in"
         if not form.instance.buy_in:
@@ -160,6 +204,7 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
                 ]
             )
         messages.success(self.request, f"Result added: {msg}")
+
         return super().form_valid(form)
 
 
@@ -187,6 +232,7 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
 
     def get_queryset(self):
         q_set = super().get_queryset()
+
         return q_set.filter(tournament=self.kwargs.get("pk"))
 
 
@@ -200,10 +246,12 @@ class TeamListView(SuccessMessageMixin, LoginRequiredMixin, ListView):
     def get_initial(self):
         initial = super().get_initial()
         initial["tournament"] = self.kwargs.get("pk")
+
         return initial
 
     def get_queryset(self):
         q_set = super().get_queryset()
+
         return q_set.filter(tournament=self.kwargs.get("pk"))
 
     def test_func(self):
@@ -224,10 +272,12 @@ class TeamDetailView(SuccessMessageMixin, LoginRequiredMixin, DetailView):
     def get_initial(self):
         initial = super().get_initial()
         initial["tournament"] = self.kwargs.get("pk")
+
         return initial
 
     def get_queryset(self):
         q_set = super().get_queryset()
+
         return q_set.filter(tournament=self.kwargs.get("pk"))
 
     def test_func(self):

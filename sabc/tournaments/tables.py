@@ -42,3 +42,31 @@ class TeamResultTable(Table):
             "big_bass_weight",
             "total_weight",
         )
+
+
+class TournamentSummary(Table):
+    total_fish = Column()
+    total_weight = Column()
+    limits = Column()
+    zeros = Column()
+    buy_ins = Column()
+    big_bass = Column()
+    heavy_stringer = Column()
+
+    class Meta:
+        orderable = False
+        template_name = DEFAULT_TABLE_TEMPLATE
+
+
+class PayoutSummary(Table):
+    first = Column(accessor="place_1")
+    second = Column(accessor="place_2")
+    third = Column(accessor="place_3")
+    big_bass = Column()
+    club = Column()
+    charity = Column()
+    total = Column()
+
+    class Meta:
+        orderable = False
+        template_name = DEFAULT_TABLE_TEMPLATE
