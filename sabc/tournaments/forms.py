@@ -18,10 +18,10 @@ class ResultForm(ModelForm):
     class Meta:
         model = Result
         fields = (
+            "tournament",
             "angler",
             "buy_in",
             "num_fish",
-            "tournament",
             "total_weight",
             "num_fish_dead",
             "big_bass_weight",
