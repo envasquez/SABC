@@ -20,9 +20,9 @@ from tournaments.views import (
     TournamentListView as TmntList,
     TournamentUpdateView as TmntUpdate,
     TournamentDeleteView as TmntDelete,
-    TeamCreateView,
-    TeamDetailView,
-    TeamListView,
+    # TeamCreateView,
+    # TeamDetailView,
+    # TeamListView,
     ResultCreateView,
 )
 
@@ -88,10 +88,10 @@ urlpatterns = [
     path(TMNT_DETAIL[0], TmntDetail.as_view(), name=TMNT_DETAIL[1]),
     path(TMNT_UPDATE[0], TmntUpdate.as_view(), name=TMNT_UPDATE[1]),
     path(TMNT_DELETE[0], TmntDelete.as_view(), name=TMNT_DELETE[1]),
+    path(RESULT_CREATE[0], ResultCreateView.as_view(), name=RESULT_CREATE[1]),
     # path(TEAM_CREATE[0], TeamCreateView.as_view(), name=TEAM_CREATE[1]),
     # path(TEAM_LIST[0], TeamListView.as_view(), name=TEAM_LIST[1]),
     # path(TEAM_DETAIL[0], TeamDetailView.as_view(), name=TEAM_DETAIL[1]),
-    path(RESULT_CREATE[0], ResultCreateView.as_view(), name=RESULT_CREATE[1]),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
