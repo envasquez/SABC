@@ -1,0 +1,6 @@
+{% extends "users/base.html" %}
+{% load django_tables2 %}
+{% block content %}
+<h3>Angler of the Year Standings - {{ year }}</h3>
+{% render_table aoy_tbl %}<br /><br />
+{% endblock content %}

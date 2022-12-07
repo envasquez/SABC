@@ -70,3 +70,30 @@ class PayoutSummary(Table):
     class Meta:
         orderable = False
         template_name = DEFAULT_TABLE_TEMPLATE
+
+
+class Aoy(Table):
+    angler = Column()
+    total_points = Column()
+
+    class Meta:
+        template_name = DEFAULT_TABLE_TEMPLATE
+
+
+class BigBass(Table):
+    angler = Column()
+    big_bass_wt = Column()
+    tournament = Column()
+
+    class Meta:
+        orderable = False
+        template_name = DEFAULT_TABLE_TEMPLATE
+
+
+class HeavyStringer(Table):
+    angler = Column()
+    heavy_stringer = Column()
+
+    class Meta:
+        orderable = False
+        template_name = DEFAULT_TABLE_TEMPLATE

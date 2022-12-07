@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import logging
+
 from decimal import Decimal
 
 from django.contrib import messages
+from django.shortcuts import render
+from django.db.models import Sum, Max
 from django.views.generic import (
     ListView,
     DetailView,
@@ -12,9 +16,19 @@ from django.views.generic import (
 )
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.contrib.auth.decorators import login_required
 
+from . import get_current_year
 from .forms import TournamentForm, ResultForm, TeamForm
-from .tables import ResultTable, TeamResultTable, PayoutSummary, TournamentSummary
+from .tables import (
+    Aoy as AoyTable,
+    BigBass,
+    ResultTable,
+    PayoutSummary,
+    HeavyStringer,
+    TeamResultTable,
+    TournamentSummary,
+)
 from .models import Tournament, Result, TeamResult
 
 OFFICERS = [
@@ -26,6 +40,7 @@ OFFICERS = [
     "tournament-director",
     "assistant-tournament-director",
 ]
+
 
 #
 # Tournaments
@@ -78,17 +93,17 @@ class ExtraContext:
 
     def get_context_data(self, **kwargs):
         tmnt = Tournament.objects.get(id=self.get_object().id)
+        results = Result.objects.filter(tournament=tmnt).order_by("place_finish")
+        team_results = TeamResult.objects.filter(tournament=tmnt).order_by("place_finish")
         context = super().get_context_data(**kwargs)
 
         Tournament.results.set_points(tournament=tmnt)
-        self.extra_context["results"] = ResultTable(
-            Result.objects.filter(tournament=tmnt).order_by("place_finish")
-        )
-        self.extra_context["team_results"] = TeamResultTable(
-            TeamResult.objects.filter(tournament=tmnt).order_by("place_finish")
-        )
+        self.extra_context["results"] = ResultTable(results)
+        self.extra_context["team_results"] = TeamResultTable(team_results)
         self.extra_context["payouts"] = self.get_payout_table(tmnt)
-        self.extra_context["catch_stats"] = self.get_stats_table(tmnt)
+        self.extra_context["catch_stats"] = TournamentSummary([])
+        if results:
+            self.extra_context["catch_stats"] = self.get_stats_table(tmnt)
         context.update(self.extra_context)
 
         return context
@@ -306,3 +321,40 @@ class TeamUpdateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
     def save(self):
         obj = self.get_object()
         messages.success(self.request, self.success_message % obj.__dict__.get("name", "UNKNOWN"))
+
+
+@login_required
+def annual_awards(request):
+    aoy_tbl = AoyTable(get_aoy_results(year=get_current_year()))
+    aoy_tbl.order_by = "-total_points"
+
+    return render(
+        request,
+        "tournaments/annual_awards.html",
+        {
+            "title": "Statistics",
+            "aoy_tbl": aoy_tbl,
+            "year": get_current_year(),
+        },
+    )
+
+
+def get_aoy_results(year=None):
+    if not year:
+        year = get_current_year()
+
+    all_results = Result.objects.filter(
+        tournament__year=year,
+        angler__user__is_active=True,
+    )
+    anglers = []
+    for r in all_results:
+        if r.angler not in anglers:
+            anglers.append(r.angler)
+
+    results = []
+    for angler in anglers:
+        total_pts = sum([r.points for r in all_results if r.angler == angler])
+        results.append({"angler": angler.user.get_full_name(), "total_points": total_pts})
+
+    return results

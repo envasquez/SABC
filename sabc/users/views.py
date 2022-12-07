@@ -7,12 +7,10 @@ from random import randint
 
 from django.db.models import Q
 from django.contrib import messages
-from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 
 from django.shortcuts import render, redirect
 
-from names import get_first_name, get_last_name
 
 from . import (
     CLUB_GUEST,
@@ -40,11 +38,6 @@ def about(request):
 def bylaws(request):
     """Bylaws page"""
     return render(request, "users/bylaws.html", {"title": "SABC - Bylaws"})
-
-
-def gallery(request):
-    """Gallery page"""
-    return render(request, "users/gallery.html", {"title": "SABC - Gallery"})
 
 
 def calendar(request):
