@@ -229,3 +229,7 @@ def get_last_sunday(month=None):
     sunday = max(week[-1] for week in monthcalendar(date.today().year, month))
     sunday = sunday if sunday >= 10 else f"0{sunday}"
     return f"{date.today().year}-{month}-{sunday}"
+
+
+def get_current_year():
+    return date.today().year
