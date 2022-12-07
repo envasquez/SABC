@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 
 from decimal import Decimal
 
@@ -15,7 +16,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.decorators import login_required
 
-from . import get_current_year
 from .forms import TournamentForm, ResultForm, TeamForm
 from .tables import (
     Aoy as AoyTable,
@@ -322,7 +322,7 @@ class TeamUpdateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
 
 @login_required
 def annual_awards(request):
-    aoy_tbl = AoyTable(get_aoy_results(year=get_current_year()))
+    aoy_tbl = AoyTable(get_aoy_results(year=datetime.date.today().year))
     aoy_tbl.order_by = "-total_points"
 
     return render(
@@ -331,14 +331,14 @@ def annual_awards(request):
         {
             "title": "Statistics",
             "aoy_tbl": aoy_tbl,
-            "year": get_current_year(),
+            "year": datetime.date.today().year,
         },
     )
 
 
 def get_aoy_results(year=None):
     if not year:
-        year = get_current_year()
+        year = datetime.date.today().year
 
     all_results = Result.objects.filter(
         tournament__year=year,

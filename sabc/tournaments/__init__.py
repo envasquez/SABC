@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Tournament definitions and enums"""
-from __future__ import unicode_literals
+import datetime
 
 from decimal import Decimal
-from datetime import datetime, date
 from calendar import monthcalendar
 
 LAKES = [
@@ -92,8 +90,8 @@ this pot will be carried over to the next tournament.
 - ONLY MEMBERS in good standing are eligible for Big Bass Award.
 """
 
-DEFAULT_END_TIME = datetime.time(datetime.strptime("3:00 pm", "%I:%M %p"))
-DEFAULT_START_TIME = datetime.time(datetime.strptime("6:00 am", "%I:%M %p"))
+DEFAULT_END_TIME = datetime.datetime.time(datetime.datetime.strptime("3:00 pm", "%I:%M %p"))
+DEFAULT_START_TIME = datetime.datetime.time(datetime.datetime.strptime("6:00 am", "%I:%M %p"))
 DEFAULT_PAID_PLACES = 3
 DEFAULT_FACEBOOK_URL = "https://www.facebook.com/SouthAustinBassClub"
 DEFAULT_INSTAGRAM_URL = "https://www.instagram.com/south_austin_bass_club"
@@ -225,11 +223,7 @@ def get_last_sunday(month=None):
         ValueError if the month is less than 0 for greater than 12 or not an int.
     """
     if month is None:
-        month = date.today().month
-    sunday = max(week[-1] for week in monthcalendar(date.today().year, month))
+        month = datetime.date.today().month
+    sunday = max(week[-1] for week in monthcalendar(datetime.date.today().year, month))
     sunday = sunday if sunday >= 10 else f"0{sunday}"
-    return f"{date.today().year}-{month}-{sunday}"
-
-
-def get_current_year():
-    return date.today().year
+    return f"{datetime.date.today().year}-{month}-{sunday}"

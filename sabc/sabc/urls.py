@@ -27,16 +27,7 @@ from tournaments.views import (
     # TeamListView,
 )
 
-from users.views import (
-    about,
-    bylaws,
-    profile,
-    register,
-    calendar,
-    list_guests,
-    list_members,
-    list_officers,
-)
+from users.views import about, bylaws, profile, register, calendar, roster
 
 TMNT_CREATE = ("tournament/new", "tournament-create")
 TMNT_DETAIL = ("tournament/<int:pk>/", "tournament-details")
@@ -73,22 +64,20 @@ urlpatterns = [
         PWRstComplete.as_view(template_name="users/password_reset_complete.html"),
         name="password_reset_complete",
     ),
+    path("", TmntList.as_view(), name="sabc-home"),
     path("about/", about, name="about"),
     path("admin/", admin.site.urls),
     path("bylaws/", bylaws, name="bylaws"),
     path("profile/", profile, name="profile"),
     path("register/", register, name="register"),
     path("calendar/", calendar, name="calendar"),
-    path("members/", list_members, name="list-members"),
-    path("officers/", list_officers, name="list-officers"),
-    path("guests/", list_guests, name="list-guests"),
-    path("", TmntList.as_view(), name="sabc-home"),
+    path("roster/", roster, name="roster"),
+    path("awards/", annual_awards, name="annual-awards"),
     path(TMNT_CREATE[0], TmntCreate.as_view(), name=TMNT_CREATE[1]),
     path(TMNT_DETAIL[0], TmntDetail.as_view(), name=TMNT_DETAIL[1]),
     path(TMNT_UPDATE[0], TmntUpdate.as_view(), name=TMNT_UPDATE[1]),
     path(TMNT_DELETE[0], TmntDelete.as_view(), name=TMNT_DELETE[1]),
     path(RESULT_CREATE[0], ResultCreate.as_view(), name=RESULT_CREATE[1]),
-    path("awards/", annual_awards, name="annual-awards"),
     # path(TEAM_CREATE[0], TeamCreateView.as_view(), name=TEAM_CREATE[1]),
     # path(TEAM_LIST[0], TeamListView.as_view(), name=TEAM_LIST[1]),
     # path(TEAM_DETAIL[0], TeamDetailView.as_view(), name=TEAM_DETAIL[1]),

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+import datetime
 
 from time import strftime
 from decimal import Decimal
@@ -36,7 +37,6 @@ from . import (
     DEFAULT_FACEBOOK_URL,
     DEFAULT_INSTAGRAM_URL,
     get_last_sunday,
-    get_current_year,
     get_weight_from_length,
 )
 
@@ -165,7 +165,7 @@ class Tournament(Model):
     fee = DecimalField(default=Decimal("20"), max_digits=5, decimal_places=2)
     name = CharField(default=f"Event #{strftime('%m')} {strftime('%Y')}", max_length=512)
     date = DateField(null=False, blank=False, default=get_last_sunday)
-    year = SmallIntegerField(null=False, blank=False, default=get_current_year)
+    year = SmallIntegerField(null=False, blank=False, default=datetime.date.today().year)
     team = BooleanField(default=True)
     lake = CharField(default="TBD", null=False, blank=False, max_length=100, choices=LAKES)
     rules = ForeignKey(RuleSet, null=True, blank=True, on_delete=DO_NOTHING)

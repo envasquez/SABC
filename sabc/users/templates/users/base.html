@@ -27,9 +27,7 @@
               <a class="nav-item nav-link" href="{% url 'bylaws' %}">Bylaws</a>
               <a class="nav-item nav-link" href="{% url 'calendar' %}">Calendars</a>
               {% if user.is_authenticated and user.angler.type != 'guest' %}
-                <a class="nav-item nav-link" href="{% url 'list-officers' %}">Officers</a>
-                <a class="nav-item nav-link" href="{% url 'list-members' %}">Members</a>
-                <a class="nav-item nav-link" href="{% url 'list-guests' %}">Past Guests</a>
+                <a class="nav-item nav-link" href="{% url 'roster' %}">Members</a>
                 <a class="nav-item nav-link" href="{% url 'annual-awards' %}">Awards</a>
                 {% if user.angler.type == "officer" or user.is_superuser %}
                   &nbsp;&nbsp;

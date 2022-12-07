@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Using pylint at a file level, since it does not like django models (objects.foo())
-# pylint: disable=no-member
-"""User/Angler views"""
+
+import datetime
 
 from random import randint
 
@@ -10,7 +10,6 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 
 from django.shortcuts import render, redirect
-
 
 from . import (
     CLUB_GUEST,
@@ -24,7 +23,6 @@ from . import (
     CLUB_TOURNAMENT_DIRECTOR,
     CLUB_ASSISTANT_TOURNAMENT_DIRECTOR,
 )
-
 from .forms import UserRegisterForm, AnglerRegisterForm, UserUpdateForm, AnglerUpdateForm
 from .models import Angler
 from .tables import OfficerTable, MemberTable, GuestTable
@@ -62,7 +60,7 @@ def register(request):
         a_form = AnglerRegisterForm()
 
     context = {
-        "title": "SABC - Angler Registration",
+        "title": "Angler Registration",
         "u_form": u_form,
         "a_form": a_form,
         "form_name": "Angler Registration",
@@ -92,40 +90,11 @@ def profile(request):
 
 
 @login_required
-def list_officers(request):
+def roster(request):
     """Officers roster page"""
-    table = OfficerTable(Angler.officers.get())
-    return render(
-        request,
-        "users/roster_list.html",
-        {
-            "title": "SABC - Officers",
-            "roster_name": "Current Officers",
-            "table": table,
-        },
-    )
-
-
-@login_required
-def list_members(request):
-    """Members roster page"""
-    table = MemberTable(Angler.members.get_active_members())
-    table.order_by = "date_joined"
-    return render(
-        request,
-        "users/roster_list.html",
-        {
-            "title": "SABC - Members",
-            "roster_name": f"Active Members",
-            "table": table,
-        },
-    )
-
-
-@login_required
-def list_guests(request):
-    """Members roster page"""
-    table = GuestTable(
+    o_table = OfficerTable(Angler.officers.get())
+    m_table = MemberTable(Angler.members.get_active_members())
+    g_table = GuestTable(
         Angler.objects.filter(~Q(user__username="test_guest"), type="guest")
         .exclude(user__first_name="")
         .exclude(user__last_name="")
@@ -134,9 +103,11 @@ def list_guests(request):
         request,
         "users/roster_list.html",
         {
-            "title": "SABC - Past Guests",
-            "roster_name": "Past Guests",
-            "table": table,
+            "title": "Members",
+            "roster_name": f"{datetime.date.today().year} Members",
+            "o_table": o_table,
+            "m_table": m_table,
+            "g_table": g_table,
         },
     )
 
