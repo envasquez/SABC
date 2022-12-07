@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import logging
-
 from decimal import Decimal
 
 from django.contrib import messages
 from django.shortcuts import render
-from django.db.models import Sum, Max
 from django.views.generic import (
     ListView,
     DetailView,
@@ -22,10 +19,10 @@ from . import get_current_year
 from .forms import TournamentForm, ResultForm, TeamForm
 from .tables import (
     Aoy as AoyTable,
-    BigBass,
+    # BigBass,
     ResultTable,
     PayoutSummary,
-    HeavyStringer,
+    # HeavyStringer,
     TeamResultTable,
     TournamentSummary,
 )
@@ -348,13 +345,13 @@ def get_aoy_results(year=None):
         angler__user__is_active=True,
     )
     anglers = []
-    for r in all_results:
-        if r.angler not in anglers:
-            anglers.append(r.angler)
+    for result in all_results:
+        if result.angler not in anglers:
+            anglers.append(result.angler)
 
     results = []
     for angler in anglers:
-        total_pts = sum([r.points for r in all_results if r.angler == angler])
+        total_pts = sum(r.points for r in all_results if r.angler == angler)
         results.append({"angler": angler.user.get_full_name(), "total_points": total_pts})
 
     return results
