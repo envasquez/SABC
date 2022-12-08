@@ -94,11 +94,13 @@ def roster(request):
     """Officers roster page"""
     o_table = OfficerTable(Angler.officers.get())
     m_table = MemberTable(Angler.members.get_active_members())
-    g_table = GuestTable(
+
+    guests = (
         Angler.objects.filter(~Q(user__username="test_guest"), type="guest")
         .exclude(user__first_name="")
         .exclude(user__last_name="")
     )
+    g_table = GuestTable(guests) if guests else None
     return render(
         request,
         "users/roster_list.html",

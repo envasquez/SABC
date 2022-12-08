@@ -75,6 +75,9 @@ class PayoutSummary(Table):
 class Aoy(Table):
     angler = Column()
     total_points = Column()
+    total_fish = Column()
+    total_weight = Column()
+    events = Column()
 
     class Meta:
         template_name = DEFAULT_TABLE_TEMPLATE
@@ -82,7 +85,7 @@ class Aoy(Table):
 
 class BigBass(Table):
     angler = Column()
-    big_bass_wt = Column()
+    weight = Column()
     tournament = Column()
 
     class Meta:
@@ -92,7 +95,9 @@ class BigBass(Table):
 
 class HeavyStringer(Table):
     angler = Column()
-    heavy_stringer = Column()
+    weight = Column()
+    fish = Column()
+    tournament = Column()
 
     class Meta:
         orderable = False

@@ -19,10 +19,10 @@ from django.contrib.auth.decorators import login_required
 from .forms import TournamentForm, ResultForm, TeamForm
 from .tables import (
     Aoy as AoyTable,
-    # BigBass,
+    BigBass,
     ResultTable,
     PayoutSummary,
-    # HeavyStringer,
+    HeavyStringer,
     TeamResultTable,
     TournamentSummary,
 )
@@ -322,24 +322,24 @@ class TeamUpdateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
 
 @login_required
 def annual_awards(request):
-    aoy_tbl = AoyTable(get_aoy_results(year=datetime.date.today().year))
+    aoy_tbl = AoyTable(get_aoy_results())
     aoy_tbl.order_by = "-total_points"
-
+    hvy_tbl = HeavyStringer(get_heavy_stringer())
+    bb_tbl = BigBass(get_big_bass())
     return render(
         request,
         "tournaments/annual_awards.html",
         {
             "title": "Statistics",
             "aoy_tbl": aoy_tbl,
+            "hvy_tbl": hvy_tbl,
+            "bb_tbl": bb_tbl,
             "year": datetime.date.today().year,
         },
     )
 
 
-def get_aoy_results(year=None):
-    if not year:
-        year = datetime.date.today().year
-
+def get_aoy_results(year=datetime.date.today().year):
     all_results = Result.objects.filter(
         tournament__year=year,
         angler__user__is_active=True,
@@ -352,6 +352,49 @@ def get_aoy_results(year=None):
     results = []
     for angler in anglers:
         total_pts = sum(r.points for r in all_results if r.angler == angler)
-        results.append({"angler": angler.user.get_full_name(), "total_points": total_pts})
+        total_weight = sum(r.total_weight for r in all_results if r.angler == angler)
+        total_fish = sum(r.num_fish for r in all_results if r.angler == angler)
+        total_results = sum(1 for r in all_results if r.angler == angler)
+        results.append(
+            {
+                "angler": angler.user.get_full_name(),
+                "total_points": total_pts,
+                "total_weight": total_weight,
+                "total_fish": total_fish,
+                "events": total_results,
+            }
+        )
 
     return results
+
+
+def get_heavy_stringer(year=datetime.date.today().year):
+    result = (
+        Result.objects.filter(
+            tournament__year=year, angler__user__is_active=True, total_weight__gt=Decimal("0")
+        )
+        .order_by("-total_weight")
+        .first()
+    )
+
+    return [
+        {
+            "angler": result.angler,
+            "weight": result.total_weight,
+            "fish": result.num_fish,
+            "tournament": result.tournament,
+        }
+    ]
+
+
+def get_big_bass(year=datetime.date.today().year):
+    result = (
+        Result.objects.filter(
+            tournament__year=year, angler__user__is_active=True, big_bass_weight__gte=Decimal("5.0")
+        )
+        .order_by("-big_bass_weight")
+        .first()
+    )
+    return [
+        {"angler": result.angler, "weight": result.big_bass_weight, "tournament": result.tournament}
+    ]
