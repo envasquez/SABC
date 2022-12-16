@@ -11,6 +11,7 @@ django-nose==1.4.7
 django-phonenumber-field==6.3.0
 django-phonenumbers==1.0.1
 django-tables2==2.4.1
+humanize==4.4.0
 image==1.5.33
 inflect==6.0.0
 iniconfig==1.1.1
