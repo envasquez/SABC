@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-"""Angler Models"""
-from __future__ import unicode_literals
-
 from django.utils import timezone
 from django.db.models import (
     Q,
@@ -27,8 +24,6 @@ from . import MEMBER_CHOICES, CLUBS, CLUB_OFFICERS_TYPES
 
 
 class OfficerManager(Manager):
-    """Officer Manager class - used for custom functionality related to Officers"""
-
     def get(self, *args, **kwargs):
         """Get officers, defined by a custom ordering hierarchy
 
@@ -55,8 +50,6 @@ class OfficerManager(Manager):
 
 
 class MemberManager(Manager):
-    """Manager for dealing with member queries"""
-
     def get_active_members(self):
         return Angler.objects.filter(
             ~Q(user__username="sabc"),
@@ -66,9 +59,7 @@ class MemberManager(Manager):
 
 
 class Angler(Model):
-    """This model represents an individual angler"""
-
-    user = OneToOneField(User, on_delete=PROTECT)
+    user = OneToOneField(User, on_delete=PROTECT, unique=True)
     type = CharField(max_length=10, choices=MEMBER_CHOICES, default="guest")
     officer_type = CharField(
         max_length=64, choices=CLUB_OFFICERS_TYPES, blank=True, null=True, default=""
@@ -80,8 +71,6 @@ class Angler(Model):
     private_info = BooleanField(default=True)
 
     class Meta:
-        """Angler metadata"""
-
         ordering = ("user__first_name",)
         verbose_name_plural = "Anglers"
 
