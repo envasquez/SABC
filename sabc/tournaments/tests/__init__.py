@@ -5,7 +5,6 @@ Contains functions to:
 - Generate random tournament results
 - Generate a tie where the winner wins by: big bass and number of weighed fish
 """
-from typing import Iterable
 from random import randint
 from decimal import Decimal
 
@@ -14,7 +13,6 @@ from django.contrib.auth.models import User
 
 from users.models import Angler
 
-from ..models import Tournament, PaperResult, Result, TeamResult
 
 LAKE_BB_SCORES = {
     "LBJ": 5,
