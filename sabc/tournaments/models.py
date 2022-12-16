@@ -13,6 +13,7 @@ from django.db.models import (
     TextField,
     DateField,
     DO_NOTHING,
+    CASCADE,
     ForeignKey,
     DecimalField,
     BooleanField,
@@ -126,7 +127,7 @@ class TournamentManager(Manager):
         for result in Result.objects.filter(**query):
             result.points = previous.points - 2 if previous else 0
             if result.buy_in:
-                result.points = previous.points - 4
+                result.points = previous.points - 4 if previous else tournament.max_points - 4
             result.save()
             logging.debug(result)
 
@@ -203,7 +204,7 @@ class Result(Model):
     buy_in = BooleanField(default=False, null=False, blank=False)
     points = SmallIntegerField(default=0, null=True, blank=True)
     num_fish = SmallIntegerField(default=0, null=False, blank=False)
-    tournament = ForeignKey(Tournament, on_delete=DO_NOTHING, null=False, blank=False)
+    tournament = ForeignKey(Tournament, on_delete=CASCADE, null=False, blank=False)
     place_finish = SmallIntegerField(default=0)
     total_weight = DecimalField(
         default=Decimal("0"), null=False, blank=False, max_digits=5, decimal_places=2
