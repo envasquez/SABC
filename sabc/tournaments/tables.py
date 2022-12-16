@@ -21,10 +21,9 @@ class ResultTable(Table):
             "first_name",
             "last_name",
             "num_fish",
-            "penalty_weight",
-            "big_bass_weight",
             "total_weight",
             "points",
+            "big_bass_weight",
             "buy_in",
         )
 
