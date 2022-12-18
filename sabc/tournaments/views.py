@@ -50,7 +50,7 @@ class TournamentListView(ListView):
     context_object_name = "tournaments"
 
 
-class ExtraContext:
+class ExtraTournamentContext:
     extra_context = {}
 
     def get_payout_table(self, tid):
@@ -65,7 +65,7 @@ class ExtraContext:
         zeroes = Result.objects.filter(tournament=tid, num_fish=0, buy_in=False).count()
         buy_ins = Result.objects.filter(tournament=tid, buy_in=True).count()
         bb_result = Tournament.results.get_big_bass_winner(tournament=tid)
-        hs_result = Result.objects.get(tournament=tid, place_finish=1)
+        hs_result = Result.objects.filter(tournament=tid, place_finish=1)[0]
         heavy_stringer = f"{hs_result.angler} {hs_result.total_weight}lbs"
 
         total_fish, total_weight = 0, Decimal("0")
@@ -106,7 +106,7 @@ class ExtraContext:
         return context
 
 
-class TournamentDetailView(ExtraContext, DetailView):
+class TournamentDetailView(ExtraTournamentContext, DetailView):
     model = Tournament
     context_object_name = "tournament"
 
@@ -132,10 +132,10 @@ class TournamentUpdateView(
     form_class = TournamentForm
     success_message = "Tournament Successfully Updated!"
 
-    def form_valid(self, form):
-        form.instance.updated_by = self.request.user.angler
+    # def form_valid(self, form):
+    #     form.instance.updated_by = self.request.user.angler
 
-        return super().form_valid(form)
+    #     return super().form_valid(form)
 
     def test_func(self):
         return any(
@@ -339,7 +339,7 @@ def annual_awards(request):
     )
 
 
-def get_aoy_results(year=datetime.date.today().year):
+def get_aoy_results(year=datetime.date.today().year, full_name=None):
     all_results = Result.objects.filter(
         tournament__year=year,
         angler__user__is_active=True,
@@ -351,19 +351,17 @@ def get_aoy_results(year=datetime.date.today().year):
 
     results = []
     for angler in anglers:
-        total_pts = sum(r.points for r in all_results if r.angler == angler)
-        total_weight = sum(r.total_weight for r in all_results if r.angler == angler)
-        total_fish = sum(r.num_fish for r in all_results if r.angler == angler)
-        total_results = sum(1 for r in all_results if r.angler == angler)
-        results.append(
-            {
-                "angler": angler.user.get_full_name(),
-                "total_points": total_pts,
-                "total_weight": total_weight,
-                "total_fish": total_fish,
-                "events": total_results,
-            }
-        )
+        name = angler.user.get_full_name()
+        stats = {
+            "angler": name,
+            "total_points": sum(r.points for r in all_results if r.angler == angler),
+            "total_weight": sum(r.total_weight for r in all_results if r.angler == angler),
+            "total_fish": sum(r.num_fish for r in all_results if r.angler == angler),
+            "events": sum(1 for r in all_results if r.angler == angler),
+        }
+        if full_name == angler.user.get_full_name():
+            return stats
+        results.append(stats)
 
     return results
 

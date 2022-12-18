@@ -1,5 +1,4 @@
-"""Tables for the Angler/User model"""
-
+# -*- coding: utf-8 -*-
 from django_tables2.tables import Table
 from django_tables2.columns import Column
 

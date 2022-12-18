@@ -1,24 +1,20 @@
-"""User Forms"""
-
+# -*- coding: utf-8 -*-
 from django.forms import CharField, EmailField, FileField, ModelForm, Form
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
+from betterforms.multiform import MultiModelForm
 from phonenumber_field.formfields import PhoneNumberField
 
 from .models import Angler
 
 
 class UserRegisterForm(UserCreationForm):
-    """UserRegistrationForm for registering new Users"""
-
     email = EmailField()
     first_name = CharField(max_length=100)
     last_name = CharField(max_length=100)
 
     class Meta:
-        """UserRegisterForm metadata"""
-
         model = User
         fields = (
             "username",
@@ -30,38 +26,35 @@ class UserRegisterForm(UserCreationForm):
         )
 
 
-class AnglerRegisterForm(ModelForm):
-    """AnglerRegisterForm for registering new Anglers"""
-
-    class Meta:
-        """Model and field designations for Anglers registering"""
-
-        model = Angler
-        fields = ("phone_number", "image")
-
-
 class UserUpdateForm(ModelForm):
-    """User update form"""
-
     email = EmailField()
 
     class Meta:
-        """UserRegisterForm metadata"""
-
         model = User
-        fields = ("username", "email")
+        fields = ("username", "first_name", "last_name", "email")
 
 
-class AnglerUpdateForm(ModelForm):
-    """Angler update form"""
-
+class AnglerRegisterForm(ModelForm):
     phone_number = PhoneNumberField()
 
     class Meta:
-        """AnglerUpdateForm metadata"""
-
         model = Angler
         fields = ("phone_number", "image")
+
+
+class AnglerUpdateForm(ModelForm):
+    phone_number = PhoneNumberField()
+
+    class Meta:
+        model = Angler
+        fields = ("phone_number", "image")
+
+
+class AnglerUserMultiUpdateForm(MultiModelForm):
+    form_classes = {
+        "user": UserUpdateForm,
+        "angler": AnglerUpdateForm,
+    }
 
 
 class CsvImportForm(Form):

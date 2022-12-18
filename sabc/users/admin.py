@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from django.urls import path, reverse
 from django.http import HttpResponseRedirect
 from django.contrib import admin, messages

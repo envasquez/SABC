@@ -1,6 +1,3 @@
-"""User signals for creating an Angler object, every time a User object is created"""
-# Using file level pylint disable here becuase the reciever decorator is not considered a used arg
-# pylint: disable=unused-argument
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.contrib.auth.models import User

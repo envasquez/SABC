@@ -6,6 +6,7 @@
             <div align="center">
                 <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'tournament-update' tournament.id %}">Edit Tournament</a>
                 <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'result-create' tournament.id %}">Add Results</a>
+                <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'register' %}">Add Guest</a>
                 <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'tournament-delete' tournament.id %}">Delete</a>
             </div>
         {% endif %}
@@ -72,13 +73,13 @@
                 <h6 class="small">{{ tournament.rules.dead_fish_penalty }}lb per fish</h6>
             </div>
         {% endif %}
-        <!-- Display Results! -->
+        <!-- Display Results -->
         {% if tournament.complete %}
             <div class="row justify-content-center"></div>
-                <h2>Payouts</h2>
-                {% render_table payouts %}
-                <h2>Statistics</h2>
-                {% render_table catch_stats %}
+            {% if user.angler.type == "officer" or user.is_staff %}
+                <h2>Payouts</h2>{% render_table payouts %}
+            {% endif %}
+            <h2>Statistics</h2>{% render_table catch_stats %}
             </div>
             {% if tournament.team %}
                 <h2>Team Results</h2>

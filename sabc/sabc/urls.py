@@ -1,8 +1,6 @@
-"""SABC URL Configuration"""
-# pylint: disable=invalid-name, import-error
 from django.conf import settings
+from django.urls import path
 from django.contrib import admin
-from django.urls import path, include
 from django.contrib.auth.views import (
     LoginView as Login,
     LogoutView as Logout,
@@ -27,7 +25,15 @@ from tournaments.views import (
     # TeamListView,
 )
 
-from users.views import about, bylaws, profile, register, calendar, roster
+from users.views import (
+    about,
+    bylaws,
+    roster,
+    calendar,
+    register,
+    AnglerDetailView as Profile,
+    AnglerEditView as Edit,
+)
 
 TMNT_CREATE = ("tournament/new", "tournament-create")
 TMNT_DETAIL = ("tournament/<int:pk>/", "tournament-details")
@@ -42,8 +48,8 @@ TMNT_DELETE = (f"{TMNT_DETAIL}/delete/", "tournament-delete")
 RESULT_CREATE = ("tournament/<int:pk>/add_result/", "result-create")
 
 urlpatterns = [
-    path("login", Login.as_view(template_name="users/login.html"), name="login"),
-    path("logout", Logout.as_view(template_name="users/logout.html"), name="logout"),
+    path("login/", Login.as_view(template_name="users/login.html"), name="login"),
+    path("logout/", Logout.as_view(template_name="users/logout.html"), name="logout"),
     path(
         "password-reset/",
         PWReset.as_view(template_name="users/password_reset.html"),
@@ -64,15 +70,16 @@ urlpatterns = [
         PWRstComplete.as_view(template_name="users/password_reset_complete.html"),
         name="password_reset_complete",
     ),
-    path("", TmntList.as_view(), name="sabc-home"),
     path("about/", about, name="about"),
     path("admin/", admin.site.urls),
     path("bylaws/", bylaws, name="bylaws"),
-    path("profile/", profile, name="profile"),
+    path("roster/", roster, name="roster"),
+    path("profile/<int:pk>/", Profile.as_view(), name="profile"),
+    path("profile_edit/<int:pk>/", Edit.as_view(), name="profile-edit"),
     path("register/", register, name="register"),
     path("calendar/", calendar, name="calendar"),
-    path("roster/", roster, name="roster"),
     path("awards/", annual_awards, name="annual-awards"),
+    path("", TmntList.as_view(), name="sabc-home"),
     path(TMNT_CREATE[0], TmntCreate.as_view(), name=TMNT_CREATE[1]),
     path(TMNT_DETAIL[0], TmntDetail.as_view(), name=TMNT_DETAIL[1]),
     path(TMNT_UPDATE[0], TmntUpdate.as_view(), name=TMNT_UPDATE[1]),

@@ -201,7 +201,6 @@ class TestTournaments(TestCase):
         self.assertEqual(bb_winner, second_place)
         self.assertNotEqual(bb_winner.angler.type, "guest")
 
-    # pylint: disable=invalid-name
     def test_bb_team(self):
         """Tests the Big Bass winner function for a team tournament"""
         p = inflect.engine()

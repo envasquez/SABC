@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-# Using a file level pylint disable here because of the use of the Django signals feature
-# pylint: disable=import-outside-toplevel, unused-import
-"""AppConfig file"""
-from __future__ import unicode_literals
-
 from django.apps import AppConfig
 
 
