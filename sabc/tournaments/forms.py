@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-"""Tournament related forms"""
-from __future__ import unicode_literals
-
 from django.forms import ModelForm
 
 from .models import Tournament, Result, TeamResult

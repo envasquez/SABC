@@ -1,10 +1,4 @@
-"""Utilities used for aiding in unit tests
-
-Contains functions to:
-- Create random anglers (members)
-- Generate random tournament results
-- Generate a tie where the winner wins by: big bass and number of weighed fish
-"""
+# -*- coding: utf-8 -*-
 from random import randint
 from decimal import Decimal
 

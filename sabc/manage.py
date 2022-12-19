@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-# pylint: disable-all
-"""Django's managment untility entrypoint"""
 import os
 import sys
 

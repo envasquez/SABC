@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-"""Unittests for Tournaments, Results and TeamResults
-
-The goal is to test the functionality of our models and ensure our formulas work.
-"""
 from decimal import Decimal
 from random import choice
 
