@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import datetime
+
 from django.utils import timezone
 from django.db.models import (
     Q,
@@ -13,6 +15,7 @@ from django.db.models import (
     ImageField,
     BooleanField,
     OneToOneField,
+    SmallIntegerField,
 )
 from django.contrib.auth.models import User
 
@@ -33,7 +36,7 @@ class OfficerManager(Manager):
         CLUB_TREASURER = "treasurer"
         CLUB_TOURNAMENT_DIRECTOR = "tournament-director"
         CLUB_ASSISTANT_TOURNAMENT_DIRECTOR = "assistant-tournament-director"
-        CLUB_TECHNOLOGY = "technology"
+        CLUB_TECHNOLOGY_DIRECTOR = "technology-director"
         """
         query = Angler.objects.filter(type="officer", user__is_active=True)
         return query.annotate(
@@ -44,7 +47,7 @@ class OfficerManager(Manager):
                 When(officer_type="treasurer", then=Value(3)),
                 When(officer_type="tournament-director", then=Value(4)),
                 When(officer_type="assistant-tournament-director", then=Value(5)),
-                When(officer_type="technology", then=Value(6)),
+                When(officer_type="technology-director", then=Value(6)),
             )
         ).order_by("custom_order")
 
