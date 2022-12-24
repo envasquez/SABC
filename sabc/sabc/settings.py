@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "users",
     "tournaments",
+    # "polls",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -116,7 +117,12 @@ PHONENUMBER_DEFAULT_REGION = "US"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# TODO: Disable this in production
+# File-based back-end for email for development purposes
+EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
+EMAIL_FILE_PATH = os.path.join(BASE_DIR, "sent_emails")
+# TODO: Enable this in production
+# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST_USER = os.environ.get("EMAIL_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_PASS")
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
