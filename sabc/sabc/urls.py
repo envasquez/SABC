@@ -31,9 +31,10 @@ from users.views import (
     bylaws,
     roster,
     calendar,
-    register,
+    # register,
     AnglerDetailView as Profile,
     AnglerEditView as Edit,
+    AnglerRegistrationView as Register,
 )
 
 TMNT_CREATE = ("tournament/new", "tournament-create")
@@ -57,12 +58,12 @@ urlpatterns = [
         name="password-reset",
     ),
     path(
-        "password-reset/done",
+        "password-reset/done/",
         PWChgDone.as_view(template_name="users/password_reset_done.html"),
         name="password_reset_done",
     ),
     path(
-        "password-reset-confirm/<uidb64>",
+        "password-reset-confirm/<uidb64>/<token>/",
         PWConfirm.as_view(template_name="users/password_reset_confirm.html"),
         name="password_reset_confirm",
     ),
@@ -78,7 +79,7 @@ urlpatterns = [
     path("roster/", roster, name="roster"),
     path("awards/", annual_awards, name="annual-awards"),
     path("calendar/", calendar, name="calendar"),
-    path("register/", register, name="register"),
+    path("register/", Register.as_view(), name="register"),
     path("profile/<int:pk>/", Profile.as_view(), name="profile"),
     path("profile_edit/<int:pk>/", Edit.as_view(), name="profile-edit"),
     path(TMNT_CREATE[0], TmntCreate.as_view(), name=TMNT_CREATE[1]),

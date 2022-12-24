@@ -10,28 +10,20 @@ from .models import Angler
 
 
 class UserRegisterForm(UserCreationForm):
-    email = EmailField()
-    first_name = CharField(max_length=100)
-    last_name = CharField(max_length=100)
+    email = EmailField(max_length=512)
+    first_name = CharField(max_length=25)
+    last_name = CharField(max_length=30)
 
     class Meta:
         model = User
         fields = (
             "username",
+            "first_name",
+            "last_name",
             "email",
             "password1",
             "password2",
-            "first_name",
-            "last_name",
         )
-
-
-class UserUpdateForm(ModelForm):
-    email = EmailField()
-
-    class Meta:
-        model = User
-        fields = ("username", "first_name", "last_name", "email")
 
 
 class AnglerRegisterForm(ModelForm):
@@ -40,6 +32,18 @@ class AnglerRegisterForm(ModelForm):
     class Meta:
         model = Angler
         fields = ("phone_number", "image")
+
+
+class AnglerUserMultiRegisterForm(MultiModelForm):
+    form_classes = {"user": UserRegisterForm, "angler": AnglerRegisterForm}
+
+
+class UserUpdateForm(ModelForm):
+    email = EmailField()
+
+    class Meta:
+        model = User
+        fields = ("username", "first_name", "last_name", "email")
 
 
 class AnglerUpdateForm(ModelForm):
@@ -51,10 +55,7 @@ class AnglerUpdateForm(ModelForm):
 
 
 class AnglerUserMultiUpdateForm(MultiModelForm):
-    form_classes = {
-        "user": UserUpdateForm,
-        "angler": AnglerUpdateForm,
-    }
+    form_classes = {"user": UserUpdateForm, "angler": AnglerUpdateForm}
 
 
 class CsvImportForm(Form):

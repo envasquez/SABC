@@ -7,13 +7,11 @@ from .models import Angler
 
 
 @receiver(post_save, sender=User)
-def create_profile(sender, instance, created, **kwargs):
-    """Creates an Angler everytime a User is created"""
+def create_angler(sender, instance, created, **kwargs):
     if created:
         Angler.objects.update_or_create(user=instance)
 
 
 @receiver(post_save, sender=User)
-def save_profile(sender, instance, **kwargs):
-    """Save an angler's profile"""
+def save_angler(sender, instance, **kwargs):
     instance.angler.save()

@@ -8,12 +8,12 @@ from decimal import Decimal
 from django.db.models import (
     Model,
     Manager,
+    CASCADE,
     TimeField,
     CharField,
     TextField,
     DateField,
     DO_NOTHING,
-    CASCADE,
     ForeignKey,
     DecimalField,
     BooleanField,
@@ -21,7 +21,9 @@ from django.db.models import (
 )
 from django.urls import reverse
 
+# from polls.models import Lakes
 from users.models import Angler
+
 from . import (
     LAKES,
     RULE_INFO,
@@ -168,7 +170,8 @@ class Tournament(Model):
     date = DateField(null=False, blank=False, default=get_last_sunday)
     year = SmallIntegerField(null=False, blank=False, default=datetime.date.today().year)
     team = BooleanField(default=True)
-    lake = CharField(default="TBD", null=False, blank=False, max_length=100, choices=LAKES)
+    lake = CharField(default="", blank=False, null=False, max_length=512)
+    # lake = ForeignKey(Lakes, blank=False, null=False, on_delete=DO_NOTHING)
     rules = ForeignKey(RuleSet, null=True, blank=True, on_delete=DO_NOTHING)
     paper = BooleanField(default=False)
     start = TimeField(blank=False, null=False, default=DEFAULT_START_TIME)
@@ -259,6 +262,7 @@ class PaperResult(Result):
     fish3_len = DecimalField(default=Decimal("0"), decimal_places=2, max_digits=5)
     fish4_len = DecimalField(default=Decimal("0"), decimal_places=2, max_digits=5)
     fish5_len = DecimalField(default=Decimal("0"), decimal_places=2, max_digits=5)
+    total_num_fish = SmallIntegerField(default=0, blank=True, null=True)
 
     def get_absolute_url(self):
         return reverse("result-create", kwargs={"pk": self.tournament.pk})

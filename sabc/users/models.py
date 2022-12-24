@@ -11,9 +11,8 @@ from django.db.models import (
     DateField,
     CharField,
     ImageField,
-    BooleanField,
+    ForeignKey,
     OneToOneField,
-    SmallIntegerField,
 )
 from django.contrib.auth.models import User
 
@@ -60,16 +59,13 @@ class MemberManager(Manager):
 
 
 class Angler(Model):
-    user = OneToOneField(User, on_delete=PROTECT, unique=True)
+    user = OneToOneField(User, on_delete=PROTECT, primary_key=True)
     type = CharField(max_length=10, choices=MEMBER_CHOICES, default="guest")
-    officer_type = CharField(
-        max_length=64, choices=CLUB_OFFICERS_TYPES, blank=True, null=True, default=""
-    )
     image = ImageField(default="profile_pics/default.jpg", upload_to="profile_pics")
     date_joined = DateField(default=timezone.now)
+    officer_type = CharField(max_length=64, choices=CLUB_OFFICERS_TYPES, default="")
     phone_number = PhoneNumberField(null=False, blank=False)
-    organization = CharField(max_length=100, blank=True, choices=CLUBS, default="SABC")
-    private_info = BooleanField(default=True)
+    organization = CharField(max_length=100, choices=CLUBS, default="SABC")
 
     class Meta:
         ordering = ("user__first_name",)
@@ -80,14 +76,12 @@ class Angler(Model):
         return full_name if self.type in ["member", "officer"] else f"{full_name} (G)"
 
     def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-
-        # Re-size large images ... because ...
         img = Image.open(self.image.path)
         if img.height > 300 or img.width > 300:  # pixels
             output_size = (300, 300)
             img.thumbnail(output_size)
             img.save(self.image.path)
+        super().save(*args, **kwargs)
 
     objects = Manager()
     members = MemberManager()

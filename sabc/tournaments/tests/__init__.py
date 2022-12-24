@@ -8,26 +8,6 @@ from django.contrib.auth.models import User
 from users.models import Angler
 
 
-LAKE_BB_SCORES = {
-    "LBJ": 5,
-    "TRAVIS": 2,
-    "BELTON": 3,
-    "DECKER": 4,
-    "CANYON": 3,
-    "MEDINA": 1,
-    "AUSTIN": 3,
-    "OH-IVIE": 5,
-    "BASTROP": 1,
-    "FAYETTE": 5,
-    "BUCHANAN": 5,
-    "PALESTINE": 4,
-    "LADY-BIRD": 4,
-    "STILLHOUSE": 4,
-    "MARBLE-FALLS": 3,
-    "RICHLAND-CHAMBERS": 4,
-}
-
-
 def create_angler(first_name=None, last_name=None, angler_type="member"):
     """Creates an Angler object.
 

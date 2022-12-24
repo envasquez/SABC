@@ -36,6 +36,7 @@ OFFICERS = [
     "social-media",
     "tournament-director",
     "assistant-tournament-director",
+    "technology-director",
 ]
 
 
@@ -132,11 +133,6 @@ class TournamentUpdateView(
     form_class = TournamentForm
     success_message = "Tournament Successfully Updated!"
 
-    # def form_valid(self, form):
-    #     form.instance.updated_by = self.request.user.angler
-
-    #     return super().form_valid(form)
-
     def test_func(self):
         return any(
             [
@@ -164,7 +160,6 @@ class TournamentDeleteView(
     def delete(self, request, *args, **kwargs):
         obj = self.get_object()
         messages.success(self.request, self.success_message % obj.__dict__.get("name", "UNKNOWN"))
-
         return super().delete(request, *args, **kwargs)
 
 
@@ -178,7 +173,6 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
     def get_initial(self):
         initial = super().get_initial()
         initial["tournament"] = self.kwargs.get("pk")
-
         return initial
 
     def test_func(self):
@@ -192,7 +186,6 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["tournament"] = Tournament.objects.get(id=self.kwargs.get("pk"))
-
         return context
 
     def form_valid(self, form):
@@ -216,7 +209,6 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
                 ]
             )
         messages.success(self.request, f"Result added: {msg}")
-
         return super().form_valid(form)
 
 
@@ -231,7 +223,6 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
     def get_initial(self):
         initial = super().get_initial()
         initial["tournament"] = self.kwargs.get("pk")
-
         return initial
 
     def test_func(self):
@@ -244,7 +235,6 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
 
     def get_queryset(self):
         q_set = super().get_queryset()
-
         return q_set.filter(tournament=self.kwargs.get("pk"))
 
 
@@ -263,7 +253,6 @@ class TeamListView(SuccessMessageMixin, LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         q_set = super().get_queryset()
-
         return q_set.filter(tournament=self.kwargs.get("pk"))
 
     def test_func(self):
@@ -284,12 +273,10 @@ class TeamDetailView(SuccessMessageMixin, LoginRequiredMixin, DetailView):
     def get_initial(self):
         initial = super().get_initial()
         initial["tournament"] = self.kwargs.get("pk")
-
         return initial
 
     def get_queryset(self):
         q_set = super().get_queryset()
-
         return q_set.filter(tournament=self.kwargs.get("pk"))
 
     def test_func(self):
@@ -309,7 +296,6 @@ class TeamUpdateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
     def get_initial(self):
         initial = super().get_initial()
         initial["tournament"] = self.kwargs.get("pk")
-
         return initial
 
     def test_func(self):
@@ -339,7 +325,7 @@ def annual_awards(request):
     )
 
 
-def get_aoy_results(year=datetime.date.today().year, full_name=None):
+def get_aoy_results(year=datetime.date.today().year):
     all_results = Result.objects.filter(
         tournament__year=year,
         angler__user__is_active=True,
@@ -351,18 +337,14 @@ def get_aoy_results(year=datetime.date.today().year, full_name=None):
 
     results = []
     for angler in anglers:
-        name = angler.user.get_full_name()
         stats = {
-            "angler": name,
+            "angler": angler.user.get_full_name(),
             "total_points": sum(r.points for r in all_results if r.angler == angler),
             "total_weight": sum(r.total_weight for r in all_results if r.angler == angler),
             "total_fish": sum(r.num_fish for r in all_results if r.angler == angler),
             "events": sum(1 for r in all_results if r.angler == angler),
         }
-        if full_name == angler.user.get_full_name():
-            return stats
         results.append(stats)
-
     return results
 
 
@@ -374,7 +356,8 @@ def get_heavy_stringer(year=datetime.date.today().year):
         .order_by("-total_weight")
         .first()
     )
-
+    if not result:
+        return []
     return [
         {
             "angler": result.angler,
@@ -393,6 +376,8 @@ def get_big_bass(year=datetime.date.today().year):
         .order_by("-big_bass_weight")
         .first()
     )
+    if not result:
+        return []
     return [
         {"angler": result.angler, "weight": result.big_bass_weight, "tournament": result.tournament}
     ]
