@@ -11,7 +11,6 @@ from django.db.models import (
     DateField,
     CharField,
     ImageField,
-    ForeignKey,
     OneToOneField,
 )
 from django.contrib.auth.models import User

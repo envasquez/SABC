@@ -21,11 +21,9 @@ from django.db.models import (
 )
 from django.urls import reverse
 
-# from polls.models import Lakes
 from users.models import Angler
 
 from . import (
-    LAKES,
     RULE_INFO,
     PAYOUT,
     WEIGH_IN,
@@ -170,8 +168,7 @@ class Tournament(Model):
     date = DateField(null=False, blank=False, default=get_last_sunday)
     year = SmallIntegerField(null=False, blank=False, default=datetime.date.today().year)
     team = BooleanField(default=True)
-    lake = CharField(default="", blank=False, null=False, max_length=512)
-    # lake = ForeignKey(Lakes, blank=False, null=False, on_delete=DO_NOTHING)
+    lake = ForeignKey(Lakes, blank=False, null=False, on_delete=DO_NOTHING)
     rules = ForeignKey(RuleSet, null=True, blank=True, on_delete=DO_NOTHING)
     paper = BooleanField(default=False)
     start = TimeField(blank=False, null=False, default=DEFAULT_START_TIME)
