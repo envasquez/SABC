@@ -6,9 +6,9 @@ from django.contrib.auth.views import (
     LoginView as Login,
     LogoutView as Logout,
     PasswordResetView as PWReset,
-    PasswordChangeDoneView as PWChgDone,
+    PasswordChangeDoneView as PWDone,
     PasswordResetConfirmView as PWConfirm,
-    PasswordResetCompleteView as PWRstComplete,
+    PasswordResetCompleteView as PWComplete,
 )
 from django.conf.urls.static import static
 from django.utils.translation import gettext_lazy as _
@@ -31,7 +31,6 @@ from users.views import (
     bylaws,
     roster,
     calendar,
-    # register,
     AnglerDetailView as Profile,
     AnglerEditView as Edit,
     AnglerRegistrationView as Register,
@@ -49,29 +48,22 @@ TMNT_DELETE = (f"{TMNT_DETAIL}/delete/", "tournament-delete")
 # TEAM_DELETE = ("", "")
 RESULT_CREATE = ("tournament/<int:pk>/add_result/", "result-create")
 
+LOGIN = ("login/", "users/login.html", "login")
+LOGOUT = ("logout/", "users/logout.html", "logout")
+PW_RESET = ("password-reset/", "users/password_reset.html", "password-reset")
+PW_DONE = ("password-reset/done/", "users/password_reset_done.html", "password_reset_done")
+PW_CONFIRM = (
+    "password-reset-confirm/<uidb64>/<token>/",
+    "users/password_reset_confirm.html",
+    "password_reset_confirm",
+)
+PW_COMPLETE = (
+    "password-reset-complete/",
+    "users/password_reset_complete.html",
+    "password_reset_complete",
+)
+
 urlpatterns = [
-    path("login/", Login.as_view(template_name="users/login.html"), name="login"),
-    path("logout/", Logout.as_view(template_name="users/logout.html"), name="logout"),
-    path(
-        "password-reset/",
-        PWReset.as_view(template_name="users/password_reset.html"),
-        name="password-reset",
-    ),
-    path(
-        "password-reset/done/",
-        PWChgDone.as_view(template_name="users/password_reset_done.html"),
-        name="password_reset_done",
-    ),
-    path(
-        "password-reset-confirm/<uidb64>/<token>/",
-        PWConfirm.as_view(template_name="users/password_reset_confirm.html"),
-        name="password_reset_confirm",
-    ),
-    path(
-        "password-reset-complete/",
-        PWRstComplete.as_view(template_name="users/password_reset_complete.html"),
-        name="password_reset_complete",
-    ),
     path("", TmntList.as_view(), name="sabc-home"),
     path("about/", about, name="about"),
     path("admin/", admin.site.urls),
@@ -90,6 +82,12 @@ urlpatterns = [
     # path(TEAM_CREATE[0], TeamCreateView.as_view(), name=TEAM_CREATE[1]),
     # path(TEAM_LIST[0], TeamListView.as_view(), name=TEAM_LIST[1]),
     # path(TEAM_DETAIL[0], TeamDetailView.as_view(), name=TEAM_DETAIL[1]),
+    path(LOGIN[0], Login.as_view(template_name=LOGIN[1]), name=LOGIN[2]),
+    path(LOGOUT[0], Logout.as_view(template_name=LOGOUT[1]), name=LOGOUT[2]),
+    path(PW_RESET[0], PWReset.as_view(template_name=PW_RESET[1]), name=PW_RESET[2]),
+    path(PW_DONE[0], PWDone.as_view(template_name=PW_DONE[1]), name=PW_DONE[2]),
+    path(PW_CONFIRM[0], PWConfirm.as_view(template_name=PW_CONFIRM[1]), name=PW_CONFIRM[2]),
+    path(PW_COMPLETE[0], PWComplete.as_view(template_name=PW_COMPLETE[1]), name=PW_COMPLETE[2]),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
