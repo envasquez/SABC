@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.forms import ModelForm
+from django.forms import Form, ModelForm, FileField
 
 from .models import Tournament, Result, TeamResult
 
@@ -29,3 +29,7 @@ class TeamForm(ModelForm):
     class Meta:
         model = TeamResult
         fields = ("tournament", "result_1", "result_2")
+
+
+class YamlImportForm(Form):
+    yaml_upload = FileField()

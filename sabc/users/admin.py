@@ -39,8 +39,6 @@ def csv_is_valid(csv_file):
 
 
 class AnglerAdmin(admin.ModelAdmin):
-    """AnglerAdmin custom CSV Uploader"""
-
     def get_urls(self):
         """Override of get_urls()"""
         urls = super().get_urls()
@@ -65,9 +63,6 @@ class AnglerAdmin(admin.ModelAdmin):
                 if info:
                     members.append(info)
             messages.info(request, f"Members imported: {members}")
-            #
-            # Create Anglers
-            #
             for angler in members[2:]:
                 try:
                     create_angler(request, name=angler[0], email=angler[1], phone=angler[2])
@@ -75,7 +70,6 @@ class AnglerAdmin(admin.ModelAdmin):
                     messages.error(request, f"{err}")
                     messages.error(request, f"Error creating Angler: {angler[0]} - Skipping!")
             return HttpResponseRedirect(reverse("admin:index"))
-
         return render(request, "admin/csv_upload.html", data)
 
 

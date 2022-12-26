@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 from sabc.settings import STATICFILES_DIRS
 
 from .. import get_length_from_weight, get_weight_from_length
-from ..models import TeamResult, Tournament, Result, Lake, Ramp, create_lakes_from_yaml
+from ..models import TeamResult, Tournament, Result, Ramp
 
 from . import (
     create_angler,
@@ -20,6 +20,7 @@ from . import (
     RESULTS_NO_TIE,
     RESULTS_TIE_BB_WINS,
     TEAM_RESULTS_NO_TIE,
+    load_lakes_from_yaml,
 )
 
 LAKES_YAML = Path(STATICFILES_DIRS[0]) / "lakes.yaml"
@@ -37,7 +38,7 @@ class TestTournaments(TestCase):
 
     def setUp(self):
         """Pre-test set up"""
-        lake = choice(create_lakes_from_yaml(LAKES_YAML))
+        lake = choice(load_lakes_from_yaml(LAKES_YAML))
         ramp = choice(Ramp.objects.filter(lake=lake))
         self.team = {"team": True, "lake": lake, "ramp": ramp}
         self.indiv = {"team": False, "lake": lake, "ramp": ramp}

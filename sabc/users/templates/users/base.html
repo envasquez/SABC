@@ -29,9 +29,9 @@
               {% if user.is_authenticated and user.angler.type != 'guest' %}
                 <a class="nav-item nav-link" href="{% url 'roster' %}">Members</a>
                 <a class="nav-item nav-link" href="{% url 'annual-awards' %}">Awards</a>
-                {% if user.angler.type == "officer" or user.is_superuser %}
+                {% if user.angler.type == "officer" or user.is_superuser or user.is_staff %}
                   &nbsp;&nbsp;
-                  <a href="{% url 'tournament-create' %}" class="btn btn-outline-dark" role="button">+ Tournament</a>
+                  <a href="{% url 'tournament-create' %}" class="btn btn-outline-dark" role="button">+Tournament</a>
                 {% endif %}
               {% endif %}
             </div>

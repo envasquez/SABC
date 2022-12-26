@@ -65,21 +65,10 @@ class RuleSet(Model):
         return self.name
 
 
-def create_lakes_from_yaml(yaml_file):
-    with open(yaml_file) as lakes:
-        lakes = safe_load(lakes)
-    for lake_name in lakes:
-        lake, _ = Lake.objects.get_or_create(name=lake_name)
-        for ramp in lakes[lake_name]["ramps"]:
-            Ramp.objects.get_or_create(
-                lake=lake, name=ramp["name"], google_maps=ramp["google_maps"]
-            )
-    return Lake.objects.all()
-
-
 class Lake(Model):
     name = CharField(default="TBD", max_length=256)
     state = CharField(default=DEFAULT_LAKE_STATE, max_length=2)
+    google_maps = CharField(default="", max_length=4096)
 
     def __str__(self):
         return f"Lake {self.name.title()}, {self.state.upper()}"
@@ -91,8 +80,11 @@ class Lake(Model):
 
 class Ramp(Model):
     lake = ForeignKey(Lake, on_delete=CASCADE)
-    name = CharField(default="", max_length=128)
+    name = CharField(max_length=128)
     google_maps = CharField(default="", max_length=4096)
+
+    def __str__(self):
+        return f"{self.name.title()} - {self.lake}"
 
 
 class TournamentManager(Manager):
@@ -194,12 +186,12 @@ class TournamentManager(Manager):
 
 class Tournament(Model):
     fee = DecimalField(default=ENTRY_FEE_DOLLARS, max_digits=5, decimal_places=2)
-    name = CharField(default=f"#{strftime('%m')} {strftime('%Y')} Tournament", max_length=512)
+    name = CharField(default=f"{strftime('%B')} {strftime('%Y')} Tournament", max_length=512)
     date = DateField(default=get_last_sunday)
     year = SmallIntegerField(default=datetime.date.today().year)
     team = BooleanField(default=True)
-    lake = ForeignKey(Lake, on_delete=DO_NOTHING)
-    ramp = ForeignKey(Ramp, on_delete=DO_NOTHING)
+    lake = ForeignKey(Lake, null=True, blank=True, on_delete=DO_NOTHING)
+    ramp = ForeignKey(Ramp, null=True, blank=True, on_delete=DO_NOTHING)
     rules = ForeignKey(RuleSet, null=True, blank=True, on_delete=DO_NOTHING)
     paper = BooleanField(default=False)
     start = TimeField(default=DEFAULT_START_TIME)

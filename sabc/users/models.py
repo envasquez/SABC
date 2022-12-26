@@ -24,7 +24,7 @@ from . import MEMBER_CHOICES, CLUBS, CLUB_OFFICERS_TYPES
 
 class OfficerManager(Manager):
     def get(self, *args, **kwargs):
-        """Get officers, defined by a custom ordering hierarchy
+        """Get officers, defined by a custom ordering hierarchy.
 
         CLUB_PRESIDENT = "president"
         CLUB_VICE_PRESIDENT = "vice-president"
@@ -51,7 +51,7 @@ class OfficerManager(Manager):
 class MemberManager(Manager):
     def get_active_members(self):
         return Angler.objects.filter(
-            ~Q(user__username="sabc"),
+            ~Q(user__username="sabc"),  # Exclude this user (its a test account)
             type__in=["member", "officer"],
             user__is_active=True,
         ).order_by("user__last_name")

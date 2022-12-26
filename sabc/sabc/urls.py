@@ -36,7 +36,7 @@ from users.views import (
     AnglerRegistrationView as Register,
 )
 
-TMNT_CREATE = ("tournament/new", "tournament-create")
+TMNT_CREATE = ("tournament/new/", "tournament-create")
 TMNT_DETAIL = ("tournament/<int:pk>/", "tournament-details")
 TMNT_UPDATE = (f"{TMNT_DETAIL}/update/", "tournament-update")
 TMNT_DELETE = (f"{TMNT_DETAIL}/delete/", "tournament-delete")
