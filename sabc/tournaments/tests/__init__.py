@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-from yaml import safe_load
 from random import randint
 from decimal import Decimal
 
+from yaml import safe_load
+
 from names import get_first_name, get_last_name
+
 from django.contrib.auth.models import User
 
 from users.models import Angler
@@ -12,7 +14,7 @@ from tournaments.models import Lake, Ramp
 
 
 def load_lakes_from_yaml(yaml_file):
-    with open(yaml_file) as lakes:
+    with open(yaml_file, "r", encoding="utf-8") as lakes:
         lakes = safe_load(lakes)
     for lake_name in lakes:
         lake, _ = Lake.objects.get_or_create(name=lake_name)

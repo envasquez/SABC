@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=line-too-long
 import datetime
 from decimal import Decimal
 from calendar import monthcalendar

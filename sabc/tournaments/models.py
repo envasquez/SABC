@@ -3,7 +3,6 @@ import logging
 import datetime
 
 from time import strftime
-from yaml import safe_load
 from decimal import Decimal
 
 from django.db.models import (
@@ -18,7 +17,6 @@ from django.db.models import (
     ForeignKey,
     DecimalField,
     BooleanField,
-    OneToOneField,
     SmallIntegerField,
 )
 from django.urls import reverse
@@ -218,6 +216,31 @@ class Tournament(Model):
         if not self.rules:
             self.rules = RuleSet.objects.create()
         super().save(*args, **kwargs)
+
+
+class PayOutMultipliers(Model):
+    year = SmallIntegerField(default=datetime.date.today().year)
+    # Defaults are 2023 numbers, voted on by our members ...
+    club = SmallIntegerField(default=3)
+    place_1 = SmallIntegerField(default=7)
+    place_2 = SmallIntegerField(default=5)
+    place_3 = SmallIntegerField(default=4)
+    charity = SmallIntegerField(default=2)
+    big_bass = SmallIntegerField(default=4)
+    entry_fee = DecimalField(default=ENTRY_FEE_DOLLARS, max_digits=5, decimal_places=2)
+
+
+class TournamentPayOut(Model):
+    tournament = ForeignKey(Tournament, on_delete=DO_NOTHING)
+    multiplier = ForeignKey(PayOutMultipliers, on_delete=DO_NOTHING)
+    club = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
+    offset = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
+    place_1 = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
+    place_2 = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
+    place_3 = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
+    charity = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
+    big_bass = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
+    big_bass_paid = BooleanField(default=False)
 
 
 class Result(Model):
