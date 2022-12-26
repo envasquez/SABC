@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 from decimal import Decimal
 from random import choice
+from pathlib import Path
 
 import inflect
 
 from django.test import TestCase
 from django.contrib.auth.models import User
 
-from .. import LAKES, get_length_from_weight, get_weight_from_length
-from ..models import TeamResult, Tournament, Result
+from sabc.settings import STATICFILES_DIRS
+
+from .. import get_length_from_weight, get_weight_from_length
+from ..models import TeamResult, Tournament, Result, Lake, Ramp, create_lakes_from_yaml
 
 from . import (
     create_angler,
@@ -18,6 +21,8 @@ from . import (
     RESULTS_TIE_BB_WINS,
     TEAM_RESULTS_NO_TIE,
 )
+
+LAKES_YAML = Path(STATICFILES_DIRS[0]) / "lakes.yaml"
 
 
 class TestTournaments(TestCase):
@@ -32,12 +37,14 @@ class TestTournaments(TestCase):
 
     def setUp(self):
         """Pre-test set up"""
-        lakes = [(l[0], l[1]) for l in LAKES if l[0] != "tbd" and l[1] != "TBD"]
-        self.team = {"team": True, "lake": choice(lakes)[1]}
-        self.indiv = {"team": False, "lake": choice(lakes)[1]}
+        lake = choice(create_lakes_from_yaml(LAKES_YAML))
+        ramp = choice(Ramp.objects.filter(lake=lake))
+        self.team = {"team": True, "lake": lake, "ramp": ramp}
+        self.indiv = {"team": False, "lake": lake, "ramp": ramp}
         self.paper = {
             "team": False,
-            "lake": choice(lakes)[1],
+            "lake": lake,
+            "ramp": ramp,
             "paper": True,
         }
 
@@ -199,20 +206,20 @@ class TestTournaments(TestCase):
 
     def test_bb_team(self):
         """Tests the Big Bass winner function for a team tournament"""
-        p = inflect.engine()
+        eng = inflect.engine()
         tournament = Tournament.objects.create(**self.team)
         for idx, data in TEAM_RESULTS_NO_TIE.items():
             one = {
                 "tournament": tournament,
                 "angler": create_angler(
-                    first_name=f"{p.number_to_words(p.ordinal(idx)).capitalize()}",
+                    first_name=f"{eng.number_to_words(eng.ordinal(idx)).capitalize()}",
                     last_name="Boater",
                 ),
             } | data["result_1"]
             two = {
                 "tournament": tournament,
                 "angler": create_angler(
-                    first_name=f"{p.number_to_words(p.ordinal(idx)).capitalize()} Place",
+                    first_name=f"{eng.number_to_words(eng.ordinal(idx)).capitalize()} Place",
                     last_name="Partner",
                 ),
             } | data["result_2"]
@@ -226,7 +233,7 @@ class TestTournaments(TestCase):
         self.assertEqual(bb_winner.total_weight, Decimal("25"))
         self.assertEqual(bb_winner.big_bass_weight, Decimal("5"))
 
-    def test_get_payouts_indiv(self):
+    def test_get_payouts(self):
         """Tests the get_payouts function: funds are calculated properly"""
         tournament = Tournament.objects.create(**self.indiv)
         for data in RESULTS_NO_TIE.values():
@@ -246,10 +253,10 @@ class TestTournaments(TestCase):
         payouts = Tournament.results.get_payouts(tournament)
         yes_bb = Result.objects.filter(tournament=tournament, big_bass_weight__gte=5.0).count() > 0
         self.assertEqual(payouts["club"], Decimal("45"))
-        self.assertEqual(payouts["total"], Decimal("300"))
-        self.assertEqual(payouts["place_1"], Decimal("90"))
-        self.assertEqual(payouts["place_2"], Decimal("60"))
-        self.assertEqual(payouts["place_3"], Decimal("45"))
+        self.assertEqual(payouts["total"], Decimal("375"))
+        self.assertEqual(payouts["place_1"], Decimal("105"))
+        self.assertEqual(payouts["place_2"], Decimal("75"))
+        self.assertEqual(payouts["place_3"], Decimal("60"))
         self.assertEqual(payouts["charity"], Decimal("30"))
         self.assertEqual(payouts["bb_carry_over"], not yes_bb)
 

@@ -3,6 +3,7 @@ import logging
 import datetime
 
 from time import strftime
+from yaml import safe_load
 from decimal import Decimal
 
 from django.db.models import (
@@ -17,6 +18,7 @@ from django.db.models import (
     ForeignKey,
     DecimalField,
     BooleanField,
+    OneToOneField,
     SmallIntegerField,
 )
 from django.urls import reverse
@@ -32,6 +34,7 @@ from . import (
     DEFAULT_END_TIME,
     ENTRY_FEE_DOLLARS,
     DEAD_FISH_PENALTY,
+    DEFAULT_LAKE_STATE,
     DEFAULT_START_TIME,
     BIG_BASS_BREAKDOWN,
     DEFAULT_PAID_PLACES,
@@ -62,6 +65,36 @@ class RuleSet(Model):
         return self.name
 
 
+def create_lakes_from_yaml(yaml_file):
+    with open(yaml_file) as lakes:
+        lakes = safe_load(lakes)
+    for lake_name in lakes:
+        lake, _ = Lake.objects.get_or_create(name=lake_name)
+        for ramp in lakes[lake_name]["ramps"]:
+            Ramp.objects.get_or_create(
+                lake=lake, name=ramp["name"], google_maps=ramp["google_maps"]
+            )
+    return Lake.objects.all()
+
+
+class Lake(Model):
+    name = CharField(default="TBD", max_length=256)
+    state = CharField(default=DEFAULT_LAKE_STATE, max_length=2)
+
+    def __str__(self):
+        return f"Lake {self.name.title()}, {self.state.upper()}"
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.lower().replace("lake", "")
+        return super().save(*args, **kwargs)
+
+
+class Ramp(Model):
+    lake = ForeignKey(Lake, on_delete=CASCADE)
+    name = CharField(default="", max_length=128)
+    google_maps = CharField(default="", max_length=4096)
+
+
 class TournamentManager(Manager):
     def set_places(self, tournament):
         def _set_places(query):
@@ -74,21 +107,18 @@ class TournamentManager(Manager):
                 result.save()
                 prev = result
                 logging.debug(result)
-            # It should be guranteed that there is a prev result at this point
             for result in weighed_fish[tournament.paid_places :]:
                 tie = result.total_weight == prev.total_weight
                 result.place_finish = prev.place_finish + 1 if not tie else prev.place_finish
                 result.save()
                 prev = result
                 logging.debug(result)
-            # Set places & points for anglers who weighed in zero fish
             place = prev.place_finish + 1 if prev else 1
             for result in zeros:
                 result.place_finish = place
                 result.save()
                 logging.debug(result)
                 prev = result
-            # Set places & points for the anglers that bought-in
             place = place + 1 if len(zeros) != 0 else place
             for result in buy_ins:
                 result.place_finish = place
@@ -153,29 +183,29 @@ class TournamentManager(Manager):
         return {
             "club": Decimal("3") * num_anglers,
             "total": tournament.fee * num_anglers,
-            "place_1": Decimal("6") * num_anglers,
-            "place_2": Decimal("4") * num_anglers,
-            "place_3": Decimal("3") * num_anglers,
+            "place_1": Decimal("7") * num_anglers,
+            "place_2": Decimal("5") * num_anglers,
+            "place_3": Decimal("4") * num_anglers,
             "charity": Decimal("2") * num_anglers,
-            "big_bass": Decimal("2") * num_anglers,
+            "big_bass": Decimal("4") * num_anglers,
             "bb_carry_over": not bb_exists,
         }
 
 
 class Tournament(Model):
-    fee = DecimalField(default=Decimal("20"), max_digits=5, decimal_places=2)
-    name = CharField(default=f"Event #{strftime('%m')} {strftime('%Y')}", max_length=512)
-    date = DateField(null=False, blank=False, default=get_last_sunday)
-    year = SmallIntegerField(null=False, blank=False, default=datetime.date.today().year)
+    fee = DecimalField(default=ENTRY_FEE_DOLLARS, max_digits=5, decimal_places=2)
+    name = CharField(default=f"#{strftime('%m')} {strftime('%Y')} Tournament", max_length=512)
+    date = DateField(default=get_last_sunday)
+    year = SmallIntegerField(default=datetime.date.today().year)
     team = BooleanField(default=True)
-    lake = ForeignKey(Lakes, blank=False, null=False, on_delete=DO_NOTHING)
+    lake = ForeignKey(Lake, on_delete=DO_NOTHING)
+    ramp = ForeignKey(Ramp, on_delete=DO_NOTHING)
     rules = ForeignKey(RuleSet, null=True, blank=True, on_delete=DO_NOTHING)
     paper = BooleanField(default=False)
-    start = TimeField(blank=False, null=False, default=DEFAULT_START_TIME)
-    finish = TimeField(blank=False, null=False, default=DEFAULT_END_TIME)
+    start = TimeField(default=DEFAULT_START_TIME)
+    finish = TimeField(default=DEFAULT_END_TIME)
     points = BooleanField(default=True)
     complete = BooleanField(default=False)
-    ramp_url = CharField(default="", max_length=1024, blank=True)
     limit_num = SmallIntegerField(default=5)
     max_points = SmallIntegerField(default=100)
     paid_places = SmallIntegerField(default=DEFAULT_PAID_PLACES)
@@ -195,21 +225,18 @@ class Tournament(Model):
     def save(self, *args, **kwargs):
         if not self.rules:
             self.rules = RuleSet.objects.create()
-        self.ramp_url = self.ramp_url.replace('width="600"', 'width="700"')
         super().save(*args, **kwargs)
 
 
 class Result(Model):
-    angler = ForeignKey(Angler, null=False, blank=False, on_delete=DO_NOTHING)
-    buy_in = BooleanField(default=False, null=False, blank=False)
+    angler = ForeignKey(Angler, on_delete=DO_NOTHING)
+    buy_in = BooleanField(default=False)
     points = SmallIntegerField(default=0, null=True, blank=True)
-    num_fish = SmallIntegerField(default=0, null=False, blank=False)
+    num_fish = SmallIntegerField(default=0)
     tournament = ForeignKey(Tournament, on_delete=CASCADE, null=False, blank=False)
     place_finish = SmallIntegerField(default=0)
-    total_weight = DecimalField(
-        default=Decimal("0"), null=False, blank=False, max_digits=5, decimal_places=2
-    )
-    num_fish_dead = SmallIntegerField(default=0, null=False, blank=False)
+    total_weight = DecimalField(default=Decimal("0"), max_digits=5, decimal_places=2)
+    num_fish_dead = SmallIntegerField(default=0)
     num_fish_alive = SmallIntegerField(default=0, null=True, blank=True)
     penalty_weight = DecimalField(
         default=Decimal("0"), null=True, blank=True, max_digits=5, decimal_places=2
@@ -284,7 +311,7 @@ class PaperResult(Result):
 
 
 class TeamResult(Model):
-    result_1 = ForeignKey(Result, null=False, blank=False, on_delete=DO_NOTHING)
+    result_1 = ForeignKey(Result, on_delete=DO_NOTHING)
     result_2 = ForeignKey(Result, null=True, blank=True, related_name="+", on_delete=DO_NOTHING)
     tournament = ForeignKey(Tournament, on_delete=DO_NOTHING)
 

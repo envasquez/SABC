@@ -1,32 +1,9 @@
 # -*- coding: utf-8 -*-
 import datetime
-
 from decimal import Decimal
 from calendar import monthcalendar
 
-LAKES = [
-    ("tbd", "TBD"),
-    ("lbj", "LBJ"),
-    ("inks", "INKS"),
-    ("travis", "TRAVIS"),
-    ("belton", "BELTON"),
-    ("decker", "DECKER"),
-    ("canyon", "CANYON"),
-    ("medina", "MEDINA"),
-    ("austin", "AUSTIN"),
-    ("oh-ivie", "OH-IVIE"),
-    ("bastrop", "BASTROP"),
-    ("fayette", "FAYETTE"),
-    ("buchanan", "BUCHANAN"),
-    ("palestine", "PALESTINE"),
-    ("lady-bird", "LADY-BIRD"),
-    ("stillhouse", "STILLHOUSE"),
-    ("marble-falls", "MARBLE-FALLS"),
-    ("richland-chambers", "RICHLAND-CHAMBERS"),
-]
 
-
-# pylint: disable=line-too-long
 RULE_INFO = """
 1. All Federal, State and local laws must be observed. Illegal acts may result in disqualification.
 2. Protests must be presented to a club officer within 30 minutes of the weigh-in.
@@ -79,7 +56,7 @@ FEE_BREAKDOWN = """Breakdown of $20.00 Entry Fee:
 - $3.00 will go towards Clubs Funds
 - $2.00 Club Charity – Charity give back will be decided by a vote of club members present at the December club meeting.
 """
-ENTRY_FEE_DOLLARS = Decimal("20.00")
+ENTRY_FEE_DOLLARS = Decimal("25.00")
 DEAD_FISH_PENALTY = Decimal("0.25")
 BIG_BASS_BREAKDOWN = """
 Big Bass Pot is paid to the heaviest bass caught at the tournament OVER 5lbs.
@@ -89,9 +66,9 @@ this pot will be carried over to the next tournament.
 
 - ONLY MEMBERS in good standing are eligible for Big Bass Award.
 """
-
 DEFAULT_END_TIME = datetime.datetime.time(datetime.datetime.strptime("3:00 pm", "%I:%M %p"))
 DEFAULT_START_TIME = datetime.datetime.time(datetime.datetime.strptime("6:00 am", "%I:%M %p"))
+DEFAULT_LAKE_STATE = "TX"
 DEFAULT_PAID_PLACES = 3
 DEFAULT_FACEBOOK_URL = "https://www.facebook.com/SouthAustinBassClub"
 DEFAULT_INSTAGRAM_URL = "https://www.instagram.com/south_austin_bass_club"

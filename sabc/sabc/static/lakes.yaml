@@ -1,0 +1,76 @@
+belton:
+  ramps:
+  - name: cedar ridge park
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2763.3408258138325!2d-97.45704795803061!3d31.168535773868932!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864543757eb30125%3A0x17fbcbdab7568631!2sCedar%20Ridge%20Park%20Campground!5e0!3m2!1sen!2sus!4v1671864557440!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  - name: temple lake park
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d22115.29759656615!2d-97.50177248085855!3d31.131790913973408!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x86454163a9dc3bfd%3A0xee022161ce3aacd5!2sTemple%20Lake%20Park!5e0!3m2!1sen!2sus!4v1671864603737!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  - name: blora
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d44229.84651291661!2d-97.54595857241749!3d31.13339656945169!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0xebb32443ccd8abff!2sBLORA!5e0!3m2!1sen!2sus!4v1671864637987!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+
+# walter e. long (decker):
+# - ramps:
+#   - name: walter e. long metropolitan park
+#     google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27557.76266055116!2d-97.62033162697347!3d30.30202233700364!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8644b8204e1823e1%3A0xb71ed1aa18b30b13!2sWalter%20E.%20Long%20Metropolitan%20Park!5e0!3m2!1sen!2sus!4v1671864941817!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+
+# travis:
+# ramps:
+#   - name: mansfield dam
+#     google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3441.558784628063!2d-97.9073722!3d30.3918843!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b312583cad291%3A0xa528bfb289afe63c!2sMansfield%20Dam%2C%20Austin%2C%20TX%2078734!5e0!3m2!1sen!2sus!4v1671862997617!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+#   - name: collier
+#     google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3439.1326665894044!2d-98.03029128515357!3d30.46068020574459!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b3b4bb7873ea5%3A0xb6a53b9c3f3d023c!2sCollier%20Cove%20Boat%20Ramp-Lake%20Travis!5e0!3m2!1sen!2sus!4v1671863082649!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+#   - name: tournament point
+#     google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3439.3832948444756!2d-98.01451398515376!3d30.4535798060842!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b3b25686dd915%3A0x666bb94d3587abc9!2sTournament%20Point!5e0!3m2!1sen!2sus!4v1671863395836!5m2!1sen!2sus' width='600' height='450' style='border:0;'' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+
+# inks:
+# ramps:
+#   - name: inks lake state park
+#     google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d54878.696040395946!2d-98.42008103480629!3d30.720691437303145!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865afb95d363f72f%3A0xc99d574116003081!2sInks%20Lake%20State%20Park!5e0!3m2!1sen!2sus!4v1671863699408!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+
+# lbj:
+# ramps:
+#   - name: yacht club & marina
+#     google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d13743.176144422227!2d-98.33703067175577!3d30.555122685345957!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b0368e3e45e11%3A0x2a3445d322a5846d!2sLake%20LBJ%20Yacht%20Club%20%26%20Marina!5e0!3m2!1sen!2sus!4v1671863916169!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+#   - name: blue briar
+#     google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1717.2316098823944!2d-98.39681863652343!3d30.592695099999997!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b03503ad69075%3A0x5cad4ee9ca3a2dd4!2sBluebriar%20Park!5e0!3m2!1sen!2sus!4v1671864015861!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+#   - name: mcnair park
+#     google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3434.7995826980305!2d-98.41850488190664!3d30.583202634651794!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b019f2df91893%3A0x508cc0e4abaee81b!2sMcNair%20Park!5e0!3m2!1sen!2sus!4v1671864074365!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+
+# austin:
+# - ramps:
+#   - name:
+#     google_maps:
+
+# name: oh-ivie
+# - ramps:
+#   - name:
+#     google_maps:
+
+# name: bastrop
+# - ramps:
+#   - name:
+#     google_maps:
+
+# fayette:
+# - ramps:
+#   - name:
+#     google_maps:
+
+# buchanan:
+# - ramps:
+#   - name:
+#     google_maps:
+
+# lady-bird:
+# - ramps:
+#   - name:
+#     google_maps:
+
+# stillhouse:
+# - ramps:
+#   - name:
+#     google_maps:
+
+# marble-falls:
+# - ramps:
+#   - name:
+#     google_maps:
