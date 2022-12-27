@@ -17,7 +17,11 @@ def load_lakes_from_yaml(yaml_file):
     with open(yaml_file, "r", encoding="utf-8") as lakes:
         lakes = safe_load(lakes)
     for lake_name in lakes:
-        lake, _ = Lake.objects.get_or_create(name=lake_name)
+        lake, _ = Lake.objects.get_or_create(
+            name=lake_name,
+            paper=lakes[lake_name].get("paper", False),
+            google_maps=lakes[lake_name].get("google_maps", ""),
+        )
         for ramp in lakes[lake_name]["ramps"]:
             Ramp.objects.get_or_create(
                 lake=lake, name=ramp["name"], google_maps=ramp["google_maps"]
