@@ -51,7 +51,7 @@ $20 annual membership fee prior to fishing any more club tournaments within the 
 3. If special provisions or requests are required by a member they must be brought up before the
 tournament and voted on and approved by at least three officers
 """
-FEE_BREAKDOWN = """Breakdown of $20.00 Entry Fee:
+FEE_BREAKDOWN = """Breakdown of the Entry Fee:
 - $13.00 to the Tournament Pot 1st $6.00, 2nd $4.00, 3rd $3.00
 - $2.00 to the Tournament Big Bass Pot OVER 5 lbs.
 - $3.00 will go towards Clubs Funds
