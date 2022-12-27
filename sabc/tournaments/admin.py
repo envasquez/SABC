@@ -28,7 +28,7 @@ def create_lake_from_yaml(request):
             google_maps=lakes[lake_name].get("google_maps", ""),
         )
         for ramp in lakes[lake_name]["ramps"]:
-            result, _ = Ramp.objects.update_or_create(
+            Ramp.objects.update_or_create(
                 lake=lake, name=ramp["name"], google_maps=ramp["google_maps"]
             )
         messages.info(request, f"Lake: {lake_name} and all ramps reated Successfully!")
