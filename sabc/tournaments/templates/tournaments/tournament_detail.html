@@ -25,44 +25,44 @@
             {% endif %}
         </h2>
         {{ tournament.ramp.google_maps | safe}}
+        {% if tournament.lake %}
+            <table  class="table">
+                <tbody>
+                    <tr>
+                        <td align="right">Date:</td>
+                        <td align="left">{{ tournament.date }}</td>
+                        <td align="right">Start time:</td>
+                        <td align="left">{{ tournament.start }}</td>
+                        <td align="right">Weigh-in:</td>
+                        <td align="left">{{ tournament.finish }}</td>
+                        <td align="right">Team Payout:</td>
+                        {% if tournament.team %}
+                            <td align="left">Yes</td>
+                        {% else %}
+                            <td align="left">No</td>
+                        {% endif %}
+                    </tr>
+                    <tr>
+                        <td align="right">Limit:</td>
+                        <td align="left">5 fish per angler</td>
+                        <td align="right">Entry Fee:</td>
+                        <td align="left">${{ tournament.rules.fee }}/boat</td>
+                        <td align="right">AoY Points:</td>
+                        {% if tournament.points %}
+                            <td align="left" colspan="2">Yes</td>
+                        {% else %}
+                            <td align="left" colspan="2">No</td>
+                        {% endif %}
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            <br /><br />
+        {% endif %}
         {% if not tournament.complete %}
             <p class="article-content">
                 {{ tournament.description | linebreaks }}
             </p>
-            {% if tounament.lake %}
-                <table  class="table">
-                    <tbody>
-                        <tr>
-                            <td align="right">Date:</td>
-                            <td align="left">{{ tournament.date }}</td>
-                            <td align="right">Start time:</td>
-                            <td align="left">{{ tournament.start }}</td>
-                            <td align="right">Weigh-in:</td>
-                            <td align="left">{{ tournament.finish }}</td>
-                            <td align="right">Team Payout:</td>
-                            {% if tournament.team %}
-                                <td align="left">Yes</td>
-                            {% else %}
-                                <td align="left">No</td>
-                            {% endif %}
-                        </tr>
-                        <tr>
-                            <td align="right">Limit:</td>
-                            <td align="left">5 fish per angler</td>
-                            <td align="right">Entry Fee:</td>
-                            <td align="left">${{ tournament.rules.fee }}/boat</td>
-                            <td align="right">AoY Points:</td>
-                            {% if tournament.points %}
-                                <td align="left" colspan="2">Yes</td>
-                            {% else %}
-                                <td align="left" colspan="2">No</td>
-                            {% endif %}
-                            <td></td>
-                        </tr>
-                    </tbody>
-                </table>
-                <br /><br />
-            {% endif %}
             <div class="media-body">
                 <div class="article-metadata">ENTRY FEES & PAYOUT:</div>
                 <h6 class="small">{{ tournament.rules.fee_breakdown | linebreaks }}</h6>

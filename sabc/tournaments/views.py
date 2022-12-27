@@ -16,7 +16,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.decorators import login_required
 
-from .forms import TournamentForm, ResultForm, TeamForm
+from .forms import TournamentForm, ResultForm, TeamResultForm
 from .tables import (
     Aoy as AoyTable,
     BigBass,
@@ -213,11 +213,11 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
 
 
 #
-# Teams
+# Team Results (adding the results of 2 angler (Results))
 #
-class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
+class TeamResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
     model = TeamResult
-    form_class = TeamForm
+    form_class = TeamResultForm
     template_name = "tournaments/team_form.html"
 
     def get_initial(self):
@@ -238,72 +238,72 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
         return q_set.filter(tournament=self.kwargs.get("pk"))
 
 
-class TeamListView(SuccessMessageMixin, LoginRequiredMixin, ListView):
-    model = TeamResult
-    form_class = TeamForm
-    paginate_by = 10
-    template_name = "tournaments/team_list.html"
-    context_object_name = "teams"
+# class TeamListView(SuccessMessageMixin, LoginRequiredMixin, ListView):
+#     model = TeamResult
+#     form_class = TeamForm
+#     paginate_by = 10
+#     template_name = "tournaments/team_list.html"
+#     context_object_name = "teams"
 
-    def get_initial(self):
-        initial = super().get_initial()
-        initial["tournament"] = self.kwargs.get("pk")
+#     def get_initial(self):
+#         initial = super().get_initial()
+#         initial["tournament"] = self.kwargs.get("pk")
 
-        return initial
+#         return initial
 
-    def get_queryset(self):
-        q_set = super().get_queryset()
-        return q_set.filter(tournament=self.kwargs.get("pk"))
+#     def get_queryset(self):
+#         q_set = super().get_queryset()
+#         return q_set.filter(tournament=self.kwargs.get("pk"))
 
-    def test_func(self):
-        return any(
-            [
-                self.request.user.angler.officer_type in OFFICERS,
-                self.request.user.is_staff,
-            ]
-        )
-
-
-class TeamDetailView(SuccessMessageMixin, LoginRequiredMixin, DetailView):
-    model = TeamResult
-    form_class = TeamForm
-    template_name = "tournaments/team_detail.html"
-    context_object_name = "team"
-
-    def get_initial(self):
-        initial = super().get_initial()
-        initial["tournament"] = self.kwargs.get("pk")
-        return initial
-
-    def get_queryset(self):
-        q_set = super().get_queryset()
-        return q_set.filter(tournament=self.kwargs.get("pk"))
-
-    def test_func(self):
-        return any(
-            [
-                self.request.user.angler.officer_type in OFFICERS,
-                self.request.user.is_staff,
-            ]
-        )
+#     def test_func(self):
+#         return any(
+#             [
+#                 self.request.user.angler.officer_type in OFFICERS,
+#                 self.request.user.is_staff,
+#             ]
+#         )
 
 
-class TeamUpdateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
-    model = Tournament
-    form_class = TeamForm
-    success_message = "%s Successfully Updated!"
+# class TeamDetailView(SuccessMessageMixin, LoginRequiredMixin, DetailView):
+#     model = TeamResult
+#     form_class = TeamForm
+#     template_name = "tournaments/team_detail.html"
+#     context_object_name = "team"
 
-    def get_initial(self):
-        initial = super().get_initial()
-        initial["tournament"] = self.kwargs.get("pk")
-        return initial
+#     def get_initial(self):
+#         initial = super().get_initial()
+#         initial["tournament"] = self.kwargs.get("pk")
+#         return initial
 
-    def test_func(self):
-        return self.request.user.angler.type == "officer"
+#     def get_queryset(self):
+#         q_set = super().get_queryset()
+#         return q_set.filter(tournament=self.kwargs.get("pk"))
 
-    def save(self):
-        obj = self.get_object()
-        messages.success(self.request, self.success_message % obj.__dict__.get("name", "UNKNOWN"))
+#     def test_func(self):
+#         return any(
+#             [
+#                 self.request.user.angler.officer_type in OFFICERS,
+#                 self.request.user.is_staff,
+#             ]
+#         )
+
+
+# class TeamUpdateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
+#     model = TeamResult
+#     form_class = TeamForm
+#     success_message = "%s Successfully Updated!"
+
+#     def get_initial(self):
+#         initial = super().get_initial()
+#         initial["tournament"] = self.kwargs.get("pk")
+#         return initial
+
+#     def test_func(self):
+#         return self.request.user.angler.type == "officer"
+
+#     def save(self):
+#         obj = self.get_object()
+#         messages.success(self.request, self.success_message % obj.__dict__.get("name", "UNKNOWN"))
 
 
 @login_required

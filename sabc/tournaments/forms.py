@@ -8,7 +8,7 @@ class TournamentForm(ModelForm):
     class Meta:
         model = Tournament
         fields = "__all__"
-        exclude = ("created_by", "updated_by", "year")
+        exclude = ("created_by", "updated_by")
 
 
 class ResultForm(ModelForm):
@@ -25,7 +25,7 @@ class ResultForm(ModelForm):
         )
 
 
-class TeamForm(ModelForm):
+class TeamResultForm(ModelForm):
     class Meta:
         model = TeamResult
         fields = ("tournament", "result_1", "result_2")

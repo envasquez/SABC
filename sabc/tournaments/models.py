@@ -68,7 +68,7 @@ class Lake(Model):
     google_maps = CharField(default="", max_length=4096)
 
     def __str__(self):  # A little bit of custom code for a few of our local lakes :-)
-        if self.name in ["fayette county reservior", "choke canyone reservior"]:
+        if self.name in ["fayette county reservoir", "choke canyon reservoir"]:
             return self.name.title()
         return (
             f"lake {self.name}".title()
@@ -87,7 +87,7 @@ class Ramp(Model):
     google_maps = CharField(default="", max_length=4096)
 
     def __str__(self):
-        return f"{self.name} - {self.lake}".title()
+        return f"{self.lake}: {self.name.title()}"
 
 
 class TournamentManager(Manager):
@@ -372,7 +372,6 @@ class TeamResult(Model):
         name = ""
         if self.result_1 and not self.result_2:
             return f"{self.result_1.angler.user.get_full_name()} - solo"
-
         return f"{name} & {self.result_2.angler.user.get_full_name()}"
 
     def save(self, *args, **kwargs):

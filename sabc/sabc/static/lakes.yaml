@@ -65,7 +65,7 @@ bastrop:
   - name: north shore park
     google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12522.596645779417!2d-97.28674063100424!3d30.160612426065434!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8644903dbb0946d1%3A0xf0e7a524c5329569!2sLake%20Bastrop%20North%20Shore%20Park!5e0!3m2!1sen!2sus!4v1672086678318!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
 
-fayette county reservior:
+fayette county reservoir:
   paper: true
   google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27661.073845959945!2d-96.75088302750409!3d29.932430634478603!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8643f4db8073adb9%3A0x80c9b433b95b7331!2sFayette%20County%20Reservoir!5e0!3m2!1sen!2sus!4v1672086798689!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
   ramps:
@@ -96,7 +96,7 @@ stillhouse hollow:
   - name: stillhouse hollow marina
     google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d8836.008883776529!2d-97.54428504907642!3d31.038106554721605!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864538a668df90b9%3A0x72c86bc08a507c74!2sStillhouse%20Hollow%20Marina!5e0!3m2!1sen!2sus!4v1672089997591!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
 
-marble-falls:
+marble falls:
   paper: false
   google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d54969.84203714589!2d-98.33216078575335!3d30.560176174262416!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b1cb83373ba9b%3A0xe8ac7b0555be6e17!2sLake%20Marble%20Falls!5e0!3m2!1sen!2sus!4v1672090387181!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
   ramps:
