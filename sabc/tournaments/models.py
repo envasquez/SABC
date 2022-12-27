@@ -24,21 +24,20 @@ from django.urls import reverse
 from users.models import Angler
 
 from . import (
-    RULE_INFO,
     PAYOUT,
-    WEIGH_IN,
     PAYMENT,
+    WEIGH_IN,
+    RULE_INFO,
     FEE_BREAKDOWN,
+    get_last_sunday,
     DEFAULT_END_TIME,
     ENTRY_FEE_DOLLARS,
     DEAD_FISH_PENALTY,
-    DEFAULT_LAKE_STATE,
     DEFAULT_START_TIME,
     BIG_BASS_BREAKDOWN,
     DEFAULT_PAID_PLACES,
     DEFAULT_FACEBOOK_URL,
     DEFAULT_INSTAGRAM_URL,
-    get_last_sunday,
     get_weight_from_length,
 )
 
@@ -65,11 +64,17 @@ class RuleSet(Model):
 
 class Lake(Model):
     name = CharField(default="TBD", max_length=256)
-    state = CharField(default=DEFAULT_LAKE_STATE, max_length=2)
+    paper = BooleanField(default=False)
     google_maps = CharField(default="", max_length=4096)
 
-    def __str__(self):
-        return f"Lake {self.name.title()}, {self.state.upper()}"
+    def __str__(self):  # A little bit of custom code for a few of our local lakes :-)
+        if self.name in ["fayette county reservior", "choke canyone reservior"]:
+            return self.name.title()
+        return (
+            f"lake {self.name}".title()
+            if self.name not in ["inks", "stillhouse hollow", "lady bird", "canyon"]
+            else f"{self.name} lake".title()
+        )
 
     def save(self, *args, **kwargs):
         self.name = self.name.lower().replace("lake", "")
@@ -82,7 +87,7 @@ class Ramp(Model):
     google_maps = CharField(default="", max_length=4096)
 
     def __str__(self):
-        return f"{self.name.title()} - {self.lake}"
+        return f"{self.name} - {self.lake}".title()
 
 
 class TournamentManager(Manager):
@@ -215,12 +220,16 @@ class Tournament(Model):
     def save(self, *args, **kwargs):
         if not self.rules:
             self.rules = RuleSet.objects.create()
+        if self.lake:
+            self.paper = self.lake.paper
         super().save(*args, **kwargs)
 
 
 class PayOutMultipliers(Model):
+    class Meta:
+        verbose_name_plural = "payout multipliers"
+
     year = SmallIntegerField(default=datetime.date.today().year)
-    # Defaults are 2023 numbers, voted on by our members ...
     club = SmallIntegerField(default=3)
     place_1 = SmallIntegerField(default=7)
     place_2 = SmallIntegerField(default=5)
@@ -228,11 +237,13 @@ class PayOutMultipliers(Model):
     charity = SmallIntegerField(default=2)
     big_bass = SmallIntegerField(default=4)
     entry_fee = DecimalField(default=ENTRY_FEE_DOLLARS, max_digits=5, decimal_places=2)
+    tournament = ForeignKey(Tournament, on_delete=DO_NOTHING)
 
 
 class TournamentPayOut(Model):
-    tournament = ForeignKey(Tournament, on_delete=DO_NOTHING)
-    multiplier = ForeignKey(PayOutMultipliers, on_delete=DO_NOTHING)
+    class Meta:
+        verbose_name_plural = "tournament payouts"
+
     club = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
     offset = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
     place_1 = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
@@ -240,6 +251,7 @@ class TournamentPayOut(Model):
     place_3 = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
     charity = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
     big_bass = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
+    tournament = ForeignKey(Tournament, on_delete=DO_NOTHING)
     big_bass_paid = BooleanField(default=False)
 
 
