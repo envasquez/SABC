@@ -6,6 +6,7 @@
             <div align="center">
                 <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'tournament-update' tournament.id %}">Edit Tournament</a>
                 <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'result-create' tournament.id %}">Add Results</a>
+                <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'team-create' tournament.id %}">Add Teams</a>
                 <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'register' %}">Add Guest</a>
                 <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'tournament-delete' tournament.id %}">Delete</a>
             </div>

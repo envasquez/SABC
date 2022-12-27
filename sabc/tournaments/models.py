@@ -67,6 +67,10 @@ class Lake(Model):
     paper = BooleanField(default=False)
     google_maps = CharField(default="", max_length=4096)
 
+    class Meta:
+        ordering = ("name",)
+        verbose_name_plural = "Lakes"
+
     def __str__(self):  # A little bit of custom code for a few of our local lakes :-)
         if self.name in ["fayette county reservoir", "choke canyon reservoir"]:
             return self.name.title()
@@ -85,6 +89,10 @@ class Ramp(Model):
     lake = ForeignKey(Lake, on_delete=CASCADE)
     name = CharField(max_length=128)
     google_maps = CharField(default="", max_length=4096)
+
+    class Meta:
+        ordering = ("lake__name",)
+        verbose_name_plural = "Ramps"
 
     def __str__(self):
         return f"{self.lake}: {self.name.title()}"
@@ -366,12 +374,12 @@ class TeamResult(Model):
         return f"{place}{name}{' ' * (60 - len(str(name)))}{weight}\t\t{big_bass}"
 
     def get_absolute_url(self):
-        return reverse("team-details", kwargs={"pk": self.id})
+        return reverse("team-create", kwargs={"pk": self.tournament.id})
 
     def get_team_name(self):
-        name = ""
+        name = f"{self.result_1.angler.user.get_full_name()}"
         if self.result_1 and not self.result_2:
-            return f"{self.result_1.angler.user.get_full_name()} - solo"
+            return f"{name} - solo"
         return f"{name} & {self.result_2.angler.user.get_full_name()}"
 
     def save(self, *args, **kwargs):
@@ -394,7 +402,6 @@ class TeamResult(Model):
                 for attr in [
                     "buy_in",
                     "num_fish",
-                    "team_name",
                     "total_weight",
                     "big_bass_weight",
                     "num_fish_alive",

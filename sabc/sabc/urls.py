@@ -21,9 +21,7 @@ from tournaments.views import (
     TournamentDetailView as TmntDetail,
     TournamentUpdateView as TmntUpdate,
     TournamentDeleteView as TmntDelete,
-    TeamResultCreateView as TeamResultCreate,
-    # TeamDetailView as TeamDetail,
-    # TeamListView as TeamDelete,
+    TeamCreateView as TeamCreate,
 )
 
 from users.views import (
@@ -38,13 +36,11 @@ from users.views import (
 
 TMNT_CREATE = ("tournament/new/", "tournament-create")
 TMNT_DETAIL = ("tournament/<int:pk>/", "tournament-details")
-TMNT_UPDATE = (f"{TMNT_DETAIL}/update/", "tournament-update")
-TMNT_DELETE = (f"{TMNT_DETAIL}/delete/", "tournament-delete")
+TMNT_UPDATE = ("tournament/<int:pk>/update/", "tournament-update")
+TMNT_DELETE = ("tournament/<int:pk>/delete/", "tournament-delete")
 
-TEAM_LIST = ("tournament/<int:pk>/list_teams", "team-list")
-TEAM_CREATE = ("tournament/<int:pk>/add_team", "team-create")
-TEAM_DETAIL = ("team/<int:pk>/", "team-details")
-TEAM_DELETE = ("", "")
+TEAM_CREATE = ("tournament/<int:pk>/add_team/", "team-create")
+# TEAM_DELETE = ("", "")
 RESULT_CREATE = ("tournament/<int:pk>/add_result/", "result-create")
 
 LOGIN = ("login/", "users/login.html", "login")
@@ -78,9 +74,8 @@ urlpatterns = [
     path(TMNT_UPDATE[0], TmntUpdate.as_view(), name=TMNT_UPDATE[1]),
     path(TMNT_DELETE[0], TmntDelete.as_view(), name=TMNT_DELETE[1]),
     path(RESULT_CREATE[0], ResultCreate.as_view(), name=RESULT_CREATE[1]),
-    path(TEAM_CREATE[0], TeamResultCreate.as_view(), name=TEAM_CREATE[1]),
-    # path(TEAM_LIST[0], TeamList.as_view(), name=TEAM_LIST[1]),
-    # path(TEAM_DETAIL[0], TeamDetail.as_view(), name=TEAM_DETAIL[1]),
+    path(TEAM_CREATE[0], TeamCreate.as_view(), name=TEAM_CREATE[1]),
+    # path(TEAM_DELETE[0], TeamCreate.as_view(), name=TEAM_CREATE[1]),
     path(LOGIN[0], Login.as_view(template_name=LOGIN[1]), name=LOGIN[2]),
     path(LOGOUT[0], Logout.as_view(template_name=LOGOUT[1]), name=LOGOUT[2]),
     path(PW_RESET[0], PWReset.as_view(template_name=PW_RESET[1]), name=PW_RESET[2]),

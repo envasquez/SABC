@@ -9,7 +9,8 @@
                 {{ form|crispy }}
             </fieldset>
             <div class="form-group">
-                <button class="btn btn-outline-info" type="submit">Save</button>
+                <button class="btn btn-outline-info" type="submit">Save</button>&nbsp;&nbsp;
+                <a class="btn btn-outline-info" href="{% url 'tournament-details' tournament.id %}" role="button">Back</a></button>
             </div>
         </form>
     </div>

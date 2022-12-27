@@ -25,7 +25,7 @@ class ResultForm(ModelForm):
         )
 
 
-class TeamResultForm(ModelForm):
+class TeamForm(ModelForm):
     class Meta:
         model = TeamResult
         fields = ("tournament", "result_1", "result_2")
