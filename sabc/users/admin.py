@@ -34,20 +34,18 @@ def create_angler(request, name, email, phone):
 
 
 def csv_is_valid(csv_file):
-    """Validates that a csv file is of proper format"""
+    # TODO: Add more/better validation
     return csv_file.name.endswith(".csv")
 
 
 class AnglerAdmin(admin.ModelAdmin):
     def get_urls(self):
-        """Override of get_urls()"""
         urls = super().get_urls()
         new_urls = [path("upload-csv/", self.upload_csv)]
 
         return new_urls + urls
 
     def upload_csv(self, request):
-        """CSV Upload handler"""
         form = CsvImportForm()
         data = {"form": form}
         if request.method == "POST":
