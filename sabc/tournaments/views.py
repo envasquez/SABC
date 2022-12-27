@@ -239,6 +239,18 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
         )
 
     def form_valid(self, form):
+        tid = self.get_initial()["tournament"]
+        results = TeamResult.objects.filter(tournament=tid)
+        anglers = [r.result_1.angler for r in results] + [r.result_2.angler for r in results]
+        err = "Team Result for %s already exists!"
+        if form.instance.result_1.angler in anglers:
+            messages.error(self.request, err % form.instance.result_1.angler)
+            return self.form_invalid(form)
+        if form.instance.result_2:
+            if form.instance.result_2.angler in anglers:
+                messages.error(self.request, err % form.instance.result_2.angler)
+                return self.form_invalid(form)
+
         msg = f"{form.instance.result_1.angler}"
         msg += f"& {form.instance.result_2.angler}" if form.instance.result_2 else " - solo"
         messages.success(self.request, f"Team added: {msg}")

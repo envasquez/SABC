@@ -36,7 +36,6 @@ class TeamResultTable(Table):
             "place_finish",
             "team_name",
             "num_fish",
-            "penalty_weight",
             "big_bass_weight",
             "total_weight",
         )
