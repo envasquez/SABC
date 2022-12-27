@@ -378,25 +378,20 @@ class TeamResult(Model):
 
     def get_team_name(self):
         name = f"{self.result_1.angler.user.get_full_name()}"
-        if self.result_1 and not self.result_2:
+        if not self.result_2:
             return f"{name} - solo"
         return f"{name} & {self.result_2.angler.user.get_full_name()}"
 
     def save(self, *args, **kwargs):
         if self._state.adding:
             if self.result_2:
-                self.num_fish = sum([self.result_1.num_fish, self.result_2.num_fish])
-                self.total_weight = sum([self.result_1.total_weight, self.result_2.total_weight])
-                self.num_fish_dead = sum([self.result_1.num_fish, self.result_2.num_fish_dead])
-                self.penalty_weight = sum(
-                    [self.result_1.penalty_weight, self.result_2.penalty_weight]
-                )
-                self.num_fish_alive = sum(
-                    [self.result_1.num_fish_alive, self.result_2.num_fish_alive]
-                )
-
+                self.num_fish = self.result_1.num_fish + self.result_2.num_fish
+                self.total_weight = self.result_1.total_weight + self.result_2.total_weight
+                self.num_fish_dead = self.result_1.num_fish + self.result_2.num_fish_dead
+                self.penalty_weight = self.result_1.penalty_weight + self.result_2.penalty_weight
+                self.num_fish_alive = self.result_1.num_fish_alive + self.result_2.num_fish_alive
                 self.big_bass_weight = max(
-                    [self.result_1.big_bass_weight, self.result_2.big_bass_weight]
+                    self.result_1.big_bass_weight, self.result_2.big_bass_weight
                 )
             else:
                 for attr in [
@@ -411,5 +406,4 @@ class TeamResult(Model):
                     setattr(self, attr, getattr(self.result_1, attr))
 
         self.team_name = self.get_team_name()
-
         super().save(*args, **kwargs)
