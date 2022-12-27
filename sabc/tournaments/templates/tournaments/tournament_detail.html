@@ -57,7 +57,6 @@
                     </tr>
                 </tbody>
             </table>
-            <br /><br />
         {% endif %}
         {% if not tournament.complete %}
             <p class="article-content">
@@ -76,6 +75,7 @@
                 <div class="article-metadata">DEAD FISH PENALTY</div>
                 <h6 class="small">{{ tournament.rules.dead_fish_penalty }}lb per fish</h6>
             </div>
+            <br /><br /><br />
         {% endif %}
         <!-- Display Results -->
         {% if tournament.complete %}
