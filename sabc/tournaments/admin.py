@@ -8,12 +8,12 @@ from django.shortcuts import render
 
 from .forms import YamlImportForm
 from .models import (
-    Tournament,
-    Result,
-    TeamResult,
-    RuleSet,
     Lake,
     Ramp,
+    Result,
+    RuleSet,
+    Tournament,
+    TeamResult,
     PayOutMultipliers,
     TournamentPayOut,
 )
