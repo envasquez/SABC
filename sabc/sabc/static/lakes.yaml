@@ -1,76 +1,163 @@
 belton:
+  paper: false
+  google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d127649.34820671633!2d-97.51757425844599!3d31.19291265081045!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864542e4f58c375d%3A0x7a72ea4037ea61e1!2sBelton%20Lake!5e0!3m2!1sen!2sus!4v1672084069808!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
   ramps:
   - name: cedar ridge park
-    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2763.3408258138325!2d-97.45704795803061!3d31.168535773868932!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864543757eb30125%3A0x17fbcbdab7568631!2sCedar%20Ridge%20Park%20Campground!5e0!3m2!1sen!2sus!4v1671864557440!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4321.177367944409!2d-97.4569861346852!3d31.16781644035503!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864543757eb30125%3A0x17fbcbdab7568631!2sCedar%20Ridge%20Park%20Campground!5e0!3m2!1sen!2sus!4v1672084176691!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
   - name: temple lake park
-    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d22115.29759656615!2d-97.50177248085855!3d31.131790913973408!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x86454163a9dc3bfd%3A0xee022161ce3aacd5!2sTemple%20Lake%20Park!5e0!3m2!1sen!2sus!4v1671864603737!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3415.1679938270418!2d-97.49716678513832!3d31.132848973290137!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x86454163a9dc3bfd%3A0xee022161ce3aacd5!2sTemple%20Lake%20Park!5e0!3m2!1sen!2sus!4v1672084210091!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
   - name: blora
-    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d44229.84651291661!2d-97.54595857241749!3d31.13339656945169!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0xebb32443ccd8abff!2sBLORA!5e0!3m2!1sen!2sus!4v1671864637987!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3414.8360503697413!2d-97.55820148513804!3d31.14206757284069!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8645442e47a0eaf7%3A0xebb32443ccd8abff!2sBLORA!5e0!3m2!1sen!2sus!4v1672084237455!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
 
-# walter e. long (decker):
-# - ramps:
-#   - name: walter e. long metropolitan park
-#     google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27557.76266055116!2d-97.62033162697347!3d30.30202233700364!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8644b8204e1823e1%3A0xb71ed1aa18b30b13!2sWalter%20E.%20Long%20Metropolitan%20Park!5e0!3m2!1sen!2sus!4v1671864941817!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+walter e. long (decker):
+  paper: true
+  google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27557.76355476698!2d-97.63664045612765!3d30.302019155659053!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8644b8067b2dfc2b%3A0x2ec27edf62c402e8!2sLake%20Walter%20E.%20Long!5e0!3m2!1sen!2sus!4v1672084291654!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  ramps:
+  - name: walter e. long metropolitan park
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27557.76355476698!2d-97.63664045612765!3d30.302019155659053!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8644b8067b2dfc2b%3A0x2ec27edf62c402e8!2sLake%20Walter%20E.%20Long!5e0!3m2!1sen!2sus!4v1672084291654!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
 
-# travis:
-# ramps:
-#   - name: mansfield dam
-#     google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3441.558784628063!2d-97.9073722!3d30.3918843!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b312583cad291%3A0xa528bfb289afe63c!2sMansfield%20Dam%2C%20Austin%2C%20TX%2078734!5e0!3m2!1sen!2sus!4v1671862997617!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
-#   - name: collier
-#     google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3439.1326665894044!2d-98.03029128515357!3d30.46068020574459!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b3b4bb7873ea5%3A0xb6a53b9c3f3d023c!2sCollier%20Cove%20Boat%20Ramp-Lake%20Travis!5e0!3m2!1sen!2sus!4v1671863082649!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
-#   - name: tournament point
-#     google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3439.3832948444756!2d-98.01451398515376!3d30.4535798060842!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b3b25686dd915%3A0x666bb94d3587abc9!2sTournament%20Point!5e0!3m2!1sen!2sus!4v1671863395836!5m2!1sen!2sus' width='600' height='450' style='border:0;'' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+travis:
+  paper: false
+  google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d220097.1104179962!2d-98.20472670546498!3d30.46394666079379!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b234b3c3d1495%3A0x74e585eef7396b82!2sLake%20Travis!5e0!3m2!1sen!2sus!4v1672084358820!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  ramps:
+  - name: mansfield dam
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3441.5586222547017!2d-97.90956088515522!3d30.39188890903085!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b312583cad291%3A0xa528bfb289afe63c!2sMansfield%20Dam%2C%20Austin%2C%20TX%2078734!5e0!3m2!1sen!2sus!4v1672084422898!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  - name: collier cove boat '
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3439.1326665894044!2d-98.03029128515358!3d30.46068020574459!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b3b4bb7873ea5%3A0xb6a53b9c3f3d023c!2sCollier%20Cove%20Boat%20Ramp-Lake%20Travis!5e0!3m2!1sen!2sus!4v1672084465961!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  - name: tournament point
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3439.3832948444756!2d-98.0145139851538!3d30.4535798060842!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b3b25686dd915%3A0x666bb94d3587abc9!2sTournament%20Point!5e0!3m2!1sen!2sus!4v1672084502896!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
 
-# inks:
-# ramps:
-#   - name: inks lake state park
-#     google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d54878.696040395946!2d-98.42008103480629!3d30.720691437303145!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865afb95d363f72f%3A0xc99d574116003081!2sInks%20Lake%20State%20Park!5e0!3m2!1sen!2sus!4v1671863699408!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+inks:
+  paper: false
+  google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27432.80686924699!2d-98.40580282633022!3d30.743668309010552!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865afbdc61d5e785%3A0x73a6c3855a5925bb!2sInks%20Lake!5e0!3m2!1sen!2sus!4v1672084568730!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  ramps:
+  - name: inks lake state park
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3429.323908811455!2d-98.37325277952323!3d30.737401842334435!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865afb95d363f72f%3A0xc99d574116003081!2sInks%20Lake%20State%20Park!5e0!3m2!1sen!2sus!4v1672084604980!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
 
-# lbj:
-# ramps:
-#   - name: yacht club & marina
-#     google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d13743.176144422227!2d-98.33703067175577!3d30.555122685345957!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b0368e3e45e11%3A0x2a3445d322a5846d!2sLake%20LBJ%20Yacht%20Club%20%26%20Marina!5e0!3m2!1sen!2sus!4v1671863916169!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
-#   - name: blue briar
-#     google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1717.2316098823944!2d-98.39681863652343!3d30.592695099999997!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b03503ad69075%3A0x5cad4ee9ca3a2dd4!2sBluebriar%20Park!5e0!3m2!1sen!2sus!4v1671864015861!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
-#   - name: mcnair park
-#     google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3434.7995826980305!2d-98.41850488190664!3d30.583202634651794!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b019f2df91893%3A0x508cc0e4abaee81b!2sMcNair%20Park!5e0!3m2!1sen!2sus!4v1671864074365!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+lbj:
+  paper: false
+  google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d109851.72687261835!2d-98.4610429014146!3d30.63772073331308!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865afde4a00a34eb%3A0xb4e89bc100df5a25!2sLake%20Lyndon%20B.%20Johnson!5e0!3m2!1sen!2sus!4v1672084656844!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  ramps:
+  - name: yacht club & marina
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3435.92021707728!2d-98.33944238515157!3d30.551558101393322!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b0368e3e45e11%3A0x2a3445d322a5846d!2sLake%20LBJ%20Yacht%20Club%20%26%20Marina!5e0!3m2!1sen!2sus!4v1672084726827!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  - name: blue briar
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3434.4566669683177!2d-98.39695698515064!3d30.592879999410872!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b0227a6b45b99%3A0x2930a76d8b5602fc!2sBluebriar%20Park%2C%20Granite%20Shoals%2C%20TX%2078654!5e0!3m2!1sen!2sus!4v1672084758039!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  - name: mcnair park
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3434.8114244978537!2d-98.41854248515084!3d30.582868399891495!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b019f2df91893%3A0x508cc0e4abaee81b!2sMcNair%20Park!5e0!3m2!1sen!2sus!4v1672084791944!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
 
-# austin:
-# - ramps:
-#   - name:
-#     google_maps:
+austin:
+  paper: false
+  google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d110184.25020196816!2d-97.9221557584372!3d30.343621887024348!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b3435dbfe386d%3A0x7036e55ce0332d2e!2sLake%20Austin!5e0!3m2!1sen!2sus!4v1672085066104!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  ramps:
+  - name: loop 360 boat '
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3442.99412354953!2d-97.79878258515609!3d30.35111691097542!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b34da5ad510af%3A0xc87465991d57c4da!2sLoop%20360%20Boat%20Ramp!5e0!3m2!1sen!2sus!4v1672086035327!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  - name: emma long metropolitan park
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3443.806141712739!2d-97.84411658515658!3d30.32803151207547!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b3453575fee85%3A0xcd23194b656e6ca8!2sEmma%20Long%20Metropolitan%20Park!5e0!3m2!1sen!2sus!4v1672086108658!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  - name: walsh boat landing
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4917.111458641186!2d-97.7893092423146!3d30.295845726521364!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8644caaa979797e5%3A0x2f0106edaa298fbe!2sWalsh%20Boat%20Landing!5e0!3m2!1sen!2sus!4v1672086236126!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
 
-# name: oh-ivie
-# - ramps:
-#   - name:
-#     google_maps:
+bastrop:
+  paper: true
+  google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27599.1678513568!2d-97.29475782718627!3d30.154389796074234!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8644901016f7a4a5%3A0x5fc6b59e59a6c4f9!2sLake%20Bastrop!5e0!3m2!1sen!2sus!4v1672086620966!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  ramps:
+  - name: south shore park
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27599.1678513568!2d-97.29475782718627!3d30.154389796074234!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x86449aa0cd896375%3A0xf320e3207416fdbb!2sLake%20Bastrop%20South%20Shore%20Park!5e0!3m2!1sen!2sus!4v1672086643870!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  - name: north shore park
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12522.596645779417!2d-97.28674063100424!3d30.160612426065434!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8644903dbb0946d1%3A0xf0e7a524c5329569!2sLake%20Bastrop%20North%20Shore%20Park!5e0!3m2!1sen!2sus!4v1672086678318!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
 
-# name: bastrop
-# - ramps:
-#   - name:
-#     google_maps:
+fayette county reservior:
+  paper: true
+  google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27661.073845959945!2d-96.75088302750409!3d29.932430634478603!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8643f4db8073adb9%3A0x80c9b433b95b7331!2sFayette%20County%20Reservoir!5e0!3m2!1sen!2sus!4v1672086798689!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  ramps:
+  - name: prairie preserve park
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27661.073845959945!2d-96.75088302750409!3d29.932430634478603!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8643f52b52c35b67%3A0xee48924556306a0!2sLake%20Fayette%20Prairie%20Preserve!5e0!3m2!1sen!2sus!4v1672086847620!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  - name: oak thicket park
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27661.073845959945!2d-96.75088302750409!3d29.932430634478603!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8643f5190809f8ab%3A0x1d4d26ed97836313!2sLake%20Fayette%20Oak%20Thicket%20Park!5e0!3m2!1sen!2sus!4v1672086887598!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
 
-# fayette:
-# - ramps:
-#   - name:
-#     google_maps:
+buchanan:
+  paper: false
+  google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d109664.49492179992!2d-98.48687604745601!3d30.802200572804807!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865af9e0edbb56fb%3A0x7f0e121dabc72896!2sBuchanan%20Lake!5e0!3m2!1sen!2sus!4v1672089611108!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  ramps:
+  - name: burnett county park
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3425.388032374857!2d-98.39148858514476!3d30.84780938712895!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865af0da18d79f59%3A0x45d7ba50b57a98b7!2sBurnet%20County%20Park!5e0!3m2!1sen!2sus!4v1672089657639!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  - name: black rock park
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d109664.49492179992!2d-98.486876047456!3d30.802200572804807!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865af85a3ae40745%3A0xd371c1f327b446d4!2sBlack%20Rock%20Park!5e0!3m2!1sen!2sus!4v1672089697157!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
 
-# buchanan:
-# - ramps:
-#   - name:
-#     google_maps:
+stillhouse hollow:
+  paper: false
+  google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d218842.65828602808!2d-97.87295436793148!3d31.01464251415014!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8645382293747367%3A0xa006fdf3c27114e9!2sStillhouse%20Hollow%20Lake!5e0!3m2!1sen!2sus!4v1672089803444!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  ramps:
+  - name: riversbend park
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d10367.10477023927!2d-97.60476446416581!3d31.002028052248534!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x86453828b3e31e89%3A0xdc4172db44cc2571!2sRiversbend%20Park%2C%20Salado%2C%20TX%2076571!5e0!3m2!1sen!2sus!4v1672089832988!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  - name: union grove park
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d41468.41908095708!2d-97.60476446416581!3d31.002028052248534!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864537ead456dc99%3A0xe91af0e473c273d9!2sUnion%20Grove%20Park%2C%20Stillhouse%20Lake!5e0!3m2!1sen!2sus!4v1672089883488!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  - name: cedar gap park
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d41468.128093465006!2d-97.64223182453333!3d31.002697114757016!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864537ca15b176b1%3A0xb9ad15c37447b25a!2sCedar%20Gap%20Park!5e0!3m2!1sen!2sus!4v1672089940210!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  - name: stillhouse hollow marina
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d8836.008883776529!2d-97.54428504907642!3d31.038106554721605!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864538a668df90b9%3A0x72c86bc08a507c74!2sStillhouse%20Hollow%20Marina!5e0!3m2!1sen!2sus!4v1672089997591!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
 
-# lady-bird:
-# - ramps:
-#   - name:
-#     google_maps:
+marble-falls:
+  paper: false
+  google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d54969.84203714589!2d-98.33216078575335!3d30.560176174262416!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b1cb83373ba9b%3A0xe8ac7b0555be6e17!2sLake%20Marble%20Falls!5e0!3m2!1sen!2sus!4v1672090387181!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  ramps:
+  - name: cottonwood shores boat ramp
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d17394.33793171148!2d-98.33192875205326!3d30.561694151333096!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b033786282987%3A0x19fbfcd9892adc36!2sCottonwood%20Shores%20Boat%20Ramp!5e0!3m2!1sen!2sus!4v1672090755070!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
 
-# stillhouse:
-# - ramps:
-#   - name:
-#     google_maps:
+lady bird:
+  paper: false
+  google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d55134.06585531003!2d-97.78582748745764!3d30.26902532158024!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8644b50e720134c3%3A0x9eb67ecc9e2fcb81!2sLady%20Bird%20Lake!5e0!3m2!1sen!2sus!4v1672090163822!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  ramps:
+  - name: festival beach boat '
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2181.2854596206494!2d-97.7288438446887!3d30.24815874702227!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8644b44c2bc61e85%3A0x2cb2edce77cd129e!2sFestival%20Beach%20Boat%20Ramp!5e0!3m2!1sen!2sus!4v1672090270049!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
 
-# marble-falls:
-# - ramps:
-#   - name:
-#     google_maps:
+sommerville:
+  paper: false
+  google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d110214.29386216452!2d-96.66790740907118!3d30.31692288719605!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8644179fc687c36d%3A0x38e930b57f6b5861!2sSomerville%20Lake!5e0!3m2!1sen!2sus!4v1672090809093!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  ramps:
+  - name: welch park
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d6886.949258183686!2d-96.55590269321215!3d30.337480469022637!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8644185d1c2da391%3A0xd297242da6453f9a!2sWelch%20Park%20Somerville%20Lake!5e0!3m2!1sen!2sus!4v1672090907382!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  - name: nails creek boat ramp
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d13779.834854683037!2d-96.68050825595857!3d30.29523695720339!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x86441543bd5e1ef3%3A0x5e31bfa0864d895b!2sNails%20Creek%20boat%20ramp!5e0!3m2!1sen!2sus!4v1672090951159!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  - name: lake somerville state park
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d55113.257421752896!2d-96.69698774650007!3d30.306056337662877!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864416ed609b6de3%3A0xf30fd18ac3e6c4d!2sLake%20Somerville%20State%20Park!5e0!3m2!1sen!2sus!4v1672091005194!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+
+canyon:
+  paper: false
+  google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d221420.26450043847!2d-98.39890081314753!3d29.873165763891397!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865c9bbea40ad011%3A0xba6571b88cb898b1!2sCanyon%20Lake%2C%20TX!5e0!3m2!1sen!2sus!4v1672091127799!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  ramps:
+    - name: potters creek launch ramp/dock
+      google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d11552.672974119347!2d-98.28253103063459!3d29.90691571725766!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b629b348f2d53%3A0x6f200d4d67f5ff94!2sPotters%20Creek%20Launch%20Ramp%2FDock%2C%20Potters%20Creek%20Park%20Rd%2C%20Canyon%20Lake%2C%20TX%2078133!5e0!3m2!1sen!2sus!4v1672091266095!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+    - name: boat ramp 22
+      google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d11552.672974119347!2d-98.28253103063459!3d29.90691571725766!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b637fc3b970cf%3A0x64f4331cd30e6090!2sBoat%20Ramp%20%2322!5e0!3m2!1sen!2sus!4v1672091297198!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+    - name: canyon lake boat ramp 3
+      google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d46214.352132814245!2d-98.31887084297465!3d29.8990247019628!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x428db388dab28bcb!2sCanyon%20Lake%20Boat%20Ramp%203!5e0!3m2!1sen!2sus!4v1672091363282!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+    - name: canyon lake boat ramp 17
+      google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d11553.90502733395!2d-98.22608605371178!3d29.8962906611298!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865c9f8fecaacb99%3A0x8e07759997303507!2sCanyon%20Lake%20Boat%20Ramp%2017!5e0!3m2!1sen!2sus!4v1672091431845!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+    - name: canyon lake marina
+      google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d11553.400710212505!2d-98.2337912410377!3d29.900640236290005!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x47f30bb3803074d7!2sCanyon%20Lake%20Marina!5e0!3m2!1sen!2sus!4v1672091472046!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+    - name: canyon lake boat ramp 10
+      google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d53095.50046207343!2d-98.29323685555411!3d29.88184221518331!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x9c8f0a393ca925d0!2sCanyon%20Lake%20Boat%20Ramp%2010!5e0!3m2!1sen!2sus!4v1672091528095!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+
+waco:
+  paper: false
+  google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d54404.788625262685!2d-97.2601439798701!3d31.54339997858495!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864f85b47cb24f0d%3A0xa837658ad93f16aa!2sLake%20Waco!5e0!3m2!1sen!2sus!4v1672091839394!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  ramps:
+    - name: lake waco marina boat ramp
+      google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27198.848846719997!2d-97.26907074451448!3d31.555563414770422!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864f85841fbf9ccb%3A0x56d4418c4261a9!2sLake%20Waco%20Marina%20Boat%20Ramp!5e0!3m2!1sen!2sus!4v1672093070081!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+    - name: airport park boat ramp
+      google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27189.14416508598!2d-97.25525200366978!3d31.588835799615612!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864f858e0d5c6615%3A0x3853416863e4376a!2sAirport%20Park%20Boat%20Ramp!5e0!3m2!1sen!2sus!4v1672093102880!5m2!1sen!2sus' width='600' height='450' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+    - name: airport park boat ramp 2
+      google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27189.14416508598!2d-97.25525200366978!3d31.588835799615612!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864f85bc49f71cd9%3A0xa43edf02cf85c93e!2sAirport%20Park%20Boat%20Ramp%20%232!5e0!3m2!1sen!2sus!4v1672093151544!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+    - name: airport park boat ramp 3
+      google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27189.14416508598!2d-97.25525200366978!3d31.588835799615612!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864f853f831f3f6f%3A0x6005816b3d3c8679!2sAirport%20Park%20Boat%20Ramp%20%233!5e0!3m2!1sen!2sus!4v1672093170646!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+    - name: flat rock boat ramp
+      google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d27184.033585972033!2d-97.30261981487271!3d31.606344734538432!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864f9001a2a0c7ff%3A0x2f059105abf40ade!2sFlat%20Rock%20Boat%20Ramp!5e0!3m2!1sen!2sus!4v1672093196862!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+
+choke canyon reservoir:
+  paper: false
+  google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d112201.98522502766!2d-98.428165500817!3d28.50025816256284!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865d7c7c81e064a7%3A0x8618346548101157!2sChoke%20Canyon%20Reservoir!5e0!3m2!1sen!2sus!4v1672093258979!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  ramps:
+  - name: south shore unit boat ramp
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d112201.98522502766!2d-98.428165500817!3d28.50025816256284!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865d630da9d40927%3A0x3c8382a711edbf7e!2sSouth%20Shore%20Unit%20Boat%20Ramp!5e0!3m2!1sen!2sus!4v1672093321362!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
+  - name: calliham unit boat ramp
+    google_maps: <iframe src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14027.864601918014!2d-98.3590442724813!3d28.480566030578192!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865d7df1db5b9e31%3A0x8744286541b9eb12!2sCalliham%20Unit%20Boat%20Ramp!5e0!3m2!1sen!2sus!4v1672093406309!5m2!1sen!2sus' width='400' height='300' style='border:0;' allowfullscreen='' loading='lazy' referrerpolicy='no-referrer-when-downgrade'></iframe>
