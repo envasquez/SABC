@@ -5,7 +5,7 @@
         <div class="article-metadata"><a class="article-title" href="{% url 'tournament-details' tournament.id %}">{{ tournament.date }} - {{ tournament.name }}</a></div>
         <h2>
         {% if tournament.lake %}
-            <a class="article-title" href="{% url 'tournament-details' tournament.id %}">Lake: {{ tournament.lake | upper }}</a>
+            <a class="article-title" href="{% url 'tournament-details' tournament.id %}">{{ tournament.lake | upper }}</a>
         {% else %}
             <a class="article-title" href="{% url 'tournament-details' tournament.id %}">Lake: To Be Voted On ...</a>
         {% endif %}
@@ -13,7 +13,7 @@
             <small class="text-muted ml-2">- Complete</small>
         {% endif %}
         </h2>
-        {{ tournament.ramp_url | default:'<img src="static/tbd.jpg" height="250">'| safe}}
+        {{ tournament.ramp.google_maps | default:'<img src="static/tbd.jpg" height="250">'| safe}}
             <p class="article-content">
                 <table class="table">
                     <tbody>
