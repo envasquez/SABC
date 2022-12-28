@@ -3,6 +3,7 @@ import datetime
 
 from decimal import Decimal
 
+from django.urls import reverse_lazy
 from django.contrib import messages
 from django.shortcuts import render
 from django.views.generic import (
@@ -24,7 +25,9 @@ from .tables import (
     PayoutSummary,
     HeavyStringer,
     TeamResultTable,
-    TournamentSummary,
+    EditableResultTable,
+    TournamentSummaryTable,
+    EditableTeamResultTable,
 )
 from .models import Tournament, Result, TeamResult
 
@@ -87,23 +90,25 @@ class ExtraTournamentContext:
             "heavy_stringer": heavy_stringer,
         }
 
-        return TournamentSummary([data])
+        return TournamentSummaryTable([data])
 
     def get_context_data(self, **kwargs):
-        tmnt = Tournament.objects.get(id=self.get_object().id)
-        results = Result.objects.filter(tournament=tmnt).order_by("place_finish")
-        team_results = TeamResult.objects.filter(tournament=tmnt).order_by("place_finish")
         context = super().get_context_data(**kwargs)
 
-        Tournament.results.set_points(tournament=tmnt)
-        self.extra_context["results"] = ResultTable(results)
-        self.extra_context["team_results"] = TeamResultTable(team_results)
-        self.extra_context["payouts"] = self.get_payout_table(tmnt)
-        self.extra_context["catch_stats"] = TournamentSummary([])
-        if results:
-            self.extra_context["catch_stats"] = self.get_stats_table(tmnt)
-        context.update(self.extra_context)
+        tmnt = Tournament.objects.get(pk=self.get_object().id)
+        results = Result.objects.filter(tournament=tmnt).order_by("place_finish")
+        team_results = TeamResult.objects.filter(tournament=tmnt).order_by("place_finish")
 
+        Tournament.results.set_points(tournament=tmnt)
+        self.extra_context["payouts"] = self.get_payout_table(tmnt)
+        self.extra_context["results"] = ResultTable(results)
+        self.extra_context["catch_stats"] = (
+            self.get_stats_table(tmnt) if results else TournamentSummaryTable([])
+        )
+        self.extra_context["team_results"] = TeamResultTable(team_results)
+        self.extra_context["editable_results"] = EditableResultTable(results)
+        self.extra_context["editable_team_results"] = EditableTeamResultTable(team_results)
+        context.update(self.extra_context)
         return context
 
 
@@ -112,10 +117,12 @@ class TournamentDetailView(ExtraTournamentContext, DetailView):
     context_object_name = "tournament"
 
 
-class TournamentCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
+class TournamentCreateView(
+    SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView
+):
     model = Tournament
     form_class = TournamentForm
-    success_message = "Tournament Successfully Created!"
+    success_message = "Tournament successfully created!"
 
     def test_func(self):
         return any(
@@ -131,7 +138,7 @@ class TournamentUpdateView(
 ):
     model = Tournament
     form_class = TournamentForm
-    success_message = "Tournament Successfully Updated!"
+    success_message = "Tournament successfully updated!"
 
     def test_func(self):
         return any(
@@ -146,8 +153,6 @@ class TournamentDeleteView(
     SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView
 ):
     model = Tournament
-    success_message = "Tournament [ %s ] Successfully Deleted!"
-    success_url = "/"
 
     def test_func(self):
         return any(
@@ -157,16 +162,24 @@ class TournamentDeleteView(
             ]
         )
 
+    def get_queryset(self):
+        return super().get_queryset().filter(pk=self.kwargs.get("pk"))
+
+    def get_success_url(self):
+        messages.success(self.request, f"{self.get_object().name} Deleted!")
+        # return reverse_lazy("sabc-home", kwargs={"pk": self.get_object().tournament.id})
+        return reverse_lazy("sabc-home")
+
     def delete(self, request, *args, **kwargs):
         obj = self.get_object()
-        messages.success(self.request, self.success_message % obj.__dict__.get("name", "UNKNOWN"))
+        messages.success(self.request, self.success_message % obj.name)
         return super().delete(request, *args, **kwargs)
 
 
 #
 # Results
 #
-class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
+class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Result
     form_class = ResultForm
 
@@ -185,7 +198,7 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["tournament"] = Tournament.objects.get(id=self.kwargs.get("pk"))
+        context["tournament"] = Tournament.objects.get(pk=self.kwargs.get("pk"))
         return context
 
     def form_valid(self, form):
@@ -198,7 +211,7 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
             messages.error(self.request, message=f"ERROR Result exists! {result}")
             return super().form_invalid(form)
 
-        Tournament.results.set_points(Tournament.objects.get(id=tid))
+        Tournament.results.set_points(Tournament.objects.get(pk=tid))
         msg = f"{form.instance.angler} Buy-in"
         if not form.instance.buy_in:
             msg = " ".join(
@@ -212,10 +225,34 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
+class ResultDeleteView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Result
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["tournament"] = Result.objects.get(pk=self.kwargs.get("pk")).tournament
+        return context
+
+    def test_func(self):
+        return any(
+            [
+                self.request.user.angler.officer_type in OFFICERS,
+                self.request.user.is_staff,
+            ]
+        )
+
+    def get_queryset(self):
+        return super().get_queryset().filter(pk=self.kwargs.get("pk"))
+
+    def get_success_url(self):
+        messages.success(self.request, f"{self.get_object()} Deleted!")
+        return reverse_lazy("tournament-details", kwargs={"pk": self.get_object().tournament.id})
+
+
 #
 # Teams
 #
-class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
+class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = TeamResult
     form_class = TeamForm
     template_name = "tournaments/team_form.html"
@@ -227,7 +264,7 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["tournament"] = Tournament.objects.get(id=self.kwargs.get("pk"))
+        context["tournament"] = Tournament.objects.get(pk=self.kwargs.get("pk"))
         return context
 
     def test_func(self):
@@ -257,22 +294,35 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-# class TeamUpdateView(SuccessMessageMixin, LoginRequiredMixin, CreateView):
-#     model = TeamResult
-#     form_class = TeamForm
-#     success_message = "%s Successfully Updated!"
+class TeamResultDeleteView(
+    SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView
+):
+    model = TeamResult
 
-#     def get_initial(self):
-#         initial = super().get_initial()
-#         initial["tournament"] = self.kwargs.get("pk")
-#         return initial
+    def get_initial(self):
+        initial = super().get_initial()
+        initial["tournament"] = self.kwargs.get("pk")
+        return initial
 
-#     def test_func(self):
-#         return self.request.user.angler.type == "officer"
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["tournament"] = TeamResult.objects.get(pk=self.kwargs.get("pk")).tournament
+        return context
 
-#     def save(self):
-#         obj = self.get_object()
-#         messages.success(self.request, self.success_message % obj.__dict__.get("name", "UNKNOWN"))
+    def test_func(self):
+        return any(
+            [
+                self.request.user.angler.officer_type in OFFICERS,
+                self.request.user.is_staff,
+            ]
+        )
+
+    def get_queryset(self):
+        return super().get_queryset().filter(pk=self.kwargs.get("pk"))
+
+    def get_success_url(self):
+        messages.success(self.request, f"{self.get_object()} Deleted!")
+        return reverse_lazy("tournament-details", kwargs={"pk": self.get_object().tournament.id})
 
 
 @login_required

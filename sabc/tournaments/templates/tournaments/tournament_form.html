@@ -5,11 +5,14 @@
         <form method="POST">
             {% csrf_token %}
             <fieldset class="form-group">
-                <legend class="border-bottom mb-4"> Create Tournament</legend>
+                <legend class="border-bottom mb-4">Tournament Form</legend>
                 {{ form|crispy }}
             </fieldset>
             <div class="form-group">
-                <button class="btn btn-outline-info" type="submit">Save</button>
+                <button class="btn btn-outline-info" type="submit">Save</button>&nbsp;&nbsp;
+                {% if tournament %}
+                    <a class="btn btn-outline-info" href="{% url 'tournament-details' tournament.id %}" role="button">Back</a></button>
+                {% endif %}
             </div>
         </form>
     </div>

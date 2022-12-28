@@ -15,13 +15,15 @@ from django.utils.translation import gettext_lazy
 
 from tournaments.views import (
     annual_awards,
+    TeamCreateView as TeamCreate,
     ResultCreateView as ResultCreate,
+    ResultDeleteView as ResultDelete,
     TournamentListView as TmntList,
     TournamentCreateView as TmntCreate,
     TournamentDetailView as TmntDetail,
     TournamentUpdateView as TmntUpdate,
     TournamentDeleteView as TmntDelete,
-    TeamCreateView as TeamCreate,
+    TeamResultDeleteView as TeamDelete,
 )
 
 from users.views import (
@@ -29,8 +31,8 @@ from users.views import (
     bylaws,
     roster,
     calendar,
-    AnglerDetailView as Profile,
     AnglerEditView as Edit,
+    AnglerDetailView as Profile,
     AnglerRegistrationView as Register,
 )
 
@@ -40,8 +42,9 @@ TMNT_UPDATE = ("tournament/<int:pk>/update/", "tournament-update")
 TMNT_DELETE = ("tournament/<int:pk>/delete/", "tournament-delete")
 
 TEAM_CREATE = ("tournament/<int:pk>/add_team/", "team-create")
-# TEAM_DELETE = ("", "")
+TEAM_DELETE = ("teamresult/<int:pk>/delete/", "teamresult-delete")
 RESULT_CREATE = ("tournament/<int:pk>/add_result/", "result-create")
+RESULT_DELETE = ("result/<int:pk>/delete/", "result-delete")
 
 LOGIN = ("login/", "users/login.html", "login")
 LOGOUT = ("logout/", "users/logout.html", "logout")
@@ -74,8 +77,9 @@ urlpatterns = [
     path(TMNT_UPDATE[0], TmntUpdate.as_view(), name=TMNT_UPDATE[1]),
     path(TMNT_DELETE[0], TmntDelete.as_view(), name=TMNT_DELETE[1]),
     path(RESULT_CREATE[0], ResultCreate.as_view(), name=RESULT_CREATE[1]),
+    path(RESULT_DELETE[0], ResultDelete.as_view(), name=RESULT_DELETE[1]),
     path(TEAM_CREATE[0], TeamCreate.as_view(), name=TEAM_CREATE[1]),
-    # path(TEAM_DELETE[0], TeamCreate.as_view(), name=TEAM_CREATE[1]),
+    path(TEAM_DELETE[0], TeamDelete.as_view(), name=TEAM_DELETE[1]),
     path(LOGIN[0], Login.as_view(template_name=LOGIN[1]), name=LOGIN[2]),
     path(LOGOUT[0], Logout.as_view(template_name=LOGOUT[1]), name=LOGOUT[2]),
     path(PW_RESET[0], PWReset.as_view(template_name=PW_RESET[1]), name=PW_RESET[2]),

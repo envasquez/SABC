@@ -30,7 +30,6 @@ def create_angler(request, name, email, phone):
     angler.phone_number = f"+1{phone}"
     angler.type = "member"
     angler.save()
-    messages.info(request, f"Member: {angler.user.get_full_name()} Created Successfully!")
 
 
 def csv_is_valid(csv_file):

@@ -1,10 +1,35 @@
 # -*- coding: utf-8 -*-
+from django_tables2.utils import A
 from django_tables2.tables import Table
-from django_tables2.columns import Column
+from django_tables2.columns import Column, LinkColumn
 
 from .models import Result, TeamResult
 
 DEFAULT_TABLE_TEMPLATE = "django_tables2/bootstrap4.html"
+
+
+class EditableResultTable(Table):
+    delete = LinkColumn(
+        "result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=()
+    )
+
+    first_name = Column(accessor="angler.user.first_name")
+    last_name = Column(accessor="angler.user.last_name")
+
+    class Meta:
+        model = Result
+        orderable = False
+        template_name = DEFAULT_TABLE_TEMPLATE
+        fields = (
+            "place_finish",
+            "first_name",
+            "last_name",
+            "num_fish",
+            "total_weight",
+            "points",
+            "big_bass_weight",
+            "buy_in",
+        )
 
 
 class ResultTable(Table):
@@ -27,6 +52,24 @@ class ResultTable(Table):
         )
 
 
+class EditableTeamResultTable(Table):
+    delete = LinkColumn(
+        "teamresult-delete", text="delete", args=[A("pk")], orderable=False, empty_values=()
+    )
+
+    class Meta:
+        model = TeamResult
+        orderable = False
+        template_name = DEFAULT_TABLE_TEMPLATE
+        fields = (
+            "place_finish",
+            "team_name",
+            "num_fish",
+            "big_bass_weight",
+            "total_weight",
+        )
+
+
 class TeamResultTable(Table):
     class Meta:
         model = TeamResult
@@ -41,7 +84,7 @@ class TeamResultTable(Table):
         )
 
 
-class TournamentSummary(Table):
+class TournamentSummaryTable(Table):
     total_fish = Column()
     total_weight = Column()
     limits = Column()

@@ -14,8 +14,8 @@ from .models import (
     RuleSet,
     Tournament,
     TeamResult,
-    PayOutMultipliers,
     TournamentPayOut,
+    PayOutMultipliers,
 )
 
 
