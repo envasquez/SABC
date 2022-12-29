@@ -112,3 +112,6 @@ sabc/tournaments/migrations/*
 pylint.out
 # Docker Data
 data/
+
+# CSV Files
+*.csv
