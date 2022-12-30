@@ -11,7 +11,7 @@ from django.contrib.auth.models import User
 from sabc.settings import STATICFILES_DIRS
 
 from .. import get_length_from_weight, get_weight_from_length
-from ..models import TeamResult, Tournament, Result, Ramp
+from ..models import TeamResult, Tournament, Result, Ramp, PayOutMultipliers
 
 from . import (
     create_angler,
@@ -38,15 +38,17 @@ class TestTournaments(TestCase):
 
     def setUp(self):
         """Pre-test set up"""
+        pom = PayOutMultipliers.objects.create()
         lake = choice(load_lakes_from_yaml(LAKES_YAML))
         ramp = choice(Ramp.objects.filter(lake=lake))
-        self.team = {"team": True, "lake": lake, "ramp": ramp}
-        self.indiv = {"team": False, "lake": lake, "ramp": ramp}
+        self.team = {"team": True, "lake": lake, "ramp": ramp, "payout_multiplier": pom}
+        self.indiv = {"team": False, "lake": lake, "ramp": ramp, "payout_multiplier": pom}
         self.paper = {
             "team": False,
             "lake": lake,
             "ramp": ramp,
             "paper": True,
+            "payout_multiplier": pom,
         }
 
     def test_get_weight_by_length(self):

@@ -47,7 +47,7 @@ class PayOutMultipliers(Model):
     place_3 = DecimalField(default=Decimal("4"), max_digits=4, decimal_places=2)
     charity = DecimalField(default=Decimal("2"), max_digits=4, decimal_places=2)
     big_bass = DecimalField(default=Decimal("4"), max_digits=4, decimal_places=2)
-    entry_fee = DecimalField(default=DecimalField("25"), max_digits=5, decimal_places=2)
+    entry_fee = DecimalField(default=Decimal("25"), max_digits=5, decimal_places=2)
     paid_places = SmallIntegerField(default=3)
     per_boat_fee = DecimalField(default=Decimal("50"), max_digits=5, decimal_places=2)
     fee_breakdown = TextField(default="")
