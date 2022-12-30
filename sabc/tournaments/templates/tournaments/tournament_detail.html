@@ -47,7 +47,7 @@
                         <td align="right">Limit:</td>
                         <td align="left">5 fish per angler</td>
                         <td align="right">Entry Fee:</td>
-                        <td align="left">${{ tournament.rules.fee }}/boat</td>
+                        <td align="left">${{ tournament.payout_multiplier.per_boat_fee }}/boat</td>
                         <td align="right">AoY Points:</td>
                         {% if tournament.points %}
                             <td align="left" colspan="2">Yes</td>
@@ -65,7 +65,7 @@
             </p>
             <div class="media-body">
                 <div class="article-metadata">ENTRY FEES & PAYOUT:</div>
-                <h6 class="small">{{ tournament.rules.fee_breakdown | linebreaks }}</h6>
+                <h6 class="small">{{ tournament.payout_multiplier.fee_breakdown | linebreaks }}</h6>
                 <h6 class="small">{{ tournament.rules.payout | linebreaks}}</h6>
                 <div class="article-metadata">BIG BASS POT</div>
                 <h6 class="small">{{ tournament.rules.big_bass_breakdown | linebreaks }}</h6>
@@ -84,7 +84,7 @@
             {% if user.angler.type == "officer" or user.is_staff %}
                 <h2>Payouts</h2>{% render_table payouts %}
             {% endif %}
-            <h2>Statistics</h2>{% render_table catch_stats %}
+            <h2>Tournament Statistics</h2>{% render_table catch_stats %}
             </div>
             {% if tournament.team %}
                 <h2>Team Results</h2>

@@ -19,7 +19,7 @@
                     <tbody>
                         <tr>{{ tournament.description | truncatechars:250 | linebreaks}}</tr>
                         <tr><td align="right">Start time:</td><td align="left">{{ tournament.start }}</td><td align="right">Weigh-in:</td><td align="left">{{ tournament.finish }}</td></tr>
-                        <tr><td align="right">Limit:</td><td align="left">{{ tournament.type | title }} 5 fish per angler</td><td align="right">Entry Fee:</td><td align="left">${{ tournament.fee }} per boat</td></tr>
+                        <tr><td align="right">Limit:</td><td align="left">{{ tournament.type | title }} 5 fish per angler</td><td align="right">Entry Fee:</td><td align="left">${{ tournament.payout_multiplier.per_boat_fee }} per boat</td></tr>
                         <tr>
                         {% if tournament.points %}
                             <td align="right">AoY Points:</td><td align="left">Yes</td><td></td><td></td>

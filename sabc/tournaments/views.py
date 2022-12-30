@@ -65,6 +65,10 @@ class ExtraTournamentContext:
         return PayoutSummary([payouts])
 
     def get_stats_table(self, tid):
+        tournament = Tournament.objects.get(pk=tid)
+        if not tournament.complete:
+            return TournamentSummaryTable([])
+
         limits = Result.objects.filter(tournament=tid, num_fish=5).count()
         zeroes = Result.objects.filter(tournament=tid, num_fish=0, buy_in=False).count()
         buy_ins = Result.objects.filter(tournament=tid, buy_in=True).count()
@@ -95,7 +99,7 @@ class ExtraTournamentContext:
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        tmnt = Tournament.objects.get(pk=self.get_object().id)
+        tmnt = Tournament.objects.get(pk=self.kwargs.get("pk"))
         results = Result.objects.filter(tournament=tmnt).order_by("place_finish")
         team_results = TeamResult.objects.filter(tournament=tmnt).order_by("place_finish")
 
@@ -103,7 +107,7 @@ class ExtraTournamentContext:
         self.extra_context["payouts"] = self.get_payout_table(tmnt)
         self.extra_context["results"] = ResultTable(results)
         self.extra_context["catch_stats"] = (
-            self.get_stats_table(tmnt) if results else TournamentSummaryTable([])
+            self.get_stats_table(tmnt.id) if results else TournamentSummaryTable([])
         )
         self.extra_context["team_results"] = TeamResultTable(team_results)
         self.extra_context["editable_results"] = EditableResultTable(results)
