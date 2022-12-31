@@ -59,9 +59,9 @@ class PayOutMultipliers(Model):
         tmnt_pot = sum([self.place_1, self.place_2, self.place_3])
         return "\n".join(
             [
-                "Breakdown of the <strong>Entry Fee</strong>:",
+                "Breakdown of the Entry Fee:",
                 f"${tmnt_pot:.2f} to the Tournament Pot",
-                f"&nbsp;&nbsp;&nbsp;&nbsp;1st ${self.place_1:.2f}, 2nd ${self.place_2:.2f}, 3rd ${self.place_3:.2f}",
+                f"1st ${self.place_1:.2f}, 2nd ${self.place_2:.2f}, 3rd ${self.place_3:.2f}",
                 f"${self.big_bass:.2f} to the Tournament Big Bass Pot OVER 5 lbs.",
                 f"${self.club:.2f} will go towards Clubs Funds",
                 f"${self.charity:.2f} Charity of the clubs choosing",

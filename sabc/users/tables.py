@@ -2,7 +2,7 @@
 from django_tables2.tables import Table
 from django_tables2.columns import Column
 
-from .models import Angler
+from .models import Angler, Officers
 
 DEFAULT_TABLE_TEMPLATE = "django_tables2/bootstrap4.html"
 
@@ -10,15 +10,15 @@ DEFAULT_TABLE_TEMPLATE = "django_tables2/bootstrap4.html"
 class OfficerTable(Table):
     """Table for displaying Officers"""
 
-    first_name = Column(accessor="user.first_name")
-    last_name = Column(accessor="user.last_name")
-    email = Column(accessor="user.email")
+    first_name = Column(accessor="angler.user.first_name")
+    last_name = Column(accessor="angler.user.last_name")
+    email = Column(accessor="angler.user.email")
 
     class Meta:
         """Default OfficerTable settings"""
 
-        model = Angler
-        fields = ("officer_type", "first_name", "last_name", "email")
+        model = Officers
+        fields = ("position", "first_name", "last_name", "email")
         orderable = False
         template_name = DEFAULT_TABLE_TEMPLATE
 

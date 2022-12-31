@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+from yaml import safe_load
+
 from django.urls import path, reverse
 from django.http import HttpResponseRedirect
 from django.contrib import admin, messages
 from django.shortcuts import render
 from django.contrib.auth.models import User
 
-from users.models import Angler
+from users.models import Angler, Officers
+
+from tournaments.forms import YamlImportForm
 
 from .forms import CsvImportForm
 
@@ -39,10 +43,7 @@ def csv_is_valid(csv_file):
 
 class AnglerAdmin(admin.ModelAdmin):
     def get_urls(self):
-        urls = super().get_urls()
-        new_urls = [path("upload-csv/", self.upload_csv)]
-
-        return new_urls + urls
+        return [path("upload-csv/", self.upload_csv)] + super().get_urls()
 
     def upload_csv(self, request):
         form = CsvImportForm()
@@ -70,4 +71,37 @@ class AnglerAdmin(admin.ModelAdmin):
         return render(request, "admin/csv_upload.html", data)
 
 
-admin.site.register(Angler, AnglerAdmin)
+class OfficersAdmin(admin.ModelAdmin):
+    def get_urls(self):
+        return [path("upload-officers/", self.upload_officers)] + super().get_urls()
+
+    def upload_officers(self, request):
+        form = YamlImportForm()
+        data = {"form": form}
+        if request.method == "POST":
+            results = []
+            file_data = safe_load(request.FILES["yaml_upload"])
+            for year, officer in file_data.items():
+                for position, name in officer.items():
+                    first_name, last_name = name.split(" ")
+                    try:
+                        angler = Angler.objects.get(
+                            user__first_name=first_name, user__last_name=last_name
+                        )
+                    except Exception:
+                        messages.error(request, f"Error: creating {year}:{name} - {position}")
+                        raise
+                    Officers.objects.create(year=year, angler=angler, position=position)
+                    angler.user.is_staff = True
+                    angler.save()
+                    results.append(name)
+            if not results:
+                messages.error(request, f"No officers created - Import some members maybe?")
+            else:
+                messages.info(request, f"Officers created: {results}")
+            return HttpResponseRedirect(reverse("admin:index"))
+        return render(request, "admin/yaml_upload.html", data)
+
+
+admin.site.register(Angler, admin_class=AnglerAdmin)
+admin.site.register(Officers, admin_class=OfficersAdmin)

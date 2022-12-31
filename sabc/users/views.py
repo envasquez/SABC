@@ -13,7 +13,7 @@ from django.contrib.auth.decorators import login_required
 from tournaments.models import Result
 
 from .forms import AnglerUserMultiRegisterForm, AnglerUserMultiUpdateForm
-from .models import Angler
+from .models import Angler, Officers
 from .tables import OfficerTable, MemberTable, GuestTable
 
 
@@ -31,12 +31,12 @@ def calendar(request):
 
 @login_required
 def roster(request):
-    o_table = OfficerTable(Angler.officers.get())
+    o_table = OfficerTable(Officers.objects.filter(year=datetime.date.today().year))
     m_table = MemberTable(Angler.members.get_active_members())
     guests = (
         Angler.objects.filter(type="guest").exclude(user__first_name="").exclude(user__last_name="")
     )
-    g_table = GuestTable(guests) if guests else None
+    g_table = GuestTable(guests) if guests else []
     return render(
         request,
         "users/roster_list.html",
