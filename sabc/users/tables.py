@@ -8,15 +8,11 @@ DEFAULT_TABLE_TEMPLATE = "django_tables2/bootstrap4.html"
 
 
 class OfficerTable(Table):
-    """Table for displaying Officers"""
-
     first_name = Column(accessor="angler.user.first_name")
     last_name = Column(accessor="angler.user.last_name")
     email = Column(accessor="angler.user.email")
 
     class Meta:
-        """Default OfficerTable settings"""
-
         model = Officers
         fields = ("position", "first_name", "last_name", "email")
         orderable = False
@@ -30,15 +26,11 @@ class OfficerTable(Table):
 
 
 class MemberTable(Table):
-    """Table for displaying Members"""
-
     first_name = Column(accessor="user.first_name")
     last_name = Column(accessor="user.last_name")
     email = Column(accessor="user.email")
 
     class Meta:
-        """Default MemberTable settings"""
-
         model = Angler
         fields = ("last_name", "first_name", "email", "phone_number")
         orderable = False
@@ -49,15 +41,11 @@ class MemberTable(Table):
 
 
 class GuestTable(Table):
-    """Table for displaying guests"""
-
     first_name = Column(accessor="user.first_name")
     last_name = Column(accessor="user.last_name")
     email = Column(accessor="user.email")
 
     class Meta:
-        """Default GuestTable settings"""
-
         model = Angler
         fields = ("first_name", "last_name", "email")
         orderable = False
