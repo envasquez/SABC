@@ -22,13 +22,13 @@ class OfficerTable(Table):
 
 
 class MemberTable(Table):
+    email = Column(accessor="user.email")
     first_name = Column(accessor="user.first_name")
     last_name = Column(accessor="user.last_name")
-    email = Column(accessor="user.email")
 
     class Meta:
         model = Angler
-        fields = ("last_name", "first_name", "email", "phone_number")
+        fields = ("first_name", "last_name", "email", "phone_number")
         orderable = False
         template_name = DEFAULT_TABLE_TEMPLATE
 
@@ -37,9 +37,9 @@ class MemberTable(Table):
 
 
 class GuestTable(Table):
+    email = Column(accessor="user.email")
     first_name = Column(accessor="user.first_name")
     last_name = Column(accessor="user.last_name")
-    email = Column(accessor="user.email")
 
     class Meta:
         model = Angler
