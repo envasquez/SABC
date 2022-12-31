@@ -10,19 +10,15 @@ DEFAULT_TABLE_TEMPLATE = "django_tables2/bootstrap4.html"
 class OfficerTable(Table):
     first_name = Column(accessor="angler.user.first_name")
     last_name = Column(accessor="angler.user.last_name")
-    email = Column(accessor="angler.user.email")
 
     class Meta:
         model = Officers
-        fields = ("position", "first_name", "last_name", "email")
+        fields = ("position", "first_name", "last_name")
         orderable = False
         template_name = DEFAULT_TABLE_TEMPLATE
 
-    def render_phone_number(self, record):
-        return record.phone_number.as_national
-
     def render_officer_type(self, record):
-        return record.officer_type.replace("-", " ").replace("assistant", "asst.").title()
+        return record.position.replace("-", " ").replace("assistant", "asst.").title()
 
 
 class MemberTable(Table):
