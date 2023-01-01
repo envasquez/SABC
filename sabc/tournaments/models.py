@@ -428,5 +428,7 @@ class TeamResult(Model):
                 "penalty_weight",
             ]:
                 setattr(self, attr, getattr(self.result_1, attr))
+        if any([self.result_1.disqualified, self.result_2.disqualified]):
+            self.disqualified = True
         self.team_name = self.get_team_name()
         super().save(*args, **kwargs)
