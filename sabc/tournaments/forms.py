@@ -19,6 +19,8 @@ class ResultForm(ModelForm):
             "angler",
             "buy_in",
             "num_fish",
+            "dq_points",
+            "disqualified",
             "total_weight",
             "num_fish_dead",
             "big_bass_weight",

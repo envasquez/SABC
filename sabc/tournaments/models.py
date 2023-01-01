@@ -157,25 +157,43 @@ class TournamentManager(Manager):
     def set_places(self, tournament):
         def _set_places(query):
             prev = None
-            zeros = [q for q in query if not q.buy_in and q.total_weight == Decimal("0")]
-            buy_ins = [q for q in query if q.buy_in]
-            weighed_fish = [q for q in query if not q.buy_in and q.total_weight > Decimal("0")]
+            dqs = [q for q in query if q.disqualified]
+            zeros = [
+                q
+                for q in query
+                if not q.buy_in and q.total_weight == Decimal("0") and not q.disqualified
+            ]
+            buy_ins = [q for q in query if q.buy_in and not q.disqualified]
+            weighed_fish = [
+                q
+                for q in query
+                if not q.buy_in and q.total_weight > Decimal("0") and not q.disqualified
+            ]
+            # Results for anglers "In the money"
             for result in weighed_fish[: tournament.payout_multiplier.paid_places]:
                 result.place_finish = 1 if not prev else prev.place_finish + 1
                 result.save()
                 prev = result
+            # All other anglers who weighed in fish (i.e. did not zero)
             for result in weighed_fish[tournament.payout_multiplier.paid_places :]:
                 tie = result.total_weight == prev.total_weight
                 result.place_finish = prev.place_finish + 1 if not tie else prev.place_finish
                 result.save()
                 prev = result
             place = prev.place_finish + 1 if prev else 1
+            # All of the anglers who fished, but caught nothing
             for result in zeros:
                 result.place_finish = place
                 result.save()
                 prev = result
-            place = place + 1 if len(zeros) != 0 else place
+            place = place + 1 if zeros else place
+            # All of the anglers that "Bought-in"
             for result in buy_ins:
+                result.place_finish = place
+                result.save()
+            # Anglers who were disqualified
+            place = place + 1 if buy_ins else place
+            for result in dqs:
                 result.place_finish = place
                 result.save()
 
@@ -192,10 +210,12 @@ class TournamentManager(Manager):
         if not tournament.points:
             return
 
+        # Anglers that weighed in fish
         query = {
             "tournament": tournament,
-            "angler__type__in": ["officer", "member"],
+            "angler__type": "member",
             "total_weight__gt": 0,
+            "disqualified": False,
         }
         points = tournament.max_points
         previous = None
@@ -205,8 +225,22 @@ class TournamentManager(Manager):
             result.save()
             previous = result
             points -= 1
-
-        query = {"tournament": tournament, "angler__type__in": ["officer", "member"], "num_fish": 0}
+        # Anglers who were disqualified, but points awarded were allowed
+        query = {
+            "dq_points": True,
+            "tournament": tournament,
+            "angler__type": "member",
+            "disqualified": True,
+        }
+        for result in Result.objects.filter(**query):
+            result.points = previous.points - 3 if previous else tournament.max_points - 3
+            result.save()
+        # Anglers that did not weigh in fish or bought in
+        query = {
+            "tournament": tournament,
+            "angler__type": "member",
+            "num_fish": 0,
+        }
         for result in Result.objects.filter(**query):
             result.points = previous.points - 2 if previous else 0
             if result.buy_in:
@@ -217,7 +251,7 @@ class TournamentManager(Manager):
         return (
             Result.objects.filter(
                 tournament=tournament,
-                angler__type__in=["officer", "member"],
+                angler__type="member",
                 big_bass_weight__gte=Decimal("5"),
             )
             .order_by("-big_bass_weight")
@@ -227,8 +261,8 @@ class TournamentManager(Manager):
     def get_payouts(self, tournament):
         bb_query = {
             "tournament": tournament,
+            "angler__type": "member",
             "big_bass_weight__gte": 5.0,
-            "angler__type__in": ["officer", "member"],
         }
         bb_exists = Result.objects.filter(**bb_query).count() > 0
         num_anglers = Result.objects.filter(tournament=tournament).count()
@@ -289,9 +323,11 @@ class Result(Model):
     buy_in = BooleanField(default=False)
     points = SmallIntegerField(default=0, null=True, blank=True)
     num_fish = SmallIntegerField(default=0)
+    dq_points = BooleanField(default=False)
     tournament = ForeignKey(Tournament, on_delete=CASCADE, null=False, blank=False)
     place_finish = SmallIntegerField(default=0)
     total_weight = DecimalField(default=Decimal("0"), max_digits=5, decimal_places=2)
+    disqualified = BooleanField(default=False)
     num_fish_dead = SmallIntegerField(default=0)
     num_fish_alive = SmallIntegerField(default=0, null=True, blank=True)
     penalty_weight = DecimalField(
@@ -344,6 +380,7 @@ class TeamResult(Model):
     num_fish = SmallIntegerField(default=0, null=True, blank=True)
     team_name = CharField(default="", max_length=1024, null=True, blank=True)
     place_finish = SmallIntegerField(default=0, null=True, blank=True)
+    disqualified = BooleanField(default=False)
     total_weight = DecimalField(
         default=Decimal("0"), max_digits=5, decimal_places=2, null=True, blank=True
     )

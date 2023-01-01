@@ -17,6 +17,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.decorators import login_required
 
+from users.models import Officers
+
 from .forms import TournamentForm, ResultForm, TeamForm
 from .tables import (
     Aoy as AoyTable,
@@ -30,17 +32,6 @@ from .tables import (
     EditableTeamResultTable,
 )
 from .models import Tournament, Result, TeamResult
-
-OFFICERS = [
-    "president",
-    "vice-president",
-    "secretary",
-    "treasurer",
-    "social-media",
-    "tournament-director",
-    "assistant-tournament-director",
-    "technology-director",
-]
 
 
 #
@@ -129,12 +120,10 @@ class TournamentCreateView(
     success_message = "Tournament successfully created!"
 
     def test_func(self):
-        return any(
-            [
-                self.request.user.angler.officer_type in OFFICERS,
-                self.request.user.is_staff,
-            ]
-        )
+        is_officer = Officers.objects.filter(
+            year=datetime.date.today().year, angler=self.request.user.angler
+        ).count()
+        return is_officer != 0 or self.request.user.is_staff
 
 
 class TournamentUpdateView(
@@ -145,12 +134,10 @@ class TournamentUpdateView(
     success_message = "Tournament successfully updated!"
 
     def test_func(self):
-        return any(
-            [
-                self.request.user.angler.officer_type in OFFICERS,
-                self.request.user.is_staff,
-            ]
-        )
+        is_officer = Officers.objects.filter(
+            year=datetime.date.today().year, angler=self.request.user.angler
+        ).count()
+        return is_officer != 0 or self.request.user.is_staff
 
 
 class TournamentDeleteView(
@@ -159,12 +146,10 @@ class TournamentDeleteView(
     model = Tournament
 
     def test_func(self):
-        return any(
-            [
-                self.request.user.angler.officer_type in OFFICERS,
-                self.request.user.is_staff,
-            ]
-        )
+        is_officer = Officers.objects.filter(
+            year=datetime.date.today().year, angler=self.request.user.angler
+        ).count()
+        return is_officer != 0 or self.request.user.is_staff
 
     def get_queryset(self):
         return super().get_queryset().filter(pk=self.kwargs.get("pk"))
@@ -193,12 +178,10 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMi
         return initial
 
     def test_func(self):
-        return any(
-            [
-                self.request.user.angler.officer_type in OFFICERS,
-                self.request.user.is_staff,
-            ]
-        )
+        is_officer = Officers.objects.filter(
+            year=datetime.date.today().year, angler=self.request.user.angler
+        ).count()
+        return is_officer != 0 or self.request.user.is_staff
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -238,12 +221,10 @@ class ResultDeleteView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMi
         return context
 
     def test_func(self):
-        return any(
-            [
-                self.request.user.angler.officer_type in OFFICERS,
-                self.request.user.is_staff,
-            ]
-        )
+        is_officer = Officers.objects.filter(
+            year=datetime.date.today().year, angler=self.request.user.angler
+        ).count()
+        return is_officer != 0 or self.request.user.is_staff
 
     def get_queryset(self):
         return super().get_queryset().filter(pk=self.kwargs.get("pk"))
@@ -272,12 +253,10 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixi
         return context
 
     def test_func(self):
-        return any(
-            [
-                self.request.user.angler.officer_type in OFFICERS,
-                self.request.user.is_staff,
-            ]
-        )
+        is_officer = Officers.objects.filter(
+            year=datetime.date.today().year, angler=self.request.user.angler
+        ).count()
+        return is_officer != 0 or self.request.user.is_staff
 
     def form_valid(self, form):
         tid = self.get_initial()["tournament"]
@@ -314,12 +293,10 @@ class TeamResultDeleteView(
         return context
 
     def test_func(self):
-        return any(
-            [
-                self.request.user.angler.officer_type in OFFICERS,
-                self.request.user.is_staff,
-            ]
-        )
+        is_officer = Officers.objects.filter(
+            year=datetime.date.today().year, angler=self.request.user.angler
+        ).count()
+        return is_officer != 0 or self.request.user.is_staff
 
     def get_queryset(self):
         return super().get_queryset().filter(pk=self.kwargs.get("pk"))
