@@ -36,8 +36,8 @@ test-webapp:
 lint: clean clean-db
 	python3 -m pylint --verbose --rcfile=.pylintrc --output=pylint.out sabc/tournaments; cat pylint.out
 
-test: clean clean-db
-	# python3 sabc/manage.py makemigrations && python3 sabc/manage.py migrate --run-syncdb --fake
+test: clean-all
+	python3 sabc/manage.py makemigrations && python3 sabc/manage.py migrate
 	python3 -m coverage run --branch --source=sabc/tournaments sabc/./manage.py test --verbosity=2 sabc
 	python3 -m coverage report
 
