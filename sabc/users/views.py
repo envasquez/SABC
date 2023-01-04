@@ -60,7 +60,6 @@ class AnglerRegistrationView(CreateView, SuccessMessageMixin):
         angler = form["angler"].save(commit=False)
         angler.user = user
         angler.save()
-
         return redirect("login")
 
 
