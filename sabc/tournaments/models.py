@@ -314,9 +314,9 @@ class Tournament(Model):
 
     def save(self, *args, **kwargs):
         if not self.rules:
-            self.rules = RuleSet.objects.create()
+            self.rules, _ = RuleSet.objects.get_or_create(year=CURRENT_YEAR)
         if not self.payout_multiplier:
-            self.payout_multiplier = PayOutMultipliers.objects.get_or_create(year=self.year)
+            self.payout_multiplier, _ = PayOutMultipliers.objects.get_or_create(year=self.year)
 
         if self.lake:
             self.paper = self.lake.paper
