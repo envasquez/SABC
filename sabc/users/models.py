@@ -81,20 +81,5 @@ class Officers(Model):
     angler = ForeignKey(Angler, on_delete=PROTECT)
     position = CharField(choices=OfficerPositions.choices, max_length=50)
 
-    def get(self, *args, **kwargs):
-        """Get officers, defined by a custom ordering hierarchy"""
-        query = Officers.objects.filter(year=kwargs.get("year"))
-        return query.annotate(
-            custom_order=Case(
-                When(officer_type="president", then=Value(0)),
-                When(officer_type="vice-president", then=Value(1)),
-                When(officer_type="secretary", then=Value(2)),
-                When(officer_type="treasurer", then=Value(3)),
-                When(officer_type="tournament-director", then=Value(4)),
-                When(officer_type="assistant-tournament-director", then=Value(5)),
-                When(officer_type="technology-director", then=Value(6)),
-            )
-        ).order_by("custom_order")
-
     def __str__(self):
         return f"{self.year}: {self.angler} - {self.position}"
