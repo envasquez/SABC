@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.conf import settings
-from django.urls import path
+from django.urls import path, include
 from django.contrib import admin
 from django.contrib.auth.views import (
     LoginView as Login,
@@ -36,6 +36,8 @@ from users.views import (
     AnglerRegistrationView as Register,
 )
 
+from polls.views import LakePollListView as PollList, LakePollView as Poll
+
 TMNT_CREATE = ("tournament/new/", "tournament-create")
 TMNT_DETAIL = ("tournament/<int:pk>/", "tournament-details")
 TMNT_UPDATE = ("tournament/<int:pk>/update/", "tournament-update")
@@ -63,6 +65,8 @@ PW_COMPLETE = (
 
 urlpatterns = [
     path("", TmntList.as_view(), name="sabc-home"),
+    path("polls/", PollList.as_view(), name="polls"),
+    path("polls/<int:pid>/", Poll.as_view(), name="poll"),
     path("about/", about, name="about"),
     path("admin/", admin.site.urls),
     path("bylaws/", bylaws, name="bylaws"),
@@ -87,6 +91,7 @@ urlpatterns = [
     path(PW_CONFIRM[0], PWConfirm.as_view(template_name=PW_CONFIRM[1]), name=PW_CONFIRM[2]),
     path(PW_COMPLETE[0], PWComplete.as_view(template_name=PW_COMPLETE[1]), name=PW_COMPLETE[2]),
 ]
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

@@ -34,9 +34,6 @@ from .tables import (
 from .models import Tournament, Result, TeamResult
 
 
-#
-# Tournaments
-#
 class TournamentListView(ListView):
     model = Tournament
     ordering = ["-date"]  # Newest tournament first
@@ -156,18 +153,14 @@ class TournamentDeleteView(
 
     def get_success_url(self):
         messages.success(self.request, f"{self.get_object().name} Deleted!")
-        # return reverse_lazy("sabc-home", kwargs={"pk": self.get_object().tournament.id})
         return reverse_lazy("sabc-home")
 
     def delete(self, request, *args, **kwargs):
         obj = self.get_object()
-        messages.success(self.request, self.success_message % obj.name)
+        messages.success(request, self.success_message % obj.name)
         return super().delete(request, *args, **kwargs)
 
 
-#
-# Results
-#
 class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Result
     form_class = ResultForm
@@ -234,9 +227,6 @@ class ResultDeleteView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMi
         return reverse_lazy("tournament-details", kwargs={"pk": self.get_object().tournament.id})
 
 
-#
-# Teams
-#
 class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = TeamResult
     form_class = TeamForm

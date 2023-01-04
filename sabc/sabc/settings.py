@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 from django.contrib.messages import constants as messages
 
@@ -12,19 +13,19 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 # Application definition
 INSTALLED_APPS = [
+    "polls",
+    "users",
     "django_nose",
+    "tournaments",
+    "crispy_forms",
     "django_tables2",
     "phonenumber_field",
-    "django.contrib.admin",
-    "crispy_forms",
     "django.contrib.auth",
-    "django.contrib.contenttypes",
+    "django.contrib.admin",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "users",
-    "tournaments",
-    # "polls",
+    "django.contrib.contenttypes",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
