@@ -376,7 +376,7 @@ class Result(Model):
         super().save(*args, **kwargs)
 
 
-class TeamResult(Model):
+class TeamResult(Model):  # pylint: disable=too-many-instance-attributes
     result_1 = ForeignKey(Result, on_delete=CASCADE)
     result_2 = ForeignKey(Result, null=True, blank=True, related_name="+", on_delete=CASCADE)
     tournament = ForeignKey(Tournament, on_delete=CASCADE)
