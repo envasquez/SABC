@@ -26,8 +26,8 @@ docker: DEPLOYMENT_HOST=db
 docker: clean-all
 	docker compose up -d --build --force-recreate
 
-docker-test-webapp: DEPLOYMENT_HOST=db
-docker-test-webapp:
+test-webapp: DEPLOYMENT_HOST=db
+test-webapp:
 	docker-compose down
 	docker volume rm sabc_sabc_app || true
 	docker image rm sabc_sabc || true
