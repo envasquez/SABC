@@ -1,40 +1,44 @@
 {% extends "users/base.html" %}
 {% block content %}
 {% for tournament in tournaments %}
-    <div class="media-body">
-        <div class="article-metadata"><a class="article-title" href="{% url 'tournament-details' tournament.id %}">{{ tournament.date }} - {{ tournament.name }}</a></div>
-        <h2>
-        {% if tournament.lake %}
-            <a class="article-title" href="{% url 'tournament-details' tournament.id %}">{{ tournament.lake | upper }}</a>
-        {% else %}
-            <a class="article-title" href="{% url 'tournament-details' tournament.id %}">Lake: To Be Voted On ...</a>
-        {% endif %}
-        {% if tournament.complete %}
-            <small class="text-muted ml-2">- Complete</small>
-        {% endif %}
-        </h2>
-        <div align="center">{{ tournament.ramp.google_maps | default:'<img src="static/tbd.jpg" height="250">'| safe}}</div>
+    <article class="media content-section">
+        <div class="media-body">
+            <div class="article-metadata">
+                <a class="article-title" href="{% url 'tournament-details' tournament.id %}">{{ tournament.date }} - {{ tournament.name }}</a>
+            </div>
+            <h2>
+                {% if tournament.lake %}
+                    <a class="article-title" href="{% url 'tournament-details' tournament.id %}">{{ tournament.lake | upper }}</a>
+                {% else %}
+                    <a class="article-title" href="{% url 'tournament-details' tournament.id %}">Lake: To Be Voted On ...</a>
+                {% endif %}
+                {% if tournament.complete %}
+                    <small class="text-muted ml-2">- Complete</small>
+                {% endif %}
+            </h2>
             <p class="article-content">
+                <div align="center">{{ tournament.ramp.google_maps | default:'<img src="static/tbd.jpg" height="250">'| safe}}</div>
                 <table class="table">
                     <tbody>
                         <tr>{{ tournament.description | truncatechars:250 | linebreaks}}</tr>
                         <tr><td align="right">Start time:</td><td align="left">{{ tournament.start }}</td><td align="right">Weigh-in:</td><td align="left">{{ tournament.finish }}</td></tr>
                         <tr><td align="right">Limit:</td><td align="left">{{ tournament.type | title }} 5 fish per angler</td><td align="right">Entry Fee:</td><td align="left">${{ tournament.payout_multiplier.per_boat_fee }} per boat</td></tr>
                         <tr>
-                        {% if tournament.points %}
-                            <td align="right">AoY Points:</td><td align="left">Yes</td><td></td><td></td>
-                        {% else %}
-                            <td align="right">AoY Points:</td><td align="left">No</td>
-                        {% endif %}
-                        {% if tournament.paper %}
-                            <td align="right">Paper Tournament:</td><td align="left">Yes</td>
-                        {% else %}
-                            <td></td><td></td>
-                        {% endif %}
-                      </tr>
+                            {% if tournament.points %}
+                                <td align="right">AoY Points:</td><td align="left">Yes</td><td></td><td></td>
+                            {% else %}
+                                <td align="right">AoY Points:</td><td align="left">No</td>
+                            {% endif %}
+                            {% if tournament.paper %}
+                                <td align="right">Paper Tournament:</td><td align="left">Yes</td>
+                            {% else %}
+                                <td></td><td></td>
+                            {% endif %}
+                        </tr>
                     </tbody>
                 </table>
             </p>
-      </div>
+        </div>
+    </article>
 {% endfor %}
 {% endblock content %}
