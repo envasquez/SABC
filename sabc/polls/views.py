@@ -21,17 +21,6 @@ class LakePollListView(ListView, LoginRequiredMixin, UserPassesTestMixin, Succes
 class LakePollView(View, LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin):
     model = LakePoll
 
-    def _get_fake_test_results(self, poll):  # Testing DEMO function - will remove later ...
-        import random
-
-        results = [["Lake", "Votes"]]
-        sample_lakes = ["travis", "lbj", "buchanan", "belton", "inks"]
-        for choice in poll.choices.all():
-            if choice.name in sample_lakes:
-                count = random.randint(2, 16)
-                results.append([choice.name, count])
-        return results
-
     def get_results(self, poll):
         results = [["Lake", "Votes"]]
         for choice in poll.choices.all():
@@ -46,7 +35,11 @@ class LakePollView(View, LoginRequiredMixin, UserPassesTestMixin, SuccessMessage
         return render(
             request,
             template_name="polls/poll.html",
-            context={"poll": poll, "results": self.get_results(poll=poll), "voted": voted},
+            context={
+                "poll": poll,
+                "results": self.get_results(poll=poll),
+                "voted": voted,
+            },
         )
 
     def post(self, request, pid):
