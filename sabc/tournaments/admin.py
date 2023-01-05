@@ -57,7 +57,7 @@ class PayoutMultiplierAdmin(admin.ModelAdmin):
         if request.method == "POST":
             poms = safe_load(request.FILES["yaml_upload"])
             for year, pom in poms.items():
-                PayOutMultipliers.objects.create(
+                PayOutMultipliers.objects.update_or_create(
                     year=year,
                     club=pom["club"],
                     charity=pom["charity"],
