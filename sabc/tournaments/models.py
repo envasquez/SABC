@@ -8,6 +8,7 @@ from django.db.models import (
     Model,
     Manager,
     CASCADE,
+    PROTECT,
     TimeField,
     CharField,
     TextField,
@@ -301,7 +302,7 @@ class Tournament(Model):
     description = TextField(default="TBD")
     facebook_url = CharField(max_length=512, default=DEFAULT_FACEBOOK_URL)
     instagram_url = CharField(max_length=512, default=DEFAULT_INSTAGRAM_URL)
-    payout_multiplier = ForeignKey(PayOutMultipliers, null=True, blank=True, on_delete=CASCADE)
+    payout_multiplier = ForeignKey(PayOutMultipliers, null=True, blank=True, on_delete=PROTECT)
 
     objects = Manager()
     results = TournamentManager()
@@ -369,10 +370,12 @@ class Result(Model):
             self.num_fish_alive = 0
             self.penalty_weight = Decimal("0")
             self.big_bass_weight = Decimal("0")
+
         self.big_bass_weight = self.big_bass_weight
         self.penalty_weight = self.num_fish_dead * self.tournament.rules.dead_fish_penalty
-        self.total_weight = self.total_weight - self.penalty_weight
         self.num_fish_alive = self.num_fish - self.num_fish_dead
+        if self._state.adding:
+            self.total_weight = self.total_weight - self.penalty_weight
         super().save(*args, **kwargs)
 
 
