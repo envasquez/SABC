@@ -63,13 +63,20 @@
                     {% endif %}
                     {% block content %}{% endblock %}
                 </div>
-                <div class="col-md-4">
-                    <ul class="list-group">
-                        <li class="list-group-item list-group-item-light"><b>Next Meeting:</b> INFO</li>
-                        <li class="list-group-item list-group-item-light"><b>Next Tournament:</b>INFO</li>
-                        <li class="list-group-item list-group-item-light"><b>Current Big Bass Pot:</b>INFO</li>
-                    </ul>
-                </div>
+                {% if index_html %}
+                    <div class="col-md-4">
+                        <ul class="list-group">
+                            <li class="list-group-item list-group-item-light"><b>Next Meeting:</b><br />
+                                {{ next_meeting }}
+                                <a href="https://goo.gl/maps/JcfDTmX6g5P1Ai2j6" target="_blank" rel="noopener noreferrer">
+                                    Beto's Restaurant & Bar
+                                </a>
+                            </li>
+                            <li class="list-group-item list-group-item-light"><b>Next Tournament:</b> {{ next_tournament }}</li>
+                            <li class="list-group-item list-group-item-light"><b>Current Big Bass Pot:</b> $172</li>
+                        </ul>
+                    </div>
+                {% endif %}
                 {% if is_paginated %}
                     {% if page_obj.has_previous %}
                         <a class="btn btn-outline-info mb-4" href="?page=1">First</a>

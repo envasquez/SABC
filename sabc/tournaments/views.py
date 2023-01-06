@@ -19,6 +19,8 @@ from django.contrib.auth.decorators import login_required
 
 from users.models import Officers
 
+from . import NEXT_MEETING, NEXT_TOURNAMENT
+
 from .forms import TournamentForm, ResultForm, TeamForm
 from .tables import (
     Aoy as AoyTable,
@@ -40,6 +42,13 @@ class TournamentListView(ListView):
     paginate_by = 3
     template_name = "users/index.html"
     context_object_name = "tournaments"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["index_html"] = True
+        context["next_meeting"] = NEXT_MEETING
+        context["next_tournament"] = NEXT_TOURNAMENT
+        return context
 
 
 class ExtraTournamentContext:
@@ -100,6 +109,7 @@ class ExtraTournamentContext:
         self.extra_context["team_results"] = TeamResultTable(team_results)
         self.extra_context["editable_results"] = EditableResultTable(results)
         self.extra_context["editable_team_results"] = EditableTeamResultTable(team_results)
+
         context.update(self.extra_context)
         return context
 
@@ -354,7 +364,7 @@ def get_heavy_stringer(year=datetime.date.today().year):
             "weight": result.total_weight,
             "fish": result.num_fish,
             "tournament": result.tournament,
-        }
+        },
     ]
 
 
@@ -369,5 +379,9 @@ def get_big_bass(year=datetime.date.today().year):
     if not result:
         return []
     return [
-        {"angler": result.angler, "weight": result.big_bass_weight, "tournament": result.tournament}
+        {
+            "angler": result.angler,
+            "weight": result.big_bass_weight,
+            "tournament": result.tournament,
+        },
     ]
