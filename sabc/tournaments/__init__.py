@@ -1,8 +1,16 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=line-too-long
 import datetime
+import calendar
+
+from pathlib import Path
 from decimal import Decimal
-from calendar import monthcalendar
+
+from yaml import safe_load
+
+from django.utils import timezone
+
+from sabc.settings import STATICFILES_DIRS
 
 
 RULE_INFO = """
@@ -191,6 +199,52 @@ def get_last_sunday(month=None):
     """
     if month is None:
         month = datetime.date.today().month
-    sunday = max(week[-1] for week in monthcalendar(datetime.date.today().year, month))
+    sunday = max(week[-1] for week in calendar.monthcalendar(datetime.date.today().year, month))
     sunday = sunday if sunday >= 10 else f"0{sunday}"
     return f"{datetime.date.today().year}-{month}-{sunday}"
+
+
+MEETINGS = Path(STATICFILES_DIRS[0]) / "meetings.yaml"
+TOURNAMENTS = Path(STATICFILES_DIRS[0]) / "tournaments.yaml"
+
+
+def get_next_meeting():
+    year = timezone.now().year
+    month_num = timezone.now().month
+    month_name = calendar.month_name[month_num]
+
+    meetings = None
+    with open(str(MEETINGS), "r", encoding="utf-8") as stream:
+        meetings = safe_load(stream)
+    if not meetings:
+        return " -- "
+
+    mtg_date = datetime.datetime(year, month_num, meetings[year][month_name])
+    if datetime.datetime.now() > mtg_date:  # See if meeting already passed for this month
+        month_num += 1
+        month_name = calendar.month_name[month_num]
+        mtg_date = datetime.datetime(year, month_num, meetings[year][month_name])
+    return f"{mtg_date.strftime('%D')} @ 7PM"
+
+
+def get_next_tournament():
+    year = timezone.now().year
+    month_num = timezone.now().month
+    month_name = calendar.month_name[month_num]
+
+    tournaments = None
+    with open(str(TOURNAMENTS), "r", encoding="utf-8") as stream:
+        tournaments = safe_load(stream)
+    if not tournaments:
+        return " -- "
+
+    tournament = datetime.datetime(year, month_num, tournaments[year][month_name])
+    if datetime.datetime.now() > tournament:  # See if tournament already passed for this month
+        month_num += 1
+        month_name = calendar.month_name[month_num]
+        tournament = datetime.datetime(year, month_num, tournaments[year][month_name])
+    return f"{tournament.strftime('%D')}"
+
+
+NEXT_MEETING = get_next_meeting()
+NEXT_TOURNAMENT = get_next_tournament()
