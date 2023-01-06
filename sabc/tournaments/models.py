@@ -7,7 +7,6 @@ from decimal import Decimal
 from django.db.models import (
     Model,
     Manager,
-    CASCADE,
     PROTECT,
     TimeField,
     CharField,
@@ -144,7 +143,7 @@ class Lake(Model):
 
 
 class Ramp(Model):
-    lake = ForeignKey(Lake, on_delete=CASCADE)
+    lake = ForeignKey(Lake, on_delete=PROTECT)
     name = CharField(max_length=128)
     google_maps = CharField(default="", max_length=4096)
 
@@ -289,14 +288,14 @@ class Tournament(Model):
     date = DateField(default=get_last_sunday)
     year = SmallIntegerField(default=datetime.date.today().year)
     team = BooleanField(default=True)
-    lake = ForeignKey(Lake, null=True, blank=True, on_delete=CASCADE)
-    ramp = ForeignKey(Ramp, null=True, blank=True, on_delete=CASCADE)
-    rules = ForeignKey(RuleSet, null=True, blank=True, on_delete=CASCADE)
+    lake = ForeignKey(Lake, null=True, blank=True, on_delete=PROTECT)
+    ramp = ForeignKey(Ramp, null=True, blank=True, on_delete=PROTECT)
+    rules = ForeignKey(RuleSet, null=True, blank=True, on_delete=PROTECT)
     paper = BooleanField(default=False)
     start = TimeField(default=DEFAULT_START_TIME)
     finish = TimeField(default=DEFAULT_END_TIME)
     points = BooleanField(default=True)
-    payout = ForeignKey(TournamentPayOut, null=True, blank=True, on_delete=CASCADE)
+    payout = ForeignKey(TournamentPayOut, null=True, blank=True, on_delete=PROTECT)
     complete = BooleanField(default=False)
     max_points = SmallIntegerField(default=100)
     description = TextField(default="TBD")
@@ -325,12 +324,12 @@ class Tournament(Model):
 
 
 class Result(Model):
-    angler = ForeignKey(Angler, on_delete=CASCADE)
+    angler = ForeignKey(Angler, on_delete=PROTECT)
     buy_in = BooleanField(default=False)
     points = SmallIntegerField(default=0, null=True, blank=True)
     num_fish = SmallIntegerField(default=0)
     dq_points = BooleanField(default=False)
-    tournament = ForeignKey(Tournament, on_delete=CASCADE, null=False, blank=False)
+    tournament = ForeignKey(Tournament, on_delete=PROTECT, null=False, blank=False)
     place_finish = SmallIntegerField(default=0)
     total_weight = DecimalField(default=Decimal("0"), max_digits=5, decimal_places=2)
     disqualified = BooleanField(default=False)
@@ -380,9 +379,9 @@ class Result(Model):
 
 
 class TeamResult(Model):  # pylint: disable=too-many-instance-attributes
-    result_1 = ForeignKey(Result, on_delete=CASCADE)
-    result_2 = ForeignKey(Result, null=True, blank=True, related_name="+", on_delete=CASCADE)
-    tournament = ForeignKey(Tournament, on_delete=CASCADE)
+    result_1 = ForeignKey(Result, on_delete=PROTECT)
+    result_2 = ForeignKey(Result, null=True, blank=True, related_name="+", on_delete=PROTECT)
+    tournament = ForeignKey(Tournament, on_delete=PROTECT)
 
     buy_in = BooleanField(default=False, null=True, blank=True)
     num_fish = SmallIntegerField(default=0, null=True, blank=True)
