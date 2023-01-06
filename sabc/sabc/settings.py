@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     "crispy_forms",
     "django_tables2",
     "phonenumber_field",
+    "django_extensions",
     "django.contrib.auth",
     "django.contrib.admin",
     "django.contrib.sessions",

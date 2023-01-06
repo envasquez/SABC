@@ -6,6 +6,7 @@ dill==0.3.5.1
 Django>=4.0.7
 django-betterforms==2.0.0
 django-crispy-forms==1.13.0
+django-extensions==3.2.1
 django-nose==1.4.7
 django-phonenumber-field==6.3.0
 django-phonenumbers==1.0.1
