@@ -13,6 +13,12 @@
                     <p class="text-secondary"><b>username:</b> {{ user.username }}</p>
                     <p class="text-secondary"><b>phone:</b> {{ user.angler.phone_number.as_national }}</p>
                     <p class="text-secondary"><b>email:</b> {{ user.email }}</p>
+                    {% if officer_pos %}
+                        <p class="text-secondary"><b>officer:</b> {{ officer_pos }}</p>
+                    {% endif %}
+                    {% if user.is_superuser %}
+                        <p class="text-secondary"><b>superuser:</b> yes</p>
+                    {% endif %}
             </div>
         </div>
     </article>
