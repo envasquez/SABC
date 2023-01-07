@@ -1,33 +1,36 @@
 {% extends "users/base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
-<div class="media">
-    <img class="rounded-circle account-img" src="{{ user.angler.image.url }}">
-    <div class="media-body">
-      <h2 class="account-heading">{{ user.first_name }} {{ user.last_name }}</h2>
-      <p class="text-secondary"><h4>{{ user.angler.type }}</h4></p>
-      {% if user.is_authenticated and user.angler.type == 'officer' %}
-        <p class="text-secondary"><h5>{{ user.angler.officer_type }}</h5></p>
-      {% endif %}
-      <p class="text-secondary"><b>username:</b> {{ user.username }}</p>
-      <p class="text-secondary"><b>phone:</b> {{ user.angler.phone_number.as_national }}</p>
-      <p class="text-secondary"><b>email:</b> {{ user.email }}</p>
-    </div>
-    <div class="col-md-6">
+    <article class="media content-section">
+        <div class="media-body">
+            <img class="rounded-circle account-img" src="{{ user.angler.image.url }}">
+            <div class="media-body">
+                <h2 class="account-heading">{{ user.first_name }} {{ user.last_name }}</h2>
+                    <p class="text-secondary"><h4>{{ user.angler.type }}</h4></p>
+                    {% if user.is_authenticated and user.angler.type == 'officer' %}
+                        <p class="text-secondary"><h5>{{ user.angler.officer_type }}</h5></p>
+                    {% endif %}
+                    <p class="text-secondary"><b>username:</b> {{ user.username }}</p>
+                    <p class="text-secondary"><b>phone:</b> {{ user.angler.phone_number.as_national }}</p>
+                    <p class="text-secondary"><b>email:</b> {{ user.email }}</p>
+            </div>
+        </div>
+    </article>
+</div> <!-- Needed to put the Angler Stats box in the right spot! -->
+    <div class="col-md-4">
       <div class="content-section">
-        <h3>{{ year }} Statistics</h3>
-        <ul class="list-group">
-          <li class="list-group-item list-group-item-light">Number of wins : <b>{{ wins }}</b></li>
-          <li class="list-group-item list-group-item-light">AoY points : <b>{{ points }}</b></li>
-          <li class="list-group-item list-group-item-light">Total fish : <b>{{ num_fish }}</b></li>
-          <li class="list-group-item list-group-item-light">Total weight : <b>{{ total_wt }}lbs</b></li>
-          <li class="list-group-item list-group-item-light">Events fished : <b>{{ num_events }}</b></li>
-          <li class="list-group-item list-group-item-light">Big bass <small>(over 5lbs)</small> : <b>{{ big_bass }}lbs</b></li>
-        </ul>
+          <h3>{{ year }} Statistics</h3>
+          <ul class="list-group">
+              <li class="list-group-item list-group-item-light">Number of wins : <b>{{ wins }}</b></li>
+              <li class="list-group-item list-group-item-light">AoY points : <b>{{ points }}</b></li>
+              <li class="list-group-item list-group-item-light">Total fish : <b>{{ num_fish }}</b></li>
+              <li class="list-group-item list-group-item-light">Total weight : <b>{{ total_wt }}lbs</b></li>
+              <li class="list-group-item list-group-item-light">Events fished : <b>{{ num_events }}</b></li>
+              <li class="list-group-item list-group-item-light">Big bass <small>(over 5lbs)</small> : <b>{{ big_bass }}lbs</b></li>
+          </ul>
       </div>
     </div>
-  </div>
-  {% if can_edit or user.is_superuser or user.is_staff %}
+{% if can_edit or user.is_superuser or user.is_staff %}
     <a href="{% url 'profile-edit' user.id %}" class="btn btn-outline-info mb-4" role="button">Edit Profile</a>
-  {% endif %}
+{% endif %}
 {% endblock content %}

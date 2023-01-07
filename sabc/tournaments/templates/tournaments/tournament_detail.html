@@ -1,6 +1,7 @@
 {% extends "users/base.html" %}
 {% load django_tables2 %}
 {% block content %}
+<article class="media content-section">
     <div class="media-body">
         {% if user.angler.type == "officer" or user.is_staff %}
             <div align="center">
@@ -76,40 +77,30 @@
                 <div class="article-metadata">DEAD FISH PENALTY</div>
                 <h6 class="small">{{ tournament.rules.dead_fish_penalty }}lb per fish</h6>
             </div>
-            <br /><br /><br />
         {% endif %}
         <!-- Display Results -->
         {% if tournament.complete %}
-            <div class="row justify-content-center"></div>
             {% if user.angler.type == "officer" or user.is_staff %}
                 <h2>Payouts</h2>{% render_table payouts %}
             {% endif %}
             <h2>Tournament Statistics</h2>{% render_table catch_stats %}
-            </div>
             {% if tournament.team %}
                 <h2>Team Results</h2>
-                <div class="media-body">
-                    <div class="row">
-                        {% if user.angler.type == "officer" or user.is_staff %}
-                            <div class="col-lg-12">{% render_table editable_team_results %}</div>
-                        {% else %}
-                            <div class="col-lg-12">{% render_table team_results %}</div>
-                        {% endif %}
-                    </div>
-                </div>
+                {% if user.angler.type == "officer" or user.is_staff %}
+                    <div class="col-lg-12">{% render_table editable_team_results %}</div>
+                {% else %}
+                    <div class="col-lg-12">{% render_table team_results %}</div>
+                {% endif %}
             {% endif %}
             <h2>Individual Results</h2>
-            <div class="media-body">
-                <div class="row">
-                    {% if user.angler.type == "officer" or user.is_staff %}
-                        <div class="col-lg-12">{% render_table editable_results %}</div>
-                    {% else %}
-                        <div class="col-lg-12">{% render_table results %}</div>
-                    {% endif %}
-                </div>
-            </div>
+            {% if user.angler.type == "officer" or user.is_staff %}
+                <div class="col-lg-12">{% render_table editable_results %}</div>
+            {% else %}
+                <div class="col-lg-12">{% render_table results %}</div>
+            {% endif %}
         {% endif %}
     </div>
+</article>
 {% endblock content %}
 
 

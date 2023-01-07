@@ -1,8 +1,35 @@
 {% extends "users/base.html" %}
 {% load django_tables2 %}
 {% block content %}
-<h1>{{ year }} Awards</h1><br />
-<h3>Heavy Stringer</h3> {% render_table hvy_tbl %}<br />
-<h3>Big Bass</h3> {% render_table bb_tbl %}<br />
-<h3>Angler of the Year Standings</h3> {% render_table aoy_tbl %}
+    <h1>{{ year }} Awards</h1>
+    <article class="media content-section">
+        <div class="media-body">
+            <div class="container">
+                <h4>Heavy Stringer</h4>
+                <div class="col-lg-12">
+                    {% render_table hvy_tbl %}
+                </div>
+            </div>
+        </div>
+    </article>
+    <article class="media content-section">
+        <div class="media-body">
+            <div class="container">
+                <h4>Big Bass of the Year</h4>
+                <div class="col-lg-12">
+                    {% render_table bb_tbl %}
+                </div>
+            </div>
+        </div>
+    </article>
+    <article class="media content-section">
+        <div class="media-body">
+            <div class="container">
+                <h4>Angler of the Year</h4>
+                <div class="col-lg-12">
+                    {% render_table aoy_tbl %}
+                </div>
+            </div>
+        </div>
+    </article>
 {% endblock content %}
