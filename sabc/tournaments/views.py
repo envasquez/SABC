@@ -33,7 +33,7 @@ from .tables import (
     TournamentSummaryTable,
     EditableTeamResultTable,
 )
-from .models import Tournament, Result, TeamResult
+from .models import Tournament, Result, TeamResult, PayOutMultipliers
 
 
 class TournamentListView(ListView):
@@ -125,6 +125,13 @@ class TournamentCreateView(
     model = Tournament
     form_class = TournamentForm
     success_message = "Tournament successfully created!"
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial["payout_multiplier"] = PayOutMultipliers.objects.get(
+            year=datetime.date.today().year
+        )
+        return initial
 
     def test_func(self):
         is_officer = Officers.objects.filter(
