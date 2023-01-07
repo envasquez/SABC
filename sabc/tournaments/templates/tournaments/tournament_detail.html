@@ -98,6 +98,22 @@
             {% else %}
                 <div class="col-lg-12">{% render_table results %}</div>
             {% endif %}
+            {% if render_buy_ins %}
+                <h2>Buy-ins</h2>
+                {% if user.angler.type == "officer" or user.is_staff %}
+                    <div class="col-lg-12">{% render_table editable_buy_ins %}</div>
+                {% else %}
+                    <div class="col-lg-12">{% render_table buy_ins %}</div>
+                {% endif %}
+            {% endif %}
+            {% if render_dqs %}
+                <h2>Disqualifications</h2>
+                {% if user.angler.type == "officer" or user.is_staff %}
+                    <div class="col-lg-12">{% render_table editable_dqs %}</div>
+                {% else %}
+                    <div class="col-lg-12">{% render_table dqs %}</div>
+                {% endif %}
+            {% endif %}
         {% endif %}
     </div>
 </article>

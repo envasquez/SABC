@@ -12,7 +12,6 @@ class EditableResultTable(Table):
     delete = LinkColumn(
         "result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=()
     )
-
     first_name = Column(accessor="angler.user.first_name")
     last_name = Column(accessor="angler.user.last_name")
 
@@ -28,7 +27,6 @@ class EditableResultTable(Table):
             "total_weight",
             "points",
             "big_bass_weight",
-            "buy_in",
         )
 
 
@@ -48,7 +46,6 @@ class ResultTable(Table):
             "total_weight",
             "points",
             "big_bass_weight",
-            "buy_in",
         )
 
 
@@ -81,6 +78,82 @@ class TeamResultTable(Table):
             "num_fish",
             "big_bass_weight",
             "total_weight",
+        )
+
+
+class EditableBuyInTable(Table):
+    delete = LinkColumn(
+        "result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=()
+    )
+    first_name = Column(accessor="angler.user.first_name")
+    last_name = Column(accessor="angler.user.last_name")
+
+    class Meta:
+        model = Result
+        orderable = False
+        template_name = DEFAULT_TABLE_TEMPLATE
+        fields = (
+            "place_finish",
+            "first_name",
+            "last_name",
+            "points",
+        )
+
+
+class BuyInTable(Table):
+    first_name = Column(accessor="angler.user.first_name")
+    last_name = Column(accessor="angler.user.last_name")
+
+    class Meta:
+        model = Result
+        orderable = False
+        template_name = DEFAULT_TABLE_TEMPLATE
+        fields = (
+            "place_finish",
+            "first_name",
+            "last_name",
+            "points",
+        )
+
+
+class EditableDQTable(Table):
+    delete = LinkColumn(
+        "result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=()
+    )
+    first_name = Column(accessor="angler.user.first_name")
+    last_name = Column(accessor="angler.user.last_name")
+
+    class Meta:
+        model = Result
+        orderable = False
+        template_name = DEFAULT_TABLE_TEMPLATE
+        fields = (
+            "place_finish",
+            "first_name",
+            "last_name",
+            "num_fish",
+            "total_weight",
+            "points",
+            "big_bass_weight",
+        )
+
+
+class DQTable(Table):
+    first_name = Column(accessor="angler.user.first_name")
+    last_name = Column(accessor="angler.user.last_name")
+
+    class Meta:
+        model = Result
+        orderable = False
+        template_name = DEFAULT_TABLE_TEMPLATE
+        fields = (
+            "place_finish",
+            "first_name",
+            "last_name",
+            "num_fish",
+            "total_weight",
+            "points",
+            "big_bass_weight",
         )
 
 

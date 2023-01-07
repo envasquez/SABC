@@ -25,10 +25,14 @@ from .forms import TournamentForm, ResultForm, TeamForm
 from .tables import (
     Aoy as AoyTable,
     BigBass,
+    DQTable,
+    BuyInTable,
     ResultTable,
     PayoutSummary,
     HeavyStringer,
     TeamResultTable,
+    EditableDQTable,
+    EditableBuyInTable,
     EditableResultTable,
     TournamentSummaryTable,
     EditableTeamResultTable,
@@ -95,21 +99,33 @@ class ExtraTournamentContext:
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
         tmnt = Tournament.objects.get(pk=self.kwargs.get("pk"))
-        results = Result.objects.filter(tournament=tmnt).order_by("place_finish")
-        team_results = TeamResult.objects.filter(tournament=tmnt).order_by("place_finish")
-
         Tournament.results.set_points(tournament=tmnt)
-        self.extra_context["payouts"] = self.get_payout_table(tmnt)
-        self.extra_context["results"] = ResultTable(results)
-        self.extra_context["catch_stats"] = (
-            self.get_stats_table(tmnt.id) if results else TournamentSummaryTable([])
-        )
+
+        team_results = TeamResult.objects.filter(tournament=tmnt).order_by("place_finish")
         self.extra_context["team_results"] = TeamResultTable(team_results)
-        self.extra_context["editable_results"] = EditableResultTable(results)
         self.extra_context["editable_team_results"] = EditableTeamResultTable(team_results)
 
+        indv_results = Result.objects.filter(
+            tournament=tmnt, buy_in=False, disqualified=False
+        ).order_by("place_finish")
+        self.extra_context["results"] = ResultTable(indv_results)
+        self.extra_context["editable_results"] = EditableResultTable(indv_results)
+
+        buy_ins = Result.objects.filter(tournament=tmnt, buy_in=True)
+        self.extra_context["buy_ins"] = BuyInTable(buy_ins)
+        self.extra_context["render_buy_ins"] = buy_ins.count()
+        self.extra_context["editable_buy_ins"] = EditableBuyInTable(buy_ins)
+
+        dqs = Result.objects.filter(tournament=tmnt, disqualified=True)
+        self.extra_context["dqs"] = DQTable(dqs)
+        self.extra_context["render_dqs"] = dqs.count()
+        self.extra_context["editable_dqs"] = EditableDQTable(dqs)
+
+        self.extra_context["payouts"] = self.get_payout_table(tmnt)
+        self.extra_context["catch_stats"] = (
+            self.get_stats_table(tmnt.id) if indv_results else TournamentSummaryTable([])
+        )
         context.update(self.extra_context)
         return context
 

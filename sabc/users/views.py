@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import logging
 import datetime
 
 from decimal import Decimal
@@ -125,6 +126,11 @@ class AnglerDetailView(DetailView):
         context["total_wt"] = results.get("total_weight", Decimal("0"))
         context["big_bass"] = self.get_biggest_bass()
         context["num_events"] = results.get("events", 0)
+
+        context["officer_pos"] = None
+        officer = Officers.objects.filter(angler__user=self.request.user)
+        if officer:
+            context["officer_pos"] = officer.position.title()
 
         context["can_edit"] = False
         if self.get_object().id == self.kwargs.get("pk"):
