@@ -49,10 +49,10 @@ class LakePollView(View, LoginRequiredMixin, UserPassesTestMixin, SuccessMessage
         try:
             choice = Lake.objects.get(id=lake)
             if voted:
-                messages.error(self.request, f"ERROR:{request.user.angler} has already voted!")
+                messages.error(self.request, f"ERROR: {request.user.angler} has already voted!")
                 return HttpResponseRedirect(reverse("poll", kwargs={"pid": pid}))
         except Model.DoesNotExist as err:
             msg = "" if lake else "Please select a lake!"
-            messages.error(self.request, f"ERROR:{err} {msg}")
+            messages.error(self.request, f"ERROR: {err} {msg}")
         LakeVote.objects.create(poll=poll, choice=choice, angler=request.user.angler)
         return HttpResponseRedirect(reverse("poll", kwargs={"pid": pid}))
