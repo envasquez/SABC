@@ -227,20 +227,7 @@ class TournamentManager(Manager):
             result.save()
             previous = result
             points -= 1
-        # Anglers that did not weigh in fish or bought in
-        query = {
-            "tournament": tournament,
-            "angler__type": "member",
-            "num_fish": 0,
-        }
-        buy_in_pts = 0
-        for result in Result.objects.filter(**query):
-            result.points = previous.points - 2 if previous else 0
-            if result.buy_in:
-                result.points = previous.points - 4 if previous else tournament.max_points - 4
-                buy_in_pts = result.points
-            result.save()
-        # Anglers who were disqualified, but points awarded were allowed
+            # Anglers who were disqualified, but points awarded were allowed
         query = {
             "dq_points": True,
             "tournament": tournament,
@@ -248,7 +235,19 @@ class TournamentManager(Manager):
             "disqualified": True,
         }
         for result in Result.objects.filter(**query):
-            result.points = buy_in_pts + 1
+            result.points = previous.points - 3 if previous else tournament.max_points
+            result.save()
+        # Anglers that did not weigh in fish or bought in
+        query = {
+            "tournament": tournament,
+            "angler__type": "member",
+            "num_fish": 0,
+        }
+        for result in Result.objects.filter(**query):
+            result.points = previous.points - 2 if previous else 0
+            if result.buy_in:
+                result.points = previous.points - 4 if previous else tournament.max_points - 4
+                buy_in_pts = result.points
             result.save()
 
     def get_big_bass_winner(self, tournament):
