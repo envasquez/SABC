@@ -1,13 +1,13 @@
 {% extends "users/base.html" %}
 {% load crispy_forms_tags %}
 {% block content %}
+    <h2>Join South Austin Bass Club!</h2>
     <article class="media content-section">
         <div class="media-body">
             <div class="content-section">
                 <form method="POST">
                     {% csrf_token %}
                     <fieldset class="form-group">
-                        <legend class="border-bottom mb-4">{{ form_name }}</legend>
                         {{ u_form|crispy }}
                         {{ form|crispy }}
                     </fieldset>
