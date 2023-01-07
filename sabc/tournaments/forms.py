@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from django.forms import Form, ModelForm, FileField
 
-from .models import Tournament, Result, TeamResult
+from .models.results import Result, TeamResult
+from .models.tournament import Tournament
 
 
 class TournamentForm(ModelForm):

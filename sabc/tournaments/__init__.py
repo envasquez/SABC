@@ -4,7 +4,6 @@ import datetime
 import calendar
 
 from pathlib import Path
-from decimal import Decimal
 
 from yaml import safe_load
 
@@ -13,64 +12,63 @@ from django.utils import timezone
 from sabc.settings import STATICFILES_DIRS
 
 
-RULE_INFO = """
-1. All Federal, State and local laws must be observed. Illegal acts may result in disqualification.
-2. Protests must be presented to a club officer within 30 minutes of the weigh-in.
-3. Team members must fish from the same boat. SABC rules do allow a third contestant in a boat during “Individual” type tournaments. (A guest must fish with a paid member)
-4. Only artificial baits may be used. (Exception – pork rind may be used.)
-5. Only legal-sized Black, Smallmouth, or Spotted Bass are eligible for weigh-in. (Exception --Spotted/ Guadalupe Bass must be 12 inches in length.) Members are responsible for knowing individual lake rules.
-6. Fish must be measured on a flat board with a perpendicular end. Fish must be placed flat on the board, with mouth closed and jammed against perpendicular end. You may manipulate tail to determine maximum length. (Tip of tail must touch the line for 14 inches, etc.). Any fish at weigh-in short of legal limit makes team/individual subject to disqualification. If you are unsure of a fish’s measurement, ask a club officer to check the fish prior to presentation at weigh-in.
-7. Tournament Lake is off limits for Fishing 12 hours prior to tournament start time.
-8. There is a five (5) fish limit per person. Each person may weigh-in only those five fish that they caught. No exchange of fish between team members. Keep your fish separated or mark when caught.
-Exceptions:
-    (a) Two-day tournaments--5 fish per day, and/or
-    (b) Local lake law allows less than five fish stringers.
-    (c) Summer 3 fish limits to prevent fish mortality
-9. No trolling with gas engine will be allowed.
-10. Weigh-ins will be held lakeside when possible for live release of fish.
-11. Fish should not be presented at weigh-in in a net! Fish must be presented in a water holding bag.
-12. Any team or individual may be disqualified for a violation of rules or un-sportsman like conduct, by a vote of the club officers present.
-13. Start time: You may not make your first cast until the designated start time.
-14. Team may consist of 1 member, but he may weigh-in only 5 fish--against the other teams with 10 fish.
-"""
-WEIGH_IN_INFO = """
-1. Tournament anglers must be inside of the buoys, where weigh-in is to be held by the end time of the tournament. If an angler or a team is not at an idle speed, inside the buoys by the end time of the tournament they will be disqualified.
-2. The weigh-in will begin 15min after the end time of the tournament. This time is for people to trailer their boats and for the weigh-in committee to get set up to receive fish. For fish care reasons please wait for scales to officially open before placing your fish in a weigh in bag.
-3. Hard Luck Clause: If a Team experiences mechanical issues or any issues outside their power, they can call an Officer before the end of the Tournament for a grace period or assistance. The team’s creel will be weighed in once they can get back to weigh-in site.
-"""
+def get_last_sunday(month=None):
+    """Returns the date of the last Sunday of the month passed in.
 
-PAYOUT_INFO = """Moneys paid to winners will be based on total weight of combined stringers of both team members.
-Individual stringer weights are recorded to determine the points awarded for the year-end awards.
-"""
-BIG_BASS_INFO = """
-Big Bass Pot is paid to the heaviest bass caught at the tournament OVER 5lbs.
+    If no month is passed in, then the current (when called) month is used.
 
-If fishing a Slot Limit Lake or a Paper Tournament and no bass is brought in over the slot limit,
-this pot will be carried over to the next tournament.
+    Args:
+        month (int) The month to get the last Sunday from.
+    Raises:
+        ValueError if the month is less than 0 for greater than 12 or not an int.
+    """
+    if month is None:
+        month = datetime.date.today().month
+    sunday = max(week[-1] for week in calendar.monthcalendar(datetime.date.today().year, month))
+    sunday = sunday if sunday >= 10 else f"0{sunday}"
+    return f"{datetime.date.today().year}-{month}-{sunday}"
 
-- ONLY MEMBERS in good standing are eligible for Big Bass Award.
-"""
-PAYMENT_INFO = """
-Entry fee shall be due no later than weigh-in. No checks, cash only and possibly Venmo/Zello/Ca$hApp.
-Fee is due if you fish at any time during the tournament.
 
-1. Teams/ Club Members fishing tournament waters, during tournament hours, will be responsible for
-entry fees whether you show up for weigh-in or not as you will be considered fishing the tournament.
+def get_next_meeting():
+    year = timezone.now().year
+    month_num = timezone.now().month
+    month_name = calendar.month_name[month_num]
 
-2. If you have an adult guest fishing in the boat they will be considered fishing the tournament and will
-pay the tournament fee. A guest can fish up to two tournaments within the same calendar year
-without having to become an SABC member. After that, they will be required to pay the annual
-$20 annual membership fee prior to fishing any more club tournaments within the same year.
+    meetings = None
+    with open(str(Path(STATICFILES_DIRS[0]) / "meetings.yaml"), "r", encoding="utf-8") as stream:
+        meetings = safe_load(stream)
+    if not meetings:
+        return " -- "
 
-3. If special provisions or requests are required by a member they must be brought up before the
-tournament and voted on and approved by at least three officers
-"""
-DEFAULT_END_TIME = datetime.datetime.time(datetime.datetime.strptime("3:00 pm", "%I:%M %p"))
-DEFAULT_START_TIME = datetime.datetime.time(datetime.datetime.strptime("6:00 am", "%I:%M %p"))
-DEFAULT_LAKE_STATE = "TX"
-DEFAULT_FACEBOOK_URL = "https://www.facebook.com/SouthAustinBassClub"
-DEFAULT_INSTAGRAM_URL = "https://www.instagram.com/south_austin_bass_club"
-DEFAULT_DEAD_FISH_PENALTY = Decimal("0.25")
+    mtg_date = datetime.datetime(year, month_num, meetings[year][month_name])
+    if datetime.datetime.now() > mtg_date:  # See if meeting already passed for this month
+        month_num += 1
+        month_name = calendar.month_name[month_num]
+        mtg_date = datetime.datetime(year, month_num, meetings[year][month_name])
+    return f"{mtg_date.strftime('%D')} @ 7PM"
+
+
+def get_next_tournament():
+    year = timezone.now().year
+    month_num = timezone.now().month
+    month_name = calendar.month_name[month_num]
+
+    tournaments = None
+    with open(str(Path(STATICFILES_DIRS[0]) / "tournaments.yaml"), "r", encoding="utf-8") as stream:
+        tournaments = safe_load(stream)
+    if not tournaments:
+        return " -- "
+
+    tournament = datetime.datetime(year, month_num, tournaments[year][month_name])
+    if datetime.datetime.now() > tournament:  # See if tournament already passed for this month
+        month_num += 1
+        month_name = calendar.month_name[month_num]
+        tournament = datetime.datetime(year, month_num, tournaments[year][month_name])
+    return f"{tournament.strftime('%D')}"
+
+
+NEXT_MEETING = get_next_meeting()
+NEXT_TOURNAMENT = get_next_tournament()
 
 # TPW Length-weight Conversion Table for Texas Largemouth Bass
 # https://tpwd.texas.gov/fishboat/fish/recreational/catchrelease/bass_length_weight.phtml
@@ -185,66 +183,3 @@ def get_length_from_weight(weight):
             break
 
     return inches + fractions[index]
-
-
-def get_last_sunday(month=None):
-    """Returns the date of the last Sunday of the month passed in.
-
-    If no month is passed in, then the current (when called) month is used.
-
-    Args:
-        month (int) The month to get the last Sunday from.
-    Raises:
-        ValueError if the month is less than 0 for greater than 12 or not an int.
-    """
-    if month is None:
-        month = datetime.date.today().month
-    sunday = max(week[-1] for week in calendar.monthcalendar(datetime.date.today().year, month))
-    sunday = sunday if sunday >= 10 else f"0{sunday}"
-    return f"{datetime.date.today().year}-{month}-{sunday}"
-
-
-MEETINGS = Path(STATICFILES_DIRS[0]) / "meetings.yaml"
-TOURNAMENTS = Path(STATICFILES_DIRS[0]) / "tournaments.yaml"
-
-
-def get_next_meeting():
-    year = timezone.now().year
-    month_num = timezone.now().month
-    month_name = calendar.month_name[month_num]
-
-    meetings = None
-    with open(str(MEETINGS), "r", encoding="utf-8") as stream:
-        meetings = safe_load(stream)
-    if not meetings:
-        return " -- "
-
-    mtg_date = datetime.datetime(year, month_num, meetings[year][month_name])
-    if datetime.datetime.now() > mtg_date:  # See if meeting already passed for this month
-        month_num += 1
-        month_name = calendar.month_name[month_num]
-        mtg_date = datetime.datetime(year, month_num, meetings[year][month_name])
-    return f"{mtg_date.strftime('%D')} @ 7PM"
-
-
-def get_next_tournament():
-    year = timezone.now().year
-    month_num = timezone.now().month
-    month_name = calendar.month_name[month_num]
-
-    tournaments = None
-    with open(str(TOURNAMENTS), "r", encoding="utf-8") as stream:
-        tournaments = safe_load(stream)
-    if not tournaments:
-        return " -- "
-
-    tournament = datetime.datetime(year, month_num, tournaments[year][month_name])
-    if datetime.datetime.now() > tournament:  # See if tournament already passed for this month
-        month_num += 1
-        month_name = calendar.month_name[month_num]
-        tournament = datetime.datetime(year, month_num, tournaments[year][month_name])
-    return f"{tournament.strftime('%D')}"
-
-
-NEXT_MEETING = get_next_meeting()
-NEXT_TOURNAMENT = get_next_tournament()

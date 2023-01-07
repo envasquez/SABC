@@ -10,7 +10,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.contrib.auth.decorators import login_required
 
-from tournaments.models import Result
+from tournaments.models.results import Result
 
 from .forms import AnglerUserMultiRegisterForm, AnglerUserMultiUpdateForm
 from .models import Angler, Officers

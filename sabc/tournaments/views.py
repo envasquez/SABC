@@ -37,7 +37,9 @@ from .tables import (
     TournamentSummaryTable,
     EditableTeamResultTable,
 )
-from .models import Tournament, Result, TeamResult, PayOutMultipliers
+from .models.payouts import PayOutMultipliers
+from .models.results import Result, TeamResult
+from .models.tournament import Tournament
 
 
 class TournamentListView(ListView):

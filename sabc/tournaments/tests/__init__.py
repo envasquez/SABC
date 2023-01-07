@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 
 from users.models import Angler
 
-from tournaments.models import Lake, Ramp
+from ..models.lakes import Lake, Ramp
 
 
 def load_lakes_from_yaml(yaml_file):

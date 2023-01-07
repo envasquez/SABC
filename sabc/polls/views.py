@@ -8,7 +8,7 @@ from django.views.generic import View, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 
-from tournaments.models import Lake
+from tournaments.models.lakes import Lake
 
 from .models import LakePoll, LakeVote
 

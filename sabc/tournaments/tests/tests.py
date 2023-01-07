@@ -11,7 +11,10 @@ from django.contrib.auth.models import User
 from sabc.settings import STATICFILES_DIRS
 
 from .. import get_length_from_weight, get_weight_from_length
-from ..models import TeamResult, Tournament, Result, Ramp, PayOutMultipliers
+from ..models.lakes import Ramp
+from ..models.payouts import PayOutMultipliers
+from ..models.results import Result, TeamResult
+from ..models.tournament import Tournament
 
 from . import (
     create_angler,

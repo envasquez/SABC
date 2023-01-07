@@ -7,16 +7,11 @@ from django.contrib import admin, messages
 from django.shortcuts import render
 
 from .forms import YamlImportForm
-from .models import (
-    Lake,
-    Ramp,
-    Result,
-    RuleSet,
-    Tournament,
-    TeamResult,
-    TournamentPayOut,
-    PayOutMultipliers,
-)
+from .models.lakes import Lake, Ramp
+from .models.rules import RuleSet
+from .models.payouts import PayOutMultipliers, TournamentPayOut
+from .models.results import Result, TeamResult
+from .models.tournament import Tournament
 
 
 class LakeAdmin(admin.ModelAdmin):
@@ -73,6 +68,6 @@ class PayoutMultiplierAdmin(admin.ModelAdmin):
         return render(request, "admin/yaml_upload.html", data)
 
 
-admin.site.register([Result, RuleSet, Tournament, TeamResult, TournamentPayOut])
+admin.site.register([Tournament, RuleSet, Result, TeamResult, TournamentPayOut])
 admin.site.register([Lake, Ramp], admin_class=LakeAdmin)
 admin.site.register(PayOutMultipliers, admin_class=PayoutMultiplierAdmin)

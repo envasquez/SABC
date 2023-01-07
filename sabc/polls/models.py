@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from time import strftime
 
+from django.apps import apps
 from django.db.models import (
     Model,
     CASCADE,
@@ -10,11 +11,11 @@ from django.db.models import (
     ForeignKey,
     ManyToManyField,
 )
-from django.utils import timezone
 
+# Lake = apps.get_model("tournaments", "Lake")
+# Angler = apps.get_model("users", "Angler")
 from users.models import Angler
-from tournaments.models import Lake
-
+from tournaments.models.lakes import Lake
 
 CURRENT_YEAR = f"{strftime('%Y')}"
 CURRENT_MONTH = f"{strftime('%B')}"

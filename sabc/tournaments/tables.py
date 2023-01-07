@@ -3,7 +3,7 @@ from django_tables2.utils import A
 from django_tables2.tables import Table
 from django_tables2.columns import Column, LinkColumn
 
-from .models import Result, TeamResult
+from .models.results import Result, TeamResult
 
 DEFAULT_TABLE_TEMPLATE = "django_tables2/bootstrap4.html"
 
