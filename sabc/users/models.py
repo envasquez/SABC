@@ -4,9 +4,6 @@ import datetime
 from django.utils import timezone
 from django.db.models import (
     Q,
-    When,
-    Case,
-    Value,
     Model,
     PROTECT,
     Manager,
