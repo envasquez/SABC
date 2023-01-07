@@ -247,7 +247,6 @@ class TournamentManager(Manager):
             result.points = previous.points - 2 if previous else 0
             if result.buy_in:
                 result.points = previous.points - 4 if previous else tournament.max_points - 4
-                buy_in_pts = result.points
             result.save()
 
     def get_big_bass_winner(self, tournament):
