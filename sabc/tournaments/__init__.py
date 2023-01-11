@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=line-too-long
+from typing import Any, Type
+
 import datetime
 import calendar
 
@@ -12,7 +14,7 @@ from django.utils import timezone
 from sabc.settings import STATICFILES_DIRS
 
 
-def get_last_sunday(month=None):
+def get_last_sunday(month: int = 0) -> str:
     """Returns the date of the last Sunday of the month passed in.
 
     If no month is passed in, then the current (when called) month is used.
@@ -22,19 +24,18 @@ def get_last_sunday(month=None):
     Raises:
         ValueError if the month is less than 0 for greater than 12 or not an int.
     """
-    if month is None:
-        month = datetime.date.today().month
-    sunday = max(week[-1] for week in calendar.monthcalendar(datetime.date.today().year, month))
-    sunday = sunday if sunday >= 10 else f"0{sunday}"
+    month = month or datetime.date.today().month
+    sun: int = max(week[-1] for week in calendar.monthcalendar(datetime.date.today().year, month))
+    sunday: str = str(sun) if sun >= 10 else f"0{sun}"
     return f"{datetime.date.today().year}-{month}-{sunday}"
 
 
-def get_next_meeting():
-    year = timezone.now().year
-    month_num = timezone.now().month
-    month_name = calendar.month_name[month_num]
+def get_next_meeting() -> str:
+    year: int = timezone.now().year
+    month_num: int = timezone.now().month
+    month_name: str = calendar.month_name[month_num]
 
-    meetings = None
+    meetings: Any = None
     with open(str(Path(STATICFILES_DIRS[0]) / "meetings.yaml"), "r", encoding="utf-8") as stream:
         meetings = safe_load(stream)
     if not meetings:
@@ -48,18 +49,18 @@ def get_next_meeting():
     return f"{mtg_date.strftime('%D')} @ 7PM"
 
 
-def get_next_tournament():
-    year = timezone.now().year
-    month_num = timezone.now().month
-    month_name = calendar.month_name[month_num]
+def get_next_tournament() -> str:
+    year: int = timezone.now().year
+    month_num: int = timezone.now().month
+    month_name: str = calendar.month_name[month_num]
 
-    tournaments = None
+    tournaments: Any = None
     with open(str(Path(STATICFILES_DIRS[0]) / "tournaments.yaml"), "r", encoding="utf-8") as stream:
         tournaments = safe_load(stream)
     if not tournaments:
         return " -- "
 
-    tournament = datetime.datetime(year, month_num, tournaments[year][month_name])
+    tournament: datetime.date = datetime.datetime(year, month_num, tournaments[year][month_name])
     if datetime.datetime.now() > tournament:  # See if tournament already passed for this month
         month_num += 1
         month_name = calendar.month_name[month_num]
@@ -67,8 +68,8 @@ def get_next_tournament():
     return f"{tournament.strftime('%D')}"
 
 
-NEXT_MEETING = get_next_meeting()
-NEXT_TOURNAMENT = get_next_tournament()
+NEXT_MEETING: str = get_next_meeting()
+NEXT_TOURNAMENT: str = get_next_tournament()
 
 # TPW Length-weight Conversion Table for Texas Largemouth Bass
 # https://tpwd.texas.gov/fishboat/fish/recreational/catchrelease/bass_length_weight.phtml
@@ -95,7 +96,7 @@ NEXT_TOURNAMENT = get_next_tournament()
 # 27	12.55	12.74	12.94	13.13	13.33	13.53	13.73	13.94
 # 28	14.15	14.35	14.56	14.78	14.99	15.21	15.43	15.65
 # 29	15.87	16.10	16.33	16.56	16.79	17.03	17.26	17.50
-LENGTH_TO_WEIGHT = {
+LENGTH_TO_WEIGHT: dict[int, list] = {
     #     0    1/8    1/4   3/8   1/2   5/8   3/4   7/8
     # 10: [0.48, 0.50, 0.52, 0.54, 0.56, 0.58, 0.61, 0.63],
     # 11: [0.66, 0.68, 0.71, 0.73, 0.76, 0.79, 0.81, 0.84],
@@ -120,7 +121,7 @@ LENGTH_TO_WEIGHT = {
 }
 
 
-def get_weight_from_length(length):
+def get_weight_from_length(length: float) -> float:
     """Returns the weight of a fish, given its length
 
     if the length is below 10 inches: 0.00 (lbs) is returned
@@ -136,22 +137,28 @@ def get_weight_from_length(length):
     3/4 = 0.75
     7/8 = 0.875
     """
-    length = float(length)  # Endure we're always dealing with floats
-    inches, fraction = str(length).split(".")
-
-    inches = int(inches)
-    fraction = float(f"0.{fraction}")
+    inches = int(str(length).split(".")[0])
+    fraction = float(f"0.{str(length).split('.')[1]}")
     if inches > 29:
         return 18.00
 
-    fractions = {0.00: 0, 0.125: 1, 0.25: 2, 0.375: 3, 0.50: 4, 0.625: 5, 0.75: 6, 0.875: 7}
+    fractions: dict[float, int] = {
+        0.00: 0,
+        0.125: 1,
+        0.25: 2,
+        0.375: 3,
+        0.50: 4,
+        0.625: 5,
+        0.75: 6,
+        0.875: 7,
+    }
     if inches in LENGTH_TO_WEIGHT:
         return LENGTH_TO_WEIGHT[inches][fractions[fraction]]
 
     return 0.00
 
 
-def get_length_from_weight(weight):
+def get_length_from_weight(weight: float) -> float:
     """Given a fishes weight, return its length
 
     if the weight is less than 0.48 pounds: 10.00 (inches) is returned
@@ -167,18 +174,27 @@ def get_length_from_weight(weight):
     6: 0.75  3/4
     7: 0.875 7/8
     """
-    weight = float(weight)  # Ensure we're always dealing with a float
     if weight > 17.50:
         return 30.0
 
-    fractions = {0: 0.00, 1: 0.125, 2: 0.25, 3: 0.375, 4: 0.50, 5: 0.625, 6: 0.75, 7: 0.875}
-    index, inches = 0, 0
+    fractions: dict[int, float] = {
+        0: 0.00,
+        1: 0.125,
+        2: 0.25,
+        3: 0.375,
+        4: 0.50,
+        5: 0.625,
+        6: 0.75,
+        7: 0.875,
+    }
+    index: int = 0
+    inches: int = 0
     for inch, weights in LENGTH_TO_WEIGHT.items():
         # Find inch range for the weight
         if all([weight >= min(weights), weight <= max(weights)]):
             inches = inch
             # Get the closes fractional weight
-            closest = min(weights, key=lambda w: abs(w - weight))
+            closest: float = min(weights, key=lambda w: abs(w - weight))
             index = weights.index(closest)
             break
 

@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
+from typing import Any, Type, Optional
+
+from functools import partial
+
 from django.conf import settings
-from django.urls import path, include
+from django.urls import path
 from django.contrib import admin
 from django.contrib.auth.views import (
     LoginView as Login,
@@ -38,32 +42,32 @@ from users.views import (
 
 from polls.views import LakePollListView as PollList, LakePollView as Poll
 
-TMNT_CREATE = ("tournament/new/", "tournament-create")
-TMNT_DETAIL = ("tournament/<int:pk>/", "tournament-details")
-TMNT_UPDATE = ("tournament/<int:pk>/update/", "tournament-update")
-TMNT_DELETE = ("tournament/<int:pk>/delete/", "tournament-delete")
+TMNT_CREATE: tuple = ("tournament/new/", "tournament-create")
+TMNT_DETAIL: tuple = ("tournament/<int:pk>/", "tournament-details")
+TMNT_UPDATE: tuple = ("tournament/<int:pk>/update/", "tournament-update")
+TMNT_DELETE: tuple = ("tournament/<int:pk>/delete/", "tournament-delete")
 
-TEAM_CREATE = ("tournament/<int:pk>/add_team/", "team-create")
-TEAM_DELETE = ("teamresult/<int:pk>/delete/", "teamresult-delete")
-RESULT_CREATE = ("tournament/<int:pk>/add_result/", "result-create")
-RESULT_DELETE = ("result/<int:pk>/delete/", "result-delete")
+TEAM_CREATE: tuple = ("tournament/<int:pk>/add_team/", "team-create")
+TEAM_DELETE: tuple = ("teamresult/<int:pk>/delete/", "teamresult-delete")
+RESULT_CREATE: tuple = ("tournament/<int:pk>/add_result/", "result-create")
+RESULT_DELETE: tuple = ("result/<int:pk>/delete/", "result-delete")
 
-LOGIN = ("login/", "users/login.html", "login")
-LOGOUT = ("logout/", "users/logout.html", "logout")
-PW_RESET = ("password-reset/", "users/password_reset.html", "password-reset")
-PW_DONE = ("password-reset/done/", "users/password_reset_done.html", "password_reset_done")
-PW_CONFIRM = (
+LOGIN: tuple = ("login/", "users/login.html", "login")
+LOGOUT: tuple = ("logout/", "users/logout.html", "logout")
+PW_RESET: tuple = ("password-reset/", "users/password_reset.html", "password-reset")
+PW_DONE: tuple = ("password-reset/done/", "users/password_reset_done.html", "password_reset_done")
+PW_CONFIRM: tuple = (
     "password-reset-confirm/<uidb64>/<token>/",
     "users/password_reset_confirm.html",
     "password_reset_confirm",
 )
-PW_COMPLETE = (
+PW_COMPLETE: tuple = (
     "password-reset-complete/",
     "users/password_reset_complete.html",
     "password_reset_complete",
 )
 
-urlpatterns = [
+urlpatterns: list[Type[partial]] = [
     path("", TmntList.as_view(), name="sabc-home"),
     path("polls/", PollList.as_view(), name="polls"),
     path("polls/<int:pid>/", Poll.as_view(), name="poll"),
@@ -94,8 +98,3 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-# Admin site customizations
-admin.site.site_title = gettext_lazy("SABC")
-admin.site.site_header = gettext_lazy("South Austin Bass Club Administration")
-admin.site.index_title = gettext_lazy("Tournaments")

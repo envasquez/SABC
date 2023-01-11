@@ -1,4 +1,4 @@
 # -*- coding: utf-8 -*-
 import datetime
 
-CURRENT_YEAR = datetime.date.today().year
+CURRENT_YEAR: int = datetime.date.today().year

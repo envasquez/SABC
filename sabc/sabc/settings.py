@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
+from typing import Any, Optional
+
 import os
 from django.contrib.messages import constants as messages
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+SECRET_KEY: Optional[str] = os.environ.get("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-ALLOWED_HOSTS = ["*"]
+DEBUG: bool = True
+ALLOWED_HOSTS: list = ["*"]
 # Application definition
-INSTALLED_APPS = [
+INSTALLED_APPS: list[str] = [
     "polls",
     "users",
     "django_nose",
@@ -28,7 +30,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.contenttypes",
 ]
-MIDDLEWARE = [
+MIDDLEWARE: list[str] = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -37,8 +39,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-ROOT_URLCONF = "sabc.urls"
-TEMPLATES = [
+ROOT_URLCONF: str = "sabc.urls"
+TEMPLATES: list[dict] = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": [],
@@ -53,10 +55,10 @@ TEMPLATES = [
         },
     },
 ]
-WSGI_APPLICATION = "sabc.wsgi.application"
+WSGI_APPLICATION: str = "sabc.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
-DATABASES = {
+DATABASES: dict[Any, Any] = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
         "NAME": os.environ.get("POSTGRES_DB", os.environ.get("USER")),
@@ -79,7 +81,7 @@ if os.environ.get("GITHUB_WORKFLOW"):
     }
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
-AUTH_PASSWORD_VALIDATORS = [
+AUTH_PASSWORD_VALIDATORS: list[dict] = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
@@ -95,45 +97,45 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
-LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
-USE_I18N = True
-USE_L10N = True
-USE_TZ = True
+LANGUAGE_CODE: str = "en-us"
+TIME_ZONE: str = "UTC"
+USE_I18N: bool = True
+USE_L10N: bool = True
+USE_TZ: bool = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
-CRISPY_TEMPLATE_PACK = "bootstrap4"
+CRISPY_TEMPLATE_PACK: str = "bootstrap4"
 
-STATIC_URL = "/static/"
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "sabc", "static")]
+STATIC_URL: str = "/static/"
+STATICFILES_DIRS: list[str] = [os.path.join(BASE_DIR, "sabc", "static")]
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
-MEDIA_URL = "/media/"
+MEDIA_ROOT: str = os.path.join(BASE_DIR, "media")
+MEDIA_URL: str = "/media/"
 
-LOGIN_REDIRECT_URL = "sabc-home"
-LOGIN_URL = "login"
+LOGIN_REDIRECT_URL: str = "sabc-home"
+LOGIN_URL: str = "login"
 
-PHONENUMBER_DB_FORMAT = "NATIONAL"
-PHONENUMBER_DEFAULT_REGION = "US"
+PHONENUMBER_DB_FORMAT: str = "NATIONAL"
+PHONENUMBER_DEFAULT_REGION: str = "US"
 
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+EMAIL_HOST: str = "smtp.gmail.com"
+EMAIL_PORT: int = 587
+EMAIL_USE_TLS: bool = True
 # TODO: Disable this in production
 # File-based back-end for email for development purposes
-EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
-EMAIL_FILE_PATH = os.path.join(BASE_DIR, "sent_emails")
+EMAIL_BACKEND: str = "django.core.mail.backends.filebased.EmailBackend"
+EMAIL_FILE_PATH: str = os.path.join(BASE_DIR, "sent_emails")
 # TODO: Enable this in production
 # EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST_USER = os.environ.get("EMAIL_USER")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_PASS")
-DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
-DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
-# django-nose settings
-TEST_RUNNER = "django_nose.NoseTestSuiteRunner"
-NOSE_ARGS = ["--verbosity=3"]
+EMAIL_HOST_USER: Optional[str] = os.environ.get("EMAIL_USER")
+EMAIL_HOST_PASSWORD: Optional[str] = os.environ.get("EMAIL_PASS")
+DEFAULT_AUTO_FIELD: str = "django.db.models.AutoField"
+DJANGO_TABLES2_TEMPLATE: str = "django_tables2/bootstrap4.html"
 
-LOGGING = {
+TEST_RUNNER: str = "django_nose.NoseTestSuiteRunner"
+NOSE_ARGS: list[str] = ["--verbosity=3"]
+
+LOGGING: dict[Any, Any] = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {
@@ -154,4 +156,4 @@ LOGGING = {
     },
 }
 # Make messages.error() - display in RED
-MESSAGE_TAGS = {messages.ERROR: "danger"}
+MESSAGE_TAGS: dict[int, str] = {messages.ERROR: "danger"}

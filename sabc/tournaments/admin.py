@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+from typing import Type, Any
+
 from yaml import safe_load
 
+from django.http import HttpRequest, HttpResponse
 from django.urls import path, reverse
 from django.http import HttpResponseRedirect
 from django.contrib import admin, messages
@@ -15,11 +18,11 @@ from .models.tournament import Tournament
 
 
 class LakeAdmin(admin.ModelAdmin):
-    def get_urls(self):
+    def get_urls(self) -> list:
         return [path("upload-lakes/", self.lake_upload)] + super().get_urls()
 
-    def create_lake_from_yaml(self, request):
-        lakes = safe_load(request.FILES["yaml_upload"])
+    def create_lake_from_yaml(self, request: Type[HttpRequest]) -> None:
+        lakes: Any = safe_load(request.FILES["yaml_upload"])
         for lake_name in lakes:
             lake, _ = Lake.objects.update_or_create(
                 name=lake_name,
@@ -32,9 +35,9 @@ class LakeAdmin(admin.ModelAdmin):
                 )
         messages.info(request, f"{lakes} imported & created successfully!")
 
-    def lake_upload(self, request):
-        form = YamlImportForm()
-        data = {"form": form}
+    def lake_upload(self, request: Type[HttpRequest]) -> Type[HttpResponse]:
+        form: Type[YamlImportForm] = YamlImportForm()
+        data: dict[Any, Any] = {"form": form}
         if request.method == "POST":
             self.create_lake_from_yaml(request)
             return HttpResponseRedirect(reverse("admin:index"))
@@ -43,14 +46,14 @@ class LakeAdmin(admin.ModelAdmin):
 
 class PayoutMultiplierAdmin(admin.ModelAdmin):
     # pom stands for Payout Multiplier
-    def get_urls(self):
+    def get_urls(self) -> list:
         return [path("upload-pom/", self.pom_upload)] + super().get_urls()
 
-    def pom_upload(self, request):
-        form = YamlImportForm()
-        data = {"form": form}
+    def pom_upload(self, request: Type[HttpRequest]) -> Type[HttpResponse]:
+        form: Type[YamlImportForm] = YamlImportForm()
+        data: dict[Any, Any] = {"form": form}
         if request.method == "POST":
-            poms = safe_load(request.FILES["yaml_upload"])
+            poms: Any = safe_load(request.FILES["yaml_upload"])
             for year, pom in poms.items():
                 PayOutMultipliers.objects.update_or_create(
                     year=year,

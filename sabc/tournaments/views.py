@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
+from typing import Type, Any
+
 import datetime
 
 from decimal import Decimal
 
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.contrib import messages
+from django.db.models import QuerySet
 from django.shortcuts import render
 from django.views.generic import (
     ListView,
@@ -37,54 +41,58 @@ from .tables import (
     TournamentSummaryTable,
     EditableTeamResultTable,
 )
+from .models.rules import RuleSet
 from .models.payouts import PayOutMultipliers
 from .models.results import Result, TeamResult
 from .models.tournament import Tournament
 
 
 class TournamentListView(ListView):
-    model = Tournament
-    ordering = ["-date"]  # Newest tournament first
-    paginate_by = 3
-    template_name = "users/index.html"
-    context_object_name = "tournaments"
+    model: Type[Tournament] = Tournament
+    ordering: list[str] = ["-date"]  # Newest tournament first
+    paginate_by: int = 3
+    template_name: str = "users/index.html"
+    context_object_name: str = "tournaments"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def get_context_data(self, **kwargs: dict) -> dict[Any, Any]:
+        context: dict = super().get_context_data(**kwargs)
         context["index_html"] = True
         context["next_meeting"] = NEXT_MEETING
         context["next_tournament"] = NEXT_TOURNAMENT
         return context
 
 
-class ExtraTournamentContext:
-    extra_context = {}
+class TournamentDetailView(DetailView):
+    model: Type[Tournament] = Tournament
+    context_object_name: str = "tournament"
 
-    def get_payout_table(self, tid):
-        payouts = Tournament.results.get_payouts(tid)
+    def get_payout_table(self, tournament: Type[Tournament]) -> Type[PayoutSummary]:
+        payouts: dict[Any, Any] = Tournament.results.get_payouts(tournament=tournament)
         for key, val in payouts.items():
             payouts[key] = f"${val:.2f}"
-
         return PayoutSummary([payouts])
 
-    def get_stats_table(self, tid):
-        tournament = Tournament.objects.get(pk=tid)
+    def get_stats_table(self, tid: int) -> Type[TournamentSummaryTable]:
+        tournament: Type[QuerySet] = Tournament.objects.get(pk=tid)
         if not tournament.complete:
             return TournamentSummaryTable([])
 
-        limits = Result.objects.filter(tournament=tid, num_fish=5).count()
-        zeroes = Result.objects.filter(tournament=tid, num_fish=0, buy_in=False).count()
-        buy_ins = Result.objects.filter(tournament=tid, buy_in=True).count()
-        bb_result = Tournament.results.get_big_bass_winner(tournament=tid)
-        hs_result = Result.objects.filter(tournament=tid, place_finish=1)[0]
-        heavy_stringer = f"{hs_result.angler} {hs_result.total_weight}lbs"
+        limits: Type[QuerySet] = Result.objects.filter(tournament=tid, num_fish=5).count()
+        zeroes: Type[QuerySet] = Result.objects.filter(
+            tournament=tid, num_fish=0, buy_in=False
+        ).count()
+        buy_ins: Type[QuerySet] = Result.objects.filter(tournament=tid, buy_in=True).count()
+        bb_result: Type[QuerySet] = Tournament.results.get_big_bass_winner(tournament=tid)
+        hs_result: Type[QuerySet] = Result.objects.filter(tournament=tid, place_finish=1)[0]
+        heavy_stringer: str = f"{hs_result.angler} {hs_result.total_weight}lbs"
 
-        total_fish, total_weight = 0, Decimal("0")
+        total_fish: int = 0
+        total_weight: Decimal = Decimal("0")
         for result in Result.objects.filter(tournament=tid, num_fish__gt=0):
             total_fish += result.num_fish
             total_weight += result.total_weight
 
-        big_bass = "--"
+        big_bass: str = "--"
         if bb_result:
             big_bass = f"{bb_result.angler} {bb_result.big_bass_weight: .2f}lbs"
         data = {
@@ -99,60 +107,57 @@ class ExtraTournamentContext:
 
         return TournamentSummaryTable([data])
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        tmnt = Tournament.objects.get(pk=self.kwargs.get("pk"))
+    def get_context_data(self, **kwargs: dict[Any, Any]) -> dict[Any, Any]:
+        context: dict[Any, Any] = super().get_context_data(**kwargs)
+        tmnt: Type[Tournament] = Tournament.objects.get(pk=self.kwargs.get("pk"))
         Tournament.results.set_points(tournament=tmnt)
 
-        team_results = TeamResult.objects.filter(tournament=tmnt).order_by("place_finish")
-        self.extra_context["team_results"] = TeamResultTable(team_results)
-        self.extra_context["editable_team_results"] = EditableTeamResultTable(team_results)
+        team_results: Type[QuerySet] = TeamResult.objects.filter(tournament=tmnt).order_by(
+            "place_finish"
+        )
+        context["team_results"] = TeamResultTable(team_results)
+        context["editable_team_results"] = EditableTeamResultTable(team_results)
 
-        indv_results = Result.objects.filter(
+        indv_results: Type[QuerySet] = Result.objects.filter(
             tournament=tmnt, buy_in=False, disqualified=False
         ).order_by("place_finish")
-        self.extra_context["results"] = ResultTable(indv_results)
-        self.extra_context["editable_results"] = EditableResultTable(indv_results)
+        context["results"] = ResultTable(indv_results)
+        context["editable_results"] = EditableResultTable(indv_results)
 
-        buy_ins = Result.objects.filter(tournament=tmnt, buy_in=True)
-        self.extra_context["buy_ins"] = BuyInTable(buy_ins)
-        self.extra_context["render_buy_ins"] = buy_ins.count()
-        self.extra_context["editable_buy_ins"] = EditableBuyInTable(buy_ins)
+        buy_ins: Type[QuerySet] = Result.objects.filter(tournament=tmnt, buy_in=True)
+        context["buy_ins"] = BuyInTable(buy_ins)
+        context["render_buy_ins"] = buy_ins.count()
+        context["editable_buy_ins"] = EditableBuyInTable(buy_ins)
 
-        dqs = Result.objects.filter(tournament=tmnt, disqualified=True)
-        self.extra_context["dqs"] = DQTable(dqs)
-        self.extra_context["render_dqs"] = dqs.count()
-        self.extra_context["editable_dqs"] = EditableDQTable(dqs)
+        dqs: Type[QuerySet] = Result.objects.filter(tournament=tmnt, disqualified=True)
+        context["dqs"] = DQTable(dqs)
+        context["render_dqs"] = dqs.count()
+        context["editable_dqs"] = EditableDQTable(dqs)
 
-        self.extra_context["payouts"] = self.get_payout_table(tmnt)
-        self.extra_context["catch_stats"] = (
+        context["payouts"] = self.get_payout_table(tournament=tmnt)
+        context["catch_stats"] = (
             self.get_stats_table(tmnt.id) if indv_results else TournamentSummaryTable([])
         )
-        context.update(self.extra_context)
         return context
-
-
-class TournamentDetailView(ExtraTournamentContext, DetailView):
-    model = Tournament
-    context_object_name = "tournament"
 
 
 class TournamentCreateView(
     SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView
 ):
-    model = Tournament
-    form_class = TournamentForm
-    success_message = "Tournament successfully created!"
+    model: Type[Tournament] = Tournament
+    form_class: Type[TournamentForm] = TournamentForm
+    success_message: str = "Tournament successfully created!"
 
-    def get_initial(self):
-        initial = super().get_initial()
-        initial["payout_multiplier"] = PayOutMultipliers.objects.get(
+    def get_initial(self) -> dict[Any, Any]:
+        initial: dict[Any, Any] = super().get_initial()
+        initial["rules"] = RuleSet.objects.get_or_create(year=datetime.date.today().year)
+        initial["payout_multiplier"] = PayOutMultipliers.objects.get_or_create(
             year=datetime.date.today().year
         )
         return initial
 
-    def test_func(self):
-        is_officer = Officers.objects.filter(
+    def test_func(self) -> bool:
+        is_officer: int = Officers.objects.filter(
             year=datetime.date.today().year, angler=self.request.user.angler
         ).count()
         return is_officer != 0 or self.request.user.is_staff
@@ -161,12 +166,12 @@ class TournamentCreateView(
 class TournamentUpdateView(
     SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView
 ):
-    model = Tournament
-    form_class = TournamentForm
-    success_message = "Tournament successfully updated!"
+    model: Type[Tournament] = Tournament
+    form_class: Type[TournamentForm] = TournamentForm
+    success_message: str = "Tournament successfully updated!"
 
-    def test_func(self):
-        is_officer = Officers.objects.filter(
+    def test_func(self) -> bool:
+        is_officer: int = Officers.objects.filter(
             year=datetime.date.today().year, angler=self.request.user.angler
         ).count()
         return is_officer != 0 or self.request.user.is_staff
@@ -175,59 +180,61 @@ class TournamentUpdateView(
 class TournamentDeleteView(
     SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView
 ):
-    model = Tournament
+    model: Type[Tournament] = Tournament
 
-    def test_func(self):
-        is_officer = Officers.objects.filter(
+    def test_func(self) -> bool:
+        is_officer: int = Officers.objects.filter(
             year=datetime.date.today().year, angler=self.request.user.angler
         ).count()
         return is_officer != 0 or self.request.user.is_staff
 
-    def get_queryset(self):
+    def get_queryset(self) -> Type[QuerySet]:
         return super().get_queryset().filter(pk=self.kwargs.get("pk"))
 
-    def get_success_url(self):
+    def get_success_url(self) -> Any:
         messages.success(self.request, f"{self.get_object().name} Deleted!")
         return reverse_lazy("sabc-home")
 
-    def delete(self, request, *args, **kwargs):
-        obj = self.get_object()
+    def delete(
+        self, request: Type[HttpRequest], *args: list, **kwargs: dict[Any, Any]
+    ) -> Type[HttpResponseRedirect]:
+        obj: Type[TournamentDeleteView] = self.get_object()
         messages.success(request, self.success_message % obj.name)
         return super().delete(request, *args, **kwargs)
 
 
 class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
-    model = Result
-    form_class = ResultForm
+    model: Type[Result] = Result
+    form_class: Type[ResultForm] = ResultForm
 
-    def get_initial(self):
-        initial = super().get_initial()
+    def get_initial(self) -> dict[Any, Any]:
+        initial: dict[Any, Any] = super().get_initial()
         initial["tournament"] = self.kwargs.get("pk")
         return initial
 
-    def test_func(self):
-        is_officer = Officers.objects.filter(
+    def test_func(self) -> bool:
+        is_officer: int = Officers.objects.filter(
             year=datetime.date.today().year, angler=self.request.user.angler
         ).count()
         return is_officer != 0 or self.request.user.is_staff
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def get_context_data(self, **kwargs: dict[Any, Any]) -> dict[Any, Any]:
+        context: dict[Any, Any] = super().get_context_data(**kwargs)
         context["tournament"] = Tournament.objects.get(pk=self.kwargs.get("pk"))
         return context
 
-    def form_valid(self, form):
-        tid = self.kwargs.get("pk")
-        duplicate = form.instance.angler in [
+    def form_valid(self, form: Type[ResultForm]) -> Any:
+        tid: int = self.kwargs.get("pk")
+        duplicate: bool = form.instance.angler in [
             r.angler for r in Result.objects.filter(tournament=tid)
         ]
         if duplicate:  # Don't add duplicate records!
-            result = Result.objects.get(tournament=tid, angler=form.instance.angler)
+            result: Type[Result] = Result.objects.get(tournament=tid, angler=form.instance.angler)
             messages.error(self.request, message=f"ERROR Result exists! {result}")
             return super().form_invalid(form)
 
         Tournament.results.set_points(Tournament.objects.get(pk=tid))
-        msg = f"{form.instance.angler} Buy-in"
+        msg: str = f"{form.instance.angler} Buy-in"
         if not form.instance.buy_in:
             msg = " ".join(
                 [
@@ -241,53 +248,53 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMi
 
 
 class ResultDeleteView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    model = Result
+    model: Type[Result] = Result
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def get_context_data(self, **kwargs: dict[Any, Any]) -> dict[Any, Any]:
+        context: dict[Any, Any] = super().get_context_data(**kwargs)
         context["tournament"] = Result.objects.get(pk=self.kwargs.get("pk")).tournament
         return context
 
-    def test_func(self):
-        is_officer = Officers.objects.filter(
+    def test_func(self) -> bool:
+        is_officer: int = Officers.objects.filter(
             year=datetime.date.today().year, angler=self.request.user.angler
         ).count()
         return is_officer != 0 or self.request.user.is_staff
 
-    def get_queryset(self):
+    def get_queryset(self) -> Type[QuerySet]:
         return super().get_queryset().filter(pk=self.kwargs.get("pk"))
 
-    def get_success_url(self):
+    def get_success_url(self) -> Any:
         messages.success(self.request, f"{self.get_object()} Deleted!")
         return reverse_lazy("tournament-details", kwargs={"pk": self.get_object().tournament.id})
 
 
 class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
-    model = TeamResult
-    form_class = TeamForm
-    template_name = "tournaments/team_form.html"
+    model: Type[TeamResult] = TeamResult
+    form_class: Type[TeamForm] = TeamForm
+    template_name: str = "tournaments/team_form.html"
 
-    def get_initial(self):
-        initial = super().get_initial()
+    def get_initial(self) -> dict[Any, Any]:
+        initial: dict[Any, Any] = super().get_initial()
         initial["tournament"] = self.kwargs.get("pk")
         return initial
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def get_context_data(self, **kwargs: dict[Any, Any]) -> dict[Any, Any]:
+        context: dict[Any, Any] = super().get_context_data(**kwargs)
         context["tournament"] = Tournament.objects.get(pk=self.kwargs.get("pk"))
         return context
 
-    def test_func(self):
-        is_officer = Officers.objects.filter(
+    def test_func(self) -> bool:
+        is_officer: int = Officers.objects.filter(
             year=datetime.date.today().year, angler=self.request.user.angler
         ).count()
         return is_officer != 0 or self.request.user.is_staff
 
-    def form_valid(self, form):
-        tid = self.get_initial()["tournament"]
-        results = TeamResult.objects.filter(tournament=tid)
-        anglers = [r.result_1.angler for r in results] + [r.result_2.angler for r in results]
-        err = "Team Result for %s already exists!"
+    def form_valid(self, form: Type[TeamForm]) -> Any:
+        tid: int = self.get_initial()["tournament"]
+        results: Type[QuerySet] = TeamResult.objects.filter(tournament=tid)
+        anglers: list = [r.result_1.angler for r in results] + [r.result_2.angler for r in results]
+        err: str = "Team Result for %s already exists!"
         if form.instance.result_1.angler in anglers:
             messages.error(self.request, err % form.instance.result_1.angler)
             return self.form_invalid(form)
@@ -296,7 +303,7 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixi
                 messages.error(self.request, err % form.instance.result_2.angler)
                 return self.form_invalid(form)
 
-        msg = f"{form.instance.result_1.angler}"
+        msg: str = f"{form.instance.result_1.angler}"
         msg += f"& {form.instance.result_2.angler}" if form.instance.result_2 else " - solo"
         messages.success(self.request, f"Team added: {msg}")
         return super().form_valid(form)
@@ -305,38 +312,38 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixi
 class TeamResultDeleteView(
     SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView
 ):
-    model = TeamResult
+    model: Type[TeamResult] = TeamResult
 
-    def get_initial(self):
+    def get_initial(self) -> dict[Any, Any]:
         initial = super().get_initial()
         initial["tournament"] = self.kwargs.get("pk")
         return initial
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def get_context_data(self, **kwargs: dict[Any, Any]) -> dict[Any, Any]:
+        context: dict[Any, Any] = super().get_context_data(**kwargs)
         context["tournament"] = TeamResult.objects.get(pk=self.kwargs.get("pk")).tournament
         return context
 
-    def test_func(self):
-        is_officer = Officers.objects.filter(
+    def test_func(self) -> bool:
+        is_officer: int = Officers.objects.filter(
             year=datetime.date.today().year, angler=self.request.user.angler
         ).count()
         return is_officer != 0 or self.request.user.is_staff
 
-    def get_queryset(self):
+    def get_queryset(self) -> Type[QuerySet]:
         return super().get_queryset().filter(pk=self.kwargs.get("pk"))
 
-    def get_success_url(self):
+    def get_success_url(self) -> Any:
         messages.success(self.request, f"{self.get_object()} Deleted!")
         return reverse_lazy("tournament-details", kwargs={"pk": self.get_object().tournament.id})
 
 
 @login_required
-def annual_awards(request):
-    aoy_tbl = AoyTable(get_aoy_results())
+def annual_awards(request: Type[HttpRequest]) -> Type[HttpResponse]:
+    aoy_tbl: Type[AoyTable] = AoyTable(get_aoy_results())
     aoy_tbl.order_by = "-total_points"
-    hvy_tbl = HeavyStringer(get_heavy_stringer())
-    bb_tbl = BigBass(get_big_bass())
+    hvy_tbl: Type[HeavyStringer] = HeavyStringer(get_heavy_stringer())
+    bb_tbl: Type[BigBass] = BigBass(get_big_bass())
     return render(
         request,
         "tournaments/annual_awards.html",
@@ -350,19 +357,19 @@ def annual_awards(request):
     )
 
 
-def get_aoy_results(year=datetime.date.today().year):
-    all_results = Result.objects.filter(
+def get_aoy_results(year: int = datetime.date.today().year) -> list:
+    all_results: Type[QuerySet] = Result.objects.filter(
         tournament__year=year,
         angler__user__is_active=True,
     )
-    anglers = []
+    anglers: list = []
     for result in all_results:
         if result.angler not in anglers:
             anglers.append(result.angler)
 
-    results = []
+    results: list = []
     for angler in anglers:
-        stats = {
+        stats: dict[str, Any] = {
             "angler": angler.user.get_full_name(),
             "total_points": sum(r.points for r in all_results if r.angler == angler),
             "total_weight": sum(r.total_weight for r in all_results if r.angler == angler),
@@ -373,8 +380,8 @@ def get_aoy_results(year=datetime.date.today().year):
     return results
 
 
-def get_heavy_stringer(year=datetime.date.today().year):
-    result = (
+def get_heavy_stringer(year=datetime.date.today().year) -> list:
+    result: Type[Result] = (
         Result.objects.filter(
             tournament__year=year, angler__user__is_active=True, total_weight__gt=Decimal("0")
         )
@@ -393,8 +400,8 @@ def get_heavy_stringer(year=datetime.date.today().year):
     ]
 
 
-def get_big_bass(year=datetime.date.today().year):
-    result = (
+def get_big_bass(year=datetime.date.today().year) -> list:
+    result: Type[QuerySet] = (
         Result.objects.filter(
             tournament__year=year, angler__user__is_active=True, big_bass_weight__gte=Decimal("5.0")
         )

@@ -1,25 +1,27 @@
 # -*- coding: utf-8 -*-
+from typing import Type
+
 from django_tables2.utils import A
 from django_tables2.tables import Table
 from django_tables2.columns import Column, LinkColumn
 
 from .models.results import Result, TeamResult
 
-DEFAULT_TABLE_TEMPLATE = "django_tables2/bootstrap4.html"
+DEFAULT_TABLE_TEMPLATE: str = "django_tables2/bootstrap4.html"
 
 
 class EditableResultTable(Table):
-    delete = LinkColumn(
+    delete: Type[LinkColumn] = LinkColumn(
         "result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=()
     )
-    first_name = Column(accessor="angler.user.first_name")
-    last_name = Column(accessor="angler.user.last_name")
+    first_name: Type[Column] = Column(accessor="angler.user.first_name")
+    last_name: Type[Column] = Column(accessor="angler.user.last_name")
 
     class Meta:
-        model = Result
-        orderable = False
-        template_name = DEFAULT_TABLE_TEMPLATE
-        fields = (
+        model: Type[Result] = Result
+        orderable: bool = False
+        template_name: str = DEFAULT_TABLE_TEMPLATE
+        fields: tuple = (
             "place_finish",
             "first_name",
             "last_name",
@@ -31,14 +33,14 @@ class EditableResultTable(Table):
 
 
 class ResultTable(Table):
-    first_name = Column(accessor="angler.user.first_name")
-    last_name = Column(accessor="angler.user.last_name")
+    first_name: Type[Column] = Column(accessor="angler.user.first_name")
+    last_name: Type[Column] = Column(accessor="angler.user.last_name")
 
     class Meta:
-        model = Result
-        orderable = False
-        template_name = DEFAULT_TABLE_TEMPLATE
-        fields = (
+        model: Type[Result] = Result
+        orderable: bool = False
+        template_name: str = DEFAULT_TABLE_TEMPLATE
+        fields: tuple = (
             "place_finish",
             "first_name",
             "last_name",
@@ -50,15 +52,15 @@ class ResultTable(Table):
 
 
 class EditableTeamResultTable(Table):
-    delete = LinkColumn(
+    delete: Type[LinkColumn] = LinkColumn(
         "teamresult-delete", text="delete", args=[A("pk")], orderable=False, empty_values=()
     )
 
     class Meta:
-        model = TeamResult
-        orderable = False
-        template_name = DEFAULT_TABLE_TEMPLATE
-        fields = (
+        model: Type[TeamResult] = TeamResult
+        orderable: bool = False
+        template_name: str = DEFAULT_TABLE_TEMPLATE
+        fields: tuple = (
             "place_finish",
             "team_name",
             "num_fish",
@@ -69,10 +71,10 @@ class EditableTeamResultTable(Table):
 
 class TeamResultTable(Table):
     class Meta:
-        model = TeamResult
-        orderable = False
-        template_name = DEFAULT_TABLE_TEMPLATE
-        fields = (
+        model: Type[TeamResult] = TeamResult
+        orderable: bool = False
+        template_name: str = DEFAULT_TABLE_TEMPLATE
+        fields: tuple = (
             "place_finish",
             "team_name",
             "num_fish",
@@ -82,17 +84,17 @@ class TeamResultTable(Table):
 
 
 class EditableBuyInTable(Table):
-    delete = LinkColumn(
+    delete: Type[LinkColumn] = LinkColumn(
         "result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=()
     )
-    first_name = Column(accessor="angler.user.first_name")
-    last_name = Column(accessor="angler.user.last_name")
+    first_name: Type[Column] = Column(accessor="angler.user.first_name")
+    last_name: Type[Column] = Column(accessor="angler.user.last_name")
 
     class Meta:
-        model = Result
-        orderable = False
-        template_name = DEFAULT_TABLE_TEMPLATE
-        fields = (
+        model: Type[Result] = Result
+        orderable: bool = False
+        template_name: str = DEFAULT_TABLE_TEMPLATE
+        fields: tuple = (
             "place_finish",
             "first_name",
             "last_name",
@@ -101,14 +103,14 @@ class EditableBuyInTable(Table):
 
 
 class BuyInTable(Table):
-    first_name = Column(accessor="angler.user.first_name")
-    last_name = Column(accessor="angler.user.last_name")
+    first_name: Type[Column] = Column(accessor="angler.user.first_name")
+    last_name: Type[Column] = Column(accessor="angler.user.last_name")
 
     class Meta:
-        model = Result
-        orderable = False
-        template_name = DEFAULT_TABLE_TEMPLATE
-        fields = (
+        model: Type[Result] = Result
+        orderable: bool = False
+        template_name: str = DEFAULT_TABLE_TEMPLATE
+        fields: tuple = (
             "place_finish",
             "first_name",
             "last_name",
@@ -117,17 +119,17 @@ class BuyInTable(Table):
 
 
 class EditableDQTable(Table):
-    delete = LinkColumn(
+    delete: Type[LinkColumn] = LinkColumn(
         "result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=()
     )
-    first_name = Column(accessor="angler.user.first_name")
-    last_name = Column(accessor="angler.user.last_name")
+    first_name: Type[Column] = Column(accessor="angler.user.first_name")
+    last_name: Type[Column] = Column(accessor="angler.user.last_name")
 
     class Meta:
-        model = Result
-        orderable = False
-        template_name = DEFAULT_TABLE_TEMPLATE
-        fields = (
+        model: Type[Result] = Result
+        orderable: bool = False
+        template_name: str = DEFAULT_TABLE_TEMPLATE
+        fields: tuple = (
             "place_finish",
             "first_name",
             "last_name",
@@ -139,14 +141,14 @@ class EditableDQTable(Table):
 
 
 class DQTable(Table):
-    first_name = Column(accessor="angler.user.first_name")
-    last_name = Column(accessor="angler.user.last_name")
+    first_name: Type[Column] = Column(accessor="angler.user.first_name")
+    last_name: Type[Column] = Column(accessor="angler.user.last_name")
 
     class Meta:
-        model = Result
-        orderable = False
-        template_name = DEFAULT_TABLE_TEMPLATE
-        fields = (
+        model: Type[Result] = Result
+        orderable: bool = False
+        template_name: str = DEFAULT_TABLE_TEMPLATE
+        fields: tuple = (
             "place_finish",
             "first_name",
             "last_name",
@@ -158,60 +160,60 @@ class DQTable(Table):
 
 
 class TournamentSummaryTable(Table):
-    total_fish = Column()
-    total_weight = Column()
-    limits = Column()
-    zeros = Column()
-    buy_ins = Column()
-    big_bass = Column()
-    heavy_stringer = Column()
+    total_fish: Type[Column] = Column()
+    total_weight: Type[Column] = Column()
+    limits: Type[Column] = Column()
+    zeros: Type[Column] = Column()
+    buy_ins: Type[Column] = Column()
+    big_bass: Type[Column] = Column()
+    heavy_stringer: Type[Column] = Column()
 
     class Meta:
-        orderable = False
-        template_name = DEFAULT_TABLE_TEMPLATE
+        orderable: bool = False
+        template_name: str = DEFAULT_TABLE_TEMPLATE
 
 
 class PayoutSummary(Table):
-    first = Column(accessor="place_1")
-    second = Column(accessor="place_2")
-    third = Column(accessor="place_3")
-    big_bass = Column()
-    club = Column()
-    charity = Column()
-    total = Column()
+    first: Type[Column] = Column(accessor="place_1")
+    second: Type[Column] = Column(accessor="place_2")
+    third: Type[Column] = Column(accessor="place_3")
+    big_bass: Type[Column] = Column()
+    club: Type[Column] = Column()
+    charity: Type[Column] = Column()
+    total: Type[Column] = Column()
 
     class Meta:
-        orderable = False
-        template_name = DEFAULT_TABLE_TEMPLATE
+        orderable: bool = False
+        template_name: str = DEFAULT_TABLE_TEMPLATE
 
 
 class Aoy(Table):
-    angler = Column()
-    total_points = Column()
-    total_fish = Column()
-    total_weight = Column()
-    events = Column()
+    angler: Type[Column] = Column()
+    total_points: Type[Column] = Column()
+    total_fish: Type[Column] = Column()
+    total_weight: Type[Column] = Column()
+    events: Type[Column] = Column()
 
     class Meta:
-        template_name = DEFAULT_TABLE_TEMPLATE
+        template_name: str = DEFAULT_TABLE_TEMPLATE
 
 
 class BigBass(Table):
-    angler = Column()
-    weight = Column()
-    tournament = Column()
+    angler: Type[Column] = Column()
+    weight: Type[Column] = Column()
+    tournament: Type[Column] = Column()
 
     class Meta:
-        orderable = False
-        template_name = DEFAULT_TABLE_TEMPLATE
+        orderable: bool = False
+        template_name: str = DEFAULT_TABLE_TEMPLATE
 
 
 class HeavyStringer(Table):
-    angler = Column()
-    weight = Column()
-    fish = Column()
-    tournament = Column()
+    angler: Type[Column] = Column()
+    weight: Type[Column] = Column()
+    fish: Type[Column] = Column()
+    tournament: Type[Column] = Column()
 
     class Meta:
-        orderable = False
-        template_name = DEFAULT_TABLE_TEMPLATE
+        orderable: bool = False
+        template_name: str = DEFAULT_TABLE_TEMPLATE
