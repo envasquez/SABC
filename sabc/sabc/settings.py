@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
+import os
 from typing import Any, Optional
 
-import os
 from django.contrib.messages import constants as messages
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -17,7 +17,6 @@ ALLOWED_HOSTS: list = ["*"]
 INSTALLED_APPS: list[str] = [
     "polls",
     "users",
-    "django_nose",
     "tournaments",
     "crispy_forms",
     "django_tables2",
@@ -51,9 +50,9 @@ TEMPLATES: list[dict] = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-            ],
+            ]
         },
-    },
+    }
 ]
 WSGI_APPLICATION: str = "sabc.wsgi.application"
 # Database
@@ -82,25 +81,17 @@ if os.environ.get("GITHUB_WORKFLOW"):
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS: list[dict] = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 LANGUAGE_CODE: str = "en-us"
 TIME_ZONE: str = "UTC"
 USE_I18N: bool = True
-USE_L10N: bool = True
+# USE_L10N: bool = True
 USE_TZ: bool = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
@@ -132,27 +123,17 @@ EMAIL_HOST_PASSWORD: Optional[str] = os.environ.get("EMAIL_PASS")
 DEFAULT_AUTO_FIELD: str = "django.db.models.AutoField"
 DJANGO_TABLES2_TEMPLATE: str = "django_tables2/bootstrap4.html"
 
-TEST_RUNNER: str = "django_nose.NoseTestSuiteRunner"
-NOSE_ARGS: list[str] = ["--verbosity=3"]
-
 LOGGING: dict[Any, Any] = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-        },
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": "DEBUG" if DEBUG else "INFO",
-    },
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "root": {"handlers": ["console"], "level": "DEBUG" if DEBUG else "INFO"},
     "loggers": {
         "django": {
             "handlers": ["console"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
             "propagate": False,
-        },
+        }
     },
 }
 # Make messages.error() - display in RED
