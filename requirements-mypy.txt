@@ -77,9 +77,11 @@ terminaltables==3.1.10
 tomli==2.0.1
 tomlkit==0.11.6
 traitlets==5.8.1
+types-PyYAML==6.0.12.2
 typing_extensions==4.4.0
 wcwidth==0.2.5
 websockets==10.4
 wrap==2018.3.1
 wrapt==1.14.1
 yarl==1.8.2
+types-Pillow==9.4.0.1
