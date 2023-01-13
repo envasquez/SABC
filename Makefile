@@ -2,13 +2,17 @@ SHELL := /bin/bash
 SETUP := SETUP
 PROJECT := sabc
 
-.PHONY: clean clean-db clean-docker clean-all docker lint test
+.PHONY: clean clean-db clean-docker clean-all docker lint test webapp mypy isort
 .DEFAULT_GOAL: help
 export PYTHONPATH=$(shell pwd)/sabc
+
+isort:
+	isort .
 
 clean:
 	find $(PROJECT) -name "*.pyc" -type f -delete
 	find $(PROJECT) -name "__pycache__" -type d -delete
+	docker image prune -f
 
 clean-db: clean
 	find $(PROJECT) -path "*/migrations/*.py" -not -name "__init__.py" -delete
@@ -26,20 +30,24 @@ docker: DEPLOYMENT_HOST=db
 docker: clean-all
 	docker compose up -d --build --force-recreate
 
-test-webapp: DEPLOYMENT_HOST=db
-test-webapp:
-	docker-compose down
+webapp: DEPLOYMENT_HOST=db
+webapp:
+	docker compose down
 	docker volume rm sabc_sabc_app || true
 	docker image rm sabc_sabc || true
 	docker compose up -d --build
 
-lint: clean clean-db
-	python3 -m pylint --verbose --rcfile=.pylintrc --output=pylint.out sabc/tournaments; cat pylint.out
+lint: clean clean-db isort
+	python3 -m pylint --verbose sabc/tournaments/ sabc/users/ sabc/polls/ --rcfile pyproject.toml
 
 test: clean-db
 	python3 sabc/manage.py makemigrations --no-input -v 3 && python3 sabc/manage.py migrate --run-syncdb
-	python3 -m coverage run --branch --source=sabc/tournaments sabc/./manage.py test --verbosity=2 sabc
-	python3 -m coverage report
+	coverage run --branch --source=sabc -m pytest && coverage report -m
+
+mypy: clean-db
+	docker build -f Dockerfile_mypy -t test_mypy .
+	docker run --rm test_mypy
+
 
 help:
 	@echo -e "\t make clean"
