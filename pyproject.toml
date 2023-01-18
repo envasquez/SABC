@@ -2,14 +2,17 @@
 # MyPy
 #
 [tool.mypy]
+exclude = ["sabc/sabc/urls.py"]
+plugins = ["mypy_django_plugin.main"]
 python_version = 3.11
-# disallow_untyped_defs = true
-# disallow_any_unimported = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
 no_implicit_optional = true
-check_untyped_defs = true
-# warn_return_any = true
-# warn_unused_ignores = true
-# show_error_codes = true
+warn_incomplete_stub = false
+
+[tool.django-stubs]
+django_settings_module = "sabc.settings"
 
 [[tool.mypy.overrides]]
 module = "django.*"
@@ -38,6 +41,19 @@ ignore_missing_imports = true
 max_line_length = 120
 skip_magic_trailing_comma = true
 target_version = ['py311']
+exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | \.tox
+  | venv
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
 
 #
 # Coverage
@@ -60,119 +76,127 @@ omit = [
 #
 # Pylint
 #
-[tool.pylint]
-    [tool.pylint.master]
-    #ignore=['CVS']
-    jobs=0
-    persistent=['yes']
-    unsafe-load-any-extension=['no']
+[tool.pylint.MASTER]
+extension-pkg-whitelist = ''
+fail-under = '10.0'
+ignore = '.git'
+ignore-patterns = ''
+jobs = 0
+limit-inference-results = 100
+load-plugins = ''
+persistent = 'yes'
+suggestion-mode = 'yes'
+unsafe-load-any-extension = 'no'
 
-    [tool.pylint.'MESSAGES CONTROL']
-    disable=['all']
-    enable=['old-ne-operator,old-octal-literal,apply-builtin,basestring-builtin,buffer-builtin,cmp-builtin,unichr-builtin,C0203,C0204,C0303,C0304,C0321,C0325,C1001,E0001,E0101,E0104,E0105,E0108,E0213,E0601,E0602,E0701,E0710,E0711,E0712,E1001-E1004,E1111,E1121,E1122,E1200,E1201,E1205,E1206,E1300-E1306,W0101,W0104,W0107,W0109,W0231,W0401']
+[tool.pylint."MESSAGES CONTROL"]
+disable = 'missing-function-docstring, missing-module-docstring, missing-class-docstring, too-few-public-methods, abstract-method'
 
-    [tool.pylint.'REPORTS']
-    evaluation=['10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)']
-    output-format=['text']
-    reports=['no']
-        score=['yes']
+[tool.pylint.REPORTS]
+evaluation = '10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)'
+output-format = 'text'
+reports = 'no'
+score = 'yes'
 
-    [tool.pylint.'REFACTORING']
-    max-nested-blocks=5
+[tool.pylint.REFACTORING]
+max-nested-blocks = 5
+never-returning-functions = 'sys.exit'
+notes = '''FIXME,
+      XXX,
+      TODO
+'''
 
-    [tool.pylint.'MISCELLANEOUS']
-    notes=['FIXME,XXX,TODO']
+[tool.pylint.TYPECHECK]
+contextmanager-decorators = 'contextlib.contextmanager'
+generated-members = ''
+ignore-mixin-members = 'yes'
+ignore-none = 'yes'
+ignore-on-opaque-inference = 'yes'
+ignored-classes = 'optparse.Values,thread._local,_thread._local'
+ignored-modules = ''
+missing-member-hint = 'yes'
+missing-member-hint-distance = 1
+missing-member-max-choices = 1
+signature-mutators = ''
 
-    [tool.pylint.'TYPECHECK']
-    contextmanager-decorators=['contextlib.contextmanager']
-    ignore-mixin-members=['yes']
-    ignore-on-opaque-inference=['yes']
-    ignored-classes=['optparse.Values,thread._local,_thread._local']
-    missing-member-hint=['yes']
-    missing-member-hint-distance=1
-    missing-member-max-choices=1
 
-    [tool.pylint.'FORMAT']
-    ignore-long-lines=['^\s*(# )?<?https?://\S+>?$']
-    indent-after-paren=4
-    indent-string='    '
-    max-line-length=120
-    max-module-lines=1000
-    no-space-check=['trailing-comma,dict-separator']
-    single-line-class-stmt=['no']
-    single-line-if-stmt=['no']
+[tool.pylint.VARIABLES]
+additional-builtins = ''
+allow-global-unused-variables = 'yes'
+callbacks = '''cb_,
+          _cb
+'''
+dummy-variables-rgx = '_+$|(_[a-zA-Z0-9_]*[a-zA-Z0-9]+?$)|dummy|^ignored_|^unused_'
+ignored-argument-names = '_.*|^ignored_|^unused_'
+init-import = 'no'
+redefining-builtins-modules = 'six.moves,past.builtins,future.builtins,builtins,io'
 
-    [tool.pylint.'LOGGING']
-    logging-modules=['logging']
+[tool.pylint.FORMAT]
+expected-line-ending-format = ''
+ignore-long-lines = '^\s*(# )?<?https?://\S+>?$'
+indent-after-paren = 4
+indent-string = '    '
+max-line-length = 120
+max-module-lines = 500
+single-line-class-stmt = 'no'
+single-line-if-stmt = 'no'
 
-    [tool.pylint.'BASIC']
-    argument-name-hint=['(([a-z][a-z0-9_]{2,30})|(_[a-z0-9_]*))$']
-    argument-rgx=['(([a-z][a-z0-9_]{2,30})|(_[a-z0-9_]*))$']
-    attr-name-hint=['(([a-z][a-z0-9_]{2,30})|(_[a-z0-9_]*))$']
-    attr-rgx=['(([a-z][a-z0-9_]{2,30})|(_[a-z0-9_]*))$']
-    bad-names=['foo,bar,baz,toto,tutu,tata']
-    class-attribute-name-hint=['([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$']
-    class-attribute-rgx=['([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$']
-    class-name-hint=['[A-Z_][a-zA-Z0-9]+$']
-    class-rgx=['[A-Z_][a-zA-Z0-9]+$']
-    const-name-hint=['(([A-Z_][A-Z0-9_]*)|(__.*__))$']
-    const-rgx=['(([A-Z_][A-Z0-9_]*)|(__.*__))$']
-    docstring-min-length=-1
-    function-name-hint=['(([a-z][a-z0-9_]{2,30})|(_[a-z0-9_]*))$']
-    function-rgx=['(([a-z][a-z0-9_]{2,30})|(_[a-z0-9_]*))$']
-    good-names=['i,j,k,ex,Run,_,x,y,o,id']
-    include-naming-hint=['no']
-    inlinevar-name-hint=['[A-Za-z_][A-Za-z0-9_]*$']
-    inlinevar-rgx=['[A-Za-z_][A-Za-z0-9_]*$']
-    method-name-hint=['(([a-z][a-z0-9_]{2,30})|(_[a-z0-9_]*))$']
-    method-rgx=['(([a-z][a-z0-9_]{2,30})|(_[a-z0-9_]*))$']
-    module-name-hint=['(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$']
-    module-rgx=['(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$']
-    no-docstring-rgx=['^_']
-    property-classes=['abc.abstractproperty']
-    variable-name-hint=['(([a-z][a-z0-9_]{2,30})|(_[a-z0-9_]*))$']
-    variable-rgx=['(([^lO])|([a-z][a-z0-9_]{2,30})|(_[a-z0-9_]*))$']
+[tool.pylint.SIMILARITIES]
+ignore-comments = 'yes'
+ignore-docstrings = 'yes'
+ignore-imports = 'no'
+min-similarity-lines = 4
 
-    [tool.pylint.'VARIABLES']
-    allow-global-unused-variables=['yes']
-    callbacks=['cb_,_cb']
-    dummy-variables-rgx=['_+$|(_[a-zA-Z0-9_]*[a-zA-Z0-9]+?$)|dummy|^ignored_|^unused_']
-    ignored-argument-names=['_.*|^ignored_|^unused_']
-    init-import=['no']
-    redefining-builtins-modules=['six.moves,future.builtins']
+[tool.pylint.BASIC]
+argument-naming-style = 'snake_case'
+attr-naming-style = 'snake_case'
+bad-names = '''foo,
+          bar,
+          baz,
+          toto,
+          tutu,
+          tata
+'''
+bad-names-rgxs = ''
+class-attribute-naming-style = 'any'
+class-naming-style = 'PascalCase'
+const-naming-style = 'UPPER_CASE'
+docstring-min-length = -1
+function-naming-style = 'snake_case'
+good-names = '''i,
+           j,
+           k,
+           ex,
+           Run,
+           pk,
+           fd,
+           x,
+           y,
+           _
+'''
+good-names-rgxs = ''
+include-naming-hint = 'no'
+inlinevar-naming-style = 'any'
+method-naming-style = 'snake_case'
+module-naming-style = 'snake_case'
+name-group = ''
+no-docstring-rgx = '^_'
+property-classes = 'abc.abstractproperty'
+variable-naming-style = 'snake_case'
 
-    [tool.pylint.'SIMILARITIES']
-    ignore-comments=['yes']
-    ignore-docstrings=['yes']
-    ignore-imports=['no']
-    min-similarity-lines=4
+[tool.pylint.DESIGN]
+max-args = 5
+max-attributes = 7
+max-bool-expr = 5
+max-branches = 12
+max-locals = 15
+max-parents = 11
+max-public-methods = 20
+max-returns = 6
+max-statements = 50
+min-public-methods = 2
 
-    [tool.pylint.'SPELLING']
-    spelling-store-unknown-words=['no']
-
-    [tool.pylint.'DESIGN']
-    max-args=5
-    max-attributes=7
-    max-bool-expr=5
-    max-branches=12
-    max-locals=15
-    max-parents=7
-    max-public-methods=20
-    max-returns=6
-    max-statements=50
-    min-public-methods=2
-
-    [tool.pylint.'IMPORTS']
-    allow-wildcard-with-all=['no']
-    analyse-fallback-blocks=['no']
-    deprecated-modules=['regsub,TERMIOS,Bastion,rexec']
-    known-third-party=['enchant']
-
-    [tool.pylint.'CLASSES']
-    defining-attr-methods=['__init__,__new__,setUp']
-    exclude-protected=['_asdict,_fields,_replace,_source,_make']
-    valid-classmethod-first-arg=['cls']
-    valid-metaclass-classmethod-first-arg=['mcs']
-
-    [tool.pylint.'EXCEPTIONS']
-    overgeneral-exceptions=['Exception']
+#
+# isort
+#
+[tool.isort]
+profile = "black"
