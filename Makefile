@@ -26,9 +26,9 @@ clean-docker:
 
 clean-all: clean-docker clean clean-db
 
-docker: DEPLOYMENT_HOST=db
-docker: clean-all
-	docker compose up -d --build --force-recreate
+# docker: DEPLOYMENT_HOST=db
+# docker: clean-all
+# 	docker compose up -d --build --force-recreate
 
 webapp: DEPLOYMENT_HOST=db
 webapp:
@@ -36,9 +36,6 @@ webapp:
 	docker volume rm sabc_sabc_app || true
 	docker image rm sabc_sabc || true
 	docker compose up -d --build
-
-lint: clean clean-db isort
-	python3 -m pylint --verbose sabc/tournaments/ sabc/users/ sabc/polls/ --rcfile pyproject.toml
 
 test: clean-db
 	python3 sabc/manage.py makemigrations --no-input -v 3 && python3 sabc/manage.py migrate --run-syncdb
@@ -48,6 +45,8 @@ mypy: clean-db
 	docker build -f Dockerfile_mypy -t test_mypy .
 	docker run --rm test_mypy
 
+lint: clean clean-db isort
+	DJANGO_SETTINGS_MODULE=sabc.settings python3 -m pylint --load-plugins pylint_django --verbose sabc/tournaments/ sabc/users/ sabc/polls/ --rcfile pyproject.toml
 
 help:
 	@echo -e "\t make clean"
