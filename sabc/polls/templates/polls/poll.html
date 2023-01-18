@@ -1,45 +1,45 @@
 {% extends "users/base.html" %}
 {% block content %}
-{% if success_message %}
-    <div class="alert alert-success"> {{ success_message }} </div>
-{% endif %}
-<h2>{{ poll.name }}</h2>
+    {% if success_message %}
+        <div class="alert alert-success"> {{ success_message }} </div>
+    {% endif %}
+    <h2>{{ poll.name }}</h2>
     <p>{{ poll.description | linebreaks }}</p>
-<hr class="my-4">
-{% if not voted %}
-    <form method="post">
-        {% csrf_token %}
-        {% for choice in poll.choices.all %}
-            <div class="form-check">
-                <ul>
-                    <li>
-                        <input class="form-check-input" type="radio" name="lake" id="{{ choice.id }}" value="{{ choice.id }}">
-                        <label class="form-check-label" for="{{ choice.id }}">{{ choice | title }}</label>
-                    </li>
-                </ul>
-            </div>
-        {% endfor %}
-        <hr class="my-4">
-        <button class="btn btn-outline-success">Vote!</button>
-    </form>
-{% else %}
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <div id="chart_div"></div>
-    <script type="text/javascript">
-        google.charts.load('current', { 'packages': ['corechart'] });
-        google.charts.setOnLoadCallback(drawBasic);
-        function drawBasic(){
-            var data = google.visualization.arrayToDataTable({{results|safe}});
-            var opts = {
+    <hr class="my-4">
 
-                title: "Voting Results",
-                height: 500,
-                width: 800,
-                legend: "none"
-            };
-            var chart = new google.visualization.BarChart(document.getElementById('chart_div'));
-            chart.draw(data, opts);
-        }
-    </script>
+    {% if not voted %}
+        <form method="post">
+            {% csrf_token %}
+            {% for choice in poll.choices.all %}
+                <div class="form-check">
+                    <ul>
+                        <li>
+                            <input class="form-check-input" type="radio" name="lake" id="{{ choice.id }}" value="{{ choice.id }}">
+                            <label class="form-check-label" for="{{ choice.id }}">{{ choice | title }}</label>
+                        </li>
+                    </ul>
+                </div>
+            {% endfor %}
+            <hr class="my-4">
+            <button class="btn btn-outline-success">Vote!</button>
+        </form>
+    {% else %}
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <div id="chart_div"></div>
+            <script type="text/javascript">
+                google.charts.load('current', { 'packages': ['corechart'] });
+                google.charts.setOnLoadCallback(drawBasic);
+                function drawBasic(){
+                    var data = google.visualization.arrayToDataTable({{results|safe}});
+                        var opts = {
+                            title: "Voting Results",
+                            height: 500,
+                            width: 800,
+                            legend: "none"
+                        };
+                    var chart = new google.visualization.BarChart(document.getElementById('chart_div'));
+                    chart.draw(data, opts);
+                }
+        </script>
 {% endif %}
 {% endblock content %}
