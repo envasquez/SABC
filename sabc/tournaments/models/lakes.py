@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-from typing import Type
 
-from django.db.models import Model, CharField, BooleanField, ForeignKey, PROTECT
+from django.db.models import PROTECT, BooleanField, CharField, ForeignKey, Model
 
 DEFAULT_LAKE_STATE: str = "TX"
 
 
 class Lake(Model):
-    name: Type[CharField] = CharField(default="TBD", max_length=256)
-    paper: Type[BooleanField] = BooleanField(default=False)
-    google_maps: Type[CharField] = CharField(default="", max_length=4096)
+    name: CharField = CharField(default="TBD", max_length=256)
+    paper: BooleanField = BooleanField(default=False)
+    google_maps: CharField = CharField(default="", max_length=4096)
 
     class Meta:
         ordering: tuple = ("name",)
@@ -30,9 +29,9 @@ class Lake(Model):
 
 
 class Ramp(Model):
-    lake: Type[ForeignKey] = ForeignKey(Lake, on_delete=PROTECT)
-    name: Type[CharField] = CharField(max_length=128)
-    google_maps: Type[CharField] = CharField(default="", max_length=4096)
+    lake: ForeignKey | Lake = ForeignKey(Lake, on_delete=PROTECT)
+    name: CharField | str = CharField(max_length=128)
+    google_maps: CharField | str = CharField(default="", max_length=4096)
 
     class Meta:
         ordering: tuple = ("lake__name",)

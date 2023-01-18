@@ -3,10 +3,8 @@ from django.apps import AppConfig
 
 
 class UsersConfig(AppConfig):
-    """User config"""
-
     name = "users"
 
     def ready(self):
-        """Ready signal"""
+        # pylint: disable=unused-import, import-outside-toplevel
         from . import signals

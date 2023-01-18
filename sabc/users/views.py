@@ -1,62 +1,58 @@
+# # -*- coding: utf-8 -*-
 # -*- coding: utf-8 -*-
-from typing import Any, Type, Optional
-
 import datetime
-
 from decimal import Decimal
 
-from django.http import HttpRequest, HttpResponse
-from django.urls import reverse_lazy
-from django.db.models import QuerySet
-from django.shortcuts import render, redirect
-from django.views.generic import CreateView, UpdateView, DetailView
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.contrib.auth.decorators import login_required
-
+from django.shortcuts import redirect, render
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, DetailView, UpdateView
 from tournaments.models.results import Result
 
 from .forms import AnglerUserMultiRegisterForm, AnglerUserMultiUpdateForm
 from .models import Angler, Officers
-from .tables import OfficerTable, MemberTable, GuestTable
+from .tables import GuestTable, MemberTable, OfficerTable
 
 
-def about(request: Type[HttpRequest]) -> Type[HttpResponse]:
+def about(request):
     return render(request, "users/about.html", {"title": "SABC - About"})
 
 
-def bylaws(request: Type[HttpRequest]) -> Type[HttpResponse]:
+def bylaws(request):
     return render(request, "users/bylaws.html", {"title": "SABC - Bylaws"})
 
 
-def calendar(request: Type[HttpRequest]) -> Type[HttpResponse]:
+def calendar(request):
     return render(request, "users/calendar.html", {"title": "SABC - Calendar"})
 
 
 @login_required
-def roster(request: Type[HttpRequest]) -> Type[HttpResponse]:
-    guests: Type[QuerySet] = Angler.objects.filter(type="guest")
-    g_table: Type[GuestTable] = GuestTable(guests) if guests else GuestTable([])
-    m_table: Type[MemberTable] = MemberTable(Angler.members.get_active_members())
-    o_table: Type[OfficerTable] = OfficerTable(
-        Officers.objects.filter(year=datetime.date.today().year)
+def roster(request):
+    o_table = OfficerTable(Officers.objects.filter(year=datetime.date.today().year))
+    m_table = MemberTable(Angler.members.get_active_members())
+    guests = Angler.objects.filter(member=False).exclude(user__first_name="").exclude(user__last_name="")
+    g_table = GuestTable(guests) if guests else []
+    return render(
+        request,
+        "users/roster_list.html",
+        {
+            "title": "Members",
+            "roster_name": f"{datetime.date.today().year} Members",
+            "o_table": o_table,
+            "m_table": m_table,
+            "g_table": g_table,
+        },
     )
-    context: dict = {
-        "title": "Members",
-        "roster_name": f"{datetime.date.today().year} Members",
-        "o_table": o_table,
-        "m_table": m_table,
-        "g_table": g_table,
-    }
-    return render(request, "users/roster_list.html", context=context)
 
 
 class AnglerRegistrationView(CreateView, SuccessMessageMixin):
-    model: Type[Angler] = Angler
-    form_class: Type[AnglerUserMultiRegisterForm] = AnglerUserMultiRegisterForm
-    template_name: str = "users/register.html"
+    model = Angler
+    form_class = AnglerUserMultiRegisterForm
+    template_name = "users/register.html"
 
-    def form_valid(self, form: dict) -> Type[HttpResponse]:
+    def form_valid(self, form):
         user = form["user"].save()
         angler = form["angler"].save(commit=False)
         angler.user = user
@@ -65,20 +61,19 @@ class AnglerRegistrationView(CreateView, SuccessMessageMixin):
 
 
 class AnglerEditView(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
-    model: Type[Angler] = Angler
-    form_class: Type[AnglerUserMultiUpdateForm] = AnglerUserMultiUpdateForm
-    template_name: str = "users/edit_profile.html"
+    model = Angler
+    form_class = AnglerUserMultiUpdateForm
+    template_name = "users/edit_profile.html"
 
-    def get_form_kwargs(self) -> Optional[dict[Any, Any]]:
-        kwargs: dict = super().get_form_kwargs()
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
         return kwargs.update(instance={"user": self.object.user, "angler": self.object})
 
-    def get_initial(self) -> dict:
-        initial: dict = super().get_initial()
-        initial["dataset_request"] = Angler.objects.get(user=self.request.user)
-        return initial
+    def get_initial(self):
+        initial = super().get_initial()
+        return initial.update(dataset_request=Angler.objects.get(user=self.request.user))
 
-    def get_queryset(self) -> Type[QuerySet]:
+    def get_queryset(self):
         return super().get_queryset().filter(user=self.kwargs.get("pk"))
 
     def get_success_url(self):
@@ -86,31 +81,26 @@ class AnglerEditView(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
 
 
 class AnglerDetailView(DetailView):
-    model = Type[Angler]
+    model = Angler
     template_name = "users/profile.html"
 
-    def get_object(self):
+    def get_object(self, queryset=None):
         return self.request.user
 
-    def get_biggest_bass(self, year: int = 0) -> str:
+    def get_biggest_bass(self, year=None):
         year = year or datetime.date.today().year
-        bb_result: Type[QuerySet] = (
-            Result.objects.filter(
-                tournament__year=year,
-                angler__user=self.get_object(),
-                big_bass_weight__gte=Decimal("5"),
-            )
-            .order_by("-big_bass_weight")
-            .first()
+        big_bass = Result.objects.filter(
+            tournament__event__year=year, angler__user=self.get_object(), big_bass_weight__gte=Decimal("5")
         )
-        if bb_result:
-            return f"{bb_result.big_bass_weight:.2f}"
+        if big_bass:
+            biggest_bass = max(big_bass)
+            return f"{biggest_bass:.2f}"
         return "0.00"
 
-    def get_stats(self, year: int = 0) -> dict[Any, Any]:
+    def get_stats(self, year=None):
         year = year or datetime.date.today().year
-        angler: Type[Angler] = Angler.objects.get(user=self.get_object().id)
-        results: Type[QuerySet] = Result.objects.filter(angler=angler, tournament__year=year)
+        angler = Angler.objects.get(user=self.get_object().id)
+        results = Result.objects.filter(angler=angler, tournament__event__year=year)
         return {
             "wins": sum(1 for r in results),
             "angler": angler.user.get_full_name(),
@@ -120,7 +110,7 @@ class AnglerDetailView(DetailView):
             "total_weight": sum(r.total_weight for r in results),
         }
 
-    def get_context_data(self, **kwargs: dict[Any, Any]) -> dict[Any, Any]:
+    def get_context_data(self, **kwargs):
         context: dict = super().get_context_data(**kwargs)
         context["year"] = datetime.date.today().year
         results: dict = self.get_stats(context["year"])
@@ -132,9 +122,9 @@ class AnglerDetailView(DetailView):
         context["num_events"] = results.get("events", 0)
 
         context["officer_pos"] = None
-        officer = Officers.objects.filter(angler__user=self.request.user)
+        officer: QuerySet = Officers.objects.filter(angler__user=self.request.user)
         if officer:
-            context["officer_pos"] = officer.position.title()
+            context["officer_pos"] = officer.first().position.title()
 
         context["can_edit"] = False
         if self.get_object().id == self.kwargs.get("pk"):

@@ -15,8 +15,8 @@ DEBUG: bool = True
 ALLOWED_HOSTS: list = ["*"]
 # Application definition
 INSTALLED_APPS: list[str] = [
-    "polls",
     "users",
+    "polls",
     "tournaments",
     "crispy_forms",
     "django_tables2",
@@ -129,11 +129,7 @@ LOGGING: dict[Any, Any] = {
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": "DEBUG" if DEBUG else "INFO"},
     "loggers": {
-        "django": {
-            "handlers": ["console"],
-            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
-            "propagate": False,
-        }
+        "django": {"handlers": ["console"], "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"), "propagate": False}
     },
 }
 # Make messages.error() - display in RED

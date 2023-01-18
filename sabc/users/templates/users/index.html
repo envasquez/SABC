@@ -4,7 +4,7 @@
     <article class="media content-section">
         <div class="media-body">
             <div class="article-metadata">
-                <a class="article-title" href="{% url 'tournament-details' tournament.id %}">{{ tournament.date }} - {{ tournament.name }}</a>
+                <a class="article-title" href="{% url 'tournament-details' tournament.id %}">{{ tournament.name }} on {{ tournament.event.date }}</a>
             </div>
             <h2>
                 {% if tournament.lake %}
@@ -23,9 +23,9 @@
                         <tr>{{ tournament.description | truncatechars:250 | linebreaks}}</tr>
                         <tr>
                             <td align="right">Start time:</td>
-                            <td align="left">{{ tournament.start }}</td>
+                            <td align="left">{{ tournament.event.start }}</td>
                             <td align="right">Weigh-in:</td>
-                            <td align="left">{{ tournament.finish }}</td>
+                            <td align="left">{{ tournament.event.finish }}</td>
                         </tr>
                         <tr>
                             <td align="right">Limit:</td>

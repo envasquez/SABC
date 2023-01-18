@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from decimal import Decimal
 
-from django.db.models import SmallIntegerField, DecimalField, TextField, Model, BooleanField
+from django.db.models import DecimalField, Model, SmallIntegerField, TextField
 
 from . import CURRENT_YEAR
 
@@ -39,27 +39,9 @@ class PayOutMultipliers(Model):
         )
 
     def save(self, *args, **kwargs):
-        total = sum(
-            [self.club, self.charity, self.place_1, self.place_2, self.place_3, self.big_bass]
-        )
+        total = sum([self.club, self.charity, self.place_1, self.place_2, self.place_3, self.big_bass])
         if total != self.entry_fee:
-            raise ValueError(
-                f"Fee breakdown: {total} does not add up to entry fee: {self.entry_fee}"
-            )
+            raise ValueError(f"Fee breakdown: {total} does not add up to entry fee: {self.entry_fee}")
         self.per_boat_fee = self.entry_fee * 2
         self.fee_breakdown = self.fee_breakdown or self.get_fee_breakdown()
         super().save(*args, **kwargs)
-
-
-class TournamentPayOut(Model):
-    class Meta:
-        verbose_name_plural = "tournament payouts"
-
-    club = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
-    offset = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
-    place_1 = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
-    place_2 = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
-    place_3 = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
-    charity = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
-    big_bass = DecimalField(default=Decimal("0"), max_digits=6, decimal_places=2)
-    big_bass_paid = BooleanField(default=False)

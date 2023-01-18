@@ -2,7 +2,13 @@
 # pylint: disable=line-too-long
 from decimal import Decimal
 
-from django.db.models import SmallIntegerField, CharField, TextField, DecimalField, Model
+from django.db.models import (
+    CharField,
+    DecimalField,
+    Model,
+    SmallIntegerField,
+    TextField,
+)
 
 from . import CURRENT_YEAR
 
@@ -58,26 +64,27 @@ $20 annual membership fee prior to fishing any more club tournaments within the 
 3. If special provisions or requests are required by a member they must be brought up before the
 tournament and voted on and approved by at least three officers
 """
-DEFAULT_DEAD_FISH_PENALTY = Decimal("0.25")
 
 
 class RuleSet(Model):
-    year = SmallIntegerField(default=CURRENT_YEAR)
-    name = CharField(default=f"SABC Default Rules {CURRENT_YEAR}", max_length=100)
-    rules = TextField(default=RULE_INFO)
-    payout = TextField(default=PAYOUT_INFO)
-    weigh_in = TextField(default=WEIGH_IN_INFO)
-    entry_fee = TextField(default=PAYMENT_INFO)
-    limit_num = SmallIntegerField(default=5)
-    dead_fish_penalty = DecimalField(
-        default=DEFAULT_DEAD_FISH_PENALTY, max_digits=5, decimal_places=2
-    )
-    big_bass_breakdown = TextField(default=BIG_BASS_INFO)
+    year: SmallIntegerField = SmallIntegerField(default=CURRENT_YEAR)
+    name: CharField = CharField(default=f"SABC Default Rules {CURRENT_YEAR}", max_length=100)
+    rules: TextField = TextField(default=RULE_INFO)
+    payout: TextField = TextField(default=PAYOUT_INFO)
+    weigh_in: TextField = TextField(default=WEIGH_IN_INFO)
+    entry_fee: TextField = TextField(default=PAYMENT_INFO)
+    limit_num: SmallIntegerField = SmallIntegerField(default=5)
+    dead_fish_penalty: DecimalField = DecimalField(default=Decimal("0.25"), max_digits=5, decimal_places=2)
+    max_points: SmallIntegerField = SmallIntegerField(default=100)
+    big_bass_breakdown: TextField = TextField(default=BIG_BASS_INFO)
+    zeroes_points_offest: SmallIntegerField = SmallIntegerField(default=2)
+    buy_ins_points_offest: SmallIntegerField = SmallIntegerField(default=4)
+    disqualified_points_offest: SmallIntegerField = SmallIntegerField(default=3)
 
     def save(self, *args, **kwargs):
         if not self.name:
             self.name = f"RuleSet-{self.id}"
         super().save(*args, **kwargs)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import Type
 
-from django.forms import Form, ModelForm, FileField
+from django.forms import FileField, Form, ModelForm
 
 from .models.results import Result, TeamResult
 from .models.tournament import Tournament
@@ -37,4 +37,4 @@ class TeamForm(ModelForm):
 
 
 class YamlImportForm(Form):
-    yaml_upload: Type[FileField] = FileField()
+    yaml_upload: FileField = FileField()

@@ -1,53 +1,47 @@
 # -*- coding: utf-8 -*-
 import datetime
 
-from django.utils import timezone
+from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
 from django.db.models import (
-    Q,
-    Model,
     PROTECT,
-    Manager,
-    DateField,
+    BooleanField,
     CharField,
-    ImageField,
+    DateField,
     ForeignKey,
-    TextChoices,
+    ImageField,
+    Manager,
+    Model,
     OneToOneField,
     SmallIntegerField,
+    TextChoices,
 )
-from django.contrib.auth.models import User
-
+from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
-
 from PIL import Image
-
-from . import MEMBER_CHOICES, CLUBS
 
 
 class MemberManager(Manager):
     def get_active_members(self):
-        return Angler.objects.filter(
-            ~Q(user__username="sabc"),  # Exclude this user (its a test account)
-            type__in=["member"],
-            user__is_active=True,
-        ).order_by("user__last_name")
+        return Angler.objects.filter(member=True, user__is_active=True)
 
 
 class Angler(Model):
-    user = OneToOneField(User, on_delete=PROTECT, primary_key=True)
-    type = CharField(max_length=10, choices=MEMBER_CHOICES, default="guest")
-    image = ImageField(default="profile_pics/default.jpg", upload_to="profile_pics")
-    date_joined = DateField(default=timezone.now)
-    phone_number = PhoneNumberField(null=False, blank=False)
-    organization = CharField(max_length=100, choices=CLUBS, default="SABC")
+    user: OneToOneField = OneToOneField(User, on_delete=PROTECT, primary_key=True)
+    member: BooleanField = BooleanField(default=False, null=True, blank=True)
+    image: ImageField = ImageField(default="profile_pics/default.jpg", upload_to="profile_pics")
+    date_joined: DateField = DateField(default=timezone.now)
+    phone_number: PhoneNumberField = PhoneNumberField(null=False, blank=False)
+
+    objects: Manager = Manager()
+    members: MemberManager = MemberManager()
 
     class Meta:
-        ordering = ("user__first_name",)
-        verbose_name_plural = "Anglers"
+        ordering: tuple[str] = ("user__first_name",)
+        verbose_name_plural: str = "Anglers"
 
-    def __str__(self):
-        full_name = self.user.get_full_name()
-        return full_name if self.type in ["member", "officer"] else f"{full_name} (G)"
+    def __str__(self) -> str:
+        full_name: str = self.user.get_full_name()  # pylint: disable=no-member
+        return full_name if self.member else f"{full_name} (G)"
 
     def save(self, *args, **kwargs):
         img = Image.open(self.image.path)
@@ -57,26 +51,24 @@ class Angler(Model):
             img.save(self.image.path)
         super().save(*args, **kwargs)
 
-    objects = Manager()
-    members = MemberManager()
-
 
 class Officers(Model):
     class Meta:
-        verbose_name_plural = "Officers"
+        verbose_name_plural: str = "Officers"
 
     class OfficerPositions(TextChoices):
-        PRESIDENT = "president"
-        SECRETARY = "secretary"
-        TREASURER = "treasurer"
-        VICE_PRESIDENT = "vice-president"
-        TOURNAMENT_DIRECTOR = "tournament-director"
-        TECHNOLOGY_DIRECTOR = "technology-director"
-        ASSISTANT_TOURNAMENT_DIRECTOR = "assistant-tournament-director"
+        PRESIDENT: str = "president"
+        SECRETARY: str = "secretary"
+        TREASURER: str = "treasurer"
+        VICE_PRESIDENT: str = "vice-president"
+        TOURNAMENT_DIRECTOR: str = "tournament-director"
+        ASSISTANT_TOURNAMENT_DIRECTOR: str = "assistant-tournament-director"
+        MEDIA_DIRECTOR: str = "media-director"
+        TECHNOLOGY_DIRECTOR: str = "technology-director"
 
-    year = SmallIntegerField(default=datetime.date.today().year)
-    angler = ForeignKey(Angler, on_delete=PROTECT)
-    position = CharField(choices=OfficerPositions.choices, max_length=50)
+    year: SmallIntegerField = SmallIntegerField(default=datetime.date.today().year)
+    position: CharField = CharField(choices=OfficerPositions.choices, max_length=50)
+    angler: ForeignKey = ForeignKey(Angler, on_delete=PROTECT)
 
     def __str__(self):
         return f"{self.year}: {self.angler} - {self.position}"

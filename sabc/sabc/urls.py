@@ -1,73 +1,52 @@
 # -*- coding: utf-8 -*-
-from typing import Any, Type, Optional
-
 from functools import partial
 
 from django.conf import settings
-from django.urls import path
-from django.contrib import admin
-from django.contrib.auth.views import (
-    LoginView as Login,
-    LogoutView as Logout,
-    PasswordResetView as PWReset,
-    PasswordChangeDoneView as PWDone,
-    PasswordResetConfirmView as PWConfirm,
-    PasswordResetCompleteView as PWComplete,
-)
 from django.conf.urls.static import static
+from django.contrib import admin
+from django.contrib.auth.views import LoginView as Login
+from django.contrib.auth.views import LogoutView as Logout
+from django.contrib.auth.views import PasswordChangeDoneView as PWDone
+from django.contrib.auth.views import PasswordResetCompleteView as PWComplete
+from django.contrib.auth.views import PasswordResetConfirmView as PWConfirm
+from django.contrib.auth.views import PasswordResetView as PWReset
+from django.urls import path
 from django.utils.translation import gettext_lazy
+from polls.views import LakePollListView as PollList
+from polls.views import LakePollView as Poll
+from tournaments.views import ResultCreateView as ResultCreate
+from tournaments.views import ResultDeleteView as ResultDelete
+from tournaments.views import TeamCreateView as TeamCreate
+from tournaments.views import TeamResultDeleteView as TeamDelete
+from tournaments.views import TournamentCreateView as TmntCreate
+from tournaments.views import TournamentDeleteView as TmntDelete
+from tournaments.views import TournamentDetailView as TmntDetail
+from tournaments.views import TournamentListView as TmntList
+from tournaments.views import TournamentUpdateView as TmntUpdate
+from tournaments.views import annual_awards
+from users.views import AnglerDetailView as Profile
+from users.views import AnglerEditView as Edit
+from users.views import AnglerRegistrationView as Register
+from users.views import about, bylaws, calendar, roster
 
-from tournaments.views import (
-    annual_awards,
-    TeamCreateView as TeamCreate,
-    ResultCreateView as ResultCreate,
-    ResultDeleteView as ResultDelete,
-    TournamentListView as TmntList,
-    TournamentCreateView as TmntCreate,
-    TournamentDetailView as TmntDetail,
-    TournamentUpdateView as TmntUpdate,
-    TournamentDeleteView as TmntDelete,
-    TeamResultDeleteView as TeamDelete,
-)
+TMNT_CREATE = ("tournament/new/", "tournament-create")
+TMNT_DETAIL = ("tournament/<int:pk>/", "tournament-details")
+TMNT_UPDATE = ("tournament/<int:pk>/update/", "tournament-update")
+TMNT_DELETE = ("tournament/<int:pk>/delete/", "tournament-delete")
 
-from users.views import (
-    about,
-    bylaws,
-    roster,
-    calendar,
-    AnglerEditView as Edit,
-    AnglerDetailView as Profile,
-    AnglerRegistrationView as Register,
-)
+TEAM_CREATE = ("tournament/<int:pk>/add_team/", "team-create")
+TEAM_DELETE = ("teamresult/<int:pk>/delete/", "teamresult-delete")
+RESULT_CREATE = ("tournament/<int:pk>/add_result/", "result-create")
+RESULT_DELETE = ("result/<int:pk>/delete/", "result-delete")
 
-from polls.views import LakePollListView as PollList, LakePollView as Poll
+LOGIN = ("login/", "users/login.html", "login")
+LOGOUT = ("logout/", "users/logout.html", "logout")
+PW_RESET = ("password-reset/", "users/password_reset.html", "password-reset")
+PW_DONE = ("password-reset/done/", "users/password_reset_done.html", "password_reset_done")
+PW_CONFIRM = ("password-reset-confirm/<uidb64>/<token>/", "users/password_reset_confirm.html", "password_reset_confirm")
+PW_COMPLETE = ("password-reset-complete/", "users/password_reset_complete.html", "password_reset_complete")
 
-TMNT_CREATE: tuple = ("tournament/new/", "tournament-create")
-TMNT_DETAIL: tuple = ("tournament/<int:pk>/", "tournament-details")
-TMNT_UPDATE: tuple = ("tournament/<int:pk>/update/", "tournament-update")
-TMNT_DELETE: tuple = ("tournament/<int:pk>/delete/", "tournament-delete")
-
-TEAM_CREATE: tuple = ("tournament/<int:pk>/add_team/", "team-create")
-TEAM_DELETE: tuple = ("teamresult/<int:pk>/delete/", "teamresult-delete")
-RESULT_CREATE: tuple = ("tournament/<int:pk>/add_result/", "result-create")
-RESULT_DELETE: tuple = ("result/<int:pk>/delete/", "result-delete")
-
-LOGIN: tuple = ("login/", "users/login.html", "login")
-LOGOUT: tuple = ("logout/", "users/logout.html", "logout")
-PW_RESET: tuple = ("password-reset/", "users/password_reset.html", "password-reset")
-PW_DONE: tuple = ("password-reset/done/", "users/password_reset_done.html", "password_reset_done")
-PW_CONFIRM: tuple = (
-    "password-reset-confirm/<uidb64>/<token>/",
-    "users/password_reset_confirm.html",
-    "password_reset_confirm",
-)
-PW_COMPLETE: tuple = (
-    "password-reset-complete/",
-    "users/password_reset_complete.html",
-    "password_reset_complete",
-)
-
-urlpatterns: list[Type[partial]] = [
+urlpatterns = [
     path("", TmntList.as_view(), name="sabc-home"),
     path("polls/", PollList.as_view(), name="polls"),
     path("polls/<int:pid>/", Poll.as_view(), name="poll"),
