@@ -1,0 +1,32 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres
+    volumes:
+    - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - db_vars.env
+  sabc:
+    env_file:
+      - django_vars.env
+    build:
+      context: .
+    container_name: sabc
+    command: >
+            sh -c "
+            python sabc/manage.py makemigrations
+            && python sabc/manage.py migrate --run-syncdb --noinput
+            && ./create_superuser.sh
+            && python sabc/manage.py runserver 0.0.0.0:8000
+            "
+    restart: unless-stopped
+    volumes:
+      - sabc_app:/app
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+volumes:
+  sabc_app:
+  postgres_data:
