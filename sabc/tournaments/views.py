@@ -4,7 +4,6 @@ from decimal import Decimal
 from typing import Any, Type
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import QuerySet
@@ -19,7 +18,7 @@ from django.views.generic import (
     UpdateView,
 )
 
-from .forms import ResultForm, TeamForm, TournamentEventMultiForm  # TournamentForm
+from .forms import ResultForm, TeamForm, TournamentEventMultiForm
 from .models import TODAY
 from .models.payouts import PayOutMultipliers
 from .models.results import Result, TeamResult
@@ -52,7 +51,7 @@ class TournamentListView(ListView):
     def get_context_data(self, **kwargs: dict) -> dict[Any, Any]:
         context: dict = super().get_context_data(**kwargs)
         context["index_html"] = True
-        # FIXME
+        # Hook this up to the DB, not file reading ...
         # context["next_meeting"] = NEXT_MEETING
         # context["next_tournament"] = NEXT_TOURNAMENT
         return context
