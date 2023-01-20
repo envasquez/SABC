@@ -153,11 +153,11 @@ class TournamentManager(Manager):
 class Tournament(Model):
     lake: ForeignKey = ForeignKey("tournaments.Lake", null=True, blank=True, on_delete=PROTECT)
     ramp: ForeignKey = ForeignKey("tournaments.Ramp", null=True, blank=True, on_delete=PROTECT)
-    event: ForeignKey = ForeignKey("tournaments.Events", null=True, blank=True, on_delete=PROTECT)
     rules: ForeignKey = ForeignKey("tournaments.RuleSet", null=True, blank=True, on_delete=PROTECT)
     payout_multiplier: ForeignKey = ForeignKey(
         "tournaments.PayOutMultipliers", null=True, blank=True, on_delete=PROTECT
     )
+    event: ForeignKey = ForeignKey("tournaments.Events", null=True, blank=True, on_delete=PROTECT)
     name: CharField = CharField(default=f"{strftime('%B')} {strftime('%Y')}", max_length=256)
     points_count: BooleanField = BooleanField(default=True)
     team: BooleanField = BooleanField(default=True)

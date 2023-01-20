@@ -11,9 +11,15 @@ from django.db.models import QuerySet
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    ListView,
+    UpdateView,
+)
 
-from .forms import ResultForm, TeamForm, TournamentForm
+from .forms import ResultForm, TeamForm, TournamentEventMultiForm  # TournamentForm
 from .models import TODAY
 from .models.payouts import PayOutMultipliers
 from .models.results import Result, TeamResult
@@ -129,7 +135,7 @@ class TournamentDetailView(DetailView):
 
 class TournamentCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model: Type[Tournament] = Tournament
-    form_class: Type[TournamentForm] = TournamentForm
+    form_class: Type[TournamentEventMultiForm] = TournamentEventMultiForm
     success_message: str = "Tournament successfully created!"
 
     def get_initial(self):
@@ -144,11 +150,25 @@ class TournamentCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTe
 
 class TournamentUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model: Type[Tournament] = Tournament
-    form_class: Type[TournamentForm] = TournamentForm
+    form_class: Type[TournamentEventMultiForm] = TournamentEventMultiForm
     success_message: str = "Tournament successfully updated!"
 
     def test_func(self):
         return self.request.user.is_staff
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        return kwargs.update(instance={"tournament": self.object, "event": self.object.event})
+
+    def get_initial(self):
+        initial = super().get_initial()
+        return initial.update(dataset_request=Tournament.objects.get(pk=self.kwargs.get("pk")))
+
+    def get_queryset(self):
+        return super().get_queryset().filter(pk=self.kwargs.get("pk"))
+
+    def get_success_url(self):
+        return reverse_lazy("tournament", kwargs={"pk": self.kwargs.get("pk")})
 
 
 class TournamentDeleteView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView):  # type: ignore

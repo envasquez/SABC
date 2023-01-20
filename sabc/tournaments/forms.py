@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from typing import Type
 
+from betterforms.multiform import MultiForm
 from django.forms import FileField, Form, ModelForm
 
 from .models.results import Result, TeamResult
-from .models.tournament import Tournament
+from .models.tournament import Events, Tournament
 
 
 class TournamentForm(ModelForm):
@@ -12,6 +13,16 @@ class TournamentForm(ModelForm):
         model: Type[Tournament] = Tournament
         fields: str = "__all__"
         exclude: tuple = ("created_by", "updated_by", "payout")
+
+
+class EventForm(ModelForm):
+    class Meta:
+        model: Type[Events] = Events
+        fields: str = "__all__"
+
+
+class TournamentEventMultiForm(MultiForm):
+    form_classes = {"tournament": TournamentForm, "event": EventForm}
 
 
 class ResultForm(ModelForm):
