@@ -21,7 +21,7 @@ from .. import get_last_sunday
 from . import TODAY
 from .events import Events
 from .payouts import PayOutMultipliers
-from .results import Result, TeamResult
+from .results import Result  # , TeamResult
 from .rules import RuleSet
 
 DEFAULT_FACEBOOK_URL: str = "https://www.facebook.com/SouthAustinBassClub"

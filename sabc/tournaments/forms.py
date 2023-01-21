@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=modelform-uses-exclude
 from django.forms import FileField, Form, ModelForm
 
 from .models.results import Result, TeamResult

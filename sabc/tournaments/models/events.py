@@ -2,13 +2,20 @@
 import calendar
 import datetime
 
-from django.db.models import CharField, DateField, Model, SmallIntegerField, TextChoices, TimeField
+from django.db.models import (
+    CharField,
+    DateField,
+    Model,
+    SmallIntegerField,
+    TextChoices,
+    TimeField,
+)
 
 from .. import get_last_sunday
 from . import TODAY
 
-DEFAULT_MEETING_START: datetime.datetime = datetime.datetime.time(datetime.datetime.strptime("7:00 pm", "%I:%M %p"))
-DEFAULT_MEETING_FINISH: datetime.datetime = datetime.datetime.time(datetime.datetime.strptime("8:00 pm", "%I:%M %p"))
+DEFAULT_MEETING_START: datetime.time = datetime.datetime.time(datetime.datetime.strptime("7:00 pm", "%I:%M %p"))
+DEFAULT_MEETING_FINISH: datetime.time = datetime.datetime.time(datetime.datetime.strptime("8:00 pm", "%I:%M %p"))
 DEFAULT_TOURNAMENT_START: datetime.time = datetime.datetime.time(datetime.datetime.strptime("6:00 am", "%I:%M %p"))
 DEFAULT_TOURNAMENT_FINISH: datetime.time = datetime.datetime.time(datetime.datetime.strptime("3:00 pm", "%I:%M %p"))
 

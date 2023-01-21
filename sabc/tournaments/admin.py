@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-import datetime
 import calendar
+import datetime
 from typing import Any
 
 from django.contrib import admin, messages
@@ -14,7 +14,7 @@ from .models.lakes import Lake, Ramp
 from .models.payouts import PayOutMultipliers
 from .models.results import Result, TeamResult
 from .models.rules import RuleSet
-from .models.tournament import Tournament, Events
+from .models.tournament import Events, Tournament
 
 
 class LakeAdmin(admin.ModelAdmin):
@@ -73,8 +73,8 @@ class EventsAdmin(admin.ModelAdmin):
     def get_urls(self) -> list:
         return [path("upload-events/", self.event_upload)] + super().get_urls()
 
-    def create_events_from_yaml(self, request: HttpRequest) -> None:
-        events: dict[str, Any] = safe_load(request.FILES["yaml_upload"])
+    def create_events_from_yaml(self, request):
+        events = safe_load(request.FILES["yaml_upload"])
         for event_type, data in events.items():
             for year, dates in data.items():
                 for month, day in dates.items():

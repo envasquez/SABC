@@ -1,21 +1,29 @@
 # -*- coding: utf-8 -*-
 import datetime
 from decimal import Decimal
-from typing import Any, Type
+from typing import Any
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import render
+from django.urls import reverse_lazy
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    ListView,
+    UpdateView,
+)
 
 from .forms import ResultForm, TeamForm, TournamentForm
 from .models import TODAY
-from .models.payouts import PayOutMultipliers
+
+# from .models.payouts import PayOutMultipliers
 from .models.results import Result, TeamResult
-from .models.rules import RuleSet
+
+# from .models.rules import RuleSet
 from .models.tournament import Tournament
 from .tables import Aoy as AoyTable
 from .tables import (
@@ -41,10 +49,6 @@ class TournamentCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTe
 
     def get_initial(self):
         initial = super().get_initial()
-        import pprint
-
-        print("+" * 50)
-        pprint.pprint(initial)
         # initial["rules"] = RuleSet.objects.filter(year=TODAY.year).first()
         # initial["payout_multiplier"] = PayOutMultipliers.objects.filter(year=TODAY.year).first()
         return initial
@@ -73,13 +77,13 @@ class TournamentDetailView(DetailView):
     model = Tournament
     context_object_name = "tournament"
 
-    def get_payout_table(self, tmnt: Tournament):
+    def get_payout_table(self, tmnt):
         payouts = Tournament.results.get_payouts(tmnt=tmnt)
         for key, val in payouts.items():
             payouts[key] = f"${val:.2f}"
         return PayoutSummary([payouts])
 
-    def get_stats_table(self, tid: int):
+    def get_stats_table(self, tid):
         tournament: Tournament = Tournament.objects.get(pk=tid)
         if not tournament.complete:
             return TournamentSummaryTable([])
