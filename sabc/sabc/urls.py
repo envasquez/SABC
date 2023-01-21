@@ -11,7 +11,6 @@ from django.contrib.auth.views import PasswordResetCompleteView as PWComplete
 from django.contrib.auth.views import PasswordResetConfirmView as PWConfirm
 from django.contrib.auth.views import PasswordResetView as PWReset
 from django.urls import path
-from django.utils.translation import gettext_lazy
 from polls.views import LakePollListView as PollList
 from polls.views import LakePollView as Poll
 from tournaments.views import ResultCreateView as ResultCreate
@@ -25,8 +24,8 @@ from tournaments.views import TournamentListView as TmntList
 from tournaments.views import TournamentUpdateView as TmntUpdate
 from tournaments.views import annual_awards
 from users.views import AnglerDetailView as Profile
-from users.views import AnglerEditView as Edit
 from users.views import AnglerRegistrationView as Register
+from users.views import AnglerUpdateView as Edit
 from users.views import about, bylaws, calendar, roster
 
 TMNT_CREATE = ("tournament/new/", "tournament-create")

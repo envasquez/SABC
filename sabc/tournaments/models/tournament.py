@@ -9,26 +9,21 @@ from django.db.models import (
     PROTECT,
     BooleanField,
     CharField,
-    DateField,
     ForeignKey,
     Manager,
     Model,
     QuerySet,
-    SmallIntegerField,
-    TextChoices,
     TextField,
-    TimeField,
 )
 from django.urls import reverse
 
 from .. import get_last_sunday
 from . import TODAY
+from .events import Events
 from .payouts import PayOutMultipliers
 from .results import Result, TeamResult
 from .rules import RuleSet
 
-DEFAULT_TOURNAMENT_START: datetime.time = datetime.datetime.time(datetime.datetime.strptime("6:00 am", "%I:%M %p"))
-DEFAULT_TOURNAMENT_FINISH: datetime.time = datetime.datetime.time(datetime.datetime.strptime("3:00 pm", "%I:%M %p"))
 DEFAULT_FACEBOOK_URL: str = "https://www.facebook.com/SouthAustinBassClub"
 DEFAULT_INSTAGRAM_URL: str = "https://www.instagram.com/south_austin_bass_club"
 
@@ -63,54 +58,56 @@ class TournamentManager(Manager):
             prev = result
 
     def set_places(self, tmnt) -> None:
-        # Set places for non-zeroes and zeroes (calculated)
-        self.assign_places(self.get_non_zeroes(tmnt=tmnt))
-        self.assign_places(self.get_zeroes(tmnt=tmnt), place=self.get_last_place(tmnt=tmnt))
-        # Set places for buy-ins
-        last_place: int = self.get_last_place(tmnt=tmnt)
-        for result in self.get_buy_ins(tmnt=tmnt):
-            result.place_finish = last_place
-            result.save()
-        # Set places for DQs (should always be LAST!)
-        last_place = self.get_last_place(tmnt=tmnt) + 1
-        for result in self.get_disqualified(tmnt=tmnt):
-            result.place_finish = last_place
-            result.save()
-        # Set team results
-        if tmnt.team:
-            self.assign_places(TeamResult.objects.filter(tournament=tmnt))
+        pass
+        # # Set places for non-zeroes and zeroes (calculated)
+        # self.assign_places(self.get_non_zeroes(tmnt=tmnt))
+        # self.assign_places(self.get_zeroes(tmnt=tmnt), place=self.get_last_place(tmnt=tmnt))
+        # # Set places for buy-ins
+        # last_place: int = self.get_last_place(tmnt=tmnt)
+        # for result in self.get_buy_ins(tmnt=tmnt):
+        #     result.place_finish = last_place
+        #     result.save()
+        # # Set places for DQs (should always be LAST!)
+        # last_place = self.get_last_place(tmnt=tmnt) + 1
+        # for result in self.get_disqualified(tmnt=tmnt):
+        #     result.place_finish = last_place
+        #     result.save()
+        # # Set team results
+        # if tmnt.team:
+        #     self.assign_places(TeamResult.objects.filter(tournament=tmnt))
 
     def set_points(self, tmnt) -> None:
-        self.set_places(tmnt=tmnt)
-        points: int = tmnt.rules.max_points
-        for result in self.get_non_zeroes(tmnt=tmnt):
-            if not result.locked:
-                result.points = points
-                result.save()
-                continue
-            result.points = points if result.member else 0
-            points -= 1
-        # Zeros receive 2 less points than the last non-zero result
-        last_points: int = self.get_last_points(tmnt=tmnt)
-        for result in self.get_zeroes(tmnt=tmnt):
-            if result.locked:
-                continue
-            result.points = last_points - tmnt.rules.zeroes_points_offest
-            result.save()
-        # DQs with points receive 3 less points than the last non-zero result
-        last_points = self.get_last_points(tmnt=tmnt)
-        for result in self.get_disqualified(tmnt=tmnt):
-            if result.locked:
-                continue
-            result.points = last_points - tmnt.rules.disqualified_points_offset
-            result.save()
-        # Buy-ins receive 4 less points than the the last non-zero result
-        last_points = self.get_last_points(tmnt=tmnt)
-        for result in self.get_buy_ins(tmnt=tmnt):
-            if result.locked:
-                continue
-            result.points = last_points - tmnt.rules.buy_ins_points_offset
-            result.save()
+        pass
+        # self.set_places(tmnt=tmnt)
+        # points: int = tmnt.rules.max_points
+        # for result in self.get_non_zeroes(tmnt=tmnt):
+        #     if not result.locked:
+        #         result.points = points
+        #         result.save()
+        #         continue
+        #     result.points = points if result.member else 0
+        #     points -= 1
+        # # Zeros receive 2 less points than the last non-zero result
+        # last_points: int = self.get_last_points(tmnt=tmnt)
+        # for result in self.get_zeroes(tmnt=tmnt):
+        #     if result.locked:
+        #         continue
+        #     result.points = last_points - tmnt.rules.zeroes_points_offest
+        #     result.save()
+        # # DQs with points receive 3 less points than the last non-zero result
+        # last_points = self.get_last_points(tmnt=tmnt)
+        # for result in self.get_disqualified(tmnt=tmnt):
+        #     if result.locked:
+        #         continue
+        #     result.points = last_points - tmnt.rules.disqualified_points_offset
+        #     result.save()
+        # # Buy-ins receive 4 less points than the the last non-zero result
+        # last_points = self.get_last_points(tmnt=tmnt)
+        # for result in self.get_buy_ins(tmnt=tmnt):
+        #     if result.locked:
+        #         continue
+        #     result.points = last_points - tmnt.rules.buy_ins_points_offset
+        #     result.save()
 
     def get_non_zeroes(self, tmnt) -> QuerySet:
         query: dict[str, Any] = {"tournament": tmnt, "locked": False, "disqualified": False, "num_fish__gt": 0}
@@ -158,7 +155,7 @@ class Tournament(Model):
         "tournaments.PayOutMultipliers", null=True, blank=True, on_delete=PROTECT
     )
     event: ForeignKey = ForeignKey("tournaments.Events", null=True, blank=True, on_delete=PROTECT)
-    name: CharField = CharField(default=f"{strftime('%B')} {strftime('%Y')}", max_length=256)
+    name: CharField = CharField(default=f"{strftime('%B')} {strftime('%Y')} Event #{TODAY.month}", max_length=256)
     points_count: BooleanField = BooleanField(default=True)
     team: BooleanField = BooleanField(default=True)
     paper: BooleanField = BooleanField(default=False)
@@ -189,40 +186,4 @@ class Tournament(Model):
             )
         if not self.payout_multiplier:
             self.payout_multiplier, _ = PayOutMultipliers.objects.get_or_create(year=self.event.year)
-        super().save(*args, **kwargs)
-
-
-class Events(Model):
-    class Meta:
-        ordering: tuple[str] = ("-year",)
-        verbose_name_plural: str = "Events"
-
-    class EventTypes(TextChoices):
-        MEETING: str = "meeting"
-        TOURNAMNET: str = "tournament"
-
-    class Months(TextChoices):
-        JANUARY: str = "january"
-        FEBRUARY: str = "february"
-        MARCH: str = "march"
-        APRIL: str = "april"
-        MAY: str = "may"
-        JUNE: str = "june"
-        JULY: str = "july"
-        AUGUST: str = "august"
-        SEPTEMBER: str = "september"
-        OCTOBER: str = "october"
-        NOVEMBER: str = "november"
-        DECEMBER: str = "december"
-
-    date: DateField = DateField(null=True, blank=True)
-    type: CharField = CharField(choices=EventTypes.choices, default="tournament", max_length=25)
-    year: SmallIntegerField = SmallIntegerField(default=TODAY.year)
-    month: CharField = CharField(choices=Months.choices, default=TODAY.strftime("%B").lower(), max_length=20)
-    start: TimeField = TimeField(default=DEFAULT_TOURNAMENT_START)
-    finish: TimeField = TimeField(default=DEFAULT_TOURNAMENT_FINISH)
-
-    def save(self, *args, **kwargs) -> None:
-        if not self.date:
-            self.date = datetime.date(year=self.year, month=self.month, day=get_last_sunday())
         super().save(*args, **kwargs)

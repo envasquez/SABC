@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import datetime
+import calendar
 from typing import Any
 
 from django.contrib import admin, messages
@@ -12,7 +14,7 @@ from .models.lakes import Lake, Ramp
 from .models.payouts import PayOutMultipliers
 from .models.results import Result, TeamResult
 from .models.rules import RuleSet
-from .models.tournament import Tournament
+from .models.tournament import Tournament, Events
 
 
 class LakeAdmin(admin.ModelAdmin):
@@ -67,6 +69,30 @@ class PayoutMultiplierAdmin(admin.ModelAdmin):
         return render(request, "admin/yaml_upload.html", data)
 
 
+class EventsAdmin(admin.ModelAdmin):
+    def get_urls(self) -> list:
+        return [path("upload-events/", self.event_upload)] + super().get_urls()
+
+    def create_events_from_yaml(self, request: HttpRequest) -> None:
+        events: dict[str, Any] = safe_load(request.FILES["yaml_upload"])
+        for event_type, data in events.items():
+            for year, dates in data.items():
+                for month, day in dates.items():
+                    month_value: int = list(calendar.month_name).index(month.title())
+                    date: datetime.date = datetime.date(year=year, month=month_value, day=day)
+                    Events.objects.update_or_create(type=event_type, year=year, month=month, date=date)
+            messages.info(request, f"{event_type}: {data} imported & created successfully!")
+
+    def event_upload(self, request) -> HttpResponse:
+        form: YamlImportForm = YamlImportForm()
+        data: dict[str, Any] = {"form": form}
+        if request.method == "POST":
+            self.create_events_from_yaml(request)
+            return HttpResponseRedirect(reverse("admin:index"))
+        return render(request, "admin/yaml_upload.html", data)
+
+
 admin.site.register([Tournament, RuleSet, Result, TeamResult])
 admin.site.register([Lake, Ramp], admin_class=LakeAdmin)
 admin.site.register(PayOutMultipliers, admin_class=PayoutMultiplierAdmin)
+admin.site.register(Events, admin_class=EventsAdmin)
