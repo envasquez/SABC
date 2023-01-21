@@ -216,7 +216,7 @@ class Events(Model):
         DECEMBER: str = "december"
 
     date: DateField = DateField(null=True, blank=True)
-    type: CharField = CharField(choices=EventTypes.choices, max_length=25)
+    type: CharField = CharField(choices=EventTypes.choices, default="tournament", max_length=25)
     year: SmallIntegerField = SmallIntegerField(default=TODAY.year)
     month: CharField = CharField(choices=Months.choices, default=TODAY.strftime("%B").lower(), max_length=20)
     start: TimeField = TimeField(default=DEFAULT_TOURNAMENT_START)

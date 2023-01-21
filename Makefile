@@ -2,7 +2,7 @@ SHELL := /bin/bash
 SETUP := SETUP
 PROJECT := sabc
 
-.PHONY: clean clean-db clean-docker clean-all docker lint test webapp mypy isort
+.PHONY: clean clean-migrations clean-docker clean-all docker lint test webapp mypy isort destroy-db
 .DEFAULT_GOAL: help
 export PYTHONPATH=$(shell pwd)/sabc
 
@@ -14,38 +14,36 @@ clean:
 	find $(PROJECT) -name "__pycache__" -type d -delete
 	docker image prune -f
 
-clean-db: clean
+clean-migrations: clean
 	find $(PROJECT) -path "*/migrations/*.py" -not -name "__init__.py" -delete
 
 clean-docker:
 	docker compose down
-	docker volume rm sabc_sabc_app || true
-	docker volume rm sabc_postgres_data || true
 	docker image rm sabc_sabc || true
 	docker image prune -f
 
-clean-all: clean-docker clean clean-db
+destroy-db:
+	docker volume rm sabc_sabc_app || true
+	docker volume rm sabc_postgres_data || true
 
-# docker: DEPLOYMENT_HOST=db
-# docker: clean-all
-# 	docker compose up -d --build --force-recreate
+clean-all: clean-docker clean clean-migrations
 
 webapp: DEPLOYMENT_HOST=db
 webapp:
 	docker compose down
 	docker volume rm sabc_sabc_app || true
 	docker image rm sabc_sabc || true
-	docker compose up -d --build
+	docker compose -f docker-compose.yml up -d --build
 
-test: clean-db
-	python3 sabc/manage.py makemigrations --no-input -v 3 && python3 sabc/manage.py migrate --run-syncdb
-	coverage run --branch --source=sabc -m pytest && coverage report -m
+test: clean-migrations
+	docker build -f Dockerfile_pytest -t test_sabc .
+	docker run --rm test_sabc
 
-mypy: clean-db
+mypy: clean-migrations
 	docker build -f Dockerfile_mypy -t test_mypy .
 	docker run --rm test_mypy
 
-lint: clean clean-db isort
+lint: clean clean-migrations isort
 	DJANGO_SETTINGS_MODULE=sabc.settings python3 -m pylint --load-plugins pylint_django --verbose sabc/tournaments/ sabc/users/ sabc/polls/ --rcfile pyproject.toml
 
 help:

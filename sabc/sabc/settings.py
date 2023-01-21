@@ -6,13 +6,16 @@ from django.contrib.messages import constants as messages
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY: Optional[str] = os.environ.get("DJANGO_SECRET_KEY")
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG: bool = True
 ALLOWED_HOSTS: list = ["*"]
+
 # Application definition
 INSTALLED_APPS: list[str] = [
     "users",
@@ -55,20 +58,11 @@ TEMPLATES: list[dict] = [
     }
 ]
 WSGI_APPLICATION: str = "sabc.wsgi.application"
+
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
-DATABASES: dict[Any, Any] = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": os.environ.get("POSTGRES_DB", os.environ.get("USER")),
-        "USER": os.environ.get("POSTGRES_USER", os.environ.get("USER")),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "sabc"),
-        "HOST": os.environ.get("DEPLOYMENT_HOST", "localhost"),
-        "PORT": 5432,
-    }
-}
 if os.environ.get("GITHUB_WORKFLOW"):
-    DATABASES = {
+    DATABASES: dict = {
         "default": {
             "ENGINE": "django.db.backends.postgresql_psycopg2",
             "NAME": "postgres",
@@ -78,6 +72,22 @@ if os.environ.get("GITHUB_WORKFLOW"):
             "PORT": 5432,
         }
     }
+elif os.environ.get("UNITTEST"):
+    DATABASES: dict = {
+        "default": {"ENGINE": "django.db.backends.sqlite3", "NAME": os.path.join(BASE_DIR, "db.sqlite3")}
+    }
+else:
+    DATABASES: dict = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql_psycopg2",
+            "NAME": os.environ.get("POSTGRES_DB", os.environ.get("USER")),
+            "USER": os.environ.get("POSTGRES_USER", os.environ.get("USER")),
+            "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "sabc"),
+            "HOST": os.environ.get("DEPLOYMENT_HOST", "localhost"),
+            "PORT": 5432,
+        }
+    }
+
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS: list[dict] = [
@@ -91,8 +101,10 @@ AUTH_PASSWORD_VALIDATORS: list[dict] = [
 LANGUAGE_CODE: str = "en-us"
 TIME_ZONE: str = "UTC"
 USE_I18N: bool = True
+
 # USE_L10N: bool = True
 USE_TZ: bool = True
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 CRISPY_TEMPLATE_PACK: str = "bootstrap4"
@@ -112,10 +124,12 @@ PHONENUMBER_DEFAULT_REGION: str = "US"
 EMAIL_HOST: str = "smtp.gmail.com"
 EMAIL_PORT: int = 587
 EMAIL_USE_TLS: bool = True
+
 # TODO: Disable this in production
 # File-based back-end for email for development purposes
 EMAIL_BACKEND: str = "django.core.mail.backends.filebased.EmailBackend"
 EMAIL_FILE_PATH: str = os.path.join(BASE_DIR, "sent_emails")
+
 # TODO: Enable this in production
 # EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST_USER: Optional[str] = os.environ.get("EMAIL_USER")
@@ -132,5 +146,6 @@ LOGGING: dict[Any, Any] = {
         "django": {"handlers": ["console"], "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"), "propagate": False}
     },
 }
+
 # Make messages.error() - display in RED
 MESSAGE_TAGS: dict[int, str] = {messages.ERROR: "danger"}

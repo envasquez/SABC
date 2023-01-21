@@ -12,7 +12,7 @@ class TournamentForm(ModelForm):
     class Meta:
         model: Type[Tournament] = Tournament
         fields: str = "__all__"
-        exclude: tuple = ("created_by", "updated_by", "payout")
+        # exclude: tuple = ("event", "created_by", "updated_by", "payout")
 
 
 class EventForm(ModelForm):

@@ -1,17 +1,18 @@
 version: '3.9'
 
 services:
+
   db:
     image: postgres
     volumes:
     - postgres_data:/var/lib/postgresql/data
     env_file:
       - db_vars.env
+
   sabc:
     env_file:
       - django_vars.env
-    build:
-      context: .
+    build: .
     container_name: sabc
     command: >
             sh -c "
@@ -22,11 +23,11 @@ services:
             "
     restart: unless-stopped
     volumes:
-      - sabc_app:/app
+      # - sabc_app:/app
+      - .:/app
     ports:
       - 8000:8000
     depends_on:
       - db
 volumes:
-  sabc_app:
   postgres_data:
