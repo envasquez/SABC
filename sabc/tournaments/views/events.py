@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
@@ -7,10 +6,7 @@ from django.views.generic import UpdateView
 
 from ..forms import EventForm
 from ..models.events import Events
-from ..models.tournament import Tournament
-from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.contrib.messages.views import SuccessMessageMixin
+from ..models.tournaments import Tournament
 
 
 class EventUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView):

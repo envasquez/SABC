@@ -2,7 +2,6 @@
 import datetime
 from decimal import Decimal
 from time import strftime
-from typing import Any
 
 from django.db.models import (
     PROTECT,
@@ -15,7 +14,6 @@ from django.db.models import (
 from django.urls import reverse
 
 from .. import get_last_sunday
-from . import TODAY
 from .events import Events
 from .payouts import PayOutMultipliers
 from .results import Result, TeamResult
@@ -33,7 +31,9 @@ class Tournament(Model):
         "tournaments.PayOutMultipliers", null=True, blank=True, on_delete=PROTECT
     )
     event: ForeignKey = ForeignKey("tournaments.Events", null=True, blank=True, on_delete=PROTECT)
-    name: CharField = CharField(default=f"{strftime('%B')} {strftime('%Y')} Event #{TODAY.month}", max_length=256)
+    name: CharField = CharField(
+        default=f"{strftime('%B')} {strftime('%Y')} Event #{datetime.date.today().month}", max_length=256
+    )
     points_count: BooleanField = BooleanField(default=True)
     team: BooleanField = BooleanField(default=True)
     paper: BooleanField = BooleanField(default=False)
@@ -49,19 +49,20 @@ class Tournament(Model):
         return reverse("tournament-details", kwargs={"pk": self.pk})
 
     def save(self, *args, **kwargs) -> None:
-        self.paper = self.lake.paper if self.lake else self.paper
+        today = datetime.date.today()
         if not self.rules:
-            self.rules, _ = RuleSet.objects.get_or_create(year=TODAY.year)
+            self.rules, _ = RuleSet.objects.get_or_create(year=today.year)
         if not self.event:
             self.event, _ = Events.objects.get_or_create(
                 type="tournament",
-                month=TODAY.month,
-                year=TODAY.year,
-                date=datetime.date(year=TODAY.year, month=TODAY.month, day=get_last_sunday(month=TODAY.month)),
+                month=today.month,
+                year=today.year,
+                date=datetime.date(year=today.year, month=today.month, day=get_last_sunday(month=today.month)),
             )
         if not self.payout_multiplier:
             self.payout_multiplier, _ = PayOutMultipliers.objects.get_or_create(year=self.event.year)
         super().save(*args, **kwargs)
+
 
 def get_last_place(tid):
     """Returns the last place result number"""
@@ -70,30 +71,21 @@ def get_last_place(tid):
         return results.last().place_finish or 1
     return 1
 
+
 def get_last_points(tid):
     results = Result.objects.filter(tournament=tid).order_by("-points")
     if results:
         return results.last().points
     return Tournament.objects.get(id=tid).rules.max_points
 
-#
-# Old manager functions ... and query wrappers
-#
+
 def set_places(tid):
     def _set_places(query):
         prev = None
         dqs = [q for q in query if q.disqualified]
-        zeros = [
-            q
-            for q in query
-            if not q.buy_in and q.total_weight == Decimal("0") and not q.disqualified
-        ]
+        zeros = [q for q in query if not q.buy_in and q.total_weight == Decimal("0") and not q.disqualified]
         buy_ins = [q for q in query if q.buy_in and not q.disqualified]
-        weighed_fish = [
-            q
-            for q in query
-            if not q.buy_in and q.total_weight > Decimal("0") and not q.disqualified
-        ]
+        weighed_fish = [q for q in query if not q.buy_in and q.total_weight > Decimal("0") and not q.disqualified]
         # Results for anglers "In the money"
         for result in weighed_fish[: tournament.payout_multiplier.paid_places]:
             result.place_finish = 1 if not prev else prev.place_finish + 1
@@ -121,6 +113,7 @@ def set_places(tid):
         for result in dqs:
             result.place_finish = place
             result.save()
+
     #
     # Set Places
     #
@@ -129,6 +122,7 @@ def set_places(tid):
     _set_places(Result.objects.filter(tournament=tid).order_by(*order))
     if tournament.team:
         _set_places(TeamResult.objects.filter(tournament=tid).order_by(*order))
+
 
 def set_points(tid):
     tournament = Tournament.objects.get(id=tid)
@@ -158,26 +152,32 @@ def set_points(tid):
             result.points = previous.points - buy_in_offset if previous else tournament.max_points - buy_in_offset
         result.save()
 
+
 def get_non_zeroes(tid):
     query = {"tournament__id": tid, "locked": False, "disqualified": False, "num_fish__gt": 0}
-    order= ("-total_weight", "-big_bass_weight", "-num_fish")
+    order = ("-total_weight", "-big_bass_weight", "-num_fish")
     return Result.objects.filter(**query).order_by(*order)
+
 
 def get_zeroes(tid):
     query = {"buy_in": False, "num_fish": 0, "tournament__id": tid, "disqualified": False, "locked": False}
     return Result.objects.filter(**query)
 
+
 def get_buy_ins(tid):
     return Result.objects.filter(tournament=tid, buy_in=True)
+
 
 def get_disqualified(tid):
     order = ("-total_weight", "-big_bass_weight", "-num_fish")
     return Result.objects.filter(tournament=tid, disqualified=True).order_by(*order)
 
+
 def get_big_bass_winner(tid):
-    query= {"angler__member": True, "tournament__id": tid, "big_bass_weight__gte": Decimal("5")}
+    query = {"angler__member": True, "tournament__id": tid, "big_bass_weight__gte": Decimal("5")}
     bb_results = Result.objects.filter(**query)
     return bb_results.first() if len(bb_results) == 1 else None
+
 
 def get_payouts(tid):
     bb_query = {"angler__member": True, "tournament__id": tid, "big_bass_weight__gte": Decimal("5")}

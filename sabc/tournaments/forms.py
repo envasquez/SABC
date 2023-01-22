@@ -3,7 +3,7 @@
 from django.forms import FileField, Form, ModelForm
 
 from .models.results import Result, TeamResult
-from .models.tournament import Events, Tournament
+from .models.tournaments import Events, Tournament
 
 
 class TournamentForm(ModelForm):

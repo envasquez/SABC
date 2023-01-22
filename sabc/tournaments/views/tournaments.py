@@ -1,17 +1,43 @@
 # -*- coding: utf-8 -*-
 import datetime
+from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.views.generic import UpdateView, CreateView, DeleteView, ListView
-
+from django.urls import reverse_lazy
+from django.views.generic import (
+    CreateView,
+    DeleteView,
+    DetailView,
+    ListView,
+    UpdateView,
+)
 
 from ..forms import TournamentForm
-from ..models.tournament import Tournament
-from ..models.rules import RuleSet
+from ..models.events import get_next_event
 from ..models.payouts import PayOutMultipliers
-from ..models.events import get_next_tournament
+from ..models.results import Result, TeamResult
+from ..models.rules import RuleSet
+from ..models.tournaments import (
+    Tournament,
+    get_big_bass_winner,
+    get_payouts,
+    set_places,
+    set_points,
+)
+from ..tables import (
+    BuyInTable,
+    DQTable,
+    EditableBuyInTable,
+    EditableDQTable,
+    EditableResultTable,
+    EditableTeamResultTable,
+    PayoutSummary,
+    ResultTable,
+    TeamResultTable,
+    TournamentSummaryTable,
+)
 
 
 class TournamentCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
@@ -23,7 +49,7 @@ class TournamentCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTe
         initial = super().get_initial()
         initial["rules"] = RuleSet.objects.filter(year=datetime.date.today().year).first()
         initial["payout_multiplier"] = PayOutMultipliers.objects.filter(year=datetime.date.today().year).first()
-        initial["event"] = get_next_tournament()
+        initial["event"] = get_next_event(event_type="tournament")
         return initial
 
     def test_func(self):
@@ -40,9 +66,8 @@ class TournamentListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["index_html"] = True
-        # Hook this up to the DB, not file reading ...
-        # context["next_meeting"] = NEXT_MEETING
-        # context["next_tournament"] = NEXT_TOURNAMENT
+        context["next_meeting"] = get_next_event(event_type="meeting")
+        context["next_tournament"] = get_next_event(event_type="tournament")
         return context
 
 
@@ -146,6 +171,6 @@ class TournamentDeleteView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTe
         messages.success(self.request, f"{self.get_object().name} Deleted!")
         return reverse_lazy("sabc-home")
 
-    def delete(self, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+    def delete(self, request, *args, **kwargs):
         messages.success(request, self.success_message)
         return super().delete(request, *args, **kwargs)

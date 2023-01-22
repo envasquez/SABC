@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=line-too-long
+import datetime
 from decimal import Decimal
 
 from django.db.models import (
@@ -9,8 +10,6 @@ from django.db.models import (
     SmallIntegerField,
     TextField,
 )
-
-from . import CURRENT_YEAR
 
 RULE_INFO = """
 1. All Federal, State and local laws must be observed. Illegal acts may result in disqualification.
@@ -67,8 +66,8 @@ tournament and voted on and approved by at least three officers
 
 
 class RuleSet(Model):
-    year: SmallIntegerField = SmallIntegerField(default=CURRENT_YEAR)
-    name: CharField = CharField(default=f"SABC Default Rules {CURRENT_YEAR}", max_length=100)
+    year: SmallIntegerField = SmallIntegerField(default=datetime.date.today().year)
+    name: CharField = CharField(default=f"SABC Default Rules {datetime.date.today().year}", max_length=100)
     rules: TextField = TextField(default=RULE_INFO)
     payout: TextField = TextField(default=PAYOUT_INFO)
     weigh_in: TextField = TextField(default=WEIGH_IN_INFO)

@@ -1,18 +1,8 @@
 # -*- coding: utf-8 -*-
-import calendar
 import datetime
+import calendar
 
-from django.db.models import (
-    CharField,
-    DateField,
-    Model,
-    SmallIntegerField,
-    TextChoices,
-    TimeField,
-)
-
-from .. import get_last_sunday
-from . import TODAY
+from django.db.models import CharField, DateField, Model, SmallIntegerField, TextChoices, TimeField
 
 DEFAULT_MEETING_START: datetime.time = datetime.datetime.time(datetime.datetime.strptime("7:00 pm", "%I:%M %p"))
 DEFAULT_MEETING_FINISH: datetime.time = datetime.datetime.time(datetime.datetime.strptime("8:00 pm", "%I:%M %p"))
@@ -45,8 +35,10 @@ class Events(Model):
 
     date: DateField = DateField(null=True, blank=True)
     type: CharField = CharField(choices=EventTypes.choices, default="tournament", max_length=25)
-    year: SmallIntegerField = SmallIntegerField(default=TODAY.year)
-    month: CharField = CharField(choices=Months.choices, default=TODAY.strftime("%B").lower(), max_length=20)
+    year: SmallIntegerField = SmallIntegerField(default=datetime.date.today().year)
+    month: CharField = CharField(
+        choices=Months.choices, default=datetime.date.today().strftime("%B").lower(), max_length=20
+    )
     start: TimeField = TimeField(null=True, blank=True)
     finish: TimeField = TimeField(null=True, blank=True)
 
@@ -54,9 +46,6 @@ class Events(Model):
         return f"{self.type} {self.date} {self.start}-{self.finish}".title()
 
     def save(self, *args, **kwargs) -> None:
-        month = list(calendar.month_name).index(self.month.title())
-        if not self.date:
-            self.date = datetime.date(year=self.year, month=month, day=get_last_sunday())
         if not self.start:
             if self.type == "tournament":
                 self.start = DEFAULT_TOURNAMENT_START
@@ -69,17 +58,15 @@ class Events(Model):
                 self.finish = DEFAULT_MEETING_FINISH
         super().save(*args, **kwargs)
 
-def get_next_meeting():
+
+def get_next_event(event_type):
     today = datetime.date.today()
     year = today.year
     month = today.month
-    meeting = Events.objects.get(type="meeting", month=month, year=year)
-    if today.day < meeting.date.day:
-        return meeting
+    event = Events.objects.get(type=event_type, month=calendar.month_name[month], year=year)
+    if today.day < event.date.day:
+        return event
     if today.month == 12:
         year += year
         month = 1
-    return Events.objects.get(type="meeting", month=month + 1, year=year)
-
-def get_next_tournament():
-    ...
+    return Events.objects.get(type=event_type, month=calendar.month_name[month], year=year)

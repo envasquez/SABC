@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
+import datetime
 from decimal import Decimal
 
 from django.db.models import DecimalField, Model, SmallIntegerField, TextField
-
-from . import CURRENT_YEAR
 
 
 class PayOutMultipliers(Model):
     class Meta:
         verbose_name_plural = "payout multipliers"
 
-    year = SmallIntegerField(default=CURRENT_YEAR)
+    year = SmallIntegerField(default=datetime.date.today().year)
     club = DecimalField(default=Decimal("3"), max_digits=4, decimal_places=2)
     place_1 = DecimalField(default=Decimal("7"), max_digits=4, decimal_places=2)
     place_2 = DecimalField(default=Decimal("5"), max_digits=4, decimal_places=2)

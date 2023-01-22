@@ -13,18 +13,18 @@ from django.contrib.auth.views import PasswordResetView as PWReset
 from django.urls import path
 from polls.views import LakePollListView as PollList
 from polls.views import LakePollView as Poll
-from tournaments.views import EventUpdateView as EventUpdate
-from tournaments.views import ResultCreateView as ResultCreate
-from tournaments.views import ResultDeleteView as ResultDelete
-from tournaments.views import ResultUpdateView as ResultUpdate
-from tournaments.views import TeamCreateView as TeamCreate
-from tournaments.views import TeamResultDeleteView as TeamDelete
-from tournaments.views import TournamentCreateView as TmntCreate
-from tournaments.views import TournamentDeleteView as TmntDelete
-from tournaments.views import TournamentDetailView as TmntDetail
-from tournaments.views import TournamentListView as TmntList
-from tournaments.views import TournamentUpdateView as TmntUpdate
 from tournaments.views import annual_awards
+from tournaments.views.events import EventUpdateView as EventUpdate
+from tournaments.views.results import ResultCreateView as ResultCreate
+from tournaments.views.results import ResultDeleteView as ResultDelete
+from tournaments.views.results import ResultUpdateView as ResultUpdate
+from tournaments.views.results import TeamCreateView as TeamCreate
+from tournaments.views.results import TeamResultDeleteView as TeamDelete
+from tournaments.views.tournaments import TournamentCreateView as TmntCreate
+from tournaments.views.tournaments import TournamentDeleteView as TmntDelete
+from tournaments.views.tournaments import TournamentDetailView as TmntDetail
+from tournaments.views.tournaments import TournamentListView as TmntList
+from tournaments.views.tournaments import TournamentUpdateView as TmntUpdate
 from users.views import AnglerDetailView as Profile
 from users.views import AnglerRegistrationView as Register
 from users.views import AnglerUpdateView as Edit

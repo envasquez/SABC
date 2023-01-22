@@ -14,7 +14,7 @@ from .models.lakes import Lake, Ramp
 from .models.payouts import PayOutMultipliers
 from .models.results import Result, TeamResult
 from .models.rules import RuleSet
-from .models.tournament import Events, Tournament
+from .models.tournaments import Events, Tournament
 
 
 class LakeAdmin(admin.ModelAdmin):
