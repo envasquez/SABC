@@ -65,7 +65,7 @@ class ResultUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMi
         return reverse_lazy("tournament-details", kwargs={"pk": self.get_object().tournament.id})
 
 
-class ResultDeleteView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class ResultDeleteView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView):  # type: ignore
     model = Result
 
     def get_context_data(self, **kwargs):
