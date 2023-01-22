@@ -23,6 +23,7 @@ clean-docker:
 	docker image prune -f
 
 destroy-db:
+	docker compose down
 	docker volume rm sabc_sabc_app || true
 	docker volume rm sabc_postgres_data || true
 

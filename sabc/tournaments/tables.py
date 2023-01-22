@@ -11,6 +11,7 @@ DEFAULT_TABLE_TEMPLATE: str = "django_tables2/bootstrap4.html"
 
 
 class EditableResultTable(Table):
+    edit: LinkColumn = LinkColumn("result-update", text="edit", args=[A("pk")], orderable=False, empty_values=())
     delete: LinkColumn = LinkColumn("result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=())
     first_name: Column = Column(accessor="angler.user.first_name")
     last_name: Column = Column(accessor="angler.user.last_name")
@@ -70,6 +71,7 @@ class TeamResultTable(Table):
 
 
 class EditableBuyInTable(Table):
+    edit: LinkColumn = LinkColumn("result-update", text="edit", args=[A("pk")], orderable=False, empty_values=())
     delete: LinkColumn = LinkColumn("result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=())
     first_name: Column = Column(accessor="angler.user.first_name")
     last_name: Column = Column(accessor="angler.user.last_name")
@@ -93,6 +95,7 @@ class BuyInTable(Table):
 
 
 class EditableDQTable(Table):
+    edit: LinkColumn = LinkColumn("result-update", text="edit", args=[A("pk")], orderable=False, empty_values=())
     delete: LinkColumn = LinkColumn("result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=())
     first_name: Column = Column(accessor="angler.user.first_name")
     last_name: Column = Column(accessor="angler.user.last_name")

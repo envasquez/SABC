@@ -68,3 +68,18 @@ class Events(Model):
             elif self.type == "meeting":
                 self.finish = DEFAULT_MEETING_FINISH
         super().save(*args, **kwargs)
+
+def get_next_meeting():
+    today = datetime.date.today()
+    year = today.year
+    month = today.month
+    meeting = Events.objects.get(type="meeting", month=month, year=year)
+    if today.day < meeting.date.day:
+        return meeting
+    if today.month == 12:
+        year += year
+        month = 1
+    return Events.objects.get(type="meeting", month=month + 1, year=year)
+
+def get_next_tournament():
+    ...

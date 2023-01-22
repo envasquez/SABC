@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=no-member
 import datetime
 from decimal import Decimal
 from time import strftime
@@ -10,9 +9,7 @@ from django.db.models import (
     BooleanField,
     CharField,
     ForeignKey,
-    Manager,
     Model,
-    QuerySet,
     TextField,
 )
 from django.urls import reverse
@@ -21,130 +18,11 @@ from .. import get_last_sunday
 from . import TODAY
 from .events import Events
 from .payouts import PayOutMultipliers
-from .results import Result  # , TeamResult
+from .results import Result, TeamResult
 from .rules import RuleSet
 
 DEFAULT_FACEBOOK_URL: str = "https://www.facebook.com/SouthAustinBassClub"
 DEFAULT_INSTAGRAM_URL: str = "https://www.instagram.com/south_austin_bass_club"
-
-
-class TournamentManager(Manager):
-    def get_last_place(self, tmnt):
-        """Returns the last place result number"""
-        results = Result.objects.filter(tournament=tmnt).order_by("place_finish")
-        if results:
-            return results.last().place_finish
-        return 1
-
-    def get_last_points(self, tmnt):
-        results = Result.filter(tournament=tmnt).order_by("-points")
-        if results:
-            return results.last().points
-        return tmnt.rules.max_points
-
-    def assign_places(self, query: QuerySet, place: int = 1) -> None:
-        if query.count() == 0:
-            return
-        # Ensure ordering ... according to the bylaws
-        query.order_by("-total_weight", "-big_bass_weight", "-num_fish")
-        prev: Result | None = None
-        for place_finish, result in enumerate(query, start=place):
-            tie: bool = False
-            result.place_finish = place_finish
-            if prev:
-                tie = result.total_weight == prev.total_weight
-                result.place_finish = place_finish if not tie else prev.place_finish
-            result.save()
-            prev = result
-
-    def set_places(self, tmnt) -> None:
-        pass
-        # # Set places for non-zeroes and zeroes (calculated)
-        # self.assign_places(self.get_non_zeroes(tmnt=tmnt))
-        # self.assign_places(self.get_zeroes(tmnt=tmnt), place=self.get_last_place(tmnt=tmnt))
-        # # Set places for buy-ins
-        # last_place: int = self.get_last_place(tmnt=tmnt)
-        # for result in self.get_buy_ins(tmnt=tmnt):
-        #     result.place_finish = last_place
-        #     result.save()
-        # # Set places for DQs (should always be LAST!)
-        # last_place = self.get_last_place(tmnt=tmnt) + 1
-        # for result in self.get_disqualified(tmnt=tmnt):
-        #     result.place_finish = last_place
-        #     result.save()
-        # # Set team results
-        # if tmnt.team:
-        #     self.assign_places(TeamResult.objects.filter(tournament=tmnt))
-
-    def set_points(self, tmnt) -> None:
-        pass
-        # self.set_places(tmnt=tmnt)
-        # points: int = tmnt.rules.max_points
-        # for result in self.get_non_zeroes(tmnt=tmnt):
-        #     if not result.locked:
-        #         result.points = points
-        #         result.save()
-        #         continue
-        #     result.points = points if result.member else 0
-        #     points -= 1
-        # # Zeros receive 2 less points than the last non-zero result
-        # last_points: int = self.get_last_points(tmnt=tmnt)
-        # for result in self.get_zeroes(tmnt=tmnt):
-        #     if result.locked:
-        #         continue
-        #     result.points = last_points - tmnt.rules.zeroes_points_offest
-        #     result.save()
-        # # DQs with points receive 3 less points than the last non-zero result
-        # last_points = self.get_last_points(tmnt=tmnt)
-        # for result in self.get_disqualified(tmnt=tmnt):
-        #     if result.locked:
-        #         continue
-        #     result.points = last_points - tmnt.rules.disqualified_points_offset
-        #     result.save()
-        # # Buy-ins receive 4 less points than the the last non-zero result
-        # last_points = self.get_last_points(tmnt=tmnt)
-        # for result in self.get_buy_ins(tmnt=tmnt):
-        #     if result.locked:
-        #         continue
-        #     result.points = last_points - tmnt.rules.buy_ins_points_offset
-        #     result.save()
-
-    def get_non_zeroes(self, tmnt) -> QuerySet:
-        query: dict[str, Any] = {"tournament": tmnt, "locked": False, "disqualified": False, "num_fish__gt": 0}
-        order: tuple[str, str, str] = ("-total_weight", "-big_bass_weight", "-num_fish")
-        return Result.objects.filter(**query).order_by(*order)
-
-    def get_zeroes(self, tmnt) -> QuerySet:
-        query: dict = {"buy_in": False, "num_fish": 0, "tournament": tmnt, "disqualified": False, "locked": False}
-        return Result.objects.filter(**query)
-
-    def get_buy_ins(self, tmnt) -> QuerySet:
-        return Result.objects.filter(tournament=tmnt, buy_in=True)
-
-    def get_disqualified(self, tmnt) -> QuerySet:
-        order: tuple[str, str, str] = ("-total_weight", "-big_bass_weight", "-num_fish")
-        return Result.objects.filter(tournament=tmnt, disqualified=True).order_by(*order)
-
-    def get_big_bass_winner(self, tmnt) -> Result | None:
-        query: dict[str, Any] = {"angler__member": True, "tournament": tmnt, "big_bass_weight__gte": Decimal("5")}
-        bb_results: QuerySet = Result.objects.filter(**query)
-        return bb_results.first() if len(bb_results) == 1 else None
-
-    def get_payouts(self, tmnt) -> dict[str, Decimal | bool]:
-        bb_query: dict[str, Any] = {"angler__member": True, "tournament": tmnt, "big_bass_weight__gte": Decimal("5")}
-        bb_exists: bool = Result.objects.filter(**bb_query).count() > 0
-        num_anglers: int = Result.objects.filter(tournament=tmnt).count()
-        pom: PayOutMultipliers = tmnt.payout_multiplier
-        return {
-            "club": pom.club * num_anglers,
-            "total": pom.entry_fee * num_anglers,
-            "place_1": pom.place_1 * num_anglers,
-            "place_2": pom.place_2 * num_anglers,
-            "place_3": pom.place_3 * num_anglers,
-            "charity": pom.charity * num_anglers,
-            "big_bass": pom.big_bass * num_anglers,
-            "bb_carry_over": not bb_exists,
-        }
 
 
 class Tournament(Model):
@@ -163,9 +41,6 @@ class Tournament(Model):
     instagram_url: CharField = CharField(max_length=512, default=DEFAULT_INSTAGRAM_URL)
     description: TextField = TextField(default="TBD")
     complete: BooleanField = BooleanField(default=False)
-
-    objects: Manager = Manager()
-    results: TournamentManager = TournamentManager()
 
     def __str__(self) -> str:
         return str(self.name)
@@ -187,3 +62,135 @@ class Tournament(Model):
         if not self.payout_multiplier:
             self.payout_multiplier, _ = PayOutMultipliers.objects.get_or_create(year=self.event.year)
         super().save(*args, **kwargs)
+
+def get_last_place(tid):
+    """Returns the last place result number"""
+    results = Result.objects.filter(tournament=tid).order_by("place_finish")
+    if results:
+        return results.last().place_finish or 1
+    return 1
+
+def get_last_points(tid):
+    results = Result.objects.filter(tournament=tid).order_by("-points")
+    if results:
+        return results.last().points
+    return Tournament.objects.get(id=tid).rules.max_points
+
+#
+# Old manager functions ... and query wrappers
+#
+def set_places(tid):
+    def _set_places(query):
+        prev = None
+        dqs = [q for q in query if q.disqualified]
+        zeros = [
+            q
+            for q in query
+            if not q.buy_in and q.total_weight == Decimal("0") and not q.disqualified
+        ]
+        buy_ins = [q for q in query if q.buy_in and not q.disqualified]
+        weighed_fish = [
+            q
+            for q in query
+            if not q.buy_in and q.total_weight > Decimal("0") and not q.disqualified
+        ]
+        # Results for anglers "In the money"
+        for result in weighed_fish[: tournament.payout_multiplier.paid_places]:
+            result.place_finish = 1 if not prev else prev.place_finish + 1
+            result.save()
+            prev = result
+        # All other anglers who weighed in fish (i.e. did not zero)
+        for result in weighed_fish[tournament.payout_multiplier.paid_places :]:
+            tie = result.total_weight == prev.total_weight
+            result.place_finish = prev.place_finish + 1 if not tie else prev.place_finish
+            result.save()
+            prev = result
+        place = prev.place_finish + 1 if prev else 1
+        # All of the anglers who fished, but caught nothing
+        for result in zeros:
+            result.place_finish = place
+            result.save()
+            prev = result
+        place = place + 1 if zeros else place
+        # All of the anglers that "Bought-in"
+        for result in buy_ins:
+            result.place_finish = place
+            result.save()
+        # Anglers who were disqualified
+        place = place + 1 if buy_ins else place
+        for result in dqs:
+            result.place_finish = place
+            result.save()
+    #
+    # Set Places
+    #
+    order = ("-total_weight", "-big_bass_weight", "-num_fish")
+    tournament = Tournament.objects.get(id=tid)
+    _set_places(Result.objects.filter(tournament=tid).order_by(*order))
+    if tournament.team:
+        _set_places(TeamResult.objects.filter(tournament=tid).order_by(*order))
+
+def set_points(tid):
+    tournament = Tournament.objects.get(id=tid)
+    set_places(tid=tid)
+    if not tournament.points_count:
+        return
+    # Anglers that weighed in fish
+    points = tournament.rules.max_points
+    previous = None
+    for result in get_non_zeroes(tid=tid).order_by("place_finish"):
+        tie = result.place_finish == previous.place_finish if previous else False
+        result.points = points if not tie else previous.points
+        result.save()
+        previous = result
+        points -= 1
+    dq_offset = tournament.rules.disqualified_points_offset
+    # Anglers who were disqualified, but points awarded were allowed
+    for result in get_disqualified(tid=tid):
+        result.points = previous.points - dq_offset if previous else tournament.max_points
+        result.save()
+    # Anglers that did not weigh in fish or bought in
+    zeros_offset = tournament.rules.zeroes_points_offset
+    buy_in_offset = tournament.rules.buy_ins_points_offset
+    for result in get_zeroes(tid=tid):
+        result.points = previous.points - zeros_offset if previous else 0
+        if result.buy_in:
+            result.points = previous.points - buy_in_offset if previous else tournament.max_points - buy_in_offset
+        result.save()
+
+def get_non_zeroes(tid):
+    query = {"tournament__id": tid, "locked": False, "disqualified": False, "num_fish__gt": 0}
+    order= ("-total_weight", "-big_bass_weight", "-num_fish")
+    return Result.objects.filter(**query).order_by(*order)
+
+def get_zeroes(tid):
+    query = {"buy_in": False, "num_fish": 0, "tournament__id": tid, "disqualified": False, "locked": False}
+    return Result.objects.filter(**query)
+
+def get_buy_ins(tid):
+    return Result.objects.filter(tournament=tid, buy_in=True)
+
+def get_disqualified(tid):
+    order = ("-total_weight", "-big_bass_weight", "-num_fish")
+    return Result.objects.filter(tournament=tid, disqualified=True).order_by(*order)
+
+def get_big_bass_winner(tid):
+    query= {"angler__member": True, "tournament__id": tid, "big_bass_weight__gte": Decimal("5")}
+    bb_results = Result.objects.filter(**query)
+    return bb_results.first() if len(bb_results) == 1 else None
+
+def get_payouts(tid):
+    bb_query = {"angler__member": True, "tournament__id": tid, "big_bass_weight__gte": Decimal("5")}
+    bb_exists = Result.objects.filter(**bb_query).count() > 0
+    num_anglers = Result.objects.filter(tournament=tid).count()
+    pom = Tournament.objects.get(id=tid).payout_multiplier
+    return {
+        "club": pom.club * num_anglers,
+        "total": pom.entry_fee * num_anglers,
+        "place_1": pom.place_1 * num_anglers,
+        "place_2": pom.place_2 * num_anglers,
+        "place_3": pom.place_3 * num_anglers,
+        "charity": pom.charity * num_anglers,
+        "big_bass": pom.big_bass * num_anglers,
+        "bb_carry_over": not bb_exists,
+    }

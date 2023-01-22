@@ -13,8 +13,10 @@ from django.contrib.auth.views import PasswordResetView as PWReset
 from django.urls import path
 from polls.views import LakePollListView as PollList
 from polls.views import LakePollView as Poll
+from tournaments.views import EventUpdateView as EventUpdate
 from tournaments.views import ResultCreateView as ResultCreate
 from tournaments.views import ResultDeleteView as ResultDelete
+from tournaments.views import ResultUpdateView as ResultUpdate
 from tournaments.views import TeamCreateView as TeamCreate
 from tournaments.views import TeamResultDeleteView as TeamDelete
 from tournaments.views import TournamentCreateView as TmntCreate
@@ -36,8 +38,10 @@ TMNT_DELETE = ("tournament/<int:pk>/delete/", "tournament-delete")
 TEAM_CREATE = ("tournament/<int:pk>/add_team/", "team-create")
 TEAM_DELETE = ("teamresult/<int:pk>/delete/", "teamresult-delete")
 RESULT_CREATE = ("tournament/<int:pk>/add_result/", "result-create")
+RESULT_UPDATE = ("result/<int:pk>/update/", "result-update")
 RESULT_DELETE = ("result/<int:pk>/delete/", "result-delete")
 
+EVENT_UPDATE = ("event/<int:pk>/", "event-update")
 LOGIN = ("login/", "users/login.html", "login")
 LOGOUT = ("logout/", "users/logout.html", "logout")
 PW_RESET = ("password-reset/", "users/password_reset.html", "password-reset")
@@ -58,11 +62,13 @@ urlpatterns = [
     path("register/", Register.as_view(), name="register"),
     path("profile/<int:pk>/", Profile.as_view(), name="profile"),
     path("profile_edit/<int:pk>/", Edit.as_view(), name="profile-edit"),
+    path(EVENT_UPDATE[0], EventUpdate.as_view(), name=EVENT_UPDATE[1]),
     path(TMNT_CREATE[0], TmntCreate.as_view(), name=TMNT_CREATE[1]),
     path(TMNT_DETAIL[0], TmntDetail.as_view(), name=TMNT_DETAIL[1]),
     path(TMNT_UPDATE[0], TmntUpdate.as_view(), name=TMNT_UPDATE[1]),
     path(TMNT_DELETE[0], TmntDelete.as_view(), name=TMNT_DELETE[1]),
     path(RESULT_CREATE[0], ResultCreate.as_view(), name=RESULT_CREATE[1]),
+    path(RESULT_UPDATE[0], ResultUpdate.as_view(), name=RESULT_UPDATE[1]),
     path(RESULT_DELETE[0], ResultDelete.as_view(), name=RESULT_DELETE[1]),
     path(TEAM_CREATE[0], TeamCreate.as_view(), name=TEAM_CREATE[1]),
     path(TEAM_DELETE[0], TeamDelete.as_view(), name=TEAM_DELETE[1]),

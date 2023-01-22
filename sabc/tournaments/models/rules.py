@@ -77,9 +77,9 @@ class RuleSet(Model):
     dead_fish_penalty: DecimalField = DecimalField(default=Decimal("0.25"), max_digits=5, decimal_places=2)
     max_points: SmallIntegerField = SmallIntegerField(default=100)
     big_bass_breakdown: TextField = TextField(default=BIG_BASS_INFO)
-    zeroes_points_offest: SmallIntegerField = SmallIntegerField(default=2)
-    buy_ins_points_offest: SmallIntegerField = SmallIntegerField(default=4)
-    disqualified_points_offest: SmallIntegerField = SmallIntegerField(default=3)
+    zeroes_points_offset: SmallIntegerField = SmallIntegerField(default=2)
+    buy_ins_points_offset: SmallIntegerField = SmallIntegerField(default=4)
+    disqualified_points_offset: SmallIntegerField = SmallIntegerField(default=3)
 
     def save(self, *args, **kwargs):
         if not self.name:

@@ -8,6 +8,7 @@
                 <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'tournament-update' tournament.id %}">Edit Tournament</a>
                 <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'result-create' tournament.id %}">Add Results</a>
                 <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'team-create' tournament.id %}">Add Teams</a>
+                <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'event-update' tournament.event.id %}">Edit Event</a>
                 <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'register' %}">Add Guest</a>
                 <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'tournament-delete' tournament.id %}">Delete</a>
             </div>
@@ -32,11 +33,11 @@
                 <tbody>
                     <tr>
                         <td align="right">Date:</td>
-                        <td align="left">{{ tournament.date }}</td>
+                        <td align="left">{{ tournament.event.date }}</td>
                         <td align="right">Start time:</td>
-                        <td align="left">{{ tournament.start }}</td>
+                        <td align="left">{{ tournament.event.start }}</td>
                         <td align="right">Weigh-in:</td>
-                        <td align="left">{{ tournament.finish }}</td>
+                        <td align="left">{{ tournament.event.finish }}</td>
                         <td align="right">Team Payout:</td>
                         {% if tournament.team %}
                             <td align="left">Yes</td>
