@@ -48,7 +48,6 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMi
         messages.success(self.request, f"Result added: {msg}")
         return super().form_valid(form)
 
-
 class ResultUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Result
     form_class = ResultForm

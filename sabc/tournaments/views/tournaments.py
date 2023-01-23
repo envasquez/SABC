@@ -39,7 +39,6 @@ from ..tables import (
     TournamentSummaryTable,
 )
 
-
 class TournamentCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Tournament
     form_class = TournamentForm
