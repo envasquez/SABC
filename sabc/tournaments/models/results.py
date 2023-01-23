@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=no-member
-
 from decimal import Decimal
 
 from django.db.models import (
+    CASCADE,
     PROTECT,
     BooleanField,
     CharField,
@@ -30,7 +30,7 @@ class Result(Model):
     big_bass_weight: DecimalField = DecimalField(default=Decimal("0"), max_digits=5, decimal_places=2)
 
     angler: ForeignKey = ForeignKey("users.Angler", on_delete=PROTECT)
-    tournament: ForeignKey = ForeignKey("tournaments.Tournament", on_delete=PROTECT, null=False, blank=False)
+    tournament: ForeignKey = ForeignKey("tournaments.Tournament", on_delete=CASCADE, null=False, blank=False)
 
     def __str__(self) -> str:
         place: str = f"{self.place_finish}."
@@ -102,17 +102,6 @@ class TeamResult(Model):  # pylint: disable=too-many-instance-attributes
             self.penalty_weight = self.result_1.penalty_weight + self.result_2.penalty_weight
             self.num_fish_alive = self.result_1.num_fish_alive + self.result_2.num_fish_alive
             self.big_bass_weight = max(self.result_1.big_bass_weight, self.result_2.big_bass_weight)
-        # else:
-        #     for attr in [
-        #         "buy_in",
-        #         "num_fish",
-        #         "total_weight",
-        #         "big_bass_weight",
-        #         "num_fish_alive",
-        #         "num_fish_dead",
-        #         "penalty_weight",
-        #     ]:
-        #         setattr(self, attr, getattr(self.result_1, attr))
         if any([self.result_1.disqualified, self.result_2.disqualified]):
             self.disqualified = True
         if self._state.adding or self.manual_edit:

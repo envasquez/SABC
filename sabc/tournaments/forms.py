@@ -27,6 +27,7 @@ class ResultForm(ModelForm):
             "tournament",
             "angler",
             "buy_in",
+            "locked",
             "num_fish",
             "dq_points",
             "disqualified",

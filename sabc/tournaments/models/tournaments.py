@@ -4,6 +4,7 @@ from decimal import Decimal
 from time import strftime
 
 from django.db.models import (
+    CASCADE,
     PROTECT,
     BooleanField,
     CharField,
@@ -24,9 +25,9 @@ DEFAULT_INSTAGRAM_URL: str = "https://www.instagram.com/south_austin_bass_club"
 
 
 class Tournament(Model):
-    lake: ForeignKey = ForeignKey("tournaments.Lake", null=True, blank=True, on_delete=PROTECT)
-    ramp: ForeignKey = ForeignKey("tournaments.Ramp", null=True, blank=True, on_delete=PROTECT)
-    rules: ForeignKey = ForeignKey("tournaments.RuleSet", null=True, blank=True, on_delete=PROTECT)
+    lake: ForeignKey = ForeignKey("tournaments.Lake", null=True, blank=True, on_delete=CASCADE)
+    ramp: ForeignKey = ForeignKey("tournaments.Ramp", null=True, blank=True, on_delete=CASCADE)
+    rules: ForeignKey = ForeignKey("tournaments.RuleSet", null=True, blank=True, on_delete=CASCADE)
     payout_multiplier: ForeignKey = ForeignKey(
         "tournaments.PayOutMultipliers", null=True, blank=True, on_delete=PROTECT
     )
@@ -160,7 +161,7 @@ def get_non_zeroes(tid):
 
 
 def get_zeroes(tid):
-    query = {"buy_in": False, "num_fish": 0, "tournament__id": tid, "disqualified": False, "locked": False}
+    query = {"num_fish": 0, "tournament__id": tid, "disqualified": False, "locked": False}
     return Result.objects.filter(**query)
 
 
