@@ -49,7 +49,7 @@ class TournamentCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTe
         initial = super().get_initial()
         initial["rules"] = RuleSet.objects.filter(year=datetime.date.today().year).first()
         initial["payout_multiplier"] = PayOutMultipliers.objects.filter(year=datetime.date.today().year).first()
-        initial["event"] = get_next_event(event_type="tournament")
+        initial["event"] =  get_next_event(event_type="tournament")
         return initial
 
     def test_func(self):
@@ -66,8 +66,8 @@ class TournamentListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["index_html"] = True
-        context["next_meeting"] = get_next_event(event_type="meeting")
-        context["next_tournament"] = get_next_event(event_type="tournament")
+        context["next_meeting"] = get_next_event(event_type="meeting").as_html()
+        context["next_tournament"] = get_next_event(event_type="tournament").as_html()
         return context
 
 
