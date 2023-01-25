@@ -5,7 +5,7 @@ from time import strftime
 
 from django.db.models import (
     CASCADE,
-    PROTECT,
+    PROTECT,gt
     BooleanField,
     CharField,
     ForeignKey,

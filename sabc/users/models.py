@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import datetime
 
-from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
+from django.contrib.auth import get_user_model
 from django.db.models import (
     PROTECT,
     BooleanField,
@@ -19,6 +19,7 @@ from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 from PIL import Image
 
+User = get_user_model()
 
 class MemberManager(Manager):
     def get_active_members(self):

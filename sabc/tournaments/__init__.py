@@ -2,61 +2,9 @@
 import calendar
 import datetime
 
-# from pathlib import Path
-from typing import Any
-
-from sabc.settings import STATICFILES_DIRS
-
-# from django.utils import timezone
-# from yaml import safe_load
-
-
-
 def get_last_sunday(month: int = 0) -> int:
     month = month or datetime.date.today().month
     return max(week[-1] for week in calendar.monthcalendar(datetime.date.today().year, month))
-
-
-# def get_next_meeting() -> str:
-#     year: int = timezone.now().year
-#     month_num: int = timezone.now().month
-#     month_name: str = calendar.month_name[month_num]
-
-#     meetings: Any = None
-#     with open(str(Path(STATICFILES_DIRS[0]) / "meetings.yaml"), "r", encoding="utf-8") as stream:
-#         meetings = safe_load(stream)
-#     if not meetings:
-#         return " -- "
-
-#     mtg_date = datetime.datetime(year, month_num, meetings[year][month_name])
-#     if datetime.datetime.now() > mtg_date:  # See if meeting already passed for this month
-#         month_num += 1
-#         month_name = calendar.month_name[month_num]
-#         mtg_date = datetime.datetime(year, month_num, meetings[year][month_name])
-#     return f"{mtg_date.strftime('%D')} @ 7PM"
-
-
-# def get_next_tournament() -> str:
-#     year: int = timezone.now().year
-#     month_num: int = timezone.now().month
-#     month_name: str = calendar.month_name[month_num]
-
-#     tournaments: Any = None
-#     with open(str(Path(STATICFILES_DIRS[0]) / "tournaments.yaml"), "r", encoding="utf-8") as stream:
-#         tournaments = safe_load(stream)
-#     if not tournaments:
-#         return " -- "
-
-#     tournament: datetime.date = datetime.datetime(year, month_num, tournaments[year][month_name])
-#     if datetime.datetime.now() > tournament:  # See if tournament already passed for this month
-#         month_num += 1
-#         month_name = calendar.month_name[month_num]
-#         tournament = datetime.datetime(year, month_num, tournaments[year][month_name])
-#     return f"{tournament.strftime('%D')}"
-
-
-# NEXT_MEETING: str = get_next_meeting()
-# NEXT_TOURNAMENT: str = get_next_tournament()
 
 # TPW Length-weight Conversion Table for Texas Largemouth Bass
 # https://tpwd.texas.gov/fishboat/fish/recreational/catchrelease/bass_length_weight.phtml
