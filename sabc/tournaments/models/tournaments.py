@@ -5,7 +5,7 @@ from time import strftime
 
 from django.db.models import (
     CASCADE,
-    PROTECT,gt
+    PROTECT,
     BooleanField,
     CharField,
     ForeignKey,
@@ -109,6 +109,7 @@ def set_points(tid):
     set_places(tid=tid)
     if not tournament.points_count:
         return
+
 
     # Anglers that weighed in fish
     points = tournament.rules.max_points
