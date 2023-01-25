@@ -65,85 +65,69 @@ class Tournament(Model):
         super().save(*args, **kwargs)
 
 
-def get_last_place(tid):
-    """Returns the last place result number"""
-    results = Result.objects.filter(tournament=tid).order_by("place_finish")
-    if results:
-        return results.last().place_finish or 1
-    return 1
-
-
-def get_last_points(tid):
-    results = Result.objects.filter(tournament=tid).order_by("-points")
-    if results:
-        return results.last().points
-    return Tournament.objects.get(id=tid).rules.max_points
+def tie(current, previous):
+    return all([
+        current.total_weight == previous.total_weight,
+        current.num_fish == previous.num_fish,
+        current.big_bass_weight == previous.big_bass_weight
+    ]) if previous else False
 
 
 def set_places(tid):
     def _set_places(query):
+        if not query:
+            return
         prev = None
-        dqs = [q for q in query if q.disqualified]
-        zeros = [q for q in query if not q.buy_in and q.total_weight == Decimal("0") and not q.disqualified]
-        buy_ins = [q for q in query if q.buy_in and not q.disqualified]
-        weighed_fish = [q for q in query if not q.buy_in and q.total_weight > Decimal("0") and not q.disqualified]
-        # Results for anglers "In the money"
-        for result in weighed_fish[: tournament.payout_multiplier.paid_places]:
-            result.place_finish = 1 if not prev else prev.place_finish + 1
+        place = 1
+        fished = [q for q in query if not q.disqualified and not q.buy_in]
+        for result in fished:
+            if tie(current=result, previous=prev):
+                result.place_finish = prev.place_finish
+            else:
+                result.place_finish = place
+                place += 1
             result.save()
             prev = result
-        # All other anglers who weighed in fish (i.e. did not zero)
-        for result in weighed_fish[tournament.payout_multiplier.paid_places :]:
-            tie = result.total_weight == prev.total_weight
-            result.place_finish = prev.place_finish + 1 if not tie else prev.place_finish
-            result.save()
-            prev = result
-        place = prev.place_finish + 1 if prev else 1
-        # All of the anglers who fished, but caught nothing
-        for result in zeros:
-            result.place_finish = place
-            result.save()
-            prev = result
-        place = place + 1 if zeros else place
-        # All of the anglers that "Bought-in"
-        for result in buy_ins:
-            result.place_finish = place
-            result.save()
-        # Anglers who were disqualified
-        place = place + 1 if buy_ins else place
-        for result in dqs:
-            result.place_finish = place
-            result.save()
+        buy_ins = [q for q in query if q.buy_in]
+        if buy_ins:
+            for buy_in in buy_ins:
+                buy_in.place_finish = place
+                buy_in.save()
+            place += 1
+        disqualified = [q for q in query if q.disqualified]
+        if disqualified:
+            for dqs in disqualified:
+                dqs.place_finish = place
+                dqs.save()
 
-    #
-    # Set Places
-    #
     order = ("-total_weight", "-big_bass_weight", "-num_fish")
-    tournament = Tournament.objects.get(id=tid)
     _set_places(Result.objects.filter(tournament=tid).order_by(*order))
-    if tournament.team:
-        _set_places(TeamResult.objects.filter(tournament=tid).order_by(*order))
-
+    _set_places(TeamResult.objects.filter(tournament=tid).order_by(*order))
 
 def set_points(tid):
     tournament = Tournament.objects.get(id=tid)
     set_places(tid=tid)
     if not tournament.points_count:
         return
+
     # Anglers that weighed in fish
     points = tournament.rules.max_points
     previous = None
     for result in get_non_zeroes(tid=tid).order_by("place_finish"):
-        tie = result.place_finish == previous.place_finish if previous else False
-        result.points = points if not tie else previous.points
+        if tie(current=result, previous=previous):
+            result.points = previous.points
+        else:
+            result.points = points
+            points -= 1
         result.save()
         previous = result
-        points -= 1
-    dq_offset = tournament.rules.disqualified_points_offset
+
     # Anglers who were disqualified, but points awarded were allowed
+    dq_offset = tournament.rules.disqualified_points_offset
     for result in get_disqualified(tid=tid):
         result.points = previous.points - dq_offset if previous else tournament.max_points
         result.save()
+
     # Anglers that did not weigh in fish or bought in
     zeros_offset = tournament.rules.zeroes_points_offset
     buy_in_offset = tournament.rules.buy_ins_points_offset
