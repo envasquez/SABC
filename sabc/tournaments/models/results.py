@@ -33,16 +33,13 @@ class Result(Model):
     tournament: ForeignKey = ForeignKey("tournaments.Tournament", on_delete=CASCADE, null=False, blank=False)
 
     def __str__(self) -> str:
-        place: str = f"{self.place_finish}."
-        weight: str = f"{self.num_fish} @ {self.total_weight}lbs"
-        points: str = f"{self.points} Points"
+        place: str = f"{self.place_finish}.{self.angler}"
+        weight: str = f"{self.num_fish} fish for:{self.total_weight}lbs"
+        points: str = f"[{self.points}pts]" if self.tournament.points_count else ""
         if self.buy_in:
             weight = "Buy-in"
-        big_bass: str = f"{self.big_bass_weight}lb BB" if not self.buy_in else ""
-        return (
-            f"{place}{self.angler}{' ' * (30 - len(str(self.angler)))}"
-            f"{weight}\t{big_bass}\t{points}\t{self.tournament.name}"
-        )
+        big_bass: str = f"{self.big_bass_weight}lb BB" if not self.buy_in and self.big_bass_weight else ""
+        return " " .join([s for s in [place,  weight, big_bass, self.tournament.name, points] if s])
 
     def get_absolute_url(self) -> str:
         return reverse("result-create", kwargs={"pk": self.tournament.id})
@@ -74,8 +71,8 @@ class TeamResult(Model):  # pylint: disable=too-many-instance-attributes
     penalty_weight: DecimalField = DecimalField(default=Decimal("0"), max_digits=5, decimal_places=2)
     big_bass_weight: DecimalField = DecimalField(default=Decimal("0"), max_digits=5, decimal_places=2)
 
-    result_1: ForeignKey = ForeignKey("tournaments.Result", on_delete=PROTECT)
-    result_2: ForeignKey = ForeignKey("tournaments.Result", null=True, blank=True, related_name="+", on_delete=PROTECT)
+    result_1: ForeignKey = ForeignKey("tournaments.Result", on_delete=CASCADE)
+    result_2: ForeignKey = ForeignKey("tournaments.Result", null=True, blank=True, related_name="+", on_delete=CASCADE)
     tournament: ForeignKey = ForeignKey("tournaments.Tournament", on_delete=PROTECT)
 
     def __str__(self) -> str:
@@ -102,7 +99,7 @@ class TeamResult(Model):  # pylint: disable=too-many-instance-attributes
             self.penalty_weight = self.result_1.penalty_weight + self.result_2.penalty_weight
             self.num_fish_alive = self.result_1.num_fish_alive + self.result_2.num_fish_alive
             self.big_bass_weight = max(self.result_1.big_bass_weight, self.result_2.big_bass_weight)
-        if any([self.result_1.disqualified, self.result_2.disqualified]):
+        if any([self.result_1.disqualified, self.result_2.disqualified if self.result_2 else False]):
             self.disqualified = True
         if self._state.adding or self.manual_edit:
             self.team_name = self.get_team_name()
