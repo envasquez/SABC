@@ -41,11 +41,13 @@ test: clean-migrations
 	docker run --rm test_sabc
 
 mypy: clean-migrations
-	docker build -f Dockerfile_mypy -t test_mypy .
-	docker run --rm test_mypy
+	docker build -f Dockerfile_mypy -t mypy_sabc .
+	docker run --rm mypy_sabc
 
 lint: clean clean-migrations isort
-	DJANGO_SETTINGS_MODULE=sabc.settings python3 -m pylint --load-plugins pylint_django --verbose sabc/tournaments/ sabc/users/ sabc/polls/ --rcfile pyproject.toml
+	# DJANGO_SETTINGS_MODULE=sabc.settings python3 -m pylint --load-plugins pylint_django --verbose sabc/tournaments/ sabc/users/ sabc/polls/ --rcfile pyproject.toml
+	docker build -f Dockerfile_pylint -t pylint_sabc .
+	docker run --rm pylint_sabc
 
 help:
 	@echo -e "\t make clean"
