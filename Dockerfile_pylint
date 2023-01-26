@@ -8,5 +8,5 @@ RUN apk --update add libxml2-dev libxslt-dev libffi-dev gcc musl-dev libgcc open
 RUN apk add jpeg-dev zlib-dev freetype-dev lcms2-dev openjpeg-dev tiff-dev tk-dev tcl-dev tree py3-pip
 WORKDIR /app
 COPY . .
-RUN --mount=type=cache,target=/root/.cache pip install -r requirements-mypy.txt
+RUN pip install -r requirements-mypy.txt
 CMD ["python3", "-m", "pylint", "--load-plugins", "pylint_django", "--verbose", "sabc/tournaments/", "sabc/users/", "sabc/polls/", "--rcfile", "pyproject.toml"]
