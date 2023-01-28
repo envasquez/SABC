@@ -80,7 +80,7 @@ def get_next_event(event_type):
     month = today.month
     try:
         event = Events.objects.get(type=event_type, month=calendar.month_name[month], year=year)
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         return None
     if today.day < event.date.day:
         return event

@@ -3,7 +3,15 @@ import datetime
 from decimal import Decimal
 from time import strftime
 
-from django.db.models import CASCADE, PROTECT, BooleanField, CharField, ForeignKey, Model, TextField
+from django.db.models import (
+    CASCADE,
+    PROTECT,
+    BooleanField,
+    CharField,
+    ForeignKey,
+    Model,
+    TextField,
+)
 from django.urls import reverse
 
 from .. import get_last_sunday
