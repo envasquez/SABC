@@ -3,7 +3,6 @@ from time import strftime
 
 from django.db.models import CASCADE, CharField, DateField, ForeignKey, ManyToManyField, Model, TextField
 from tournaments.models.lakes import Lake
-from tournaments.models.tournaments import Tournament
 from users.models import Angler
 
 CURRENT_YEAR: str = f"{strftime('%Y')}"
