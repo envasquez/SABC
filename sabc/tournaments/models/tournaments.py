@@ -66,11 +66,17 @@ class Tournament(Model):
 
 
 def tie(current, previous):
-    return all([
-        current.total_weight == previous.total_weight,
-        current.num_fish == previous.num_fish,
-        current.big_bass_weight == previous.big_bass_weight
-    ]) if previous else False
+    return (
+        all(
+            [
+                current.total_weight == previous.total_weight,
+                current.num_fish == previous.num_fish,
+                current.big_bass_weight == previous.big_bass_weight,
+            ]
+        )
+        if previous
+        else False
+    )
 
 
 def set_places(tid):
@@ -104,12 +110,12 @@ def set_places(tid):
     _set_places(Result.objects.filter(tournament=tid).order_by(*order))
     _set_places(TeamResult.objects.filter(tournament=tid).order_by(*order))
 
+
 def set_points(tid):
     tournament = Tournament.objects.get(id=tid)
     set_places(tid=tid)
     if not tournament.points_count:
         return
-
 
     # Anglers that weighed in fish
     points = tournament.rules.max_points
@@ -126,7 +132,7 @@ def set_points(tid):
     # Anglers who were disqualified, but points awarded were allowed
     dq_offset = tournament.rules.disqualified_points_offset
     for result in get_disqualified(tid=tid):
-        result.points = previous.points - dq_offset if previous else tournament.max_points
+        result.points = previous.points - dq_offset if previous else tournament.rules.max_points
         result.save()
 
     # Anglers that did not weigh in fish or bought in
@@ -135,7 +141,7 @@ def set_points(tid):
     for result in get_zeroes(tid=tid):
         result.points = previous.points - zeros_offset if previous else 0
         if result.buy_in:
-            result.points = previous.points - buy_in_offset if previous else tournament.max_points - buy_in_offset
+            result.points = previous.points - buy_in_offset if previous else tournament.rules.max_points - buy_in_offset
         result.save()
 
 
