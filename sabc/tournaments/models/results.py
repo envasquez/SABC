@@ -39,7 +39,7 @@ class Result(Model):
         if self.buy_in:
             weight = "Buy-in"
         big_bass: str = f"{self.big_bass_weight}lb BB" if not self.buy_in and self.big_bass_weight else ""
-        return " " .join([s for s in [place,  weight, big_bass, self.tournament.name, points] if s])
+        return " ".join([s for s in [place, weight, big_bass, self.tournament.name, points] if s])
 
     def get_absolute_url(self) -> str:
         return reverse("result-create", kwargs={"pk": self.tournament.id})
@@ -73,7 +73,7 @@ class TeamResult(Model):  # pylint: disable=too-many-instance-attributes
 
     result_1: ForeignKey = ForeignKey("tournaments.Result", on_delete=CASCADE)
     result_2: ForeignKey = ForeignKey("tournaments.Result", null=True, blank=True, related_name="+", on_delete=CASCADE)
-    tournament: ForeignKey = ForeignKey("tournaments.Tournament", on_delete=PROTECT)
+    tournament: ForeignKey = ForeignKey("tournaments.Tournament", on_delete=CASCADE)
 
     def __str__(self) -> str:
         name: str = self.get_team_name()
