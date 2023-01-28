@@ -12,6 +12,17 @@ from ..models.results import Result, TeamResult
 from ..models.tournaments import Tournament
 
 
+def valid_result(result):
+    msg = ""
+    if result.angler in [r.angler for r in Result.objects.filter(tournament=result.tournament.id)]:
+        msg = f"ERROR Result exists for {result.angler} ... edit instead?"
+    elif result.num_fish == 0 and result.total_weight > Decimal("0"):
+        msg = f"ERROR Can't have weight: {result.total_weight}lbs with {result.num_fish} fish weighed!"
+    elif result.num_fish > result.tournament.rules.limit_num:
+        msg = f"ERROR: Number of Fish exceeds limit: {result.tournament.rules.limit_num}"
+    return (True, msg) if msg == "" else (False, msg)
+
+
 class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Result
     form_class = ResultForm
@@ -30,17 +41,11 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMi
         return context
 
     def form_valid(self, form):
-        tid = self.kwargs.get("pk")
-        duplicate = form.instance.angler in [r.angler for r in Result.objects.filter(tournament=tid)]
-        zero_fish_wt = form.instance.num_fish == 0 and form.instance.total_weight > Decimal("0")
-        errors = any([duplicate, zero_fish_wt])
-        if duplicate:
-            messages.error(self.request, message=f"ERROR Result exists for {form.instance.angler} ... edit instead?")
-        elif zero_fish_wt:
-            messages.error(self.request, message=f"ERROR Result exists for {form.instance.angler} ... edit instead?")
-        if errors:
-            return super().form_invalid(form)
-        messages.success(self.request, f"Result added: {form.instance}")
+        valid, msg = valid_result(result=form.instance)
+        if not valid:
+            messages.error(self.request, msg)
+            return self.form_invalid(form)
+        messages.success(self.request, f"Result ADDED for: {form.instance}!")
         return super().form_valid(form)
 
 
@@ -60,13 +65,13 @@ class ResultUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMi
         return reverse_lazy("tournament-details", kwargs={"pk": self.get_object().tournament.id})
 
     def form_valid(self, form):
-        result = form.instance
-        if result.total_weight > 0 and result.num_fish == 0:
-            msg = f"ERROR Can't have weight: {result.total_weight}lbs with {result.num_fish} fish weighed "
-            msg += "please fix the field: Num fish!"
-            messages.error(self.request, message=msg)
-            return super().form_invalid(form)
+        valid, msg = valid_result(result=form.instance)
+        if not valid:
+            messages.error(self.request, msg)
+            return self.form_invalid(form)
+        messages.success(self.request, f"Result EDITED for: {form.instance}!")
         return super().form_valid(form)
+
 
 class ResultDeleteView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView):  # type: ignore
     model = Result

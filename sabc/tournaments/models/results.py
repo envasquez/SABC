@@ -92,15 +92,29 @@ class TeamResult(Model):  # pylint: disable=too-many-instance-attributes
         return f"{name} & {self.result_2.angler.user.get_full_name()}"
 
     def save(self, *args, **kwargs) -> None:
-        if self.result_2:
+        use_result2 = all([self.result_2, not self.result_2.disqualified if self.result_2 else False])
+        if use_result2:
             self.num_fish = self.result_1.num_fish + self.result_2.num_fish
             self.total_weight = self.result_1.total_weight + self.result_2.total_weight
             self.num_fish_dead = self.result_1.num_fish + self.result_2.num_fish_dead
             self.penalty_weight = self.result_1.penalty_weight + self.result_2.penalty_weight
             self.num_fish_alive = self.result_1.num_fish_alive + self.result_2.num_fish_alive
             self.big_bass_weight = max(self.result_1.big_bass_weight, self.result_2.big_bass_weight)
+        else:
+            for attr in [
+                "buy_in",
+                "num_fish",
+                "total_weight",
+                "big_bass_weight",
+                "num_fish_alive",
+                "num_fish_dead",
+                "penalty_weight",
+            ]:
+                setattr(self, attr, getattr(self.result_1, attr))
+
         if any([self.result_1.disqualified, self.result_2.disqualified if self.result_2 else False]):
             self.disqualified = True
+
         if self._state.adding or self.manual_edit:
             self.team_name = self.get_team_name()
         super().save(*args, **kwargs)
