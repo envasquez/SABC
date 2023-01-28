@@ -12,17 +12,6 @@ from ..models.results import Result, TeamResult
 from ..models.tournaments import Tournament
 
 
-def valid_result(result):
-    msg = ""
-    if result.angler in [r.angler for r in Result.objects.filter(tournament=result.tournament.id)]:
-        msg = f"ERROR Result exists for {result.angler} ... edit instead?"
-    elif result.num_fish == 0 and result.total_weight > Decimal("0"):
-        msg = f"ERROR Can't have weight: {result.total_weight}lbs with {result.num_fish} fish weighed!"
-    elif result.num_fish > result.tournament.rules.limit_num:
-        msg = f"ERROR: Number of Fish exceeds limit: {result.tournament.rules.limit_num}"
-    return (True, msg) if msg == "" else (False, msg)
-
-
 class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Result
     form_class = ResultForm
@@ -102,6 +91,12 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixi
         initial["tournament"] = self.kwargs.get("pk")
         return initial
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["result_1"] = Result.objects.filter(tournament=kwargs["initial"]["tournament"])
+        kwargs["result_2"] = Result.objects.filter(tournament=kwargs["initial"]["tournament"])
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["tournament"] = Tournament.objects.get(pk=self.kwargs.get("pk"))
@@ -153,3 +148,14 @@ class TeamResultDeleteView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTe
     def get_success_url(self):
         messages.success(self.request, f"{self.get_object()} Deleted!")
         return reverse_lazy("tournament-details", kwargs={"pk": self.get_object().tournament.id})
+
+
+def valid_result(result):
+    msg = ""
+    if result.angler in [r.angler for r in Result.objects.filter(tournament=result.tournament.id)]:
+        msg = f"ERROR Result exists for {result.angler} ... edit instead?"
+    elif result.num_fish == 0 and result.total_weight > Decimal("0"):
+        msg = f"ERROR Can't have weight: {result.total_weight}lbs with {result.num_fish} fish weighed!"
+    elif result.num_fish > result.tournament.rules.limit_num:
+        msg = f"ERROR: Number of Fish exceeds limit: {result.tournament.rules.limit_num}"
+    return (True, msg) if msg == "" else (False, msg)

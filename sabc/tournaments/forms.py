@@ -42,6 +42,14 @@ class TeamForm(ModelForm):
         model = TeamResult
         fields = ("tournament", "result_1", "result_2")
 
+    def __init__(self, *args, **kwargs):
+        result_1 = kwargs.pop("result_1")
+        result_2 = kwargs.pop("result_2")
+
+        super().__init__(*args, **kwargs)
+        self.fields["result_1"].queryset = result_1
+        self.fields["result_2"].queryset = result_2
+
 
 class YamlImportForm(Form):
     yaml_upload = FileField()
