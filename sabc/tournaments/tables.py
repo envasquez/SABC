@@ -135,6 +135,7 @@ class DQTable(Table):
 
 
 class TournamentSummaryTable(Table):
+    anglers: Column = Column()
     total_fish: Column = Column()
     total_weight: Column = Column()
     limits: Column = Column()

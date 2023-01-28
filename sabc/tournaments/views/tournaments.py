@@ -6,26 +6,14 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
-from django.views.generic import (
-    CreateView,
-    DeleteView,
-    DetailView,
-    ListView,
-    UpdateView,
-)
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from ..forms import TournamentForm
 from ..models.events import get_next_event
 from ..models.payouts import PayOutMultipliers
 from ..models.results import Result, TeamResult
 from ..models.rules import RuleSet
-from ..models.tournaments import (
-    Tournament,
-    get_big_bass_winner,
-    get_payouts,
-    set_places,
-    set_points,
-)
+from ..models.tournaments import Tournament, get_big_bass_winner, get_payouts, set_places, set_points
 from ..tables import (
     BuyInTable,
     DQTable,
@@ -49,7 +37,7 @@ class TournamentCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTe
         initial = super().get_initial()
         initial["rules"] = RuleSet.objects.filter(year=datetime.date.today().year).first()
         initial["payout_multiplier"] = PayOutMultipliers.objects.filter(year=datetime.date.today().year).first()
-        initial["event"] =  get_next_event(event_type="tournament")
+        initial["event"] = get_next_event(event_type="tournament")
         return initial
 
     def test_func(self):
@@ -89,6 +77,7 @@ class TournamentDetailView(DetailView):
         limits = Result.objects.filter(tournament=tid, num_fish=5).count()
         zeroes = Result.objects.filter(tournament=tid, num_fish=0, buy_in=False).count()
         buy_ins = Result.objects.filter(tournament=tid, buy_in=True).count()
+        anglers = Result.objects.filter(tournament=tid, buy_in=False).count()
         bb_result = get_big_bass_winner(tid=tid)
         heavy_stringer = "--"
         hs_result = Result.objects.filter(tournament=tid, place_finish=1)
@@ -107,6 +96,7 @@ class TournamentDetailView(DetailView):
         data = {
             "limits": limits,
             "zeros": zeroes,
+            "anglers": anglers,
             "buy_ins": buy_ins,
             "total_fish": total_fish,
             "total_weight": f"{total_weight: .2f}lbs",
