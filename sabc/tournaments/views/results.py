@@ -93,8 +93,14 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixi
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs["result_1"] = Result.objects.filter(tournament=kwargs["initial"]["tournament"])
-        kwargs["result_2"] = Result.objects.filter(tournament=kwargs["initial"]["tournament"])
+        tid = kwargs["initial"]["tournament"]
+        all_results = [r for r in Result.objects.filter(tournament=tid, buy_in=False)]
+        test_results = [t.result_1 for t in TeamResult.objects.filter(tournament=tid)]
+        test_results += [t.result_2 for t in TeamResult.objects.filter(tournament=tid) if t.result_2]
+
+        results = Result.objects.filter(id__in=[r.id for r in all_results if r not in test_results])
+        kwargs["result_1"] = results
+        kwargs["result_2"] = results
         return kwargs
 
     def get_context_data(self, **kwargs):
