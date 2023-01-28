@@ -13,7 +13,7 @@
                     <a class="article-title" href="{% url 'tournament-details' tournament.id %}">Lake: To Be Voted On ...</a>
                 {% endif %}
                 {% if tournament.complete %}
-                    <small class="text-muted ml-2">- Complete</small>
+                    <a class="article-title" href="{% url 'tournament-details' tournament.id %}"><small>[results]</small></a>
                 {% endif %}
             </h2>
             <p class="article-content">
