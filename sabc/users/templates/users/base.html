@@ -67,17 +67,14 @@
                     <div class="col-md-4">
                         <ul class="list-group">
                             <li class="list-group-item list-group-item-light"><b>Next:</b>
-                                <small>
-                                    {{ next_meeting | safe }}
-                                    <a href="https://goo.gl/maps/JcfDTmX6g5P1Ai2j6" target="_blank" rel="noopener noreferrer">
-                                        Beto's Restaurant & Bar
-                                    </a>
-                                </small>
+                                {{ next_meeting | safe }}
+                                <a href="https://goo.gl/maps/JcfDTmX6g5P1Ai2j6" target="_blank" rel="noopener noreferrer">
+                                    Beto's Restaurant & Bar
+                                </a>
                             </li>
                             <li class="list-group-item list-group-item-light">
-                            </small>
-                                <b>Next:</b> {{ next_tournament | safe }}</li>
-                            </small>
+                                <b>Next:</b> {{ next_tournament | safe }}
+                            </li>
                         </ul>
                     </div>
                 {% endif %}

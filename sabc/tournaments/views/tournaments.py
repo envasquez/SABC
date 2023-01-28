@@ -6,26 +6,14 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
-from django.views.generic import (
-    CreateView,
-    DeleteView,
-    DetailView,
-    ListView,
-    UpdateView,
-)
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from ..forms import TournamentForm
 from ..models.events import get_next_event
 from ..models.payouts import PayOutMultipliers
 from ..models.results import Result, TeamResult
 from ..models.rules import RuleSet
-from ..models.tournaments import (
-    Tournament,
-    get_big_bass_winner,
-    get_payouts,
-    set_places,
-    set_points,
-)
+from ..models.tournaments import Tournament, get_big_bass_winner, get_payouts, set_places, set_points
 from ..tables import (
     BuyInTable,
     DQTable,
@@ -66,8 +54,10 @@ class TournamentListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["index_html"] = True
-        context["next_meeting"] = get_next_event(event_type="meeting").as_html()
-        context["next_tournament"] = get_next_event(event_type="tournament").as_html()
+        next_meeting = get_next_event(event_type="meeting")
+        context["next_meeting"] = next_meeting.as_html(date_only=False) if next_meeting else "N/A"
+        next_tournament = get_next_event(event_type="tournament")
+        context["next_tournament"] = next_tournament.as_html() if next_tournament else "N/A"
         return context
 
 

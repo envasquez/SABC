@@ -1,16 +1,9 @@
 # -*- coding: utf-8 -*-
 from time import strftime
 
-from django.db.models import (
-    CASCADE,
-    CharField,
-    DateField,
-    ForeignKey,
-    ManyToManyField,
-    Model,
-    TextField,
-)
+from django.db.models import CASCADE, CharField, DateField, ForeignKey, ManyToManyField, Model, TextField
 from tournaments.models.lakes import Lake
+from tournaments.models.tournaments import Tournament
 from users.models import Angler
 
 CURRENT_YEAR: str = f"{strftime('%Y')}"
@@ -18,9 +11,7 @@ CURRENT_MONTH: str = f"{strftime('%B')}"
 
 
 class LakePoll(Model):
-    name: CharField | str = CharField(
-        default=f"Poll: {CURRENT_MONTH} {CURRENT_YEAR}", max_length=256
-    )
+    name: CharField | str = CharField(default=f"Poll: {CURRENT_MONTH} {CURRENT_YEAR}", max_length=256)
     choices: ManyToManyField = ManyToManyField(Lake)
     description: TextField | str = TextField(max_length=4096, null=True, blank=True)
 
