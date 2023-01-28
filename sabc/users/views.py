@@ -95,7 +95,7 @@ class AnglerDetailView(DetailView):
         angler = Angler.objects.get(user=self.get_object().id)
         results = Result.objects.filter(angler=angler, tournament__event__year=year)
         return {
-            "wins": sum(1 for r in results),
+            "wins": sum(1 for r in results if r.place_finish == 1),
             "angler": angler.user.get_full_name(),
             "events": results.count(),
             "total_fish": sum(r.num_fish for r in results),
