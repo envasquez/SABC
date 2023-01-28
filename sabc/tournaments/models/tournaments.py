@@ -62,6 +62,8 @@ class Tournament(Model):
             )
         if not self.payout_multiplier:
             self.payout_multiplier, _ = PayOutMultipliers.objects.get_or_create(year=self.event.year)
+        if self.lake:
+            self.paper = self.lake.paper  # pylint: disable=no-member
         super().save(*args, **kwargs)
 
 
