@@ -31,12 +31,13 @@
                 google.charts.setOnLoadCallback(drawBasic);
                 function drawBasic(){
                     var data = google.visualization.arrayToDataTable({{results|safe}});
-                        var opts = {
-                            title: "Voting Results",
-                            height: 500,
-                            width: 800,
-                            legend: "none"
-                        };
+                    var opts = {
+                        title: "Voting Results",
+                        height: 500,
+                        width: 800,
+                        legend: "none",
+                        hAxis: {format: "#"}
+                    };
                     var chart = new google.visualization.BarChart(document.getElementById('chart_div'));
                     chart.draw(data, opts);
                 }

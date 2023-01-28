@@ -94,7 +94,7 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixi
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         tid = kwargs["initial"]["tournament"]
-        all_results = [r for r in Result.objects.filter(tournament=tid, buy_in=False)]
+        all_results = list(Result.objects.filter(tournament=tid, buy_in=False))
         test_results = [t.result_1 for t in TeamResult.objects.filter(tournament=tid)]
         test_results += [t.result_2 for t in TeamResult.objects.filter(tournament=tid) if t.result_2]
 
