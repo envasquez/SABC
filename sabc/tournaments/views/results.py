@@ -7,7 +7,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, UpdateView
 
-from ..forms import ResultForm, TeamForm
+from ..forms import ResultForm, ResultUpdateForm, TeamForm
 from ..models.results import Result, TeamResult
 from ..models.tournaments import Tournament
 
@@ -40,7 +40,7 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMi
 
 class ResultUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Result
-    form_class = ResultForm
+    form_class = ResultUpdateForm
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -54,7 +54,7 @@ class ResultUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMi
         return reverse_lazy("tournament-details", kwargs={"pk": self.get_object().tournament.id})
 
     def form_valid(self, form):
-        valid, msg = valid_result(result=form.instance)
+        valid, msg = valid_result(result=form.instance, new_result=False)
         if not valid:
             messages.error(self.request, msg)
             return self.form_invalid(form)
@@ -156,11 +156,12 @@ class TeamResultDeleteView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTe
         return reverse_lazy("tournament-details", kwargs={"pk": self.get_object().tournament.id})
 
 
-def valid_result(result):
+def valid_result(result, new_result=True):
     msg = ""
-    if result.angler in [r.angler for r in Result.objects.filter(tournament=result.tournament.id)]:
-        msg = f"ERROR Result exists for {result.angler} ... edit instead?"
-    elif result.num_fish == 0 and result.total_weight > Decimal("0"):
+    if new_result:
+        if result.angler in [r.angler for r in Result.objects.filter(tournament=result.tournament.id)]:
+            msg = f"ERROR Result exists for {result.angler} ... edit instead?"
+    if result.num_fish == 0 and result.total_weight > Decimal("0"):
         msg = f"ERROR Can't have weight: {result.total_weight}lbs with {result.num_fish} fish weighed!"
     elif result.num_fish > result.tournament.rules.limit_num:
         msg = f"ERROR: Number of Fish exceeds limit: {result.tournament.rules.limit_num}"

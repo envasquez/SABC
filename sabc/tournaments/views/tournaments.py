@@ -6,26 +6,14 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
-from django.views.generic import (
-    CreateView,
-    DeleteView,
-    DetailView,
-    ListView,
-    UpdateView,
-)
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from ..forms import TournamentForm
 from ..models.events import get_next_event
 from ..models.payouts import PayOutMultipliers
 from ..models.results import Result, TeamResult
 from ..models.rules import RuleSet
-from ..models.tournaments import (
-    Tournament,
-    get_big_bass_winner,
-    get_payouts,
-    set_places,
-    set_points,
-)
+from ..models.tournaments import Tournament, get_big_bass_winner, get_payouts, set_places, set_points
 from ..tables import (
     BuyInTable,
     DQTable,
@@ -128,11 +116,13 @@ class TournamentDetailView(DetailView):
         if tmnt.points_count:
             set_points(tid=tid)
 
-        team_results = TeamResult.objects.filter(tournament=tid).order_by("place_finish")
+        team_results = TeamResult.objects.filter(tournament=tid).order_by("place_finish", "-total_weight", "-num_fish")
         context["team_results"] = TeamResultTable(team_results)
         context["editable_team_results"] = EditableTeamResultTable(team_results)
 
-        indv_results = Result.objects.filter(tournament=tid, buy_in=False, disqualified=False).order_by("place_finish")
+        indv_results = Result.objects.filter(tournament=tid, buy_in=False, disqualified=False).order_by(
+            "place_finish", "-total_weight", "-num_fish"
+        )
         context["results"] = ResultTable(indv_results)
         context["editable_results"] = EditableResultTable(indv_results)
 

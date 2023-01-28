@@ -3,15 +3,7 @@ import datetime
 from decimal import Decimal
 from time import strftime
 
-from django.db.models import (
-    CASCADE,
-    PROTECT,
-    BooleanField,
-    CharField,
-    ForeignKey,
-    Model,
-    TextField,
-)
+from django.db.models import CASCADE, PROTECT, BooleanField, CharField, ForeignKey, Model, TextField
 from django.urls import reverse
 
 from .. import get_last_sunday
@@ -94,7 +86,8 @@ def set_places(tid):
             else:
                 result.place_finish = place
                 place += 1
-            result.save()
+            if not result.locked:
+                result.save()
             prev = result
         buy_ins = [q for q in query if q.buy_in]
         if buy_ins:

@@ -1,7 +1,15 @@
 # -*- coding: utf-8 -*-
 from time import strftime
 
-from django.db.models import CASCADE, CharField, DateField, ForeignKey, ManyToManyField, Model, TextField
+from django.db.models import (
+    CASCADE,
+    CharField,
+    DateField,
+    ForeignKey,
+    ManyToManyField,
+    Model,
+    TextField,
+)
 from tournaments.models.lakes import Lake
 from users.models import Angler
 

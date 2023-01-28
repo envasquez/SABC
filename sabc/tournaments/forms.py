@@ -28,9 +28,27 @@ class ResultForm(ModelForm):
             "angler",
             "buy_in",
             "locked",
-            "num_fish",
             "dq_points",
             "disqualified",
+            "num_fish",
+            "total_weight",
+            "num_fish_dead",
+            "big_bass_weight",
+        )
+
+
+class ResultUpdateForm(ModelForm):
+    class Meta:
+        model = Result
+        fields = (
+            "tournament",
+            "angler",
+            "buy_in",
+            "locked",
+            "dq_points",
+            "disqualified",
+            "place_finish",
+            "num_fish",
             "total_weight",
             "num_fish_dead",
             "big_bass_weight",
