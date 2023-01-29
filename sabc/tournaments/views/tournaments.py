@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import datetime
-import calendar
 from decimal import Decimal
 
 from django.contrib import messages

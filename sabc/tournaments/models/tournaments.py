@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
 from decimal import Decimal
-from time import strftime
 
 from django.db.models import (
     CASCADE,
