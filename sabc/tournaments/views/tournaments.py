@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
+import calendar
 from decimal import Decimal
 
 from django.contrib import messages
@@ -49,7 +50,10 @@ class TournamentCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTe
         initial = super().get_initial()
         initial["rules"] = RuleSet.objects.filter(year=datetime.date.today().year).first()
         initial["payout_multiplier"] = PayOutMultipliers.objects.filter(year=datetime.date.today().year).first()
-        initial["event"] = get_next_event(event_type="tournament")
+
+        event = get_next_event(event_type="tournament")
+        initial["event"] = event
+        initial["name"] = f"{event.month} {event.year} Event #{event.date.month}" if event else None
         return initial
 
     def test_func(self):
@@ -67,7 +71,7 @@ class TournamentListView(ListView):
         context = super().get_context_data(**kwargs)
         context["index_html"] = True
         next_meeting = get_next_event(event_type="meeting")
-        context["next_meeting"] = next_meeting.as_html(date_only=False) if next_meeting else "N/A"
+        context["next_meeting"] = next_meeting.as_html() if next_meeting else "N/A"
         next_tournament = get_next_event(event_type="tournament")
         context["next_tournament"] = next_tournament.as_html() if next_tournament else "N/A"
         return context

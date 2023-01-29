@@ -32,9 +32,7 @@ class Tournament(Model):
         "tournaments.PayOutMultipliers", null=True, blank=True, on_delete=PROTECT
     )
     event: ForeignKey = ForeignKey("tournaments.Events", null=True, blank=True, on_delete=PROTECT)
-    name: CharField = CharField(
-        default=f"{strftime('%B')} {strftime('%Y')} Event #{datetime.date.today().month}", max_length=256
-    )
+    name: CharField = CharField(default="", max_length=256)
     points_count: BooleanField = BooleanField(default=True)
     team: BooleanField = BooleanField(default=True)
     paper: BooleanField = BooleanField(default=False)

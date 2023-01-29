@@ -13,8 +13,8 @@ from django.db.models import (
 
 DEFAULT_MEETING_START: datetime.time = datetime.datetime.time(datetime.datetime.strptime("7:00 pm", "%I:%M %p"))
 DEFAULT_MEETING_FINISH: datetime.time = datetime.datetime.time(datetime.datetime.strptime("8:00 pm", "%I:%M %p"))
-DEFAULT_TOURNAMENT_START: datetime.time = datetime.datetime.time(datetime.datetime.strptime("6:00 am", "%I:%M %p"))
-DEFAULT_TOURNAMENT_FINISH: datetime.time = datetime.datetime.time(datetime.datetime.strptime("3:00 pm", "%I:%M %p"))
+DEFAULT_TOURNAMENT_START: datetime.time = datetime.datetime.time(datetime.datetime.strptime("12:00 am", "%I:%M %p"))
+DEFAULT_TOURNAMENT_FINISH: datetime.time = datetime.datetime.time(datetime.datetime.strptime("12:00 am", "%I:%M %p"))
 
 
 class Events(Model):
@@ -52,13 +52,13 @@ class Events(Model):
     def __str__(self):
         return f"{self.type} {self.date} {self.start}-{self.finish}".title()
 
-    def as_html(self, date_only=True):
+    def as_html(self):
         dmy = self.date.strftime("%d %B %Y")
-        start = self.start.strftime("%I %p")
-        finish = self.finish.strftime("%I %p")
-        if date_only:
-            return f"{self.type.title()} {dmy}<br />"
-        return f"{self.type.title()} {dmy}<br />{start}-{finish}<br />"
+        start = self.start.strftime("%I:%M %p")
+        finish = self.finish.strftime("%I:%M %p")
+        if self.start == self.finish:
+            return f"{self.type.upper()}<br />{dmy} Time: TBD<br />"
+        return f"{self.type.upper()}<br />{dmy}<br />{start}-{finish}<br />"
 
     def save(self, *args, **kwargs) -> None:
         if not self.start:
@@ -75,17 +75,13 @@ class Events(Model):
 
 
 def get_next_event(event_type):
-    today = datetime.date.today()
-    year = today.year
-    month = today.month
-    try:
-        event = Events.objects.get(type=event_type, month=calendar.month_name[month], year=year)
-    except Exception:  # pylint: disable=broad-except
+    if not Events.objects.filter(type=event_type):
         return None
-    if today.day < event.date.day:
-        return event
-    month += 1
-    if month == 12:
-        year += year
-        month = 1
-    return Events.objects.get(type=event_type, month=calendar.month_name[month], year=year)
+
+    today = datetime.date.today()
+    events = Events.objects.filter(type=event_type, year=today.year).order_by("date")
+    for idx, event in enumerate(events):
+        current_month = event.month == calendar.month_name[today.month]
+        if current_month and today.day < event.date.day:
+            return event
+        return events[idx + 1] if idx + 1 <= len(events) else None
