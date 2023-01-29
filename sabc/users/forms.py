@@ -45,7 +45,7 @@ class AnglerUpdateForm(ModelForm):
 
     class Meta:
         model = Angler
-        fields = ("phone_number", "image")
+        fields = ("phone_number",)
 
 
 class AnglerUserMultiUpdateForm(MultiModelForm):

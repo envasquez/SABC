@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Model
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.generic import ListView, View
@@ -30,7 +30,7 @@ class LakePollView(View, LoginRequiredMixin, UserPassesTestMixin, SuccessMessage
                 results.append([str(choice).title(), count])
         return results
 
-    def get(self, request, pid) -> HttpResponse:
+    def get(self, request: HttpRequest, pid: int) -> HttpResponse:
         poll: LakePoll = LakePoll.objects.get(id=pid)
         voted: bool = LakeVote.objects.filter(poll=poll, angler=request.user.angler).exists()
         context: dict = {"poll": poll, "results": self.get_results(poll=poll), "voted": voted}

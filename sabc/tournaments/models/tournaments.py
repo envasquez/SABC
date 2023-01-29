@@ -91,8 +91,9 @@ def set_places(tid):
             else:
                 result.place_finish = place
                 place += 1
-            if not result.locked:
-                result.save()
+            if isinstance(result, Result):
+                if not result.locked:
+                    result.save()
             prev = result
         buy_ins = [q for q in query if q.buy_in]
         if buy_ins:
