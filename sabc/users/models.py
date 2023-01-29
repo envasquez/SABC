@@ -21,6 +21,7 @@ from PIL import Image
 
 User = get_user_model()
 
+
 class MemberManager(Manager):
     def get_active_members(self):
         return Angler.objects.filter(member=True, user__is_active=True)
@@ -29,7 +30,9 @@ class MemberManager(Manager):
 class Angler(Model):
     user: OneToOneField = OneToOneField(User, on_delete=PROTECT, primary_key=True)
     member: BooleanField = BooleanField(default=False, null=True, blank=True)
-    image: ImageField = ImageField(default="profile_pics/default.jpg", upload_to="profile_pics")
+    image: ImageField = ImageField(
+        default="profile_pics/default.jpg", upload_to="profile_pics"
+    )
     date_joined: DateField = DateField(default=timezone.now)
     phone_number: PhoneNumberField = PhoneNumberField(null=False, blank=False)
 

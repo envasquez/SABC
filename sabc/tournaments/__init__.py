@@ -5,7 +5,10 @@ import datetime
 
 def get_last_sunday(month: int = 0) -> int:
     month = month or datetime.date.today().month
-    return max(week[-1] for week in calendar.monthcalendar(datetime.date.today().year, month))
+    return max(
+        week[-1] for week in calendar.monthcalendar(datetime.date.today().year, month)
+    )
+
 
 # TPW Length-weight Conversion Table for Texas Largemouth Bass
 # https://tpwd.texas.gov/fishboat/fish/recreational/catchrelease/bass_length_weight.phtml

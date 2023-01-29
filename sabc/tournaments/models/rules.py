@@ -67,13 +67,17 @@ tournament and voted on and approved by at least three officers
 
 class RuleSet(Model):
     year: SmallIntegerField = SmallIntegerField(default=datetime.date.today().year)
-    name: CharField = CharField(default=f"SABC Default Rules {datetime.date.today().year}", max_length=100)
+    name: CharField = CharField(
+        default=f"SABC Default Rules {datetime.date.today().year}", max_length=100
+    )
     rules: TextField = TextField(default=RULE_INFO)
     payout: TextField = TextField(default=PAYOUT_INFO)
     weigh_in: TextField = TextField(default=WEIGH_IN_INFO)
     entry_fee: TextField = TextField(default=PAYMENT_INFO)
     limit_num: SmallIntegerField = SmallIntegerField(default=5)
-    dead_fish_penalty: DecimalField = DecimalField(default=Decimal("0.25"), max_digits=5, decimal_places=2)
+    dead_fish_penalty: DecimalField = DecimalField(
+        default=Decimal("0.25"), max_digits=5, decimal_places=2
+    )
     max_points: SmallIntegerField = SmallIntegerField(default=100)
     big_bass_breakdown: TextField = TextField(default=BIG_BASS_INFO)
     zeroes_points_offset: SmallIntegerField = SmallIntegerField(default=2)

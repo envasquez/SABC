@@ -64,7 +64,7 @@
                     <div class="col-md-4">
                         {% if user.angler.type == "officer" or user.is_superuser %}
                             <a href="{% url 'tournament-create' %}" class="btn btn-outline-dark" role="button">+Tournament</a>
-                            <a href="{% url 'tournament-create' %}" class="btn btn-outline-dark" role="button">+Poll</a>
+                            <a href="{% url 'lakepoll-create' %}" class="btn btn-outline-dark" role="button">+Poll</a>
                         {% endif %}
                         <ul class="list-group">
                             <li class="list-group-item list-group-item-light"><b>Next:</b>

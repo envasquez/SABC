@@ -9,6 +9,7 @@ from django.contrib.auth.views import PasswordResetCompleteView as PWComplete
 from django.contrib.auth.views import PasswordResetConfirmView as PWConfirm
 from django.contrib.auth.views import PasswordResetView as PWReset
 from django.urls import path
+from polls.views import LakePollCreateView as PollCreate
 from polls.views import LakePollListView as PollList
 from polls.views import LakePollView as Poll
 from tournaments.views import annual_awards
@@ -28,6 +29,7 @@ from users.views import AnglerRegistrationView as Register
 from users.views import AnglerUpdateView as Edit
 from users.views import about, bylaws, calendar, roster
 
+POLL_CREATE = ("polls/new/", "lakepoll-create")
 TMNT_CREATE = ("tournament/new/", "tournament-create")
 TMNT_DETAIL = ("tournament/<int:pk>/", "tournament-details")
 TMNT_UPDATE = ("tournament/<int:pk>/update/", "tournament-update")
@@ -43,9 +45,21 @@ EVENT_UPDATE = ("event/<int:pk>/", "event-update")
 LOGIN = ("login/", "users/login.html", "login")
 LOGOUT = ("logout/", "users/logout.html", "logout")
 PW_RESET = ("password-reset/", "users/password_reset.html", "password-reset")
-PW_DONE = ("password-reset/done/", "users/password_reset_done.html", "password_reset_done")
-PW_CONFIRM = ("password-reset-confirm/<uidb64>/<token>/", "users/password_reset_confirm.html", "password_reset_confirm")
-PW_COMPLETE = ("password-reset-complete/", "users/password_reset_complete.html", "password_reset_complete")
+PW_DONE = (
+    "password-reset/done/",
+    "users/password_reset_done.html",
+    "password_reset_done",
+)
+PW_CONFIRM = (
+    "password-reset-confirm/<uidb64>/<token>/",
+    "users/password_reset_confirm.html",
+    "password_reset_confirm",
+)
+PW_COMPLETE = (
+    "password-reset-complete/",
+    "users/password_reset_complete.html",
+    "password_reset_complete",
+)
 
 urlpatterns = [
     path("", TmntList.as_view(), name="sabc-home"),
@@ -60,6 +74,7 @@ urlpatterns = [
     path("register/", Register.as_view(), name="register"),
     path("profile/<int:pk>/", Profile.as_view(), name="profile"),
     path("profile_edit/<int:pk>/", Edit.as_view(), name="profile-edit"),
+    path(POLL_CREATE[0], PollCreate.as_view(), name=POLL_CREATE[1]),
     path(EVENT_UPDATE[0], EventUpdate.as_view(), name=EVENT_UPDATE[1]),
     path(TMNT_CREATE[0], TmntCreate.as_view(), name=TMNT_CREATE[1]),
     path(TMNT_DETAIL[0], TmntDetail.as_view(), name=TMNT_DETAIL[1]),
@@ -74,8 +89,16 @@ urlpatterns = [
     path(LOGOUT[0], Logout.as_view(template_name=LOGOUT[1]), name=LOGOUT[2]),
     path(PW_RESET[0], PWReset.as_view(template_name=PW_RESET[1]), name=PW_RESET[2]),
     path(PW_DONE[0], PWDone.as_view(template_name=PW_DONE[1]), name=PW_DONE[2]),
-    path(PW_CONFIRM[0], PWConfirm.as_view(template_name=PW_CONFIRM[1]), name=PW_CONFIRM[2]),
-    path(PW_COMPLETE[0], PWComplete.as_view(template_name=PW_COMPLETE[1]), name=PW_COMPLETE[2]),
+    path(
+        PW_CONFIRM[0],
+        PWConfirm.as_view(template_name=PW_CONFIRM[1]),
+        name=PW_CONFIRM[2],
+    ),
+    path(
+        PW_COMPLETE[0],
+        PWComplete.as_view(template_name=PW_COMPLETE[1]),
+        name=PW_COMPLETE[2],
+    ),
 ]
 
 if settings.DEBUG:

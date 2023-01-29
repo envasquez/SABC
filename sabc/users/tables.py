@@ -30,7 +30,12 @@ class MemberTable(Table):
 
     class Meta:
         model: Type[Angler] = Angler
-        fields: tuple[str, str, str, str] = ("first_name", "last_name", "email", "phone_number")
+        fields: tuple[str, str, str, str] = (
+            "first_name",
+            "last_name",
+            "email",
+            "phone_number",
+        )
         orderable: bool = False
         template_name: str = DEFAULT_TABLE_TEMPLATE
 

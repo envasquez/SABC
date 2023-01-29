@@ -27,7 +27,9 @@ def annual_awards(request):
 
 
 def get_aoy_results(year: int = datetime.date.today().year):
-    all_results = Result.objects.filter(tournament__event__year=year, angler__user__is_active=True)
+    all_results = Result.objects.filter(
+        tournament__event__year=year, angler__user__is_active=True
+    )
     anglers = []
     for result in all_results:
         if all((result.angler not in anglers, result.angler.member)):
@@ -38,7 +40,9 @@ def get_aoy_results(year: int = datetime.date.today().year):
         stats = {
             "angler": angler.user.get_full_name(),
             "total_points": sum(r.points for r in all_results if r.angler == angler),
-            "total_weight": sum(r.total_weight for r in all_results if r.angler == angler),
+            "total_weight": sum(
+                r.total_weight for r in all_results if r.angler == angler
+            ),
             "total_fish": sum(r.num_fish for r in all_results if r.angler == angler),
             "events": sum(1 for r in all_results if r.angler == angler),
         }
@@ -48,7 +52,11 @@ def get_aoy_results(year: int = datetime.date.today().year):
 
 def get_heavy_stringer(year=datetime.date.today().year):
     result = (
-        Result.objects.filter(tournament__event__year=year, angler__user__is_active=True, total_weight__gt=Decimal("0"))
+        Result.objects.filter(
+            tournament__event__year=year,
+            angler__user__is_active=True,
+            total_weight__gt=Decimal("0"),
+        )
         .order_by("-total_weight")
         .first()
     )
@@ -67,9 +75,21 @@ def get_heavy_stringer(year=datetime.date.today().year):
 def get_big_bass(year=datetime.date.today().year):
     query = (
         Result.objects.filter(
-            tournament__event__year=year, angler__user__is_active=True, big_bass_weight__gte=Decimal("5.0")
+            tournament__event__year=year,
+            angler__user__is_active=True,
+            big_bass_weight__gte=Decimal("5.0"),
         )
         .order_by("-big_bass_weight")
         .first()
     )
-    return [{"angler": query.angler, "weight": query.big_bass_weight, "tournament": query.tournament}] if query else []
+    return (
+        [
+            {
+                "angler": query.angler,
+                "weight": query.big_bass_weight,
+                "tournament": query.tournament,
+            }
+        ]
+        if query
+        else []
+    )

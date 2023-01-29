@@ -14,7 +14,9 @@ class Lake(Model):
         ordering: tuple = ("name",)
         verbose_name_plural: str = "Lakes"
 
-    def __str__(self) -> str:  # A little bit of custom code for a few of our local lakes :-)
+    def __str__(
+        self,
+    ) -> str:  # A little bit of custom code for a few of our local lakes :-)
         if self.name in ["fayette county reservoir", "choke canyon reservoir"]:
             return self.name.title()
         return (

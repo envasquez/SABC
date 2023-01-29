@@ -22,7 +22,9 @@ def create_angler(name: str, email: str, phone: str) -> None:
     #
     # Create a User
     #
-    user, _ = U_MODEL.objects.update_or_create(username=username, first_name=fname, last_name=lname, email=email)
+    user, _ = U_MODEL.objects.update_or_create(
+        username=username, first_name=fname, last_name=lname, email=email
+    )
     user.is_active = True
     user.save()
     #
@@ -55,7 +57,9 @@ class AnglerAdmin(admin.ModelAdmin):
                     create_angler(name=angler[0], email=angler[1], phone=angler[2])
                 except Exception as err:  # pylint: disable=broad-except
                     messages.error(request, f"{err}")
-                    messages.error(request, f"Error creating Angler: {angler[0]} - Skipping!")
+                    messages.error(
+                        request, f"Error creating Angler: {angler[0]} - Skipping!"
+                    )
             return HttpResponseRedirect(reverse("admin:index"))
         return render(request, "admin/csv_upload.html", data)
 
@@ -76,16 +80,22 @@ class OfficersAdmin(admin.ModelAdmin):
                 for position, name in officer.items():
                     first_name, last_name = name.split(" ")
                     try:
-                        angler: Angler = Angler.objects.get(user__first_name=first_name, user__last_name=last_name)
+                        angler: Angler = Angler.objects.get(
+                            user__first_name=first_name, user__last_name=last_name
+                        )
                     except Exception:  # pylint: disable=broad-except
-                        messages.error(request, f"Error: creating {year}:{name} - {position}")
+                        messages.error(
+                            request, f"Error: creating {year}:{name} - {position}"
+                        )
                         raise
                     Officers.objects.create(year=year, angler=angler, position=position)
                     angler.user.is_staff = True
                     angler.save()
                     results.append(name)
             if not results:
-                messages.error(request, "No officers created - Import some members maybe?")
+                messages.error(
+                    request, "No officers created - Import some members maybe?"
+                )
             else:
                 messages.info(request, f"Officers created: {results}")
             return HttpResponseRedirect(reverse("admin:index"))

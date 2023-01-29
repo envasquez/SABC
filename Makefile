@@ -49,6 +49,12 @@ lint: clean clean-migrations isort
 	docker build -f Dockerfile_pylint -t pylint_sabc .
 	docker run --rm pylint_sabc
 
+format:
+	find . -name "*.py" | xargs black -v
+	isort .
+
+make ci: format lint mypy test
+
 help:
 	@echo -e "\t make clean"
 	@echo -e "\t\t clean pycache, pyc files"

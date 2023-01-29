@@ -11,8 +11,12 @@ DEFAULT_TABLE_TEMPLATE: str = "django_tables2/bootstrap4.html"
 
 
 class EditableResultTable(Table):
-    edit: LinkColumn = LinkColumn("result-update", text="edit", args=[A("pk")], orderable=False, empty_values=())
-    delete: LinkColumn = LinkColumn("result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=())
+    edit: LinkColumn = LinkColumn(
+        "result-update", text="edit", args=[A("pk")], orderable=False, empty_values=()
+    )
+    delete: LinkColumn = LinkColumn(
+        "result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=()
+    )
     first_name: Column = Column(accessor="angler.user.first_name")
     last_name: Column = Column(accessor="angler.user.last_name")
 
@@ -52,14 +56,24 @@ class ResultTable(Table):
 
 class EditableTeamResultTable(Table):
     delete: LinkColumn = LinkColumn(
-        "teamresult-delete", text="delete", args=[A("pk")], orderable=False, empty_values=()
+        "teamresult-delete",
+        text="delete",
+        args=[A("pk")],
+        orderable=False,
+        empty_values=(),
     )
 
     class Meta:
         model: Type[TeamResult] = TeamResult
         orderable: bool = False
         template_name: str = DEFAULT_TABLE_TEMPLATE
-        fields: tuple = ("place_finish", "team_name", "num_fish", "big_bass_weight", "total_weight")
+        fields: tuple = (
+            "place_finish",
+            "team_name",
+            "num_fish",
+            "big_bass_weight",
+            "total_weight",
+        )
 
 
 class TeamResultTable(Table):
@@ -67,12 +81,22 @@ class TeamResultTable(Table):
         model: Type[TeamResult] = TeamResult
         orderable: bool = False
         template_name: str = DEFAULT_TABLE_TEMPLATE
-        fields: tuple = ("place_finish", "team_name", "num_fish", "big_bass_weight", "total_weight")
+        fields: tuple = (
+            "place_finish",
+            "team_name",
+            "num_fish",
+            "big_bass_weight",
+            "total_weight",
+        )
 
 
 class EditableBuyInTable(Table):
-    edit: LinkColumn = LinkColumn("result-update", text="edit", args=[A("pk")], orderable=False, empty_values=())
-    delete: LinkColumn = LinkColumn("result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=())
+    edit: LinkColumn = LinkColumn(
+        "result-update", text="edit", args=[A("pk")], orderable=False, empty_values=()
+    )
+    delete: LinkColumn = LinkColumn(
+        "result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=()
+    )
     first_name: Column = Column(accessor="angler.user.first_name")
     last_name: Column = Column(accessor="angler.user.last_name")
 
@@ -95,8 +119,12 @@ class BuyInTable(Table):
 
 
 class EditableDQTable(Table):
-    edit: LinkColumn = LinkColumn("result-update", text="edit", args=[A("pk")], orderable=False, empty_values=())
-    delete: LinkColumn = LinkColumn("result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=())
+    edit: LinkColumn = LinkColumn(
+        "result-update", text="edit", args=[A("pk")], orderable=False, empty_values=()
+    )
+    delete: LinkColumn = LinkColumn(
+        "result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=()
+    )
     first_name: Column = Column(accessor="angler.user.first_name")
     last_name: Column = Column(accessor="angler.user.last_name")
 

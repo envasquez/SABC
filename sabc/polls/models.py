@@ -10,6 +10,7 @@ from django.db.models import (
     Model,
     TextField,
 )
+from django.urls import reverse
 from tournaments.models.lakes import Lake
 from users.models import Angler
 
@@ -18,12 +19,17 @@ CURRENT_MONTH: str = f"{strftime('%B')}"
 
 
 class LakePoll(Model):
-    name: CharField | str = CharField(default=f"Poll: {CURRENT_MONTH} {CURRENT_YEAR}", max_length=256)
+    name: CharField | str = CharField(
+        default=f"Poll: {CURRENT_MONTH} {CURRENT_YEAR}", max_length=256
+    )
     choices: ManyToManyField = ManyToManyField(Lake)
     description: TextField | str = TextField(max_length=4096, null=True, blank=True)
 
     def __str__(self) -> str:
         return f"{self.name}"
+
+    def get_absolute_url(self):
+        return reverse("polls")
 
 
 class LakeVote(Model):

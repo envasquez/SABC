@@ -9,7 +9,9 @@ from ..models.events import Events
 from ..models.tournaments import Tournament
 
 
-class EventUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class EventUpdateView(
+    SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView
+):
     model = Events
     form_class = EventForm
 

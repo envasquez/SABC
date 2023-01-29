@@ -48,6 +48,7 @@ class ResultUpdateForm(ModelForm):
             "dq_points",
             "disqualified",
             "place_finish",
+            "points",
             "num_fish",
             "total_weight",
             "num_fish_dead",

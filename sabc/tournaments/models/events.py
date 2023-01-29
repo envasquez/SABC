@@ -11,10 +11,18 @@ from django.db.models import (
     TimeField,
 )
 
-DEFAULT_MEETING_START: datetime.time = datetime.datetime.time(datetime.datetime.strptime("7:00 pm", "%I:%M %p"))
-DEFAULT_MEETING_FINISH: datetime.time = datetime.datetime.time(datetime.datetime.strptime("8:00 pm", "%I:%M %p"))
-DEFAULT_TOURNAMENT_START: datetime.time = datetime.datetime.time(datetime.datetime.strptime("12:00 am", "%I:%M %p"))
-DEFAULT_TOURNAMENT_FINISH: datetime.time = datetime.datetime.time(datetime.datetime.strptime("12:00 am", "%I:%M %p"))
+DEFAULT_MEETING_START: datetime.time = datetime.datetime.time(
+    datetime.datetime.strptime("7:00 pm", "%I:%M %p")
+)
+DEFAULT_MEETING_FINISH: datetime.time = datetime.datetime.time(
+    datetime.datetime.strptime("8:00 pm", "%I:%M %p")
+)
+DEFAULT_TOURNAMENT_START: datetime.time = datetime.datetime.time(
+    datetime.datetime.strptime("12:00 am", "%I:%M %p")
+)
+DEFAULT_TOURNAMENT_FINISH: datetime.time = datetime.datetime.time(
+    datetime.datetime.strptime("12:00 am", "%I:%M %p")
+)
 
 
 class Events(Model):
@@ -41,10 +49,14 @@ class Events(Model):
         DECEMBER: str = "december"
 
     date: DateField = DateField(null=True, blank=True)
-    type: CharField = CharField(choices=EventTypes.choices, default="tournament", max_length=25)
+    type: CharField = CharField(
+        choices=EventTypes.choices, default="tournament", max_length=25
+    )
     year: SmallIntegerField = SmallIntegerField(default=datetime.date.today().year)
     month: CharField = CharField(
-        choices=Months.choices, default=datetime.date.today().strftime("%B").lower(), max_length=20
+        choices=Months.choices,
+        default=datetime.date.today().strftime("%B").lower(),
+        max_length=20,
     )
     start: TimeField = TimeField(null=True, blank=True)
     finish: TimeField = TimeField(null=True, blank=True)

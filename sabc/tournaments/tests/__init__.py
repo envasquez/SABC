@@ -23,11 +23,15 @@ def load_lakes_from_yaml(yaml_file: str) -> QuerySet:
             google_maps=lake_data[lake_name].get("google_maps", ""),
         )
         for ramp in lake_data[lake_name]["ramps"]:
-            Ramp.objects.get_or_create(lake=lake, name=ramp["name"], google_maps=ramp["google_maps"])
+            Ramp.objects.get_or_create(
+                lake=lake, name=ramp["name"], google_maps=ramp["google_maps"]
+            )
     return Lake.objects.all()
 
 
-def create_angler(first_name: str = "", last_name: str = "", is_member: bool = True) -> Angler:
+def create_angler(
+    first_name: str = "", last_name: str = "", is_member: bool = True
+) -> Angler:
     """Creates an Angler object.
 
     Args:

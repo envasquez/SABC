@@ -12,7 +12,9 @@ from ..models.results import Result, TeamResult
 from ..models.tournaments import Tournament
 
 
-class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class ResultCreateView(
+    SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView
+):
     model = Result
     form_class = ResultForm
 
@@ -38,7 +40,9 @@ class ResultCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMi
         return super().form_valid(form)
 
 
-class ResultUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class ResultUpdateView(
+    SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView
+):
     model = Result
     form_class = ResultUpdateForm
 
@@ -51,7 +55,9 @@ class ResultUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMi
         return self.request.user.is_staff
 
     def get_success_url(self):
-        return reverse_lazy("tournament-details", kwargs={"pk": self.get_object().tournament.id})
+        return reverse_lazy(
+            "tournament-details", kwargs={"pk": self.get_object().tournament.id}
+        )
 
     def form_valid(self, form):
         valid, msg = valid_result(result=form.instance, new_result=False)
@@ -78,10 +84,14 @@ class ResultDeleteView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMi
 
     def get_success_url(self):
         messages.success(self.request, f"{self.get_object()} Deleted!")
-        return reverse_lazy("tournament-details", kwargs={"pk": self.get_object().tournament.id})
+        return reverse_lazy(
+            "tournament-details", kwargs={"pk": self.get_object().tournament.id}
+        )
 
 
-class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class TeamCreateView(
+    SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView
+):
     model = TeamResult
     form_class = TeamForm
     template_name = "tournaments/team_form.html"
@@ -96,9 +106,13 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixi
         tid = kwargs["initial"]["tournament"]
         all_results = list(Result.objects.filter(tournament=tid, buy_in=False))
         test_results = [t.result_1 for t in TeamResult.objects.filter(tournament=tid)]
-        test_results += [t.result_2 for t in TeamResult.objects.filter(tournament=tid) if t.result_2]
+        test_results += [
+            t.result_2 for t in TeamResult.objects.filter(tournament=tid) if t.result_2
+        ]
 
-        results = Result.objects.filter(id__in=[r.id for r in all_results if r not in test_results])
+        results = Result.objects.filter(
+            id__in=[r.id for r in all_results if r not in test_results]
+        )
         kwargs["result_1"] = results
         kwargs["result_2"] = results
         return kwargs
@@ -114,7 +128,9 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixi
     def form_valid(self, form):
         tid = self.get_initial()["tournament"]
         results = TeamResult.objects.filter(tournament=tid)
-        anglers = [r.result_1.angler for r in results] + [r.result_2.angler for r in results if r.result_2]
+        anglers = [r.result_1.angler for r in results] + [
+            r.result_2.angler for r in results if r.result_2
+        ]
         err = "Team Result for %s already exists!"
         if form.instance.result_1.angler in anglers:
             messages.error(self.request, err % form.instance.result_1.angler)
@@ -127,7 +143,11 @@ class TeamCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixi
                 messages.error(self.request, "Angler 2 cannot be the same as Angler 1!")
                 return self.form_invalid(form)
         msg = f"{form.instance.result_1.angler}"
-        msg += f"& {form.instance.result_2.angler}" if form.instance.result_2 else " - solo"
+        msg += (
+            f"& {form.instance.result_2.angler}"
+            if form.instance.result_2
+            else " - solo"
+        )
         messages.success(self.request, f"Team added: {msg}")
         return super().form_valid(form)
 
@@ -142,7 +162,9 @@ class TeamResultDeleteView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTe
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["tournament"] = TeamResult.objects.get(pk=self.kwargs.get("pk")).tournament
+        context["tournament"] = TeamResult.objects.get(
+            pk=self.kwargs.get("pk")
+        ).tournament
         return context
 
     def test_func(self):
@@ -153,16 +175,22 @@ class TeamResultDeleteView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTe
 
     def get_success_url(self):
         messages.success(self.request, f"{self.get_object()} Deleted!")
-        return reverse_lazy("tournament-details", kwargs={"pk": self.get_object().tournament.id})
+        return reverse_lazy(
+            "tournament-details", kwargs={"pk": self.get_object().tournament.id}
+        )
 
 
 def valid_result(result, new_result=True):
     msg = ""
     if new_result:
-        if result.angler in [r.angler for r in Result.objects.filter(tournament=result.tournament.id)]:
+        if result.angler in [
+            r.angler for r in Result.objects.filter(tournament=result.tournament.id)
+        ]:
             msg = f"ERROR Result exists for {result.angler} ... edit instead?"
     if result.num_fish == 0 and result.total_weight > Decimal("0"):
         msg = f"ERROR Can't have weight: {result.total_weight}lbs with {result.num_fish} fish weighed!"
     elif result.num_fish > result.tournament.rules.limit_num:
-        msg = f"ERROR: Number of Fish exceeds limit: {result.tournament.rules.limit_num}"
+        msg = (
+            f"ERROR: Number of Fish exceeds limit: {result.tournament.rules.limit_num}"
+        )
     return (True, msg) if msg == "" else (False, msg)

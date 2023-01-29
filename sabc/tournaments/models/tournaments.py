@@ -24,13 +24,21 @@ DEFAULT_INSTAGRAM_URL: str = "https://www.instagram.com/south_austin_bass_club"
 
 
 class Tournament(Model):
-    lake: ForeignKey = ForeignKey("tournaments.Lake", null=True, blank=True, on_delete=CASCADE)
-    ramp: ForeignKey = ForeignKey("tournaments.Ramp", null=True, blank=True, on_delete=CASCADE)
-    rules: ForeignKey = ForeignKey("tournaments.RuleSet", null=True, blank=True, on_delete=CASCADE)
+    lake: ForeignKey = ForeignKey(
+        "tournaments.Lake", null=True, blank=True, on_delete=CASCADE
+    )
+    ramp: ForeignKey = ForeignKey(
+        "tournaments.Ramp", null=True, blank=True, on_delete=CASCADE
+    )
+    rules: ForeignKey = ForeignKey(
+        "tournaments.RuleSet", null=True, blank=True, on_delete=CASCADE
+    )
     payout_multiplier: ForeignKey = ForeignKey(
         "tournaments.PayOutMultipliers", null=True, blank=True, on_delete=PROTECT
     )
-    event: ForeignKey = ForeignKey("tournaments.Events", null=True, blank=True, on_delete=PROTECT)
+    event: ForeignKey = ForeignKey(
+        "tournaments.Events", null=True, blank=True, on_delete=PROTECT
+    )
     name: CharField = CharField(default="", max_length=256)
     points_count: BooleanField = BooleanField(default=True)
     team: BooleanField = BooleanField(default=True)
@@ -55,10 +63,16 @@ class Tournament(Model):
                 type="tournament",
                 month=today.month,
                 year=today.year,
-                date=datetime.date(year=today.year, month=today.month, day=get_last_sunday(month=today.month)),
+                date=datetime.date(
+                    year=today.year,
+                    month=today.month,
+                    day=get_last_sunday(month=today.month),
+                ),
             )
         if not self.payout_multiplier:
-            self.payout_multiplier, _ = PayOutMultipliers.objects.get_or_create(year=self.event.year)
+            self.payout_multiplier, _ = PayOutMultipliers.objects.get_or_create(
+                year=self.event.year
+            )
         if self.lake:
             self.paper = self.lake.paper  # pylint: disable=no-member
         super().save(*args, **kwargs)
@@ -133,7 +147,9 @@ def set_points(tid):
     # Anglers who were disqualified, but points awarded were allowed
     dq_offset = tournament.rules.disqualified_points_offset
     for result in get_disqualified(tid=tid):
-        result.points = previous.points - dq_offset if previous else tournament.rules.max_points
+        result.points = (
+            previous.points - dq_offset if previous else tournament.rules.max_points
+        )
         result.save()
 
     # Anglers that did not weigh in fish or bought in
@@ -142,18 +158,34 @@ def set_points(tid):
     for result in get_zeroes(tid=tid):
         result.points = previous.points - zeros_offset if previous else 0
         if result.buy_in:
-            result.points = previous.points - buy_in_offset if previous else tournament.rules.max_points - buy_in_offset
+            result.points = (
+                previous.points - buy_in_offset
+                if previous
+                else tournament.rules.max_points - buy_in_offset
+            )
         result.save()
 
 
 def get_non_zeroes(tid):
-    query = {"tournament__id": tid, "locked": False, "disqualified": False, "num_fish__gt": 0, "angler__member": True}
+    query = {
+        "tournament__id": tid,
+        "locked": False,
+        "disqualified": False,
+        "num_fish__gt": 0,
+        "angler__member": True,
+    }
     order = ("-total_weight", "-big_bass_weight", "-num_fish")
     return Result.objects.filter(**query).order_by(*order)
 
 
 def get_zeroes(tid):
-    query = {"num_fish": 0, "tournament__id": tid, "disqualified": False, "locked": False, "angler__member": True}
+    query = {
+        "num_fish": 0,
+        "tournament__id": tid,
+        "disqualified": False,
+        "locked": False,
+        "angler__member": True,
+    }
     return Result.objects.filter(**query)
 
 
@@ -163,17 +195,27 @@ def get_buy_ins(tid):
 
 def get_disqualified(tid):
     order = ("-total_weight", "-big_bass_weight", "-num_fish")
-    return Result.objects.filter(tournament=tid, disqualified=True, angler__member=True).order_by(*order)
+    return Result.objects.filter(
+        tournament=tid, disqualified=True, angler__member=True
+    ).order_by(*order)
 
 
 def get_big_bass_winner(tid):
-    query = {"angler__member": True, "tournament__id": tid, "big_bass_weight__gte": Decimal("5")}
+    query = {
+        "angler__member": True,
+        "tournament__id": tid,
+        "big_bass_weight__gte": Decimal("5"),
+    }
     bb_results = Result.objects.filter(**query)
     return bb_results.first() if len(bb_results) == 1 else None
 
 
 def get_payouts(tid):
-    bb_query = {"angler__member": True, "tournament__id": tid, "big_bass_weight__gte": Decimal("5")}
+    bb_query = {
+        "angler__member": True,
+        "tournament__id": tid,
+        "big_bass_weight__gte": Decimal("5"),
+    }
     bb_exists = Result.objects.filter(**bb_query).count() > 0
     num_anglers = Result.objects.filter(tournament=tid).count()
     pom = Tournament.objects.get(id=tid).payout_multiplier
