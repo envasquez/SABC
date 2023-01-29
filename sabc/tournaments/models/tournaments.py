@@ -147,23 +147,23 @@ def set_points(tid):
 
 
 def get_non_zeroes(tid):
-    query = {"tournament__id": tid, "locked": False, "disqualified": False, "num_fish__gt": 0, "member": True}
+    query = {"tournament__id": tid, "locked": False, "disqualified": False, "num_fish__gt": 0, "angler__member": True}
     order = ("-total_weight", "-big_bass_weight", "-num_fish")
     return Result.objects.filter(**query).order_by(*order)
 
 
 def get_zeroes(tid):
-    query = {"num_fish": 0, "tournament__id": tid, "disqualified": False, "locked": False, "member": True}
+    query = {"num_fish": 0, "tournament__id": tid, "disqualified": False, "locked": False, "angler__member": True}
     return Result.objects.filter(**query)
 
 
 def get_buy_ins(tid):
-    return Result.objects.filter(tournament=tid, buy_in=True, rmember=True)
+    return Result.objects.filter(tournament=tid, buy_in=True, angler__member=True)
 
 
 def get_disqualified(tid):
     order = ("-total_weight", "-big_bass_weight", "-num_fish")
-    return Result.objects.filter(tournament=tid, disqualified=True, member=True).order_by(*order)
+    return Result.objects.filter(tournament=tid, disqualified=True, angler__member=True).order_by(*order)
 
 
 def get_big_bass_winner(tid):
