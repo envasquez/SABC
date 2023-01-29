@@ -36,6 +36,12 @@ class ResultForm(ModelForm):
             "big_bass_weight",
         )
 
+    def __init__(self, *args, **kwargs):
+        angler = kwargs.pop("angler")
+
+        super().__init__(*args, **kwargs)
+        self.fields["angler"].queryset = angler
+
 
 class ResultUpdateForm(ModelForm):
     class Meta:

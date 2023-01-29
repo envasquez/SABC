@@ -6,6 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, UpdateView
+from users.models import Angler
 
 from ..forms import ResultForm, ResultUpdateForm, TeamForm
 from ..models.results import Result, TeamResult
@@ -30,6 +31,15 @@ class ResultCreateView(
         context = super().get_context_data(**kwargs)
         context["tournament"] = Tournament.objects.get(pk=self.kwargs.get("pk"))
         return context
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        tid = kwargs["initial"]["tournament"]
+        exists = [r.angler for r in Result.objects.filter(tournament=tid)]
+        kwargs["angler"] = Angler.objects.filter(
+            user__id__in=[a.user.id for a in Angler.objects.all() if a not in exists]
+        )
+        return kwargs
 
     def form_valid(self, form):
         valid, msg = valid_result(result=form.instance)
@@ -105,13 +115,13 @@ class TeamCreateView(
         kwargs = super().get_form_kwargs()
         tid = kwargs["initial"]["tournament"]
         all_results = list(Result.objects.filter(tournament=tid, buy_in=False))
-        test_results = [t.result_1 for t in TeamResult.objects.filter(tournament=tid)]
-        test_results += [
+        team_results = [t.result_1 for t in TeamResult.objects.filter(tournament=tid)]
+        team_results += [
             t.result_2 for t in TeamResult.objects.filter(tournament=tid) if t.result_2
         ]
 
         results = Result.objects.filter(
-            id__in=[r.id for r in all_results if r not in test_results]
+            id__in=[r.id for r in all_results if r not in team_results]
         )
         kwargs["result_1"] = results
         kwargs["result_2"] = results
