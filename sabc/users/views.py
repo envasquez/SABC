@@ -115,7 +115,7 @@ class AnglerDetailView(DetailView):
         context["num_events"] = results.get("events", 0)
 
         context["officer_pos"] = None
-        officer = Officers.objects.filter(angler__user=self.request.user)
+        officer = Officers.objects.filter(angler__user=self.request.user, year=datetime.date.today().year)
         if officer:
             context["officer_pos"] = officer.first().position.title()
 
