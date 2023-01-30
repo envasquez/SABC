@@ -32,7 +32,7 @@ class AnglerRegisterForm(ModelForm):
 
     class Meta:
         model = Angler
-        fields = ("phone_number", "image")
+        fields = ("phone_number",)
 
 
 class AnglerUserMultiRegisterForm(MultiModelForm):
