@@ -129,13 +129,13 @@ PHONENUMBER_DEFAULT_REGION: str = "US"
 
 EMAIL_HOST: str = "smtp.gmail.com"
 EMAIL_PORT: int = 587
+EMAIL_BACKEND: str = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_USE_TLS: bool = True
-
+DEFAULT_FROM_EMAIL: str = "southaustinbassclub@gmail.com"
 # Disable this in production
 # File-based back-end for email for development purposes
 # EMAIL_BACKEND: str = "django.core.mail.backends.filebased.EmailBackend"
 # EMAIL_FILE_PATH: str = os.path.join(BASE_DIR, "sent_emails")
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
 DEFAULT_AUTO_FIELD: str = "django.db.models.AutoField"
 DJANGO_TABLES2_TEMPLATE: str = "django_tables2/bootstrap4.html"
