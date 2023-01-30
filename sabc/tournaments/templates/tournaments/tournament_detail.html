@@ -17,14 +17,14 @@
             {{ tournament.name }}
         </div>
         {% if tournament.lake %}
-            <h2>{{ tournament.lake | upper }}
-        {% else %}
-            <h2>Lake: To Be Voted On ...
-        {% endif %}
             {% if tournament.complete %}
-                RESULTS
+                <h2>{{ tournament.lake | upper }} - <small>RESULTS</small></h2>
+            {% else %}
+                <h2>{{ tournament.lake | upper }}</h2>
             {% endif %}
-        </h2>
+        {% else %}
+            <h2>Lake: To Be Voted On ...</h2>
+        {% endif %}
         {% if tournament.lake %}
         <div align="center">{{ tournament.ramp.google_maps | safe}}</div>
             <table  class="table">
@@ -116,9 +116,3 @@
     </div>
 </article>
 {% endblock content %}
-
-
-
-
-
-
