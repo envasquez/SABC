@@ -2,7 +2,7 @@ SHELL := /bin/bash
 SETUP := SETUP
 PROJECT := sabc
 
-.PHONY: clean clean-migrations clean-docker clean-all docker lint test webapp mypy isort destroy-db
+.PHONY: clean clean-migrations clean-docker clean-all docker lint test webapp mypy isort destroy-db ci format
 .DEFAULT_GOAL: help
 export PYTHONPATH=$(shell pwd)/sabc
 
@@ -12,7 +12,6 @@ isort:
 clean:
 	find $(PROJECT) -name "*.pyc" -type f -delete
 	find $(PROJECT) -name "__pycache__" -type d -delete
-	docker image prune -f
 
 clean-migrations: clean
 	find $(PROJECT) -path "*/migrations/*.py" -not -name "__init__.py" -delete
@@ -38,16 +37,15 @@ webapp:
 
 test: clean-migrations
 	docker build -f Dockerfile_pytest -t test_sabc .
-	docker run --rm test_sabc
+	docker run test_sabc
 
 mypy: clean-migrations
 	docker build -f Dockerfile_mypy -t mypy_sabc .
-	docker run --rm mypy_sabc
+	docker run mypy_sabc
 
 lint: clean clean-migrations isort
-	# DJANGO_SETTINGS_MODULE=sabc.settings python3 -m pylint --load-plugins pylint_django --verbose sabc/tournaments/ sabc/users/ sabc/polls/ --rcfile pyproject.toml
 	docker build -f Dockerfile_pylint -t pylint_sabc .
-	docker run --rm pylint_sabc
+	docker run pylint_sabc
 
 format:
 	find . -name "*.py" | xargs black -v
