@@ -6,6 +6,7 @@ services:
     image: postgres
     volumes:
     - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
     env_file:
       - db_vars.env
 
@@ -23,7 +24,6 @@ services:
             "
     restart: unless-stopped
     volumes:
-      # - sabc_app:/app
       - .:/app
     ports:
       - 8000:8000
@@ -31,3 +31,4 @@ services:
       - db
 volumes:
   postgres_data:
+  .:
