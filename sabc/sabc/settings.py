@@ -74,21 +74,14 @@ if os.environ.get("GITHUB_WORKFLOW"):
         }
     }
 elif os.environ.get("UNITTEST"):
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-        }
-    }
+    DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": os.path.join(BASE_DIR, "db.sqlite3")}}
 else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql_psycopg2",
             "NAME": os.environ.get("POSTGRES_DB", os.environ.get("POSTGRES_DB")),
             "USER": os.environ.get("POSTGRES_USER", os.environ.get("POSTGRES_USER")),
-            "PASSWORD": os.environ.get(
-                "POSTGRES_PASSWORD", os.environ.get("POSTGRES_PASSWORD")
-            ),
+            "PASSWORD": os.environ.get("POSTGRES_PASSWORD", os.environ.get("POSTGRES_PASSWORD")),
             "HOST": os.environ.get("DEPLOYMENT_HOST", "localhost"),
             "PORT": 5432,
         }
@@ -97,9 +90,7 @@ else:
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS: list[dict] = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
@@ -131,24 +122,15 @@ PHONENUMBER_DEFAULT_REGION: str = "US"
 
 # Gmail SMTP Server
 EMAIL_HOST: str = "smtp.gmail.com"
-<<<<<<< HEAD
 EMAIL_PORT: int = 587
 EMAIL_BACKEND: str = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_USE_TLS: bool = True
-DEFAULT_FROM_EMAIL: str = "southaustinbassclub@gmail.com"
+DEFAULT_FROM_EMAIL: str = os.environ.get("DEFAULT_FROM_EMAIL")
+
 # Disable this in production
 # File-based back-end for email for development purposes
 # EMAIL_BACKEND: str = "django.core.mail.backends.filebased.EmailBackend"
 # EMAIL_FILE_PATH: str = os.path.join(BASE_DIR, "sent_emails")
-=======
-EMAIL_PORT: str = "587"
-EMAIL_BACKEND: str = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST_USER: str = os.environ.get("email", "")
-EMAIL_HOST_PASSWORD = os.environ.get("email_pass", "")
-EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-
->>>>>>> 3b559ab (Update email settings for production)
 
 DEFAULT_AUTO_FIELD: str = "django.db.models.AutoField"
 DJANGO_TABLES2_TEMPLATE: str = "django_tables2/bootstrap4.html"
@@ -159,11 +141,7 @@ LOGGING: dict[Any, Any] = {
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": "DEBUG" if DEBUG else "INFO"},
     "loggers": {
-        "django": {
-            "handlers": ["console"],
-            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
-            "propagate": False,
-        }
+        "django": {"handlers": ["console"], "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"), "propagate": False}
     },
 }
 
