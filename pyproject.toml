@@ -1,4 +1,29 @@
 #
+# Coverage
+#
+[tool.coverage.run]
+omit = [
+    "sabc/manage.py",
+    "sabc/sabc/urls.py",
+    "sabc/sabc/wsgi.py",
+]
+[tool.coverage.report]
+omit = [
+    "sabc/users/*",
+    "sabc/polls/*",
+    "sabc/sabc/*",
+    "sabc/*/tests/*",
+    "sabc/*/migrations/*",
+    "sabc/tournaments/views/*",
+    "sabc/tournaments/__init__.py",
+    "sabc/tournaments/admin.py",
+    "sabc/tournaments/apps.py",
+    "sabc/tournaments/forms.py",
+    "sabc/tournaments/models/__init__.py",
+    "sabc/tournaments/tables.py"
+]
+
+#
 # MyPy
 #
 [tool.mypy]
@@ -54,25 +79,6 @@ exclude = '''
   | dist
 )/
 '''
-
-#
-# Coverage
-#
-[tool.coverage.run]
-omit = [
-    "sabc/manage.py",
-    "sabc/sabc/urls.py",
-    "sabc/sabc/wsgi.py",
-]
-[tool.coverage.report]
-omit = [
-    "sabc/manage.py",
-    "sabc/sabc/urls.py",
-    "sabc/sabc/wsgi.py",
-    "*/migrations/*",
-    "*/tests/*"
-]
-
 #
 # Pylint
 #
