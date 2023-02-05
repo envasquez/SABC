@@ -1,4 +1,8 @@
 # # -*- coding: utf-8 -*-
+""" Test Plan for conversion functions
+
+- Test that weight to length and lenght to weight conversions are accurate
+"""
 
 from .. import get_length_from_weight, get_weight_from_length
 from . import LENGTH_TO_WEIGHT, WEIGHT_TO_LENGTH

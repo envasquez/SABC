@@ -1,13 +1,19 @@
 # -*- coding: utf-8 -*-
+import os
 from random import randint
 
+import pytest
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 from names import get_first_name, get_last_name
 from users.models import Angler
 from yaml import safe_load
 
+from sabc import settings
+from sabc.settings import BASE_DIR
+
 from ..models.lakes import Lake, Ramp
+from ..models.results import Result
 
 User = get_user_model()
 
@@ -53,12 +59,14 @@ def create_angler(
     angler.phone_number = f"+{randint(10000000000, 99999999999)}"
     angler.member = is_member
     angler.save()
-
     return angler
 
 
-def create_angler_and_result():
-    ...
+def create_angler_and_result(**kwargs):
+    a_kwargs = kwargs.get("angler", {})
+    r_kwargs = kwargs.get("result")
+    angler = create_angler(**a_kwargs)
+    return Result.objects.create(angler=angler, **r_kwargs)
 
 
 LENGTH_TO_WEIGHT = [

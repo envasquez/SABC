@@ -209,7 +209,7 @@ def get_big_bass_winner(tid):
         "big_bass_weight__gte": Decimal("5"),
     }
     bb_results = Result.objects.filter(**query)
-    return bb_results.first() if len(bb_results) == 1 else None
+    return bb_results.first() if bb_results.exists() else None
 
 
 def get_payouts(tid):
