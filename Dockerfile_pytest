@@ -4,13 +4,9 @@ ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONPATH="/app/sabc"
 ENV UNITTEST=1
-
-RUN apk --update add libxml2-dev libxslt-dev libffi-dev gcc musl-dev libgcc openssl-dev curl && \
-    apk add jpeg-dev zlib-dev freetype-dev lcms2-dev openjpeg-dev tiff-dev tk-dev tcl-dev tree py3-pip
-
 WORKDIR /app
 COPY . .
-RUN pip install -r requirements-mypy.txt
+RUN pip install -r requirements-pytest.txt
 RUN python3 sabc/manage.py makemigrations --no-input -v 3 && python3 sabc/manage.py migrate --run-syncdb
 RUN coverage run --branch --source=sabc -m pytest
-CMD ["coverage", "report", "-m"]
+CMD ["coverage", "report", "--show-missing"]
