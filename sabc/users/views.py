@@ -35,6 +35,7 @@ def roster(request):
         Angler.objects.filter(member=False)
         .exclude(user__first_name="")
         .exclude(user__last_name="")
+        .exclude(user="sabc")
     )
     g_table = GuestTable(guests) if guests else []
     return render(
@@ -87,9 +88,7 @@ class AnglerDetailView(DetailView):
     def get_biggest_bass(self, year=0):
         year = year or datetime.date.today().year
         big_bass = Result.objects.filter(
-            tournament__event__year=year,
-            angler__user=self.get_object(),
-            big_bass_weight__gte=Decimal("5"),
+            tournament__event__year=year, angler__user=self.get_object(), big_bass_weight__gte=Decimal("5")
         )
         if big_bass:
             biggest_bass = max(big_bass)
@@ -121,9 +120,7 @@ class AnglerDetailView(DetailView):
         context["num_events"] = results.get("events", 0)
 
         context["officer_pos"] = None
-        officer = Officers.objects.filter(
-            angler__user=self.request.user, year=datetime.date.today().year
-        )
+        officer = Officers.objects.filter(angler__user=self.request.user, year=datetime.date.today().year)
         if officer:
             context["officer_pos"] = officer.first().position.title()
 
