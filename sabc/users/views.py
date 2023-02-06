@@ -35,7 +35,7 @@ def roster(request):
         Angler.objects.filter(member=False)
         .exclude(user__first_name="")
         .exclude(user__last_name="")
-        .exclude(user="sabc")
+        .exclude(username="sabc")
     )
     g_table = GuestTable(guests) if guests else []
     return render(
