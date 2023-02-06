@@ -17,7 +17,7 @@ class EventForm(ModelForm):
     class Meta:
         model = Events
         fields = "__all__"
-        exclude = ("type", "year", "month")
+        exclude = ("type", "month")
 
 
 class ResultForm(ModelForm):
