@@ -17,12 +17,12 @@ def annual_awards(request, year: int = 0):
     return render(
         request,
         "tournaments/annual_awards.html",
-        {"title": "Statistics", "aoy_tbl": aoy_tbl, "hvy_tbl": hvy_tbl, "bb_tbl": bb_tbl, "year": year},
+        {"title": f"{year} awards".title(), "aoy_tbl": aoy_tbl, "hvy_tbl": hvy_tbl, "bb_tbl": bb_tbl, "year": year},
     )
 
 
 def get_aoy_results(year: int = datetime.date.today().year):
-    all_results = Result.objects.filter(tournament__event__year=year, angler__user__is_active=True)
+    all_results = Result.objects.filter(tournament__event__year=year, angler__user__is_active=True, angler__member=True)
     anglers = []
     for result in all_results:
         if all((result.angler not in anglers, result.angler.member)):
@@ -41,9 +41,14 @@ def get_aoy_results(year: int = datetime.date.today().year):
     return results
 
 
-def get_heavy_stringer(year=datetime.date.today().year):
+def get_heavy_stringer(year: int = datetime.date.today().year):
     result = (
-        Result.objects.filter(tournament__event__year=year, angler__user__is_active=True, total_weight__gt=Decimal("0"))
+        Result.objects.filter(
+            tournament__event__year=year,
+            angler__member=True,
+            angler__user__is_active=True,
+            total_weight__gt=Decimal("0"),
+        )
         .order_by("-total_weight")
         .first()
     )
