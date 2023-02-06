@@ -125,7 +125,7 @@ EMAIL_HOST: str = "smtp.gmail.com"
 EMAIL_PORT: int = 587
 EMAIL_BACKEND: str = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_USE_TLS: bool = True
-DEFAULT_FROM_EMAIL: str = os.environ.get("DEFAULT_FROM_EMAIL")
+DEFAULT_FROM_EMAIL: str = str(os.environ.get("DEFAULT_FROM_EMAIL"))
 
 # Disable this in production
 # File-based back-end for email for development purposes

@@ -45,9 +45,21 @@ EVENT_UPDATE = ("event/<int:pk>/", "event-update")
 LOGIN = ("login/", "users/login.html", "login")
 LOGOUT = ("logout/", "users/logout.html", "logout")
 PW_RESET = ("password-reset/", "users/password_reset.html", "password-reset")
-PW_DONE = ("password-reset/done/", "users/password_reset_done.html", "password_reset_done")
-PW_CONFIRM = ("password-reset-confirm/<uidb64>/<token>/", "users/password_reset_confirm.html", "password_reset_confirm")
-PW_COMPLETE = ("password-reset-complete/", "users/password_reset_complete.html", "password_reset_complete")
+PW_DONE = (
+    "password-reset/done/",
+    "users/password_reset_done.html",
+    "password_reset_done",
+)
+PW_CONFIRM = (
+    "password-reset-confirm/<uidb64>/<token>/",
+    "users/password_reset_confirm.html",
+    "password_reset_confirm",
+)
+PW_COMPLETE = (
+    "password-reset-complete/",
+    "users/password_reset_complete.html",
+    "password_reset_complete",
+)
 
 urlpatterns = [
     path("", TmntList.as_view(), name="sabc-home"),
@@ -77,8 +89,16 @@ urlpatterns = [
     path(LOGOUT[0], Logout.as_view(template_name=LOGOUT[1]), name=LOGOUT[2]),
     path(PW_RESET[0], PWReset.as_view(template_name=PW_RESET[1]), name=PW_RESET[2]),
     path(PW_DONE[0], PWDone.as_view(template_name=PW_DONE[1]), name=PW_DONE[2]),
-    path(PW_CONFIRM[0], PWConfirm.as_view(template_name=PW_CONFIRM[1]), name=PW_CONFIRM[2]),
-    path(PW_COMPLETE[0], PWComplete.as_view(template_name=PW_COMPLETE[1]), name=PW_COMPLETE[2]),
+    path(
+        PW_CONFIRM[0],
+        PWConfirm.as_view(template_name=PW_CONFIRM[1]),
+        name=PW_CONFIRM[2],
+    ),
+    path(
+        PW_COMPLETE[0],
+        PWComplete.as_view(template_name=PW_COMPLETE[1]),
+        name=PW_COMPLETE[2],
+    ),
 ]
 
 if settings.DEBUG:
