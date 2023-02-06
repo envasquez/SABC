@@ -122,23 +122,23 @@ class TeamResult(Model):  # pylint: disable=too-many-instance-attributes
         return f"{name} & {self.result_2.angler.user.get_full_name()}"
 
     def save(self, *args, **kwargs) -> None:
-        use_result_1 = all([self.result_1.disqualified, not self.result_1.buy_in])
+        use_result_1 = all([not self.result_1.disqualified, not self.result_1.buy_in])
         use_result_2 = all(
-            [self.result_2, self.result_2.disqualified if self.result_2 else False]
+            [self.result_2, not self.result_2.disqualified if self.result_2 else False]
         )
         if use_result_1 and use_result_2:
-            self.num_fish = sum(self.result_1.num_fish, self.result_2.num_fish)
+            self.num_fish = sum([self.result_1.num_fish, self.result_2.num_fish])
             self.total_weight = sum(
-                self.result_1.total_weight, self.result_2.total_weight
+                [self.result_1.total_weight, self.result_2.total_weight]
             )
             self.num_fish_dead = sum(
-                self.result_1.num_fish, self.result_2.num_fish_dead
+                [self.result_1.num_fish, self.result_2.num_fish_dead]
             )
             self.penalty_weight = sum(
-                self.result_1.penalty_weight, self.result_2.penalty_weight
+                [self.result_1.penalty_weight, self.result_2.penalty_weight]
             )
             self.num_fish_alive = sum(
-                self.result_1.num_fish_alive, self.result_2.num_fish_alive
+                [self.result_1.num_fish_alive, self.result_2.num_fish_alive]
             )
             self.big_bass_weight = max(
                 self.result_1.big_bass_weight, self.result_2.big_bass_weight
