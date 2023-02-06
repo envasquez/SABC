@@ -20,13 +20,14 @@ services:
             python sabc/manage.py makemigrations
             && python sabc/manage.py migrate --run-syncdb --noinput
             && ./create_superuser.sh
-            && python sabc/manage.py runserver 0.0.0.0:8000
+            && python sabc/manage.py runserver 0.0.0.0:80
             "
     restart: unless-stopped
     volumes:
       - .:/app
     ports:
-      - 8000:8000
+      - 80:80
+      - 587:587
     depends_on:
       - db
 volumes:
