@@ -16,7 +16,7 @@ SECRET_KEY: Optional[str] = os.environ.get("DJANGO_SECRET_KEY", get_random_secre
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG: bool = not not os.environ.get("DJANGO_DEBUG")
 
-ALLOWED_HOSTS: list = ["*"]
+ALLOWED_HOSTS: list = ["*"] if DEBUG else os.environ.get("DJANGO_ALLOWED_HOSTS").split(',')
 
 # Application definition
 INSTALLED_APPS: list[str] = [
@@ -135,7 +135,10 @@ EMAIL_HOST: str = "smtp.gmail.com"
 EMAIL_PORT: int = 587
 EMAIL_BACKEND: str = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_USE_TLS: bool = True
+EMAIL_USE_SSL: bool = False
+EMAIL_HOST_USER: str = str(os.environ.get("DEFAULT_FROM_EMAIL"))
 DEFAULT_FROM_EMAIL: str = str(os.environ.get("DEFAULT_FROM_EMAIL"))
+
 
 # Disable this in production
 # File-based back-end for email for development purposes
