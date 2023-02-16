@@ -60,4 +60,6 @@ Some things I found useful:
 ***
 
 # Questions / Comments
-If you happened upon this repo and have questions, comments, concerns or suggestions; Please feel free to post them to the discussion board or open a GitHub issue.
+If you happened upon this repo and have questions, comments, concerns or suggestions; Please feel free to post them to the discussion board or open a GitHub issue. Lastly - if you're a Django guru and want to help me take things to the next level - I am ABSOLUTELY willing to learn.
+
+For Example: If you could answer questions like: What is a useful purpose of custom "Managers" besides being some kind of syntatical sugar - I tried using them (and maybe I did it wrong) - but found that it was just easier to make self contained functions that return the queries I want ...
