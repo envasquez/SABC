@@ -27,7 +27,7 @@ omit = [
 # MyPy
 #
 [tool.mypy]
-exclude = ["sabc/sabc/urls.py"]
+#exclude = ["sabc/sabc/urls.py"]
 plugins = ["mypy_django_plugin.main"]
 python_version = 3.11
 warn_unused_configs = true

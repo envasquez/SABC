@@ -8,7 +8,7 @@ from django.contrib.auth.views import PasswordChangeDoneView as PWDone
 from django.contrib.auth.views import PasswordResetCompleteView as PWComplete
 from django.contrib.auth.views import PasswordResetConfirmView as PWConfirm
 from django.contrib.auth.views import PasswordResetView as PWReset
-from django.urls import path
+from django.urls import URLPattern, URLResolver, path
 from polls.views import LakePollCreateView as PollCreate
 from polls.views import LakePollListView as PollList
 from polls.views import LakePollView as Poll
@@ -29,39 +29,39 @@ from users.views import AnglerRegistrationView as Register
 from users.views import AnglerUpdateView as Edit
 from users.views import about, bylaws, calendar, roster
 
-POLL_CREATE = ("polls/new/", "lakepoll-create")
-TMNT_CREATE = ("tournament/new/", "tournament-create")
-TMNT_DETAIL = ("tournament/<int:pk>/", "tournament-details")
-TMNT_UPDATE = ("tournament/<int:pk>/update/", "tournament-update")
-TMNT_DELETE = ("tournament/<int:pk>/delete/", "tournament-delete")
+POLL_CREATE: tuple[str,str] = ("polls/new/", "lakepoll-create")
+TMNT_CREATE: tuple[str,str] = ("tournament/new/", "tournament-create")
+TMNT_DETAIL: tuple[str,str] = ("tournament/<int:pk>/", "tournament-details")
+TMNT_UPDATE: tuple[str,str] = ("tournament/<int:pk>/update/", "tournament-update")
+TMNT_DELETE: tuple[str,str] = ("tournament/<int:pk>/delete/", "tournament-delete")
 
-TEAM_CREATE = ("tournament/<int:pk>/add_team/", "team-create")
-TEAM_DELETE = ("teamresult/<int:pk>/delete/", "teamresult-delete")
-RESULT_CREATE = ("tournament/<int:pk>/add_result/", "result-create")
-RESULT_UPDATE = ("result/<int:pk>/update/", "result-update")
-RESULT_DELETE = ("result/<int:pk>/delete/", "result-delete")
+TEAM_CREATE: tuple[str,str] = ("tournament/<int:pk>/add_team/", "team-create")
+TEAM_DELETE: tuple[str,str] = ("teamresult/<int:pk>/delete/", "teamresult-delete")
+RESULT_CREATE: tuple[str,str] = ("tournament/<int:pk>/add_result/", "result-create")
+RESULT_UPDATE: tuple[str,str] = ("result/<int:pk>/update/", "result-update")
+RESULT_DELETE: tuple[str,str] = ("result/<int:pk>/delete/", "result-delete")
 
-EVENT_UPDATE = ("event/<int:pk>/", "event-update")
-LOGIN = ("login/", "users/login.html", "login")
-LOGOUT = ("logout/", "users/logout.html", "logout")
-PW_RESET = ("password-reset/", "users/password_reset.html", "password-reset")
-PW_DONE = (
+EVENT_UPDATE: tuple[str,str] = ("event/<int:pk>/", "event-update")
+LOGIN: tuple[str,str, str] = ("login/", "users/login.html", "login")
+LOGOUT: tuple[str,str, str] = ("logout/", "users/logout.html", "logout")
+PW_RESET: tuple[str,str, str] = ("password-reset/", "users/password_reset.html", "password-reset")
+PW_DONE: tuple[str,str, str] = (
     "password-reset/done/",
     "users/password_reset_done.html",
     "password_reset_done",
 )
-PW_CONFIRM = (
+PW_CONFIRM: tuple[str,str, str] = (
     "password-reset-confirm/<uidb64>/<token>/",
     "users/password_reset_confirm.html",
     "password_reset_confirm",
 )
-PW_COMPLETE = (
+PW_COMPLETE: tuple[str,str, str] = (
     "password-reset-complete/",
     "users/password_reset_complete.html",
     "password_reset_complete",
 )
 
-urlpatterns = [
+urlpatterns: list[URLPattern | URLResolver] = [
     path("", TmntList.as_view(), name="sabc-home"),
     path("polls/", PollList.as_view(), name="polls"),
     path("polls/<int:pid>/", Poll.as_view(), name="poll"),

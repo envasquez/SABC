@@ -16,7 +16,7 @@ SECRET_KEY: Optional[str] = os.environ.get("DJANGO_SECRET_KEY", get_random_secre
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG: bool = not not os.environ.get("DJANGO_DEBUG")
 
-ALLOWED_HOSTS: list = ["*"] if DEBUG else os.environ.get("DJANGO_ALLOWED_HOSTS").split(',')
+ALLOWED_HOSTS: list = ["*"] if DEBUG else os.environ.get("DJANGO_ALLOWED_HOSTS", '').split(',')
 
 # Application definition
 INSTALLED_APPS: list[str] = [
@@ -63,6 +63,18 @@ WSGI_APPLICATION: str = "sabc.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
+DATABASES: dict = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": os.environ.get("POSTGRES_DB", os.environ.get("POSTGRES_DB")),
+        "USER": os.environ.get("POSTGRES_USER", os.environ.get("POSTGRES_USER")),
+        "PASSWORD": os.environ.get(
+            "POSTGRES_PASSWORD", os.environ.get("POSTGRES_PASSWORD")
+        ),
+        "HOST": os.environ.get("DEPLOYMENT_HOST", "localhost"),
+        "PORT": 5432,
+    }
+}
 if os.environ.get("GITHUB_WORKFLOW"):
     DATABASES = {
         "default": {
@@ -81,23 +93,10 @@ elif os.environ.get("UNITTEST"):
             "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
         }
     }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql_psycopg2",
-            "NAME": os.environ.get("POSTGRES_DB", os.environ.get("POSTGRES_DB")),
-            "USER": os.environ.get("POSTGRES_USER", os.environ.get("POSTGRES_USER")),
-            "PASSWORD": os.environ.get(
-                "POSTGRES_PASSWORD", os.environ.get("POSTGRES_PASSWORD")
-            ),
-            "HOST": os.environ.get("DEPLOYMENT_HOST", "localhost"),
-            "PORT": 5432,
-        }
-    }
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
-AUTH_PASSWORD_VALIDATORS: list[dict] = [
+AUTH_PASSWORD_VALIDATORS: list[dict[str,str]] = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
     },
@@ -138,8 +137,6 @@ EMAIL_USE_TLS: bool = True
 EMAIL_USE_SSL: bool = False
 EMAIL_HOST_USER: str = str(os.environ.get("DEFAULT_FROM_EMAIL"))
 DEFAULT_FROM_EMAIL: str = str(os.environ.get("DEFAULT_FROM_EMAIL"))
-
-
 # Disable this in production
 # File-based back-end for email for development purposes
 # EMAIL_BACKEND: str = "django.core.mail.backends.filebased.EmailBackend"
