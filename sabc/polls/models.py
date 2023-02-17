@@ -19,7 +19,9 @@ CURRENT_MONTH: str = f"{strftime('%B')}"
 
 
 class LakePoll(Model):
-    name: CharField = CharField(default=f"Poll: {CURRENT_MONTH} {CURRENT_YEAR}", max_length=256)
+    name: CharField = CharField(
+        default=f"Poll: {CURRENT_MONTH} {CURRENT_YEAR}", max_length=256
+    )
     choices: ManyToManyField = ManyToManyField(Lake)
     description: TextField = TextField(max_length=4096, null=True, blank=True)
 

@@ -46,7 +46,7 @@ def create_angler(
     """
     last_name = get_last_name() if not last_name else last_name
     first_name = get_first_name() if not first_name else first_name
-    user = User.objects.create(
+    user: User = User.objects.create(  # type: ignore
         username=first_name[0].lower() + last_name.lower() + str(randint(1000, 9999)),
         first_name=first_name,
         last_name=last_name,
@@ -59,14 +59,14 @@ def create_angler(
     return angler
 
 
-def create_angler_and_result(**kwargs):
-    a_kwargs = kwargs.get("angler", {})
-    r_kwargs = kwargs.get("result")
-    angler = create_angler(**a_kwargs)
+def create_angler_and_result(**kwargs: dict) -> Result:
+    a_kwargs: dict = kwargs.get("angler", {})
+    r_kwargs: dict = kwargs.get("result", {})
+    angler: Angler = create_angler(**a_kwargs)
     return Result.objects.create(angler=angler, **r_kwargs)
 
 
-LENGTH_TO_WEIGHT = [
+LENGTH_TO_WEIGHT: list[tuple[float, float]] = [
     (29.875, 17.50),
     (12.0, 0.87),
     (0.25, 0.00),
@@ -81,7 +81,7 @@ LENGTH_TO_WEIGHT = [
     (16.875, 2.68),
     (17.75, 3.16),
 ]
-WEIGHT_TO_LENGTH = [
+WEIGHT_TO_LENGTH: list[tuple[float, float]] = [
     (1.46, 14.00),
     (11.85, 26.50),
     (0.12, 0.00),

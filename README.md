@@ -28,9 +28,9 @@ The goal of this website application are to:
 
 We hope to increase member participation by modernizing our model of interaction and providing data analytics & insights. Also by allowing members to participate remotely vs. in-person exclusively will hopefully increase tournament attendance which should increase commradrie and growth.
 
-Please see the [Wiki](https://github.com/envasquez/SABC/wiki) for an informal write-up to capture some requirements, solution space and design decisions. 
+Please see the [Wiki](https://github.com/envasquez/SABC/wiki) for an informal write-up to capture some requirements, solution space and design decisions.
 
-Initially, to learn more about some of Django's more modern features, I followed many of the recommendations from [this Tutorial from Corey Schafer](https://youtu.be/UmljXZIypDc) for writing a web application, and modified it to suite the club's needs. I essentially tried to learn "just enough" Django to pull all of our needs together.
+Initially, to learn more about some of Django's more modern features, I followed many of the recommendations from [this Tutorial from Corey Schafer](https://youtu.be/UmljXZIypDc) for writing a web application, and modified it to suite the club's needs. I essentially tried to learn "just enough" Django to pull all of our needs together. I found Django to be a REALLY good framework, but there are a few Django-isms that you could end up spinning your wheels on, or sometimes its impossible to DRY (don't repeat yourself) - since sometimes you just have to add that one or two lines of code to activate a feature.
 
 Some things I found useful:
 - Class Based Views
@@ -49,6 +49,7 @@ Some things I found useful:
     * Its Docker! I don't have to run "anything" local like a Postgresql server
   - Cons:
     * Sometimes it can take a bit of overhead to rebuild containers from scratch when changing code
+    * Be sure to build Docker container/image clean-up
 - Mypy type annotations ...
   - Pros:
     * Its the right thing to do!
@@ -57,6 +58,12 @@ Some things I found useful:
     * It can be hard to properly annoate Django, because it has a bit of "magic" happening in the framework
     * Need to monkey-patch things to get it annotated properly or add additional packages
     * I felt it grew in complexity - vs - reward as I was starting to have to look-up how to solve special cases and support for py3.11
+- Admin Site Overrides
+  - Pros:
+      * Makes it trivial to add buttons to upload data in csv, yaml
+      * Greate for re-creating/loading data and initially genersting a site
+  - Cons:
+      * Can't think of any ...
 ***
 
 # Questions / Comments

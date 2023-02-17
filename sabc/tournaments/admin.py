@@ -24,6 +24,7 @@ class LakeAdmin(admin.ModelAdmin):
     def create_lake_from_yaml(self, request) -> None:
         lakes: dict[str, Any] = safe_load(request.FILES["yaml_upload"])
         for lake_name in lakes:
+            lake: Lake
             lake, _ = Lake.objects.update_or_create(
                 name=lake_name,
                 paper=lakes[lake_name].get("paper", False),
@@ -49,11 +50,11 @@ class PayoutMultiplierAdmin(admin.ModelAdmin):
     def get_urls(self) -> list:
         return [path("upload-pom/", self.pom_upload)] + super().get_urls()
 
-    def pom_upload(self, request) -> HttpResponse:
+    def pom_upload(self, request: HttpRequest) -> HttpResponse:
         form: YamlImportForm = YamlImportForm()
         data: dict[Any, Any] = {"form": form}
         if request.method == "POST":
-            poms: dict = safe_load(request.FILES["yaml_upload"])
+            poms = safe_load(request.FILES["yaml_upload"])  # type: ignore
             for year, pom in poms.items():
                 PayOutMultipliers.objects.update_or_create(
                     year=year,
@@ -75,8 +76,8 @@ class EventsAdmin(admin.ModelAdmin):
     def get_urls(self) -> list:
         return [path("upload-events/", self.event_upload)] + super().get_urls()
 
-    def create_events_from_yaml(self, request):
-        events = safe_load(request.FILES["yaml_upload"])
+    def create_events_from_yaml(self, request: HttpRequest) -> None:
+        events = safe_load(request.FILES["yaml_upload"])  # type: ignore
         for event_type, data in events.items():
             for year, dates in data.items():
                 for month, day in dates.items():
@@ -91,7 +92,7 @@ class EventsAdmin(admin.ModelAdmin):
                 request, f"{event_type}: {data} imported & created successfully!"
             )
 
-    def event_upload(self, request) -> HttpResponse:
+    def event_upload(self, request: HttpRequest) -> HttpResponse:
         form: YamlImportForm = YamlImportForm()
         data: dict[str, Any] = {"form": form}
         if request.method == "POST":
