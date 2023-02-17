@@ -85,9 +85,15 @@ class EventsAdmin(admin.ModelAdmin):
                     date: datetime.date = datetime.date(
                         year=year, month=month_value, day=day
                     )
-                    Events.objects.update_or_create(
-                        type=event_type, year=year, month=month, date=date
-                    )
+                    kwargs = {
+                        "type": event_type,
+                        "year": year,
+                        "month": month.lower(),
+                        "date": date,
+                    }
+                    print(f"kwargs: {kwargs}")
+                    Events.objects.update_or_create(**kwargs)
+            print("=" * 100)
             messages.info(
                 request, f"{event_type}: {data} imported & created successfully!"
             )

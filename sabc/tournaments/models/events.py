@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import calendar
 import datetime
 
 from django.db.models import (
@@ -53,11 +52,7 @@ class Events(Model):
         choices=EventTypes.choices, default="tournament", max_length=25
     )
     year: SmallIntegerField = SmallIntegerField(default=datetime.date.today().year)
-    month: CharField = CharField(
-        choices=Months.choices,
-        default=datetime.date.today().strftime("%B").lower(),
-        max_length=20,
-    )
+    month: CharField = CharField(choices=Months.choices, max_length=20)
     start: TimeField = TimeField(null=True, blank=True)
     finish: TimeField = TimeField(null=True, blank=True)
 
@@ -86,14 +81,17 @@ class Events(Model):
         super().save(*args, **kwargs)
 
 
-def get_next_event(event_type: str) -> Events | None:
+def get_next_event(event_type: str, today: datetime.date) -> Events | None:
     if not Events.objects.filter(type=event_type):
         return None
-    today = datetime.date.today()
     events = Events.objects.filter(type=event_type, year=today.year).order_by("date")
+    next_event: Events | None = None
     for idx, event in enumerate(events):
-        current_month = event.month == calendar.month_name[today.month]
-        if current_month and today.day < event.date.day:
-            return event
-        return events[idx + 1] if idx + 1 <= len(events) else None
-    return None
+        current_month: bool = event.date.month == today.month
+        current_year: bool = event.year == today.year
+        if current_year and current_month:
+            if today.day < event.date.day:
+                next_event = event
+            else:
+                next_event = events[idx + 1] if idx + 1 < events.count() else None
+    return next_event

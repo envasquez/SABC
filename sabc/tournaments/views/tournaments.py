@@ -52,15 +52,14 @@ class TournamentCreateView(
     success_message: str = "Tournament successfully created!"
 
     def get_initial(self) -> dict:
+        today: datetime.date = datetime.date.today()
         initial: dict = super().get_initial()
-        initial["rules"] = RuleSet.objects.filter(
-            year=datetime.date.today().year
-        ).first()
+        initial["rules"] = RuleSet.objects.filter(year=today.year).first()
         initial["payout_multiplier"] = PayOutMultipliers.objects.filter(
-            year=datetime.date.today().year
+            year=today.year
         ).first()
 
-        event: Events | None = get_next_event(event_type="tournament")
+        event: Events | None = get_next_event(event_type="tournament", today=today)
         initial["event"] = event
         initial["name"] = (
             f"{event.month} {event.year} Event #{event.date.month}" if event else None
@@ -81,9 +80,14 @@ class TournamentListView(ListView):
     def get_context_data(self, **kwargs: dict) -> dict:
         context: dict = super().get_context_data(**kwargs)
         context["index_html"] = True
-        next_meeting: Events | None = get_next_event(event_type="meeting")
+        today: datetime.date = datetime.date.today()
+        print(f"today is: {today}")
+        next_meeting: Events | None = get_next_event(event_type="meeting", today=today)
+        print(f"next meeting: {next_meeting}")
         context["next_meeting"] = next_meeting.as_html() if next_meeting else "N/A"
-        next_tournament: Events | None = get_next_event(event_type="tournament")
+        next_tournament: Events | None = get_next_event(
+            event_type="tournament", today=today
+        )
         context["next_tournament"] = (
             next_tournament.as_html() if next_tournament else "N/A"
         )

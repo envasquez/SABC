@@ -1,4 +1,4 @@
-# # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """ Test Plan for conversion functions
 
 - Test that weight to length and lenght to weight conversions are accurate
