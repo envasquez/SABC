@@ -61,10 +61,10 @@ class Events(Model):
     start: TimeField = TimeField(null=True, blank=True)
     finish: TimeField = TimeField(null=True, blank=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.type} {self.date} {self.start}-{self.finish}".title()
 
-    def as_html(self):
+    def as_html(self) -> str:
         dmy = self.date.strftime("%d %B %Y")
         start = self.start.strftime("%I:%M %p")
         finish = self.finish.strftime("%I:%M %p")
@@ -86,10 +86,9 @@ class Events(Model):
         super().save(*args, **kwargs)
 
 
-def get_next_event(event_type):
+def get_next_event(event_type: str) -> Events | None:
     if not Events.objects.filter(type=event_type):
         return None
-
     today = datetime.date.today()
     events = Events.objects.filter(type=event_type, year=today.year).order_by("date")
     for idx, event in enumerate(events):
@@ -97,3 +96,4 @@ def get_next_event(event_type):
         if current_month and today.day < event.date.day:
             return event
         return events[idx + 1] if idx + 1 <= len(events) else None
+    return None

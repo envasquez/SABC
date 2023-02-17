@@ -16,7 +16,9 @@ SECRET_KEY: Optional[str] = os.environ.get("DJANGO_SECRET_KEY", get_random_secre
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG: bool = not not os.environ.get("DJANGO_DEBUG")
 
-ALLOWED_HOSTS: list = ["*"] if DEBUG else os.environ.get("DJANGO_ALLOWED_HOSTS", '').split(',')
+ALLOWED_HOSTS: list = (
+    ["*"] if DEBUG else os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
+)
 
 # Application definition
 INSTALLED_APPS: list[str] = [
@@ -96,7 +98,7 @@ elif os.environ.get("UNITTEST"):
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
-AUTH_PASSWORD_VALIDATORS: list[dict[str,str]] = [
+AUTH_PASSWORD_VALIDATORS: list[dict[str, str]] = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
     },

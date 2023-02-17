@@ -19,16 +19,14 @@ CURRENT_MONTH: str = f"{strftime('%B')}"
 
 
 class LakePoll(Model):
-    name: CharField | str = CharField(
-        default=f"Poll: {CURRENT_MONTH} {CURRENT_YEAR}", max_length=256
-    )
+    name: CharField = CharField(default=f"Poll: {CURRENT_MONTH} {CURRENT_YEAR}", max_length=256)
     choices: ManyToManyField = ManyToManyField(Lake)
-    description: TextField | str = TextField(max_length=4096, null=True, blank=True)
+    description: TextField = TextField(max_length=4096, null=True, blank=True)
 
     def __str__(self) -> str:
         return f"{self.name}"
 
-    def get_absolute_url(self):
+    def get_absolute_url(self) -> str:
         return reverse("polls")
 
 

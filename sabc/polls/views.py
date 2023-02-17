@@ -27,17 +27,17 @@ class LakePollListView(
 class LakePollCreateView(
     SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView
 ):
-    model = LakePoll
-    form_class = LakePollForm
-    success_message = "Tournament successfully created!"
+    model: Type[LakePoll] = LakePoll
+    form_class: Type[LakePollForm] = LakePollForm
+    success_message: str = "Tournament successfully created!"
 
-    def test_func(self):
+    def test_func(self) -> bool:
         return self.request.user.is_staff
 
-    def get_initial(self):
-        initial = super().get_initial()
-        today = datetime.date.today()
-        month_name = calendar.month_name[today.month + 1]
+    def get_initial(self) -> dict:
+        initial: dict = super().get_initial()
+        today: datetime.date = datetime.date.today()
+        month_name: str = calendar.month_name[today.month + 1]
         initial["name"] = f"Lake Poll for: {month_name} {today.year}"
         initial["choices"] = Lake.objects.all()
         initial["description"] = f"Cast your vote for {month_name}'s Tournament Lake!"

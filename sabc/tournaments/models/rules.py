@@ -84,7 +84,7 @@ class RuleSet(Model):
     buy_ins_points_offset: SmallIntegerField = SmallIntegerField(default=4)
     disqualified_points_offset: SmallIntegerField = SmallIntegerField(default=3)
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         if not self.name:
             self.name = f"RuleSet-{self.id}"
         super().save(*args, **kwargs)

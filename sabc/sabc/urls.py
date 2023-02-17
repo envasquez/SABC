@@ -29,33 +29,37 @@ from users.views import AnglerRegistrationView as Register
 from users.views import AnglerUpdateView as Edit
 from users.views import about, bylaws, calendar, roster
 
-POLL_CREATE: tuple[str,str] = ("polls/new/", "lakepoll-create")
-TMNT_CREATE: tuple[str,str] = ("tournament/new/", "tournament-create")
-TMNT_DETAIL: tuple[str,str] = ("tournament/<int:pk>/", "tournament-details")
-TMNT_UPDATE: tuple[str,str] = ("tournament/<int:pk>/update/", "tournament-update")
-TMNT_DELETE: tuple[str,str] = ("tournament/<int:pk>/delete/", "tournament-delete")
+POLL_CREATE: tuple[str, str] = ("polls/new/", "lakepoll-create")
+TMNT_CREATE: tuple[str, str] = ("tournament/new/", "tournament-create")
+TMNT_DETAIL: tuple[str, str] = ("tournament/<int:pk>/", "tournament-details")
+TMNT_UPDATE: tuple[str, str] = ("tournament/<int:pk>/update/", "tournament-update")
+TMNT_DELETE: tuple[str, str] = ("tournament/<int:pk>/delete/", "tournament-delete")
 
-TEAM_CREATE: tuple[str,str] = ("tournament/<int:pk>/add_team/", "team-create")
-TEAM_DELETE: tuple[str,str] = ("teamresult/<int:pk>/delete/", "teamresult-delete")
-RESULT_CREATE: tuple[str,str] = ("tournament/<int:pk>/add_result/", "result-create")
-RESULT_UPDATE: tuple[str,str] = ("result/<int:pk>/update/", "result-update")
-RESULT_DELETE: tuple[str,str] = ("result/<int:pk>/delete/", "result-delete")
+TEAM_CREATE: tuple[str, str] = ("tournament/<int:pk>/add_team/", "team-create")
+TEAM_DELETE: tuple[str, str] = ("teamresult/<int:pk>/delete/", "teamresult-delete")
+RESULT_CREATE: tuple[str, str] = ("tournament/<int:pk>/add_result/", "result-create")
+RESULT_UPDATE: tuple[str, str] = ("result/<int:pk>/update/", "result-update")
+RESULT_DELETE: tuple[str, str] = ("result/<int:pk>/delete/", "result-delete")
 
-EVENT_UPDATE: tuple[str,str] = ("event/<int:pk>/", "event-update")
-LOGIN: tuple[str,str, str] = ("login/", "users/login.html", "login")
-LOGOUT: tuple[str,str, str] = ("logout/", "users/logout.html", "logout")
-PW_RESET: tuple[str,str, str] = ("password-reset/", "users/password_reset.html", "password-reset")
-PW_DONE: tuple[str,str, str] = (
+EVENT_UPDATE: tuple[str, str] = ("event/<int:pk>/", "event-update")
+LOGIN: tuple[str, str, str] = ("login/", "users/login.html", "login")
+LOGOUT: tuple[str, str, str] = ("logout/", "users/logout.html", "logout")
+PW_RESET: tuple[str, str, str] = (
+    "password-reset/",
+    "users/password_reset.html",
+    "password-reset",
+)
+PW_DONE: tuple[str, str, str] = (
     "password-reset/done/",
     "users/password_reset_done.html",
     "password_reset_done",
 )
-PW_CONFIRM: tuple[str,str, str] = (
+PW_CONFIRM: tuple[str, str, str] = (
     "password-reset-confirm/<uidb64>/<token>/",
     "users/password_reset_confirm.html",
     "password_reset_confirm",
 )
-PW_COMPLETE: tuple[str,str, str] = (
+PW_COMPLETE: tuple[str, str, str] = (
     "password-reset-complete/",
     "users/password_reset_complete.html",
     "password_reset_complete",

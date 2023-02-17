@@ -9,6 +9,7 @@ from django.db.models import (
     CharField,
     ForeignKey,
     Model,
+    QuerySet,
     TextField,
 )
 from django.urls import reverse
@@ -78,7 +79,7 @@ class Tournament(Model):
         super().save(*args, **kwargs)
 
 
-def tie(current, previous):
+def tie(current: Result, previous: Result | None) -> bool:
     return (
         all(
             [
@@ -92,16 +93,16 @@ def tie(current, previous):
     )
 
 
-def set_places(tid):
-    def _set_places(query):
+def set_places(tid: int) -> None:
+    def _set_places(query: QuerySet):
         if not query:
             return
-        prev = None
-        place = 1
-        fished = [q for q in query if not q.disqualified and not q.buy_in]
+        prev: None | Result = None
+        place: int = 1
+        fished: list[Result] = [q for q in query if not q.disqualified and not q.buy_in]
         for result in fished:
             if tie(current=result, previous=prev):
-                result.place_finish = prev.place_finish
+                result.place_finish = prev.place_finish if prev else place
             else:
                 result.place_finish = place
                 place += 1
@@ -111,35 +112,35 @@ def set_places(tid):
             else:
                 result.save()
             prev = result
-        buy_ins = [q for q in query if q.buy_in]
+        buy_ins: list = [q for q in query if q.buy_in]
         if buy_ins:
             for buy_in in buy_ins:
                 buy_in.place_finish = place
                 buy_in.save()
             place += 1
-        disqualified = [q for q in query if q.disqualified]
+        disqualified: list = [q for q in query if q.disqualified]
         if disqualified:
             for dqs in disqualified:
                 dqs.place_finish = place
                 dqs.save()
 
-    order = ("-total_weight", "-big_bass_weight", "-num_fish")
+    order: tuple = ("-total_weight", "-big_bass_weight", "-num_fish")
     _set_places(Result.objects.filter(tournament=tid).order_by(*order))
     _set_places(TeamResult.objects.filter(tournament=tid).order_by(*order))
 
 
-def set_points(tid):
-    tournament = Tournament.objects.get(id=tid)
+def set_points(tid: int) -> None:
+    tournament: Tournament = Tournament.objects.get(id=tid)
     set_places(tid=tid)
     if not tournament.points_count:
         return
 
     # Anglers that weighed in fish
-    points = tournament.rules.max_points
-    previous = None
+    points: int = tournament.rules.max_points
+    previous: Result | None = None
     for result in get_non_zeroes(tid=tid).order_by("place_finish"):
         if tie(current=result, previous=previous):
-            result.points = previous.points
+            result.points = previous.points if previous else points
         else:
             result.points = points
             points -= 1
@@ -147,7 +148,7 @@ def set_points(tid):
         previous = result
 
     # Anglers who were disqualified, but points awarded were allowed
-    dq_offset = tournament.rules.disqualified_points_offset
+    dq_offset: int = tournament.rules.disqualified_points_offset
     for result in get_disqualified(tid=tid):
         result.points = (
             previous.points - dq_offset if previous else tournament.rules.max_points
@@ -155,8 +156,8 @@ def set_points(tid):
         result.save()
 
     # Anglers that did not weigh in fish or bought in
-    zeros_offset = tournament.rules.zeroes_points_offset
-    buy_in_offset = tournament.rules.buy_ins_points_offset
+    zeros_offset: int = tournament.rules.zeroes_points_offset
+    buy_in_offset: int = tournament.rules.buy_ins_points_offset
     for result in get_zeroes(tid=tid):
         result.points = previous.points - zeros_offset if previous else 0
         if result.buy_in:
@@ -168,20 +169,20 @@ def set_points(tid):
         result.save()
 
 
-def get_non_zeroes(tid):
-    query = {
+def get_non_zeroes(tid: int) -> QuerySet:
+    query: dict = {
         "tournament__id": tid,
         "locked": False,
         "disqualified": False,
         "num_fish__gt": 0,
         "angler__member": True,
     }
-    order = ("-total_weight", "-big_bass_weight", "-num_fish")
+    order: tuple = ("-total_weight", "-big_bass_weight", "-num_fish")
     return Result.objects.filter(**query).order_by(*order)
 
 
-def get_zeroes(tid):
-    query = {
+def get_zeroes(tid: int) -> QuerySet[Result]:
+    query: dict = {
         "num_fish": 0,
         "tournament__id": tid,
         "disqualified": False,
@@ -191,19 +192,19 @@ def get_zeroes(tid):
     return Result.objects.filter(**query)
 
 
-def get_buy_ins(tid):
+def get_buy_ins(tid: int) -> QuerySet[Result]:
     return Result.objects.filter(tournament=tid, buy_in=True, angler__member=True)
 
 
-def get_disqualified(tid):
+def get_disqualified(tid: int) -> QuerySet[Result]:
     order = ("-total_weight", "-big_bass_weight", "-num_fish")
     return Result.objects.filter(
         tournament=tid, disqualified=True, angler__member=True
     ).order_by(*order)
 
 
-def get_big_bass_winner(tid):
-    query = {
+def get_big_bass_winner(tid: int) -> Result | None:
+    query: dict = {
         "angler__member": True,
         "tournament__id": tid,
         "big_bass_weight__gte": Decimal("5"),
@@ -212,15 +213,15 @@ def get_big_bass_winner(tid):
     return bb_results.first() if bb_results.exists() else None
 
 
-def get_payouts(tid):
-    bb_query = {
+def get_payouts(tid: int) -> dict:
+    bb_query: dict = {
         "angler__member": True,
         "tournament__id": tid,
         "big_bass_weight__gte": Decimal("5"),
     }
-    bb_exists = Result.objects.filter(**bb_query).count() > 0
-    num_anglers = Result.objects.filter(tournament=tid).count()
-    pom = Tournament.objects.get(id=tid).payout_multiplier
+    bb_exists: bool = Result.objects.filter(**bb_query).count() > 0
+    num_anglers: int = Result.objects.filter(tournament=tid).count()
+    pom: PayOutMultipliers = Tournament.objects.get(id=tid).payout_multiplier
     return {
         "club": pom.club * num_anglers,
         "total": pom.entry_fee * num_anglers,

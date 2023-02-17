@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
-import os
 from random import randint
 
-import pytest
 from django.contrib.auth import get_user_model
 from django.db.models import QuerySet
 from names import get_first_name, get_last_name
 from users.models import Angler
 from yaml import safe_load
 
-from sabc import settings
 from sabc.settings import BASE_DIR
 
 from ..models.lakes import Lake, Ramp
