@@ -11,7 +11,7 @@ from yaml import safe_load
 
 from .forms import CsvImportForm
 
-U_MODEL = get_user_model()
+User = get_user_model()
 
 
 def create_angler(name: str, email: str, phone: str) -> None:
@@ -22,7 +22,7 @@ def create_angler(name: str, email: str, phone: str) -> None:
     #
     # Create a User
     #
-    user, _ = U_MODEL.objects.update_or_create(
+    user, _ = User.objects.update_or_create(
         username=username, first_name=fname, last_name=lname, email=email
     )
     user.is_active = True

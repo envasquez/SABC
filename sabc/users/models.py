@@ -12,18 +12,20 @@ from django.db.models import (
     Manager,
     Model,
     OneToOneField,
+    QuerySet,
     SmallIntegerField,
     TextChoices,
 )
 from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
-from PIL import Image
+from PIL import Image as image
+from PIL.Image import Image
 
 User = get_user_model()
 
 
 class MemberManager(Manager):
-    def get_active_members(self):
+    def get_active_members(self) -> QuerySet:
         return Angler.objects.filter(member=True, user__is_active=True)
 
 
@@ -47,8 +49,8 @@ class Angler(Model):
         full_name: str = self.user.get_full_name()  # pylint: disable=no-member
         return full_name if self.member else f"{full_name} (G)"
 
-    def save(self, *args, **kwargs):
-        img = Image.open(self.image.path)
+    def save(self, *args, **kwargs) -> None:
+        img: Image = image.open(self.image.path)
         if img.height > 300 or img.width > 300:  # pixels
             output_size = (300, 300)
             img.thumbnail(output_size)

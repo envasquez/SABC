@@ -44,9 +44,7 @@ from ..tables import (
 )
 
 
-class TournamentCreateView(
-    SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView
-):
+class TournamentCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model: Type[Tournament] = Tournament
     form_class: Type[TournamentForm] = TournamentForm
     success_message: str = "Tournament successfully created!"
@@ -55,15 +53,11 @@ class TournamentCreateView(
         today: datetime.date = datetime.date.today()
         initial: dict = super().get_initial()
         initial["rules"] = RuleSet.objects.filter(year=today.year).first()
-        initial["payout_multiplier"] = PayOutMultipliers.objects.filter(
-            year=today.year
-        ).first()
+        initial["payout_multiplier"] = PayOutMultipliers.objects.filter(year=today.year).first()
 
         event: Events | None = get_next_event(event_type="tournament", today=today)
         initial["event"] = event
-        initial["name"] = (
-            f"{event.month} {event.year} Event #{event.date.month}" if event else None
-        )
+        initial["name"] = f"{event.month} {event.year} Event #{event.date.month}" if event else None
         return initial
 
     def test_func(self):
@@ -81,16 +75,10 @@ class TournamentListView(ListView):
         context: dict = super().get_context_data(**kwargs)
         context["index_html"] = True
         today: datetime.date = datetime.date.today()
-        print(f"today is: {today}")
         next_meeting: Events | None = get_next_event(event_type="meeting", today=today)
-        print(f"next meeting: {next_meeting}")
         context["next_meeting"] = next_meeting.as_html() if next_meeting else "N/A"
-        next_tournament: Events | None = get_next_event(
-            event_type="tournament", today=today
-        )
-        context["next_tournament"] = (
-            next_tournament.as_html() if next_tournament else "N/A"
-        )
+        next_tournament: Events | None = get_next_event(event_type="tournament", today=today)
+        context["next_tournament"] = next_tournament.as_html() if next_tournament else "N/A"
         return context
 
 
@@ -110,9 +98,7 @@ class TournamentDetailView(DetailView):
             return TournamentSummaryTable([])
 
         limits: int = Result.objects.filter(tournament=tid, num_fish=5).count()
-        zeroes: int = Result.objects.filter(
-            tournament=tid, num_fish=0, buy_in=False
-        ).count()
+        zeroes: int = Result.objects.filter(tournament=tid, num_fish=0, buy_in=False).count()
         buy_ins: int = Result.objects.filter(tournament=tid, buy_in=True).count()
         anglers: int = Result.objects.filter(tournament=tid, buy_in=False).count()
 
@@ -122,9 +108,7 @@ class TournamentDetailView(DetailView):
             big_bass = f"{bb_result.big_bass_weight: .2f}lbs"
 
         heavy_stringer: str = "--"
-        hs_result: Result | None = Result.objects.filter(
-            tournament=tid, place_finish=1
-        ).first()
+        hs_result: Result | None = Result.objects.filter(tournament=tid, place_finish=1).first()
         if hs_result:
             heavy_stringer = f"{hs_result.total_weight}lbs"
 
@@ -155,9 +139,9 @@ class TournamentDetailView(DetailView):
         if tmnt.points_count:
             set_points(tid=tid)
 
-        team_results: QuerySet[TeamResult] = TeamResult.objects.filter(
-            tournament=tid
-        ).order_by("place_finish", "-total_weight", "-num_fish")
+        team_results: QuerySet[TeamResult] = TeamResult.objects.filter(tournament=tid).order_by(
+            "place_finish", "-total_weight", "-num_fish"
+        )
         context["team_results"] = TeamResultTable(team_results)
         context["editable_team_results"] = EditableTeamResultTable(team_results)
 
@@ -172,25 +156,17 @@ class TournamentDetailView(DetailView):
         context["render_buy_ins"] = buy_ins.count()
         context["editable_buy_ins"] = EditableBuyInTable(buy_ins)
 
-        dqs: QuerySet[Result] = Result.objects.filter(
-            tournament=tmnt, disqualified=True
-        )
+        dqs: QuerySet[Result] = Result.objects.filter(tournament=tmnt, disqualified=True)
         context["dqs"] = DQTable(dqs)
         context["render_dqs"] = dqs.count()
         context["editable_dqs"] = EditableDQTable(dqs)
 
         context["payouts"] = self.get_payout_table(tid=tid)
-        context["catch_stats"] = (
-            self.get_stats_table(tid=tid)
-            if indv_results
-            else TournamentSummaryTable([])
-        )
+        context["catch_stats"] = self.get_stats_table(tid=tid) if indv_results else TournamentSummaryTable([])
         return context
 
 
-class TournamentUpdateView(
-    SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView
-):
+class TournamentUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model: Type[Tournament] = Tournament
     form_class: Type[TournamentForm] = TournamentForm
 
