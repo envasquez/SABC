@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import QuerySet
 from django.http import HttpRequest
-from django.shortcuts import HttpResponse, redirect, render, HttpResponseRedirect
+from django.shortcuts import HttpResponse, HttpResponseRedirect, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, UpdateView
 from tournaments.models.results import Result
@@ -35,7 +35,9 @@ def calendar(request: HttpRequest) -> HttpResponse:
 
 @login_required
 def roster(request: HttpRequest) -> HttpResponse:
-    o_table: OfficerTable = OfficerTable(Officers.objects.filter(year=datetime.date.today().year))
+    o_table: OfficerTable = OfficerTable(
+        Officers.objects.filter(year=datetime.date.today().year)
+    )
     m_table: MemberTable = MemberTable(Angler.members.get_active_members())
     guests: QuerySet[Angler] = (
         Angler.objects.filter(member=False)
@@ -96,7 +98,9 @@ class AnglerDetailView(DetailView):
         big_bass: list = [
             r.big_bass_weight
             for r in Result.objects.filter(
-                tournament__event__year=year, angler__user=self.get_object(), big_bass_weight__gte=Decimal("5")
+                tournament__event__year=year,
+                angler__user=self.get_object(),
+                big_bass_weight__gte=Decimal("5"),
             )
         ]
         if big_bass:
@@ -107,7 +111,9 @@ class AnglerDetailView(DetailView):
     def get_stats(self, year: int = 0) -> dict:
         year = year or datetime.date.today().year
         angler: Angler = Angler.objects.get(user=self.get_object().id)  # type: ignore
-        results: QuerySet[Result] = Result.objects.filter(angler=angler, tournament__event__year=year)
+        results: QuerySet[Result] = Result.objects.filter(
+            angler=angler, tournament__event__year=year
+        )
         return {
             "wins": sum(1 for r in results if r.place_finish == 1),
             "angler": angler.user.get_full_name(),

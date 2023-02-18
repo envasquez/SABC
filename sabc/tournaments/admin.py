@@ -31,7 +31,9 @@ class LakeAdmin(admin.ModelAdmin):
                 google_maps=lakes[lake_name].get("google_maps", ""),
             )
             for ramp in lakes[lake_name]["ramps"]:
-                Ramp.objects.update_or_create(lake=lake, name=ramp["name"], google_maps=ramp["google_maps"])
+                Ramp.objects.update_or_create(
+                    lake=lake, name=ramp["name"], google_maps=ramp["google_maps"]
+                )
         messages.info(request, f"{lakes} imported & created successfully!")
 
     def lake_upload(self, request: HttpRequest) -> HttpResponse:
@@ -80,10 +82,19 @@ class EventsAdmin(admin.ModelAdmin):
             for year, dates in data.items():
                 for month, day in dates.items():
                     month_value: int = list(calendar.month_name).index(month.title())
-                    date: datetime.date = datetime.date(year=year, month=month_value, day=day)
-                    kwargs = {"type": event_type, "year": year, "month": month.lower(), "date": date}
+                    date: datetime.date = datetime.date(
+                        year=year, month=month_value, day=day
+                    )
+                    kwargs = {
+                        "type": event_type,
+                        "year": year,
+                        "month": month.lower(),
+                        "date": date,
+                    }
                     Events.objects.update_or_create(**kwargs)
-            messages.info(request, f"{event_type}: {data} imported & created successfully!")
+            messages.info(
+                request, f"{event_type}: {data} imported & created successfully!"
+            )
 
     def event_upload(self, request: HttpRequest) -> HttpResponse:
         form: YamlImportForm = YamlImportForm()

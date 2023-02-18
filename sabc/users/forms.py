@@ -19,7 +19,14 @@ class UserRegisterForm(UserCreationForm):
 
     class Meta:
         model: Type[User] = User  # type: ignore
-        fields: tuple[str, ...] = ("username", "first_name", "last_name", "email", "password1", "password2")
+        fields: tuple[str, ...] = (
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "password1",
+            "password2",
+        )
 
 
 class AnglerRegisterForm(ModelForm):
