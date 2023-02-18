@@ -73,7 +73,7 @@ Some things I found useful:
       * I was able to write minimal CSS, HTML and Django's template language to get a site up and running. Its not pretty - but its functional for now.
       * Admin override templates were awesome and gave me a handy way to upload our data. It also drove us to formatting our data in a common standard
   - Cons:
-      * I have 3 apps (anglers/users, polls, tournaments) and my templates are everywhere, I have admin overrides ... etc. Issue #128 
+      * I have 3 apps (anglers/users, polls, tournaments) and my templates are everywhere, I have admin overrides ... etc. [Issue #128](https://github.com/envasquez/SABC/issues/128)
 ***
 
 # Questions / Comments
