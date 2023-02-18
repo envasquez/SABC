@@ -30,40 +30,50 @@ We hope to increase member participation by modernizing our model of interaction
 
 Please see the [Wiki](https://github.com/envasquez/SABC/wiki) for an informal write-up to capture some requirements, solution space and design decisions.
 
-Initially, to learn more about some of Django's more modern features, I followed many of the recommendations from [this Tutorial from Corey Schafer](https://youtu.be/UmljXZIypDc) for writing a web application, and modified it to suite the club's needs. I essentially tried to learn "just enough" Django to pull all of our needs together. I found Django to be a REALLY good framework, but there are a few Django-isms that you could end up spinning your wheels on, or sometimes its impossible to DRY (don't repeat yourself) - since sometimes you just have to add that one or two lines of code to activate a feature.
+Initially, to learn more about some of Django's more modern features, I followed many of the recommendations from [this Tutorial from Corey Schafer](https://youtu.be/UmljXZIypDc) for writing a web application, and modified it to suite the club's needs. I essentially tried to learn "just enough" Django to pull all of our needs together. I found it to be a REALLY good framework, but there are a few Django-isms that you could end up spinning your wheels on, or sometimes its impossible to DRY (don't repeat yourself) - since you may have to add that one or two lines of code, in similar places to activate a feature (I'm sure there is a way to avoid this).
 
 Some things I found useful:
 - Class Based Views
   - Pros:
-    * This made entering and validating data super easy
+    * This made creating forms and entering and validating data super easy
     * Found a module called [Better Forms](https://pypi.org/project/django-betterforms/) that made dealing with multi-form views
     * I found a tables module to render table data using a CBV pattern [django-tables2](https://django-tables2.readthedocs.io/en/latest/)
   - Cons:
-    * It can be tricky if you have to combine multiple forms to create an entry
-    * There is a bit of magic (how Django implements CBV) to learn
+    * It can be tricky if you have to combine multiple forms to create an entry (thus the use of a library)
+    * There is a bit of magic (how Django implements CBV) to learn - not terribly difficult though
 - Using Pytest vs. Nosetest
     * Writing straight functions with normal asserts is super easy
     * Pytest decorators make DB integration easy
+    * I think the pytest is cleaner
 - Dockerizing everything!
   - Pros:
-    * Its Docker! I don't have to run "anything" local like a Postgresql server
+    * Its Docker! I don't have to run "anything" local services, like a Postgresql server for example
+    * Make CI/CD easier to debug
   - Cons:
     * Sometimes it can take a bit of overhead to rebuild containers from scratch when changing code
-    * Be sure to build Docker container/image clean-up
-- Mypy type annotations ...
+    * Be sure to build Docker container/image clean-up into your local flows
+- Mypy & Type Annotations
   - Pros:
     * Its the right thing to do!
-    * I found a few bugs - or rewrote some code due to mypy feedback
+    * I found a few potential bugs - or rewrote some code due to mypy feedback
   - Cons:
     * It can be hard to properly annoate Django, because it has a bit of "magic" happening in the framework
     * Need to monkey-patch things to get it annotated properly or add additional packages
     * I felt it grew in complexity - vs - reward as I was starting to have to look-up how to solve special cases and support for py3.11
+    * Different syntax in the different versions of python
+    * Can make the code a bit obfuscated 
 - Admin Site Overrides
   - Pros:
       * Makes it trivial to add buttons to upload data in csv, yaml
-      * Greate for re-creating/loading data and initially genersting a site
+      * Greate for re-creating/loading data and initially generating a site
   - Cons:
       * Can't think of any ...
+- Templates:
+  - Pros:
+      * I was able to write minimal CSS, HTML and Django's template language to get a site up and running. Its not pretty - but its functional for now.
+      * Admin override templates were awesome and gave me a handy way to upload our data. It also drove us to formatting our data in a common standard
+  - Cons:
+      * I have 3 apps (anglers/users, polls, tournaments) and my templates are everywhere, I have admin overrides ... etc. Issue #128 
 ***
 
 # Questions / Comments
