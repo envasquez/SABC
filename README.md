@@ -25,7 +25,11 @@ The goal of this website application are to:
 - Serve as a source of distributing club news, information and events to members and potential members
 - Archive recent (and historical) club data
 - Eliminate the need for manual process
-- Go Live in Feb. 2023: we did!
+- Go Live in Feb. 2023!!!
+    - We did it! - currently running on a Digital Ocean Droplet with 1 CPU, 512MB RAM and 10GB disk Ubuntu 22.10 & Docker
+    - Deployed with a simple: `make webapp` command (once secured)
+    - Cost has been under $10/month
+    - A few members joined GitHub - to help me review the site and look for bugs, which helped a lot! (Thanks Rob & Chris)
 
 We hope to increase member participation by modernizing our model of interaction and providing data analytics & insights. Also by allowing members to participate remotely vs. in-person exclusively will hopefully increase tournament attendance which should increase commradrie and growth.
 
