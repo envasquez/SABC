@@ -25,12 +25,13 @@ The goal of this website application are to:
 - Serve as a source of distributing club news, information and events to members and potential members
 - Archive recent (and historical) club data
 - Eliminate the need for manual process
+- Go Live in Feb. 2023: we did!
 
 We hope to increase member participation by modernizing our model of interaction and providing data analytics & insights. Also by allowing members to participate remotely vs. in-person exclusively will hopefully increase tournament attendance which should increase commradrie and growth.
 
 Please see the [Wiki](https://github.com/envasquez/SABC/wiki) for an informal write-up to capture some requirements, solution space and design decisions.
 
-Initially, to learn more about some of Django's more modern features, I followed many of the recommendations from [this Tutorial from Corey Schafer](https://youtu.be/UmljXZIypDc) for writing a web application, and modified it to suite the club's needs. I essentially tried to learn "just enough" Django to pull all of our needs together. I found it to be a REALLY good framework, but there are a few Django-isms that you could end up spinning your wheels on, or sometimes its impossible to DRY (don't repeat yourself) - since you may have to add that one or two lines of code, in similar places to activate a feature (I'm sure there is a way to avoid this).
+Initially, to learn more about some of Django's more modern features, I followed many of the recommendations from [this Tutorial from Corey Schafer](https://youtu.be/UmljXZIypDc) for writing a web application, and modified it to suite the club's needs. I essentially tried to learn "just enough" Django to pull it all together. I found it to be a REALLY good framework, but there are a few Django-isms that you could end up spinning your wheels on, or sometimes its impossible to DRY (don't repeat yourself) - since you may have to add that one or two lines of code, in similar places to activate a feature (I'm sure there is a way to avoid this).
 
 Some things I found useful:
 - Class Based Views
@@ -61,7 +62,8 @@ Some things I found useful:
     * Need to monkey-patch things to get it annotated properly or add additional packages
     * I felt it grew in complexity - vs - reward as I was starting to have to look-up how to solve special cases and support for py3.11
     * Different syntax in the different versions of python
-    * Can make the code a bit obfuscated 
+    * Can make the code a bit obfuscated
+    * I am not proud of the number of # type: ignore statements in the current code-base :-(
 - Admin Site Overrides
   - Pros:
       * Makes it trivial to add buttons to upload data in csv, yaml
