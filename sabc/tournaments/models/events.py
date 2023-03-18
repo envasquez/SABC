@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import datetime
 
+import pytz
 from django.db.models import (
     CharField,
     DateField,
     Model,
+    QuerySet,
     SmallIntegerField,
     TextChoices,
     TimeField,
@@ -82,16 +84,37 @@ class Events(Model):
 
 
 def get_next_event(event_type: str, today: datetime.date) -> Events | None:
+    """Return the next event, relative to 'today'"""
     if not Events.objects.filter(type=event_type):
         return None
-    events = Events.objects.filter(type=event_type, year=today.year).order_by("date")
+    events: QuerySet = Events.objects.filter(type=event_type, year=today.year).order_by(
+        "date"
+    )
     next_event: Events | None = None
     for idx, event in enumerate(events):
         current_month: bool = event.date.month == today.month
         current_year: bool = event.year == today.year
-        if current_year and current_month:
-            if today.day < event.date.day:
-                next_event = event
-            else:
-                next_event = events[idx + 1] if idx + 1 < events.count() else None
+        now: datetime.datetime = datetime.datetime.now(pytz.timezone("US/Central"))
+        if all(
+            [
+                current_year,
+                current_month,
+                now.day <= event.date.day,
+                now.hour <= event.start.hour,
+            ]
+        ):
+            next_event = event
+        else:
+            next_event = events[idx + 1] if idx + 1 < events.count() else None
+        if (
+            today.month == 12
+        ):  # Last event of the year, get the first event for next year ...
+            next_event = (
+                Events.objects.filter(type=event_type, year=today.year + 1)
+                .order_by("date")
+                .first()
+            )
+        if next_event:
+            break
+
     return next_event
