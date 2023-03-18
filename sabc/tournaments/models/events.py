@@ -77,12 +77,11 @@ def get_next_event(event_type: str, today: datetime.date) -> Events | None:
 
     next_event: Events | None = None
     for idx, event in enumerate(events):
-        if now.month != event.date.month:
-            continue
-        if now.day <= event.date.day and now.hour <= event.start.hour:
-            next_event = event
-        else:
-            next_event = events[idx + 1]
-        break
+        if now.month == event.date.month:
+            if now.day <= event.date.day and now.hour <= event.start.hour:
+                next_event = event
+            else:
+                next_event = events[idx + 1]
+            break
 
     return next_event
