@@ -92,13 +92,14 @@ def get_next_event(event_type: str) -> Events | None:
     ):  # We never fish past this date ... goto next year
         year += 1
 
-    events: QuerySet = Events.objects.filter(type=event_type, year=year)
+    events: QuerySet = Events.objects.filter(type=event_type, year=year).order_by(
+        "date"
+    )
     if not events:
         return None
 
     current_event: Events = events[now.month - 1]  # Offset for 0th element
-    if current_event.date.month == now.month:
-        if now.day <= current_event.date.day:
-            return current_event
+    if now.day <= current_event.date.day:
+        return current_event
 
     return events[now.month]
