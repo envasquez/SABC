@@ -59,7 +59,7 @@ class TournamentCreateView(
             year=today.year
         ).first()
 
-        event: Events | None = get_next_event(event_type="tournament", today=today)
+        event: Events | None = get_next_event(event_type="tournament")
         initial["event"] = event
         initial["name"] = (
             f"{event.month} {event.year} Event #{event.date.month}" if event else None
