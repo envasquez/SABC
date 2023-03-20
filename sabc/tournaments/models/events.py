@@ -2,12 +2,28 @@
 import datetime
 
 import pytz
-from django.db.models import CharField, DateField, Model, QuerySet, SmallIntegerField, TextChoices, TimeField
+from django.db.models import (
+    CharField,
+    DateField,
+    Model,
+    QuerySet,
+    SmallIntegerField,
+    TextChoices,
+    TimeField,
+)
 
-DEFAULT_MEETING_START: datetime.time = datetime.datetime.time(datetime.datetime.strptime("7:00 pm", "%I:%M %p"))
-DEFAULT_MEETING_FINISH: datetime.time = datetime.datetime.time(datetime.datetime.strptime("8:00 pm", "%I:%M %p"))
-DEFAULT_TOURNAMENT_START: datetime.time = datetime.datetime.time(datetime.datetime.strptime("12:00 am", "%I:%M %p"))
-DEFAULT_TOURNAMENT_FINISH: datetime.time = datetime.datetime.time(datetime.datetime.strptime("12:00 am", "%I:%M %p"))
+DEFAULT_MEETING_START: datetime.time = datetime.datetime.time(
+    datetime.datetime.strptime("7:00 pm", "%I:%M %p")
+)
+DEFAULT_MEETING_FINISH: datetime.time = datetime.datetime.time(
+    datetime.datetime.strptime("8:00 pm", "%I:%M %p")
+)
+DEFAULT_TOURNAMENT_START: datetime.time = datetime.datetime.time(
+    datetime.datetime.strptime("12:00 am", "%I:%M %p")
+)
+DEFAULT_TOURNAMENT_FINISH: datetime.time = datetime.datetime.time(
+    datetime.datetime.strptime("12:00 am", "%I:%M %p")
+)
 
 
 class Events(Model):
@@ -34,7 +50,9 @@ class Events(Model):
         DECEMBER: str = "december"
 
     date: DateField = DateField(null=True, blank=True)
-    type: CharField = CharField(choices=EventTypes.choices, default="tournament", max_length=25)
+    type: CharField = CharField(
+        choices=EventTypes.choices, default="tournament", max_length=25
+    )
     year: SmallIntegerField = SmallIntegerField(default=datetime.date.today().year)
     month: CharField = CharField(choices=Months.choices, max_length=20)
     start: TimeField = TimeField(null=True, blank=True)
@@ -65,23 +83,22 @@ class Events(Model):
         super().save(*args, **kwargs)
 
 
-def get_next_event(event_type: str, today: datetime.date) -> Events | None:
+def get_next_event(event_type: str) -> Events | None:
     """Return the next event, relative to 'today'"""
-    if not Events.objects.filter(type=event_type):
+    now: datetime.datetime = datetime.datetime.now(pytz.timezone("US/Central"))
+    year: int = now.year
+    if (
+        now.month == 12 and now.day > 15
+    ):  # We never fish past this date ... goto next year
+        year += 1
+
+    events: QuerySet = Events.objects.filter(type=event_type, year=year)
+    if not events:
         return None
 
-    events: QuerySet = Events.objects.filter(type=event_type, year=today.year).order_by("date")
-    now: datetime.datetime = datetime.datetime.now(pytz.timezone("US/Central"))
-    if now.month == 12 and now.day > 15:
-        return Events.objects.filter(type=event_type, year=today.year + 1).order_by("date").first()
+    current_event: Events = events[now.month - 1]  # Offset for 0th element
+    if current_event.date.month == now.month:
+        if now.day <= current_event.date.day:
+            return current_event
 
-    next_event: Events | None = None
-    for idx, event in enumerate(events):
-        if now.month == event.date.month:
-            if now.day <= event.date.day and now.hour <= event.start.hour:
-                next_event = event
-            else:
-                next_event = events[idx + 1]
-            break
-
-    return next_event
+    return events[now.month]

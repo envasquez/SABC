@@ -80,12 +80,9 @@ class TournamentListView(ListView):
     def get_context_data(self, **kwargs: dict) -> dict:
         context: dict = super().get_context_data(**kwargs)
         context["index_html"] = True
-        today: datetime.date = datetime.date.today()
-        next_meeting: Events | None = get_next_event(event_type="meeting", today=today)
+        next_meeting: Events | None = get_next_event(event_type="meeting")
         context["next_meeting"] = next_meeting.as_html() if next_meeting else "N/A"
-        next_tournament: Events | None = get_next_event(
-            event_type="tournament", today=today
-        )
+        next_tournament: Events | None = get_next_event(event_type="tournament")
         context["next_tournament"] = (
             next_tournament.as_html() if next_tournament else "N/A"
         )

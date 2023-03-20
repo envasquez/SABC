@@ -13,5 +13,5 @@ def test_get_next_event() -> None:
         event_date: datetime.date = datetime.date(year=now.year, month=month, day=3)
         Events.objects.create(type="meeting", date=event_date)
 
-    next_event = get_next_event(event_type="meeting", today=datetime.date.today())
+    next_event = get_next_event(event_type="meeting")
     assert next_event.date.month >= now.month
