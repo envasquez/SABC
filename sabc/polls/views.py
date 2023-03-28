@@ -67,7 +67,7 @@ class LakePollView(View, LoginRequiredMixin, UserPassesTestMixin, SuccessMessage
             "poll": poll,
             "voted": voted,
             "results": results,
-            "no_results": results == [["Lake", "Votes"]]
+            "no_results": results == [["Lake", "Votes"]],
         }
         return render(request, template_name="polls/poll.html", context=context)
 

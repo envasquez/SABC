@@ -47,7 +47,9 @@ class LakePoll(Model):
         if datetime.date.today() > self.end_date:
             self.complete = True
         elif datetime.date.today() == self.end_date:
-            self.complete = datetime.datetime.now(pytz.timezone("US/Central")) > self.end_time
+            self.complete = (
+                datetime.datetime.now(pytz.timezone("US/Central")) > self.end_time
+            )
         super().save(*args, **kwargs)
 
 
