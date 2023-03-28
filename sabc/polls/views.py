@@ -21,6 +21,8 @@ class LakePollListView(
     ListView, LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin
 ):
     model: Type[LakePoll] = LakePoll
+    ordering: list = ["-end_date"]
+    paginate_by: int = 5
     context_object_name: str = "polls"
 
 
@@ -60,10 +62,12 @@ class LakePollView(View, LoginRequiredMixin, UserPassesTestMixin, SuccessMessage
         voted: bool = LakeVote.objects.filter(
             poll=poll, angler=request.user.angler  # type: ignore
         ).exists()
+        results: list = self.get_results(poll=poll)
         context: dict = {
             "poll": poll,
-            "results": self.get_results(poll=poll),
             "voted": voted,
+            "results": results,
+            "no_results": results == [["Lake", "Votes"]]
         }
         return render(request, template_name="polls/poll.html", context=context)
 

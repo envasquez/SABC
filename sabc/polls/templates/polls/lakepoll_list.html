@@ -1,12 +1,13 @@
 {% extends "users/base.html" %}
 {% block content %}
 {% for poll in polls %}
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">{{ poll.name }}</h5>
-            <p class="card-text">{{ poll.description }}</p>
-            <a href="{% url 'poll' poll.id %}" class="btn btn-primary">See Results</a>
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ poll.name }}</h5>
+                <p class="card-text">{{ poll.description }}</p>
+                <a href="{% url 'poll' poll.id %}" class="btn btn-primary">See Results</a>
+            </div>
         </div>
-    </div>
+        <br /><br />
 {% endfor %}
 {% endblock content %}

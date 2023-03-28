@@ -1,13 +1,15 @@
 {% extends "users/base.html" %}
 {% block content %}
     {% if success_message %}
-        <div class="alert alert-success"> {{ success_message }} </div>
+        <div class="alert alert-success"> {{ success_message }}</div>
     {% endif %}
     <h2>{{ poll.name }}</h2>
-    <p>{{ poll.description | linebreaks }}</p>
+    <p>
+        {{ poll.description | linebreaks }}
+        End Date: {{ poll.end_date }} @ {{ poll.end_time }}<br />
+    </p>
     <hr class="my-4">
-
-    {% if not voted %}
+    {% if not poll.complete and not voted %}
         <form method="post">
             {% csrf_token %}
             {% for choice in poll.choices.all %}
@@ -24,23 +26,30 @@
             <button class="btn btn-outline-success">Vote to see results</button>
         </form>
     {% else %}
-        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-        <div id="chart_div"></div>
-            <script type="text/javascript">
-                google.charts.load('current', { 'packages': ['corechart'] });
-                google.charts.setOnLoadCallback(drawBasic);
-                function drawBasic(){
-                    var data = google.visualization.arrayToDataTable({{results|safe}});
-                    var opts = {
-                        title: "Voting Results",
-                        height: 500,
-                        width: 800,
-                        legend: "none",
-                        hAxis: {format: "#"}
-                    };
-                    var chart = new google.visualization.BarChart(document.getElementById('chart_div'));
-                    chart.draw(data, opts);
-                }
-        </script>
+        {% if poll.complete %}
+            <h4>Voting for this poll has ended.</h4>
+        {% endif %}
+        {% if no_results  %}
+            <h5>No Results to display ...</h5>
+        {% else %}
+            <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+            <div id="chart_div"></div>
+                <script type="text/javascript">
+                    google.charts.load('current', { 'packages': ['corechart'] });
+                    google.charts.setOnLoadCallback(drawBasic);
+                    function drawBasic(){
+                        var data = google.visualization.arrayToDataTable({{results|safe}});
+                        var opts = {
+                            title: "Voting Results",
+                            height: 500,
+                            width: 800,
+                            legend: "none",
+                            hAxis: {format: "#"}
+                        };
+                        var chart = new google.visualization.BarChart(document.getElementById('chart_div'));
+                        chart.draw(data, opts);
+                    }
+            </script>
+        {% endif %}
 {% endif %}
 {% endblock content %}
