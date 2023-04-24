@@ -4,12 +4,22 @@ body {
   margin-top: 5rem;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: #444444;
 }
 
 ul {
   margin: 0;
+  list-style-type: none;
+}
+
+li {
+  list-style-type: none;
 }
 
 .bg-steel {
@@ -90,4 +100,12 @@ a.article-title:hover {
   right: 50%;
   margin-left: -50vw;
   margin-right: -50vw;
+}
+
+.form-check ul {
+  list-style-type: none;
+}
+
+.form-check li {
+  list-style-type: none;
 }
