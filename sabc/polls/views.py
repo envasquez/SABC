@@ -31,7 +31,7 @@ class LakePollCreateView(
 ):
     model: Type[LakePoll] = LakePoll
     form_class: Type[LakePollForm] = LakePollForm
-    success_message: str = "Tournament successfully created!"
+    success_message: str = "Voting Poll successfully created!"
 
     def test_func(self) -> bool:
         return self.request.user.is_staff
