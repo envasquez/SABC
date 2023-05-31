@@ -76,7 +76,7 @@ pytzdata==2020.1
 PyYAML==6.0
 six==1.16.0
 soupsieve==2.3.2.post1
-sqlparse==0.4.3
+sqlparse>=0.4.4
 stack-data==0.6.2
 termcc==2019.8.2
 terminaltables==3.1.10
