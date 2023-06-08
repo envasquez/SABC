@@ -17,18 +17,14 @@ from .forms import LakePollForm
 from .models import LakePoll, LakeVote
 
 
-class LakePollListView(
-    ListView, LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin
-):
+class LakePollListView(ListView, LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin):
     model: Type[LakePoll] = LakePoll
     ordering: list = ["-end_date"]
-    paginate_by: int = 5
+    paginate_by: int = 0
     context_object_name: str = "polls"
 
 
-class LakePollCreateView(
-    SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView
-):
+class LakePollCreateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model: Type[LakePoll] = LakePoll
     form_class: Type[LakePollForm] = LakePollForm
     success_message: str = "Voting Poll successfully created!"
@@ -59,30 +55,19 @@ class LakePollView(View, LoginRequiredMixin, UserPassesTestMixin, SuccessMessage
 
     def get(self, request: HttpRequest, pid: int) -> HttpResponse:
         poll: LakePoll = LakePoll.objects.get(id=pid)
-        voted: bool = LakeVote.objects.filter(
-            poll=poll, angler=request.user.angler  # type: ignore
-        ).exists()
+        voted: bool = LakeVote.objects.filter(poll=poll, angler=request.user.angler).exists()  # type: ignore
         results: list = self.get_results(poll=poll)
-        context: dict = {
-            "poll": poll,
-            "voted": voted,
-            "results": results,
-            "no_results": results == [["Lake", "Votes"]],
-        }
+        context: dict = {"poll": poll, "voted": voted, "results": results, "no_results": results == [["Lake", "Votes"]]}
         return render(request, template_name="polls/poll.html", context=context)
 
     def post(self, request, pid: int) -> HttpResponseRedirect:
         lake: str = request.POST.get("lake", "")
         poll: LakePoll = LakePoll.objects.get(id=pid)
-        voted: bool = LakeVote.objects.filter(
-            poll=poll, angler=request.user.angler
-        ).exists()
+        voted: bool = LakeVote.objects.filter(poll=poll, angler=request.user.angler).exists()
         try:
             choice: Lake = Lake.objects.get(id=lake)
             if voted:
-                messages.error(
-                    self.request, f"ERROR: {request.user.angler} has already voted!"
-                )
+                messages.error(self.request, f"ERROR: {request.user.angler} has already voted!")
                 return HttpResponseRedirect(reverse("poll", kwargs={"pid": pid}))
         except Model.DoesNotExist as err:
             msg: str = "" if lake else "Please select a lake!"
