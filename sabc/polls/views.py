@@ -8,7 +8,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Model
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.views.generic import CreateView, ListView, View
 from tournaments.models.lakes import Lake
@@ -54,10 +54,18 @@ class LakePollView(View, LoginRequiredMixin, UserPassesTestMixin, SuccessMessage
         return results
 
     def get(self, request: HttpRequest, pid: int) -> HttpResponse:
-        poll: LakePoll = LakePoll.objects.get(id=pid)
-        voted: bool = LakeVote.objects.filter(poll=poll, angler=request.user.angler).exists()  # type: ignore
-        results: list = self.get_results(poll=poll)
-        context: dict = {"poll": poll, "voted": voted, "results": results, "no_results": results == [["Lake", "Votes"]]}
+        try:
+            poll: LakePoll = LakePoll.objects.get(id=pid)
+            voted: bool = LakeVote.objects.filter(poll=poll, angler=request.user.angler).exists()  # type: ignore
+            results: list = self.get_results(poll=poll)
+            context: dict = {
+                "poll": poll,
+                "voted": voted,
+                "results": results,
+                "no_results": results == [["Lake", "Votes"]],
+            }
+        except AttributeError:
+            return redirect("login")
         return render(request, template_name="polls/poll.html", context=context)
 
     def post(self, request, pid: int) -> HttpResponseRedirect:
