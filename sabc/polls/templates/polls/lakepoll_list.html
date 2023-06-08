@@ -6,7 +6,7 @@
                 <h5 class="card-title">{{ poll.name }}</h5>
                 <p class="card-text">{{ poll.description }}<br />
                 <i>Poll ends: {{ poll.end_date }} @ {{ poll.end_time }}</i></p>
-                <a href="{% url 'poll' poll.id %}" class="btn btn-primary">See Results</a>
+                <a href="{% url 'poll' poll.id %}" class="btn btn-primary">Click to view poll</a>
             </div>
         </div>
         <br /><br />
