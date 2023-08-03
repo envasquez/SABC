@@ -65,7 +65,7 @@ pure-eval==0.2.2
 pycodestyle==2.9.1
 pydantic==1.10.4
 pyflakes==2.5.0
-Pygments~>2.15.0
+Pygments==2.15.0
 pylint==2.15.10
 pylint-django==2.5.3
 pylint-plugin-utils==0.7
