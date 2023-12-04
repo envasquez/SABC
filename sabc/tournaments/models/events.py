@@ -102,4 +102,4 @@ def get_next_event(event_type: str) -> Events | None:
     if now.day <= current_event.date.day:
         return current_event
 
-    return events[now.month]
+    return events[now.month - 1]
