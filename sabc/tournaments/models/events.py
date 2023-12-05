@@ -103,9 +103,11 @@ def get_next_event(event_type: str) -> Events | None:
     try:
         # See if this is the last event of the year
         if current_event == events.last():
-            return Events.objects.filter(type=event_type, year=year + 1).order_by(
-                "date"
-            )[0]
+            return (
+                Events.objects.filter(type=event_type, year=year + 1)
+                .order_by("date")
+                .first()
+            )
         return current_event
     except IndexError:
         return None
