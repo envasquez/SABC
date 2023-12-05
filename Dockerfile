@@ -13,6 +13,6 @@ ADD requirements-docker.txt /app/
 ADD django_vars.env /app/
 ADD create_superuser.sh /app/
 ADD db_vars.env /app/
-RUN pip install -r requirements-docker.txt
+RUN apk add --no-cache build-base python3-dev && pip install -r requirements-docker.txt
 RUN chown -R sabc:sabc /app
 USER sabc
