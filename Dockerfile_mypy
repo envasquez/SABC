@@ -6,5 +6,5 @@ ENV PYTHONPATH="/app/sabc"
 ENV DJANGO_DEBUG=1
 WORKDIR /app
 COPY . .
-RUN apk add --no-cache build-base python3-dev && pip install -r requirements-mypy.txt
+RUN apk add --no-cache build-base python3-dev linux-headers && pip install -r requirements-mypy.txt
 CMD ["mypy", "--config-file", "pyproject.toml",  "/app/sabc"]

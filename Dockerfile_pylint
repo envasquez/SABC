@@ -7,5 +7,5 @@ ENV DJANGO_DEBUG=1
 ENV DJANGO_SETTINGS_MODULE=sabc.settings
 WORKDIR /app
 COPY . .
-RUN apk add --no-cache build-base python3-dev && pip install -r requirements-mypy.txt
+RUN apk add --no-cache build-base python3-dev linux-headers && pip install -r requirements-mypy.txt
 CMD ["python3", "-m", "pylint", "--load-plugins", "pylint_django", "--verbose", "sabc/tournaments/", "sabc/users/", "sabc/polls/", "--rcfile", "pyproject.toml"]

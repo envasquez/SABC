@@ -7,7 +7,7 @@ ENV UNITTEST=1
 ENV DJANGO_DEBUG=1
 WORKDIR /app
 COPY . .
-RUN apk add --no-cache build-base python3-dev && pip install -r requirements-pytest.txt
+RUN apk add --no-cache build-base python3-dev linux-headers && pip install -r requirements-pytest.txt
 RUN python3 sabc/manage.py makemigrations --no-input -v 3 && python3 sabc/manage.py migrate --run-syncdb
 RUN coverage run --branch --source=sabc -m pytest
 CMD ["coverage", "report", "--show-missing"]
