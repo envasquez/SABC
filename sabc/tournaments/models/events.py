@@ -97,13 +97,15 @@ def get_next_event(event_type: str) -> Events | None:
     )
     if not events:
         return None
-
-    current_event: Events = events[now.month - 1]  # Offset for 0th element
+    current_event: Events = events[now.month - 1]  # Offset for the 0th element
     if now.day <= current_event.date.day:
         return current_event
-
     try:
-        # Return the next event
-        return events[now.month]
+        # See if this is the last event of the year
+        if current_event == events.last():
+            return Events.objects.filter(type=event_type, year=year + 1).order_by(
+                "date"
+            )[0]
+        return current_event
     except IndexError:
         return None
