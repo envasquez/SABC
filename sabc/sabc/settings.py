@@ -26,6 +26,7 @@ INSTALLED_APPS: list[str] = [
     "polls",
     "tournaments",
     "crispy_forms",
+    "crispy_bootstrap4",
     "django_tables2",
     "phonenumber_field",
     "django_extensions",
@@ -117,6 +118,7 @@ USE_TZ: bool = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
+CRISPY_ALLOWED_TEMPLATE_PACKS: str = "bootstrap4"
 CRISPY_TEMPLATE_PACK: str = "bootstrap4"
 
 STATIC_URL: str = "/static/"
