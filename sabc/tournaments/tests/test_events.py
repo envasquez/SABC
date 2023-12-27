@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-import datetime
+# import datetime
 
-import pytest
+# import pytest
 
-from ..models.events import Events, get_next_event
+# from ..models.events import Events, get_next_event
 
 
 # @pytest.mark.django_db
