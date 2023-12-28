@@ -3,9 +3,9 @@ version: '3.9'
 services:
 
   db:
-    image: postgres
+    image: postgres:15
     volumes:
-    - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
     env_file:
       - db_vars.env
@@ -16,12 +16,7 @@ services:
     build: .
     container_name: sabc
     command: >
-            sh -c "
-            python sabc/manage.py makemigrations
-            && python sabc/manage.py migrate --run-syncdb --noinput
-            && ./create_superuser.sh
-            && python sabc/manage.py runserver 0.0.0.0:80
-            "
+      sh -c " python sabc/manage.py makemigrations && python sabc/manage.py migrate --run-syncdb --noinput && ./create_superuser.sh && python sabc/manage.py runserver 0.0.0.0:80 "
     restart: unless-stopped
     volumes:
       - .:/app
