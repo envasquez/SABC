@@ -88,39 +88,8 @@ class Events(Model):
 
 def get_next_event(event_type: str) -> Events | None:
     """Return the next event, relative to 'today'"""
-    # now: datetime.datetime = datetime.datetime.now(pytz.timezone("US/Central"))
-    # year: int = now.year
-    # if (
-    #     now.month == 12 and now.day > 15
-    # ):  # We never fish past this date ... goto next year
-    #     year += 1
-
-    # events: QuerySet = Events.objects.filter(type=event_type, year=year).order_by(
-    #     "date"
-    # )
-    # if not events:
-    #     return None
-    # try:
-    #     current_event: Events = events[now.month - 1]  # Offset for the 0th element
-    #     if now.day <= current_event.date.day:
-    #         return current_event
-    #     # See if this is the last event of the year
-    #     if current_event == events.last():
-    #         return (
-    #             Events.objects.filter(type=event_type, year=year + 1)
-    #             .order_by("date")
-    #             .first()
-    #         )
-    #     return current_event
-    # except IndexError:
-    #     return None
     now = timezone.now()
     year = now.year
-
-    # if now.month == 12 and now.day > 15:
-    #     # We never fish past this date ... goto next year
-    #     year += 1
-
     events = (
         Events.objects.filter(Q(year=year, date__gte=now) | Q(year=year + 1))
         .filter(type=event_type)
