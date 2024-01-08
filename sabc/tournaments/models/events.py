@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
 
-import pytz
 from django.db.models import (
     CharField,
     DateField,
@@ -87,7 +86,7 @@ class Events(Model):
 
 
 def get_next_event(event_type: str) -> Events | None:
-    """Return the next event, relative to 'today'"""
+    """Return the next event, relative to today'"""
     now = timezone.now()
     year = now.year
     events = (
