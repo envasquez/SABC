@@ -5,7 +5,6 @@ from django.db.models import (
     CharField,
     DateField,
     Model,
-    QuerySet,
     SmallIntegerField,
     TextChoices,
     TimeField,
