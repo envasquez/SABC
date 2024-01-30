@@ -2,13 +2,21 @@
 {% load django_tables2 %}
 {% block content %}
     <h1>{{ title }}</h1>
+    {% if title == '2024 Awards' %}
+        <div align="right">
+            <a href="{% url 'annual-awards' 2022 %}" class="btn btn-secondary btn-sm" role="button">2022 Awards</a>
+            <a href="{% url 'annual-awards' 2023 %}" class="btn btn-secondary btn-sm" role="button">2023 Awards</a>
+        </div>
+    {% endif %}
     {% if title == '2023 Awards' %}
         <div align="right">
             <a href="{% url 'annual-awards' 2022 %}" class="btn btn-secondary btn-sm" role="button">2022 Awards</a>
+            <a href="{% url 'annual-awards' 2024 %}" class="btn btn-secondary btn-sm" role="button">2024 Awards</a>
         </div>
     {% endif %}
     {% if title == '2022 Awards' %}
         <div align="right">
+            <a href="{% url 'annual-awards' 2024 %}" class="btn btn-secondary btn-sm" role="button">2024 Awards</a>
             <a href="{% url 'annual-awards' 2023 %}" class="btn btn-secondary btn-sm" role="button">2023 Awards</a>
         </div>
     {% endif %}

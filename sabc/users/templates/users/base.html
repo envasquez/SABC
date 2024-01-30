@@ -30,7 +30,7 @@
                             <a class="nav-item nav-link" href="{% url 'about' %}">About</a>
                             <a class="nav-item nav-link" href="{% url 'bylaws' %}">Bylaws</a>
                             <a class="nav-item nav-link" href="{% url 'calendar' %}">Calendars</a>
-                            <a class="nav-item nav-link" href="{% url 'annual-awards' 2023 %}">Annual Awards</a>
+                            <a class="nav-item nav-link" href="{% url 'annual-awards' 2024 %}">Annual Awards</a>
                             {% if user.is_authenticated and user.angler.type != 'guest' %}
                                 <a class="nav-item nav-link" href="{% url 'polls' %}">Polls</a>
                                 <a class="nav-item nav-link" href="{% url 'roster' %}">Members</a>
