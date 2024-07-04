@@ -7,4 +7,4 @@ class UsersConfig(AppConfig):
 
     def ready(self) -> None:
         # pylint: disable=unused-import, import-outside-toplevel
-        from . import signals
+        pass

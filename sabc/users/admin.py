@@ -47,8 +47,8 @@ class AnglerAdmin(admin.ModelAdmin):
             csv_file: UploadedFile = request.FILES["csv_upload"]
             file_data: str = csv_file.read().decode("utf-8")
             members: list = []
-            for line in file_data.splitlines():
-                info: list = [l for l in line.strip().split(",") if l]
+            for lines in file_data.splitlines():
+                info: list = [line for line in lines.strip().split(",") if line]
                 if info:
                     members.append(info)
             messages.info(request, f"Members imported: {members}")

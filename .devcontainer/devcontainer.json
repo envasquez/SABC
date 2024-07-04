@@ -1,0 +1,26 @@
+{
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.debugpy",
+                "ms-vscode.makefile-tools",
+                "ms-python.vscode-pylance",
+                "ms-azuretools.vscode-docker"
+            ],
+            "settings": {
+                "extensions.verifySignature": false,
+                "python.analysis.extraPaths": [
+                    "/workspaces"
+                ],
+            }
+        }
+    },
+    "name": "Python",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+    "postCreateCommand": "poetry update",
+    "remoteUser": "sabc"
+}
