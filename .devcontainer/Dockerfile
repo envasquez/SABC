@@ -1,14 +1,22 @@
-FROM python:3.10-bullseye
-ENV PYTHONUNBUFFERED=1 \
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH="/app/sabc" \
+    POSTGRES_PASSWORD="sabc" \
     USER=sabc \
     POETRY_VERSION=1.5.0 \
-    PATH="/home/sabc/.local/bin:$PATH"
+    POETRY_HOME="/opt/poetry" \
+    POETRY_VIRTUALENVS_CREATE=false \
+    POETRY_NO_INTERACTION=1
+ENV PATH=${POETRY_HOME}/bin:${PATH}
+
 WORKDIR /app
-RUN curl -sSL https://install.python-poetry.org | python3 -
-COPY poetry.lock pyproject.toml /app/
+
+COPY ../poetry.lock ../pyproject.toml /app/
+
+RUN apt-get update && apt-get install -y curl && \
+    curl -sSL https://install.python-poetry.org | python3 -
 RUN poetry install --no-root
-RUN groupadd -r $USER && useradd -r -g $USER -d /home/$USER -s /bin/bash $USER \
-    && mkdir -p /home/$USER \
-    && chown -R $USER:$USER /home/$USER \
-    && chown -R $USER:$USER /app
-USER $USER
+
+ENTRYPOINT [ "poetry", "shell" ]

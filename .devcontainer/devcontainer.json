@@ -9,6 +9,7 @@
                 "ms-azuretools.vscode-docker"
             ],
             "settings": {
+                "terminal.integrated.shell.linux": "/bin/bash",
                 "extensions.verifySignature": false,
                 "python.analysis.extraPaths": [
                     "/workspaces"
@@ -20,7 +21,5 @@
     "build": {
         "dockerfile": "Dockerfile",
         "context": ".."
-    },
-    "postCreateCommand": "poetry update",
-    "remoteUser": "sabc"
+    }
 }
