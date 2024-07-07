@@ -16,10 +16,11 @@
                 ],
             }
         }
-    },
+    }
+    ,
     "name": "Python",
     "build": {
-        "dockerfile": "Dockerfile",
+        "dockerfile": "./Dockerfile",
         "context": ".."
     }
 }

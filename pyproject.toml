@@ -8,6 +8,16 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 Django = "^5.0.6"
+crispy-bootstrap4 = "^2024.1"
+psycopg2-binary = "^2.9.9"
+django-tables2 = "^2.7.0"
+django-phonenumber-field = "^8.0.0"
+django-extensions = "^3.2.3"
+django-phonenumbers = "^1.0.1"
+pillow = "^10.4.0"
+pytz = "^2024.1"
+pyyaml = "^6.0.1"
+django-betterforms = "^2.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest-cov = "^5.0.0"
