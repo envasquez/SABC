@@ -20,11 +20,12 @@ Place/Point Scenarios to test for
 - An angler is DQ'd and receives no points
 - A person fishing solo wins the TeamResult
 - Points are accurate:
-    100 -> N: for weighed results
+    100->N: for weighed results
        N - 2: for zeros (fished, but didn't catch/weigh-in)
        N - 3: for DQ but awarded points (if weighed fish)
        N - 4: Buy-ins
 """
+
 from decimal import Decimal
 from typing import Optional
 
@@ -36,7 +37,7 @@ from . import create_angler, create_angler_and_result
 
 
 @pytest.mark.django_db
-def test_guest_no_points() -> None:
+def test_guest_no_points():
     """Ensure that guests do not receive points ... and member points adjust accordinly.
 
     Create results for a tournament. Odd places will be members, even places will be guests.
@@ -62,21 +63,21 @@ def test_guest_no_points() -> None:
         if res.place_finish % 2 == 0:
             assert res.points == 0
             continue
-        assert res.points == previous.points - 1 if previous else tmnt.rules.max_points
+        assert res.points == previous.points - 1 if previous else tmnt.rules.max_points  # type: ignore
         previous = res
 
 
 @pytest.mark.django_db
-def test_guest_cant_win_bb() -> None:
+def test_guest_cant_win_bb():
     """Ensure that a guest cannot win the big bass prize
 
     Create a big bass result for a guest that is greater than a big bass result for a member.
     The member should win.
     Delete the member result, and call get_big_bass_winner(tid) and it should return None
     """
-    tmnt: Tournament = Tournament.objects.create()
+    tmnt = Tournament.objects.create()
     for idx in [1, 2]:
-        kwargs: dict = {
+        kwargs = {
             "angler": {"is_member": idx == 1},
             "result": {
                 "tournament": tmnt,
@@ -87,7 +88,7 @@ def test_guest_cant_win_bb() -> None:
         }
         create_angler_and_result(**kwargs)
 
-    winner: Result | None = get_big_bass_winner(tid=tmnt.id)
+    winner = get_big_bass_winner(tid=tmnt.id)
     assert winner.angler.member is True if winner else False
 
     if winner:
@@ -96,25 +97,25 @@ def test_guest_cant_win_bb() -> None:
 
 
 @pytest.mark.django_db
-def test_penalty_wt_calculation() -> None:
+def test_penalty_wt_calculation():
     """Create a result and make it have 2 dead fish.
 
     The total_weight should == total_weight - 2 * dead_fish_penalty
     """
-    tmnt: Tournament = Tournament.objects.create()
-    kwargs: dict = {
+    tmnt = Tournament.objects.create()
+    kwargs = {
         "angler": create_angler(),
         "tournament": tmnt,
         "num_fish": 5,
         "num_fish_dead": 2,
         "total_weight": Decimal("5"),
     }
-    result: Result = Result.objects.create(**kwargs)
+    result = Result.objects.create(**kwargs)
     assert result.total_weight == Decimal("5") - (2 * tmnt.rules.dead_fish_penalty)
 
 
 @pytest.mark.django_db
-def test_dq_with_points() -> None:
+def test_dq_with_points():
     """Ensures that a dq with points gets 3 less points, than the last weighed in results points
 
     Create 5 results (all members): R1: Non-zero winner, R2: Non-zero, R3: Non-zero, R4: Zero, R5: Buy-in
@@ -125,11 +126,11 @@ def test_dq_with_points() -> None:
     4: R5 = R3 - 4
     5: R2 = R3 - 3
     """
-    tmnt: Tournament = Tournament.objects.create()
-    result_1: Result = create_angler_and_result(
+    tmnt = Tournament.objects.create()
+    result_1 = create_angler_and_result(
         **{"result": {"tournament": tmnt, "total_weight": Decimal("25"), "num_fish": 5}}
     )
-    result_2: Result = create_angler_and_result(
+    result_2 = create_angler_and_result(
         **{
             "result": {
                 "tournament": tmnt,
@@ -139,13 +140,13 @@ def test_dq_with_points() -> None:
             }
         }
     )
-    result_3: Result = create_angler_and_result(
+    result_3 = create_angler_and_result(
         **{"result": {"tournament": tmnt, "total_weight": Decimal("23"), "num_fish": 5}}
     )
-    result_4: Result = create_angler_and_result(
+    result_4 = create_angler_and_result(
         **{"result": {"tournament": tmnt, "total_weight": Decimal("00"), "num_fish": 0}}
     )
-    result_5: Result = create_angler_and_result(
+    result_5 = create_angler_and_result(
         **{"result": {"tournament": tmnt, "buy_in": True}}
     )
 
@@ -159,11 +160,11 @@ def test_dq_with_points() -> None:
             == Result.objects.get(tournament=tmnt, place_finish=place).angler
         )
 
-    winner: Result = Result.objects.get(tournament=tmnt, place_finish=1)
-    second: Result = Result.objects.get(tournament=tmnt, place_finish=2)
-    third: Result = Result.objects.get(tournament=tmnt, place_finish=3)
-    fourth: Result = Result.objects.get(tournament=tmnt, place_finish=4)
-    fifth: Result = Result.objects.get(tournament=tmnt, place_finish=5)
+    winner = Result.objects.get(tournament=tmnt, place_finish=1)
+    second = Result.objects.get(tournament=tmnt, place_finish=2)
+    third = Result.objects.get(tournament=tmnt, place_finish=3)
+    fourth = Result.objects.get(tournament=tmnt, place_finish=4)
+    fifth = Result.objects.get(tournament=tmnt, place_finish=5)
 
     assert result_1.angler == winner.angler and winner.points == tmnt.rules.max_points
     assert result_3.angler == second.angler and second.points == winner.points - 1
@@ -173,7 +174,7 @@ def test_dq_with_points() -> None:
 
 
 @pytest.mark.django_db
-def test_team_result_dq() -> None:
+def test_team_result_dq():
     """Ensures that a DQ'd result is not added to a team result
 
     R1 is a non-zero result
@@ -181,10 +182,10 @@ def test_team_result_dq() -> None:
     Create a Team that consists of R1 & R2
     Verify that all team result stats are the same as R1
     """
-    tmnt: Tournament = Tournament.objects.create()
-    results: list = []
+    tmnt = Tournament.objects.create()
+    results = []
     for idx in [1, 2]:
-        kwargs: dict = {
+        kwargs = {
             "result": {
                 "tournament": tmnt,
                 "total_weight": Decimal("10"),
@@ -194,7 +195,7 @@ def test_team_result_dq() -> None:
         }
         results.append(create_angler_and_result(**kwargs))
 
-    team_result: TeamResult = TeamResult.objects.create(
+    team_result = TeamResult.objects.create(
         tournament=tmnt, result_1=results[0], result_2=results[1]
     )
     assert team_result.total_weight == results[1].total_weight

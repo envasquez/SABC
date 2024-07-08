@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
-from django.core.files.uploadedfile import UploadedFile
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import path, reverse
 from tournaments.forms import YamlImportForm
-from users.models import Angler, Officers
 from yaml import safe_load
+
+from users.models import Angler, Officers
 
 from .forms import CsvImportForm
 
 User = get_user_model()
 
 
-def create_angler(name: str, email: str, phone: str) -> None:
+def create_angler(name, email, phone):
     """Creates a user and Angler in the database"""
     phone = phone.replace("-", "")
     fname, lname = name.split()
-    username: str = f"{fname[0].lower()}_{lname.lower()}"
+    username = f"{fname[0].lower()}_{lname.lower()}"
     #
     # Create a User
     #
@@ -30,32 +30,32 @@ def create_angler(name: str, email: str, phone: str) -> None:
     #
     # Create a corresponding Angler
     #
-    angler: Angler = Angler.objects.get(user=user)
+    angler = Angler.objects.get(user=user)
     angler.phone_number = f"+1{phone}"
     angler.member = True
     angler.save()
 
 
 class AnglerAdmin(admin.ModelAdmin):
-    def get_urls(self) -> list:
+    def get_urls(self):
         return [path("upload-csv/", self.upload_csv)] + super().get_urls()
 
-    def upload_csv(self, request) -> HttpResponseRedirect | HttpResponse:
-        form: CsvImportForm = CsvImportForm()
-        data: dict[str, CsvImportForm] = {"form": form}
+    def upload_csv(self, request):
+        form = CsvImportForm()
+        data = {"form": form}
         if request.method == "POST":
-            csv_file: UploadedFile = request.FILES["csv_upload"]
-            file_data: str = csv_file.read().decode("utf-8")
-            members: list = []
+            csv_file = request.FILES["csv_upload"]
+            file_data = csv_file.read().decode("utf-8")
+            members = []
             for lines in file_data.splitlines():
-                info: list = [line for line in lines.strip().split(",") if line]
+                info = [line for line in lines.strip().split(",") if line]
                 if info:
                     members.append(info)
             messages.info(request, f"Members imported: {members}")
             for angler in members[2:]:
                 try:
                     create_angler(name=angler[0], email=angler[1], phone=angler[2])
-                except Exception as err:  # pylint: disable=broad-except
+                except Exception as err:
                     messages.error(request, f"{err}")
                     messages.error(
                         request, f"Error creating Angler: {angler[0]} - Skipping!"
@@ -65,25 +65,23 @@ class AnglerAdmin(admin.ModelAdmin):
 
 
 class OfficersAdmin(admin.ModelAdmin):
-    def get_urls(self) -> list:
+    def get_urls(self):
         return [path("upload-officers/", self.upload_officers)] + super().get_urls()
 
-    def upload_officers(self, request) -> HttpResponseRedirect | HttpResponse:
-        form: YamlImportForm = YamlImportForm()
-        data: dict[str, YamlImportForm] = {"form": form}
+    def upload_officers(self, request):
+        form = YamlImportForm()
+        data = {"form": form}
         if request.method == "POST":
-            results: list = []
-            file_data: dict = safe_load(request.FILES["yaml_upload"])
-            last_name: str
-            first_name: str
+            results = []
+            file_data = safe_load(request.FILES["yaml_upload"])
             for year, officer in file_data.items():
                 for position, name in officer.items():
                     first_name, last_name = name.split(" ")
                     try:
-                        angler: Angler = Angler.objects.get(
+                        angler = Angler.objects.get(
                             user__first_name=first_name, user__last_name=last_name
                         )
-                    except Exception:  # pylint: disable=broad-except
+                    except Exception:
                         messages.error(
                             request, f"Error: creating {year}:{name} - {position}"
                         )

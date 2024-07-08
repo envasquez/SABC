@@ -245,6 +245,16 @@ files = [
 ]
 
 [[package]]
+name = "names"
+version = "0.3.0"
+description = "Generate random names"
+optional = false
+python-versions = "*"
+files = [
+    {file = "names-0.3.0.tar.gz", hash = "sha256:726e46254f2ed03f1ffb5d941dae3bc67c35123941c29becd02d48d0caa2a671"},
+]
+
+[[package]]
 name = "nodeenv"
 version = "1.9.1"
 description = "Node.js virtual environment builder"
@@ -677,4 +687,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "fe1e4f0c43a710de61d936c335b934137a49b1f6da77c18e390bbf4692a00803"
+content-hash = "55339c7d778c8a71a0780ce20054ee53be2863e112e0be5e4eaaab18f2aa6d8b"

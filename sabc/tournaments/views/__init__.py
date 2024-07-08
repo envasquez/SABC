@@ -3,19 +3,19 @@ from decimal import Decimal
 from typing import Optional
 
 from django.db.models import QuerySet
-from django.shortcuts import HttpResponse, render
+from django.shortcuts import render
 
 from ..models.results import Result
 from ..tables import Aoy as AoyTable
 from ..tables import BigBass, HeavyStringer
 
 
-def annual_awards(request, year: int = 0) -> HttpResponse:
+def annual_awards(request, year=0):
     year = year or datetime.date.today().year
-    aoy_tbl: AoyTable = AoyTable(get_aoy_results(year=year))
+    aoy_tbl = AoyTable(get_aoy_results(year=year))
     aoy_tbl.order_by = "-total_points"
-    hvy_tbl: HeavyStringer = HeavyStringer(get_heavy_stringer(year=year))
-    bb_tbl: BigBass = BigBass(get_big_bass(year=year))
+    hvy_tbl = HeavyStringer(get_heavy_stringer(year=year))
+    bb_tbl = BigBass(get_big_bass(year=year))
     return render(
         request,
         "tournaments/annual_awards.html",
@@ -29,16 +29,16 @@ def annual_awards(request, year: int = 0) -> HttpResponse:
     )
 
 
-def get_aoy_results(year: int = datetime.date.today().year) -> list:
-    all_results: QuerySet = Result.objects.filter(
+def get_aoy_results(year=datetime.date.today().year):
+    all_results = Result.objects.filter(
         tournament__event__year=year, angler__user__is_active=True, angler__member=True
     )
-    anglers: list = []
+    anglers = []
     for result in all_results:
         if all((result.angler not in anglers, result.angler.member)):
             anglers.append(result.angler)
 
-    results: list = []
+    results = []
     for angler in anglers:
         stats = {
             "angler": angler.user.get_full_name(),
@@ -53,8 +53,8 @@ def get_aoy_results(year: int = datetime.date.today().year) -> list:
     return results
 
 
-def get_heavy_stringer(year: int = datetime.date.today().year) -> list:
-    result: Optional[Result] = (
+def get_heavy_stringer(year=datetime.date.today().year):
+    result = (
         Result.objects.filter(
             tournament__event__year=year,
             angler__member=True,
@@ -76,7 +76,7 @@ def get_heavy_stringer(year: int = datetime.date.today().year) -> list:
     return []
 
 
-def get_big_bass(year=datetime.date.today().year) -> list:
+def get_big_bass(year=datetime.date.today().year):
     query: Optional[Result] = (
         Result.objects.filter(
             tournament__event__year=year,

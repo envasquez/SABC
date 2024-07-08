@@ -16,15 +16,15 @@ else
 	LOG_LEVEL := INFO
 endif
 
-.PHONY: clean lint format
+.PHONY: clean format
 
 clean:
 	find $(PROJECT) -name "*.pyc" -type f -delete
 	find $(PROJECT) -name "__pycache__" -type d -delete
 
-lint: clean
-	ruff check --select I --fix sabc $(VERBOSE) && \
-	PYRIGHT_PYTHON_FORCE_VERSION="latest" pyright $(VERBOSE)
-
 format:
 	ruff format $(VERBOSE) .
+
+lint: clean
+	ruff check --select I --fix sabc $(VERBOSE)
+	PYRIGHT_PYTHON_FORCE_VERSION="latest" pyright $(VERBOSE)

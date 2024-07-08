@@ -5,64 +5,61 @@ from django.db.models import (
     CharField,
     DateField,
     Model,
+    Q,
     SmallIntegerField,
     TextChoices,
     TimeField,
 )
 from django.utils import timezone
-from django.db.models import Q
 
-
-DEFAULT_MEETING_START: datetime.time = datetime.datetime.time(
+DEFAULT_MEETING_START = datetime.datetime.time(
     datetime.datetime.strptime("7:00 pm", "%I:%M %p")
 )
-DEFAULT_MEETING_FINISH: datetime.time = datetime.datetime.time(
+DEFAULT_MEETING_FINISH = datetime.datetime.time(
     datetime.datetime.strptime("8:00 pm", "%I:%M %p")
 )
-DEFAULT_TOURNAMENT_START: datetime.time = datetime.datetime.time(
+DEFAULT_TOURNAMENT_START = datetime.datetime.time(
     datetime.datetime.strptime("12:00 am", "%I:%M %p")
 )
-DEFAULT_TOURNAMENT_FINISH: datetime.time = datetime.datetime.time(
+DEFAULT_TOURNAMENT_FINISH = datetime.datetime.time(
     datetime.datetime.strptime("12:00 am", "%I:%M %p")
 )
 
 
 class Events(Model):
     class Meta:
-        ordering: tuple[str] = ("-year",)
-        verbose_name_plural: str = "Events"
+        ordering = ("-year",)
+        verbose_name_plural = "Events"
 
     class EventTypes(TextChoices):
-        MEETING: str = "meeting"
-        TOURNAMNET: str = "tournament"
+        MEETING = "meeting"
+        TOURNAMNET = "tournament"
 
     class Months(TextChoices):
-        JANUARY: str = "january"
-        FEBRUARY: str = "february"
-        MARCH: str = "march"
-        APRIL: str = "april"
-        MAY: str = "may"
-        JUNE: str = "june"
-        JULY: str = "july"
-        AUGUST: str = "august"
-        SEPTEMBER: str = "september"
-        OCTOBER: str = "october"
-        NOVEMBER: str = "november"
-        DECEMBER: str = "december"
+        JANUARY = "january"
+        FEBRUARY = "february"
+        MARCH = "march"
+        APRIL = "april"
+        MAY = "may"
+        JUNE = "june"
+        JULY = "july"
+        AUGUST = "august"
+        SEPTEMBER = "september"
+        OCTOBER = "october"
+        NOVEMBER = "november"
+        DECEMBER = "december"
 
-    date: DateField = DateField(null=True, blank=True)
-    type: CharField = CharField(
-        choices=EventTypes.choices, default="tournament", max_length=25
-    )
-    year: SmallIntegerField = SmallIntegerField(default=datetime.date.today().year)
-    month: CharField = CharField(choices=Months.choices, max_length=20)
-    start: TimeField = TimeField(null=True, blank=True)
-    finish: TimeField = TimeField(null=True, blank=True)
+    date = DateField(null=True, blank=True)
+    type = CharField(choices=EventTypes.choices, default="tournament", max_length=25)
+    year = SmallIntegerField(default=datetime.date.today().year)
+    month = CharField(choices=Months.choices, max_length=20)
+    start = TimeField(null=True, blank=True)
+    finish = TimeField(null=True, blank=True)
 
-    def __str__(self) -> str:
+    def __str__(self):
         return f"{self.type} {self.date} {self.start}-{self.finish}".title()
 
-    def as_html(self) -> str:
+    def as_html(self):
         dmy = self.date.strftime("%d %B %Y")
         start = self.start.strftime("%I:%M %p")
         finish = self.finish.strftime("%I:%M %p")
@@ -70,7 +67,7 @@ class Events(Model):
             return f"{self.type.upper()}<br />{dmy} Time: TBD<br />"
         return f"{self.type.upper()}<br />{dmy}<br />{start}-{finish}<br />"
 
-    def save(self, *args, **kwargs) -> None:
+    def save(self, *args, **kwargs):
         if not self.start:
             if self.type == "tournament":
                 self.start = DEFAULT_TOURNAMENT_START
@@ -84,7 +81,7 @@ class Events(Model):
         super().save(*args, **kwargs)
 
 
-def get_next_event(event_type: str) -> Events | None:
+def get_next_event(event_type):
     """Return the next event, relative to today'"""
     now = timezone.now()
     year = now.year

@@ -2,19 +2,19 @@
 
 from django.db.models import PROTECT, BooleanField, CharField, ForeignKey, Model
 
-DEFAULT_LAKE_STATE: str = "TX"
+DEFAULT_LAKE_STATE = "TX"
 
 
 class Lake(Model):
-    name: CharField = CharField(default="TBD", max_length=256)
-    paper: BooleanField = BooleanField(default=False)
-    google_maps: CharField = CharField(default="", max_length=4096)
+    name = CharField(default="TBD", max_length=256)
+    paper = BooleanField(default=False)
+    google_maps = CharField(default="", max_length=4096)
 
     class Meta:
-        ordering: tuple = ("name",)
-        verbose_name_plural: str = "Lakes"
+        ordering = ("name",)
+        verbose_name_plural = "Lakes"
 
-    def __str__(self) -> str:
+    def __str__(self):
         # A little bit of custom code for a few of our local Texas lakes :-)
         if self.name in ["fayette county reservoir", "choke canyon reservoir"]:
             return self.name.title()
@@ -24,19 +24,19 @@ class Lake(Model):
             else f"{self.name} lake".title()
         )
 
-    def save(self, *args, **kwargs) -> None:
-        self.name: str = self.name.lower().replace("lake", "")
+    def save(self, *args, **kwargs):
+        self.name = self.name.lower().replace("lake", "")
         return super().save(*args, **kwargs)
 
 
 class Ramp(Model):
-    lake: ForeignKey = ForeignKey(Lake, on_delete=PROTECT)
-    name: CharField = CharField(max_length=128)
-    google_maps: CharField = CharField(default="", max_length=4096)
+    lake = ForeignKey(Lake, on_delete=PROTECT)
+    name = CharField(max_length=128)
+    google_maps = CharField(default="", max_length=4096)
 
     class Meta:
-        ordering: tuple = ("lake__name",)
-        verbose_name_plural: str = "Ramps"
+        ordering = ("lake__name",)
+        verbose_name_plural = "Ramps"
 
-    def __str__(self) -> str:
+    def __str__(self):
         return f"{self.lake}: {self.name.title()}"
