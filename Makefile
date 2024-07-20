@@ -29,9 +29,9 @@ lint: clean
 	PYRIGHT_PYTHON_FORCE_VERSION="latest" pyright $(VERBOSE)
 
 test: clean
-	docker build -f Dockerfile.tests -t test_sabc . --no-cache
+	docker build -f docker/Dockerfile.tests -t test_sabc . --no-cache
 	docker run test_sabc
 
 webapp: clean
 	docker compose down
-	docker compose -f deploy/docker-compose.yml up --build
+	docker compose -f docker/docker-compose.yml up --build
