@@ -2,6 +2,7 @@
 from random import randint
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from names import get_first_name, get_last_name
 from users.models import Angler
 from yaml import safe_load
@@ -10,8 +11,6 @@ from sabc.settings import BASE_DIR
 
 from ..models.lakes import Lake, Ramp
 from ..models.results import Result
-
-User = get_user_model()
 
 
 def load_lakes_from_yaml(yaml_file):
@@ -40,19 +39,19 @@ def create_angler(first_name="", last_name="", is_member=True):
     Returns:
         (Angler) An Angler object that was created with random names and other information
     """
-    last_name = get_last_name() if not last_name else last_name
     first_name = get_first_name() if not first_name else first_name
-    user = User.objects.create(
-        username=first_name[0].lower() + last_name.lower() + str(randint(1000, 9999)),
+    last_name = get_last_name() if not last_name else last_name
+
+    user = User.objects.create_user(
+        username=first_name + last_name + str(randint(1000, 9999)),
+        password="testpassword" + str(randint(1000, 9999)),
         first_name=first_name,
         last_name=last_name,
         email=f"{first_name}.{last_name}@unittest.com",
     )
-    angler = Angler.objects.get(user=user)
-    angler.phone_number = f"+{randint(10000000000, 99999999999)}"
-    angler.member = is_member
-    angler.save()
-    return angler
+    return Angler.objects.create(
+        user=user, member=True if is_member else False, phone_number="1234567890"
+    )
 
 
 def create_angler_and_result(**kwargs):

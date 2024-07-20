@@ -19,12 +19,21 @@ pytz = "^2024.1"
 pyyaml = "^6.0.1"
 django-betterforms = "^2.0.0"
 names = "^0.3.0"
+pyright = "^1.1.372"
+requests = "^2.32.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest-cov = "^5.0.0"
 ruff = "^0.5.0"
 pyright = "^1.1.370"
+coverage = "^7.5.4"
+pytest-coverage = "^0.0"
+pytest = "^8.2.2"
+pytest-django = "^4.8.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "sabc.settings"

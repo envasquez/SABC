@@ -2,6 +2,7 @@
 import datetime
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from django.db.models import (
     PROTECT,
     BooleanField,
@@ -19,8 +20,6 @@ from django.utils import timezone
 from phonenumber_field.modelfields import PhoneNumberField
 from PIL import Image as image
 from PIL.Image import Image
-
-User = get_user_model()
 
 
 class MemberManager(Manager):

@@ -46,7 +46,7 @@ class LakePoll(Model):
             self.complete = True
         elif datetime.date.today() == self.end_date:
             now = datetime.datetime.now(pytz.timezone("US/Central"))
-            self.complete =  now > self.end_time  # pyright: ignore[reportOperatorIssue]
+            self.complete = now > self.end_time  # pyright: ignore[reportOperatorIssue]
         super().save(*args, **kwargs)
 
 

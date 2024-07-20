@@ -27,9 +27,12 @@ Place/Point Scenarios to test for
 """
 
 from decimal import Decimal
-from typing import Optional
 
+import django
 import pytest
+from django.conf import settings
+from django.contrib.auth.models import User
+from users.models import Angler
 
 from ..models.results import Result, TeamResult
 from ..models.tournaments import Tournament, get_big_bass_winner, set_points
@@ -43,14 +46,15 @@ def test_guest_no_points():
     Create results for a tournament. Odd places will be members, even places will be guests.
     Ensure that guest points are zero, and member points start at max and decrement by 1 for each member result
     """
-    tmnt: Tournament = Tournament.objects.create()
-    for num in range(1, 11):
-        angler: dict = {
+    tmnt = Tournament.objects.create()
+    for num in range(0, 11):
+        print(f"Num is: {num}")
+        angler = {
             "first_name": "Angler",
             "last_name": f"{num}",
             "is_member": num % 2 == 0,
         }
-        result: dict = {
+        result = {
             "tournament": tmnt,
             "total_weight": Decimal("5") + num,
             "num_fish": 5,
@@ -58,11 +62,13 @@ def test_guest_no_points():
         create_angler_and_result(**{"angler": angler, "result": result})
 
     set_points(tid=tmnt.id)
-    previous: Optional[Result] = None
+    previous = None
     for res in Result.objects.filter(tournament=tmnt).order_by("place_finish"):
         if res.place_finish % 2 == 0:
-            assert res.points == 0
-            continue
+            a = res.angler
+            if not res.angler.member:
+                assert res.points == 0
+                continue
         assert res.points == previous.points - 1 if previous else tmnt.rules.max_points  # type: ignore
         previous = res
 
@@ -75,6 +81,8 @@ def test_guest_cant_win_bb():
     The member should win.
     Delete the member result, and call get_big_bass_winner(tid) and it should return None
     """
+    import pprint
+
     tmnt = Tournament.objects.create()
     for idx in [1, 2]:
         kwargs = {
@@ -86,7 +94,7 @@ def test_guest_cant_win_bb():
                 "big_bass_weight": Decimal("10") if idx == 1 else Decimal("11"),
             },
         }
-        create_angler_and_result(**kwargs)
+        r = create_angler_and_result(**kwargs)
 
     winner = get_big_bass_winner(tid=tmnt.id)
     assert winner.angler.member is True if winner else False
@@ -111,7 +119,7 @@ def test_penalty_wt_calculation():
         "total_weight": Decimal("5"),
     }
     result = Result.objects.create(**kwargs)
-    assert result.total_weight == Decimal("5") - (2 * tmnt.rules.dead_fish_penalty)
+    assert result.total_weight == Decimal("5") - (2 * tmnt.rules.dead_fish_penalty)  # type: ignore
 
 
 @pytest.mark.django_db
@@ -166,11 +174,11 @@ def test_dq_with_points():
     fourth = Result.objects.get(tournament=tmnt, place_finish=4)
     fifth = Result.objects.get(tournament=tmnt, place_finish=5)
 
-    assert result_1.angler == winner.angler and winner.points == tmnt.rules.max_points
-    assert result_3.angler == second.angler and second.points == winner.points - 1
-    assert result_4.angler == third.angler and third.points == second.points - 2
-    assert result_5.angler == fourth.angler and fourth.points == second.points - 4
-    assert result_2.angler == fifth.angler and fifth.points == second.points - 3
+    assert result_1.angler == winner.angler and winner.points == tmnt.rules.max_points  # type: ignore
+    assert result_3.angler == second.angler and second.points == winner.points - 1  # type: ignore
+    assert result_4.angler == third.angler and third.points == second.points - 2  # type: ignore
+    assert result_5.angler == fourth.angler and fourth.points == second.points - 4  # type: ignore
+    assert result_2.angler == fifth.angler and fifth.points == second.points - 3  # type: ignore
 
 
 @pytest.mark.django_db

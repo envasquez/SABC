@@ -37,7 +37,7 @@ class Result(Model):
 
     def __str__(self):
         place = f"{self.place_finish}.{self.angler}"
-        weight = f"{self.num_fish} fish for:{self.total_weight}lbs"
+        weight = f"{self.num_fish} fish for: {self.total_weight}lbs"
         points = f"[{self.points}pts]" if self.tournament.points_count else ""
         if self.buy_in:
             weight = "Buy-in"

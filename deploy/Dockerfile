@@ -12,12 +12,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y gcc libpq-dev
 
-# COPY sabc /app/
-# ADD docker/django_vars.env /app
-# ADD docker/db_vars.env /app
-# ADD docker/create_superuser.sh /app
 ADD docker/requirements.txt /app
-
 RUN pip install -r requirements.txt
 
 RUN useradd -m $USER && chown -R ${USER}:${USER} /app
