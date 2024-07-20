@@ -1,9 +1,7 @@
 SHELL := /bin/bash -e
 PYTHON := python3
 PROJECT := sabc
-POETRY_ENV_BIN := $(shell poetry env info --path)/bin
 CURRENT_PATH := $(PATH)
-PATH := $(POETRY_ENV_BIN):$(PATH)
 
 DEBUG =
 VERBOSE =
@@ -17,7 +15,6 @@ else
 endif
 
 .PHONY: clean format lint test
-export PYTHONPATH=$(shell pwd)/sabc
 
 clean:
 	find $(PROJECT) -name "*.pyc" -type f -delete
