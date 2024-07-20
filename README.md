@@ -9,7 +9,7 @@
 ---
 
 # Background
-The COVID-19 pandemic wiped out a lot of tournament bass fishing in our local area (Austin, Tx) for the past couple of years. Member attendance for our Bass Fishing Club meetings and tournaments lowered & stopped completely when lockdown protocols occured. Since the lockdown, attendance has remained low and growth has slowed. We've tried various methods to increase participation but some are only effective for short periods of time. We'd like to try to leverage technology to fill in gaps of member participation while honoring: 1 member 1 vote.
+In 2018, the COVID-19 pandemic wiped out a lot of tournament bass fishing in our local area (Austin, Tx) for the past couple of years. Member attendance for our Bass Fishing Club meetings and tournaments lowered & stopped completely when lockdown protocols occured. Since the lockdown, attendance has remained low and growth has slowed. We've tried various methods to increase participation but some are only effective for short periods of time. We'd like to try to leverage technology to fill in gaps of member participation while honoring: 1 member 1 vote.
 
 *Some* of our South Austin Bass Club (SABC) process is manual & hand-written which is not archivable or mineable for data purposes. Our tournament director has kept some spreadsheets on-line (Googledocs) that we may be able injest for historical data. We can possibly use this data for insights about making more informed choices for tournament events in the future.
 
