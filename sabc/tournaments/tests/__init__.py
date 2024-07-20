@@ -2,7 +2,7 @@
 from random import randint
 
 from django.contrib.auth import get_user_model
-from django.db.models import QuerySet
+from django.contrib.auth.models import User
 from names import get_first_name, get_last_name
 from users.models import Angler
 from yaml import safe_load
@@ -12,14 +12,11 @@ from sabc.settings import BASE_DIR
 from ..models.lakes import Lake, Ramp
 from ..models.results import Result
 
-User = get_user_model()
 
-
-def load_lakes_from_yaml(yaml_file: str) -> QuerySet:
+def load_lakes_from_yaml(yaml_file):
     with open(yaml_file, "r", encoding="utf-8") as lakes:
-        lake_data: dict = safe_load(lakes)
+        lake_data = safe_load(lakes)
     for lake_name in lake_data:
-        lake: Lake
         lake, _ = Lake.objects.get_or_create(
             name=lake_name,
             paper=lake_data[lake_name].get("paper", False),
@@ -32,9 +29,7 @@ def load_lakes_from_yaml(yaml_file: str) -> QuerySet:
     return Lake.objects.all()
 
 
-def create_angler(
-    first_name: str = "", last_name: str = "", is_member: bool = True
-) -> Angler:
+def create_angler(first_name="", last_name="", is_member=True):
     """Creates an Angler object.
 
     Args:
@@ -44,29 +39,29 @@ def create_angler(
     Returns:
         (Angler) An Angler object that was created with random names and other information
     """
-    last_name = get_last_name() if not last_name else last_name
     first_name = get_first_name() if not first_name else first_name
-    user: User = User.objects.create(  # type: ignore
-        username=first_name[0].lower() + last_name.lower() + str(randint(1000, 9999)),
+    last_name = get_last_name() if not last_name else last_name
+
+    user = User.objects.create_user(
+        username=first_name + last_name + str(randint(1000, 9999)),
+        password="testpassword" + str(randint(1000, 9999)),
         first_name=first_name,
         last_name=last_name,
         email=f"{first_name}.{last_name}@unittest.com",
     )
-    angler: Angler = Angler.objects.get(user=user)
-    angler.phone_number = f"+{randint(10000000000, 99999999999)}"
-    angler.member = is_member
-    angler.save()
-    return angler
+    return Angler.objects.create(
+        user=user, member=True if is_member else False, phone_number="1234567890"
+    )
 
 
-def create_angler_and_result(**kwargs: dict) -> Result:
-    a_kwargs: dict = kwargs.get("angler", {})
-    r_kwargs: dict = kwargs.get("result", {})
-    angler: Angler = create_angler(**a_kwargs)
+def create_angler_and_result(**kwargs):
+    a_kwargs = kwargs.get("angler", {})
+    r_kwargs = kwargs.get("result", {})
+    angler = create_angler(**a_kwargs)
     return Result.objects.create(angler=angler, **r_kwargs)
 
 
-LENGTH_TO_WEIGHT: list[tuple[float, float]] = [
+LENGTH_TO_WEIGHT = [
     (29.875, 17.50),
     (12.0, 0.87),
     (0.25, 0.00),
@@ -81,7 +76,7 @@ LENGTH_TO_WEIGHT: list[tuple[float, float]] = [
     (16.875, 2.68),
     (17.75, 3.16),
 ]
-WEIGHT_TO_LENGTH: list[tuple[float, float]] = [
+WEIGHT_TO_LENGTH = [
     (1.46, 14.00),
     (11.85, 26.50),
     (0.12, 0.00),

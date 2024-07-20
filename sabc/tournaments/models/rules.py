@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=line-too-long
 import datetime
 from decimal import Decimal
 
@@ -66,28 +65,28 @@ tournament and voted on and approved by at least three officers
 
 
 class RuleSet(Model):
-    year: SmallIntegerField = SmallIntegerField(default=datetime.date.today().year)
-    name: CharField = CharField(
+    year = SmallIntegerField(default=datetime.date.today().year)
+    name = CharField(
         default=f"SABC Default Rules {datetime.date.today().year}", max_length=100
     )
-    rules: TextField = TextField(default=RULE_INFO)
-    payout: TextField = TextField(default=PAYOUT_INFO)
-    weigh_in: TextField = TextField(default=WEIGH_IN_INFO)
-    entry_fee: TextField = TextField(default=PAYMENT_INFO)
-    limit_num: SmallIntegerField = SmallIntegerField(default=5)
-    dead_fish_penalty: DecimalField = DecimalField(
+    rules = TextField(default=RULE_INFO)
+    payout = TextField(default=PAYOUT_INFO)
+    weigh_in = TextField(default=WEIGH_IN_INFO)
+    entry_fee = TextField(default=PAYMENT_INFO)
+    limit_num = SmallIntegerField(default=5)
+    dead_fish_penalty = DecimalField(
         default=Decimal("0.25"), max_digits=5, decimal_places=2
     )
-    max_points: SmallIntegerField = SmallIntegerField(default=100)
-    big_bass_breakdown: TextField = TextField(default=BIG_BASS_INFO)
-    zeroes_points_offset: SmallIntegerField = SmallIntegerField(default=2)
-    buy_ins_points_offset: SmallIntegerField = SmallIntegerField(default=4)
-    disqualified_points_offset: SmallIntegerField = SmallIntegerField(default=3)
+    max_points = SmallIntegerField(default=100)
+    big_bass_breakdown = TextField(default=BIG_BASS_INFO)
+    zeroes_points_offset = SmallIntegerField(default=2)
+    buy_ins_points_offset = SmallIntegerField(default=4)
+    disqualified_points_offset = SmallIntegerField(default=3)
 
-    def save(self, *args, **kwargs) -> None:
+    def save(self, *args, **kwargs):
         if not self.name:
             self.name = f"RuleSet-{self.id}"
         super().save(*args, **kwargs)
 
-    def __str__(self) -> str:
+    def __str__(self):
         return self.name

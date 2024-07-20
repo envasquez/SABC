@@ -1,208 +1,39 @@
-#
-# Coverage
-#
-[tool.coverage.run]
-omit = [
-    "sabc/manage.py",
-    "sabc/sabc/urls.py",
-    "sabc/sabc/wsgi.py",
-]
-[tool.coverage.report]
-omit = [
-    "sabc/users/*",
-    "sabc/polls/*",
-    "sabc/sabc/*",
-    "sabc/*/tests/*",
-    "sabc/*/migrations/*",
-    "sabc/tournaments/views/*",
-    "sabc/tournaments/__init__.py",
-    "sabc/tournaments/admin.py",
-    "sabc/tournaments/apps.py",
-    "sabc/tournaments/forms.py",
-    "sabc/tournaments/models/__init__.py",
-    "sabc/tournaments/tables.py"
-]
+[tool.poetry]
+name = "sabc"
+version = "0.1.0"
+description = "South Austin Bass Club Webapp"
+authors = ["Eric Vasquez"]
+readme = "README.md"
 
-#
-# MyPy
-#
-[tool.mypy]
-#exclude = ["sabc/sabc/urls.py"]
-plugins = ["mypy_django_plugin.main"]
-python_version = 3.11
-warn_unused_configs = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-no_implicit_optional = true
-warn_incomplete_stub = false
+[tool.poetry.dependencies]
+python = "^3.10"
+Django = "^5.0.6"
+crispy-bootstrap4 = "^2024.1"
+psycopg2-binary = "^2.9.9"
+django-tables2 = "^2.7.0"
+django-phonenumber-field = "^8.0.0"
+django-extensions = "^3.2.3"
+django-phonenumbers = "^1.0.1"
+pillow = "^10.4.0"
+pytz = "^2024.1"
+pyyaml = "^6.0.1"
+django-betterforms = "^2.0.0"
+names = "^0.3.0"
+pyright = "^1.1.372"
+requests = "^2.32.3"
 
-[tool.django-stubs]
-django_settings_module = "sabc.settings"
+[tool.poetry.group.dev.dependencies]
+pytest-cov = "^5.0.0"
+ruff = "^0.5.0"
+pyright = "^1.1.370"
+coverage = "^7.5.4"
+pytest-coverage = "^0.0"
+pytest = "^8.2.2"
+pytest-django = "^4.8.0"
 
-[[tool.mypy.overrides]]
-module = "django.*"
-ignore_missing_imports = true
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
-[[tool.mypy.overrides]]
-module = "django_tables2.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "phonenumber_field.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "names"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "betterforms.*"
-ignore_missing_imports = true
-
-#
-# Black
-#
-[tool.black]
-max_line_length = 120
-skip_magic_trailing_comma = true
-target_version = ['py311']
-exclude = '''
-/(
-    \.git
-  | \.mypy_cache
-  | \.tox
-  | venv
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
-'''
-#
-# Pylint
-#
-[tool.pylint.MASTER]
-extension-pkg-whitelist = ''
-fail-under = '10.0'
-ignore = '.git'
-ignore-patterns = ''
-jobs = 0
-limit-inference-results = 100
-load-plugins = ''
-persistent = 'yes'
-suggestion-mode = 'yes'
-unsafe-load-any-extension = 'no'
-
-[tool.pylint."MESSAGES CONTROL"]
-disable = 'missing-function-docstring, missing-module-docstring, missing-class-docstring, too-few-public-methods, abstract-method'
-
-[tool.pylint.REPORTS]
-evaluation = '10.0 - ((float(5 * error + warning + refactor + convention) / statement) * 10)'
-output-format = 'text'
-reports = 'no'
-score = 'yes'
-
-[tool.pylint.REFACTORING]
-max-nested-blocks = 5
-never-returning-functions = 'sys.exit'
-notes = '''FIXME,
-      XXX,
-      TODO
-'''
-
-[tool.pylint.TYPECHECK]
-contextmanager-decorators = 'contextlib.contextmanager'
-generated-members = ''
-ignore-mixin-members = 'yes'
-ignore-none = 'yes'
-ignore-on-opaque-inference = 'yes'
-ignored-classes = 'optparse.Values,thread._local,_thread._local'
-ignored-modules = ''
-missing-member-hint = 'yes'
-missing-member-hint-distance = 1
-missing-member-max-choices = 1
-signature-mutators = ''
-
-
-[tool.pylint.VARIABLES]
-additional-builtins = ''
-allow-global-unused-variables = 'yes'
-callbacks = '''cb_,
-          _cb
-'''
-dummy-variables-rgx = '_+$|(_[a-zA-Z0-9_]*[a-zA-Z0-9]+?$)|dummy|^ignored_|^unused_'
-ignored-argument-names = '_.*|^ignored_|^unused_'
-init-import = 'no'
-redefining-builtins-modules = 'six.moves,past.builtins,future.builtins,builtins,io'
-
-[tool.pylint.FORMAT]
-expected-line-ending-format = ''
-ignore-long-lines = '^\s*(# )?<?https?://\S+>?$'
-indent-after-paren = 4
-indent-string = '    '
-max-line-length = 120
-max-module-lines = 500
-single-line-class-stmt = 'no'
-single-line-if-stmt = 'no'
-
-[tool.pylint.SIMILARITIES]
-ignore-comments = 'yes'
-ignore-docstrings = 'yes'
-ignore-imports = 'no'
-min-similarity-lines = 4
-
-[tool.pylint.BASIC]
-argument-naming-style = 'snake_case'
-attr-naming-style = 'snake_case'
-bad-names = '''foo,
-          bar,
-          baz,
-          toto,
-          tutu,
-          tata
-'''
-bad-names-rgxs = ''
-class-attribute-naming-style = 'any'
-class-naming-style = 'PascalCase'
-const-naming-style = 'UPPER_CASE'
-docstring-min-length = -1
-function-naming-style = 'snake_case'
-good-names = '''i,
-           j,
-           k,
-           ex,
-           Run,
-           pk,
-           fd,
-           x,
-           y,
-           _
-'''
-good-names-rgxs = ''
-include-naming-hint = 'no'
-inlinevar-naming-style = 'any'
-method-naming-style = 'snake_case'
-module-naming-style = 'snake_case'
-name-group = ''
-no-docstring-rgx = '^_'
-property-classes = 'abc.abstractproperty'
-variable-naming-style = 'snake_case'
-
-[tool.pylint.DESIGN]
-max-args = 5
-max-attributes = 7
-max-bool-expr = 5
-max-branches = 12
-max-locals = 15
-max-parents = 11
-max-public-methods = 20
-max-returns = 6
-max-statements = 50
-min-public-methods = 2
-
-#
-# isort
-#
-[tool.isort]
-profile = "black"
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "sabc.settings"

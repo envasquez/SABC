@@ -1,0 +1,8 @@
+{
+    "typeCheckingMode": "basic",
+    "reportAttributeAccessIssue": "none",
+    "reportArgumentType": "none",
+    "exclude": [
+        "**/migrations/**"
+    ]
+}

@@ -3,7 +3,7 @@ import calendar
 import datetime
 
 
-def get_last_sunday(month: int = 0) -> int:
+def get_last_sunday(month=0):
     month = month or datetime.date.today().month
     return max(
         week[-1] for week in calendar.monthcalendar(datetime.date.today().year, month)
@@ -35,7 +35,7 @@ def get_last_sunday(month: int = 0) -> int:
 # 27	12.55	12.74	12.94	13.13	13.33	13.53	13.73	13.94
 # 28	14.15	14.35	14.56	14.78	14.99	15.21	15.43	15.65
 # 29	15.87	16.10	16.33	16.56	16.79	17.03	17.26	17.50
-LENGTH_TO_WEIGHT: dict[int, list] = {
+LENGTH_TO_WEIGHT = {
     #     0    1/8    1/4   3/8   1/2   5/8   3/4   7/8
     # 10: [0.48, 0.50, 0.52, 0.54, 0.56, 0.58, 0.61, 0.63],
     # 11: [0.66, 0.68, 0.71, 0.73, 0.76, 0.79, 0.81, 0.84],
@@ -60,7 +60,7 @@ LENGTH_TO_WEIGHT: dict[int, list] = {
 }
 
 
-def get_weight_from_length(length: float) -> float:
+def get_weight_from_length(length):
     """Returns the weight of a fish, given its length
 
     if the length is below 10 inches: 0.00 (lbs) is returned
@@ -76,12 +76,12 @@ def get_weight_from_length(length: float) -> float:
     3/4 = 0.75
     7/8 = 0.875
     """
-    inches: int = int(str(length).split(".", maxsplit=1)[0])
-    fraction: float = float(f"0.{str(length).split('.')[1]}")
+    inches = int(str(length).split(".", maxsplit=1)[0])
+    fraction = float(f"0.{str(length).split('.')[1]}")
     if inches > 29:
         return 18.00
 
-    fractions: dict[float, int] = {
+    fractions = {
         0.00: 0,
         0.125: 1,
         0.25: 2,
@@ -97,7 +97,7 @@ def get_weight_from_length(length: float) -> float:
     return 0.00
 
 
-def get_length_from_weight(weight: float) -> float:
+def get_length_from_weight(weight):
     """Given a fishes weight, return its length
 
     if the weight is less than 0.48 pounds: 10.00 (inches) is returned
@@ -116,7 +116,7 @@ def get_length_from_weight(weight: float) -> float:
     if weight > 17.50:
         return 30.0
 
-    fractions: dict[int, float] = {
+    fractions = {
         0: 0.00,
         1: 0.125,
         2: 0.25,
@@ -126,8 +126,8 @@ def get_length_from_weight(weight: float) -> float:
         6: 0.75,
         7: 0.875,
     }
-    index: int = 0
-    inches: int = 0
+    index = 0
+    inches = 0
     for inch, weights in LENGTH_TO_WEIGHT.items():
         # Find inch range for the weight
         if all([weight >= min(weights), weight <= max(weights)]):

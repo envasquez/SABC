@@ -1,68 +1,37 @@
-SHELL := /bin/bash
-SETUP := SETUP
+SHELL := /bin/bash -e
+PYTHON := python3
 PROJECT := sabc
+CURRENT_PATH := $(PATH)
 
-.PHONY: clean clean-migrations clean-docker clean-all docker lint test webapp mypy isort destroy-db ci format
-.DEFAULT_GOAL: help
-export PYTHONPATH=$(shell pwd)/sabc
+DEBUG =
+VERBOSE =
+NO_CAPTURE =
+ifdef DEBUG
+	VERBOSE := --verbose
+	LOG_LEVEL := DEBUG
+	NO_CAPTURE := --capture=no
+else
+	LOG_LEVEL := INFO
+endif
 
-isort:
-	isort .
+.PHONY: clean format lint test
 
 clean:
 	find $(PROJECT) -name "*.pyc" -type f -delete
 	find $(PROJECT) -name "__pycache__" -type d -delete
-
-clean-migrations: clean
-	find $(PROJECT) -path "*/migrations/*.py" -not -name "__init__.py" -delete
-
-clean-docker:
-	docker compose down
-	docker image rm sabc_sabc || true
-	docker image prune -f
-
-destroy-db:
-	docker compose down
-	docker volume rm sabc_sabc_app || true
-	docker volume rm sabc_postgres_data || true
-
-clean-all: clean-docker clean clean-migrations
-
-webapp: DEPLOYMENT_HOST=db
-webapp:
-	docker compose down
-	docker volume rm sabc_sabc_app || true
-	docker image rm sabc_sabc || true
-	docker compose -f docker-compose.yml up -d --build
-
-test: clean-migrations
-	docker build -f Dockerfile_pytest -t test_sabc .
-	docker run test_sabc
-
-mypy: clean-migrations
-	docker build -f Dockerfile_mypy -t mypy_sabc .
-	docker run mypy_sabc
-
-lint: clean clean-migrations isort
-	docker build -f Dockerfile_pylint -t pylint_sabc .
-	docker run pylint_sabc
+	ruff clean
 
 format:
-	find . -name "*.py" | xargs black -v
-	isort .
+	ruff format $(VERBOSE) .
 
-make ci: format lint mypy test
+lint: clean
+	ruff check --select I --fix $(PROJECT) $(VERBOSE)
+	PYRIGHT_PYTHON_FORCE_VERSION="latest" pyright $(VERBOSE)
 
-help:
-	@echo -e "\t make clean"
-	@echo -e "\t\t clean pycache, pyc files"
-	@echo -e "\t make clean-db"
-	@echo -e "\t\t clean migration and database files WARNING: DESTROYS ALL DB DATA!!!!"
-	@echo -e "\t clean-docker"
-	@echo -e "\t\t clean docker volumes and images"
-	@echo -e "\t make clean-all"
-	@echo -e "\t\t runs all clean targets"
-	@echo -e "\t make docker-rebuild"
-	@echo -e "\t\t builds the docker container image and starts it"
-	@echo -e "\t make lint"
-	@echo -e "\t\t runs pylint"
+test: clean
+	docker build -f Dockerfile.tests -t test_sabc . --no-cache
+	docker run test_sabc
+
+webapp: clean
+	docker compose down
+	docker compose -f deploy/docker-compose.yml up --build

@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import calendar
 import datetime
-from typing import Any
 
 from django.contrib import admin, messages
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import path, reverse
 from yaml import safe_load
@@ -18,13 +17,12 @@ from .models.tournaments import Events, Tournament
 
 
 class LakeAdmin(admin.ModelAdmin):
-    def get_urls(self) -> list:
+    def get_urls(self):
         return [path("upload-lakes/", self.lake_upload)] + super().get_urls()
 
-    def create_lake_from_yaml(self, request) -> None:
-        lakes: dict[str, Any] = safe_load(request.FILES["yaml_upload"])
+    def create_lake_from_yaml(self, request):
+        lakes = safe_load(request.FILES["yaml_upload"])
         for lake_name in lakes:
-            lake: Lake
             lake, _ = Lake.objects.update_or_create(
                 name=lake_name,
                 paper=lakes[lake_name].get("paper", False),
@@ -36,9 +34,9 @@ class LakeAdmin(admin.ModelAdmin):
                 )
         messages.info(request, f"{lakes} imported & created successfully!")
 
-    def lake_upload(self, request: HttpRequest) -> HttpResponse:
-        form: YamlImportForm = YamlImportForm()
-        data: dict = {"form": form}
+    def lake_upload(self, request):
+        form = YamlImportForm()
+        data = {"form": form}
         if request.method == "POST":
             self.create_lake_from_yaml(request)
             return HttpResponseRedirect(reverse("admin:index"))
@@ -47,14 +45,14 @@ class LakeAdmin(admin.ModelAdmin):
 
 class PayoutMultiplierAdmin(admin.ModelAdmin):
     # pom stands for Payout Multiplier
-    def get_urls(self) -> list:
+    def get_urls(self):
         return [path("upload-pom/", self.pom_upload)] + super().get_urls()
 
-    def pom_upload(self, request: HttpRequest) -> HttpResponse:
-        form: YamlImportForm = YamlImportForm()
-        data: dict[Any, Any] = {"form": form}
+    def pom_upload(self, request):
+        form = YamlImportForm()
+        data = {"form": form}
         if request.method == "POST":
-            poms = safe_load(request.FILES["yaml_upload"])  # type: ignore
+            poms = safe_load(request.FILES["yaml_upload"])
             for year, pom in poms.items():
                 PayOutMultipliers.objects.update_or_create(
                     year=year,
@@ -73,11 +71,11 @@ class PayoutMultiplierAdmin(admin.ModelAdmin):
 
 
 class EventsAdmin(admin.ModelAdmin):
-    def get_urls(self) -> list:
+    def get_urls(self):
         return [path("upload-events/", self.event_upload)] + super().get_urls()
 
-    def create_events_from_yaml(self, request: HttpRequest) -> None:
-        events = safe_load(request.FILES["yaml_upload"])  # type: ignore
+    def create_events_from_yaml(self, request: HttpRequest):
+        events = safe_load(request.FILES["yaml_upload"])
         for event_type, data in events.items():
             for year, dates in data.items():
                 for month, day in dates.items():
@@ -96,9 +94,9 @@ class EventsAdmin(admin.ModelAdmin):
                 request, f"{event_type}: {data} imported & created successfully!"
             )
 
-    def event_upload(self, request: HttpRequest) -> HttpResponse:
-        form: YamlImportForm = YamlImportForm()
-        data: dict[str, Any] = {"form": form}
+    def event_upload(self, request):
+        form = YamlImportForm()
+        data = {"form": form}
         if request.method == "POST":
             self.create_events_from_yaml(request)
             return HttpResponseRedirect(reverse("admin:index"))

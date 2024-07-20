@@ -4,9 +4,8 @@
 
 [![CodeQL](https://github.com/envasquez/SABC/actions/workflows/codeql-analysis.yml/badge.svg?branch=master)](https://github.com/envasquez/SABC/actions/workflows/codeql-analysis.yml)
 [![Django CI](https://github.com/envasquez/SABC/actions/workflows/django.yml/badge.svg)](https://github.com/envasquez/SABC/actions/workflows/django.yml)
-[![Pylint](https://github.com/envasquez/SABC/actions/workflows/pylint.yml/badge.svg)](https://github.com/envasquez/SABC/actions/workflows/pylint.yml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-
+[![Pylint](https://github.com/envasquez/SABC/actions/workflows/lint.yml/badge.svg)](https://github.com/envasquez/SABC/actions/workflows/lint.yml)
 ---
 
 # Background
@@ -67,7 +66,6 @@ Some things I found useful:
     * I felt it grew in complexity - vs - reward as I was starting to have to look-up how to solve special cases and support for py3.11
     * Different syntax in the different versions of python
     * Can make the code a bit obfuscated
-    * I am not proud of the number of # type: ignore statements in the current code-base :-(
 - Admin Site Overrides
   - Pros:
       * Makes it trivial to add buttons to upload data in csv, yaml

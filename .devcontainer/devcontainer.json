@@ -1,0 +1,28 @@
+{
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "vscode.git",
+                "ms-python.python",
+                "ms-python.debugpy",
+                "bungcip.better-toml",
+                "ms-vscode.makefile-tools",
+                "ms-python.vscode-pylance",
+                "ms-azuretools.vscode-docker"
+            ],
+            "settings": {
+                "terminal.integrated.shell.linux": "/bin/bash",
+                "extensions.verifySignature": false,
+                "python.analysis.extraPaths": [
+                    "/workspaces"
+                ]
+            }
+        }
+    }
+    ,
+    "name": "Python",
+    "build": {
+        "dockerfile": "./Dockerfile",
+        "context": ".."
+    }
+}

@@ -17,7 +17,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    - name: Analysing the code with pylint
+        pip install -r deploy/requirements.txt
+    - name: Analysing the code with pyright & ruff
       run: |
         make lint

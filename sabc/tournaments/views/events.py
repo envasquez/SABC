@@ -17,9 +17,9 @@ class EventUpdateView(
     model: Type[Events] = Events
     form_class: Type[EventForm] = EventForm
 
-    def test_func(self) -> bool:
+    def test_func(self):
         return self.request.user.is_staff
 
-    def get_success_url(self) -> Any:
+    def get_success_url(self):
         tmnt: Tournament = Tournament.objects.get(event__id=self.kwargs.get("pk"))
         return reverse_lazy("tournament-details", kwargs={"pk": tmnt.id})

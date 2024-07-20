@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=modelform-uses-exclude
-from typing import Any, Type
 
 from django.forms import FileField, Form, ModelForm
 
@@ -10,21 +8,21 @@ from .models.tournaments import Events, Tournament
 
 class TournamentForm(ModelForm):
     class Meta:
-        model: Type[Tournament] = Tournament
-        fields: str = "__all__"
-        exclude: tuple[str, ...] = ("created_by", "updated_by", "paper")
+        model = Tournament
+        fields = "__all__"
+        exclude = ("created_by", "updated_by", "paper")
 
 
 class EventForm(ModelForm):
     class Meta:
-        model: Type[Events] = Events
-        fields: str = "__all__"
-        exclude: tuple[str, ...] = ("type", "month")
+        model = Events
+        fields = "__all__"
+        exclude = ("type", "month")
 
 
 class ResultForm(ModelForm):
     class Meta:
-        model: Type[Result] = Result
+        model = Result
         fields = (
             "tournament",
             "angler",
@@ -39,7 +37,7 @@ class ResultForm(ModelForm):
         )
 
     def __init__(self, *args, **kwargs):
-        angler: dict[Any, Any] = kwargs.pop("angler")
+        angler = kwargs.pop("angler")
 
         super().__init__(*args, **kwargs)
         self.fields["angler"].queryset = angler
@@ -47,8 +45,8 @@ class ResultForm(ModelForm):
 
 class ResultUpdateForm(ModelForm):
     class Meta:
-        model: Type[Result] = Result
-        fields: tuple[str, ...] = (
+        model = Result
+        fields = (
             "tournament",
             "angler",
             "buy_in",
@@ -66,12 +64,12 @@ class ResultUpdateForm(ModelForm):
 
 class TeamForm(ModelForm):
     class Meta:
-        model: Type[TeamResult] = TeamResult
-        fields: tuple[str, ...] = ("tournament", "result_1", "result_2")
+        model = TeamResult
+        fields = ("tournament", "result_1", "result_2")
 
     def __init__(self, *args, **kwargs):
-        result_1: Result = kwargs.pop("result_1")
-        result_2: Result = kwargs.pop("result_2")
+        result_1 = kwargs.pop("result_1")
+        result_2 = kwargs.pop("result_2")
 
         super().__init__(*args, **kwargs)
         self.fields["result_1"].queryset = result_1
@@ -79,4 +77,4 @@ class TeamForm(ModelForm):
 
 
 class YamlImportForm(Form):
-    yaml_upload: FileField = FileField()
+    yaml_upload = FileField()

@@ -2,6 +2,7 @@
 import datetime
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from django.db.models import (
     PROTECT,
     BooleanField,
@@ -12,7 +13,6 @@ from django.db.models import (
     Manager,
     Model,
     OneToOneField,
-    QuerySet,
     SmallIntegerField,
     TextChoices,
 )
@@ -21,35 +21,30 @@ from phonenumber_field.modelfields import PhoneNumberField
 from PIL import Image as image
 from PIL.Image import Image
 
-User = get_user_model()
-
 
 class MemberManager(Manager):
-    def get_active_members(self) -> QuerySet:
+    def get_active_members(self):
         return Angler.objects.filter(member=True, user__is_active=True)
 
 
 class Angler(Model):
-    user: OneToOneField = OneToOneField(User, on_delete=PROTECT, primary_key=True)
-    member: BooleanField = BooleanField(default=False, null=True, blank=True)
-    image: ImageField = ImageField(
-        default="profile_pics/default.jpg", upload_to="profile_pics"
-    )
-    date_joined: DateField = DateField(default=timezone.now)
-    phone_number: PhoneNumberField = PhoneNumberField(null=False, blank=False)
-
-    objects: Manager = Manager()
-    members: MemberManager = MemberManager()
+    user = OneToOneField(User, on_delete=PROTECT, primary_key=True)
+    member = BooleanField(default=False, null=True, blank=True)
+    image = ImageField(default="profile_pics/default.jpg", upload_to="profile_pics")
+    members = MemberManager()
+    objects = Manager()
+    date_joined = DateField(default=timezone.now)
+    phone_number = PhoneNumberField(null=False, blank=False)
 
     class Meta:
-        ordering: tuple[str] = ("user__first_name",)
-        verbose_name_plural: str = "Anglers"
+        ordering = ("user__first_name",)
+        verbose_name_plural = "Anglers"
 
-    def __str__(self) -> str:
-        full_name: str = self.user.get_full_name()  # pylint: disable=no-member
+    def __str__(self):
+        full_name = self.user.get_full_name()
         return full_name if self.member else f"{full_name} (G)"
 
-    def save(self, *args, **kwargs) -> None:
+    def save(self, *args, **kwargs):
         img: Image = image.open(self.image.path)
         if img.height > 300 or img.width > 300:  # pixels
             output_size = (300, 300)
@@ -60,21 +55,21 @@ class Angler(Model):
 
 class Officers(Model):
     class Meta:
-        verbose_name_plural: str = "Officers"
+        verbose_name_plural = "Officers"
 
     class OfficerPositions(TextChoices):
-        PRESIDENT: str = "president"
-        SECRETARY: str = "secretary"
-        TREASURER: str = "treasurer"
-        VICE_PRESIDENT: str = "vice-president"
-        TOURNAMENT_DIRECTOR: str = "tournament-director"
-        ASSISTANT_TOURNAMENT_DIRECTOR: str = "assistant-tournament-director"
-        MEDIA_DIRECTOR: str = "media-director"
-        TECHNOLOGY_DIRECTOR: str = "technology-director"
+        PRESIDENT = "president"
+        SECRETARY = "secretary"
+        TREASURER = "treasurer"
+        VICE_PRESIDENT = "vice-president"
+        TOURNAMENT_DIRECTOR = "tournament-director"
+        ASSISTANT_TOURNAMENT_DIRECTOR = "assistant-tournament-director"
+        MEDIA_DIRECTOR = "media-director"
+        TECHNOLOGY_DIRECTOR = "technology-director"
 
-    year: SmallIntegerField = SmallIntegerField(default=datetime.date.today().year)
-    position: CharField = CharField(choices=OfficerPositions.choices, max_length=50)
-    angler: ForeignKey = ForeignKey(Angler, on_delete=PROTECT)
+    year = SmallIntegerField(default=datetime.date.today().year)
+    position = CharField(choices=OfficerPositions.choices, max_length=50)
+    angler = ForeignKey(Angler, on_delete=PROTECT)
 
     def __str__(self):
         return f"{self.year}: {self.angler} - {self.position}"
