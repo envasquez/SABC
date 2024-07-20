@@ -5,7 +5,7 @@
 [![CodeQL](https://github.com/envasquez/SABC/actions/workflows/codeql-analysis.yml/badge.svg?branch=master)](https://github.com/envasquez/SABC/actions/workflows/codeql-analysis.yml)
 [![Django CI](https://github.com/envasquez/SABC/actions/workflows/django.yml/badge.svg)](https://github.com/envasquez/SABC/actions/workflows/django.yml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-
+[![Pylint](https://github.com/envasquez/SABC/actions/workflows/lint.yml/badge.svg)](https://github.com/envasquez/SABC/actions/workflows/lint.yml)
 ---
 
 # Background
