@@ -1,13 +1,12 @@
 [tool.poetry]
 name = "sabc"
-version = "0.1.0"
+version = "0.2.0"
 description = "South Austin Bass Club Webapp"
 authors = ["Eric Vasquez"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-Django = "^5.0.6"
 crispy-bootstrap4 = "^2024.1"
 psycopg2-binary = "^2.9.9"
 django-tables2 = "^2.7.0"
@@ -20,7 +19,7 @@ pyyaml = "^6.0.1"
 django-betterforms = "^2.0.0"
 names = "^0.3.0"
 pyright = "^1.1.372"
-requests = "^2.32.3"
+django = "^5.0.7"
 
 [tool.poetry.group.dev.dependencies]
 pytest-cov = "^5.0.0"
@@ -34,6 +33,3 @@ pytest-django = "^4.8.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "sabc.settings"
