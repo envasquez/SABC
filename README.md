@@ -13,7 +13,7 @@ In 2018, the COVID-19 pandemic wiped out a lot of tournament bass fishing in our
 
 *Some* of our South Austin Bass Club (SABC) process is manual & hand-written which is not archivable or mineable for data purposes. Our tournament director has kept some spreadsheets on-line (Googledocs) that we may be able injest for historical data. We can possibly use this data for insights about making more informed choices for tournament events in the future.
 
-Lastly, our only medium for information transfer to non-members or potential members is through social media platforms (of which there are many) that come with their own maintenance overhead. Some members may not want or know how to join social media platform X just to get tournament information. We could use a neutral, (and cheap) platform to host this platform that social media can point to.
+Lastly, our only medium for information transfer to non-members or potential members is through social media platforms (of which there are many) that come with their own maintenance overhead. Some members may not want or know how to join social media platform XYZ just to get tournament information. We could use a neutral, (and cheap) platform to host this platform that social media can point to.
 
 
 # Goals
