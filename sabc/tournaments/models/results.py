@@ -152,6 +152,5 @@ class TeamResult(Model):
         ):
             self.disqualified = True
 
-        if self._state.adding or self.manual_edit:
-            self.team_name = self.get_team_name()
+        self.team_name = self.get_team_name()
         super().save(*args, **kwargs)
