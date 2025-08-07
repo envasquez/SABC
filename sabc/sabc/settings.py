@@ -66,12 +66,13 @@ WSGI_APPLICATION = "sabc.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 # Force SQLite for testing and CI environments
-if (os.environ.get("UNITTEST") or 
-    os.environ.get("GITHUB_ACTIONS") or 
-    any('test' in arg for arg in sys.argv) or 
-    any('makemigrations' in arg for arg in sys.argv) or
-    any('migrate' in arg for arg in sys.argv)):
-    
+if (
+    os.environ.get("UNITTEST")
+    or os.environ.get("GITHUB_ACTIONS")
+    or any("test" in arg for arg in sys.argv)
+    or any("makemigrations" in arg for arg in sys.argv)
+    or any("migrate" in arg for arg in sys.argv)
+):
     # Using SQLite for testing, CI, migrations
     DATABASES = {
         "default": {
