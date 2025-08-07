@@ -3,6 +3,8 @@
     "reportAttributeAccessIssue": "none",
     "reportArgumentType": "none",
     "exclude": [
-        "**/migrations/**"
+        "**/migrations/**",
+        ".direnv/**",
+        ".nix-postgresql/**"
     ]
 }
