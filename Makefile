@@ -29,8 +29,13 @@ lint: clean
 	PYRIGHT_PYTHON_FORCE_VERSION="latest" pyright $(VERBOSE)
 
 test: clean
-	docker build -f docker/Dockerfile.tests -t test_sabc . --no-cache
-	docker run test_sabc
+	export UNITTEST=1 && \
+	export DJANGO_SETTINGS_MODULE="sabc.settings" && \
+	cd sabc && \
+	python manage.py makemigrations --no-input && \
+	python manage.py migrate --run-syncdb && \
+	coverage run --branch --source=. -m pytest --capture=no -vv && \
+	coverage report --show-missing
 
 webapp: clean
 	docker compose down
