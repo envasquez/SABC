@@ -69,7 +69,7 @@ class AnglerRegistrationView(CreateView, SuccessMessageMixin):
         return render(
             request,
             self.template_name,
-            {"user_form": user_form, "angler_form": angler_form},
+            {"u_form": user_form, "form": angler_form},
         )
 
     def post(self, request, *args, **kwargs):
@@ -86,7 +86,7 @@ class AnglerRegistrationView(CreateView, SuccessMessageMixin):
         return render(
             request,
             self.template_name,
-            {"user_form": user_form, "angler_form": angler_form},
+            {"u_form": user_form, "form": angler_form},
         )
 
 
@@ -101,7 +101,7 @@ class AnglerUpdateView(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
         return render(
             request,
             self.template_name,
-            {"user_form": user_form, "angler_form": angler_form, "object": self.object},
+            {"form": {"user": user_form, "angler": angler_form}, "object": self.object},
         )
 
     def post(self, request, *args, **kwargs):
@@ -117,7 +117,7 @@ class AnglerUpdateView(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
         return render(
             request,
             self.template_name,
-            {"user_form": user_form, "angler_form": angler_form, "object": self.object},
+            {"form": {"user": user_form, "angler": angler_form}, "object": self.object},
         )
 
     def get_success_url(self):
