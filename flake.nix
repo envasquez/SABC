@@ -28,6 +28,7 @@
           pytz
           pyyaml
           requests
+          urllib3
           
           # Development tools
           pytest
