@@ -170,20 +170,6 @@
             echo "  2. dev-server"
             echo ""
             
-            # Create .env file template if it doesn't exist
-            if [ ! -f .env.dev ]; then
-              cat > .env.dev << EOF
-# SABC Development Environment Variables
-DJANGO_DEBUG=1
-DJANGO_SECRET_KEY=dev-secret-key-change-in-production
-POSTGRES_DB=sabc
-POSTGRES_USER=$USER
-POSTGRES_PASSWORD=
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-EOF
-              echo "📄 Created .env.dev template"
-            fi
           '';
           
           # Environment variables for development

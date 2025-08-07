@@ -1,3 +1,5 @@
+import os
+
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
@@ -8,9 +10,9 @@ class Command(BaseCommand):
     help = "Create development superuser if it doesn't exist"
 
     def handle(self, *args, **options):
-        username = "sabc"
-        email = "admin@sabc.com"
-        password = "Admin@123"
+        email = os.getenv("DJANGO_ADMIN_EMAIL")
+        username = os.getenv("DJANGO_ADMIN_USER")
+        password = os.getenv("DJANGO_ADMIN_PASSWORD")
 
         if User.objects.filter(username=username).exists():
             self.stdout.write(

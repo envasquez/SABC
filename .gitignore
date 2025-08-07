@@ -126,5 +126,6 @@ result
 # Ruff cache
 .ruff_cache/
 
-# Environment files (keep .env.dev as template)
+# Environment files
 .envrc
+.env.dev

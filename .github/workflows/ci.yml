@@ -9,27 +9,21 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
     steps:
     - uses: actions/checkout@v4
-    
     - name: Install Nix
       uses: cachix/install-nix-action@v27
       with:
         extra_nix_config: |
           experimental-features = nix-command flakes
-    
-    - name: Setup Nix Cache  
+    - name: Setup Nix Cache
       uses: cachix/cachix-action@v15
       with:
         name: nix-community
-        
     - name: Check code formatting
       run: nix develop -c ruff format --check .
-      
     - name: Lint code
       run: nix develop -c make lint
-      
     - name: Run tests
       env:
         SKIP_PIP_INSTALL: 1
