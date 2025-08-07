@@ -116,3 +116,11 @@ data/
 # CSV Files
 *.csv
 sabc/sabc/static/officers.yaml
+
+# Nix development environment
+.direnv/
+.nix-postgresql/
+logfile
+
+# Environment files (keep .env.dev as template)
+.envrc
