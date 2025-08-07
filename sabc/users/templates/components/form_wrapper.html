@@ -1,0 +1,69 @@
+{% comment %}
+Form Wrapper Component
+Usage: {% include 'components/form_wrapper.html' with form=form title="Form Title" %}
+Available variables:
+- form: Django form object or form HTML
+- title: Form title (optional)
+- description: Form description text (optional)
+- submit_text: Submit button text (default: "Submit")
+- submit_class: Submit button CSS classes (default: "btn-success")
+- cancel_url: URL for cancel button (optional)
+- form_method: HTTP method (default: "POST")
+- form_action: Form action URL (optional)
+- enctype: Form enctype (optional, for file uploads use "multipart/form-data")
+{% endcomment %}
+
+{% load crispy_forms_tags %}
+
+<div class="card shadow-sm">
+    {% if title %}
+        <div class="card-header bg-sabc-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-{{ icon|default:'pencil-square' }} me-2"></i>
+                {{ title }}
+            </h5>
+            {% if description %}
+                <small class="text-white-50 d-block mt-1">{{ description }}</small>
+            {% endif %}
+        </div>
+    {% endif %}
+    
+    <div class="card-body">
+        <form method="{{ form_method|default:'POST' }}" 
+              {% if form_action %}action="{{ form_action }}"{% endif %}
+              {% if enctype %}enctype="{{ enctype }}"{% endif %}
+              novalidate>
+            {% csrf_token %}
+            
+            {% if form %}
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+                
+                {{ form|crispy }}
+            {% else %}
+                <!-- Custom form content goes here -->
+                {% block form_content %}{% endblock %}
+            {% endif %}
+            
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <div>
+                    {% if cancel_url %}
+                        <a href="{{ cancel_url }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Cancel
+                        </a>
+                    {% endif %}
+                </div>
+                <div>
+                    <button type="submit" class="btn {{ submit_class|default:'btn-success' }}">
+                        <i class="bi bi-check-circle me-1"></i>
+                        {{ submit_text|default:'Submit' }}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
