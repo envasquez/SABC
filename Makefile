@@ -38,5 +38,4 @@ test: clean
 	coverage report --show-missing
 
 webapp: clean
-	docker compose down
-	docker compose -f docker/docker-compose.yml up --build
+	@echo "Docker webapp target removed - use 'nix develop' then 'start-db' and 'dev-server' instead"

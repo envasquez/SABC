@@ -105,7 +105,7 @@ venv.bak/
 sabc/polls/migrations/*
 sabc/users/migrations/*
 sabc/tournaments/migrations/*
-.DS_store
+.DS_Store
 .coverage
 
 # Plyint
@@ -121,6 +121,10 @@ sabc/sabc/static/officers.yaml
 .direnv/
 .nix-postgresql/
 logfile
+result
+
+# Ruff cache
+.ruff_cache/
 
 # Environment files (keep .env.dev as template)
 .envrc
