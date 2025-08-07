@@ -32,6 +32,5 @@ jobs:
       
     - name: Run tests
       env:
-        UNITTEST: 1
         SKIP_PIP_INSTALL: 1
       run: nix develop -c make test
