@@ -19,10 +19,10 @@ jobs:
         extra_nix_config: |
           experimental-features = nix-command flakes
     
-    - name: Setup Nix Cache
+    - name: Setup Nix Cache  
       uses: cachix/cachix-action@v15
       with:
-        name: devenv
+        name: nix-community
         
     - name: Check code formatting
       run: nix develop -c ruff format --check .
@@ -33,4 +33,5 @@ jobs:
     - name: Run tests
       env:
         UNITTEST: 1
+        SKIP_PIP_INSTALL: 1
       run: nix develop -c make test

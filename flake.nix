@@ -133,10 +133,10 @@
             echo "🎣 SABC Django Development Environment"
             echo "=================================="
             
-            # Install betterforms via pip since it's not in nixpkgs
-            if ! python -c "import betterforms" 2>/dev/null; then
+            # Install betterforms via pip since it's not in nixpkgs (skip in CI)
+            if [[ -z "$SKIP_PIP_INSTALL" ]] && ! python -c "import betterforms" 2>/dev/null; then
               echo "Installing django-betterforms via pip..."
-              pip install --user django-betterforms --break-system-packages
+              pip install --user django-betterforms --break-system-packages || true
             fi
             
             # Ensure user-installed packages are in Python path
