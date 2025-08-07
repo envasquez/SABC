@@ -64,18 +64,7 @@ WSGI_APPLICATION = "sabc.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
-if os.environ.get("GITHUB_WORKFLOW"):
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql_psycopg2",
-            "NAME": "postgres",
-            "USER": "postgres",
-            "PASSWORD": "postgres",
-            "HOST": "127.0.0.1",
-            "PORT": 5432,
-        }
-    }
-elif os.environ.get("UNITTEST"):
+if os.environ.get("UNITTEST") or os.environ.get("GITHUB_ACTIONS"):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
