@@ -15,10 +15,10 @@
             allowBroken = true;
           };
         };
-        
+
         # Python with specific version
         python = pkgs.python311;
-        
+
         # Python packages for development
         pythonEnv = python.withPackages (ps: with ps; [
           # Core Django dependencies
@@ -29,20 +29,20 @@
           pyyaml
           requests
           urllib3
-          
+
           # Development tools
           pytest
           pytest-django
           pytest-cov
           coverage
           ruff
-          
+
           # Django extensions
           django-crispy-forms
           crispy-bootstrap4
           django-phonenumber-field
           django-tables2
-          
+
           # Additional packages
           names
         ]);
@@ -51,12 +51,12 @@
         devPackages = with pkgs; [
           # Database
           postgresql_15
-          
+
           # System dependencies
           gcc
           pkg-config
           libpq
-          
+
           # Development tools
           git
           gnumake
@@ -65,10 +65,10 @@
           docker-compose
           pyright
           python.pkgs.pip
-          
+
           # Optional: Node.js for frontend tooling
           nodejs_20
-          
+
           # Poetry for dependency management (optional)
           poetry
         ];
@@ -80,25 +80,25 @@
             echo "Initializing PostgreSQL database..."
             initdb --auth-host=trust --auth-local=trust
           fi
-          
+
           # Start PostgreSQL
           pg_ctl -l "$PGDATA/log" start
-          
+
           # Create database if it doesn't exist
           if ! psql -lqt | cut -d \| -f 1 | grep -qw sabc; then
             createdb sabc
             echo "Created database 'sabc'"
           fi
-          
+
           echo "PostgreSQL is running on port 5432"
           echo "Database: sabc"
           echo "To stop: pg_ctl stop"
         '';
-        
+
         stopDB = pkgs.writeShellScriptBin "stop-db" ''
           pg_ctl stop
         '';
-        
+
         runTests = pkgs.writeShellScriptBin "run-tests" ''
           export UNITTEST=1
           export DJANGO_SETTINGS_MODULE="sabc.settings"
@@ -106,13 +106,16 @@
           coverage run --branch --source=. -m pytest --capture=no -vv
           coverage report --show-missing
         '';
-        
+
         devServer = pkgs.writeShellScriptBin "dev-server" ''
           export DJANGO_DEBUG=1
           export DJANGO_SECRET_KEY="dev-secret-key-change-in-production"
           export POSTGRES_DB="sabc"
           export POSTGRES_USER="$USER"
           export POSTGRES_PASSWORD=""
+          export DJANGO_ADMIN_EMAIL="admin@sabc.com"
+          export DJANGO_ADMIN_USER="sabc"
+          export DJANGO_ADMIN_PASSWORD="Admin@123"
           cd sabc
           python manage.py migrate
           python manage.py create_dev_superuser
@@ -122,41 +125,45 @@
       in {
         devShells.default = pkgs.mkShell {
           name = "sabc-dev";
-          
+
           buildInputs = [ pythonEnv ] ++ devPackages ++ [
             startDB
-            stopDB  
+            stopDB
             runTests
             devServer
           ];
-          
+
           shellHook = ''
             echo "🎣 SABC Django Development Environment"
             echo "=================================="
-            
+
             # Install betterforms via pip since it's not in nixpkgs (skip in CI)
             if [[ -z "$SKIP_PIP_INSTALL" ]] && ! python -c "import betterforms" 2>/dev/null; then
               echo "Installing django-betterforms via pip..."
               pip install --user django-betterforms --break-system-packages || true
             fi
-            
+
             # Ensure user-installed packages are in Python path
             export PYTHONPATH="$HOME/.local/lib/python3.11/site-packages:$PYTHONPATH"
-            
+
             # Set up PostgreSQL data directory
             export PGDATA="$PWD/.nix-postgresql"
             export PGHOST="localhost"
             export PGPORT="5432"
             export PGDATABASE="sabc"
             export PGUSER="$USER"
-            
+
+            export DJANGO_ADMIN_EMAIL="admin@sabc.com"
+            export DJANGO_ADMIN_USER="sabc"
+            export DJANGO_ADMIN_PASSWORD="Admin@123"
+
             # Python/Django environment
             export PYTHONPATH="$PWD/sabc:$PYTHONPATH"
             export DJANGO_SETTINGS_MODULE="sabc.settings"
-            
+
             echo "📦 Available commands:"
             echo "  start-db     - Start PostgreSQL database"
-            echo "  stop-db      - Stop PostgreSQL database"  
+            echo "  stop-db      - Stop PostgreSQL database"
             echo "  dev-server   - Start Django development server"
             echo "  run-tests    - Run test suite with coverage"
             echo ""
@@ -169,21 +176,21 @@
             echo "  1. start-db"
             echo "  2. dev-server"
             echo ""
-            
+
           '';
-          
+
           # Environment variables for development
           DJANGO_SETTINGS_MODULE = "sabc.settings";
           PYTHONPATH = "$PWD/sabc";
         };
-        
+
         # Package the application
         packages.default = pkgs.python311Packages.buildPythonPackage {
           pname = "sabc";
           version = "0.1.0";
-          
+
           src = ./.;
-          
+
           propagatedBuildInputs = with pkgs.python311Packages; [
             django
             psycopg2
@@ -192,7 +199,7 @@
             pyyaml
             requests
           ];
-          
+
           # Skip tests for package build
           doCheck = false;
         };
