@@ -3,10 +3,10 @@
 # Temporarily disabled for CI
 # from betterforms.multiform import MultiModelForm
 try:
-    from betterforms.multiform import MultiModelForm
+    from betterforms.multiform import MultiModelForm  # type: ignore
 except ImportError:
     # Fallback for CI environment
-    class MultiModelForm:
+    class MultiModelForm:  # type: ignore
         pass
 
 
