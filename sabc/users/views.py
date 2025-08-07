@@ -11,7 +11,12 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, UpdateView
 from tournaments.models.results import Result
 
-from .forms import AnglerUserMultiRegisterForm, AnglerUserMultiUpdateForm
+from .forms import (
+    AnglerRegisterForm,
+    AnglerUpdateForm,
+    UserRegisterForm,
+    UserUpdateForm,
+)
 from .models import Angler, Officers
 from .tables import GuestTable, MemberTable, OfficerTable
 
@@ -56,26 +61,64 @@ def roster(request):
 
 class AnglerRegistrationView(CreateView, SuccessMessageMixin):
     model = Angler
-    form_class = AnglerUserMultiRegisterForm
     template_name = "users/register.html"
 
-    def form_valid(self, form):
-        user = form["user"].save()
-        angler = form["angler"].save(commit=False)
-        angler.user = user
-        angler.save()
-        return redirect("login")
+    def get(self, request, *args, **kwargs):
+        user_form = UserRegisterForm()
+        angler_form = AnglerRegisterForm()
+        return render(
+            request,
+            self.template_name,
+            {"user_form": user_form, "angler_form": angler_form},
+        )
+
+    def post(self, request, *args, **kwargs):
+        user_form = UserRegisterForm(request.POST)
+        angler_form = AnglerRegisterForm(request.POST)
+
+        if user_form.is_valid() and angler_form.is_valid():
+            user = user_form.save()
+            angler = angler_form.save(commit=False)
+            angler.user = user
+            angler.save()
+            return redirect("login")
+
+        return render(
+            request,
+            self.template_name,
+            {"user_form": user_form, "angler_form": angler_form},
+        )
 
 
 class AnglerUpdateView(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
     model = Angler
-    form_class = AnglerUserMultiUpdateForm
     template_name = "users/edit_profile.html"
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["instance"] = {"user": self.object.user, "angler": self.object}
-        return kwargs
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        user_form = UserUpdateForm(instance=self.object.user)
+        angler_form = AnglerUpdateForm(instance=self.object)
+        return render(
+            request,
+            self.template_name,
+            {"user_form": user_form, "angler_form": angler_form, "object": self.object},
+        )
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        user_form = UserUpdateForm(request.POST, instance=self.object.user)
+        angler_form = AnglerUpdateForm(request.POST, instance=self.object)
+
+        if user_form.is_valid() and angler_form.is_valid():
+            user_form.save()
+            angler_form.save()
+            return redirect(self.get_success_url())
+
+        return render(
+            request,
+            self.template_name,
+            {"user_form": user_form, "angler_form": angler_form, "object": self.object},
+        )
 
     def get_success_url(self):
         return reverse_lazy("profile", kwargs={"pk": self.kwargs.get("pk")})

@@ -1,14 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# Temporarily disabled for CI
-# from betterforms.multiform import MultiModelForm
-try:
-    from betterforms.multiform import MultiModelForm  # type: ignore
-except ImportError:
-    # Fallback for CI environment
-    class MultiModelForm:  # type: ignore
-        pass
-
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
@@ -45,10 +36,6 @@ class AnglerRegisterForm(ModelForm):
         fields = ("phone_number",)
 
 
-class AnglerUserMultiRegisterForm(MultiModelForm):
-    form_classes = {"user": UserRegisterForm, "angler": AnglerRegisterForm}
-
-
 class UserUpdateForm(ModelForm):
     email = EmailField()
 
@@ -63,10 +50,6 @@ class AnglerUpdateForm(ModelForm):
     class Meta:
         model = Angler
         fields = ("phone_number",)
-
-
-class AnglerUserMultiUpdateForm(MultiModelForm):
-    form_classes = {"user": UserUpdateForm, "angler": AnglerUpdateForm}
 
 
 class CsvImportForm(Form):
