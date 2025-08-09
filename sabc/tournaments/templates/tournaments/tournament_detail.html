@@ -1,118 +1,237 @@
 {% extends "users/base.html" %}
 {% load django_tables2 %}
+
 {% block content %}
-<article class="media content-section">
-    <div class="media-body">
-        {% if user.angler.type == "officer" or user.is_staff %}
-            <div align="center">
-                <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'tournament-update' tournament.id %}">Edit Tournament</a>
-                <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'result-create' tournament.id %}">Add Results</a>
-                <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'team-create' tournament.id %}">Add Teams</a>
-                <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'event-update' tournament.event.id %}">Edit Event</a>
-                <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'register' %}">Add Guest</a>
-                <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'tournament-delete' tournament.id %}">Delete</a>
+    <!-- Tournament Information Section -->
+    {% include 'components/tournament_info.html' with tournament=tournament show_actions=true %}
+    
+    {% if not tournament.complete and tournament.lake %}
+        <!-- Pre-Tournament Information -->
+        <div class="row g-4 mt-4">
+            {% if tournament.description %}
+                <div class="col-12 col-lg-8">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-sabc-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-info-circle me-2"></i>Tournament Details
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="article-content">{{ tournament.description|linebreaks }}</div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <div class="col-12 {% if tournament.description %}col-lg-4{% endif %}">
+                <!-- Tournament Rules Accordion -->
+                <div class="accordion shadow-sm" id="tournamentRules">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="payoutHeading">
+                            <button class="accordion-button collapsed" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#payoutCollapse">
+                                <i class="bi bi-currency-dollar me-2 text-success"></i>
+                                Entry Fees & Payout
+                            </button>
+                        </h2>
+                        <div id="payoutCollapse" class="accordion-collapse collapse" 
+                             data-bs-parent="#tournamentRules">
+                            <div class="accordion-body">
+                                <div class="mb-3">
+                                    <h6 class="text-sabc-primary">Fee Breakdown:</h6>
+                                    <div class="small">{{ tournament.payout_multiplier.fee_breakdown|linebreaks }}</div>
+                                </div>
+                                <div>
+                                    <h6 class="text-sabc-primary">Payout Structure:</h6>
+                                    <div class="small">{{ tournament.rules.payout|linebreaks }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="bigBassHeading">
+                            <button class="accordion-button collapsed" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#bigBassCollapse">
+                                <i class="bi bi-award me-2 text-warning"></i>
+                                Big Bass Pot
+                            </button>
+                        </h2>
+                        <div id="bigBassCollapse" class="accordion-collapse collapse" 
+                             data-bs-parent="#tournamentRules">
+                            <div class="accordion-body small">
+                                {{ tournament.rules.big_bass_breakdown|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="weighInHeading">
+                            <button class="accordion-button collapsed" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#weighInCollapse">
+                                <i class="bi bi-scale me-2 text-primary"></i>
+                                Weigh-In Procedures
+                            </button>
+                        </h2>
+                        <div id="weighInCollapse" class="accordion-collapse collapse" 
+                             data-bs-parent="#tournamentRules">
+                            <div class="accordion-body small">
+                                {{ tournament.rules.weigh_in|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="rulesHeading">
+                            <button class="accordion-button collapsed" type="button" 
+                                    data-bs-toggle="collapse" data-bs-target="#rulesCollapse">
+                                <i class="bi bi-list-check me-2 text-sabc-primary"></i>
+                                Tournament Rules
+                            </button>
+                        </h2>
+                        <div id="rulesCollapse" class="accordion-collapse collapse" 
+                             data-bs-parent="#tournamentRules">
+                            <div class="accordion-body">
+                                <div class="mb-3 small">{{ tournament.rules.rules|linebreaks }}</div>
+                                <div class="alert alert-warning">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    <strong>Dead Fish Penalty:</strong> {{ tournament.rules.dead_fish_penalty }}lb per fish
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        {% endif %}
-        <div class="article-metadata">
-            {{ tournament.name }}
         </div>
-        {% if tournament.lake %}
-            {% if tournament.complete %}
-                <h2>{{ tournament.lake | upper }} - <small>RESULTS</small></h2>
-            {% else %}
-                <h2>{{ tournament.lake | upper }}</h2>
-            {% endif %}
-        {% else %}
-            <h2>Lake: To Be Voted On ...</h2>
-        {% endif %}
-        {% if tournament.lake %}
-        <div align="center">{{ tournament.ramp.google_maps | safe}}</div>
-            <table  class="table">
-                <tbody>
-                    <tr>
-                        <td align="right">Date:</td>
-                        <td align="left">{{ tournament.event.date }}</td>
-                        <td align="right">Start time:</td>
-                        <td align="left">{{ tournament.event.start }}</td>
-                        <td align="right">Weigh-in:</td>
-                        <td align="left">{{ tournament.event.finish }}</td>
-                    </tr>
-                    <tr>
-                        <td align="right">Limit:</td>
-                        <td align="left">5 fish/angler</td>
-                        <td align="right">Entry Fee:</td>
-                        <td align="left">${{ tournament.payout_multiplier.entry_fee }}/angler</td>
-                        <td align="right">AoY Points:</td>
-                        {% if tournament.points_count %}
-                            <td align="left" colspan="2">Yes</td>
-                        {% else %}
-                            <td align="left" colspan="2">No</td>
-                        {% endif %}
-                        <td align="right">Team Payout:</td>
-                        {% if tournament.team %}
-                            <td align="left">Yes</td>
-                        {% else %}
-                            <td align="left">No</td>
-                        {% endif %}
-                    </tr>
-                </tbody>
-            </table>
-        {% endif %}
-        {% if not tournament.complete %}
-            <p class="article-content">
-                {{ tournament.description | linebreaks }}
-            </p>
-            <div class="media-body">
-                <div class="article-metadata">ENTRY FEES & PAYOUT:</div>
-                <h6 class="small">{{ tournament.payout_multiplier.fee_breakdown | linebreaks }}</h6>
-                <h6 class="small">{{ tournament.rules.payout | linebreaks}}</h6>
-                <div class="article-metadata">BIG BASS POT</div>
-                <h6 class="small">{{ tournament.rules.big_bass_breakdown | linebreaks }}</h6>
-                <div class="article-metadata">WEIGH-IN</div>
-                <h6 class="small">{{ tournament.rules.weigh_in | linebreaks }}</h6>
-                <div class="article-metadata">RULES</div>
-                <h6 class="small">{{ tournament.rules.rules | linebreaks }}</h6>
-                <div class="article-metadata">DEAD FISH PENALTY</div>
-                <h6 class="small">{{ tournament.rules.dead_fish_penalty }}lb per fish</h6>
+    {% endif %}
+    
+    <!-- Tournament Results Section -->
+    {% if tournament.complete %}
+        <div class="mt-5">
+            <div class="d-flex align-items-center mb-4">
+                <i class="bi bi-trophy-fill text-warning fs-2 me-3"></i>
+                <div>
+                    <h2 class="text-sabc-primary mb-1">Tournament Results</h2>
+                    <p class="text-muted mb-0">Final standings and statistics</p>
+                </div>
             </div>
-        {% endif %}
-        <!-- Display Results -->
-        {% if tournament.complete %}
-            {% if user.angler.type == "officer" or user.is_staff %}
-                <h2>Payouts</h2>{% render_table payouts %}
-            {% endif %}
-            <h2>Tournament Statistics</h2>{% render_table catch_stats %}
-            {% if tournament.team %}
-                <h2>Team Results</h2>
-                {% if user.angler.type == "officer" or user.is_staff %}
-                    <div class="col-lg-12">{% render_table editable_team_results %}</div>
-                {% else %}
-                    <div class="col-lg-12">{% render_table team_results %}</div>
+            
+            <!-- Results Tables -->
+            <div class="row g-4">
+                {% if user.is_staff %}
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-cash-stack me-2"></i>Payouts
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    {% render_table payouts %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 {% endif %}
-            {% endif %}
-            <h2>Individual Results</h2>
-            {% if user.angler.type == "officer" or user.is_staff %}
-                <div class="col-lg-12">{% render_table editable_results %}</div>
-            {% else %}
-                <div class="col-lg-12">{% render_table results %}</div>
-            {% endif %}
-            {% if render_buy_ins %}
-                <h2>Buy-ins</h2>
-                {% if user.angler.type == "officer" or user.is_staff %}
-                    <div class="col-lg-12">{% render_table editable_buy_ins %}</div>
-                {% else %}
-                    <div class="col-lg-12">{% render_table buy_ins %}</div>
+                
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-sabc-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-bar-chart me-2"></i>Tournament Statistics
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                {% render_table catch_stats %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if tournament.team %}
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-sabc-water text-white">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-people-fill me-2"></i>Team Results
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    {% if user.is_staff %}
+                                        {% render_table editable_team_results %}
+                                    {% else %}
+                                        {% render_table team_results %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 {% endif %}
-            {% endif %}
-            {% if render_dqs %}
-                <h2>Disqualifications</h2>
-                {% if user.angler.type == "officer" or user.is_staff %}
-                    <div class="col-lg-12">{% render_table editable_dqs %}</div>
-                {% else %}
-                    <div class="col-lg-12">{% render_table dqs %}</div>
+                
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-sabc-accent text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-person-fill me-2"></i>Individual Results
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                {% if user.is_staff %}
+                                    {% render_table editable_results %}
+                                {% else %}
+                                    {% render_table results %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if render_buy_ins %}
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-warning text-white">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-credit-card me-2"></i>Buy-ins
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    {% if user.is_staff %}
+                                        {% render_table editable_buy_ins %}
+                                    {% else %}
+                                        {% render_table buy_ins %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 {% endif %}
-            {% endif %}
-        {% endif %}
-    </div>
-</article>
+                
+                {% if render_dqs %}
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>Disqualifications
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    {% if user.is_staff %}
+                                        {% render_table editable_dqs %}
+                                    {% else %}
+                                        {% render_table dqs %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
 {% endblock content %}

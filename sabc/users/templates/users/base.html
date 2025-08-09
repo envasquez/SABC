@@ -32,30 +32,78 @@
                     </button>
                     <div class="collapse navbar-collapse" id="navbarToggle">
                         <div class="navbar-nav me-auto">
-                            <a class="nav-link" href="{% url 'about' %}">About</a>
-                            <a class="nav-link" href="{% url 'bylaws' %}">Bylaws</a>
-                            <a class="nav-link" href="{% url 'calendar' %}">Calendars</a>
-                            <a class="nav-link" href="{% url 'annual-awards' 2024 %}">Awards</a>
+                            <a class="nav-link" href="{% url 'about' %}">
+                                <i class="bi bi-people me-1"></i>
+                                <span class="d-sm-inline">About</span>
+                            </a>
+                            <a class="nav-link" href="{% url 'bylaws' %}">
+                                <i class="bi bi-file-text me-1"></i>
+                                <span class="d-sm-inline">Bylaws</span>
+                            </a>
+                            <a class="nav-link" href="{% url 'calendar' %}">
+                                <i class="bi bi-calendar3 me-1"></i>
+                                <span class="d-sm-inline">Calendar</span>
+                            </a>
+                            <a class="nav-link" href="{% url 'annual-awards' 2024 %}">
+                                <i class="bi bi-trophy me-1"></i>
+                                <span class="d-sm-inline">Awards</span>
+                            </a>
                             {% if user.is_authenticated and user.angler.type != 'guest' %}
-                                <a class="nav-link" href="{% url 'polls' %}">Polls</a>
-                                <a class="nav-link" href="{% url 'roster' %}">Members</a>
+                                <a class="nav-link" href="{% url 'polls' %}">
+                                    <i class="bi bi-clipboard2-check me-1"></i>
+                                    <span class="d-sm-inline">Polls</span>
+                                </a>
+                                <a class="nav-link" href="{% url 'roster' %}">
+                                    <i class="bi bi-people-fill me-1"></i>
+                                    <span class="d-sm-inline">Members</span>
+                                </a>
                             {% endif %}
                         </div>
+                        
                         <!-- Navbar Right Side -->
                         <div class="navbar-nav">
                             {% if user.is_authenticated %}
-                                <a class="nav-link" href="{% url 'profile' user.id %}">
-                                    <i class="bi bi-person-fill me-1"></i>{{ user.get_username }}
-                                </a>
-                                <a class="nav-link" href="{% url 'logout' %}">
-                                    <i class="bi bi-box-arrow-right me-1"></i>Logout
-                                </a>
+                                <!-- User Dropdown -->
+                                <div class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-person-circle me-1"></i>
+                                        <span class="d-none d-sm-inline">{{ user.get_username }}</span>
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'profile' user.id %}">
+                                                <i class="bi bi-person me-2"></i>My Profile
+                                            </a>
+                                        </li>
+                                        {% if user.angler.type == 'officer' or user.is_superuser %}
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'tournament-create' %}">
+                                                    <i class="bi bi-plus-circle me-2"></i>New Tournament
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'lakepoll-create' %}">
+                                                    <i class="bi bi-vote-fill me-2"></i>New Poll
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'logout' %}">
+                                                <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
                             {% else %}
                                 <a class="nav-link" href="{% url 'login' %}">
-                                    <i class="bi bi-box-arrow-in-right me-1"></i>Login
+                                    <i class="bi bi-box-arrow-in-right me-1"></i>
+                                    <span class="d-sm-inline">Login</span>
                                 </a>
                                 <a class="nav-link" href="{% url 'register' %}">
-                                    <i class="bi bi-person-plus me-1"></i>Register
+                                    <i class="bi bi-person-plus me-1"></i>
+                                    <span class="d-sm-inline">Join Club</span>
                                 </a>
                             {% endif %}
                         </div>

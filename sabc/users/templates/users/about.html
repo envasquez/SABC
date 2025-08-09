@@ -1,46 +1,130 @@
 {% extends "users/base.html" %}
-{% block content %}
-<article class="media content-section">
-    <div class="media-body">
-        <div class="article-metadata">
-            <h3>Who We Are</h3>
-        </div>
-        <p class="article-content">
-            South Austin Bass Club is a close group of fisherman who fish Central Texas lakes primarily within a 1-2 hour drive from Austin.
 
-            Our goal is to have monthly tournaments that are friendly yet competative. We have a cumulative points system and offer annual awards for the following:
-            <ul>
-                <li>Angler of the Year</li>
-                <li>Top Six Anglers</li>
-                <li>Big Bass for the Year</li>
-                <li>Heaviest Individual Stringer</li>
-                <li>O'Dell Woolley Annual Rememberance Award</li>
-            </ul>
-            <br />
-            Club Information Highlights
-            <br />
-            <ul>
-                <li>Annual membership dues are: $25 per year</li>
-                <li>We meet once a month to vote on: Lake/Ramp/Time for the monthly tournament</li>
-                <li>Tournament entry fees:
-                    <ul>
-                        <li>$25 per angler (includes Big Bass for SABC members)</li>
-                    </ul>
-                <li>Points are kept for individual performance, prize money paid to the team (unless otherwise stated)</li>
-                <li>Payouts are based on number of individuals fishing the tournament</li>
-            </ul>
-            <br />For detailed information, please our see our <a href="{% url 'bylaws' %}">bylaws</a>
-        </p>
-    </div>
-</article>
-{% comment %} <article class="media content-section">
-    <div class="media-body">
-        <div class="article-metadata">
-            <b>We Meet the First Monday of Every Month <small>(except on holidays)</small> @ Jim's Restaurant at Oak Hill</b>
+{% block content %}
+    <!-- Page Header -->
+    {% include 'components/page_header.html' with title="About South Austin Bass Club" subtitle="Central Texas bass fishing community since [year]" icon="people-fill" %}
+    
+    <div class="row g-4">
+        <!-- Who We Are Section -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-sabc-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-fish me-2"></i>Who We Are
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">
+                        South Austin Bass Club is a close group of fishermen who fish Central Texas lakes primarily within a 1-2 hour drive from Austin.
+                    </p>
+                    <p>
+                        Our goal is to have monthly tournaments that are friendly yet competitive. We have a cumulative points system and offer annual awards for achievement and recognition.
+                    </p>
+                </div>
+            </div>
         </div>
-        <p class="article-content" align="center">
-            <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d13788.385973430077!2d-97.8764697!3d30.2343247!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x865b497c9ac32317%3A0xe7e64cddb64ec553!2sJim&#39;s%20Restaurants!5e0!3m2!1sen!2sus!4v1705506818101!5m2!1sen!2sus" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-        </p>
+        
+        <!-- Awards Section -->
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-trophy-fill me-2"></i>Annual Awards
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item d-flex align-items-center border-0 px-0">
+                            <i class="bi bi-star-fill text-warning me-3"></i>
+                            <span>Angler of the Year</span>
+                        </div>
+                        <div class="list-group-item d-flex align-items-center border-0 px-0">
+                            <i class="bi bi-award-fill text-info me-3"></i>
+                            <span>Top Six Anglers</span>
+                        </div>
+                        <div class="list-group-item d-flex align-items-center border-0 px-0">
+                            <i class="bi bi-fish text-primary me-3"></i>
+                            <span>Big Bass for the Year</span>
+                        </div>
+                        <div class="list-group-item d-flex align-items-center border-0 px-0">
+                            <i class="bi bi-scale text-success me-3"></i>
+                            <span>Heaviest Individual Stringer</span>
+                        </div>
+                        <div class="list-group-item d-flex align-items-center border-0 px-0">
+                            <i class="bi bi-heart-fill text-danger me-3"></i>
+                            <span>O'Dell Woolley Annual Remembrance Award</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Club Information Section -->
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle-fill me-2"></i>Club Highlights
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-cash-coin text-success me-3 fs-5"></i>
+                                <div>
+                                    <div class="fw-semibold">Membership Dues</div>
+                                    <small class="text-muted">$25 per year</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-calendar-event text-primary me-3 fs-5"></i>
+                                <div>
+                                    <div class="fw-semibold">Monthly Meetings</div>
+                                    <small class="text-muted">Vote on lake, ramp, and tournament times</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-currency-dollar text-warning me-3 fs-5"></i>
+                                <div>
+                                    <div class="fw-semibold">Tournament Entry</div>
+                                    <small class="text-muted">$25 per angler (includes Big Bass for members)</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-graph-up text-info me-3 fs-5"></i>
+                                <div>
+                                    <div class="fw-semibold">Point System</div>
+                                    <small class="text-muted">Individual performance tracking</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-people-fill text-sabc-primary me-3 fs-5"></i>
+                                <div>
+                                    <div class="fw-semibold">Team Payouts</div>
+                                    <small class="text-muted">Based on number of participating anglers</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light text-center">
+                    <small class="text-muted">
+                        For detailed information, see our 
+                        <a href="{% url 'bylaws' %}" class="text-decoration-none fw-semibold">
+                            <i class="bi bi-file-text me-1"></i>bylaws
+                        </a>
+                    </small>
+                </div>
+            </div>
+        </div>
     </div>
-</article> {% endcomment %}
 {% endblock content %}

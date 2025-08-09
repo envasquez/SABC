@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 from decimal import Decimal
-from typing import Type
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.db.models import QuerySet
-from django.shortcuts import HttpResponse
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, UpdateView
 from users.models import Angler

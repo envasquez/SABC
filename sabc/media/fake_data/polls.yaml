@@ -1,0 +1,136 @@
+polls:
+  - title: "September 2024 Tournament Lake Selection"
+    description: "Vote for the lake where you'd like to fish our September tournament. Consider current conditions and access."
+    created_by: "club_president"
+    created_date: "2024-08-15"
+    end_date: "2024-08-30"
+    is_active: false
+    winner: "Lake Fork"
+    options:
+      - lake_name: "Lake Fork"
+        votes: 28
+        voters: ["bass_master_tx", "fishing_guru", "lake_legend", "hook_setter", "reel_deal", "top_water", "bass_pro", "fishing_ace", "angler_joe", "lake_king", "bass_whisperer", "fishing_machine", "angler_nick", "bass_catcher", "fishing_pete", "trophy_hunter", "reel_time", "bass_slayer", "fishing_tim", "angler_vic", "bass_wizard", "fishing_xavier", "angler_yancy", "bass_zack", "austin_angler", "bass_brad", "fishing_chris", "angler_dan"]
+      - lake_name: "Sam Rayburn Reservoir"
+        votes: 22
+        voters: ["bass_earl", "fishing_fred", "angler_glen", "bass_hank", "fishing_ivan", "angler_jack", "bass_kyle", "fishing_luke", "angler_max", "bass_noah", "fishing_owen", "angler_paul", "bass_quentin", "fishing_roy", "angler_sam", "bass_tyler", "fishing_uri", "angler_vince", "bass_wade", "fishing_xavier2", "angler_yale", "bass_zane"]
+      - lake_name: "Toledo Bend Reservoir"
+        votes: 18
+        voters: ["fishing_aaron", "angler_blake", "bass_caleb", "fishing_drake", "angler_ethan", "bass_felix", "fishing_gavin", "angler_hayden", "bass_isaac", "fishing_jacob", "angler_keith", "bass_liam", "fishing_mason", "angler_nate", "bass_oliver", "fishing_parker", "angler_quincy", "bass_ryan"]
+      - lake_name: "Lake Tawakoni"
+        votes: 15
+        voters: ["fishing_shane", "angler_trent", "bass_ulric", "fishing_vernon", "angler_wyatt", "bass_xavier", "fishing_york", "angler_zeke", "bass_adam", "fishing_ben", "angler_cole", "bass_dean", "fishing_eli", "angler_finn", "bass_gage"]
+      - lake_name: "Canyon Lake"
+        votes: 12
+        voters: ["fishing_hugo", "angler_ivan2", "bass_jude", "fishing_kane", "angler_leon", "bass_milo", "angler_otto", "bass_pax", "fishing_quill", "angler_reef", "bass_sage", "fishing_trace"]
+        
+  - title: "October 2024 Team Tournament Location"
+    description: "Choose the lake for our team championship tournament in October. Big lake options for team fishing."
+    created_by: "club_vp"
+    created_date: "2024-09-01"
+    end_date: "2024-09-20"
+    is_active: false
+    winner: "Toledo Bend Reservoir"
+    options:
+      - lake_name: "Toledo Bend Reservoir"
+        votes: 32
+        voters: ["bass_master_tx", "fishing_guru", "lake_legend", "hook_setter", "reel_deal", "top_water", "bass_pro", "fishing_ace", "angler_joe", "lake_king", "bass_whisperer", "fishing_machine", "angler_nick", "bass_catcher", "fishing_pete", "trophy_hunter", "reel_time", "bass_slayer", "fishing_tim", "angler_vic", "bass_wizard", "fishing_xavier", "angler_yancy", "bass_zack", "austin_angler", "bass_brad", "fishing_chris", "angler_dan", "bass_earl", "fishing_fred", "angler_glen", "bass_hank"]
+      - lake_name: "Sam Rayburn Reservoir"
+        votes: 25
+        voters: ["fishing_ivan", "angler_jack", "bass_kyle", "fishing_luke", "angler_max", "bass_noah", "fishing_owen", "angler_paul", "bass_quentin", "fishing_roy", "angler_sam", "bass_tyler", "fishing_uri", "angler_vince", "bass_wade", "fishing_xavier2", "angler_yale", "bass_zane", "fishing_aaron", "angler_blake", "bass_caleb", "fishing_drake", "angler_ethan", "bass_felix", "fishing_gavin"]
+      - lake_name: "Lake Buchanan"
+        votes: 20
+        voters: ["angler_hayden", "bass_isaac", "fishing_jacob", "angler_keith", "bass_liam", "fishing_mason", "angler_nate", "bass_oliver", "fishing_parker", "angler_quincy", "bass_ryan", "fishing_shane", "angler_trent", "bass_ulric", "fishing_vernon", "angler_wyatt", "bass_xavier", "fishing_york", "angler_zeke", "bass_adam"]
+      - lake_name: "Lake Travis"
+        votes: 18
+        voters: ["fishing_ben", "angler_cole", "bass_dean", "fishing_eli", "angler_finn", "bass_gage", "fishing_hugo", "angler_ivan2", "bass_jude", "fishing_kane", "angler_leon", "bass_milo", "angler_otto", "bass_pax", "fishing_quill", "angler_reef", "bass_sage", "fishing_trace"]
+        
+  - title: "November 2024 Tournament Lake Vote"
+    description: "Final vote for November tournament location. Weather will be cooler, so consider which lakes fish best in fall."
+    created_by: "club_secretary"
+    created_date: "2024-10-01"
+    end_date: "2024-10-25"
+    is_active: false
+    winner: "Sam Rayburn Reservoir"
+    options:
+      - lake_name: "Sam Rayburn Reservoir"
+        votes: 35
+        voters: ["bass_master_tx", "fishing_guru", "lake_legend", "hook_setter", "reel_deal", "top_water", "bass_pro", "fishing_ace", "angler_joe", "lake_king", "bass_whisperer", "fishing_machine", "angler_nick", "bass_catcher", "fishing_pete", "trophy_hunter", "reel_time", "bass_slayer", "fishing_tim", "angler_vic", "bass_wizard", "fishing_xavier", "angler_yancy", "bass_zack", "austin_angler", "bass_brad", "fishing_chris", "angler_dan", "bass_earl", "fishing_fred", "angler_glen", "bass_hank", "fishing_ivan", "angler_jack", "bass_kyle"]
+      - lake_name: "Lake Fork"
+        votes: 28
+        voters: ["fishing_luke", "angler_max", "bass_noah", "fishing_owen", "angler_paul", "bass_quentin", "fishing_roy", "angler_sam", "bass_tyler", "fishing_uri", "angler_vince", "bass_wade", "fishing_xavier2", "angler_yale", "bass_zane", "fishing_aaron", "angler_blake", "bass_caleb", "fishing_drake", "angler_ethan", "bass_felix", "fishing_gavin", "angler_hayden", "bass_isaac", "fishing_jacob", "angler_keith", "bass_liam", "fishing_mason"]
+      - lake_name: "Toledo Bend Reservoir"
+        votes: 22
+        voters: ["angler_nate", "bass_oliver", "fishing_parker", "angler_quincy", "bass_ryan", "fishing_shane", "angler_trent", "bass_ulric", "fishing_vernon", "angler_wyatt", "bass_xavier", "fishing_york", "angler_zeke", "bass_adam", "fishing_ben", "angler_cole", "bass_dean", "fishing_eli", "angler_finn", "bass_gage", "fishing_hugo", "angler_ivan2"]
+      - lake_name: "Bastrop Lake"
+        votes: 8
+        voters: ["bass_jude", "fishing_kane", "angler_leon", "bass_milo", "angler_otto", "bass_pax", "fishing_quill", "angler_reef"]
+        
+  - title: "December 2024 Year-End Tournament"
+    description: "Vote for our final tournament of 2024! Consider warm-water options for winter fishing."
+    created_by: "club_treasurer"
+    created_date: "2024-11-05"
+    end_date: "2024-11-25"
+    is_active: false
+    winner: "Calaveras Lake"
+    options:
+      - lake_name: "Calaveras Lake"
+        votes: 42
+        voters: ["bass_master_tx", "fishing_guru", "lake_legend", "hook_setter", "reel_deal", "top_water", "bass_pro", "fishing_ace", "angler_joe", "lake_king", "bass_whisperer", "fishing_machine", "angler_nick", "bass_catcher", "fishing_pete", "trophy_hunter", "reel_time", "bass_slayer", "fishing_tim", "angler_vic", "bass_wizard", "fishing_xavier", "angler_yancy", "bass_zack", "austin_angler", "bass_brad", "fishing_chris", "angler_dan", "bass_earl", "fishing_fred", "angler_glen", "bass_hank", "fishing_ivan", "angler_jack", "bass_kyle", "fishing_luke", "angler_max", "bass_noah", "fishing_owen", "angler_paul", "bass_quentin", "fishing_roy"]
+      - lake_name: "Braunig Lake"
+        votes: 25
+        voters: ["angler_sam", "bass_tyler", "fishing_uri", "angler_vince", "bass_wade", "fishing_xavier2", "angler_yale", "bass_zane", "fishing_aaron", "angler_blake", "bass_caleb", "fishing_drake", "angler_ethan", "bass_felix", "fishing_gavin", "angler_hayden", "bass_isaac", "fishing_jacob", "angler_keith", "bass_liam", "fishing_mason", "angler_nate", "bass_oliver", "fishing_parker", "angler_quincy"]
+      - lake_name: "Fayette County Reservoir"
+        votes: 18
+        voters: ["bass_ryan", "fishing_shane", "angler_trent", "bass_ulric", "fishing_vernon", "angler_wyatt", "bass_xavier", "fishing_york", "angler_zeke", "bass_adam", "fishing_ben", "angler_cole", "bass_dean", "fishing_eli", "angler_finn", "bass_gage", "fishing_hugo", "angler_ivan2"]
+      - lake_name: "Canyon Lake"
+        votes: 12
+        voters: ["bass_jude", "fishing_kane", "angler_leon", "bass_milo", "angler_otto", "bass_pax", "fishing_quill", "angler_reef", "bass_sage", "fishing_trace", "angler_amy", "bass_beth"]
+        
+  # Active Polls
+  - title: "January 2025 Season Opener Location"
+    description: "Start the new year right! Vote for where you want to kick off the 2025 tournament season."
+    created_by: "club_president"
+    created_date: "2024-11-20"
+    end_date: "2024-12-15"
+    is_active: true
+    winner: null
+    options:
+      - lake_name: "Lake Travis"
+        votes: 15
+        voters: ["bass_master_tx", "fishing_guru", "lake_legend", "hook_setter", "reel_deal", "top_water", "bass_pro", "fishing_ace", "angler_joe", "lake_king", "bass_whisperer", "fishing_machine", "angler_nick", "bass_catcher", "fishing_pete"]
+      - lake_name: "Canyon Lake"
+        votes: 12
+        voters: ["trophy_hunter", "reel_time", "bass_slayer", "fishing_tim", "angler_vic", "bass_wizard", "fishing_xavier", "angler_yancy", "bass_zack", "austin_angler", "bass_brad", "fishing_chris"]
+      - lake_name: "Lake LBJ"
+        votes: 18
+        voters: ["angler_dan", "bass_earl", "fishing_fred", "angler_glen", "bass_hank", "fishing_ivan", "angler_jack", "bass_kyle", "fishing_luke", "angler_max", "bass_noah", "fishing_owen", "angler_paul", "bass_quentin", "fishing_roy", "angler_sam", "bass_tyler", "fishing_uri"]
+      - lake_name: "Bastrop Lake"
+        votes: 8
+        voters: ["angler_vince", "bass_wade", "fishing_xavier2", "angler_yale", "bass_zane", "fishing_aaron", "angler_blake", "bass_caleb"]
+      - lake_name: "Georgetown Lake"
+        votes: 6
+        voters: ["fishing_drake", "angler_ethan", "bass_felix", "fishing_gavin", "angler_hayden", "bass_isaac"]
+        
+  - title: "February 2025 Team Tournament Lake"
+    description: "Our first team tournament of 2025 - which lake would provide the best team fishing experience?"
+    created_by: "club_vp"
+    created_date: "2024-12-01"
+    end_date: "2024-12-20"
+    is_active: true
+    winner: null
+    options:
+      - lake_name: "Lake Buchanan"
+        votes: 22
+        voters: ["bass_master_tx", "fishing_guru", "lake_legend", "hook_setter", "reel_deal", "top_water", "bass_pro", "fishing_ace", "angler_joe", "lake_king", "bass_whisperer", "fishing_machine", "angler_nick", "bass_catcher", "fishing_pete", "trophy_hunter", "reel_time", "bass_slayer", "fishing_tim", "angler_vic", "bass_wizard", "fishing_xavier"]
+      - lake_name: "Stillhouse Hollow Lake"
+        votes: 16
+        voters: ["angler_yancy", "bass_zack", "austin_angler", "bass_brad", "fishing_chris", "angler_dan", "bass_earl", "fishing_fred", "angler_glen", "bass_hank", "fishing_ivan", "angler_jack", "bass_kyle", "fishing_luke", "angler_max", "bass_noah"]
+      - lake_name: "Belton Lake"
+        votes: 14
+        voters: ["fishing_owen", "angler_paul", "bass_quentin", "fishing_roy", "angler_sam", "bass_tyler", "fishing_uri", "angler_vince", "bass_wade", "fishing_xavier2", "angler_yale", "bass_zane", "fishing_aaron", "angler_blake"]
+      - lake_name: "Granger Lake"
+        votes: 10
+        voters: ["bass_caleb", "fishing_drake", "angler_ethan", "bass_felix", "fishing_gavin", "angler_hayden", "bass_isaac", "fishing_jacob", "angler_keith", "bass_liam"]
+      - lake_name: "Somerville Lake"
+        votes: 7
+        voters: ["fishing_mason", "angler_nate", "bass_oliver", "fishing_parker", "angler_quincy", "bass_ryan", "fishing_shane"]

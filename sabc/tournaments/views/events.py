@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Any, Type
+from typing import Type
 
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin

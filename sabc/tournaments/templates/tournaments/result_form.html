@@ -1,17 +1,120 @@
 {% extends "users/base.html" %}
 {% load crispy_forms_tags %}
+
 {% block content %}
-    <div class="content-section">
-        <form method="POST">
-            {% csrf_token %}
-            <fieldset class="form-group">
-                <legend class="border-bottom mb-4"> Results: <b>{{ tournament.name }} - {{ tournament.lake }}</b></legend>
-                {{ form|crispy }}
-            </fieldset>
-            <div class="form-group">
-                <button class="btn btn-outline-info" type="submit">Save</button>&nbsp;&nbsp;
-                <a class="btn btn-outline-info" href="{% url 'tournament-details' tournament.id %}" role="button">Back</a></button>
+    <!-- Page Header -->
+    {% include 'components/page_header.html' with title="Tournament Results" subtitle="Record fishing results for the tournament" icon="clipboard-data" %}
+    
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <!-- Tournament Info Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-sabc-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-trophy me-2"></i>{{ tournament.name }}
+                    </h5>
+                    <div class="text-white-50 small mt-1">
+                        <i class="bi bi-geo-alt me-1"></i>{{ tournament.lake }}
+                        <span class="mx-2">•</span>
+                        <i class="bi bi-calendar3 me-1"></i>{{ tournament.event.date }}
+                    </div>
+                </div>
             </div>
-        </form>
+            
+            <!-- Results Form -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-fish me-2"></i>
+                        {% if result %}Edit Results{% else %}Record Results{% endif %}
+                    </h5>
+                    <small class="text-white-50 d-block mt-1">
+                        {% if result %}
+                            Update fishing results and statistics
+                        {% else %}
+                            Enter catch details and tournament performance
+                        {% endif %}
+                    </small>
+                </div>
+                
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Results Information -->
+                        <div class="mb-4">
+                            <h6 class="text-success mb-3 pb-2 border-bottom">
+                                <i class="bi bi-list-check me-2"></i>Fishing Results
+                            </h6>
+                            {{ form|crispy }}
+                        </div>
+                        
+                        <!-- Form Actions -->
+                        <div class="d-flex flex-column flex-sm-row gap-2 justify-content-between align-items-center">
+                            <div class="text-muted small">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Results will be visible to all club members and used for award calculations
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'tournament-details' tournament.id %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-1"></i>Back to Tournament
+                                </a>
+                                <button class="btn btn-success" type="submit">
+                                    <i class="bi bi-check-lg me-1"></i>
+                                    {% if result %}Update Results{% else %}Save Results{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Results Tips -->
+            <div class="card shadow-sm mt-4 bg-light">
+                <div class="card-body">
+                    <h6 class="text-success mb-3">
+                        <i class="bi bi-lightbulb me-2"></i>Results Entry Tips
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <div class="d-flex">
+                                <i class="bi bi-scale text-primary me-2 mt-1"></i>
+                                <div>
+                                    <strong class="small">Accurate Weights</strong>
+                                    <div class="small text-muted">Use official tournament scales for all measurements</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="d-flex">
+                                <i class="bi bi-exclamation-triangle text-warning me-2 mt-1"></i>
+                                <div>
+                                    <strong class="small">Dead Fish Penalty</strong>
+                                    <div class="small text-muted">Remember to apply penalties for any dead fish</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="d-flex">
+                                <i class="bi bi-trophy text-success me-2 mt-1"></i>
+                                <div>
+                                    <strong class="small">Big Bass</strong>
+                                    <div class="small text-muted">Record your heaviest single fish for big bass competition</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="d-flex">
+                                <i class="bi bi-clock text-info me-2 mt-1"></i>
+                                <div>
+                                    <strong class="small">Timely Entry</strong>
+                                    <div class="small text-muted">Enter results promptly after the tournament for accuracy</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock content %}

@@ -1,53 +1,75 @@
 {% extends "users/base.html" %}
 {% load django_tables2 %}
+
 {% block content %}
-    <h1>{{ title }}</h1>
-    {% if title == '2024 Awards' %}
-        <div align="right">
-            <a href="{% url 'annual-awards' 2022 %}" class="btn btn-secondary btn-sm" role="button">2022 Awards</a>
-            <a href="{% url 'annual-awards' 2023 %}" class="btn btn-secondary btn-sm" role="button">2023 Awards</a>
+    <!-- Page Header -->
+    {% include 'components/page_header.html' with title=title subtitle="Annual achievement awards and recognition" icon="trophy-fill" %}
+    
+    <!-- Year Navigation -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="text-center">
+                <div class="btn-group" role="group" aria-label="Award years">
+                    {% if title == '2024 Awards' %}
+                        <a href="{% url 'annual-awards' 2022 %}" class="btn btn-outline-sabc-primary">2022 Awards</a>
+                        <a href="{% url 'annual-awards' 2023 %}" class="btn btn-outline-sabc-primary">2023 Awards</a>
+                        <button type="button" class="btn btn-sabc-primary active">2024 Awards</button>
+                    {% elif title == '2023 Awards' %}
+                        <a href="{% url 'annual-awards' 2022 %}" class="btn btn-outline-sabc-primary">2022 Awards</a>
+                        <button type="button" class="btn btn-sabc-primary active">2023 Awards</button>
+                        <a href="{% url 'annual-awards' 2024 %}" class="btn btn-outline-sabc-primary">2024 Awards</a>
+                    {% elif title == '2022 Awards' %}
+                        <button type="button" class="btn btn-sabc-primary active">2022 Awards</button>
+                        <a href="{% url 'annual-awards' 2023 %}" class="btn btn-outline-sabc-primary">2023 Awards</a>
+                        <a href="{% url 'annual-awards' 2024 %}" class="btn btn-outline-sabc-primary">2024 Awards</a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-    {% endif %}
-    {% if title == '2023 Awards' %}
-        <div align="right">
-            <a href="{% url 'annual-awards' 2022 %}" class="btn btn-secondary btn-sm" role="button">2022 Awards</a>
-            <a href="{% url 'annual-awards' 2024 %}" class="btn btn-secondary btn-sm" role="button">2024 Awards</a>
-        </div>
-    {% endif %}
-    {% if title == '2022 Awards' %}
-        <div align="right">
-            <a href="{% url 'annual-awards' 2024 %}" class="btn btn-secondary btn-sm" role="button">2024 Awards</a>
-            <a href="{% url 'annual-awards' 2023 %}" class="btn btn-secondary btn-sm" role="button">2023 Awards</a>
-        </div>
-    {% endif %}
-    <article class="media content-section">
-        <div class="media-body">
-            <div class="container">
-                <h4>Heavy Stringer</h4>
-                <div class="col-lg-12">
+    </div>
+
+    <!-- Awards Sections -->
+    <div class="row g-4">
+        <!-- Heavy Stringer Award -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-sabc-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-award-fill me-2"></i>Heavy Stringer Award
+                    </h4>
+                </div>
+                <div class="card-body">
                     {% render_table hvy_tbl %}
                 </div>
             </div>
         </div>
-    </article>
-    <article class="media content-section">
-        <div class="media-body">
-            <div class="container">
-                <h4>Big Bass of the Year</h4>
-                <div class="col-lg-12">
+        
+        <!-- Big Bass Award -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-trophy-fill me-2"></i>Big Bass of the Year
+                    </h4>
+                </div>
+                <div class="card-body">
                     {% render_table bb_tbl %}
                 </div>
             </div>
         </div>
-    </article>
-    <article class="media content-section">
-        <div class="media-body">
-            <div class="container">
-                <h4>Angler of the Year</h4>
-                <div class="col-lg-12">
+        
+        <!-- Angler of the Year -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-star-fill me-2"></i>Angler of the Year
+                    </h4>
+                </div>
+                <div class="card-body">
                     {% render_table aoy_tbl %}
                 </div>
             </div>
         </div>
-    </article>
+    </div>
 {% endblock content %}

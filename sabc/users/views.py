@@ -129,15 +129,17 @@ class AnglerDetailView(DetailView):
     template_name = "users/profile.html"
 
     def get_object(self, queryset=None):
-        return self.request.user
+        user_pk = self.kwargs.get("pk")
+        return Angler.objects.get(user_id=user_pk)
 
     def get_biggest_bass(self, year=0):
         year = year or datetime.date.today().year
+        angler = self.get_object()
         big_bass = [
             r.big_bass_weight
             for r in Result.objects.filter(
                 tournament__event__year=year,
-                angler__user=self.get_object(),
+                angler=angler,
                 big_bass_weight__gte=Decimal("5"),
             )
         ]
@@ -148,7 +150,7 @@ class AnglerDetailView(DetailView):
 
     def get_stats(self, year=0):
         year = year or datetime.date.today().year
-        angler = Angler.objects.get(user=self.get_object().id)
+        angler = self.get_object()
         results = Result.objects.filter(angler=angler, tournament__event__year=year)
         return {
             "wins": sum(1 for r in results if r.place_finish == 1),
@@ -171,14 +173,15 @@ class AnglerDetailView(DetailView):
         context["num_events"] = results.get("events", 0)
 
         context["officer_pos"] = None
+        angler = self.get_object()
         officer = Officers.objects.filter(
-            angler__user=self.request.user,
+            angler=angler,
             year=datetime.date.today().year,
         )
         if officer:
             context["officer_pos"] = officer.first().position.title()
 
         context["can_edit"] = False
-        if self.get_object().id == self.kwargs.get("pk"):
+        if angler.user.id == self.request.user.id:
             context["can_edit"] = True
         return context

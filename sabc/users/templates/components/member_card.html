@@ -1,0 +1,195 @@
+{% comment %}
+Member Card Component
+Usage: {% include 'components/member_card.html' with member=angler_object %}
+Available variables:
+- member: Angler object
+- show_contact: Show contact information (default: false)
+- show_stats: Show member statistics (default: false)
+- compact: Use compact layout (default: false)
+{% endcomment %}
+
+<div class="card member-card h-100 shadow-sm {% if compact %}compact{% endif %}">
+    <div class="card-body {% if compact %}p-3{% else %}p-4{% endif %}">
+        <div class="d-flex {% if compact %}align-items-center{% else %}flex-column flex-md-row align-items-md-center{% endif %}">
+            <!-- Member Avatar/Image -->
+            <div class="{% if compact %}me-3{% else %}text-center text-md-start me-md-4 mb-3 mb-md-0{% endif %}">
+                {% if member.user.profile_image %}
+                    <img src="{{ member.user.profile_image.url }}" 
+                         class="rounded-circle {% if compact %}member-avatar-sm{% else %}member-avatar{% endif %}" 
+                         alt="{{ member.user.get_full_name }}">
+                {% else %}
+                    <div class="{% if compact %}member-avatar-sm{% else %}member-avatar{% endif %} 
+                                rounded-circle bg-sabc-primary text-white 
+                                d-flex align-items-center justify-content-center">
+                        <i class="bi bi-person-fill {% if compact %}fs-5{% else %}fs-4{% endif %}"></i>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Member Information -->
+            <div class="flex-grow-1 {% if not compact %}text-center text-md-start{% endif %}">
+                <div class="d-flex {% if compact %}align-items-center justify-content-between{% else %}flex-column flex-md-row align-items-md-center justify-content-md-between{% endif %}">
+                    <div>
+                        <h5 class="{% if compact %}mb-1 h6{% else %}mb-2{% endif %} text-sabc-primary">
+                            {{ member.user.get_full_name|default:member.user.username }}
+                            {% if member.type == 'officer' %}
+                                <i class="bi bi-star-fill text-warning ms-1" title="Officer"></i>
+                            {% elif member.member %}
+                                <i class="bi bi-check-circle-fill text-success ms-1" title="Active Member"></i>
+                            {% else %}
+                                <span class="badge bg-secondary ms-2">Guest</span>
+                            {% endif %}
+                        </h5>
+                        
+                        {% if not compact %}
+                            <p class="text-muted mb-2 small">
+                                {% if member.member %}
+                                    <i class="bi bi-calendar-check me-1"></i>
+                                    Member since {{ member.created_at|date:"Y" }}
+                                {% else %}
+                                    <i class="bi bi-person-badge me-1"></i>
+                                    Guest Member
+                                {% endif %}
+                            </p>
+                        {% endif %}
+                        
+                        {% if show_contact and member.phone_number %}
+                            <div class="{% if compact %}small{% endif %}">
+                                <i class="bi bi-telephone me-1 text-sabc-primary"></i>
+                                <a href="tel:{{ member.phone_number }}" class="text-decoration-none">
+                                    {{ member.phone_number }}
+                                </a>
+                            </div>
+                        {% endif %}
+                        
+                        {% if show_contact and member.user.email %}
+                            <div class="{% if compact %}small{% endif %} {% if member.phone_number %}mt-1{% endif %}">
+                                <i class="bi bi-envelope me-1 text-sabc-primary"></i>
+                                <a href="mailto:{{ member.user.email }}" class="text-decoration-none">
+                                    {{ member.user.email }}
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Member Actions -->
+                    <div class="{% if compact %}ms-3{% else %}mt-3 mt-md-0{% endif %}">
+                        <div class="btn-group {% if compact %}btn-group-sm{% endif %}" role="group">
+                            {% if user.is_authenticated %}
+                                <a href="{% url 'profile' member.user.id %}" 
+                                   class="btn btn-outline-sabc-primary btn-sm"
+                                   title="View Profile">
+                                    <i class="bi bi-person"></i>
+                                    {% if not compact %} Profile{% endif %}
+                                </a>
+                            {% endif %}
+                            
+                            {% if show_contact and member.phone_number %}
+                                <a href="tel:{{ member.phone_number }}" 
+                                   class="btn btn-outline-success btn-sm"
+                                   title="Call Member">
+                                    <i class="bi bi-telephone"></i>
+                                    {% if not compact %} Call{% endif %}
+                                </a>
+                            {% endif %}
+                            
+                            {% if show_contact and member.user.email %}
+                                <a href="mailto:{{ member.user.email }}" 
+                                   class="btn btn-outline-primary btn-sm"
+                                   title="Email Member">
+                                    <i class="bi bi-envelope"></i>
+                                    {% if not compact %} Email{% endif %}
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Member Statistics (if requested) -->
+                {% if show_stats and member.member %}
+                    <div class="{% if compact %}mt-2{% else %}mt-3{% endif %}">
+                        <div class="row g-2">
+                            <div class="col-4 text-center">
+                                <div class="bg-light rounded p-2">
+                                    <div class="fw-bold text-sabc-primary small">12</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">Tournaments</div>
+                                </div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="bg-light rounded p-2">
+                                    <div class="fw-bold text-success small">3</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">Wins</div>
+                                </div>
+                            </div>
+                            <div class="col-4 text-center">
+                                <div class="bg-light rounded p-2">
+                                    <div class="fw-bold text-warning small">5.2</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">Big Bass</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Optional footer for additional actions -->
+    {% block member_card_footer %}{% endblock %}
+</div>
+
+<style>
+.member-card {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.member-card:hover {
+    border-color: var(--sabc-primary);
+    transform: translateY(-3px);
+    box-shadow: var(--sabc-shadow-lg) !important;
+}
+
+.member-avatar {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+}
+
+.member-avatar-sm {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+}
+
+.member-card.compact {
+    transition: all 0.2s ease;
+}
+
+.member-card.compact:hover {
+    transform: translateY(-1px);
+}
+
+.btn-outline-sabc-primary {
+    color: var(--sabc-primary);
+    border-color: var(--sabc-primary);
+}
+
+.btn-outline-sabc-primary:hover {
+    background-color: var(--sabc-primary);
+    border-color: var(--sabc-primary);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .member-card .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .member-avatar {
+        width: 60px;
+        height: 60px;
+    }
+}
+</style>

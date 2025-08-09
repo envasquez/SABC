@@ -1,0 +1,304 @@
+lakes:
+  - name: "Lake Travis"
+    state: "Texas"
+    county: "Travis"
+    acres: 18930
+    max_depth: 210
+    description: "Popular Central Texas lake known for excellent largemouth bass fishing. Located just west of Austin."
+    ramps:
+      - name: "Mansfield Dam Park"
+        lat: 30.3875
+        lng: -97.9183
+        fee: true
+      - name: "Bob Wentz Park"
+        lat: 30.3792
+        lng: -97.8542
+        fee: true
+      - name: "Windy Point Park"
+        lat: 30.3567
+        lng: -97.8942
+        fee: true
+    
+  - name: "Lake Austin"
+    state: "Texas"
+    county: "Travis"
+    acres: 1830
+    max_depth: 75
+    description: "Urban lake in the heart of Austin with good bass fishing and scenic views."
+    ramps:
+      - name: "Red Bud Isle"
+        lat: 30.2833
+        lng: -97.7917
+        fee: false
+      - name: "Festival Beach"
+        lat: 30.2531
+        lng: -97.7272
+        fee: false
+    
+  - name: "Bastrop Lake"
+    state: "Texas" 
+    county: "Bastrop"
+    acres: 906
+    max_depth: 43
+    description: "Small lake east of Austin known for consistent bass fishing and peaceful atmosphere."
+    ramps:
+      - name: "North Shore Park"
+        lat: 30.1483
+        lng: -97.3167
+        fee: true
+      - name: "South Shore Park" 
+        lat: 30.1400
+        lng: -97.3100
+        fee: true
+        
+  - name: "Lake Buchanan"
+    state: "Texas"
+    county: "Llano/Burnet"
+    acres: 22333
+    max_depth: 132
+    description: "Large Highland Lake with excellent white bass and largemouth bass fishing."
+    ramps:
+      - name: "Black Rock Park"
+        lat: 30.7583
+        lng: -98.4167
+        fee: true
+      - name: "Llano River Marina"
+        lat: 30.7833
+        lng: -98.3833
+        fee: true
+        
+  - name: "Inks Lake"
+    state: "Texas"
+    county: "Burnet"
+    acres: 803
+    max_depth: 97
+    description: "Clear Highland Lake perfect for bass fishing with constant water level."
+    ramps:
+      - name: "Inks Lake State Park"
+        lat: 30.7333
+        lng: -98.3667
+        fee: true
+        
+  - name: "Lake LBJ"
+    state: "Texas"
+    county: "Llano/Burnet"
+    acres: 6375
+    max_depth: 90
+    description: "Popular Highland Lake with consistent bass fishing and beautiful scenery."
+    ramps:
+      - name: "Kingsland Marina"
+        lat: 30.6667
+        lng: -98.4333
+        fee: true
+      - name: "Granite Shoals Park"
+        lat: 30.5833
+        lng: -98.3833
+        fee: true
+        
+  - name: "Canyon Lake"
+    state: "Texas"
+    county: "Comal"
+    acres: 8230
+    max_depth: 125
+    description: "Clear spring-fed lake south of Austin with excellent smallmouth and largemouth bass."
+    ramps:
+      - name: "Canyon Park"
+        lat: 29.8833
+        lng: -98.2667
+        fee: true
+      - name: "Comal Park"
+        lat: 29.8667
+        lng: -98.2833
+        fee: true
+        
+  - name: "Medina Lake"
+    state: "Texas"
+    county: "Medina"
+    acres: 5575
+    max_depth: 254
+    description: "Deep lake southwest of San Antonio known for quality bass fishing."
+    ramps:
+      - name: "Medina Lake Park"
+        lat: 29.5333
+        lng: -98.9333
+        fee: true
+      - name: "Lakehills Marina"
+        lat: 29.5167
+        lng: -98.9167
+        fee: true
+        
+  - name: "Calaveras Lake"
+    state: "Texas"
+    county: "Bexar"
+    acres: 3624
+    max_depth: 30
+    description: "Warm-water discharge lake near San Antonio with great winter bass fishing."
+    ramps:
+      - name: "Calaveras Lake Park"
+        lat: 29.3167
+        lng: -98.3833
+        fee: true
+        
+  - name: "Braunig Lake"
+    state: "Texas"
+    county: "Bexar"
+    acres: 1350
+    max_depth: 35
+    description: "Small warm-water lake near San Antonio perfect for bass fishing."
+    ramps:
+      - name: "Braunig Lake Park"
+        lat: 29.2833
+        lng: -98.4667
+        fee: true
+        
+  - name: "Fayette County Reservoir"
+    state: "Texas"
+    county: "Fayette"
+    acres: 2400
+    max_depth: 45
+    description: "Power plant lake between Austin and Houston with consistent bass fishing."
+    ramps:
+      - name: "Park Prairie Marina"
+        lat: 29.7000
+        lng: -96.7833
+        fee: true
+        
+  - name: "Granger Lake"
+    state: "Texas"
+    county: "Williamson"
+    acres: 4064
+    max_depth: 67
+    description: "Corps of Engineers lake northeast of Austin with good bass and catfish."
+    ramps:
+      - name: "Wilson H. Fox Park"
+        lat: 30.6833
+        lng: -97.4167
+        fee: true
+      - name: "Taylor Park"
+        lat: 30.6667
+        lng: -97.4333
+        fee: true
+        
+  - name: "Stillhouse Hollow Lake"
+    state: "Texas"
+    county: "Bell"
+    acres: 6430
+    max_depth: 120
+    description: "Clear lake near Killeen with excellent bass fishing and rocky structure."
+    ramps:
+      - name: "Stillhouse Park"
+        lat: 31.0833
+        lng: -97.5833
+        fee: true
+      - name: "Cedar Gap Park"
+        lat: 31.0667
+        lng: -97.5667
+        fee: true
+        
+  - name: "Belton Lake"
+    state: "Texas"
+    county: "Bell"
+    acres: 12300
+    max_depth: 110
+    description: "Large Corps lake with excellent bass fishing and numerous coves to explore."
+    ramps:
+      - name: "Live Oak Ridge Park"
+        lat: 31.1333
+        lng: -97.4833
+        fee: true
+      - name: "Westcliff Park"
+        lat: 31.1167
+        lng: -97.5167
+        fee: true
+        
+  - name: "Georgetown Lake"
+    state: "Texas"
+    county: "Williamson"
+    acres: 1310
+    max_depth: 45
+    description: "Small lake north of Austin known for good bass fishing and quiet waters."
+    ramps:
+      - name: "Russell Park"
+        lat: 30.6667
+        lng: -97.6833
+        fee: true
+        
+  - name: "Somerville Lake"
+    state: "Texas"
+    county: "Burleson/Lee"
+    acres: 11460
+    max_depth: 62
+    description: "Large lake southeast of Austin with excellent bass fishing and multiple access points."
+    ramps:
+      - name: "Birch Creek Park"
+        lat: 30.3167
+        lng: -96.5333
+        fee: true
+      - name: "Yegua Creek Park"
+        lat: 30.2833
+        lng: -96.5667
+        fee: true
+        
+  - name: "Toledo Bend Reservoir"
+    state: "Texas/Louisiana"
+    county: "Sabine/Shelby"
+    acres: 185000
+    max_depth: 110
+    description: "Massive lake on Texas-Louisiana border, famous for trophy bass fishing."
+    ramps:
+      - name: "Ragtown Marina"
+        lat: 31.1667
+        lng: -93.9167
+        fee: true
+      - name: "Pendleton Harbor"
+        lat: 31.0833
+        lng: -94.0833
+        fee: true
+        
+  - name: "Sam Rayburn Reservoir"
+    state: "Texas"
+    county: "Jasper/Angelina"
+    acres: 114500
+    max_depth: 80
+    description: "One of Texas's premier bass fishing destinations with consistent tournament-quality fish."
+    ramps:
+      - name: "Cassells-Boykin Park"
+        lat: 31.0333
+        lng: -94.1833
+        fee: true
+      - name: "Powell Park"
+        lat: 31.0167
+        lng: -94.2167
+        fee: true
+        
+  - name: "Lake Fork"
+    state: "Texas"
+    county: "Wood/Rains"
+    acres: 27690
+    max_depth: 70
+    description: "World-famous trophy bass lake consistently producing double-digit largemouth bass."
+    ramps:
+      - name: "Lake Fork Marina"
+        lat: 32.7833
+        lng: -95.6167
+        fee: true
+      - name: "Mineola Nature Preserve"
+        lat: 32.6833
+        lng: -95.5333
+        fee: true
+        
+  - name: "Lake Tawakoni"
+    state: "Texas"
+    county: "Hunt/Rains/Van Zandt"
+    acres: 37879
+    max_depth: 70
+    description: "Large East Texas lake with excellent bass and catfish populations."
+    ramps:
+      - name: "Wind Point Park"
+        lat: 32.8333
+        lng: -95.9167
+        fee: true
+      - name: "Prairie Creek Park"
+        lat: 32.8167
+        lng: -95.8833
+        fee: true

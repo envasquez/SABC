@@ -28,11 +28,7 @@ Place/Point Scenarios to test for
 
 from decimal import Decimal
 
-import django
 import pytest
-from django.conf import settings
-from django.contrib.auth.models import User
-from users.models import Angler
 
 from ..models.results import Result, TeamResult
 from ..models.tournaments import Tournament, get_big_bass_winner, set_points
@@ -81,7 +77,6 @@ def test_guest_cant_win_bb():
     The member should win.
     Delete the member result, and call get_big_bass_winner(tid) and it should return None
     """
-    import pprint
 
     tmnt = Tournament.objects.create()
     for idx in [1, 2]:

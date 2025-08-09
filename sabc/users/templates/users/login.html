@@ -1,28 +1,106 @@
 {% extends "users/base.html" %}
 {% load crispy_forms_tags %}
+
 {% block content %}
-    <article class="media content-section">
-        <div class="media-body">
-            <div class="content-section">
-                <form method="POST">
-                    {% csrf_token %}
-                    <fieldset class="form-group">
-                        <legend class="border-bottom mb-4">Member Log In</legend>
-                        {{ form|crispy }}
-                    </fieldset>
-                    <div class="form-group">
-                        <button class="btn btn-outline-info" type="submit">Login</button>
-                        <small class="text-muted ml-2">
-                            <a href="{% url 'password-reset' %}">Forgot Password?</a>
-                        </small>
-                    </div>
-                </form>
-                <div class="border-top pt-3">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-6 col-lg-5">
+            {% include 'components/page_header.html' with title="Welcome Back" subtitle="Sign in to your SABC account" icon="box-arrow-in-right" %}
+            
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-sabc-primary text-white text-center py-4">
+                    <i class="bi bi-fish display-4 mb-3"></i>
+                    <h4 class="mb-0">South Austin Bass Club</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.non_form_errors %}
+                            {% include 'components/alert.html' with type="danger" message=form.non_form_errors dismissible=true %}
+                        {% endif %}
+                        
+                        <div class="mb-3">
+                            {{ form|crispy }}
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button class="btn btn-sabc-primary btn-lg" type="submit">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>
+                                Sign In
+                            </button>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <a href="{% url 'password-reset' %}" class="text-decoration-none small">
+                                <i class="bi bi-question-circle me-1"></i>
+                                Forgot your password?
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer bg-light text-center py-3">
                     <small class="text-muted">
-                        Don't Have An Account? <a class="ml-2" href="{% url 'register' %}">Register</a>
+                        New to our club? 
+                        <a href="{% url 'register' %}" class="text-decoration-none fw-semibold">
+                            <i class="bi bi-person-plus me-1"></i>Join Now
+                        </a>
                     </small>
                 </div>
             </div>
+            
+            <!-- Features showcase -->
+            <div class="row g-3 mt-4">
+                <div class="col-4">
+                    <div class="text-center">
+                        <i class="bi bi-calendar-event display-6 text-sabc-primary mb-2"></i>
+                        <small class="text-muted d-block">Track Tournaments</small>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="text-center">
+                        <i class="bi bi-trophy display-6 text-warning mb-2"></i>
+                        <small class="text-muted d-block">View Results</small>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="text-center">
+                        <i class="bi bi-people display-6 text-success mb-2"></i>
+                        <small class="text-muted d-block">Connect</small>
+                    </div>
+                </div>
+            </div>
         </div>
-    </article>
+    </div>
 {% endblock content %}
+
+<style>
+.btn-sabc-primary {
+    background-color: var(--sabc-primary);
+    border-color: var(--sabc-primary);
+    color: white;
+}
+
+.btn-sabc-primary:hover {
+    background-color: var(--sabc-secondary);
+    border-color: var(--sabc-secondary);
+    color: white;
+}
+
+.card-header i.display-4 {
+    opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1.5rem !important;
+    }
+    
+    .card-header {
+        padding: 2rem 1rem !important;
+    }
+    
+    .card-header .display-4 {
+        font-size: 2.5rem !important;
+    }
+}
+</style>
