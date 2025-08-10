@@ -49,9 +49,11 @@ class Tournament(Model):
     def save(self, *args, **kwargs):
         today = datetime.date.today()
         if not self.rules:
-            self.rules, _ = RuleSet.objects.get_or_create(year=today.year)
+            self.rules = RuleSet.objects.filter(year=today.year).first()
+            if not self.rules:
+                self.rules = RuleSet.objects.create(year=today.year)
         if not self.event:
-            self.event, _ = Events.objects.get_or_create(
+            self.event = Events.objects.filter(
                 type="tournament",
                 month=today.month,
                 year=today.year,
@@ -60,11 +62,26 @@ class Tournament(Model):
                     month=today.month,
                     day=get_last_sunday(month=today.month),
                 ),
-            )
+            ).first()
+            if not self.event:
+                self.event = Events.objects.create(
+                    type="tournament",
+                    month=today.month,
+                    year=today.year,
+                    date=datetime.date(
+                        year=today.year,
+                        month=today.month,
+                        day=get_last_sunday(month=today.month),
+                    ),
+                )
         if not self.payout_multiplier:
-            self.payout_multiplier, _ = PayOutMultipliers.objects.get_or_create(
+            self.payout_multiplier = PayOutMultipliers.objects.filter(
                 year=self.event.year
-            )
+            ).first()
+            if not self.payout_multiplier:
+                self.payout_multiplier = PayOutMultipliers.objects.create(
+                    year=self.event.year
+                )
         if self.lake:
             self.paper = self.lake.paper
         super().save(*args, **kwargs)

@@ -15,11 +15,11 @@ Usage:
     python test_migrations.py --test-rollback
 """
 
-import os
-import sys
-import subprocess
-import shutil
 import argparse
+import os
+import shutil
+import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -35,10 +35,10 @@ import django
 
 django.setup()
 
+from django.contrib.auth import get_user_model
 from django.core.management import call_command, execute_from_command_line
 from django.db import connection, transaction
 from django.test.utils import setup_test_environment, teardown_test_environment
-from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
@@ -160,8 +160,8 @@ class MigrationTester:
 
     def _check_tournament_results_consistency(self):
         """Check tournament results data consistency."""
-        from tournaments.models.tournaments import Tournament
         from tournaments.models.results import Result
+        from tournaments.models.tournaments import Tournament
 
         tournaments_count = Tournament.objects.count()
         results_count = Result.objects.count()
@@ -303,6 +303,7 @@ class MigrationTester:
     def _benchmark_tournament_queries(self):
         """Benchmark tournament-related queries."""
         import time
+
         from tournaments.models.tournaments import Tournament
 
         start_time = time.time()
@@ -322,6 +323,7 @@ class MigrationTester:
     def _benchmark_results_queries(self):
         """Benchmark results-related queries."""
         import time
+
         from tournaments.models.results import Result
 
         start_time = time.time()
