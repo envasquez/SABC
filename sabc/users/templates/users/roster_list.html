@@ -1,15 +1,16 @@
 {% extends "users/base.html" %}
 {% load table_extras %}
+{% load django_tables2 %}
 
 {% block content %}
     {% include 'components/page_header.html' with title=roster_name subtitle="Club membership directory" icon="people-fill" %}
     
-    <div class="row g-4">
+    <div class="row g-4" x-data="rosterSearch()">
         <!-- Search and Filter Controls -->
         <div class="col-12">
             <div class="card shadow-sm bg-light">
                 <div class="card-body py-3">
-                    <div class="row g-3 align-items-center" x-data="rosterSearch()">
+                    <div class="row g-3 align-items-center">
                         <div class="col-12 col-md-6">
                             <div class="input-group">
                                 <span class="input-group-text bg-sabc-primary text-white">
@@ -21,16 +22,6 @@
                         </div>
                         <div class="col-12 col-md-6">
                             <div class="d-flex gap-2 flex-wrap">
-                                <button class="btn btn-outline-sabc-primary btn-sm" 
-                                        :class="{ 'active': viewMode === 'cards' }"
-                                        x-on:click="viewMode = 'cards'">
-                                    <i class="bi bi-grid-3x3-gap"></i> Cards
-                                </button>
-                                <button class="btn btn-outline-sabc-primary btn-sm" 
-                                        :class="{ 'active': viewMode === 'table' }"
-                                        x-on:click="viewMode = 'table'">
-                                    <i class="bi bi-list"></i> Table
-                                </button>
                                 <select class="form-select form-select-sm" x-model="filterType" x-on:change="filterMembers()">
                                     <option value="all">All Members</option>
                                     <option value="officers">Officers Only</option>
@@ -45,7 +36,7 @@
         </div>
         
         <!-- Officers Section -->
-        <div class="col-12">
+        <div class="col-12" x-show="showOfficers()">
             <div class="card shadow-sm">
                 <div class="card-header bg-warning text-white">
                     <h4 class="mb-0">
@@ -53,61 +44,15 @@
                     </h4>
                 </div>
                 <div class="card-body">
-                    <div class="row g-3" x-show="viewMode === 'cards'">
-                        {% for officer in o_table.data %}
-                            <div class="col-12 col-md-6 col-lg-4" x-show="shouldShowMember('{{ officer.angler.user.get_full_name|lower }} {{ officer.position|lower }}', 'officer')">
-                                <div class="card member-card h-100 border-warning">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-center">
-                                            <div class="me-3">
-                                                <div class="member-avatar rounded-circle bg-warning text-white d-flex align-items-center justify-content-center">
-                                                    <i class="bi bi-star-fill fs-4"></i>
-                                                </div>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h5 class="mb-1 text-sabc-primary">
-                                                    {{ officer.angler.user.get_full_name|default:officer.angler.user.username }}
-                                                </h5>
-                                                <p class="text-warning fw-semibold mb-2">{{ officer.position|title }}</p>
-                                                {% if officer.angler.phone_number %}
-                                                    <div class="small">
-                                                        <i class="bi bi-telephone text-success me-1"></i>
-                                                        <a href="tel:{{ officer.angler.phone_number }}" class="text-decoration-none">
-                                                            {{ officer.angler.phone_number }}
-                                                        </a>
-                                                    </div>
-                                                {% endif %}
-                                                {% if officer.angler.user.email %}
-                                                    <div class="small mt-1">
-                                                        <i class="bi bi-envelope text-primary me-1"></i>
-                                                        <a href="mailto:{{ officer.angler.user.email }}" class="text-decoration-none">
-                                                            {{ officer.angler.user.email }}
-                                                        </a>
-                                                    </div>
-                                                {% endif %}
-                                            </div>
-                                            <div class="ms-2">
-                                                <a href="{% url 'profile' officer.angler.user.id %}" 
-                                                   class="btn btn-outline-warning btn-sm">
-                                                    <i class="bi bi-person"></i>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    
-                    <div x-show="viewMode === 'table'" class="table-responsive">
-                        {% render_data_table o_table.data o_table.headers table_id="officersTable" searchable=true sortable=true mobile_cards=false %}
+                    <div class="table-responsive">
+                        {% render_table o_table %}
                     </div>
                 </div>
             </div>
         </div>
         
         <!-- Active Members Section -->
-        <div class="col-12">
+        <div class="col-12" x-show="showMembers()">
             <div class="card shadow-sm">
                 <div class="card-header bg-success text-white">
                     <h4 class="mb-0">
@@ -115,16 +60,8 @@
                     </h4>
                 </div>
                 <div class="card-body">
-                    <div class="row g-3" x-show="viewMode === 'cards'">
-                        {% for member in m_table.data %}
-                            <div class="col-12 col-md-6 col-lg-4" x-show="shouldShowMember('{{ member.user.get_full_name|lower }}', 'member')">
-                                {% include 'components/member_card.html' with member=member show_contact=true compact=true %}
-                            </div>
-                        {% endfor %}
-                    </div>
-                    
-                    <div x-show="viewMode === 'table'" class="table-responsive">
-                        {% render_data_table m_table.data m_table.headers table_id="membersTable" searchable=true sortable=true mobile_cards=false %}
+                    <div class="table-responsive">
+                        {% render_table m_table %}
                     </div>
                 </div>
             </div>
@@ -132,7 +69,7 @@
         
         <!-- Guests Section -->
         {% if g_table %}
-            <div class="col-12">
+            <div class="col-12" x-show="showGuests()">
                 <div class="card shadow-sm">
                     <div class="card-header bg-secondary text-white">
                         <h4 class="mb-0">
@@ -140,16 +77,8 @@
                         </h4>
                     </div>
                     <div class="card-body">
-                        <div class="row g-3" x-show="viewMode === 'cards'">
-                            {% for guest in g_table.data %}
-                                <div class="col-12 col-md-6 col-lg-4" x-show="shouldShowMember('{{ guest.user.get_full_name|lower }}', 'guest')">
-                                    {% include 'components/member_card.html' with member=guest show_contact=false compact=true %}
-                                </div>
-                            {% endfor %}
-                        </div>
-                        
-                        <div x-show="viewMode === 'table'" class="table-responsive">
-                            {% render_data_table g_table.data g_table.headers table_id="guestsTable" searchable=true sortable=true mobile_cards=false %}
+                        <div class="table-responsive">
+                            {% render_table g_table %}
                         </div>
                     </div>
                 </div>
@@ -158,62 +87,50 @@
     </div>
 {% endblock %}
 
+{% block extra_js %}
 <script>
 function rosterSearch() {
     return {
         searchQuery: '',
         filterType: 'all',
-        viewMode: 'cards',
         
         filterMembers() {
-            // This function would be called to filter the visible members
-            // The actual filtering is handled by x-show directives
+            // Filtering is handled by section visibility
         },
         
-        shouldShowMember(memberName, memberType) {
-            const query = this.searchQuery.toLowerCase().trim();
-            const nameMatch = !query || memberName.includes(query);
-            
-            let typeMatch = true;
-            if (this.filterType === 'officers') {
-                typeMatch = memberType === 'officer';
-            } else if (this.filterType === 'members') {
-                typeMatch = memberType === 'member';
-            } else if (this.filterType === 'guests') {
-                typeMatch = memberType === 'guest';
-            }
-            
-            return nameMatch && typeMatch;
+        showOfficers() {
+            return this.filterType === 'all' || this.filterType === 'officers';
+        },
+        
+        showMembers() {
+            return this.filterType === 'all' || this.filterType === 'members';
+        },
+        
+        showGuests() {
+            return this.filterType === 'all' || this.filterType === 'guests';
         }
     }
 }
 </script>
+{% endblock %}
 
+{% block extra_css %}
 <style>
-.member-avatar {
-    width: 50px;
-    height: 50px;
+/* Hide elements properly with Alpine.js */
+[x-cloak] {
+    display: none !important;
 }
 
-.member-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--sabc-shadow-lg) !important;
+/* Ensure tables are properly styled */
+.table-responsive {
+    overflow-x: auto;
+    clear: both;
 }
 
-.btn.active {
-    background-color: var(--sabc-primary) !important;
-    border-color: var(--sabc-primary) !important;
-    color: white !important;
-}
-
-@media (max-width: 768px) {
-    .member-card .card-body {
-        padding: 1rem;
-    }
-    
-    .member-avatar {
-        width: 40px;
-        height: 40px;
-    }
+/* Style profile links in tables */
+.table .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
 }
 </style>
+{% endblock %}

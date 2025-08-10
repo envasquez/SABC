@@ -27,7 +27,7 @@ from tournaments.views.tournaments import TournamentUpdateView as TmntUpdate
 from users.views import AnglerDetailView as Profile
 from users.views import AnglerRegistrationView as Register
 from users.views import AnglerUpdateView as Edit
-from users.views import about, bylaws, calendar, roster
+from users.views import about, bylaws, calendar, calendar_image, roster
 
 POLL_CREATE: tuple[str, str] = ("polls/new/", "lakepoll-create")
 TMNT_CREATE: tuple[str, str] = ("tournament/new/", "tournament-create")
@@ -75,6 +75,7 @@ urlpatterns: list[URLPattern | URLResolver] = [
     path("roster/", roster, name="roster"),
     path("awards/<int:year>/", annual_awards, name="annual-awards"),
     path("calendar/", calendar, name="calendar"),
+    path("calendar-image/", calendar_image, name="calendar-image"),
     path("register/", Register.as_view(), name="register"),
     path("profile/<int:pk>/", Profile.as_view(), name="profile"),
     path("profile_edit/<int:pk>/", Edit.as_view(), name="profile-edit"),

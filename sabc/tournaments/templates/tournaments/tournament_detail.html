@@ -150,12 +150,13 @@
                     </div>
                 </div>
                 
-                {% if tournament.team %}
+                {% if is_team_tournament and render_team_results %}
                     <div class="col-12">
                         <div class="card shadow-sm">
                             <div class="card-header bg-sabc-water text-white">
                                 <h5 class="mb-0">
                                     <i class="bi bi-people-fill me-2"></i>Team Results
+                                    <span class="badge bg-light text-dark ms-2">Primary Standings</span>
                                 </h5>
                             </div>
                             <div class="card-body">
@@ -176,6 +177,11 @@
                         <div class="card-header bg-sabc-accent text-white">
                             <h5 class="mb-0">
                                 <i class="bi bi-person-fill me-2"></i>Individual Results
+                                {% if not is_team_tournament %}
+                                    <span class="badge bg-light text-dark ms-2">Primary Standings</span>
+                                {% else %}
+                                    <span class="badge bg-secondary ms-2">For Annual Awards</span>
+                                {% endif %}
                             </h5>
                         </div>
                         <div class="card-body">
@@ -189,6 +195,28 @@
                         </div>
                     </div>
                 </div>
+                
+                {% if not is_team_tournament and render_team_results %}
+                    <div class="col-12">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-sabc-water text-white">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-people-fill me-2"></i>Team Results
+                                    <span class="badge bg-secondary ms-2">For Reference</span>
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    {% if user.is_staff %}
+                                        {% render_table editable_team_results %}
+                                    {% else %}
+                                        {% render_table team_results %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
                 
                 {% if render_buy_ins %}
                     <div class="col-12">

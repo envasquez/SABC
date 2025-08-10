@@ -14,6 +14,7 @@ from .models.payouts import PayOutMultipliers
 from .models.results import Result, TeamResult
 from .models.rules import RuleSet
 from .models.tournaments import Events, Tournament
+from .models.calendar_events import CalendarEvent
 
 
 class LakeAdmin(admin.ModelAdmin):
@@ -107,3 +108,14 @@ admin.site.register([Tournament, RuleSet, Result, TeamResult])
 admin.site.register([Lake, Ramp], admin_class=LakeAdmin)
 admin.site.register(PayOutMultipliers, admin_class=PayoutMultiplierAdmin)
 admin.site.register(Events, admin_class=EventsAdmin)
+
+
+class CalendarEventAdmin(admin.ModelAdmin):
+    list_display = ('title', 'date', 'category', 'lake', 'priority')
+    list_filter = ('category', 'priority', 'date', 'lake')
+    search_fields = ('title', 'description')
+    date_hierarchy = 'date'
+    ordering = ('date',)
+
+
+admin.site.register(CalendarEvent, CalendarEventAdmin)

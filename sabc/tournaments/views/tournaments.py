@@ -170,6 +170,11 @@ class TournamentDetailView(DetailView):
             if indv_results
             else TournamentSummaryTable([])
         )
+        
+        # Set primary results based on tournament type
+        context["is_team_tournament"] = tmnt.team
+        context["render_team_results"] = team_results.count() > 0
+        
         return context
 
 

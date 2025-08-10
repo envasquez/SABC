@@ -67,9 +67,19 @@
                                     </div>
                                     <div class="col-6 col-sm-3">
                                         <div class="text-center">
-                                            <i class="bi bi-trophy display-6 text-warning mb-2"></i>
-                                            <div class="small text-muted">Type</div>
-                                            <div class="fw-semibold">{{ tournament.type|title }}</div>
+                                            {% if tournament.paper %}
+                                                <i class="bi bi-clipboard-check display-6 text-info mb-2"></i>
+                                                <div class="small text-muted">Type</div>
+                                                <div class="fw-semibold">Paper</div>
+                                            {% elif tournament.team %}
+                                                <i class="bi bi-people-fill display-6 text-primary mb-2"></i>
+                                                <div class="small text-muted">Type</div>
+                                                <div class="fw-semibold">Team</div>
+                                            {% else %}
+                                                <i class="bi bi-person-fill display-6 text-success mb-2"></i>
+                                                <div class="small text-muted">Type</div>
+                                                <div class="fw-semibold">Individual</div>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>
@@ -82,11 +92,6 @@
                                     {% if tournament.points_count %}
                                         <span class="badge bg-info me-2">
                                             <i class="bi bi-star me-1"></i>AoY Points
-                                        </span>
-                                    {% endif %}
-                                    {% if tournament.paper %}
-                                        <span class="badge bg-warning text-dark me-2">
-                                            <i class="bi bi-file-text me-1"></i>Paper Tournament
                                         </span>
                                     {% endif %}
                                 </div>

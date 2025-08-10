@@ -1,4 +1,450 @@
 {% extends "users/base.html" %}
+{% load static %}
+
 {% block content %}
-    <object data="/static/SABC-bylaws-Rev-Dec-2024.pdf" type="application/pdf" width="750" height="1000"></object>
+    <!-- Page Header -->
+    {% include 'components/page_header.html' with title="Club Bylaws" subtitle="South Austin Bass Club governance and tournament rules" icon="file-text" %}
+
+    <div class="row">
+        <!-- Table of Contents Sidebar -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="card shadow-sm position-sticky" style="top: 2rem;">
+                <div class="card-header bg-sabc-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-list me-2"></i>Table of Contents
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <nav class="nav nav-pills nav-flush flex-column">
+                        <a class="nav-link" href="#article-1">Article 1: Name and Purpose</a>
+                        <a class="nav-link" href="#article-2">Article 2: Membership</a>
+                        <a class="nav-link" href="#article-3">Article 3: Officers</a>
+                        <a class="nav-link" href="#article-4">Article 4: Meetings</a>
+                        <a class="nav-link" href="#article-5">Article 5: Tournament Rules</a>
+                        <a class="nav-link" href="#article-6">Article 6: Annual Awards</a>
+                        <a class="nav-link" href="#article-7">Article 7: Conduct</a>
+                        <a class="nav-link" href="#article-8">Article 8: Safety</a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <div class="card shadow-sm">
+                <div class="card-header bg-gradient text-white d-flex justify-content-between align-items-center"
+                     style="background: linear-gradient(135deg, var(--sabc-water) 0%, var(--sabc-primary) 100%);">
+                    <div>
+                        <h4 class="mb-0" style="color: #1a1a1a;">
+                            <i class="bi bi-file-text me-2"></i>
+                            <strong>South Austin Bass Club Bylaws</strong>
+                        </h4>
+                        <small style="color: #333;">Revised December 2024</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{% static 'SABC-bylaws-Rev-Dec-2024.pdf' %}"
+                           class="btn btn-outline-dark btn-sm" target="_blank">
+                            <i class="bi bi-file-pdf me-1"></i>PDF Version
+                        </a>
+                        <button class="btn btn-outline-dark btn-sm" onclick="window.print()">
+                            <i class="bi bi-printer me-1"></i>Print
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <div class="bylaws-content">
+                        <!-- Article 1: Name and Purpose -->
+                        <section id="article-1" class="mb-5">
+                            <h2 class="text-sabc-primary border-bottom border-2 pb-2">
+                                <i class="bi bi-1-circle me-2"></i>Article 1: Name and Purpose
+                            </h2>
+
+                            <h4 class="mt-4 text-sabc-water">1.1 Name</h4>
+                            <p>The name of this organization shall be the <strong>South Austin Bass Club</strong> (SABC).</p>
+
+                            <h4 class="mt-4 text-sabc-water">1.2 Purpose</h4>
+                            <p>The purpose of this club is to:</p>
+                            <ul>
+                                <li>Promote bass fishing in the Austin area</li>
+                                <li>Provide fellowship among bass fishing enthusiasts</li>
+                                <li>Conduct organized bass fishing tournaments</li>
+                                <li>Support conservation of bass fishing resources</li>
+                                <li>Foster sportsmanship and ethical fishing practices</li>
+                            </ul>
+                        </section>
+
+                        <!-- Article 2: Membership -->
+                        <section id="article-2" class="mb-5">
+                            <h2 class="text-sabc-primary border-bottom border-2 pb-2">
+                                <i class="bi bi-2-circle me-2"></i>Article 2: Membership
+                            </h2>
+
+                            <h4 class="mt-4 text-sabc-water">2.1 Eligibility</h4>
+                            <p>Membership is open to all persons interested in bass fishing who agree to abide by these bylaws and club rules.</p>
+
+                            <h4 class="mt-4 text-sabc-water">2.2 Types of Membership</h4>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h5 class="mt-3">2.2.1 Regular Members</h5>
+                                    <ul>
+                                        <li>Full voting rights</li>
+                                        <li>Eligible for all club tournaments and activities</li>
+                                        <li>Eligible for annual awards</li>
+                                        <li>Required to pay annual dues</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5 class="mt-3">2.2.2 Guest Anglers</h5>
+                                    <ul>
+                                        <li>May participate in tournaments on a per-event basis</li>
+                                        <li>No voting rights</li>
+                                        <li>Not eligible for annual awards</li>
+                                        <li>Pay tournament entry fees only</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <h4 class="mt-4 text-sabc-water">2.3 Dues</h4>
+                            <ul>
+                                <li>Annual dues are set by the club membership</li>
+                                <li>Dues must be paid by March 31st of each year</li>
+                                <li>Non-payment of dues results in loss of membership privileges</li>
+                            </ul>
+                        </section>
+
+                        <!-- Article 3: Officers -->
+                        <section id="article-3" class="mb-5">
+                            <h2 class="text-sabc-primary border-bottom border-2 pb-2">
+                                <i class="bi bi-3-circle me-2"></i>Article 3: Officers and Duties
+                            </h2>
+
+                            <h4 class="mt-4 text-sabc-water">3.1 Officers</h4>
+                            <p>The club shall have the following officers:</p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul>
+                                        <li><i class="bi bi-person-badge me-1 text-sabc-primary"></i><strong>President</strong></li>
+                                        <li><i class="bi bi-person-check me-1 text-sabc-primary"></i><strong>Vice President</strong></li>
+                                        <li><i class="bi bi-journal-text me-1 text-sabc-primary"></i><strong>Secretary</strong></li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul>
+                                        <li><i class="bi bi-cash-stack me-1 text-sabc-primary"></i><strong>Treasurer</strong></li>
+                                        <li><i class="bi bi-trophy me-1 text-sabc-primary"></i><strong>Tournament Director</strong></li>
+                                        <li><i class="bi bi-laptop me-1 text-sabc-primary"></i><strong>Technology Director</strong></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <h4 class="mt-4 text-sabc-water">3.2 Elections</h4>
+                            <ul>
+                                <li>Officers are elected annually by club membership</li>
+                                <li>Terms begin January 1st and end December 31st</li>
+                                <li>Nominations accepted from the floor at December meeting</li>
+                                <li>Elections held by secret ballot</li>
+                            </ul>
+                        </section>
+
+                        <!-- Article 4: Meetings -->
+                        <section id="article-4" class="mb-5">
+                            <h2 class="text-sabc-primary border-bottom border-2 pb-2">
+                                <i class="bi bi-4-circle me-2"></i>Article 4: Meetings
+                            </h2>
+
+                            <div class="alert alert-info">
+                                <h5 class="alert-heading">
+                                    <i class="bi bi-calendar-event me-2"></i>Regular Meetings
+                                </h5>
+                                <ul class="mb-0">
+                                    <li>Club meetings are held monthly</li>
+                                    <li>Meetings are held immediately after weigh-in of the current month's tournament</li>
+                                </ul>
+                            </div>
+                        </section>
+
+                        <!-- Article 5: Tournament Rules (Key Section) -->
+                        <section id="article-5" class="mb-5">
+                            <h2 class="text-sabc-primary border-bottom border-2 pb-2">
+                                <i class="bi bi-5-circle me-2"></i>Article 5: Tournament Rules
+                            </h2>
+
+                            <h4 class="mt-4 text-sabc-water">5.1 Tournament Schedule</h4>
+                            <ul>
+                                <li>Regular tournament season runs from January through October</li>
+                                <li>Monthly tournaments held on scheduled Sundays</li>
+                                <li>Tournament dates set by Tournament Director with officer approval</li>
+                            </ul>
+
+                            <h4 class="mt-4 text-sabc-water">5.2 Tournament Format</h4>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card bg-light border-success">
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                <i class="bi bi-person-fill text-success me-2"></i>Individual Tournaments
+                                            </h5>
+                                            <ul class="card-text small mb-0">
+                                                <li>Solo competition format</li>
+                                                <li>Individual results determine placement</li>
+                                                <li>Individual points awarded for Angler of the Year</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-light border-primary">
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                <i class="bi bi-people-fill text-primary me-2"></i>Team Tournaments
+                                            </h5>
+                                            <ul class="card-text small mb-0">
+                                                <li>Two-person team format</li>
+                                                <li>Combined team weight determines team placement</li>
+                                                <li>Individual results still recorded for annual awards</li>
+                                                <li>Team members may be any combination of members/guests</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h4 class="mt-4 text-sabc-water">5.3 Tournament Rules</h4>
+
+                            <div class="alert alert-primary">
+                                <h5 class="alert-heading">
+                                    <i class="bi bi-info-circle me-2"></i>General Rules
+                                </h5>
+                                <ul class="mb-0">
+                                    <li><strong>5 fish limit</strong> per angler (live or dead)</li>
+                                    <li><strong>Safe boating practices</strong> required at all times</li>
+                                    <li><strong>Tournament hours</strong>: Typically 6:00 AM to 3:00 PM</li>
+                                    <li><strong>Species</strong>: Largemouth bass, smallmouth bass, spotted bass</li>
+                                    <li><strong>Minimum length</strong>: As per lake regulations or 14 inches, whichever is greater</li>
+                                </ul>
+                            </div>
+
+                            <div class="alert alert-warning">
+                                <h5 class="alert-heading">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>Dead Fish Penalty
+                                </h5>
+                                <p class="mb-0">
+                                    <strong>0.25 pounds</strong> penalty per dead fish will be deducted from total weight
+                                </p>
+                            </div>
+
+                            <h4 class="mt-4 text-sabc-water">5.4 Entry Fees and Payouts</h4>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <p><strong>Payout structure:</strong></p>
+                                    <ul>
+                                        <li>1st Place: 40% of entry fee pot</li>
+                                        <li>2nd Place: 30% of entry fee pot</li>
+                                        <li>3rd Place: 20% of entry fee pot</li>
+                                        <li>Club fund: 10% of entry fee pot</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-award display-4"></i>
+                                            <h6 class="card-title">Big Bass</h6>
+                                            <p class="card-text small">Separate entry<br>Winner takes all</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Article 6: Annual Awards -->
+                        <section id="article-6" class="mb-5">
+                            <h2 class="text-sabc-primary border-bottom border-2 pb-2">
+                                <i class="bi bi-6-circle me-2"></i>Article 6: Annual Awards
+                            </h2>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="card border-warning h-100">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-trophy-fill text-warning display-4"></i>
+                                            <h5 class="card-title mt-2">Angler of the Year</h5>
+                                            <ul class="card-text small text-start">
+                                                <li>Must fish minimum 6 tournaments</li>
+                                                <li>Total points from all tournaments</li>
+                                                <li>Tiebreaker: Total weight for year</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-info h-100">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-award-fill text-info display-4"></i>
+                                            <h5 class="card-title mt-2">Heavy Stringer</h5>
+                                            <ul class="card-text small text-start">
+                                                <li>Heaviest single tournament bag</li>
+                                                <li>Open to members and guests</li>
+                                                <li>Annual award recognition</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-success h-100">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-award text-success display-4"></i>
+                                            <h5 class="card-title mt-2">Big Bass</h5>
+                                            <ul class="card-text small text-start">
+                                                <li>Largest bass during any tournament</li>
+                                                <li>Minimum weight: 5.00 pounds</li>
+                                                <li>Open to members and guests</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Article 7: Conduct -->
+                        <section id="article-7" class="mb-5">
+                            <h2 class="text-sabc-primary border-bottom border-2 pb-2">
+                                <i class="bi bi-7-circle me-2"></i>Article 7: Conduct and Sportsmanship
+                            </h2>
+
+                            <div class="alert alert-success">
+                                <h5 class="alert-heading">
+                                    <i class="bi bi-hand-thumbs-up me-2"></i>Expected Conduct
+                                </h5>
+                                <ul class="mb-0">
+                                    <li>Members and guests must demonstrate good sportsmanship</li>
+                                    <li>Honest and ethical behavior required at all times</li>
+                                    <li>Respect for fellow anglers, tournament officials, and property</li>
+                                    <li>Compliance with all fishing regulations and club rules</li>
+                                </ul>
+                            </div>
+                        </section>
+
+                        <!-- Article 8: Safety -->
+                        <section id="article-8" class="mb-5">
+                            <h2 class="text-sabc-primary border-bottom border-2 pb-2">
+                                <i class="bi bi-8-circle me-2"></i>Article 8: Safety
+                            </h2>
+
+                            <div class="alert alert-danger">
+                                <h5 class="alert-heading">
+                                    <i class="bi bi-shield-exclamation me-2"></i>Safety Requirements
+                                </h5>
+                                <ul class="mb-0">
+                                    <li><strong>Life jackets</strong> required when boat engine is running</li>
+                                    <li><strong>Kill switch</strong> must be used when boat is in motion</li>
+                                    <li><strong>Emergency equipment</strong> recommended: first aid kit, emergency radio</li>
+                                    <li><strong>Weather awareness</strong>: Tournament may be cancelled for severe weather</li>
+                                </ul>
+                            </div>
+                        </section>
+
+                        <!-- Footer -->
+                        <div class="text-center mt-5 pt-4 border-top">
+                            <p class="text-muted">
+                                <i class="bi bi-calendar3 me-1"></i>
+                                Approved by South Austin Bass Club membership - December 2024
+                            </p>
+                            <div class="mt-3">
+                                <a href="{% static 'SABC-bylaws-Rev-Dec-2024.pdf' %}"
+                                   class="btn btn-sabc-primary me-2" target="_blank">
+                                    <i class="bi bi-file-pdf me-1"></i>Download PDF
+                                </a>
+                                <button class="btn btn-outline-primary" onclick="window.print()">
+                                    <i class="bi bi-printer me-1"></i>Print Bylaws
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock content %}
+
+{% block extra_css %}
+<style>
+.bylaws-content h2 {
+    margin-top: 2rem;
+}
+
+.bylaws-content h4 {
+    margin-top: 1.5rem;
+}
+
+.nav-pills .nav-link {
+    color: var(--sabc-primary);
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    border-left: 3px solid transparent;
+}
+
+.nav-pills .nav-link:hover,
+.nav-pills .nav-link.active {
+    background-color: var(--sabc-primary);
+    border-left-color: var(--sabc-water);
+}
+
+@media (max-width: 991.98px) {
+    .position-sticky {
+        position: relative !important;
+        top: auto !important;
+    }
+}
+
+@media print {
+    .card-header .btn,
+    .nav {
+        display: none !important;
+    }
+}
+</style>
+{% endblock extra_css %}
+
+{% block extra_js %}
+<script>
+// Smooth scrolling for table of contents links
+document.querySelectorAll('.nav-link[href^="#"]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href').substring(1);
+        const targetElement = document.getElementById(targetId);
+        if (targetElement) {
+            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            // Update active link
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+        }
+    });
+});
+
+// Update active link on scroll
+window.addEventListener('scroll', function() {
+    const sections = document.querySelectorAll('section[id^="article-"]');
+    const navLinks = document.querySelectorAll('.nav-link[href^="#"]');
+
+    let currentSection = '';
+    sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+        if (rect.top <= 100 && rect.bottom >= 100) {
+            currentSection = section.id;
+        }
+    });
+
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + currentSection) {
+            link.classList.add('active');
+        }
+    });
+});
+</script>
+{% endblock extra_js %}

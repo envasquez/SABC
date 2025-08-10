@@ -17,9 +17,9 @@ Available variables:
                     <div class="card-body">
                         <div class="row align-items-center">
                             <div class="col-12 col-md-8">
-                                <h2 class="card-title mb-2">
+                                <h2 class="card-title mb-2" style="color: #1a1a1a;">
                                     <i class="bi bi-geo-alt-fill me-2"></i>
-                                    {{ tournament.lake|upper }}
+                                    <strong>{{ tournament.lake|upper }}</strong>
                                 </h2>
                                 {% if tournament.complete %}
                                     <div class="d-flex align-items-center">
@@ -27,7 +27,7 @@ Available variables:
                                             <i class="bi bi-check-circle me-1"></i>
                                             RESULTS
                                         </span>
-                                        <small class="opacity-75">Tournament Complete</small>
+                                        <small style="color: #333;">Tournament Complete</small>
                                     </div>
                                 {% else %}
                                     <div class="d-flex align-items-center">
@@ -35,7 +35,7 @@ Available variables:
                                             <i class="bi bi-clock me-1"></i>
                                             UPCOMING
                                         </span>
-                                        <small class="opacity-75">Registration Open</small>
+                                        <small style="color: #333;">Registration Open</small>
                                     </div>
                                 {% endif %}
                             </div>
@@ -105,14 +105,16 @@ Available variables:
                                     </span>
                                 </div>
                                 <div class="d-flex align-items-center">
-                                    <i class="bi bi-people text-primary me-2"></i>
-                                    <span>Team Event: 
-                                        {% if tournament.team %}
-                                            <span class="badge bg-success">Yes</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">No</span>
-                                        {% endif %}
-                                    </span>
+                                    {% if tournament.paper %}
+                                        <i class="bi bi-clipboard-check text-info me-2"></i>
+                                        <span>Type: <span class="badge bg-info">Paper</span></span>
+                                    {% elif tournament.team %}
+                                        <i class="bi bi-people-fill text-primary me-2"></i>
+                                        <span>Type: <span class="badge bg-primary">Team</span></span>
+                                    {% else %}
+                                        <i class="bi bi-person-fill text-success me-2"></i>
+                                        <span>Type: <span class="badge bg-success">Individual</span></span>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
