@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import calendar as cal
-import os
 from datetime import date
 from io import BytesIO
 

@@ -5,14 +5,20 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
 from django.views.generic import CreateView, DeleteView, UpdateView
 from users.models import Angler
+
+from sabc.decorators import user_rate_limit
 
 from ..forms import ResultForm, ResultUpdateForm, TeamForm
 from ..models.results import Result, TeamResult
 from ..models.tournaments import Tournament
 
 
+@method_decorator(
+    user_rate_limit(requests=15, window=300), name="post"
+)  # 15 result creations per 5 minutes
 class ResultCreateView(
     SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView
 ):

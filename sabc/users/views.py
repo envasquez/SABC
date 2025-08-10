@@ -8,8 +8,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
 from django.views.generic import CreateView, DetailView, UpdateView
 from tournaments.models.results import Result
+
+from sabc.decorators import rate_limit, user_rate_limit
 
 from .forms import (
     AnglerRegisterForm,
@@ -185,7 +188,6 @@ def calendar_image(request):
     import datetime
 
     from django.http import HttpResponse
-    from tournaments.models.calendar_events import CalendarEvent
     from tournaments.models.tournaments import Tournament
 
     from .calendar_image import calendar_image_to_bytes, generate_calendar_image
@@ -270,6 +272,9 @@ def roster(request):
     )
 
 
+@method_decorator(
+    rate_limit(requests=3, window=600), name="post"
+)  # 3 registrations per 10 minutes
 class AnglerRegistrationView(CreateView, SuccessMessageMixin):
     model = Angler
     template_name = "users/register.html"
@@ -301,6 +306,9 @@ class AnglerRegistrationView(CreateView, SuccessMessageMixin):
         )
 
 
+@method_decorator(
+    user_rate_limit(requests=10, window=300), name="post"
+)  # 10 profile updates per 5 minutes
 class AnglerUpdateView(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
     model = Angler
     template_name = "users/edit_profile.html"

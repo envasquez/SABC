@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from django.utils.html import format_html
 from django_tables2.columns import Column, TemplateColumn
 from django_tables2.tables import Table
 

@@ -15,7 +15,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         year = 2025
 
-        self.stdout.write(f"Creating 2025 SABC calendar...")
+        self.stdout.write("Creating 2025 SABC calendar...")
 
         # First, create 2025 payout multiplier if it doesn't exist
         payout, created = PayOutMultipliers.objects.get_or_create(

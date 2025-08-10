@@ -1,9 +1,18 @@
 # -*- coding: utf-8 -*-
 
+import re
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
-from django.forms import CharField, EmailField, FileField, Form, ModelForm
+from django.core.validators import RegexValidator
+from django.forms import (
+    CharField,
+    EmailField,
+    FileField,
+    Form,
+    ModelForm,
+    ValidationError,
+)
 from phonenumber_field.formfields import PhoneNumberField
 
 from .models import Angler
@@ -12,9 +21,27 @@ User = get_user_model()
 
 
 class UserRegisterForm(UserCreationForm):
-    email = EmailField(max_length=512)
-    first_name = CharField(max_length=25)
-    last_name = CharField(max_length=30)
+    email = EmailField(max_length=512, help_text="Enter a valid email address")
+    first_name = CharField(
+        max_length=25,
+        validators=[
+            RegexValidator(
+                regex=r"^[a-zA-Z\s\'-]+$",
+                message="First name can only contain letters, spaces, hyphens, and apostrophes",
+            )
+        ],
+        help_text="Enter your first name (letters only)",
+    )
+    last_name = CharField(
+        max_length=30,
+        validators=[
+            RegexValidator(
+                regex=r"^[a-zA-Z\s\'-]+$",
+                message="Last name can only contain letters, spaces, hyphens, and apostrophes",
+            )
+        ],
+        help_text="Enter your last name (letters only)",
+    )
 
     class Meta:
         model = User
@@ -27,6 +54,26 @@ class UserRegisterForm(UserCreationForm):
             "password2",
         )
 
+    def clean_username(self):
+        username = self.cleaned_data.get("username")
+        if username:
+            # Username validation: alphanumeric, underscore, hyphen only
+            if not re.match(r"^[a-zA-Z0-9_-]+$", username):
+                raise ValidationError(
+                    "Username can only contain letters, numbers, underscores, and hyphens"
+                )
+            if len(username) < 3:
+                raise ValidationError("Username must be at least 3 characters long")
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if email:
+            # Check for existing email
+            if User.objects.filter(email=email).exists():
+                raise ValidationError("A user with this email already exists")
+        return email
+
 
 class AnglerRegisterForm(ModelForm):
     phone_number = PhoneNumberField()
@@ -37,11 +84,50 @@ class AnglerRegisterForm(ModelForm):
 
 
 class UserUpdateForm(ModelForm):
-    email = EmailField()
+    email = EmailField(help_text="Enter a valid email address")
+    first_name = CharField(
+        max_length=25,
+        validators=[
+            RegexValidator(
+                regex=r"^[a-zA-Z\s\'-]+$",
+                message="First name can only contain letters, spaces, hyphens, and apostrophes",
+            )
+        ],
+        help_text="Enter your first name (letters only)",
+    )
+    last_name = CharField(
+        max_length=30,
+        validators=[
+            RegexValidator(
+                regex=r"^[a-zA-Z\s\'-]+$",
+                message="Last name can only contain letters, spaces, hyphens, and apostrophes",
+            )
+        ],
+        help_text="Enter your last name (letters only)",
+    )
 
     class Meta:
         model = User
         fields = ("username", "first_name", "last_name", "email")
+
+    def clean_username(self):
+        username = self.cleaned_data.get("username")
+        if username:
+            if not re.match(r"^[a-zA-Z0-9_-]+$", username):
+                raise ValidationError(
+                    "Username can only contain letters, numbers, underscores, and hyphens"
+                )
+            if len(username) < 3:
+                raise ValidationError("Username must be at least 3 characters long")
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if email and self.instance:
+            # Check for existing email excluding current user
+            if User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
+                raise ValidationError("A user with this email already exists")
+        return email
 
 
 class AnglerUpdateForm(ModelForm):
@@ -53,4 +139,22 @@ class AnglerUpdateForm(ModelForm):
 
 
 class CsvImportForm(Form):
-    csv_upload = FileField()
+    csv_upload = FileField(help_text="Upload a CSV file (max 5MB)")
+
+    def clean_csv_upload(self):
+        file = self.cleaned_data.get("csv_upload")
+        if file:
+            # Check file size (5MB max)
+            if file.size > 5 * 1024 * 1024:
+                raise ValidationError("File size cannot exceed 5MB")
+
+            # Check file extension
+            if not file.name.lower().endswith(".csv"):
+                raise ValidationError("Only CSV files are allowed")
+
+            # Check MIME type
+            allowed_types = ["text/csv", "application/csv", "text/plain"]
+            if hasattr(file, "content_type") and file.content_type not in allowed_types:
+                raise ValidationError("Invalid file type. Please upload a CSV file")
+
+        return file

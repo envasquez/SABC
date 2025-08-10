@@ -39,6 +39,23 @@ class LakePoll(Model):
     def get_absolute_url(self):
         return reverse("polls")
 
+    def is_active(self):
+        """Check if poll is currently accepting votes."""
+        if self.complete or not self.end_date:
+            return False
+
+        today = datetime.date.today()
+        if today > self.end_date:
+            return False
+        elif today == self.end_date:
+            if self.end_time:
+                now = datetime.datetime.now(pytz.timezone("US/Central"))
+                end_datetime = datetime.datetime.combine(self.end_date, self.end_time)
+                end_datetime = pytz.timezone("US/Central").localize(end_datetime)
+                return now <= end_datetime
+            return False
+        return True
+
     def save(self, *args, **kwargs):
         if not self.end_time:
             self.end_time = DEFAULT_END_TIME

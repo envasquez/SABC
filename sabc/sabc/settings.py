@@ -14,10 +14,22 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", get_random_secret_key())
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG: bool = not not os.environ.get("DJANGO_DEBUG")
+DEBUG: bool = os.environ.get("DJANGO_DEBUG", "False").lower() in (
+    "true",
+    "1",
+    "yes",
+    "on",
+)
 
+# Security: Never allow all hosts, even in debug mode
 ALLOWED_HOSTS = (
-    ["*"] if DEBUG else os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
+    ["localhost", "127.0.0.1", "0.0.0.0"]
+    if DEBUG
+    else [
+        host.strip()
+        for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
+        if host.strip()
+    ]
 )
 
 # Application definition
@@ -38,6 +50,8 @@ INSTALLED_APPS = [
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "sabc.middleware.SecurityHeadersMiddleware",
+    "sabc.middleware.RateLimitMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -84,11 +98,9 @@ else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql_psycopg2",
-            "NAME": os.environ.get("POSTGRES_DB", os.environ.get("POSTGRES_DB")),
-            "USER": os.environ.get("POSTGRES_USER", os.environ.get("POSTGRES_USER")),
-            "PASSWORD": os.environ.get(
-                "POSTGRES_PASSWORD", os.environ.get("POSTGRES_PASSWORD")
-            ),
+            "NAME": os.environ.get("POSTGRES_DB", "sabc"),
+            "USER": os.environ.get("POSTGRES_USER", "postgres"),
+            "PASSWORD": os.environ.get("POSTGRES_PASSWORD", ""),
             "HOST": os.environ.get("DEPLOYMENT_HOST", "localhost"),
             "PORT": 5432,
         }
@@ -127,18 +139,22 @@ LOGIN_URL = "login"
 PHONENUMBER_DB_FORMAT = "NATIONAL"
 PHONENUMBER_DEFAULT_REGION = "US"
 
-# Gmail SMTP Server
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
-EMAIL_HOST_USER = str(os.environ.get("DEFAULT_FROM_EMAIL"))
-DEFAULT_FROM_EMAIL = str(os.environ.get("DEFAULT_FROM_EMAIL"))
-# Disable this in production
-# File-based back-end for email for development purposes
-EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
-EMAIL_FILE_PATH = os.path.join(BASE_DIR, "sent_emails")
+# Email Configuration - Environment dependent
+if DEBUG:
+    # Development: File-based backend for testing
+    EMAIL_BACKEND = "django.core.mail.backends.filebased.EmailBackend"
+    EMAIL_FILE_PATH = os.path.join(BASE_DIR, "sent_emails")
+else:
+    # Production: SMTP backend
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+    EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+    EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() == "true"
+    EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "False").lower() == "true"
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@sabc.org")
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
@@ -159,3 +175,57 @@ LOGGING = {
 
 # Make messages.error() - display in RED
 MESSAGE_TAGS = {messages.ERROR: "danger"}
+
+# Security Settings for Production
+if not DEBUG:
+    # HTTPS Security
+    SECURE_SSL_REDIRECT = (
+        os.environ.get("SECURE_SSL_REDIRECT", "True").lower() == "true"
+    )
+    SECURE_HSTS_SECONDS = int(os.environ.get("SECURE_HSTS_SECONDS", "31536000"))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+    # Session Security
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+
+    # CSRF Security
+    CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_HTTPONLY = True
+    CSRF_COOKIE_SAMESITE = "Lax"
+
+    # Content Security
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    X_FRAME_OPTIONS = "DENY"
+
+    # Additional Security Headers
+    SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+# Rate Limiting Configuration
+RATE_LIMITS = {
+    "default": {"requests": 60, "window": 60},  # 60 requests per minute
+    "login": {"requests": 5, "window": 300},  # 5 login attempts per 5 minutes
+    "register": {"requests": 3, "window": 600},  # 3 registrations per 10 minutes
+    "upload": {"requests": 10, "window": 300},  # 10 uploads per 5 minutes
+    "form_submit": {"requests": 20, "window": 60},  # 20 form submissions per minute
+}
+
+# Cache Configuration for Rate Limiting
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "sabc-cache",
+        "TIMEOUT": 300,
+        "OPTIONS": {
+            "MAX_ENTRIES": 1000,
+        },
+    }
+}
+
+# File Upload Security
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 100

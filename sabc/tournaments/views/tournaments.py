@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
 from django.views.generic import (
     CreateView,
     DeleteView,
@@ -13,6 +14,8 @@ from django.views.generic import (
     ListView,
     UpdateView,
 )
+
+from sabc.decorators import user_rate_limit
 
 from ..forms import TournamentForm
 from ..models.events import get_next_event
@@ -40,6 +43,9 @@ from ..tables import (
 )
 
 
+@method_decorator(
+    user_rate_limit(requests=5, window=300), name="post"
+)  # 5 tournament creations per 5 minutes
 class TournamentCreateView(
     SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView
 ):
