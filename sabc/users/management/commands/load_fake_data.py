@@ -1,19 +1,20 @@
 import os
-import yaml
 from datetime import datetime
 from decimal import Decimal
-from django.core.management.base import BaseCommand
-from django.contrib.auth.models import User
+
+import yaml
 from django.conf import settings
+from django.contrib.auth.models import User
+from django.core.management.base import BaseCommand
+from polls.models import LakePoll, LakeVote
+from tournaments.models.events import Events
+from tournaments.models.lakes import Lake, Ramp
+from tournaments.models.payouts import PayOutMultipliers
+from tournaments.models.results import Result, TeamResult
+from tournaments.models.rules import RuleSet
+from tournaments.models.tournaments import Tournament
 
 from users.models import Angler, Officers
-from tournaments.models.lakes import Lake, Ramp
-from tournaments.models.tournaments import Tournament
-from tournaments.models.events import Events
-from tournaments.models.results import Result, TeamResult
-from tournaments.models.payouts import PayOutMultipliers
-from tournaments.models.rules import RuleSet
-from polls.models import LakePoll, LakeVote
 
 
 class Command(BaseCommand):

@@ -32,16 +32,17 @@ def bylaws(request):
 
 
 def calendar(request):
-    import datetime
     import calendar as cal
-    from tournaments.models.tournaments import Tournament
+    import datetime
+
     from tournaments.models.calendar_events import CalendarEvent
-    
+    from tournaments.models.tournaments import Tournament
+
     # Get year from request or use default
     current_year = datetime.date.today().year
     demo_year = 2024
-    
-    requested_year = request.GET.get('year')
+
+    requested_year = request.GET.get("year")
     if requested_year:
         try:
             display_year = int(requested_year)
@@ -49,128 +50,151 @@ def calendar(request):
             display_year = current_year
     else:
         # Check if current year has tournaments, otherwise use demo year
-        current_year_tournaments = Tournament.objects.filter(event__year=current_year).count()
+        current_year_tournaments = Tournament.objects.filter(
+            event__year=current_year
+        ).count()
         display_year = current_year if current_year_tournaments > 0 else demo_year
-    
+
     # Get all events for the year
     tournaments = Tournament.objects.filter(event__year=display_year)
     calendar_events = CalendarEvent.objects.filter(date__year=display_year)
-    
+
     # Create a lookup of events by date
     events_by_date = {}
     today = datetime.date.today()
-    
+
     # Add tournaments
     for tournament in tournaments:
-        date_key = tournament.event.date.strftime('%Y-%m-%d')
+        date_key = tournament.event.date.strftime("%Y-%m-%d")
         if date_key not in events_by_date:
             events_by_date[date_key] = []
-        events_by_date[date_key].append({
-            'type': 'tournament',
-            'title': tournament.name,
-            'description': f"Tournament at {tournament.lake or 'TBD'}"
-        })
+        events_by_date[date_key].append(
+            {
+                "type": "tournament",
+                "title": tournament.name,
+                "description": f"Tournament at {tournament.lake or 'TBD'}",
+            }
+        )
         # Also add meeting
-        events_by_date[date_key].append({
-            'type': 'meeting', 
-            'title': 'Club Meeting',
-            'description': 'Club meeting after tournament'
-        })
-    
+        events_by_date[date_key].append(
+            {
+                "type": "meeting",
+                "title": "Club Meeting",
+                "description": "Club meeting after tournament",
+            }
+        )
+
     # Add calendar events
     for event in calendar_events:
-        date_key = event.date.strftime('%Y-%m-%d')
+        date_key = event.date.strftime("%Y-%m-%d")
         if date_key not in events_by_date:
             events_by_date[date_key] = []
-        events_by_date[date_key].append({
-            'type': event.category,
-            'title': event.title,
-            'description': event.description or event.title
-        })
-    
+        events_by_date[date_key].append(
+            {
+                "type": event.category,
+                "title": event.title,
+                "description": event.description or event.title,
+            }
+        )
+
     # Generate 12 months of calendar data
     months_data = []
-    month_names = ['January', 'February', 'March', 'April', 'May', 'June',
-                   'July', 'August', 'September', 'October', 'November', 'December']
-    
+    month_names = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+    ]
+
     for month_num in range(1, 13):
         # Get calendar for this month
         month_cal = cal.monthcalendar(display_year, month_num)
-        
+
         days = []
-        
+
         # Add days from the calendar grid
         for week in month_cal:
             for day in week:
                 if day == 0:
                     # Previous/next month day - just show empty for simplicity
-                    days.append({
-                        'number': '',
-                        'other_month': True,
-                        'is_today': False,
-                        'event_type': None,
-                        'tooltip': None
-                    })
+                    days.append(
+                        {
+                            "number": "",
+                            "other_month": True,
+                            "is_today": False,
+                            "event_type": None,
+                            "tooltip": None,
+                        }
+                    )
                 else:
                     # Current month day
                     day_date = datetime.date(display_year, month_num, day)
-                    date_key = day_date.strftime('%Y-%m-%d')
-                    
+                    date_key = day_date.strftime("%Y-%m-%d")
+
                     # Check for events on this day
                     day_events = events_by_date.get(date_key, [])
                     event_type = None
                     tooltip = None
-                    
+
                     if day_events:
                         # Prioritize event types: tournament > holiday > external > meeting
-                        if any(e['type'] == 'tournament' for e in day_events):
-                            event_type = 'tournament'
-                        elif any(e['type'] == 'holiday' for e in day_events):
-                            event_type = 'holiday'
-                        elif any(e['type'] == 'external' for e in day_events):
-                            event_type = 'external'
-                        elif any(e['type'] == 'meeting' for e in day_events):
-                            event_type = 'meeting'
-                        
+                        if any(e["type"] == "tournament" for e in day_events):
+                            event_type = "tournament"
+                        elif any(e["type"] == "holiday" for e in day_events):
+                            event_type = "holiday"
+                        elif any(e["type"] == "external" for e in day_events):
+                            event_type = "external"
+                        elif any(e["type"] == "meeting" for e in day_events):
+                            event_type = "meeting"
+
                         # Create tooltip with all events
-                        tooltip = ' | '.join([e['title'] for e in day_events])
-                    
-                    days.append({
-                        'number': day,
-                        'other_month': False,
-                        'is_today': day_date == today,
-                        'event_type': event_type,
-                        'tooltip': tooltip
-                    })
-        
-        months_data.append({
-            'name': month_names[month_num - 1],
-            'days': days
-        })
-    
+                        tooltip = " | ".join([e["title"] for e in day_events])
+
+                    days.append(
+                        {
+                            "number": day,
+                            "other_month": False,
+                            "is_today": day_date == today,
+                            "event_type": event_type,
+                            "tooltip": tooltip,
+                        }
+                    )
+
+        months_data.append({"name": month_names[month_num - 1], "days": days})
+
     context = {
         "title": "SABC - Calendar",
         "display_year": display_year,
         "current_year": current_year,
         "months_data": months_data,
     }
-    
+
     return render(request, "users/calendar.html", context)
 
 
 def calendar_image(request):
     """Generate and serve calendar as an image"""
-    from django.http import HttpResponse
-    from .calendar_image import generate_calendar_image, calendar_image_to_bytes
     import datetime
-    from tournaments.models.tournaments import Tournament
+
+    from django.http import HttpResponse
     from tournaments.models.calendar_events import CalendarEvent
-    
+    from tournaments.models.tournaments import Tournament
+
+    from .calendar_image import calendar_image_to_bytes, generate_calendar_image
+
     # Get year from request or use default
     current_year = datetime.date.today().year
     demo_year = 2024
-    
-    requested_year = request.GET.get('year')
+
+    requested_year = request.GET.get("year")
     if requested_year:
         try:
             display_year = int(requested_year)
@@ -178,33 +202,37 @@ def calendar_image(request):
             display_year = current_year
     else:
         # Check if current year has tournaments, otherwise use demo year
-        current_year_tournaments = Tournament.objects.filter(event__year=current_year).count()
+        current_year_tournaments = Tournament.objects.filter(
+            event__year=current_year
+        ).count()
         display_year = current_year if current_year_tournaments > 0 else demo_year
-    
+
     # Get only tournaments for the year
     tournaments = Tournament.objects.filter(event__year=display_year)
-    
+
     # Create a lookup of tournament events by date
     events_by_date = {}
-    
+
     # Add only tournaments
     for tournament in tournaments:
-        date_key = tournament.event.date.strftime('%Y-%m-%d')
+        date_key = tournament.event.date.strftime("%Y-%m-%d")
         if date_key not in events_by_date:
             events_by_date[date_key] = []
-        events_by_date[date_key].append({
-            'type': 'tournament',
-            'title': tournament.name,
-            'description': f"Tournament at {tournament.lake or 'TBD'}"
-        })
-    
+        events_by_date[date_key].append(
+            {
+                "type": "tournament",
+                "title": tournament.name,
+                "description": f"Tournament at {tournament.lake or 'TBD'}",
+            }
+        )
+
     # Generate the calendar image
     img = generate_calendar_image(display_year, events_by_date)
     img_bytes = calendar_image_to_bytes(img)
-    
+
     # Return as HTTP response
-    response = HttpResponse(img_bytes, content_type='image/png')
-    response['Cache-Control'] = 'max-age=3600'  # Cache for 1 hour
+    response = HttpResponse(img_bytes, content_type="image/png")
+    response["Cache-Control"] = "max-age=3600"  # Cache for 1 hour
     return response
 
 
@@ -215,13 +243,13 @@ def roster(request):
         angler__user__first_name="", angler__user__last_name=""
     )
     o_table = OfficerTable(officers_qs)
-    
+
     # Filter members with complete names
     members_qs = Angler.members.get_active_members().exclude(
         user__first_name="", user__last_name=""
     )
     m_table = MemberTable(members_qs)
-    
+
     # Filter guests with complete names
     guests = (
         Angler.objects.filter(member=False)

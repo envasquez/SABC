@@ -9,12 +9,12 @@ from django.urls import path, reverse
 from yaml import safe_load
 
 from .forms import YamlImportForm
+from .models.calendar_events import CalendarEvent
 from .models.lakes import Lake, Ramp
 from .models.payouts import PayOutMultipliers
 from .models.results import Result, TeamResult
 from .models.rules import RuleSet
 from .models.tournaments import Events, Tournament
-from .models.calendar_events import CalendarEvent
 
 
 class LakeAdmin(admin.ModelAdmin):
@@ -111,11 +111,11 @@ admin.site.register(Events, admin_class=EventsAdmin)
 
 
 class CalendarEventAdmin(admin.ModelAdmin):
-    list_display = ('title', 'date', 'category', 'lake', 'priority')
-    list_filter = ('category', 'priority', 'date', 'lake')
-    search_fields = ('title', 'description')
-    date_hierarchy = 'date'
-    ordering = ('date',)
+    list_display = ("title", "date", "category", "lake", "priority")
+    list_filter = ("category", "priority", "date", "lake")
+    search_fields = ("title", "description")
+    date_hierarchy = "date"
+    ordering = ("date",)
 
 
 admin.site.register(CalendarEvent, CalendarEventAdmin)
