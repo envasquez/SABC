@@ -198,7 +198,7 @@ class TournamentUpdateView(
 
 
 class TournamentDeleteView(
-    SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, DeleteView
+    LoginRequiredMixin, UserPassesTestMixin, DeleteView
 ):
     model = Tournament
 
@@ -209,9 +209,10 @@ class TournamentDeleteView(
         return super().get_queryset().filter(pk=self.kwargs.get("pk"))
 
     def get_success_url(self):
-        messages.success(self.request, f"{self.get_object().name} Deleted!")
         return reverse_lazy("sabc-home")
 
-    def delete(self, request, *args, **kwargs):
-        messages.success(request, self.success_message)
-        return super().delete(request, *args, **kwargs)
+    def form_valid(self, form):
+        tournament_name = self.get_object().name
+        response = super().form_valid(form)
+        messages.success(self.request, f"{tournament_name} Deleted!")
+        return response

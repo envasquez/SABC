@@ -17,8 +17,8 @@ class EditableResultTable(Table):
     delete: LinkColumn = LinkColumn(
         "result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=()
     )
-    first_name: Column = Column(accessor="angler.user.first_name")
-    last_name: Column = Column(accessor="angler.user.last_name")
+    first_name: Column = Column(accessor="angler__user__first_name")
+    last_name: Column = Column(accessor="angler__user__last_name")
 
     class Meta:
         model: Type[Result] = Result
@@ -36,8 +36,8 @@ class EditableResultTable(Table):
 
 
 class ResultTable(Table):
-    first_name: Column = Column(accessor="angler.user.first_name")
-    last_name: Column = Column(accessor="angler.user.last_name")
+    first_name: Column = Column(accessor="angler__user__first_name")
+    last_name: Column = Column(accessor="angler__user__last_name")
 
     class Meta:
         model: Type[Result] = Result
@@ -97,8 +97,8 @@ class EditableBuyInTable(Table):
     delete: LinkColumn = LinkColumn(
         "result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=()
     )
-    first_name: Column = Column(accessor="angler.user.first_name")
-    last_name: Column = Column(accessor="angler.user.last_name")
+    first_name: Column = Column(accessor="angler__user__first_name")
+    last_name: Column = Column(accessor="angler__user__last_name")
 
     class Meta:
         model: Type[Result] = Result
@@ -108,8 +108,8 @@ class EditableBuyInTable(Table):
 
 
 class BuyInTable(Table):
-    first_name: Column = Column(accessor="angler.user.first_name")
-    last_name: Column = Column(accessor="angler.user.last_name")
+    first_name: Column = Column(accessor="angler__user__first_name")
+    last_name: Column = Column(accessor="angler__user__last_name")
 
     class Meta:
         model: Type[Result] = Result
@@ -125,8 +125,8 @@ class EditableDQTable(Table):
     delete: LinkColumn = LinkColumn(
         "result-delete", text="delete", args=[A("pk")], orderable=False, empty_values=()
     )
-    first_name: Column = Column(accessor="angler.user.first_name")
-    last_name: Column = Column(accessor="angler.user.last_name")
+    first_name: Column = Column(accessor="angler__user__first_name")
+    last_name: Column = Column(accessor="angler__user__last_name")
 
     class Meta:
         model: Type[Result] = Result
@@ -144,8 +144,8 @@ class EditableDQTable(Table):
 
 
 class DQTable(Table):
-    first_name: Column = Column(accessor="angler.user.first_name")
-    last_name: Column = Column(accessor="angler.user.last_name")
+    first_name: Column = Column(accessor="angler__user__first_name")
+    last_name: Column = Column(accessor="angler__user__last_name")
 
     class Meta:
         model: Type[Result] = Result

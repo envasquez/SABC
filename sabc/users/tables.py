@@ -9,8 +9,8 @@ DEFAULT_TABLE_TEMPLATE = "django_tables2/bootstrap4.html"
 
 
 class OfficerTable(Table):
-    first_name = Column(accessor="angler.user.first_name")
-    last_name = Column(accessor="angler.user.last_name")
+    first_name = Column(accessor="angler__user__first_name")
+    last_name = Column(accessor="angler__user__last_name")
     profile = TemplateColumn(
         template_name="components/profile_link.html",
         verbose_name="Profile",
@@ -28,9 +28,9 @@ class OfficerTable(Table):
 
 
 class MemberTable(Table):
-    email = Column(accessor="user.email")
-    first_name = Column(accessor="user.first_name")
-    last_name = Column(accessor="user.last_name")
+    email = Column(accessor="user__email")
+    first_name = Column(accessor="user__first_name")
+    last_name = Column(accessor="user__last_name")
     profile = TemplateColumn(
         template_name="components/profile_link.html",
         verbose_name="Profile",
@@ -54,9 +54,9 @@ class MemberTable(Table):
 
 
 class GuestTable(Table):
-    email = Column(accessor="user.email")
-    first_name = Column(accessor="user.first_name")
-    last_name = Column(accessor="user.last_name")
+    email = Column(accessor="user__email")
+    first_name = Column(accessor="user__first_name")
+    last_name = Column(accessor="user__last_name")
     profile = TemplateColumn(
         template_name="components/profile_link.html",
         verbose_name="Profile",
