@@ -58,9 +58,23 @@ def calendar(request):
         ).count()
         display_year = current_year if current_year_tournaments > 0 else demo_year
 
-    # Get all events for the year
-    tournaments = Tournament.objects.filter(event__year=display_year)
-    calendar_events = CalendarEvent.objects.filter(date__year=display_year)
+    # Get all events for the year with optimized queries
+    tournaments = (
+        Tournament.objects.select_related("lake", "event")
+        .filter(event__year=display_year)
+        .only(
+            "id",
+            "name",
+            "complete",
+            "lake__name",
+            "event__date",
+            "event__start",
+            "event__finish",
+        )
+    )
+    calendar_events = CalendarEvent.objects.filter(date__year=display_year).only(
+        "date", "title", "description", "category"
+    )
 
     # Create a lookup of events by date
     events_by_date = {}

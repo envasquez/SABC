@@ -129,3 +129,5 @@ result
 # Environment files
 .envrc
 .env.dev
+
+sabc/logs/*

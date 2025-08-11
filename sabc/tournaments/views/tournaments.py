@@ -101,31 +101,45 @@ class TournamentDetailView(DetailView):
             payouts[key] = f"${val:.2f}"
         return PayoutSummary([payouts])
 
-    def get_stats_table(self, tid):
-        tournament = Tournament.objects.get(pk=tid)
+    def get_stats_table(self, tid, tournament=None, all_results=None):
+        if tournament is None:
+            tournament = Tournament.objects.get(pk=tid)
         if not tournament.complete:
             return TournamentSummaryTable([])
 
-        limits = Result.objects.filter(tournament=tid, num_fish=5).count()
-        zeroes = Result.objects.filter(tournament=tid, num_fish=0, buy_in=False).count()
-        buy_ins = Result.objects.filter(tournament=tid, buy_in=True).count()
-        anglers = Result.objects.filter(tournament=tid, buy_in=False).count()
+        # Use provided results or fetch them efficiently
+        if all_results is None:
+            all_results = list(
+                Result.objects.filter(tournament=tid).select_related("angler__user")
+            )
 
-        bb_result = get_big_bass_winner(tid=tid)
+        # Calculate stats from in-memory data
+        limits = sum(1 for r in all_results if r.num_fish == 5)
+        zeroes = sum(1 for r in all_results if r.num_fish == 0 and not r.buy_in)
+        buy_ins = sum(1 for r in all_results if r.buy_in)
+        anglers = sum(1 for r in all_results if not r.buy_in)
+
+        # Find big bass winner
+        bb_result = None
+        max_bass_weight = Decimal("0")
+        for result in all_results:
+            if result.big_bass_weight > max_bass_weight:
+                max_bass_weight = result.big_bass_weight
+                bb_result = result
+
         big_bass = "--"
-        if bb_result:
+        if bb_result and bb_result.big_bass_weight >= Decimal("5"):
             big_bass = f"{bb_result.big_bass_weight: .2f}lbs"
 
+        # Find heavy stringer (place_finish = 1)
         heavy_stringer = "--"
-        hs_result = Result.objects.filter(tournament=tid, place_finish=1).first()
+        hs_result = next((r for r in all_results if r.place_finish == 1), None)
         if hs_result:
             heavy_stringer = f"{hs_result.total_weight}lbs"
 
-        total_fish = 0
-        total_weight = Decimal("0")
-        for result in Result.objects.filter(tournament=tid, num_fish__gt=0):
-            total_fish += result.num_fish
-            total_weight += result.total_weight
+        # Calculate totals
+        total_fish = sum(r.num_fish for r in all_results if r.num_fish > 0)
+        total_weight = sum(r.total_weight for r in all_results if r.num_fish > 0)
 
         data = {
             "limits": limits,
@@ -143,43 +157,64 @@ class TournamentDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         tid = self.kwargs.get("pk")
-        tmnt = Tournament.objects.get(pk=tid)
+
+        # Use prefetch_related for efficient data loading
+        tmnt = (
+            Tournament.objects.select_related(
+                "lake", "event", "rules", "payout_multiplier"
+            )
+            .prefetch_related(
+                "result_set__angler__user",
+                "teamresult_set__result_1__angler__user",
+                "teamresult_set__result_2__angler__user",
+            )
+            .get(pk=tid)
+        )
+
         set_places(tid=tid)
         if tmnt.points_count:
             set_points(tid=tid)
 
-        team_results = TeamResult.objects.filter(tournament=tid).order_by(
-            "place_finish", "-total_weight", "-num_fish"
+        # Get all results in one query and filter in Python to reduce DB hits
+        all_results = list(tmnt.result_set.select_related("angler__user").all())
+
+        # Filter results efficiently
+        team_results = list(
+            tmnt.teamresult_set.select_related(
+                "result_1__angler__user", "result_2__angler__user"
+            ).order_by("place_finish", "-total_weight", "-num_fish")
         )
+
+        indv_results = [r for r in all_results if not r.buy_in and not r.disqualified]
+        indv_results.sort(
+            key=lambda x: (x.place_finish or 999, -x.total_weight, -x.num_fish)
+        )
+
+        buy_ins = [r for r in all_results if r.buy_in]
+        dqs = [r for r in all_results if r.disqualified]
+
+        # Create table objects
         context["team_results"] = TeamResultTable(team_results)
         context["editable_team_results"] = EditableTeamResultTable(team_results)
-
-        indv_results = Result.objects.filter(
-            tournament=tid, buy_in=False, disqualified=False
-        ).order_by("place_finish", "-total_weight", "-num_fish")
         context["results"] = ResultTable(indv_results)
         context["editable_results"] = EditableResultTable(indv_results)
-
-        buy_ins = Result.objects.filter(tournament=tmnt, buy_in=True)
         context["buy_ins"] = BuyInTable(buy_ins)
-        context["render_buy_ins"] = buy_ins.count()
+        context["render_buy_ins"] = len(buy_ins)
         context["editable_buy_ins"] = EditableBuyInTable(buy_ins)
-
-        dqs = Result.objects.filter(tournament=tmnt, disqualified=True)
         context["dqs"] = DQTable(dqs)
-        context["render_dqs"] = dqs.count()
+        context["render_dqs"] = len(dqs)
         context["editable_dqs"] = EditableDQTable(dqs)
 
         context["payouts"] = self.get_payout_table(tid=tid)
         context["catch_stats"] = (
-            self.get_stats_table(tid=tid)
+            self.get_stats_table(tid=tid, tournament=tmnt, all_results=all_results)
             if indv_results
             else TournamentSummaryTable([])
         )
 
         # Set primary results based on tournament type
         context["is_team_tournament"] = tmnt.team
-        context["render_team_results"] = team_results.count() > 0
+        context["render_team_results"] = len(team_results) > 0
 
         return context
 

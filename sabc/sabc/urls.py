@@ -8,7 +8,7 @@ from django.contrib.auth.views import PasswordChangeDoneView as PWDone
 from django.contrib.auth.views import PasswordResetCompleteView as PWComplete
 from django.contrib.auth.views import PasswordResetConfirmView as PWConfirm
 from django.contrib.auth.views import PasswordResetView as PWReset
-from django.urls import URLPattern, URLResolver, path
+from django.urls import URLPattern, URLResolver, include, path
 from polls.views import LakePollCreateView as PollCreate
 from polls.views import LakePollListView as PollList
 from polls.views import LakePollView as Poll
@@ -66,6 +66,9 @@ PW_COMPLETE: tuple[str, str, str] = (
 )
 
 urlpatterns: list[URLPattern | URLResolver] = [
+    # Core monitoring endpoints
+    path("", include("core.urls")),
+    # Main application routes
     path("", TmntList.as_view(), name="sabc-home"),
     path("polls/", PollList.as_view(), name="polls"),
     path("polls/<int:pid>/", Poll.as_view(), name="poll"),

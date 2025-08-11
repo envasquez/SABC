@@ -34,6 +34,7 @@ ALLOWED_HOSTS = (
 
 # Application definition
 INSTALLED_APPS = [
+    "core",
     "users",
     "polls",
     "tournaments",
@@ -51,6 +52,8 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "sabc.middleware.SecurityHeadersMiddleware",
+    "core.static_middleware.CompressedStaticFilesMiddleware",  # Must be early
+    "core.static_middleware.StaticFileOptimizationMiddleware",
     "sabc.middleware.RateLimitMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -58,6 +61,9 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Error tracking and performance monitoring
+    "core.error_tracking.ErrorTrackingMiddleware",
+    "core.monitoring.QueryCountDebugMiddleware",
 ]
 ROOT_URLCONF = "sabc.urls"
 TEMPLATES = [
@@ -128,10 +134,34 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles") if not DEBUG else None
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "sabc", "static")]
+
+# Static file optimization for production
+# Only enable ManifestStaticFilesStorage when not in debug mode AND not running tests
+if (
+    not DEBUG
+    and not os.environ.get("UNITTEST")
+    and not os.environ.get("GITHUB_ACTIONS")
+    and not any("test" in arg for arg in sys.argv)
+):
+    # Enable static file caching and compression
+    STATICFILES_STORAGE = (
+        "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+    )
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
+
+# Image optimization settings
+IMAGE_QUALITY = 85  # JPEG compression quality (1-100)
+MAX_IMAGE_WIDTH = 1920  # Max width for uploaded images
+MAX_IMAGE_HEIGHT = 1080  # Max height for uploaded images
+THUMBNAIL_SIZES = {
+    "small": (150, 150),
+    "medium": (300, 300),
+    "large": (600, 600),
+}
 
 LOGIN_REDIRECT_URL = "sabc-home"
 LOGIN_URL = "login"
@@ -213,19 +243,130 @@ RATE_LIMITS = {
     "form_submit": {"requests": 20, "window": 60},  # 20 form submissions per minute
 }
 
-# Cache Configuration for Rate Limiting
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "sabc-cache",
-        "TIMEOUT": 300,
-        "OPTIONS": {
-            "MAX_ENTRIES": 1000,
+# Cache Configuration - Redis/Memcached with fallback to local memory
+REDIS_URL = os.environ.get("REDIS_URL", "")
+MEMCACHED_SERVERS = os.environ.get("MEMCACHED_SERVERS", "")
+
+if REDIS_URL:
+    # Production: Redis cache backend
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
+            "TIMEOUT": 900,  # 15 minutes default
+            "OPTIONS": {
+                "CONNECTION_POOL_KWARGS": {
+                    "max_connections": 20,
+                    "retry_on_timeout": True,
+                },
+            },
+        },
+        # Separate cache for sessions
+        "sessions": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
+            "TIMEOUT": 86400,  # 24 hours for sessions
+            "KEY_PREFIX": "session",
+        },
+        # Fast cache for rate limiting
+        "ratelimit": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_URL,
+            "TIMEOUT": 3600,  # 1 hour
+            "KEY_PREFIX": "rl",
         },
     }
-}
+elif MEMCACHED_SERVERS:
+    # Memcached fallback
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.memcached.PyLibMCCache",
+            "LOCATION": MEMCACHED_SERVERS.split(","),
+            "TIMEOUT": 900,
+        },
+        "sessions": {
+            "BACKEND": "django.core.cache.backends.memcached.PyLibMCCache",
+            "LOCATION": MEMCACHED_SERVERS.split(","),
+            "TIMEOUT": 86400,
+            "KEY_PREFIX": "session",
+        },
+    }
+else:
+    # Development/fallback: Local memory cache
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "sabc-cache",
+            "TIMEOUT": 300,
+            "OPTIONS": {
+                "MAX_ENTRIES": 1000,
+            },
+        },
+        "sessions": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "sabc-sessions",
+            "TIMEOUT": 86400,
+            "OPTIONS": {
+                "MAX_ENTRIES": 500,
+            },
+        },
+    }
+
+# Use cache for sessions when Redis/Memcached is available
+if REDIS_URL or MEMCACHED_SERVERS:
+    SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+    SESSION_CACHE_ALIAS = "sessions"
+    SESSION_COOKIE_AGE = 86400  # 24 hours
 
 # File Upload Security
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 100
+
+# Logging Configuration
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "[{levelname}] {asctime} {module} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+        "performance_file": {
+            "level": "WARNING",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": os.path.join(BASE_DIR, "logs", "performance.log"),
+            "maxBytes": 1024 * 1024 * 10,  # 10MB
+            "backupCount": 5,
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "sabc.performance": {
+            "handlers": ["console", "performance_file"] if not DEBUG else ["console"],
+            "level": "DEBUG" if DEBUG else "WARNING",
+            "propagate": False,
+        },
+        "django.db.backends": {
+            "handlers": ["console"],
+            "level": "DEBUG" if DEBUG else "INFO",
+            "propagate": False,
+        },
+    },
+}
+
+# Performance Monitoring Settings
+MONITOR_QUERIES = DEBUG  # Enable query monitoring in debug mode
+SLOW_QUERY_THRESHOLD = 0.1  # Log queries slower than 100ms
+HIGH_QUERY_COUNT_THRESHOLD = 20  # Warn if more than 20 queries per request

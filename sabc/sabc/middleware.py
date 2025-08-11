@@ -3,7 +3,7 @@
 import time
 
 from django.conf import settings
-from django.core.cache import cache
+from django.core.cache import cache, caches
 from django.http import HttpResponse
 from django.utils.deprecation import MiddlewareMixin
 
@@ -88,8 +88,14 @@ class RateLimitMiddleware(MiddlewareMixin):
         """Check if IP is rate limited for the given limit type"""
         cache_key = f"rate_limit:{limit_type}:{ip}"
 
+        # Use dedicated rate limiting cache if available, otherwise default
+        try:
+            rate_cache = caches["ratelimit"]
+        except:
+            rate_cache = cache
+
         # Get current request count and timestamp
-        data = cache.get(cache_key, {"count": 0, "reset_time": time.time()})
+        data = rate_cache.get(cache_key, {"count": 0, "reset_time": time.time()})
         current_time = time.time()
 
         # Reset counter if time window has passed
@@ -102,7 +108,7 @@ class RateLimitMiddleware(MiddlewareMixin):
 
         # Increment counter
         data["count"] += 1
-        cache.set(cache_key, data, rate_config["window"])
+        rate_cache.set(cache_key, data, rate_config["window"])
 
         return False
 
