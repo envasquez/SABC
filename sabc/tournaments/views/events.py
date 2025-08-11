@@ -14,6 +14,8 @@ from ..models.tournaments import Tournament
 class EventUpdateView(
     SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView
 ):
+    """Update tournament events with staff-only access."""
+
     model: Type[Events] = Events
     form_class: Type[EventForm] = EventForm
 

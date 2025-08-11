@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import datetime
-from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -22,13 +21,8 @@ from ..models.events import get_next_event
 from ..models.payouts import PayOutMultipliers
 from ..models.results import Result, TeamResult
 from ..models.rules import RuleSet
-from ..models.tournaments import (
-    Tournament,
-    get_big_bass_winner,
-    get_payouts,
-    set_places,
-    set_points,
-)
+from ..models.tournaments import Tournament, set_places, set_points
+from ..services.tournament_service import TournamentService
 from ..tables import (
     BuyInTable,
     DQTable,
@@ -49,6 +43,8 @@ from ..tables import (
 class TournamentCreateView(
     SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView
 ):
+    """Create new tournaments with rate limiting and staff-only access."""
+
     model = Tournament
     form_class = TournamentForm
     success_message = "Tournament successfully created!"
@@ -73,6 +69,8 @@ class TournamentCreateView(
 
 
 class TournamentListView(ListView):
+    """Display paginated list of tournaments with upcoming event information."""
+
     model = Tournament
     ordering = ["-event__date"]  # Newest tournament first
     paginate_by = 3
@@ -92,106 +90,38 @@ class TournamentListView(ListView):
 
 
 class TournamentDetailView(DetailView):
+    """
+    Display detailed view of a tournament including results, statistics, and payouts.
+
+    Business logic has been extracted to TournamentService for better maintainability.
+    """
+
     model = Tournament
     context_object_name = "tournament"
 
-    def get_payout_table(self, tid):
-        payouts = get_payouts(tid=tid)
-        for key, val in payouts.items():
-            payouts[key] = f"${val:.2f}"
-        return PayoutSummary([payouts])
-
-    def get_stats_table(self, tid, tournament=None, all_results=None):
-        if tournament is None:
-            tournament = Tournament.objects.get(pk=tid)
-        if not tournament.complete:
-            return TournamentSummaryTable([])
-
-        # Use provided results or fetch them efficiently
-        if all_results is None:
-            all_results = list(
-                Result.objects.filter(tournament=tid).select_related("angler__user")
-            )
-
-        # Calculate stats from in-memory data
-        limits = sum(1 for r in all_results if r.num_fish == 5)
-        zeroes = sum(1 for r in all_results if r.num_fish == 0 and not r.buy_in)
-        buy_ins = sum(1 for r in all_results if r.buy_in)
-        anglers = sum(1 for r in all_results if not r.buy_in)
-
-        # Find big bass winner
-        bb_result = None
-        max_bass_weight = Decimal("0")
-        for result in all_results:
-            if result.big_bass_weight > max_bass_weight:
-                max_bass_weight = result.big_bass_weight
-                bb_result = result
-
-        big_bass = "--"
-        if bb_result and bb_result.big_bass_weight >= Decimal("5"):
-            big_bass = f"{bb_result.big_bass_weight: .2f}lbs"
-
-        # Find heavy stringer (place_finish = 1)
-        heavy_stringer = "--"
-        hs_result = next((r for r in all_results if r.place_finish == 1), None)
-        if hs_result:
-            heavy_stringer = f"{hs_result.total_weight}lbs"
-
-        # Calculate totals
-        total_fish = sum(r.num_fish for r in all_results if r.num_fish > 0)
-        total_weight = sum(r.total_weight for r in all_results if r.num_fish > 0)
-
-        data = {
-            "limits": limits,
-            "zeros": zeroes,
-            "anglers": anglers,
-            "buy_ins": buy_ins,
-            "total_fish": total_fish,
-            "total_weight": f"{total_weight: .2f}lbs",
-            "big_bass": big_bass,
-            "heavy_stringer": heavy_stringer,
-        }
-
-        return TournamentSummaryTable([data])
-
     def get_context_data(self, **kwargs):
+        """Prepare context data using service layer for business logic."""
         context = super().get_context_data(**kwargs)
         tid = self.kwargs.get("pk")
 
-        # Use prefetch_related for efficient data loading
-        tmnt = (
-            Tournament.objects.select_related(
-                "lake", "event", "rules", "payout_multiplier"
-            )
-            .prefetch_related(
-                "result_set__angler__user",
-                "teamresult_set__result_1__angler__user",
-                "teamresult_set__result_2__angler__user",
-            )
-            .get(pk=tid)
-        )
+        # Use service to get optimized tournament data
+        tmnt = TournamentService.get_optimized_tournament_data(tid)
 
+        # Update tournament places and points
         set_places(tid=tid)
         if tmnt.points_count:
             set_points(tid=tid)
 
-        # Get all results in one query and filter in Python to reduce DB hits
+        # Get all results in one query
         all_results = list(tmnt.result_set.select_related("angler__user").all())
 
-        # Filter results efficiently
-        team_results = list(
-            tmnt.teamresult_set.select_related(
-                "result_1__angler__user", "result_2__angler__user"
-            ).order_by("place_finish", "-total_weight", "-num_fish")
+        # Use service to filter and sort results
+        indv_results, buy_ins, dqs = TournamentService.filter_and_sort_results(
+            all_results
         )
 
-        indv_results = [r for r in all_results if not r.buy_in and not r.disqualified]
-        indv_results.sort(
-            key=lambda x: (x.place_finish or 999, -x.total_weight, -x.num_fish)
-        )
-
-        buy_ins = [r for r in all_results if r.buy_in]
-        dqs = [r for r in all_results if r.disqualified]
+        # Get team results using service
+        team_results = TournamentService.get_team_results_data(tmnt)
 
         # Create table objects
         context["team_results"] = TeamResultTable(team_results)
@@ -205,10 +135,16 @@ class TournamentDetailView(DetailView):
         context["render_dqs"] = len(dqs)
         context["editable_dqs"] = EditableDQTable(dqs)
 
-        context["payouts"] = self.get_payout_table(tid=tid)
+        # Use service for payouts and statistics
+        formatted_payouts = TournamentService.get_formatted_payouts(tid)
+        context["payouts"] = PayoutSummary([formatted_payouts])
+
+        tournament_stats = TournamentService.calculate_tournament_statistics(
+            tmnt, all_results
+        )
         context["catch_stats"] = (
-            self.get_stats_table(tid=tid, tournament=tmnt, all_results=all_results)
-            if indv_results
+            TournamentSummaryTable([tournament_stats])
+            if indv_results and tournament_stats
             else TournamentSummaryTable([])
         )
 
@@ -222,6 +158,8 @@ class TournamentDetailView(DetailView):
 class TournamentUpdateView(
     SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView
 ):
+    """Update existing tournaments with staff-only access."""
+
     model = Tournament
     form_class = TournamentForm
 
@@ -233,6 +171,8 @@ class TournamentUpdateView(
 
 
 class TournamentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """Delete tournaments with confirmation and staff-only access."""
+
     model = Tournament
 
     def test_func(self):

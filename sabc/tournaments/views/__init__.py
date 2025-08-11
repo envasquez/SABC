@@ -1,21 +1,32 @@
 import datetime
-from decimal import Decimal
-from typing import Optional
 
-from django.db.models import QuerySet
 from django.shortcuts import render
 
-from ..models.results import Result
+from ..services.awards_service import AnnualAwardsService
 from ..tables import Aoy as AoyTable
 from ..tables import BigBass, HeavyStringer
 
 
 def annual_awards(request, year=0):
+    """
+    Display annual awards using service layer for business logic.
+
+    Business logic has been extracted to AnnualAwardsService for better
+    separation of concerns and maintainability.
+    """
     year = year or datetime.date.today().year
-    aoy_tbl = AoyTable(get_aoy_results(year=year))
+
+    # Use service layer for all award calculations
+    aoy_results = AnnualAwardsService.get_angler_of_year_results(year=year)
+    heavy_stringer_results = AnnualAwardsService.get_heavy_stringer_winner(year=year)
+    big_bass_results = AnnualAwardsService.get_big_bass_winner(year=year)
+
+    # Create table objects for presentation
+    aoy_tbl = AoyTable(aoy_results)
     aoy_tbl.order_by = "-total_points"
-    hvy_tbl = HeavyStringer(get_heavy_stringer(year=year))
-    bb_tbl = BigBass(get_big_bass(year=year))
+    hvy_tbl = HeavyStringer(heavy_stringer_results)
+    bb_tbl = BigBass(big_bass_results)
+
     return render(
         request,
         "tournaments/annual_awards.html",
@@ -29,90 +40,21 @@ def annual_awards(request, year=0):
     )
 
 
-def get_aoy_results(year=datetime.date.today().year):
-    # Optimized version using aggregation and select_related
-    from django.db.models import Count, Sum
-
-    all_results = Result.objects.filter(
-        tournament__event__year=year, angler__user__is_active=True, angler__member=True
-    ).select_related("angler__user", "tournament__event")
-
-    # Use dictionary to aggregate by angler efficiently
-    angler_stats = {}
-    for result in all_results:
-        angler_key = result.angler.pk
-        if angler_key not in angler_stats:
-            angler_stats[angler_key] = {
-                "angler": result.angler.user.get_full_name(),
-                "total_points": 0,
-                "total_weight": Decimal("0"),
-                "total_fish": 0,
-                "events": 0,
-            }
-
-        angler_stats[angler_key]["total_points"] += result.points or 0
-        angler_stats[angler_key]["total_weight"] += result.total_weight or Decimal("0")
-        angler_stats[angler_key]["total_fish"] += result.num_fish or 0
-        angler_stats[angler_key]["events"] += 1
-
-    # Convert to list and ensure decimal to float conversion for serialization
-    results = []
-    for stats in angler_stats.values():
-        stats["total_weight"] = float(stats["total_weight"])
-        results.append(stats)
-
-    return results
+# Legacy functions - DEPRECATED
+# These functions have been replaced by AnnualAwardsService methods
+# They are kept temporarily for backward compatibility
 
 
-def get_heavy_stringer(year=datetime.date.today().year):
-    # Optimized with select_related to avoid additional queries
-    result = (
-        Result.objects.select_related(
-            "angler__user", "tournament__lake", "tournament__event"
-        )
-        .filter(
-            tournament__event__year=year,
-            angler__member=True,
-            angler__user__is_active=True,
-            total_weight__gt=Decimal("0"),
-        )
-        .order_by("-total_weight")
-        .first()
-    )
-    if result:
-        return [
-            {
-                "angler": result.angler,
-                "weight": result.total_weight,
-                "fish": result.num_fish,
-                "tournament": result.tournament,
-            }
-        ]
-    return []
+def get_aoy_results(year=None):
+    """DEPRECATED: Use AnnualAwardsService.get_angler_of_year_results() instead."""
+    return AnnualAwardsService.get_angler_of_year_results(year)
 
 
-def get_big_bass(year=datetime.date.today().year):
-    # Optimized with select_related to avoid additional queries
-    query: Optional[Result] = (
-        Result.objects.select_related(
-            "angler__user", "tournament__lake", "tournament__event"
-        )
-        .filter(
-            tournament__event__year=year,
-            angler__user__is_active=True,
-            big_bass_weight__gte=Decimal("5.0"),
-        )
-        .order_by("-big_bass_weight")
-        .first()
-    )
-    return (
-        [
-            {
-                "angler": query.angler,
-                "weight": query.big_bass_weight,
-                "tournament": query.tournament,
-            }
-        ]
-        if query
-        else []
-    )
+def get_heavy_stringer(year=None):
+    """DEPRECATED: Use AnnualAwardsService.get_heavy_stringer_winner() instead."""
+    return AnnualAwardsService.get_heavy_stringer_winner(year)
+
+
+def get_big_bass(year=None):
+    """DEPRECATED: Use AnnualAwardsService.get_big_bass_winner() instead."""
+    return AnnualAwardsService.get_big_bass_winner(year)

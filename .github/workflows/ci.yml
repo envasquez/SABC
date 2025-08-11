@@ -1,30 +1,55 @@
-name: CI
+name: Basic CI (Fast Check)
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master, main, develop ]
   pull_request:
     branches: [ master, main ]
 
 jobs:
-  test:
+  quick-check:
+    name: Quick Quality Check
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
     - name: Install Nix
       uses: cachix/install-nix-action@v27
       with:
         extra_nix_config: |
           experimental-features = nix-command flakes
+          
     - name: Setup Nix Cache
       uses: cachix/cachix-action@v15
       with:
         name: nix-community
+        
     - name: Check code formatting
       run: nix develop -c ruff format --check .
+      
     - name: Lint code
       run: nix develop -c make lint
-    - name: Run tests
+      
+    - name: Run basic tests
       env:
         SKIP_PIP_INSTALL: 1
       run: nix develop -c make test
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request' && success()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `✅ **Quick CI Check Passed**
+            
+            - ✅ Code formatting (ruff)
+            - ✅ Linting (ruff + pyright)
+            - ✅ Basic test suite
+            
+            The enhanced CI pipeline will run additional comprehensive tests.`
+          })

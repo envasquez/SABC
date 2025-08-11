@@ -1,0 +1,199 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ master ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+
+jobs:
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment || 'production' }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for proper versioning
+
+    - name: Setup deployment environment
+      run: |
+        echo "DEPLOY_ENV=${{ github.event.inputs.environment || 'production' }}" >> $GITHUB_ENV
+        echo "DEPLOY_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+        echo "DEPLOY_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+        echo "DEPLOY_TIMESTAMP=$(date -u +%Y%m%d_%H%M%S)" >> $GITHUB_ENV
+
+    # Pre-deployment checks
+    - name: Verify deployment readiness
+      run: |
+        echo "🔍 Pre-deployment checklist:"
+        echo "  - Environment: $DEPLOY_ENV"
+        echo "  - Commit: $DEPLOY_SHA"
+        echo "  - Timestamp: $DEPLOY_TIMESTAMP"
+        echo "  - Branch: ${GITHUB_REF#refs/heads/}"
+        
+        # Only deploy from master branch or tags
+        if [[ "$GITHUB_REF" != "refs/heads/master" && "$GITHUB_REF" != refs/tags/* ]]; then
+          echo "❌ Deployment only allowed from master branch or tags"
+          exit 1
+        fi
+
+    # Database backup before deployment
+    - name: Create database backup
+      run: |
+        echo "🗄️ Creating database backup..."
+        ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+          -i <(echo "${{ secrets.DEPLOY_SSH_KEY }}") << 'EOF'
+          # Create backup directory
+          mkdir -p ~/backups/$(date +%Y%m%d)
+          
+          # Create database backup
+          BACKUP_FILE=~/backups/$(date +%Y%m%d)/sabc_backup_$(date +%Y%m%d_%H%M%S).sql
+          
+          # Backup with proper credentials (adjust as needed)
+          pg_dump -h localhost -U postgres sabc > $BACKUP_FILE
+          
+          echo "✅ Database backup created: $BACKUP_FILE"
+          
+          # Keep only last 7 days of backups
+          find ~/backups -type f -name "*.sql" -mtime +7 -delete
+          find ~/backups -type d -empty -delete
+        EOF
+
+    # Deploy application
+    - name: Deploy to server
+      run: |
+        echo "🚀 Deploying to $DEPLOY_ENV..."
+        ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+          -i <(echo "${{ secrets.DEPLOY_SSH_KEY }}") << 'EOF'
+          
+          # Navigate to application directory
+          cd ~/SABC_II/SABC
+          
+          # Stop the application (adjust command for your setup)
+          echo "⏹️ Stopping application..."
+          sudo systemctl stop sabc-web || echo "Service not running"
+          
+          # Pull latest changes
+          echo "📥 Pulling latest changes..."
+          git fetch --all
+          git reset --hard origin/master
+          
+          # Activate environment and install dependencies
+          echo "📦 Installing dependencies..."
+          source ~/.bashrc
+          nix develop -c bash -c "
+            cd sabc &&
+            pip install -r requirements.txt || echo 'No requirements.txt found'
+          "
+          
+          # Run database migrations
+          echo "🗄️ Running database migrations..."
+          nix develop -c bash -c "
+            cd sabc &&
+            python manage.py migrate --noinput
+          "
+          
+          # Collect static files
+          echo "📁 Collecting static files..."
+          nix develop -c bash -c "
+            cd sabc &&
+            python manage.py collectstatic --noinput
+          "
+          
+          # Restart application
+          echo "🔄 Restarting application..."
+          sudo systemctl start sabc-web
+          sudo systemctl enable sabc-web
+          
+          # Verify deployment
+          echo "✅ Verifying deployment..."
+          sleep 10
+          if curl -f http://localhost:8000/health/ > /dev/null 2>&1; then
+            echo "✅ Application is responding to health checks"
+          else
+            echo "❌ Application health check failed"
+            exit 1
+          fi
+        EOF
+
+    # Post-deployment verification
+    - name: Verify deployment
+      run: |
+        echo "🔍 Post-deployment verification..."
+        
+        # Health check
+        if curl -f https://${{ secrets.DEPLOY_HOST }}/health/ > /dev/null 2>&1; then
+          echo "✅ Public health check passed"
+        else
+          echo "⚠️ Public health check failed (might need time to propagate)"
+        fi
+        
+        # Database connectivity check
+        ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+          -i <(echo "${{ secrets.DEPLOY_SSH_KEY }}") << 'EOF'
+          cd ~/SABC_II/SABC
+          nix develop -c bash -c "
+            cd sabc &&
+            python manage.py check --database default
+          " && echo "✅ Database connectivity verified" || echo "❌ Database check failed"
+        EOF
+
+    # Create deployment record
+    - name: Record deployment
+      run: |
+        echo "📝 Recording deployment..."
+        ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+          -i <(echo "${{ secrets.DEPLOY_SSH_KEY }}") << EOF
+          echo "$(date -u +%Y-%m-%d_%H:%M:%S) - Deployed commit $DEPLOY_SHA to $DEPLOY_ENV by GitHub Actions" >> ~/deployment.log
+        EOF
+
+    # Rollback on failure
+    - name: Rollback on failure
+      if: failure()
+      run: |
+        echo "🔴 Deployment failed! Attempting rollback..."
+        ssh -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+          -i <(echo "${{ secrets.DEPLOY_SSH_KEY }}") << 'EOF'
+          echo "🔄 Rolling back to previous version..."
+          
+          cd ~/SABC_II/SABC
+          
+          # Get the previous commit
+          PREV_COMMIT=$(git log --oneline -2 | tail -1 | cut -d' ' -f1)
+          
+          # Rollback to previous commit
+          git reset --hard $PREV_COMMIT
+          
+          # Restart services
+          sudo systemctl restart sabc-web
+          
+          echo "⚠️ Rollback completed to commit: $PREV_COMMIT"
+          echo "$(date -u +%Y-%m-%d_%H:%M:%S) - ROLLBACK: Failed deployment rolled back to $PREV_COMMIT" >> ~/deployment.log
+        EOF
+
+    # Notification
+    - name: Notify deployment success
+      if: success()
+      run: |
+        echo "✅ Deployment to $DEPLOY_ENV completed successfully!"
+        echo "🔗 Application URL: https://${{ secrets.DEPLOY_HOST }}"
+        echo "📊 Commit: https://github.com/${{ github.repository }}/commit/$DEPLOY_SHA"
+
+    - name: Notify deployment failure
+      if: failure()
+      run: |
+        echo "❌ Deployment to $DEPLOY_ENV failed!"
+        echo "🔍 Check the logs above for details"
+        echo "🔄 Automatic rollback was attempted"

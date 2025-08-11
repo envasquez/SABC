@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from decimal import Decimal
-
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
@@ -14,6 +12,10 @@ from sabc.decorators import user_rate_limit
 from ..forms import ResultForm, ResultUpdateForm, TeamForm
 from ..models.results import Result, TeamResult
 from ..models.tournaments import Tournament
+from ..services.tournament_service import (
+    ResultValidationService,
+    TeamResultService,
+)
 
 
 @method_decorator(
@@ -22,6 +24,13 @@ from ..models.tournaments import Tournament
 class ResultCreateView(
     SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView
 ):
+    """
+    Create new tournament results with validation via service layer.
+
+    Business logic validation has been extracted to ResultValidationService
+    for better separation of concerns and testability.
+    """
+
     model = Result
     form_class = ResultForm
 
@@ -48,9 +57,12 @@ class ResultCreateView(
         return kwargs
 
     def form_valid(self, form):
-        valid, msg = valid_result(result=form.instance)
-        if not valid:
-            messages.error(self.request, msg)
+        """Validate result using service layer before saving."""
+        is_valid, error_message = ResultValidationService.validate_result(
+            form.instance, is_new_result=True
+        )
+        if not is_valid:
+            messages.error(self.request, error_message)
             return self.form_invalid(form)
         messages.success(self.request, f"Result ADDED for: {form.instance}!")
         return super().form_valid(form)
@@ -59,6 +71,8 @@ class ResultCreateView(
 class ResultUpdateView(
     SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView
 ):
+    """Update existing tournament results with validation via service layer."""
+
     model = Result
     form_class = ResultUpdateForm
 
@@ -76,9 +90,12 @@ class ResultUpdateView(
         )
 
     def form_valid(self, form):
-        valid, msg = valid_result(result=form.instance, new_result=False)
-        if not valid:
-            messages.error(self.request, msg)
+        """Validate result update using service layer before saving."""
+        is_valid, error_message = ResultValidationService.validate_result(
+            form.instance, is_new_result=False
+        )
+        if not is_valid:
+            messages.error(self.request, error_message)
             return self.form_invalid(form)
         messages.success(self.request, f"Result EDITED for: {form.instance}!")
         return super().form_valid(form)
@@ -110,6 +127,13 @@ class ResultDeleteView(
 class TeamCreateView(
     SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView
 ):
+    """
+    Create team tournament results with validation via service layer.
+
+    Business logic for team validation has been extracted to TeamResultService
+    for better maintainability and testability.
+    """
+
     model = TeamResult
     form_class = TeamForm
     template_name = "tournaments/team_form.html"
@@ -120,19 +144,18 @@ class TeamCreateView(
         return initial
 
     def get_form_kwargs(self):
+        """Get available results for team formation using service layer."""
         kwargs = super().get_form_kwargs()
         tid = kwargs["initial"]["tournament"]
-        all_results = list(Result.objects.filter(tournament=tid, buy_in=False))
-        team_results = [t.result_1 for t in TeamResult.objects.filter(tournament=tid)]
-        team_results += [
-            t.result_2 for t in TeamResult.objects.filter(tournament=tid) if t.result_2
-        ]
 
-        results = Result.objects.filter(
-            id__in=[r.id for r in all_results if r not in team_results]
+        # Use service to get available results
+        available_results = TeamResultService.get_available_results_for_teams(tid)
+        results_queryset = Result.objects.filter(
+            id__in=[r.id for r in available_results]
         )
-        kwargs["result_1"] = results
-        kwargs["result_2"] = results
+
+        kwargs["result_1"] = results_queryset
+        kwargs["result_2"] = results_queryset
         return kwargs
 
     def get_context_data(self, **kwargs):
@@ -144,29 +167,23 @@ class TeamCreateView(
         return self.request.user.is_staff
 
     def form_valid(self, form):
+        """Validate team formation using service layer before saving."""
         tid = self.get_initial()["tournament"]
-        results = TeamResult.objects.filter(tournament=tid)
-        anglers = [r.result_1.angler for r in results] + [
-            r.result_2.angler for r in results if r.result_2
-        ]
-        err = "Team Result for %s already exists!"
-        if form.instance.result_1.angler in anglers:
-            messages.error(self.request, err % form.instance.result_1.angler)
-            return self.form_invalid(form)
-        if form.instance.result_2:
-            if form.instance.result_2.angler in anglers:
-                messages.error(self.request, err % form.instance.result_2.angler)
-                return self.form_invalid(form)
-            if form.instance.result_2.angler == form.instance.result_1.angler:
-                messages.error(self.request, "Angler 2 cannot be the same as Angler 1!")
-                return self.form_invalid(form)
-        msg = f"{form.instance.result_1.angler}"
-        msg += (
-            f"& {form.instance.result_2.angler}"
-            if form.instance.result_2
-            else " - solo"
+
+        # Use service to validate team formation
+        is_valid, error_message = TeamResultService.validate_team_formation(
+            tid, form.instance.result_1, form.instance.result_2
         )
-        messages.success(self.request, f"Team added: {msg}")
+
+        if not is_valid:
+            messages.error(self.request, error_message)
+            return self.form_invalid(form)
+
+        # Use service to format success message
+        success_message = TeamResultService.format_team_message(
+            form.instance.result_1, form.instance.result_2
+        )
+        messages.success(self.request, success_message)
         return super().form_valid(form)
 
 
@@ -198,19 +215,3 @@ class TeamResultDeleteView(
         return reverse_lazy(
             "tournament-details", kwargs={"pk": self.get_object().tournament.id}
         )
-
-
-def valid_result(result, new_result=True):
-    msg = ""
-    if new_result:
-        if result.angler in [
-            r.angler for r in Result.objects.filter(tournament=result.tournament.id)
-        ]:
-            msg = f"ERROR Result exists for {result.angler} ... edit instead?"
-    if result.num_fish == 0 and result.total_weight > Decimal("0"):
-        msg = f"ERROR Can't have weight: {result.total_weight}lbs with {result.num_fish} fish weighed!"
-    elif result.num_fish > result.tournament.rules.limit_num:
-        msg = (
-            f"ERROR: Number of Fish exceeds limit: {result.tournament.rules.limit_num}"
-        )
-    return (True, msg) if msg == "" else (False, msg)

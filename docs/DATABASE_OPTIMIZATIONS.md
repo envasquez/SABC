@@ -103,7 +103,7 @@ Implemented caching for expensive operations:
 1. `/sabc/core/db_optimizations.py` - Optimization utilities and helpers
 2. `/sabc/core/monitoring.py` - Performance monitoring middleware
 3. `/sabc/tournaments/views_optimized.py` - Optimized view implementations
-4. `/sabc/test_performance.py` - Performance testing script
+4. `/sabc/tests/test_performance.py` - Performance testing script
 5. `/sabc/tournaments/migrations/0005_add_performance_indexes.py` - Tournament indexes
 6. `/sabc/users/migrations/0003_add_performance_indexes.py` - User indexes
 
@@ -117,10 +117,10 @@ Implemented caching for expensive operations:
 Run performance tests with:
 ```bash
 # With PostgreSQL (recommended)
-POSTGRES_DB=sabc POSTGRES_USER=env python test_performance.py
+POSTGRES_DB=sabc POSTGRES_USER=env python sabc/tests/test_performance.py
 
 # With SQLite (for development)
-UNITTEST=1 python test_performance.py
+UNITTEST=1 python sabc/tests/test_performance.py
 ```
 
 ## Best Practices Applied

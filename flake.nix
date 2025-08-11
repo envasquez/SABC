@@ -117,9 +117,15 @@
           export DJANGO_ADMIN_USER="sabc"
           export DJANGO_ADMIN_PASSWORD="Admin@123"
           cd sabc
+          
+          # Run migrations
           python manage.py migrate
+          
+          # Create superuser if needed
           python manage.py create_dev_superuser
-          python manage.py runserver 0.0.0.0:8000
+          
+          # Start development server using custom command that doesn't show false migration warnings
+          python manage.py devserver 0.0.0.0:8000
         '';
 
       in {

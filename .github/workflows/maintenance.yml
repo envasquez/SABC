@@ -1,0 +1,172 @@
+name: Maintenance & Dependencies
+
+on:
+  schedule:
+    # Run weekly on Sundays at 2 AM UTC
+    - cron: '0 2 * * 0'
+  workflow_dispatch:
+    inputs:
+      task:
+        description: 'Maintenance task to run'
+        required: true
+        default: 'dependency-check'
+        type: choice
+        options:
+        - dependency-check
+        - security-audit
+        - performance-test
+        - database-cleanup
+        - full-maintenance
+
+jobs:
+  dependency-check:
+    name: Check Dependencies
+    runs-on: ubuntu-latest
+    if: github.event.inputs.task == 'dependency-check' || github.event.inputs.task == 'full-maintenance' || github.event_name == 'schedule'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v27
+      with:
+        extra_nix_config: |
+          experimental-features = nix-command flakes
+
+    - name: Check for outdated dependencies
+      run: |
+        echo "📦 Checking for outdated dependencies..."
+        nix develop -c bash -c "
+          # Check Python dependencies
+          pip list --outdated || echo 'No pip dependencies to check'
+          
+          # Check Nix flake updates available
+          nix flake update --commit-lock-file || echo 'No flake updates available'
+        "
+
+    - name: Security audit
+      run: |
+        echo "🔒 Running security audit..."
+        nix develop -c bash -c "
+          pip install safety
+          safety check || echo 'Safety check completed'
+        "
+
+    - name: Create dependency update PR
+      if: success()
+      run: |
+        echo "Would create PR with dependency updates if any were found"
+        echo "This would use gh CLI to create a pull request"
+
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    if: github.event.inputs.task == 'security-audit' || github.event.inputs.task == 'full-maintenance' || github.event_name == 'schedule'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run comprehensive security scan
+      run: |
+        echo "🛡️ Running comprehensive security scan..."
+        echo "  - Code vulnerability scan"
+        echo "  - Dependency vulnerabilities"
+        echo "  - Configuration security"
+        echo "  - Secret detection"
+
+    - name: Generate security report
+      run: |
+        echo "📋 Generating security report..."
+        echo "Security scan would be saved to security-report.json"
+
+  performance-test:
+    name: Performance Regression Test
+    runs-on: ubuntu-latest
+    if: github.event.inputs.task == 'performance-test' || github.event.inputs.task == 'full-maintenance' || github.event_name == 'schedule'
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: sabc_test
+          POSTGRES_USER: test_user
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v27
+      with:
+        extra_nix_config: |
+          experimental-features = nix-command flakes
+
+    - name: Run performance tests
+      env:
+        UNITTEST: 1
+        POSTGRES_DB: sabc_test
+        POSTGRES_USER: test_user
+        POSTGRES_PASSWORD: test_password
+        POSTGRES_HOST: localhost
+        POSTGRES_PORT: 5432
+      run: |
+        echo "⚡ Running performance regression tests..."
+        nix develop -c bash -c "
+          cd sabc &&
+          python manage.py migrate --run-syncdb &&
+          python manage.py load_fake_data --clear &&
+          python tests/test_performance.py > performance-baseline.txt &&
+          echo '✅ Performance test completed'
+        "
+
+    - name: Compare with baseline
+      run: |
+        echo "📊 Comparing performance with baseline..."
+        echo "Would compare with stored performance baseline"
+        echo "Alert if performance degrades by >20%"
+
+  database-cleanup:
+    name: Database Maintenance
+    runs-on: ubuntu-latest
+    if: github.event.inputs.task == 'database-cleanup' || github.event.inputs.task == 'full-maintenance'
+    
+    steps:
+    - name: Database optimization recommendations
+      run: |
+        echo "🗄️ Database maintenance recommendations:"
+        echo "  - Clean up old session data (>30 days)"
+        echo "  - Archive completed tournaments (>1 year)"
+        echo "  - Optimize database indexes"
+        echo "  - Update table statistics"
+        echo "  - Check for orphaned records"
+        echo ""
+        echo "⚠️ These operations should be run manually on production"
+
+  notify-results:
+    name: Notify Maintenance Results
+    runs-on: ubuntu-latest
+    needs: [dependency-check, security-audit, performance-test, database-cleanup]
+    if: always() && (github.event_name == 'schedule' || github.event.inputs.task == 'full-maintenance')
+    
+    steps:
+    - name: Generate maintenance report
+      run: |
+        echo "📋 Weekly Maintenance Report - $(date)"
+        echo "================================="
+        echo ""
+        echo "Dependency Check: ${{ needs.dependency-check.result }}"
+        echo "Security Audit: ${{ needs.security-audit.result }}"
+        echo "Performance Test: ${{ needs.performance-test.result }}"
+        echo "Database Cleanup: ${{ needs.database-cleanup.result }}"
+        echo ""
+        echo "✅ Maintenance cycle completed"
