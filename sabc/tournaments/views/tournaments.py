@@ -197,9 +197,7 @@ class TournamentUpdateView(
         return reverse_lazy("tournament-details", kwargs={"pk": self.kwargs.get("pk")})
 
 
-class TournamentDeleteView(
-    LoginRequiredMixin, UserPassesTestMixin, DeleteView
-):
+class TournamentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Tournament
 
     def test_func(self):
