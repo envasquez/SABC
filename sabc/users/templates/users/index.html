@@ -141,13 +141,63 @@
             <p class="text-muted">Check back soon for upcoming tournament announcements.</p>
         </div>
         {% endif %}
+
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <nav aria-label="Tournament pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active" aria-current="page">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        
+        <div class="text-center text-muted small mb-4">
+            Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }} tournaments
+        </div>
+        {% endif %}
     </div>
 
     <!-- Sidebar -->
     <div class="col-lg-4">
+        <h1 class="h2 mb-4">Club News</h1>
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
-                <h6 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Upcoming Events</h6>
+                <h6 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Latest</h6>
             </div>
             <div class="card-body">
                 <div class="mb-3">
@@ -164,16 +214,10 @@
                 </div>
             </div>
         </div>
-
-        <div class="card">
-            <div class="card-header bg-success text-white">
-                <h6 class="mb-0"><i class="bi bi-credit-card me-2"></i>Payments</h6>
-            </div>
-            <div class="card-body text-center">
-                <p class="fw-semibold mb-3">Membership Dues & Buy-ins</p>
-                <img src="{% static 'venmo.png' %}" class="img-fluid mb-3" style="max-width: 200px;" alt="Venmo QR Code">
-                <p class="text-muted small">Scan to send payment to our Treasurer</p>
-            </div>
+        
+        <!-- Club Logo -->
+        <div class="text-center mt-4">
+            <img src="{% static 'sabc_logo.png' %}" class="img-fluid" style="max-width: 250px;" alt="South Austin Bass Club Logo">
         </div>
     </div>
 </div>

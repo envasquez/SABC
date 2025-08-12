@@ -1,9 +1,162 @@
 {% extends "users/base.html" %}
 {% load django_tables2 %}
+{% load static %}
+{% load table_extras %}
 
 {% block content %}
     <!-- Tournament Information Section -->
     {% include 'components/tournament_info.html' with tournament=tournament show_actions=true %}
+    
+    {% if not tournament.complete and not tournament.lake %}
+        <!-- Compact TBD Event Layout -->
+        <div class="row g-3 mt-3">
+            <!-- Quick Info Section (Left Column) -->
+            <div class="col-12 col-lg-4">
+                <!-- Date & Status Card -->
+                <div class="card shadow-sm border-warning mb-3">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-calendar-event display-6 text-warning me-3"></i>
+                            <div>
+                                <h6 class="mb-0 text-muted">Tournament Date</h6>
+                                <strong class="fs-5">{{ tournament.event.date|date:"M j, Y" }}</strong>
+                            </div>
+                        </div>
+                        <hr class="my-2">
+                        <div class="small">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted">Entry Fee:</span>
+                                {% if tournament.payout_multiplier and tournament.payout_multiplier.entry_fee %}
+                                    <span class="fw-semibold text-success">${{ tournament.payout_multiplier.entry_fee }}</span>
+                                {% else %}
+                                    <span>TBD</span>
+                                {% endif %}
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted">Type:</span>
+                                <span>To be determined</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted">AoY Points:</span>
+                                <span>To be determined</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Card -->
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body text-center">
+                        <h6 class="text-success mb-2">
+                            <i class="bi bi-credit-card me-1"></i>Payment
+                        </h6>
+                        <img src="{% static 'venmo.png' %}" class="img-fluid mb-2" style="max-width: 120px;" alt="Venmo QR">
+                        <p class="small text-muted mb-0">Tournament fees TBD</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Rules & Information (Center/Right Column) -->
+            <div class="col-12 col-lg-8">
+                {% if tournament.rules %}
+                <!-- Compact Rules Tabs -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-bs-toggle="tab" href="#fees-tab">
+                                    <i class="bi bi-currency-dollar me-1"></i>
+                                    <span class="d-none d-sm-inline">Fees</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" href="#bigbass-tab">
+                                    <i class="bi bi-award me-1"></i>
+                                    <span class="d-none d-sm-inline">Big Bass</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" href="#weighin-tab">
+                                    <i class="bi bi-scale me-1"></i>
+                                    <span class="d-none d-sm-inline">Weigh-in</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" href="#rules-tab">
+                                    <i class="bi bi-list-check me-1"></i>
+                                    <span class="d-none d-sm-inline">Rules</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content">
+                            <!-- Fees Tab -->
+                            <div class="tab-pane fade show active" id="fees-tab">
+                                <div class="row">
+                                    <div class="col-12 col-md-6">
+                                        <h6 class="text-primary mb-2">Fee Breakdown</h6>
+                                        <div class="small">{{ tournament.payout_multiplier.fee_breakdown|linebreaks }}</div>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <h6 class="text-primary mb-2">Payout Structure</h6>
+                                        <div class="small">{{ tournament.rules.payout|linebreaks }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Big Bass Tab -->
+                            <div class="tab-pane fade" id="bigbass-tab">
+                                <h6 class="text-warning mb-2">Big Bass Pot Details</h6>
+                                <div class="small">{{ tournament.rules.big_bass_breakdown|linebreaks }}</div>
+                            </div>
+                            
+                            <!-- Weigh-in Tab -->
+                            <div class="tab-pane fade" id="weighin-tab">
+                                <h6 class="text-info mb-2">Weigh-In Procedures</h6>
+                                <div class="small">{{ tournament.rules.weigh_in|to_bullet_list }}</div>
+                            </div>
+                            
+                            <!-- Rules Tab -->
+                            <div class="tab-pane fade" id="rules-tab">
+                                <h6 class="text-primary mb-2">Tournament Rules</h6>
+                                <div class="small mb-3">{{ tournament.rules.rules|to_bullet_list }}</div>
+                                <div class="alert alert-warning alert-sm py-2 px-3 mb-0">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    <strong>Dead Fish:</strong> {{ tournament.rules.dead_fish_penalty }}lb penalty per fish
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <!-- No Rules Available -->
+                <div class="card shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-info-circle display-4 text-muted mb-3"></i>
+                        <h5 class="text-muted">Tournament Details Pending</h5>
+                        <p class="text-muted">Complete tournament rules and information will be available once the location is determined through club voting.</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Poll Results Section (if available) -->
+                {% if poll_results %}
+                <div class="card shadow-sm mt-3">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-bar-chart me-2"></i>Lake Poll Results
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- Poll results chart would go here -->
+                        <p class="text-muted">Poll results visualization coming soon...</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
     
     {% if not tournament.complete and tournament.lake %}
         <!-- Pre-Tournament Information -->
@@ -263,3 +416,68 @@
         </div>
     {% endif %}
 {% endblock content %}
+
+{% block extra_css %}
+<style>
+/* Compact TBD Event Styles */
+.card.border-warning {
+    border-width: 2px;
+}
+
+.nav-tabs .nav-link {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.nav-tabs .nav-link i {
+    font-size: 1rem;
+}
+
+.tab-content {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.tab-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.tab-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.tab-content::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.tab-content::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.alert-sm {
+    font-size: 0.875rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .nav-tabs .nav-link {
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .tab-content {
+        max-height: none;
+    }
+}
+
+/* Smooth tab transitions */
+.tab-pane {
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+</style>
+{% endblock extra_css %}

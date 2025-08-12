@@ -194,17 +194,35 @@ Available variables:
             {% endif %}
         </div>
     {% else %}
-        <!-- Lake TBD State -->
-        <div class="card border-warning">
-            <div class="card-body text-center py-5">
-                <i class="bi bi-hourglass-split display-4 text-warning mb-3"></i>
-                <h4 class="text-warning">Lake: To Be Voted On</h4>
-                <p class="text-muted">The tournament location will be determined through club voting.</p>
-                {% if show_actions and user.angler.type == "officer" %}
-                    <a href="{% url 'lakepoll-create' %}" class="btn btn-warning">
-                        <i class="bi bi-plus-circle me-1"></i>Create Lake Poll
-                    </a>
-                {% endif %}
+        <!-- Compact Lake TBD Header -->
+        <div class="card border-warning shadow-sm">
+            <div class="card-body py-3">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <i class="bi bi-hourglass-split display-5 text-warning"></i>
+                    </div>
+                    <div class="col">
+                        <h5 class="mb-0 text-warning">Location To Be Determined</h5>
+                        <small class="text-muted">Tournament location will be decided by club vote</small>
+                    </div>
+                    {% if show_actions and user.angler.type == "officer" or user.is_staff %}
+                    <div class="col-auto">
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'lakepoll-create' %}" class="btn btn-warning btn-sm">
+                                <i class="bi bi-plus-circle me-1"></i>Create Poll
+                            </a>
+                            <a href="{% url 'tournament-update' tournament.id %}" class="btn btn-outline-warning btn-sm">
+                                <i class="bi bi-pencil me-1"></i>Edit
+                            </a>
+                            {% if user.is_staff %}
+                            <a href="{% url 'tournament-delete' tournament.id %}" class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     {% endif %}

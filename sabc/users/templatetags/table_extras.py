@@ -1,6 +1,28 @@
 from django import template
+from django.utils.safestring import mark_safe
+import re
 
 register = template.Library()
+
+
+@register.filter
+def to_bullet_list(text):
+    """Convert numbered lists to bullet points"""
+    if not text:
+        return text
+    
+    # Convert text to string if needed
+    text = str(text)
+    
+    # Replace numbered items with bullet points
+    # Match patterns like "1. ", "2) ", "(1) ", etc.
+    text = re.sub(r'^(\d+[\.\)]|\(\d+\))\s+', '• ', text, flags=re.MULTILINE)
+    text = re.sub(r'\n(\d+[\.\)]|\(\d+\))\s+', '\n• ', text)
+    
+    # Convert to HTML with line breaks
+    text = text.replace('\n', '<br>')
+    
+    return mark_safe(text)
 
 
 @register.filter
