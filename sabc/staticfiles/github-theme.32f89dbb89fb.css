@@ -1,0 +1,564 @@
+/* GitHub Dark Theme - EXACT GitHub Dark Colors */
+/* ============================================== */
+
+:root {
+  /* GitHub Dark Theme - actual colors from github.com */
+  --color-canvas-default: #0d1117;
+  --color-canvas-overlay: #161b22;
+  --color-canvas-inset: #21262d;
+  --color-canvas-subtle: #161b22;
+  
+  /* Text colors */
+  --color-fg-default: #f0f6fc;
+  --color-fg-muted: #8b949e;
+  --color-fg-subtle: #6e7681;
+  --color-fg-on-emphasis: #ffffff;
+  
+  /* Header */
+  --color-header-bg: #21262d;
+  --color-header-text: #f0f6fc;
+  --color-header-divider: #30363d;
+  
+  /* Borders */
+  --color-border-default: #30363d;
+  --color-border-muted: #21262d;
+  --color-border-subtle: rgba(240,246,252,0.1);
+  
+  /* Accent colors */
+  --color-accent-fg: #58a6ff;
+  --color-accent-emphasis: #1f6feb;
+  --color-accent-muted: rgba(88,166,255,0.4);
+  
+  /* Success/Green */
+  --color-success-fg: #3fb950;
+  --color-success-emphasis: #238636;
+  --color-success-muted: rgba(63,185,80,0.15);
+  
+  /* Danger/Red */
+  --color-danger-fg: #f85149;
+  --color-danger-emphasis: #da3633;
+  --color-danger-muted: rgba(248,81,73,0.15);
+  
+  /* Warning/Yellow */
+  --color-attention-fg: #d29922;
+  --color-attention-emphasis: #9e6a03;
+  --color-attention-muted: rgba(187,128,9,0.15);
+  
+  /* Buttons */
+  --color-btn-text: #f0f6fc;
+  --color-btn-bg: #21262d;
+  --color-btn-border: rgba(240,246,252,0.13);
+  --color-btn-shadow: 0 0 transparent;
+  --color-btn-inset-shadow: 0 0 transparent;
+  --color-btn-hover-bg: #30363d;
+  --color-btn-hover-border: #8b949e;
+  
+  /* Primary button */
+  --color-btn-primary-text: #ffffff;
+  --color-btn-primary-bg: #238636;
+  --color-btn-primary-border: rgba(240,246,252,0.13);
+  --color-btn-primary-hover-bg: #2ea043;
+  --color-btn-primary-shadow: 0 0 transparent;
+  
+  /* Danger button */
+  --color-btn-danger-text: #ffffff;
+  --color-btn-danger-bg: #da3633;
+  --color-btn-danger-border: rgba(240,246,252,0.13);
+  --color-btn-danger-hover-bg: #e5534b;
+}
+
+/* Reset and base */
+* {
+  box-sizing: border-box;
+}
+
+body, h1, h2, h3, h4, h5, h6, p, blockquote, pre, dl, dd, ol, ul, form, fieldset, legend, table, th, td, caption, hr {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-fg-default);
+  background-color: var(--color-canvas-default);
+  word-wrap: break-word;
+}
+
+/* GitHub Header - Dark theme */
+.site-header {
+  background-color: var(--color-header-bg);
+  border-bottom: 1px solid var(--color-header-divider);
+  color: var(--color-header-text);
+  z-index: 32;
+  position: fixed;
+  top: 0;
+  width: 100%;
+}
+
+.site-header .navbar {
+  background: none !important;
+  border: none !important;
+  padding: 16px;
+  margin: 0;
+  max-width: none !important;
+}
+
+.site-header .container-fluid {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Navigation brand */
+.navbar-brand {
+  color: var(--color-header-text) !important;
+  font-weight: 600;
+  font-size: 16px;
+  text-decoration: none;
+}
+
+.navbar-brand:hover {
+  color: var(--color-fg-on-emphasis) !important;
+}
+
+/* Navigation */
+.navbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.navbar-nav .nav-link {
+  color: var(--color-header-text) !important;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.navbar-nav .nav-link:hover {
+  color: var(--color-fg-on-emphasis) !important;
+  background-color: rgba(177,186,196,0.12);
+}
+
+/* Mobile dropdown styles */
+.dropdown-menu {
+  background-color: var(--color-canvas-overlay);
+  border: 1px solid var(--color-border-default);
+  border-radius: 6px;
+  box-shadow: 0 16px 32px rgba(1,4,9,0.85);
+  padding: 8px;
+  margin-top: 2px;
+}
+
+.dropdown-item {
+  color: var(--color-fg-default);
+  padding: 8px 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  border-radius: 6px;
+}
+
+.dropdown-item:hover {
+  background-color: var(--color-accent-emphasis);
+  color: var(--color-fg-on-emphasis);
+}
+
+.dropdown-divider {
+  margin: 8px 0;
+  border-top: 1px solid var(--color-border-default);
+}
+
+/* Hide icons in navbar brand only */
+.navbar-brand i {
+  display: none !important;
+}
+
+/* Body layout - GitHub style */
+body {
+  padding-top: 65px;
+}
+
+/* Main container - GitHub repository layout */
+.github-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+}
+
+.github-main {
+  flex: 0 0 70%;
+  min-width: 0;
+}
+
+.github-sidebar {
+  flex: 0 0 30%;
+  max-width: 360px;
+}
+
+/* Override all Bootstrap containers */
+main {
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Tournament cards - GitHub issue/PR style */
+.github-issue {
+  background: var(--color-canvas-default);
+  border: 1px solid var(--color-border-default);
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 8px;
+  margin-left: 16px;
+  position: relative;
+}
+
+.github-issue:hover {
+  background-color: var(--color-canvas-inset);
+  border-color: var(--color-border-muted);
+}
+
+.github-issue-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.github-issue-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-fg-default);
+  line-height: 1.25;
+  word-break: break-word;
+}
+
+.github-issue-labels {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-left: 8px;
+}
+
+.github-label {
+  display: inline-block;
+  padding: 0 7px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  border-radius: 2em;
+  white-space: nowrap;
+}
+
+.github-label-success {
+  background-color: var(--color-success-muted);
+  color: var(--color-success-fg);
+}
+
+.github-label-primary {
+  background-color: var(--color-accent-muted);
+  color: var(--color-accent-fg);
+}
+
+.github-label-secondary {
+  background-color: rgba(139,148,158,0.15);
+  color: var(--color-fg-muted);
+}
+
+.github-issue-meta {
+  font-size: 12px;
+  color: var(--color-fg-muted);
+  margin-bottom: 12px;
+}
+
+.github-issue-body {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.github-issue-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.github-issue-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--color-fg-muted);
+}
+
+.github-issue-stat {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.github-issue-map {
+  width: 200px;
+  height: 120px;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border-default);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* Sidebar - GitHub style */
+.github-sidebar-section {
+  background: var(--color-canvas-default);
+  border: 1px solid var(--color-border-default);
+  border-radius: 6px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.github-sidebar-header {
+  background: var(--color-canvas-inset);
+  border-bottom: 1px solid var(--color-border-default);
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-fg-default);
+}
+
+.github-sidebar-body {
+  padding: 16px;
+}
+
+/* White background for Payments panel */
+.payments-panel {
+  background: #ffffff !important;
+  border: 1px solid var(--color-border-default) !important;
+}
+
+.payments-panel .github-sidebar-header {
+  background: var(--color-canvas-inset) !important;
+  color: var(--color-fg-default) !important;
+}
+
+.payments-panel .github-sidebar-body {
+  color: #24292f !important;
+}
+
+.payments-panel .github-sidebar-body p {
+  color: #24292f !important;
+}
+
+.payments-panel .text-muted {
+  color: #656d76 !important;
+}
+
+/* Buttons - GitHub Dark style */
+.btn {
+  position: relative;
+  display: inline-block;
+  padding: 5px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid;
+  border-radius: 6px;
+  appearance: none;
+  text-decoration: none;
+  font-family: inherit;
+}
+
+.btn-primary,
+.btn-success {
+  color: var(--color-btn-primary-text);
+  background-color: var(--color-btn-primary-bg);
+  border-color: var(--color-btn-primary-border);
+  box-shadow: var(--color-btn-primary-shadow);
+}
+
+.btn-primary:hover,
+.btn-success:hover {
+  background-color: var(--color-btn-primary-hover-bg);
+  border-color: var(--color-btn-primary-border);
+  color: var(--color-btn-primary-text);
+}
+
+.btn-secondary {
+  color: var(--color-btn-text);
+  background-color: var(--color-btn-bg);
+  border-color: var(--color-btn-border);
+  box-shadow: var(--color-btn-shadow);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-btn-hover-bg);
+  border-color: var(--color-btn-hover-border);
+  color: var(--color-btn-text);
+}
+
+.btn-danger {
+  color: var(--color-btn-danger-text);
+  background-color: var(--color-btn-danger-bg);
+  border-color: var(--color-btn-danger-border);
+}
+
+.btn-danger:hover {
+  background-color: var(--color-btn-danger-hover-bg);
+  color: var(--color-btn-danger-text);
+}
+
+.btn-sm {
+  padding: 3px 12px;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-fg-default);
+}
+
+h1 {
+  padding-bottom: 0.3em;
+  font-size: 32px;
+  border-bottom: 1px solid var(--color-border-muted);
+}
+
+h2 {
+  padding-bottom: 0.3em;
+  font-size: 24px;
+  border-bottom: 1px solid var(--color-border-muted);
+}
+
+h3 { font-size: 20px; }
+h4 { font-size: 16px; }
+h5 { font-size: 14px; }
+h6 { font-size: 12px; color: var(--color-fg-muted); }
+
+p {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: var(--color-fg-default);
+}
+
+/* Links */
+a {
+  color: var(--color-accent-fg);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-accent-fg);
+  text-decoration: underline;
+}
+
+/* Text utilities */
+.text-muted {
+  color: var(--color-fg-muted) !important;
+}
+
+.text-success {
+  color: var(--color-success-fg) !important;
+}
+
+.text-primary {
+  color: var(--color-accent-fg) !important;
+}
+
+.text-white {
+  color: var(--color-fg-on-emphasis) !important;
+}
+
+.text-danger {
+  color: var(--color-danger-fg) !important;
+}
+
+.text-warning {
+  color: var(--color-attention-fg) !important;
+}
+
+/* Remove Bootstrap cards that we don't want */
+.card,
+.card-header,
+.card-body,
+.card-footer {
+  display: none !important;
+}
+
+.row,
+.col-12,
+.col-md-8,
+.col-md-4 {
+  display: contents !important;
+}
+
+/* Hide shadows */
+.shadow-sm,
+.shadow,
+.shadow-lg,
+*[class*="shadow"] {
+  box-shadow: none !important;
+}
+
+/* Remove all transforms and animations */
+* {
+  transform: none !important;
+}
+
+*:hover {
+  transform: none !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .github-container {
+    flex-direction: column;
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .github-sidebar {
+    width: auto;
+    order: -1;
+  }
+  
+  .github-issue-body {
+    flex-direction: column;
+  }
+  
+  .github-issue-map {
+    width: 100%;
+  }
+  
+  .site-header .container-fluid {
+    padding: 0 16px;
+  }
+}
+
+/* Fix navbar toggler for mobile */
+.navbar-toggler {
+  border: 1px solid var(--color-border-default);
+  padding: 4px 8px;
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28240,246,252,0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}

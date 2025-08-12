@@ -1,0 +1,19 @@
+2022:
+  club: 3.00
+  place_1: 6.00
+  place_2: 4.00
+  place_3: 3.00
+  charity: 2.00
+  big_bass: 2.00
+  entry_fee: 20.00
+  paid_places: 3
+
+2023:
+  club: 3.00
+  place_1: 7.00
+  place_2: 5.00
+  place_3: 4.00
+  charity: 2.00
+  big_bass: 4.00
+  entry_fee: 25.00
+  paid_places: 3

@@ -85,7 +85,7 @@
                                             </li>
                                             <li>
                                                 <a class="dropdown-item" href="{% url 'lakepoll-create' %}">
-                                                    <i class="bi bi-vote-fill me-2"></i>New Poll
+                                                    <i class="bi bi-plus-circle me-2"></i>New Poll
                                                 </a>
                                             </li>
                                         {% endif %}
@@ -128,16 +128,6 @@
                 {% if index_html %}
                     <div class="col-12 col-lg-4">
                         <div class="sticky-top" style="top: 6rem;">
-                            {% if user.angler.type == "officer" or user.is_superuser %}
-                                <div class="d-flex flex-wrap gap-2 mb-4">
-                                    <a href="{% url 'tournament-create' %}" class="btn btn-success btn-sm">
-                                        <i class="bi bi-plus-circle me-1"></i>Tournament
-                                    </a>
-                                    <a href="{% url 'lakepoll-create' %}" class="btn btn-info btn-sm">
-                                        <i class="bi bi-plus-circle me-1"></i>Poll
-                                    </a>
-                                </div>
-                            {% endif %}
                             
                             <div class="card shadow-sm mb-4">
                                 <div class="card-header bg-primary text-white">

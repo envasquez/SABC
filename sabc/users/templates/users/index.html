@@ -1,8 +1,5 @@
 {% extends "users/base.html" %}
 {% block content %}
-    <!-- Page Header -->
-    {% include 'components/page_header.html' with title="Upcoming Tournaments" subtitle="South Austin Bass Club tournament schedule" icon="calendar-event" %}
-    
     <!-- Tournaments Grid -->
     <div class="row g-4">
         {% for tournament in tournaments %}
