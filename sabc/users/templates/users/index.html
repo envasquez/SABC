@@ -1,177 +1,180 @@
 {% extends "users/base.html" %}
+{% load static %}
+
 {% block content %}
-    <!-- Tournaments Grid -->
-    <div class="row g-4">
+<div class="row">
+    <!-- Main Content -->
+    <div class="col-lg-8">
+        <h1 class="h2 mb-4">Events 🎣</h1>
+
         {% for tournament in tournaments %}
-            <div class="col-12">
-                <div class="card shadow-sm tournament-card">
-                    <div class="card-header d-flex justify-content-between align-items-center {% if tournament.complete %}bg-success{% else %}bg-sabc-primary{% endif %} text-white">
-                        <div>
-                            <h5 class="mb-0">
-                                {% if tournament.lake %}
-                                    {{ tournament.lake|upper }}
-                                {% else %}
-                                    Lake: To Be Voted On
-                                {% endif %}
-                            </h5>
-                            <small class="opacity-75">{{ tournament.name }} - {{ tournament.event.date }}</small>
-                        </div>
-                        <div>
-                            {% if tournament.complete %}
-                                <span class="badge bg-light text-success">
-                                    <i class="bi bi-check-circle-fill me-1"></i>Complete
-                                </span>
+        <div class="card mb-4">
+            <div class="card-header {% if tournament.complete %}bg-success{% else %}bg-primary{% endif %} text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        {% if tournament.lake %}
+                            {{ tournament.lake|upper }}
+                        {% else %}
+                            Location TBD
+                        {% endif %}
+                    </h5>
+                    <span class="badge bg-light {% if tournament.complete %}text-success{% else %}text-primary{% endif %}">
+                        {% if tournament.complete %}Complete{% else %}Upcoming{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <h6 class="text-muted">{{ tournament.name }} - {{ tournament.event.date }}</h6>
+
+                {% if tournament.description %}
+                <p class="mb-3">{{ tournament.description|truncatechars:200 }}</p>
+                {% endif %}
+
+                <div class="row g-3 mb-3">
+                    <div class="col-6 col-md-3">
+                        <div class="text-center">
+                            {% if tournament.event.start %}
+                                <i class="bi bi-sunrise text-warning mb-1 fs-4"></i>
+                                <div class="small text-muted">Start</div>
+                                <div class="fw-semibold">{{ tournament.event.start|time:"g:i A" }}</div>
                             {% else %}
-                                <span class="badge bg-light text-primary">
-                                    <i class="bi bi-clock me-1"></i>Upcoming
-                                </span>
+                                <i class="bi bi-sunrise text-muted mb-1 fs-4"></i>
+                                <div class="small text-muted">Start</div>
+                                <div class="fw-semibold text-muted">
+                                    TBD <i class="bi bi-question-circle-fill ms-1"></i>
+                                </div>
                             {% endif %}
                         </div>
                     </div>
-                    
-                    <div class="card-body">
-                        <div class="row">
-                            <!-- Tournament Info -->
-                            <div class="col-12 col-md-8">
-                                {% if tournament.description %}
-                                    <div class="mb-3">
-                                        <p class="text-muted">{{ tournament.description | truncatechars:250 | linebreaks }}</p>
-                                    </div>
-                                {% endif %}
-                                
-                                <!-- Tournament Details Grid -->
-                                <div class="row g-3">
-                                    <div class="col-6 col-sm-3">
-                                        <div class="text-center">
-                                            <i class="bi bi-sunrise display-6 text-warning mb-2"></i>
-                                            <div class="small text-muted">Start Time</div>
-                                            <div class="fw-semibold">{{ tournament.event.start|time:"g:i A" }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6 col-sm-3">
-                                        <div class="text-center">
-                                            <i class="bi bi-scale display-6 text-primary mb-2"></i>
-                                            <div class="small text-muted">Weigh-in</div>
-                                            <div class="fw-semibold">{{ tournament.event.finish|time:"g:i A" }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6 col-sm-3">
-                                        <div class="text-center">
-                                            <i class="bi bi-cash-coin display-6 text-success mb-2"></i>
-                                            <div class="small text-muted">Entry Fee</div>
-                                            <div class="fw-semibold">${{ tournament.payout_multiplier.entry_fee }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-6 col-sm-3">
-                                        <div class="text-center">
-                                            {% if tournament.paper %}
-                                                <i class="bi bi-clipboard-check display-6 text-info mb-2"></i>
-                                                <div class="small text-muted">Type</div>
-                                                <div class="fw-semibold">Paper</div>
-                                            {% elif tournament.team %}
-                                                <i class="bi bi-people-fill display-6 text-primary mb-2"></i>
-                                                <div class="small text-muted">Type</div>
-                                                <div class="fw-semibold">Team</div>
-                                            {% else %}
-                                                <i class="bi bi-person-fill display-6 text-success mb-2"></i>
-                                                <div class="small text-muted">Type</div>
-                                                <div class="fw-semibold">Individual</div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-center">
+                            {% if tournament.event.finish %}
+                                <i class="bi bi-clipboard-data text-primary mb-1 fs-4"></i>
+                                <div class="small text-muted">Weigh-in</div>
+                                <div class="fw-semibold">{{ tournament.event.finish|time:"g:i A" }}</div>
+                            {% else %}
+                                <i class="bi bi-clipboard-data text-muted mb-1 fs-4"></i>
+                                <div class="small text-muted">Weigh-in</div>
+                                <div class="fw-semibold text-muted">
+                                    TBD <i class="bi bi-question-circle-fill ms-1"></i>
                                 </div>
-                                
-                                <!-- Tournament Badges -->
-                                <div class="mt-3">
-                                    <span class="badge bg-secondary me-2">
-                                        <i class="bi bi-person me-1"></i>5 fish/angler
-                                    </span>
-                                    {% if tournament.points_count %}
-                                        <span class="badge bg-info me-2">
-                                            <i class="bi bi-star me-1"></i>AoY Points
-                                        </span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            
-                            <!-- Map/Image -->
-                            <div class="col-12 col-md-4">
-                                <div class="text-center">
-                                    {% if tournament.ramp.google_maps %}
-                                        <div class="tournament-map rounded border">
-                                            {{ tournament.ramp.google_maps|safe }}
-                                        </div>
-                                    {% else %}
-                                        <div class="tournament-placeholder rounded border d-flex align-items-center justify-content-center bg-light">
-                                            <div class="text-center text-muted">
-                                                <i class="bi bi-geo-alt display-4"></i>
-                                                <div class="small">Location TBD</div>
-                                            </div>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </div>
+                            {% endif %}
                         </div>
                     </div>
-                    
-                    <div class="card-footer bg-light">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">
-                                <i class="bi bi-calendar3 me-1"></i>{{ tournament.event.date }}
-                            </small>
-                            <a href="{% url 'tournament-details' tournament.id %}" class="btn btn-sabc-primary btn-sm">
-                                {% if tournament.complete %}
-                                    <i class="bi bi-eye me-1"></i>View Results
+                    <div class="col-6 col-md-3">
+                        <div class="text-center">
+                            {% if tournament.payout_multiplier and tournament.payout_multiplier.entry_fee %}
+                                <i class="bi bi-cash-coin text-success mb-1 fs-4"></i>
+                                <div class="small text-muted">Entry Fee</div>
+                                <div class="fw-semibold">${{ tournament.payout_multiplier.entry_fee }}</div>
+                            {% else %}
+                                <i class="bi bi-question-circle text-muted mb-1 fs-4"></i>
+                                <div class="small text-muted">Entry Fee</div>
+                                <div class="fw-semibold text-muted">TBD</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="text-center">
+                            {% if tournament.complete %}
+                                {% if tournament.team %}
+                                    <i class="bi bi-people-fill text-info mb-1 fs-4"></i>
+                                    <div class="small text-muted">Type</div>
+                                    <div class="fw-semibold">Team</div>
                                 {% else %}
-                                    <i class="bi bi-info-circle me-1"></i>View Details
+                                    <i class="bi bi-person-fill text-secondary mb-1 fs-4"></i>
+                                    <div class="small text-muted">Type</div>
+                                    <div class="fw-semibold">Individual</div>
                                 {% endif %}
-                            </a>
+                            {% else %}
+                                <i class="bi bi-question-circle text-muted mb-1 fs-4"></i>
+                                <div class="small text-muted">Type</div>
+                                <div class="fw-semibold text-muted">TBD</div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
-            </div>
-        {% endfor %}
-        
-        {% if not tournaments %}
-            <div class="col-12">
-                <div class="text-center py-5">
-                    <i class="bi bi-calendar-x display-1 text-muted mb-3"></i>
-                    <h4 class="text-muted">No tournaments scheduled</h4>
-                    <p class="text-muted">Check back soon for upcoming tournament announcements.</p>
+
+                {% if tournament.ramp.google_maps %}
+                <div class="mb-3">
+                    <div style="height: 200px; border-radius: 0.375rem; overflow: hidden;">
+                        {{ tournament.ramp.google_maps|safe }}
+                    </div>
+                </div>
+                {% else %}
+                <div class="mb-3">
+                    <div class="bg-light border rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <div class="text-center text-muted">
+                            <i class="bi bi-geo-alt fs-1"></i>
+                            <div>Location TBD</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        {% if tournament.complete %}
+                            <span class="badge bg-secondary me-2">5 fish/angler</span>
+                            {% if tournament.points_count %}
+                            <span class="badge bg-info">AoY Points</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'tournament-details' tournament.id %}" class="btn btn-primary">
+                        {% if tournament.complete %}
+                            <i class="bi bi-eye me-1"></i>View Results
+                        {% else %}
+                            <i class="bi bi-info-circle me-1"></i>View Details
+                        {% endif %}
+                    </a>
                 </div>
             </div>
+        </div>
+        {% endfor %}
+
+        {% if not tournaments %}
+        <div class="text-center py-5">
+            <i class="bi bi-calendar-x display-1 text-muted mb-3"></i>
+            <h4 class="text-muted">No tournaments scheduled</h4>
+            <p class="text-muted">Check back soon for upcoming tournament announcements.</p>
+        </div>
         {% endif %}
     </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Upcoming Events</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Next Meeting:</strong>
+                    <div>{{ next_meeting | safe }}</div>
+                    <a href="https://maps.app.goo.gl/UN4C5QhxHur7weRp6" target="_blank" class="btn btn-outline-primary btn-sm mt-2">
+                        <i class="bi bi-geo-alt me-1"></i>Catfish Parlour South
+                    </a>
+                </div>
+                <hr>
+                <div>
+                    <strong>Next Tournament:</strong>
+                    <div>{{ next_tournament | safe }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h6 class="mb-0"><i class="bi bi-credit-card me-2"></i>Payments</h6>
+            </div>
+            <div class="card-body text-center">
+                <p class="fw-semibold mb-3">Membership Dues & Buy-ins</p>
+                <img src="{% static 'venmo.png' %}" class="img-fluid mb-3" style="max-width: 200px;" alt="Venmo QR Code">
+                <p class="text-muted small">Scan to send payment to our Treasurer</p>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock content %}
-
-<style>
-.tournament-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--sabc-shadow-lg) !important;
-}
-
-.tournament-map iframe,
-.tournament-placeholder {
-    height: 200px;
-    width: 100%;
-}
-
-.tournament-map iframe {
-    border-radius: 0.375rem;
-}
-
-.tournament-placeholder {
-    min-height: 200px;
-}
-
-@media (max-width: 768px) {
-    .tournament-map iframe,
-    .tournament-placeholder {
-        height: 150px;
-    }
-    
-    .tournament-card .display-6 {
-        font-size: 2rem !important;
-    }
-}
-</style>

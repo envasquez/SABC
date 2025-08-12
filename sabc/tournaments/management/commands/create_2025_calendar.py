@@ -82,15 +82,14 @@ class Command(BaseCommand):
         for date_str, lake, name in tournament_dates:
             tournament_date = date.fromisoformat(date_str)
 
-            # Create event
+            # Create event - per CLAUDE.md, upcoming tournaments should only have dates, no times
             event, created = Events.objects.get_or_create(
                 date=tournament_date,
                 year=year,
                 month=tournament_date.strftime("%B").lower(),
                 defaults={
                     "type": "tournament",
-                    "start": time(6, 0),  # 6:00 AM
-                    "finish": time(15, 0),  # 3:00 PM
+                    # No start/finish times for upcoming tournaments per CLAUDE.md
                 },
             )
 

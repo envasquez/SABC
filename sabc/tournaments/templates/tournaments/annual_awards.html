@@ -10,18 +10,26 @@
         <div class="col-12">
             <div class="text-center">
                 <div class="btn-group" role="group" aria-label="Award years">
-                    {% if title == '2024 Awards' %}
-                        <a href="{% url 'annual-awards' 2022 %}" class="btn btn-outline-sabc-primary">2022 Awards</a>
-                        <a href="{% url 'annual-awards' 2023 %}" class="btn btn-outline-sabc-primary">2023 Awards</a>
-                        <button type="button" class="btn btn-sabc-primary active">2024 Awards</button>
+                    {% if title == '2025 Awards' %}
+                        <a href="{% url 'annual-awards' 2022 %}" class="btn btn-outline-primary">2022</a>
+                        <a href="{% url 'annual-awards' 2023 %}" class="btn btn-outline-primary">2023</a>
+                        <a href="{% url 'annual-awards' 2024 %}" class="btn btn-outline-primary">2024</a>
+                        <button type="button" class="btn btn-primary active">2025</button>
+                    {% elif title == '2024 Awards' %}
+                        <a href="{% url 'annual-awards' 2022 %}" class="btn btn-outline-primary">2022</a>
+                        <a href="{% url 'annual-awards' 2023 %}" class="btn btn-outline-primary">2023</a>
+                        <button type="button" class="btn btn-primary active">2024</button>
+                        <a href="{% url 'annual-awards' 2025 %}" class="btn btn-outline-primary">2025</a>
                     {% elif title == '2023 Awards' %}
-                        <a href="{% url 'annual-awards' 2022 %}" class="btn btn-outline-sabc-primary">2022 Awards</a>
-                        <button type="button" class="btn btn-sabc-primary active">2023 Awards</button>
-                        <a href="{% url 'annual-awards' 2024 %}" class="btn btn-outline-sabc-primary">2024 Awards</a>
+                        <a href="{% url 'annual-awards' 2022 %}" class="btn btn-outline-primary">2022</a>
+                        <button type="button" class="btn btn-primary active">2023</button>
+                        <a href="{% url 'annual-awards' 2024 %}" class="btn btn-outline-primary">2024</a>
+                        <a href="{% url 'annual-awards' 2025 %}" class="btn btn-outline-primary">2025</a>
                     {% elif title == '2022 Awards' %}
-                        <button type="button" class="btn btn-sabc-primary active">2022 Awards</button>
-                        <a href="{% url 'annual-awards' 2023 %}" class="btn btn-outline-sabc-primary">2023 Awards</a>
-                        <a href="{% url 'annual-awards' 2024 %}" class="btn btn-outline-sabc-primary">2024 Awards</a>
+                        <button type="button" class="btn btn-primary active">2022</button>
+                        <a href="{% url 'annual-awards' 2023 %}" class="btn btn-outline-primary">2023</a>
+                        <a href="{% url 'annual-awards' 2024 %}" class="btn btn-outline-primary">2024</a>
+                        <a href="{% url 'annual-awards' 2025 %}" class="btn btn-outline-primary">2025</a>
                     {% endif %}
                 </div>
             </div>
@@ -33,7 +41,7 @@
         <!-- Heavy Stringer Award -->
         <div class="col-12">
             <div class="card shadow-sm">
-                <div class="card-header bg-sabc-primary text-white">
+                <div class="card-header bg-primary text-white">
                     <h4 class="mb-0">
                         <i class="bi bi-award-fill me-2"></i>Heavy Stringer Award
                     </h4>

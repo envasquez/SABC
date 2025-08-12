@@ -7,7 +7,7 @@
             {% include 'components/page_header.html' with title="Welcome Back" subtitle="Sign in to your SABC account" icon="box-arrow-in-right" %}
             
             <div class="card shadow-lg border-0">
-                <div class="card-header bg-sabc-primary text-white text-center py-4">
+                <div class="card-header bg-primary text-white text-center py-4">
                     <i class="bi bi-fish display-4 mb-3"></i>
                     <h4 class="mb-0">South Austin Bass Club</h4>
                 </div>
@@ -24,7 +24,7 @@
                         </div>
                         
                         <div class="d-grid">
-                            <button class="btn btn-sabc-primary btn-lg" type="submit">
+                            <button class="btn btn-primary btn-lg" type="submit">
                                 <i class="bi bi-box-arrow-in-right me-2"></i>
                                 Sign In
                             </button>
@@ -52,7 +52,7 @@
             <div class="row g-3 mt-4">
                 <div class="col-4">
                     <div class="text-center">
-                        <i class="bi bi-calendar-event display-6 text-sabc-primary mb-2"></i>
+                        <i class="bi bi-calendar-event display-6 text-primary mb-2"></i>
                         <small class="text-muted d-block">Track Tournaments</small>
                     </div>
                 </div>
@@ -73,34 +73,3 @@
     </div>
 {% endblock content %}
 
-<style>
-.btn-sabc-primary {
-    background-color: var(--sabc-primary);
-    border-color: var(--sabc-primary);
-    color: white;
-}
-
-.btn-sabc-primary:hover {
-    background-color: var(--sabc-secondary);
-    border-color: var(--sabc-secondary);
-    color: white;
-}
-
-.card-header i.display-4 {
-    opacity: 0.9;
-}
-
-@media (max-width: 768px) {
-    .card-body {
-        padding: 1.5rem !important;
-    }
-    
-    .card-header {
-        padding: 2rem 1rem !important;
-    }
-    
-    .card-header .display-4 {
-        font-size: 2.5rem !important;
-    }
-}
-</style>

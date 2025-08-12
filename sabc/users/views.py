@@ -43,7 +43,6 @@ def calendar(request):
 
     # Get year from request or use default
     current_year = datetime.date.today().year
-    demo_year = 2024
 
     requested_year = request.GET.get("year")
     if requested_year:
@@ -56,7 +55,7 @@ def calendar(request):
         current_year_tournaments = Tournament.objects.filter(
             event__year=current_year
         ).count()
-        display_year = current_year if current_year_tournaments > 0 else demo_year
+        display_year = current_year
 
     # Get all events for the year with optimized queries
     tournaments = (
@@ -208,7 +207,6 @@ def calendar_image(request):
 
     # Get year from request or use default
     current_year = datetime.date.today().year
-    demo_year = 2024
 
     requested_year = request.GET.get("year")
     if requested_year:
@@ -221,7 +219,7 @@ def calendar_image(request):
         current_year_tournaments = Tournament.objects.filter(
             event__year=current_year
         ).count()
-        display_year = current_year if current_year_tournaments > 0 else demo_year
+        display_year = current_year
 
     # Get only tournaments for the year
     tournaments = Tournament.objects.filter(event__year=display_year)

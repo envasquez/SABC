@@ -138,14 +138,12 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles") if not DEBUG else None
 STATICFILES_DIRS = [os.path.join(BASE_DIR, "sabc", "static")]
 
 # Static file optimization for production
-# Only enable ManifestStaticFilesStorage when not in debug mode AND not running tests
+# Only enable ManifestStaticFilesStorage in true production environments
 if (
-    not DEBUG
-    and not os.environ.get("UNITTEST")
-    and not os.environ.get("GITHUB_ACTIONS")
-    and not any("test" in arg for arg in sys.argv)
+    os.environ.get("DJANGO_ENV") == "production"
+    or os.environ.get("PRODUCTION") == "true"
 ):
-    # Enable static file caching and compression
+    # Enable static file caching and compression for production
     STATICFILES_STORAGE = (
         "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
     )

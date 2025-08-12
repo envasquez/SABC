@@ -28,7 +28,7 @@ Available variables:
         <div class="row mb-3">
             <div class="col-md-6">
                 <div class="input-group">
-                    <span class="input-group-text bg-sabc-primary text-white">
+                    <span class="input-group-text bg-primary text-white">
                         <i class="bi bi-search"></i>
                     </span>
                     <input type="text" 
@@ -65,10 +65,10 @@ Available variables:
                                     <i class="bi bi-arrow-down-up ms-2 text-muted small"
                                        x-show="sortField !== '{{ header.field }}'"
                                        x-transition></i>
-                                    <i class="bi bi-sort-down ms-2 text-sabc-primary"
+                                    <i class="bi bi-sort-down ms-2 text-primary"
                                        x-show="sortField === '{{ header.field }}' && sortDirection === 'asc'"
                                        x-transition></i>
-                                    <i class="bi bi-sort-up ms-2 text-sabc-primary"
+                                    <i class="bi bi-sort-up ms-2 text-primary"
                                        x-show="sortField === '{{ header.field }}' && sortDirection === 'desc'"
                                        x-transition></i>
                                 {% endif %}
@@ -144,7 +144,7 @@ Available variables:
                     <tr>
                         <td colspan="{{ headers|length }}{% if actions %}1{% endif %}" class="text-center py-5">
                             <div class="text-muted">
-                                <i class="bi bi-inbox display-4 d-block mb-3 text-sabc-primary opacity-50"></i>
+                                <i class="bi bi-inbox display-4 d-block mb-3 text-primary opacity-50"></i>
                                 <h5>{{ empty_message|default:"No records found" }}</h5>
                                 <p class="mb-0">Try adjusting your search criteria or check back later.</p>
                             </div>

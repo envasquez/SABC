@@ -12,8 +12,7 @@ Available variables:
         <div class="row g-4">
             <!-- Tournament Header -->
             <div class="col-12">
-                <div class="card bg-gradient text-white shadow-lg" 
-                     style="background: linear-gradient(135deg, var(--sabc-water) 0%, var(--sabc-primary) 100%);">
+                <div class="card bg-primary text-white shadow-lg">
                     <div class="card-body">
                         <div class="row align-items-center">
                             <div class="col-12 col-md-8">
@@ -56,14 +55,14 @@ Available variables:
                     <!-- Date & Time Card -->
                     <div class="col-12 col-md-6 col-lg-4">
                         <div class="card h-100 border-0 shadow-sm">
-                            <div class="card-header bg-sabc-primary text-white">
+                            <div class="card-header bg-primary text-white">
                                 <h6 class="mb-0">
                                     <i class="bi bi-calendar-event me-2"></i>Date & Time
                                 </h6>
                             </div>
                             <div class="card-body">
                                 <div class="d-flex align-items-center mb-2">
-                                    <i class="bi bi-calendar3 text-sabc-primary me-2"></i>
+                                    <i class="bi bi-calendar3 text-primary me-2"></i>
                                     <span class="fw-semibold">{{ tournament.event.date|date:"l, F j, Y" }}</span>
                                 </div>
                                 <div class="d-flex align-items-center mb-2">
@@ -81,14 +80,14 @@ Available variables:
                     <!-- Tournament Rules Card -->
                     <div class="col-12 col-md-6 col-lg-4">
                         <div class="card h-100 border-0 shadow-sm">
-                            <div class="card-header bg-sabc-water text-white">
+                            <div class="card-header bg-info text-white">
                                 <h6 class="mb-0">
                                     <i class="bi bi-list-check me-2"></i>Rules & Limits
                                 </h6>
                             </div>
                             <div class="card-body">
                                 <div class="d-flex align-items-center mb-2">
-                                    <i class="bi bi-diagram-3 text-sabc-primary me-2"></i>
+                                    <i class="bi bi-diagram-3 text-primary me-2"></i>
                                     <span><strong>5</strong> fish per angler limit</span>
                                 </div>
                                 <div class="d-flex align-items-center mb-2">
@@ -124,7 +123,7 @@ Available variables:
                     <!-- Location & Ramp Card -->
                     <div class="col-12 col-md-12 col-lg-4">
                         <div class="card h-100 border-0 shadow-sm">
-                            <div class="card-header bg-sabc-accent text-white">
+                            <div class="card-header bg-success text-white">
                                 <h6 class="mb-0">
                                     <i class="bi bi-geo-alt me-2"></i>Location
                                 </h6>
@@ -132,9 +131,9 @@ Available variables:
                             <div class="card-body text-center">
                                 {% if tournament.ramp %}
                                     <div class="mb-3">
-                                        <i class="bi bi-water display-6 text-sabc-water"></i>
+                                        <i class="bi bi-water display-6 text-info"></i>
                                     </div>
-                                    <h6 class="text-sabc-primary">{{ tournament.ramp.name }}</h6>
+                                    <h6 class="text-primary">{{ tournament.ramp.name }}</h6>
                                     {% if tournament.ramp.address %}
                                         <p class="text-muted small mb-3">{{ tournament.ramp.address }}</p>
                                     {% endif %}
@@ -160,7 +159,7 @@ Available variables:
                 <div class="col-12">
                     <div class="card border-0 bg-light">
                         <div class="card-body">
-                            <h6 class="text-sabc-primary mb-3">
+                            <h6 class="text-primary mb-3">
                                 <i class="bi bi-tools me-2"></i>Tournament Management
                             </h6>
                             <div class="d-flex flex-wrap gap-2">

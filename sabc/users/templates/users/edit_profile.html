@@ -8,7 +8,7 @@
     <div class="row justify-content-center">
         <div class="col-12 col-lg-8">
             <div class="card shadow-sm">
-                <div class="card-header bg-sabc-primary text-white">
+                <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">
                         <i class="bi bi-person-gear me-2"></i>Profile Information
                     </h5>
@@ -21,7 +21,7 @@
                         
                         <!-- User Information Section -->
                         <div class="mb-4">
-                            <h6 class="text-sabc-primary mb-3 pb-2 border-bottom">
+                            <h6 class="text-primary mb-3 pb-2 border-bottom">
                                 <i class="bi bi-person me-2"></i>Personal Information
                             </h6>
                             {{ form.user|crispy }}
@@ -29,7 +29,7 @@
                         
                         <!-- Angler Information Section -->
                         <div class="mb-4">
-                            <h6 class="text-sabc-primary mb-3 pb-2 border-bottom">
+                            <h6 class="text-primary mb-3 pb-2 border-bottom">
                                 <i class="bi bi-fish me-2"></i>Angler Details
                             </h6>
                             {{ form.angler|crispy }}
@@ -45,7 +45,7 @@
                                 <a href="{% url 'profile' user.id %}" class="btn btn-outline-secondary">
                                     <i class="bi bi-arrow-left me-1"></i>Cancel
                                 </a>
-                                <button class="btn btn-sabc-primary" type="submit">
+                                <button class="btn btn-primary" type="submit">
                                     <i class="bi bi-check-lg me-1"></i>Save Changes
                                 </button>
                             </div>

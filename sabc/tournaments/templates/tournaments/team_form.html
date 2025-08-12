@@ -9,7 +9,7 @@
         <div class="col-12 col-lg-8">
             <!-- Tournament Info Card -->
             <div class="card shadow-sm mb-4">
-                <div class="card-header bg-sabc-primary text-white">
+                <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">
                         <i class="bi bi-trophy me-2"></i>{{ tournament.name }}
                     </h5>
@@ -22,12 +22,12 @@
             </div>
             
             <!-- Team Form -->
-            {% include 'components/form_wrapper.html' with form=form title="Team Information" description="Enter your team details and partner information" icon="people-fill" submit_text="Register Team" submit_class="btn-sabc-primary" cancel_url=tournament_url %}
+            {% include 'components/form_wrapper.html' with form=form title="Team Information" description="Enter your team details and partner information" icon="people-fill" submit_text="Register Team" submit_class="btn-primary" cancel_url=tournament_url %}
             
             <!-- Team Guidelines -->
             <div class="card shadow-sm mt-4 bg-light">
                 <div class="card-body">
-                    <h6 class="text-sabc-primary mb-3">
+                    <h6 class="text-primary mb-3">
                         <i class="bi bi-lightbulb me-2"></i>Team Tournament Guidelines
                     </h6>
                     <div class="row g-3">

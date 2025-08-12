@@ -11,7 +11,7 @@
             {% if tournament.description %}
                 <div class="col-12 col-lg-8">
                     <div class="card shadow-sm">
-                        <div class="card-header bg-sabc-primary text-white">
+                        <div class="card-header bg-primary text-white">
                             <h5 class="mb-0">
                                 <i class="bi bi-info-circle me-2"></i>Tournament Details
                             </h5>
@@ -38,11 +38,11 @@
                              data-bs-parent="#tournamentRules">
                             <div class="accordion-body">
                                 <div class="mb-3">
-                                    <h6 class="text-sabc-primary">Fee Breakdown:</h6>
+                                    <h6 class="text-primary">Fee Breakdown:</h6>
                                     <div class="small">{{ tournament.payout_multiplier.fee_breakdown|linebreaks }}</div>
                                 </div>
                                 <div>
-                                    <h6 class="text-sabc-primary">Payout Structure:</h6>
+                                    <h6 class="text-primary">Payout Structure:</h6>
                                     <div class="small">{{ tournament.rules.payout|linebreaks }}</div>
                                 </div>
                             </div>
@@ -85,7 +85,7 @@
                         <h2 class="accordion-header" id="rulesHeading">
                             <button class="accordion-button collapsed" type="button" 
                                     data-bs-toggle="collapse" data-bs-target="#rulesCollapse">
-                                <i class="bi bi-list-check me-2 text-sabc-primary"></i>
+                                <i class="bi bi-list-check me-2 text-primary"></i>
                                 Tournament Rules
                             </button>
                         </h2>
@@ -111,7 +111,7 @@
             <div class="d-flex align-items-center mb-4">
                 <i class="bi bi-trophy-fill text-warning fs-2 me-3"></i>
                 <div>
-                    <h2 class="text-sabc-primary mb-1">Tournament Results</h2>
+                    <h2 class="text-primary mb-1">Tournament Results</h2>
                     <p class="text-muted mb-0">Final standings and statistics</p>
                 </div>
             </div>
@@ -137,7 +137,7 @@
                 
                 <div class="col-12">
                     <div class="card shadow-sm">
-                        <div class="card-header bg-sabc-primary text-white">
+                        <div class="card-header bg-primary text-white">
                             <h5 class="mb-0">
                                 <i class="bi bi-bar-chart me-2"></i>Tournament Statistics
                             </h5>
@@ -153,7 +153,7 @@
                 {% if is_team_tournament and render_team_results %}
                     <div class="col-12">
                         <div class="card shadow-sm">
-                            <div class="card-header bg-sabc-water text-white">
+                            <div class="card-header bg-info text-white">
                                 <h5 class="mb-0">
                                     <i class="bi bi-people-fill me-2"></i>Team Results
                                     <span class="badge bg-light text-dark ms-2">Primary Standings</span>
@@ -174,7 +174,7 @@
                 
                 <div class="col-12">
                     <div class="card shadow-sm">
-                        <div class="card-header bg-sabc-accent text-white">
+                        <div class="card-header bg-success text-white">
                             <h5 class="mb-0">
                                 <i class="bi bi-person-fill me-2"></i>Individual Results
                                 {% if not is_team_tournament %}
@@ -199,7 +199,7 @@
                 {% if not is_team_tournament and render_team_results %}
                     <div class="col-12">
                         <div class="card shadow-sm">
-                            <div class="card-header bg-sabc-water text-white">
+                            <div class="card-header bg-info text-white">
                                 <h5 class="mb-0">
                                     <i class="bi bi-people-fill me-2"></i>Team Results
                                     <span class="badge bg-secondary ms-2">For Reference</span>

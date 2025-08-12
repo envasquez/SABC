@@ -61,23 +61,22 @@ class Events(Model):
 
     def as_html(self):
         dmy = self.date.strftime("%d %B %Y")
+        
+        # Handle tournaments without times (upcoming events per CLAUDE.md)
+        if not self.start or not self.finish or self.start == self.finish:
+            return f"{self.type.upper()}<br />{dmy}<br />Time: TBD<br />"
+        
         start = self.start.strftime("%I:%M %p")
         finish = self.finish.strftime("%I:%M %p")
-        if self.start == self.finish:
-            return f"{self.type.upper()}<br />{dmy} Time: TBD<br />"
         return f"{self.type.upper()}<br />{dmy}<br />{start}-{finish}<br />"
 
     def save(self, *args, **kwargs):
-        if not self.start:
-            if self.type == "tournament":
-                self.start = DEFAULT_TOURNAMENT_START
-            elif self.type == "meeting":
-                self.start = DEFAULT_MEETING_START
-        if not self.finish:
-            if self.type == "tournament":
-                self.finish = DEFAULT_TOURNAMENT_FINISH
-            elif self.type == "meeting":
-                self.finish = DEFAULT_MEETING_FINISH
+        # Only set default times for meetings, not tournaments
+        # Per CLAUDE.md: upcoming tournaments should only have dates, no times
+        if not self.start and self.type == "meeting":
+            self.start = DEFAULT_MEETING_START
+        if not self.finish and self.type == "meeting":
+            self.finish = DEFAULT_MEETING_FINISH
         super().save(*args, **kwargs)
 
 
