@@ -21,7 +21,7 @@ class LakePollListView(
 ):
     model = LakePoll
     ordering = ["-end_date"]
-    paginate_by = 0
+    paginate_by = 5  # Pagination similar to tournaments
     context_object_name = "polls"
 
     def test_func(self):
@@ -34,6 +34,46 @@ class LakePollListView(
             )
         except AttributeError:
             return False
+
+    def get_context_data(self, **kwargs):
+        """Add poll results data for each poll."""
+        context = super().get_context_data(**kwargs)
+        
+        # Get total member count
+        from users.models import Angler
+        total_members = Angler.objects.filter(member=True).count()
+        
+        # Add results for each poll
+        for poll in context['polls']:
+            results = {}
+            max_votes = 0
+            for choice in poll.choices.all():
+                count = LakeVote.objects.filter(poll=poll, choice=choice).count()
+                # Only include lakes that have votes
+                if count > 0:
+                    results[choice.name] = count
+                    if count > max_votes:
+                        max_votes = count
+            
+            poll.results = results
+            poll.max_votes = max_votes
+            poll.has_votes = max_votes > 0
+            
+            # Get total votes for this poll
+            poll.total_votes = LakeVote.objects.filter(poll=poll).count()
+            poll.total_members = total_members
+            poll.participation_rate = (poll.total_votes / total_members * 100) if total_members > 0 else 0
+            
+            # Check if current user has voted
+            if self.request.user.is_authenticated and hasattr(self.request.user, 'angler'):
+                poll.user_voted = LakeVote.objects.filter(
+                    poll=poll, 
+                    angler=self.request.user.angler
+                ).exists()
+            else:
+                poll.user_voted = False
+                
+        return context
 
 
 class LakePollCreateView(
@@ -74,7 +114,8 @@ class LakePollView(View, LoginRequiredMixin, UserPassesTestMixin, SuccessMessage
         results = [["Lake", "Votes"]]
         for choice in poll.choices.all():
             count = LakeVote.objects.filter(poll=poll, choice=choice).count()
-            if count:
+            # Only include lakes that have received votes
+            if count > 0:
                 results.append([str(choice).title(), count])
         return results
 
@@ -89,11 +130,21 @@ class LakePollView(View, LoginRequiredMixin, UserPassesTestMixin, SuccessMessage
         # User is guaranteed to have angler profile due to test_func
         voted = LakeVote.objects.filter(poll=poll, angler=request.user.angler).exists()
         results = self.get_results(poll=poll)
+        
+        # Get voting statistics
+        from users.models import Angler
+        total_members = Angler.objects.filter(member=True).count()
+        total_votes = LakeVote.objects.filter(poll=poll).count()
+        participation_rate = (total_votes / total_members * 100) if total_members > 0 else 0
+        
         context = {
             "poll": poll,
             "voted": voted,
             "results": results,
             "no_results": results == [["Lake", "Votes"]],
+            "total_votes": total_votes,
+            "total_members": total_members,
+            "participation_rate": participation_rate,
         }
         return render(request, template_name="polls/poll.html", context=context)
 

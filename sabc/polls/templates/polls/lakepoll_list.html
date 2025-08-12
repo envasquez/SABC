@@ -1,14 +1,264 @@
 {% extends "users/base.html" %}
 {% block content %}
-{% for poll in polls %}
-        <div class="card">
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-bar-chart-fill"></i> Club Polls</h2>
+        {% if user.is_staff %}
+            <a href="{% url 'lakepoll-create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create Poll
+            </a>
+        {% endif %}
+    </div>
+
+    {% for poll in polls %}
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header {% if poll.is_active %}bg-primary text-white{% else %}bg-secondary text-white{% endif %}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ poll.name }}</h5>
+                    <div>
+                        {% if poll.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-dark">Completed</span>
+                        {% endif %}
+                        {% if poll.user_voted %}
+                            <span class="badge bg-info">Voted</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">{{ poll.name }}</h5>
-                <p class="card-text">{{ poll.description }}<br />
-                <i>Poll ends: {{ poll.end_date }} @ {{ poll.end_time }}</i></p>
-                <a href="{% url 'poll' poll.id %}" class="btn btn-primary">Click to view poll</a>
+                <p class="text-muted">
+                    {{ poll.description }}
+                    <br>
+                    <small>
+                        {% if poll.is_active %}
+                            <i class="bi bi-clock"></i> Ends: {{ poll.end_date|date:"M d, Y" }} at {{ poll.end_time|time:"g:i A" }}
+                        {% else %}
+                            <i class="bi bi-check-circle"></i> Ended: {{ poll.end_date|date:"M d, Y" }}
+                        {% endif %}
+                    </small>
+                </p>
+
+                <!-- Voting Statistics -->
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <span class="text-primary fw-bold">
+                            <i class="bi bi-people-fill"></i> {{ poll.total_votes }} of {{ poll.total_members }} members voted
+                        </span>
+                        <span class="text-muted ms-2">({{ poll.participation_rate|floatformat:0 }}%)</span>
+                    </div>
+                    <div class="progress" style="width: 150px; height: 8px;">
+                        <div class="progress-bar {% if poll.participation_rate >= 75 %}bg-success{% elif poll.participation_rate >= 50 %}bg-info{% elif poll.participation_rate >= 25 %}bg-warning{% else %}bg-danger{% endif %}" 
+                             role="progressbar" 
+                             style="width: {{ poll.participation_rate }}%"
+                             aria-valuenow="{{ poll.participation_rate|floatformat:0 }}" 
+                             aria-valuemin="0" 
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+
+                {% if poll.has_votes %}
+                    <div class="chart-container" style="position: relative; height:200px; width:100%;">
+                        <canvas id="chart-{{ poll.id }}"></canvas>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info text-center">
+                        <i class="bi bi-info-circle"></i> No votes yet
+                    </div>
+                {% endif %}
+
+                {% if poll.is_active and not poll.user_voted %}
+                    <div class="text-center mt-3">
+                        <a href="{% url 'poll' poll.id %}" class="btn btn-primary">
+                            <i class="bi bi-check2-square"></i> Cast Your Vote
+                        </a>
+                    </div>
+                {% elif poll.is_active and poll.user_voted %}
+                    <div class="text-center mt-3">
+                        <a href="{% url 'poll' poll.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-bar-chart"></i> View Details
+                        </a>
+                    </div>
+                {% endif %}
             </div>
         </div>
-        <br /><br />
-{% endfor %}
+    {% empty %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No polls available at this time.
+        </div>
+    {% endfor %}
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+        <nav aria-label="Polls pagination">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item active">
+                    <span class="page-link">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% for poll in polls %}
+        {% if poll.has_votes %}
+            const ctx{{ poll.id }} = document.getElementById('chart-{{ poll.id }}');
+            if (ctx{{ poll.id }}) {
+                new Chart(ctx{{ poll.id }}, {
+                    type: 'bar',
+                    data: {
+                        labels: [
+                            {% for lake, votes in poll.results.items %}
+                                '{{ lake|escapejs }}'{% if not forloop.last %},{% endif %}
+                            {% endfor %}
+                        ],
+                        datasets: [{
+                            label: 'Votes',
+                            data: [
+                                {% for lake, votes in poll.results.items %}
+                                    {{ votes }}{% if not forloop.last %},{% endif %}
+                                {% endfor %}
+                            ],
+                            backgroundColor: [
+                                {% for lake in poll.results.keys %}
+                                    {% if poll.is_active %}
+                                        'rgba(54, 162, 235, 0.8)',
+                                    {% else %}
+                                        'rgba(75, 192, 192, 0.8)',
+                                    {% endif %}
+                                {% endfor %}
+                            ],
+                            borderColor: [
+                                {% for lake in poll.results.keys %}
+                                    {% if poll.is_active %}
+                                        'rgba(54, 162, 235, 1)',
+                                    {% else %}
+                                        'rgba(75, 192, 192, 1)',
+                                    {% endif %}
+                                {% endfor %}
+                            ],
+                            borderWidth: 2,
+                            borderRadius: 5,
+                            barThickness: 40
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                cornerRadius: 8,
+                                titleFont: {
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                bodyFont: {
+                                    size: 13
+                                },
+                                callbacks: {
+                                    label: function(context) {
+                                        const votes = context.parsed.y;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = total > 0 ? ((votes / total) * 100).toFixed(1) : 0;
+                                        return votes + ' votes (' + percentage + '%)';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1,
+                                    font: {
+                                        size: 12
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    font: {
+                                        size: 12,
+                                        weight: 'bold'
+                                    },
+                                    maxRotation: 45,
+                                    minRotation: 0
+                                },
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        },
+                        animation: {
+                            duration: 1000,
+                            easing: 'easeOutQuart'
+                        }
+                    }
+                });
+            }
+        {% endif %}
+    {% endfor %}
+});
+</script>
+
+<style>
+    .card {
+        transition: transform 0.2s;
+        border: 1px solid #dee2e6;
+    }
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    }
+    .chart-container {
+        padding: 10px 10px;
+    }
+    .card-header {
+        border-bottom: 2px solid rgba(0,0,0,0.125);
+    }
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.35em 0.65em;
+    }
+</style>
+
 {% endblock content %}

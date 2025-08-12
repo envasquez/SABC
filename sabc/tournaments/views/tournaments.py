@@ -86,6 +86,43 @@ class TournamentListView(ListView):
         context["next_tournament"] = (
             next_tournament.as_html() if next_tournament else "N/A"
         )
+        
+        # Add poll data for upcoming tournaments
+        from polls.models import LakePoll, LakeVote
+        
+        for tournament in context['tournaments']:
+            if not tournament.complete and not tournament.lake:
+                # Find active poll for this tournament's month
+                month_year = tournament.event.date.strftime("%B %Y")
+                
+                # Try to find a poll that matches this tournament's timeframe
+                matching_polls = LakePoll.objects.filter(
+                    name__icontains=month_year[:3],  # Match month abbreviation
+                    complete=False
+                ).first()
+                
+                if not matching_polls:
+                    # Try to find any active poll
+                    matching_polls = LakePoll.objects.filter(
+                        complete=False,
+                        end_date__gte=datetime.date.today()
+                    ).first()
+                
+                if matching_polls:
+                    # Get poll results
+                    poll_results = {}
+                    for choice in matching_polls.choices.all():
+                        count = LakeVote.objects.filter(poll=matching_polls, choice=choice).count()
+                        if count > 0:  # Only include lakes with votes
+                            poll_results[choice.name] = count
+                    
+                    tournament.poll_results = poll_results
+                    tournament.has_poll = bool(poll_results)
+                    tournament.poll_name = matching_polls.name
+                else:
+                    tournament.has_poll = False
+                    tournament.poll_results = {}
+        
         return context
 
 

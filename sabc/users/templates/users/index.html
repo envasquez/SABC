@@ -102,12 +102,23 @@
                         {{ tournament.ramp.google_maps|safe }}
                     </div>
                 </div>
+                {% elif tournament.has_poll %}
+                <!-- Show poll results for upcoming tournaments without location -->
+                <div class="mb-3">
+                    <div class="bg-light border rounded p-3" style="height: 200px; position: relative;">
+                        <div class="text-center mb-2">
+                            <small class="text-muted"><i class="bi bi-bar-chart-fill"></i> Current Poll Results</small>
+                        </div>
+                        <canvas id="poll-chart-{{ tournament.id }}"></canvas>
+                    </div>
+                </div>
                 {% else %}
                 <div class="mb-3">
                     <div class="bg-light border rounded d-flex align-items-center justify-content-center" style="height: 200px;">
                         <div class="text-center text-muted">
                             <i class="bi bi-geo-alt fs-1"></i>
                             <div>Location TBD</div>
+                            <small class="d-block mt-2">No active poll</small>
                         </div>
                     </div>
                 </div>
@@ -221,4 +232,101 @@
         </div>
     </div>
 </div>
+
+<!-- Chart.js for poll results in tournament cards -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% for tournament in tournaments %}
+    {% if tournament.has_poll %}
+        const ctx{{ tournament.id }} = document.getElementById('poll-chart-{{ tournament.id }}');
+        if (ctx{{ tournament.id }}) {
+            // Get poll data
+            const pollData = {
+                {% for lake, votes in tournament.poll_results.items %}
+                    '{{ lake|escapejs }}': {{ votes }}{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            };
+            
+            const labels = Object.keys(pollData);
+            const data = Object.values(pollData);
+            const total = data.reduce((a, b) => a + b, 0);
+            
+            new Chart(ctx{{ tournament.id }}, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Votes',
+                        data: data,
+                        backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        borderRadius: 3,
+                        barThickness: 25
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                            padding: 8,
+                            cornerRadius: 4,
+                            titleFont: {
+                                size: 11
+                            },
+                            bodyFont: {
+                                size: 11
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    const votes = context.parsed.y;
+                                    const percentage = total > 0 ? ((votes / total) * 100).toFixed(0) : 0;
+                                    return votes + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1,
+                                font: {
+                                    size: 10
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 10
+                                },
+                                maxRotation: 45,
+                                minRotation: 0
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 800,
+                        easing: 'easeOutQuart'
+                    }
+                }
+            });
+        }
+    {% endif %}
+    {% endfor %}
+});
+</script>
 {% endblock content %}

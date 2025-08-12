@@ -1,54 +1,229 @@
 {% extends "users/base.html" %}
 {% block content %}
-    {% if success_message %}
-        <div class="alert alert-success"> {{ success_message }}</div>
-    {% endif %}
-    <h2>{{ poll.name }}</h2>
-    <p>
-        {{ poll.description | linebreaks }}
-        End Date: {{ poll.end_date }} @ {{ poll.end_time }}<br />
-    </p>
-    {% if poll.complete %}
-        <h4>Voting for this poll has ended.</h4>
-    {% endif %}
-    {% if no_results  %}
-        <h5>No Results to display ...</h5>
-    {% else %}
-        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-        <div id="chart_div"></div>
-            <script type="text/javascript">
-                google.charts.load('current', { 'packages': ['corechart'] });
-                google.charts.setOnLoadCallback(drawBasic);
-                function drawBasic(){
-                    var data = google.visualization.arrayToDataTable({{results|safe}});
-                    var opts = {
-                        title: "Voting Results",
-                        height: 500,
-                        width: 800,
-                        legend: "none",
-                        hAxis: {format: "#"}
-                    };
-                    var chart = new google.visualization.BarChart(document.getElementById('chart_div'));
-                    chart.draw(data, opts);
-                }
-        </script>
-    {% endif %}
-    <hr class="my-4">
-    {% if not poll.complete and not voted %}
-        <form method="post">
-            {% csrf_token %}
-            {% for choice in poll.choices.all %}
-                <div class="form-check">
-                    <ul>
-                        <li>
-                            <input class="form-check-input" type="radio" name="lake" id="{{ choice.id }}" value="{{ choice.id }}">
-                            <label class="form-check-label" for="{{ choice.id }}">{{ choice | title }}</label>
-                        </li>
-                    </ul>
+
+<div class="container">
+    <div class="card shadow">
+        <div class="card-header {% if poll.is_active %}bg-primary text-white{% else %}bg-secondary text-white{% endif %}">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">{{ poll.name }}</h4>
+                <div>
+                    {% if poll.is_active %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-dark">Completed</span>
+                    {% endif %}
+                    {% if voted %}
+                        <span class="badge bg-info">You Voted</span>
+                    {% endif %}
                 </div>
-            {% endfor %}
-            <hr class="my-4">
-            <button class="btn btn-outline-success">Vote</button>
-        </form>
-    {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            <p class="lead">{{ poll.description|linebreaks }}</p>
+            <p class="text-muted">
+                {% if poll.is_active %}
+                    <i class="bi bi-clock"></i> Voting ends: {{ poll.end_date|date:"M d, Y" }} at {{ poll.end_time|time:"g:i A" }}
+                {% else %}
+                    <i class="bi bi-check-circle"></i> Voting ended: {{ poll.end_date|date:"M d, Y" }}
+                {% endif %}
+            </p>
+
+            <!-- Voting Statistics -->
+            <div class="alert alert-light border d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">
+                        <i class="bi bi-people-fill text-primary"></i> 
+                        <span class="text-primary">{{ total_votes }}</span> of <span class="text-primary">{{ total_members }}</span> members have voted
+                        <span class="badge bg-{% if participation_rate >= 75 %}success{% elif participation_rate >= 50 %}info{% elif participation_rate >= 25 %}warning{% else %}danger{% endif %} ms-2">
+                            {{ participation_rate|floatformat:0 }}% participation
+                        </span>
+                    </h5>
+                </div>
+                <div class="progress" style="width: 200px; height: 10px;">
+                    <div class="progress-bar {% if participation_rate >= 75 %}bg-success{% elif participation_rate >= 50 %}bg-info{% elif participation_rate >= 25 %}bg-warning{% else %}bg-danger{% endif %}" 
+                         role="progressbar" 
+                         style="width: {{ participation_rate }}%"
+                         aria-valuenow="{{ participation_rate|floatformat:0 }}" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                    </div>
+                </div>
+            </div>
+
+            {% if not no_results %}
+                <div class="chart-container" style="position: relative; height:400px; width:100%; margin: 30px 0;">
+                    <canvas id="pollChart"></canvas>
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle"></i> No votes have been cast yet.
+                </div>
+            {% endif %}
+
+            {% if not poll.complete and not voted %}
+                <hr class="my-4">
+                <h5>Cast Your Vote:</h5>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        {% for choice in poll.choices.all %}
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check vote-option">
+                                    <input class="form-check-input" type="radio" name="lake" id="lake-{{ choice.id }}" value="{{ choice.id }}">
+                                    <label class="form-check-label" for="lake-{{ choice.id }}">
+                                        <strong>{{ choice.name|title }}</strong>
+                                    </label>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-check2-circle"></i> Submit Vote
+                        </button>
+                    </div>
+                </form>
+            {% endif %}
+
+            <div class="text-center mt-4">
+                <a href="{% url 'polls' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to All Polls
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+{% if not no_results %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('pollChart');
+    if (ctx) {
+        // Process the results data
+        const resultsData = {{ results|safe }};
+        const labels = resultsData.slice(1).map(item => item[0]);
+        const data = resultsData.slice(1).map(item => item[1]);
+        const total = data.reduce((a, b) => a + b, 0);
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Votes',
+                    data: data,
+                    backgroundColor: {% if poll.is_active %}'rgba(54, 162, 235, 0.8)'{% else %}'rgba(75, 192, 192, 0.8)'{% endif %},
+                    borderColor: {% if poll.is_active %}'rgba(54, 162, 235, 1)'{% else %}'rgba(75, 192, 192, 1)'{% endif %},
+                    borderWidth: 2,
+                    borderRadius: 5,
+                    barThickness: 60
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        cornerRadius: 8,
+                        titleFont: {
+                            size: 15,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 14
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                const votes = context.parsed.y;
+                                const percentage = total > 0 ? ((votes / total) * 100).toFixed(1) : 0;
+                                return votes + ' votes (' + percentage + '%)';
+                            }
+                        }
+                    },
+                    // Add data labels on top of bars
+                    datalabels: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            font: {
+                                size: 13
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Number of Votes',
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                animation: {
+                    duration: 1200,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+    }
+});
+</script>
+{% endif %}
+
+<style>
+    .vote-option {
+        padding: 15px;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    .vote-option:hover {
+        border-color: #0d6efd;
+        background-color: #f8f9fa;
+    }
+    .vote-option input[type="radio"]:checked + label {
+        color: #0d6efd;
+    }
+    .vote-option input[type="radio"]:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    .chart-container {
+        padding: 20px;
+        background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+        border-radius: 10px;
+    }
+    .badge {
+        font-size: 0.8rem;
+        padding: 0.4em 0.7em;
+    }
+</style>
+
 {% endblock content %}
