@@ -29,7 +29,7 @@ class MemberManager(Manager):
 class Angler(Model):
     user = OneToOneField(User, on_delete=PROTECT, primary_key=True)
     member = BooleanField(default=False, null=True, blank=True)
-    image = ImageField(default="profile_pics/default.jpg", upload_to="profile_pics")
+    image = ImageField(default="profile_pics/default.png", upload_to="profile_pics")
     members = MemberManager()
     objects = Manager()
     date_joined = DateField(default=timezone.now)
@@ -44,12 +44,21 @@ class Angler(Model):
         return full_name if self.member else f"{full_name} (G)"
 
     def save(self, *args, **kwargs):
-        img: Image = image.open(self.image.path)
-        if img.height > 300 or img.width > 300:  # pixels
-            output_size = (300, 300)
-            img.thumbnail(output_size)
-            img.save(self.image.path)
+        # Save the instance first so the image file is created
         super().save(*args, **kwargs)
+        
+        # Only process the image if it exists and has a path
+        if self.image and hasattr(self.image, 'path'):
+            try:
+                img: Image = image.open(self.image.path)
+                if img.height > 300 or img.width > 300:  # pixels
+                    output_size = (300, 300)
+                    img.thumbnail(output_size)
+                    img.save(self.image.path)
+                    img.close()  # Close the image to free memory
+            except (FileNotFoundError, OSError):
+                # If image processing fails, that's okay - the image is still saved
+                pass
 
 
 class Officers(Model):

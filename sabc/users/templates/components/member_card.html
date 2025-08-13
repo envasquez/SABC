@@ -7,22 +7,21 @@ Available variables:
 - show_stats: Show member statistics (default: false)
 - compact: Use compact layout (default: false)
 {% endcomment %}
+{% load static %}
 
 <div class="card member-card h-100 shadow-sm {% if compact %}compact{% endif %}">
     <div class="card-body {% if compact %}p-3{% else %}p-4{% endif %}">
         <div class="d-flex {% if compact %}align-items-center{% else %}flex-column flex-md-row align-items-md-center{% endif %}">
             <!-- Member Avatar/Image -->
             <div class="{% if compact %}me-3{% else %}text-center text-md-start me-md-4 mb-3 mb-md-0{% endif %}">
-                {% if member.user.profile_image %}
-                    <img src="{{ member.user.profile_image.url }}" 
+                {% if member.image and 'default' not in member.image.url %}
+                    <img src="{{ member.image.url }}" 
                          class="rounded-circle {% if compact %}member-avatar-sm{% else %}member-avatar{% endif %}" 
                          alt="{{ member.user.get_full_name }}">
                 {% else %}
-                    <div class="{% if compact %}member-avatar-sm{% else %}member-avatar{% endif %} 
-                                rounded-circle bg-primary text-white 
-                                d-flex align-items-center justify-content-center">
-                        <i class="bi bi-person-fill {% if compact %}fs-5{% else %}fs-4{% endif %}"></i>
-                    </div>
+                    <img src="{% static 'sabc_logo.png' %}" 
+                         class="rounded-circle {% if compact %}member-avatar-sm{% else %}member-avatar{% endif %}" 
+                         alt="{{ member.user.get_full_name }}">
                 {% endif %}
             </div>
             
@@ -137,4 +136,31 @@ Available variables:
     <!-- Optional footer for additional actions -->
     {% block member_card_footer %}{% endblock %}
 </div>
+
+<style>
+.member-avatar {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+}
+
+.member-avatar-sm {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+}
+
+/* For SABC logo default, use contain and smaller size */
+.member-avatar[src*="sabc_logo"] {
+    object-fit: contain;
+    padding: 20px;
+    background: linear-gradient(135deg, #2c5234 0%, #4a7c59 50%, #2c5234 100%);
+}
+
+.member-avatar-sm[src*="sabc_logo"] {
+    object-fit: contain;
+    padding: 12px;
+    background: linear-gradient(135deg, #2c5234 0%, #4a7c59 50%, #2c5234 100%);
+}
+</style>
 

@@ -10,6 +10,7 @@ from django.forms import (
     EmailField,
     FileField,
     Form,
+    ImageField,
     ModelForm,
     ValidationError,
 )
@@ -132,10 +133,34 @@ class UserUpdateForm(ModelForm):
 
 class AnglerUpdateForm(ModelForm):
     phone_number = PhoneNumberField()
+    image = ImageField(required=False, help_text="Upload a profile picture (max 5MB, JPG/PNG)")
 
     class Meta:
         model = Angler
-        fields = ("phone_number",)
+        fields = ("phone_number", "image")
+
+    def clean_image(self):
+        image = self.cleaned_data.get("image")
+        if image:
+            # Check file size (5MB max)
+            if image.size > 5 * 1024 * 1024:
+                raise ValidationError("Image size cannot exceed 5MB")
+            
+            # Check file type
+            allowed_types = ['image/jpeg', 'image/jpg', 'image/png']
+            if hasattr(image, 'content_type') and image.content_type not in allowed_types:
+                raise ValidationError("Only JPG and PNG images are allowed")
+            
+            # Check image dimensions (optional - prevent extremely large images)
+            from PIL import Image
+            try:
+                img = Image.open(image)
+                if img.width > 2000 or img.height > 2000:
+                    raise ValidationError("Image dimensions cannot exceed 2000x2000 pixels")
+            except Exception:
+                raise ValidationError("Invalid image file")
+                
+        return image
 
 
 class CsvImportForm(Form):

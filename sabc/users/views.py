@@ -21,7 +21,6 @@ from .forms import (
     UserUpdateForm,
 )
 from .models import Angler, Officers
-from .tables import GuestTable, MemberTable, OfficerTable
 
 User = get_user_model()
 
@@ -253,33 +252,33 @@ def calendar_image(request):
 @login_required
 def roster(request):
     # Filter officers with complete names
-    officers_qs = Officers.objects.filter(year=datetime.date.today().year).exclude(
+    officers = Officers.objects.select_related('angler__user').filter(
+        year=datetime.date.today().year
+    ).exclude(
         angler__user__first_name="", angler__user__last_name=""
     )
-    o_table = OfficerTable(officers_qs)
 
     # Filter members with complete names
-    members_qs = Angler.members.get_active_members().exclude(
+    members = Angler.members.get_active_members().select_related('user').exclude(
         user__first_name="", user__last_name=""
     )
-    m_table = MemberTable(members_qs)
 
     # Filter guests with complete names
     guests = (
-        Angler.objects.filter(member=False)
+        Angler.objects.select_related('user').filter(member=False)
         .exclude(user__first_name="", user__last_name="")
         .exclude(user__username="sabc")
     )
-    g_table = GuestTable(guests) if guests else GuestTable([])
+    
     return render(
         request,
         "users/roster_list.html",
         {
             "title": "Members",
             "roster_name": f"{datetime.date.today().year} Members",
-            "o_table": o_table,
-            "m_table": m_table,
-            "g_table": g_table,
+            "officers": officers,
+            "members": members,
+            "guests": guests,
         },
     )
 
@@ -338,7 +337,7 @@ class AnglerUpdateView(UpdateView, LoginRequiredMixin, SuccessMessageMixin):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         user_form = UserUpdateForm(request.POST, instance=self.object.user)
-        angler_form = AnglerUpdateForm(request.POST, instance=self.object)
+        angler_form = AnglerUpdateForm(request.POST, request.FILES, instance=self.object)
 
         if user_form.is_valid() and angler_form.is_valid():
             user_form.save()

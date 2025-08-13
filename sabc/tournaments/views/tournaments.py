@@ -23,18 +23,7 @@ from ..models.results import Result, TeamResult
 from ..models.rules import RuleSet
 from ..models.tournaments import Tournament, set_places, set_points
 from ..services.tournament_service import TournamentService
-from ..tables import (
-    BuyInTable,
-    DQTable,
-    EditableBuyInTable,
-    EditableDQTable,
-    EditableResultTable,
-    EditableTeamResultTable,
-    PayoutSummary,
-    ResultTable,
-    TeamResultTable,
-    TournamentSummaryTable,
-)
+# Tables removed - using direct HTML templates now
 
 
 @method_decorator(
@@ -160,30 +149,22 @@ class TournamentDetailView(DetailView):
         # Get team results using service
         team_results = TournamentService.get_team_results_data(tmnt)
 
-        # Create table objects
-        context["team_results"] = TeamResultTable(team_results)
-        context["editable_team_results"] = EditableTeamResultTable(team_results)
-        context["results"] = ResultTable(indv_results)
-        context["editable_results"] = EditableResultTable(indv_results)
-        context["buy_ins"] = BuyInTable(buy_ins)
+        # Pass raw data to template instead of table objects
+        context["team_results"] = team_results
+        context["results"] = indv_results
+        context["buy_ins"] = buy_ins
         context["render_buy_ins"] = len(buy_ins)
-        context["editable_buy_ins"] = EditableBuyInTable(buy_ins)
-        context["dqs"] = DQTable(dqs)
+        context["dqs"] = dqs
         context["render_dqs"] = len(dqs)
-        context["editable_dqs"] = EditableDQTable(dqs)
 
         # Use service for payouts and statistics
         formatted_payouts = TournamentService.get_formatted_payouts(tid)
-        context["payouts"] = PayoutSummary([formatted_payouts])
+        context["payouts"] = formatted_payouts
 
         tournament_stats = TournamentService.calculate_tournament_statistics(
             tmnt, all_results
         )
-        context["catch_stats"] = (
-            TournamentSummaryTable([tournament_stats])
-            if indv_results and tournament_stats
-            else TournamentSummaryTable([])
-        )
+        context["catch_stats"] = tournament_stats if indv_results and tournament_stats else None
 
         # Set primary results based on tournament type
         context["is_team_tournament"] = tmnt.team

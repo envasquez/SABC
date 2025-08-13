@@ -1,38 +1,38 @@
 {% extends "users/base.html" %}
 
 {% block content %}
-    <!-- Page Header -->
-    {% include 'components/page_header.html' with title="Member Profile" subtitle="Angler information and statistics" icon="person-circle" %}
-    
+    {% if user.first_name and user.last_name %}
+        {% include 'components/page_header.html' with title="Member Profile" subtitle="Angler information & statistics" icon="person-circle" %}
+    {% else %}
+        {% include 'components/page_header.html' with title=user.username subtitle="Angler information and statistics" icon="person-circle" %}
+    {% endif %}
+
     <div class="row g-4">
-        <!-- Profile Information -->
         <div class="col-12 col-lg-8">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <div class="row align-items-center">
-                        <!-- Profile Image -->
                         <div class="col-12 col-sm-auto text-center text-sm-start mb-3 mb-sm-0">
                             <div class="position-relative d-inline-block">
-                                <img class="rounded-circle profile-img shadow" src="{{ user.angler.image.url }}" alt="Profile Picture">
-                                {% if user.angler.type == 'officer' %}
+                                <img class="profile-img" src="{{ user.angler.image.url }}" alt="Profile Picture">
+                                {% if officer_pos %}
                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning">
                                         <i class="bi bi-star-fill"></i>
                                     </span>
                                 {% endif %}
                             </div>
                         </div>
-                        
-                        <!-- Profile Details -->
                         <div class="col">
                             <div class="mb-3">
                                 <h2 class="text-primary mb-1">{{ user.first_name }} {{ user.last_name }}</h2>
                                 <div class="d-flex flex-wrap gap-2 mb-2">
-                                    <span class="badge {% if user.angler.type == 'officer' %}bg-warning{% elif user.angler.type == 'member' %}bg-success{% else %}bg-secondary{% endif %} fs-6">
-                                        {{ user.angler.type|title }}
-                                    </span>
-                                    {% if user.angler.type == 'officer' and user.angler.officer_type %}
-                                        <span class="badge bg-warning text-dark fs-6">
-                                            {{ user.angler.officer_type|title }}
+                                    {% if user.angler.member %}
+                                        <span class="badge bg-success fs-6">
+                                            Member
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary fs-6">
+                                            Guest
                                         </span>
                                     {% endif %}
                                     {% if officer_pos %}
@@ -47,8 +47,6 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            
-                            <!-- Contact Information -->
                             <div class="row g-3">
                                 <div class="col-12 col-sm-6">
                                     <div class="d-flex align-items-center">
@@ -86,8 +84,6 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Edit Profile Button -->
                     {% if can_edit or user.is_superuser or user.is_staff %}
                         <div class="mt-4 text-center text-sm-start">
                             <a href="{% url 'profile-edit' user.id %}" class="btn btn-primary">
@@ -98,8 +94,6 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Statistics Card -->
         <div class="col-12 col-lg-4">
             <div class="card shadow-sm">
                 <div class="card-header bg-success text-white">
@@ -157,18 +151,3 @@
         </div>
     </div>
 {% endblock content %}
-
-<style>
-.profile-img {
-    width: 120px;
-    height: 120px;
-    object-fit: cover;
-}
-
-@media (max-width: 576px) {
-    .profile-img {
-        width: 100px;
-        height: 100px;
-    }
-}
-</style>

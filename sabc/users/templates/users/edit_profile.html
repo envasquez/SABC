@@ -16,7 +16,7 @@
                 </div>
                 
                 <div class="card-body">
-                    <form method="POST" novalidate>
+                    <form method="POST" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
                         
                         <!-- User Information Section -->
@@ -25,6 +25,21 @@
                                 <i class="bi bi-person me-2"></i>Personal Information
                             </h6>
                             {{ form.user|crispy }}
+                        </div>
+                        
+                        <!-- Profile Picture Section -->
+                        <div class="mb-4">
+                            <h6 class="text-primary mb-3 pb-2 border-bottom">
+                                <i class="bi bi-camera me-2"></i>Profile Picture
+                            </h6>
+                            <div class="row align-items-center mb-3">
+                                <div class="col-12 col-sm-auto mb-3 mb-sm-0">
+                                    <div class="text-center">
+                                        <img class="profile-img-preview" src="{{ object.image.url }}" alt="Current Profile Picture">
+                                        <div class="small text-muted mt-2">Current Picture</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <!-- Angler Information Section -->
@@ -66,3 +81,13 @@
         </div>
     </div>
 {% endblock content %}
+
+<style>
+.profile-img-preview {
+    width: 100px;
+    height: auto;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+}
+</style>

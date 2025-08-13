@@ -3,8 +3,6 @@ import datetime
 from django.shortcuts import render
 
 from ..services.awards_service import AnnualAwardsService
-from ..tables import Aoy as AoyTable
-from ..tables import BigBass, HeavyStringer
 
 
 def annual_awards(request, year=0):
@@ -21,20 +19,15 @@ def annual_awards(request, year=0):
     heavy_stringer_results = AnnualAwardsService.get_heavy_stringer_winner(year=year)
     big_bass_results = AnnualAwardsService.get_big_bass_winner(year=year)
 
-    # Create table objects for presentation
-    aoy_tbl = AoyTable(aoy_results)
-    aoy_tbl.order_by = "-total_points"
-    hvy_tbl = HeavyStringer(heavy_stringer_results)
-    bb_tbl = BigBass(big_bass_results)
-
+    # Pass raw data to template instead of table objects
     return render(
         request,
         "tournaments/annual_awards.html",
         {
             "title": f"{year} awards".title(),
-            "aoy_tbl": aoy_tbl,
-            "hvy_tbl": hvy_tbl,
-            "bb_tbl": bb_tbl,
+            "aoy_results": aoy_results,
+            "heavy_stringer_results": heavy_stringer_results,
+            "big_bass_results": big_bass_results,
             "year": year,
         },
     )

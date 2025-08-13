@@ -1,9 +1,14 @@
 {% extends "users/base.html" %}
 {% load crispy_forms_tags %}
+{% load static %}
 {% block content %}
     <div class="content-section">
       <div class="media">
-        <img class="rounded-circle account-img" src="{{ team.angler_1.angler.image.url }}">
+        {% if team.angler_1.angler.image and 'default' not in team.angler_1.angler.image.url %}
+            <img class="rounded-circle account-img" src="{{ team.angler_1.angler.image.url }}">
+        {% else %}
+            <img class="rounded-circle account-img" src="{% static 'sabc_logo.png' %}">
+        {% endif %}
         <div class="media-body">
           <h2 class="account-heading">{{ team.angler_1.angler.user.first_name }} {{ team.angler_1.angler.user.last_name }}</h2>
           <p class="text-secondary">{{ team.angler_1.angler.type }}</p>
@@ -31,3 +36,19 @@
       </form> {% endcomment %}
     </div>
 {% endblock content %}
+
+<style>
+.account-img {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, #2c5234 0%, #4a7c59 50%, #2c5234 100%);
+    padding: 30px;
+    object-fit: contain;
+}
+
+/* For actual user photos, remove padding */
+.account-img[src*="profile_pics/"]:not([src*="default"]) {
+    padding: 0;
+    object-fit: cover;
+}
+</style>

@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     "tournaments",
     "crispy_forms",
     "crispy_bootstrap4",
-    "django_tables2",
     "phonenumber_field",
     "django.contrib.auth",
     "django.contrib.admin",
@@ -185,7 +184,6 @@ else:
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@sabc.org")
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
-DJANGO_TABLES2_TEMPLATE = "django_tables2/bootstrap4.html"
 
 LOGGING = {
     "version": 1,
