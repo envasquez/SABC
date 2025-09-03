@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+
+{% block title %}Create Poll - South Austin Bass Club{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="display-5">
+        <i class="bi bi-plus-circle me-2"></i>Create Poll
+    </h1>
+    <p class="lead text-muted">Create a new poll for {% if selected_event[2] %}{{ selected_event[2] }}{% else %}tournament event{% endif %}</p>
+    <small class="text-muted">
+        <i class="bi bi-calendar3 me-1"></i>{{ selected_event[1] | date_format }}
+        {% if selected_event[3] == 'sabc_tournament' %}
+            <span class="badge bg-primary ms-2">SABC Tournament</span>
+        {% elif selected_event[3] == 'other_tournament' %}
+            <span class="badge bg-secondary ms-2">Other Tournament</span>
+        {% elif selected_event[3] == 'generic_event' %}
+            <span class="badge bg-info ms-2">Generic Event</span>
+        {% endif %}
+    </small>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <!-- Error and Success Messages -->
+        {% if request.query_params.get('error') %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>{{ request.query_params.get('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        {% if request.query_params.get('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>{{ request.query_params.get('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <!-- Poll Type Tabs -->
+        <ul class="nav nav-tabs mb-4" id="pollTypeTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tournament-tab" data-bs-toggle="tab" data-bs-target="#tournament-poll" type="button" role="tab" aria-controls="tournament-poll" aria-selected="true">
+                    <i class="bi bi-geo-alt me-2"></i>Team Tournament Poll
+                </button>
+            </li>
+            {% if selected_event[3] != 'sabc_tournament' and selected_event[3] != 'other_tournament' %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="generic-tab" data-bs-toggle="tab" data-bs-target="#generic-poll" type="button" role="tab" aria-controls="generic-poll" aria-selected="false">
+                    <i class="bi bi-card-checklist me-2"></i>Generic Poll
+                </button>
+            </li>
+            {% endif %}
+        </ul>
+
+        <div class="tab-content" id="pollTypeTabContent">
+            <!-- Tournament Poll Tab -->
+            <div class="tab-pane fade show active" id="tournament-poll" role="tabpanel" aria-labelledby="tournament-tab">
+                <form method="POST" action="/admin/polls/create" id="tournament-form">
+                    <input type="hidden" name="event_id" value="{{ selected_event[0] }}">
+                    <input type="hidden" name="poll_type" value="tournament_location">
+                    
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Poll Title</label>
+                        <input type="text" class="form-control" id="title" name="title" 
+                               value="{% if selected_event[2] %}{{ selected_event[2] }} Lake Selection Poll{% else %}Tournament Event #{{ selected_event[1] | month_number }} Lake Selection Poll{% endif %}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="2">Vote for the location for the {% if selected_event[2] %}{{ selected_event[2] }}{% else %}tournament on {{ selected_event[1] }}{% endif %}. Select your preferred lake, ramp, and fishing times.</textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="starts_at" class="form-label">
+                                    <i class="bi bi-play-circle me-1 text-success"></i>Poll Starts
+                                </label>
+                                <input type="datetime-local" class="form-control" id="starts_at" name="starts_at">
+                                <div class="form-text">When members can start voting (auto-calculated based on tournament date)</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="closes_at" class="form-label">
+                                    <i class="bi bi-stop-circle me-1 text-warning"></i>Poll Closes <span class="text-danger">*</span>
+                                </label>
+                                <input type="datetime-local" class="form-control" id="closes_at" name="closes_at" required>
+                                <div class="form-text">Deadline for voting (allows time for planning and preparation)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-geo-alt me-2 text-primary"></i>Select Lakes to Include in Poll
+                        </label>
+                        <div class="form-text mb-3">Choose which lakes members can vote for. Members will be able to specify ramp and time preferences when voting.</div>
+                        
+                        <div class="row g-3">
+                            {% for lake in lakes %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           name="lake_ids" value="{{ lake[0] }}" 
+                                           id="lake_{{ lake[0] }}" checked>
+                                    <label class="form-check-label" for="lake_{{ lake[0] }}">
+                                        <strong>{{ lake[1] }}</strong>
+                                        {% if lake[2] %}
+                                        <br><small class="text-muted">{{ lake[2] }}</small>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-sm btn-outline-primary me-2" onclick="selectAll()">
+                                <i class="bi bi-check-all me-1"></i>Select All
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectNone()">
+                                <i class="bi bi-x-square me-1"></i>Select None
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="/admin/events" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Create Tournament Poll
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            {% if selected_event[3] != 'sabc_tournament' and selected_event[3] != 'other_tournament' %}
+            <!-- Generic Poll Tab -->
+            <div class="tab-pane fade" id="generic-poll" role="tabpanel" aria-labelledby="generic-tab">
+                <form method="POST" action="/admin/polls/create" id="generic-form">
+                    <input type="hidden" name="event_id" value="{{ selected_event[0] }}">
+                    <input type="hidden" name="poll_type" value="generic">
+                    
+                    <div class="mb-3">
+                        <label for="generic_title" class="form-label">Poll Title</label>
+                        <input type="text" class="form-control" id="generic_title" name="title" 
+                               placeholder="Enter poll title" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="generic_description" class="form-label">Description</label>
+                        <textarea class="form-control" id="generic_description" name="description" rows="2"
+                                  placeholder="Additional information about this poll"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="generic_starts_at" class="form-label">Poll Starts</label>
+                                <input type="datetime-local" class="form-control" id="generic_starts_at" name="starts_at">
+                                <div class="form-text">When members can start voting</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="generic_closes_at" class="form-label">Poll Closes <span class="text-danger">*</span></label>
+                                <input type="datetime-local" class="form-control" id="generic_closes_at" name="closes_at" required>
+                                <div class="form-text">When voting will end</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-list-ul me-2 text-primary"></i>Poll Options
+                        </label>
+                        <div class="form-text mb-3">Add the options that members can vote for. You need at least 2 options.</div>
+                        
+                        <div id="poll-options-container">
+                            <div class="poll-option-row mb-2">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="poll_options[]" placeholder="Option 1" required>
+                                    <button class="btn btn-outline-danger" type="button" onclick="removeOption(this)" disabled>
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="poll-option-row mb-2">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="poll_options[]" placeholder="Option 2" required>
+                                    <button class="btn btn-outline-danger" type="button" onclick="removeOption(this)" disabled>
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="addOption()">
+                            <i class="bi bi-plus-circle me-1"></i>Add Option
+                        </button>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="/admin/events" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Create Generic Poll
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Generic poll option management
+function addOption() {
+    const container = document.getElementById('poll-options-container');
+    const optionCount = container.children.length + 1;
+    
+    const optionRow = document.createElement('div');
+    optionRow.className = 'poll-option-row mb-2';
+    optionRow.innerHTML = `
+        <div class="input-group">
+            <input type="text" class="form-control" name="poll_options[]" placeholder="Option ${optionCount}" required>
+            <button class="btn btn-outline-danger" type="button" onclick="removeOption(this)">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+    `;
+    
+    container.appendChild(optionRow);
+    updateRemoveButtons();
+}
+
+function removeOption(button) {
+    const row = button.closest('.poll-option-row');
+    row.remove();
+    updateRemoveButtons();
+    updatePlaceholders();
+}
+
+function updateRemoveButtons() {
+    const container = document.getElementById('poll-options-container');
+    const removeButtons = container.querySelectorAll('button[onclick*="removeOption"]');
+    
+    // Disable remove buttons if only 2 options remain
+    removeButtons.forEach(button => {
+        button.disabled = container.children.length <= 2;
+    });
+}
+
+function updatePlaceholders() {
+    const container = document.getElementById('poll-options-container');
+    const inputs = container.querySelectorAll('input[name="poll_options[]"]');
+    
+    inputs.forEach((input, index) => {
+        if (!input.value) {
+            input.placeholder = `Option ${index + 1}`;
+        }
+    });
+}
+
+// Lake selection management
+function selectAll() {
+    document.querySelectorAll('input[name="lake_ids"]').forEach(checkbox => {
+        checkbox.checked = true;
+    });
+}
+
+function selectNone() {
+    document.querySelectorAll('input[name="lake_ids"]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+}
+
+// Set intelligent defaults based on tournament date
+document.addEventListener('DOMContentLoaded', function() {
+    const eventDate = new Date('{{ selected_event[1] }}');
+    const today = new Date();
+    
+    // Calculate optimal poll timing
+    const daysBetween = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
+    
+    let pollStart, pollClose;
+    
+    if (daysBetween > 14) {
+        // For events more than 2 weeks out, start poll 10 days before event
+        pollStart = new Date(eventDate);
+        pollStart.setDate(pollStart.getDate() - 10);
+        pollClose = new Date(eventDate);  
+        pollClose.setDate(pollClose.getDate() - 7);
+    } else if (daysBetween > 7) {
+        // For events 1-2 weeks out, start poll 7 days before event
+        pollStart = new Date(eventDate);
+        pollStart.setDate(pollStart.getDate() - 7);
+        pollClose = new Date(eventDate);
+        pollClose.setDate(pollClose.getDate() - 5);
+    } else {
+        // For events less than a week out, start poll today
+        pollStart = new Date(today);
+        pollStart.setDate(pollStart.getDate() + 1); // Tomorrow
+        pollClose = new Date(eventDate);
+        pollClose.setDate(pollClose.getDate() - 2); // 2 days before event
+    }
+    
+    // Format for datetime-local input (YYYY-MM-DDTHH:MM)
+    function formatDateTimeLocal(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+    
+    // Set optimal times (poll starts at 6am for visibility, closes at 6pm for decisions)
+    pollStart.setHours(6, 0, 0, 0);
+    pollClose.setHours(18, 0, 0, 0);
+    
+    const formattedStart = formatDateTimeLocal(pollStart);
+    const formattedClose = formatDateTimeLocal(pollClose);
+    
+    // Set dates for tournament poll
+    const tourStartsAt = document.getElementById('starts_at');
+    const tourClosesAt = document.getElementById('closes_at');
+    if (tourStartsAt) tourStartsAt.value = formattedStart;
+    if (tourClosesAt) tourClosesAt.value = formattedClose;
+    
+    // Set dates for generic poll
+    const genStartsAt = document.getElementById('generic_starts_at');
+    const genClosesAt = document.getElementById('generic_closes_at');
+    if (genStartsAt) genStartsAt.value = formattedStart;
+    if (genClosesAt) genClosesAt.value = formattedClose;
+    
+    // Initialize remove button states
+    updateRemoveButtons();
+});
+</script>
+{% endblock extra_js %}
+{% endblock %}

@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2">🏆 {{ current_year }} Annual Awards</h1>
+            
+            <!-- Year Selection Tabs -->
+            <div class="btn-group" role="group">
+                {% for year in available_years %}
+                <a href="/awards/{{ year }}" 
+                   class="btn {% if year == current_year %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+                    {{ year }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Year Statistics Summary -->
+        {% if year_stats.total_tournaments > 0 %}
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">{{ year_stats.total_tournaments }}</h5>
+                        <p class="card-text small">Tournaments</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">{{ year_stats.unique_anglers }}</h5>
+                        <p class="card-text small">Anglers</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-info">{{ year_stats.total_fish }}</h5>
+                        <p class="card-text small">Total Fish</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title text-warning">{{ "%.1f"|format(year_stats.total_weight) }} lbs</h5>
+                        <p class="card-text small">Total Weight</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Awards Sections -->
+        
+        <!-- Angler of the Year -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="bi bi-trophy-fill me-2"></i>Angler of the Year
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if aoy_standings %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Angler</th>
+                                <th>Total Points</th>
+                                <th>Total Fish</th>
+                                <th>Total Weight</th>
+                                <th>Tournaments</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for angler in aoy_standings %}
+                            <tr class="{% if loop.index <= 6 %}table-light{% endif %}">
+                                <td class="fw-bold">{{ loop.index }}</td>
+                                <td>{{ angler[0] }}</td>
+                                <td class="fw-bold text-primary">{{ angler[1] }}</td>
+                                <td>{{ angler[2] }}</td>
+                                <td>{{ "%.2f"|format(angler[3]) }} lbs</td>
+                                <td>{{ angler[4] }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-trophy text-muted display-1"></i>
+                    <h5 class="text-muted">No qualifiers yet</h5>
+                    <p class="text-muted">Anglers must fish at least 6 tournaments to qualify for Angler of the Year</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Heavy Stringer -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-award-fill me-2"></i>Heavy Stringer
+                </h4>
+                <small>Best single tournament weight</small>
+            </div>
+            <div class="card-body">
+                {% if heavy_stringer %}
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="mb-1">{{ heavy_stringer[0] }}</h5>
+                        <p class="mb-0 text-muted">{{ heavy_stringer[3] or "Tournament" }}</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <h3 class="mb-0 text-success">{{ "%.2f"|format(heavy_stringer[1]) }} lbs</h3>
+                        <small class="text-muted">{{ heavy_stringer[2] }} fish</small>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-award text-muted display-1"></i>
+                    <h5 class="text-muted">No heavy stringer recorded</h5>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Big Bass of the Year -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-award me-2"></i>Big Bass of the Year
+                </h4>
+                <small>Minimum 5.0 lbs required per club bylaws</small>
+            </div>
+            <div class="card-body">
+                {% if big_bass %}
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="mb-1">{{ big_bass[0] }}</h5>
+                        <p class="mb-0 text-muted">{{ big_bass[2] or "Tournament" }}</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <h3 class="mb-0 text-info">{{ "%.2f"|format(big_bass[1]) }} lbs</h3>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-award text-muted display-1"></i>
+                    <h5 class="text-muted">No qualifying big bass</h5>
+                    <p class="text-muted">Bass must weigh at least 5.0 lbs to qualify</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Additional Information -->
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-info-circle me-2"></i>Award Criteria
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6 class="text-warning">🏆 Angler of the Year</h6>
+                        <ul class="small">
+                            <li>Must fish minimum 6 tournaments</li>
+                            <li>Total points from all tournaments</li>
+                            <li>Tiebreaker: Total weight for year</li>
+                            <li>Top 6 highlighted in green</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-success">🎣 Heavy Stringer</h6>
+                        <ul class="small">
+                            <li>Heaviest single tournament bag</li>
+                            <li>Open to members and guests</li>
+                            <li>Any tournament during the year</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-info">🐟 Big Bass</h6>
+                        <ul class="small">
+                            <li>Largest bass during any tournament</li>
+                            <li>Minimum weight: 5.00 pounds</li>
+                            <li>Open to members and guests</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <p class="mb-0 text-muted small">
+                        <strong>Points System:</strong> 
+                        100 points for 1st place, 99 for 2nd, etc. | 
+                        Zero fish: 2 points less than last place with fish | 
+                        Buy-ins: 4 points less than last place with fish | 
+                        Disqualified: 0 points
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Custom styling for awards page */
+.table-success {
+    --bs-table-accent-bg: rgba(25, 135, 84, 0.1);
+}
+
+.table-success.fw-bold {
+    --bs-table-accent-bg: rgba(25, 135, 84, 0.15);
+}
+
+.badge.fs-6 {
+    font-size: 1rem !important;
+}
+
+/* Year tabs hover effect */
+.btn-group .btn:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease-in-out;
+}
+
+/* Award cards animation */
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}

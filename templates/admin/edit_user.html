@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Edit User - South Austin Bass Club{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person-gear me-2"></i>Edit User
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/admin/users/{{ edit_user[0] }}/edit">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ edit_user[1] }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email 
+                                <small class="text-muted">(optional for guests)</small>
+                            </label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ edit_user[2] or '' }}" 
+                                   placeholder="Leave empty or use first.last@sabc.com">
+                            <div class="form-text">
+                                If left empty for guests, a default email will be generated (first.last@sabc.com)
+                            </div>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="member" name="member" 
+                                   {% if edit_user[3] %}checked{% endif %}>
+                            <label class="form-check-label" for="member">
+                                Club Member
+                            </label>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="is_admin" name="is_admin" 
+                                   {% if edit_user[4] %}checked{% endif %}>
+                            <label class="form-check-label" for="is_admin">
+                                Administrator
+                            </label>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="active" name="active" 
+                                   {% if edit_user[5] %}checked{% endif %}>
+                            <label class="form-check-label" for="active">
+                                Active User
+                            </label>
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="/admin/users" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-save me-1"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

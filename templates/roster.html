@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+{% block title %}2025 Members - South Austin Bass Club{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="display-5">
+        <i class="bi bi-people-fill me-2"></i>2025 Members
+    </h1>
+    <p class="lead text-muted">South Austin Bass Club official roster for 2025</p>
+</div>
+
+<div class="row g-4">
+    <!-- Officers Section -->
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="bi bi-star-fill me-2"></i>Officers
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Position</th>
+                                <th>First name</th>
+                                <th>Last name</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for officer in officers %}
+                            <tr>
+                                <td>
+                                    <i class="bi bi-shield-fill-check text-warning me-1"></i>
+                                    {{ officer[0] }}
+                                </td>
+                                <td>{{ officer[1].split(' ')[0] }}</td>
+                                <td>{{ officer[1].split(' ')[-1] }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anglers Section -->
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-person-fill me-2"></i>Anglers
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>First name</th>
+                                <th>Last name</th>
+                                <th>Email address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for member in members %}
+                                {% if member[2] %}  <!-- member=1 (active members) -->
+                                <tr>
+                                    <td>{{ member[0].split(' ')[0] }}</td>
+                                    <td>{{ member[0].split(' ')[-1] }}</td>
+                                    <td>{{ member[1] }}</td>
+                                </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guests Section with Year Tabs -->
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-person-badge me-2"></i>Guests
+                </h4>
+            </div>
+            <div class="card-body">
+                {% set guests = members|selectattr(2, 'equalto', 0)|list %}
+                {% if guests|length > 0 %}
+                    <!-- Group guests by year -->
+                    {% set years_dict = {} %}
+                    {% set no_date_guests = [] %}
+                    {% for guest in guests %}
+                        {% if guest[7] %}
+                            {% set year = guest[7][:4] %}
+                            {% if year not in years_dict %}
+                                {% set _ = years_dict.update({year: []}) %}
+                            {% endif %}
+                            {% set _ = years_dict[year].append(guest) %}
+                        {% else %}
+                            {% set _ = no_date_guests.append(guest) %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <!-- Sort years in descending order -->
+                    {% set sorted_years = years_dict.keys()|list|sort(reverse=true) %}
+                    
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-tabs" id="guestTabs" role="tablist">
+                        {% for year in sorted_years %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link {% if loop.first %}active{% endif %}" 
+                                    id="year-{{ year }}-tab" 
+                                    data-bs-toggle="tab" 
+                                    data-bs-target="#year-{{ year }}" 
+                                    type="button" 
+                                    role="tab" 
+                                    aria-controls="year-{{ year }}" 
+                                    aria-selected="{% if loop.first %}true{% else %}false{% endif %}">
+                                {{ year }} <span class="badge bg-dark ms-1">{{ years_dict[year]|length }}</span>
+                            </button>
+                        </li>
+                        {% endfor %}
+                        {% if no_date_guests|length > 0 %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link {% if sorted_years|length == 0 %}active{% endif %}" 
+                                    id="no-date-tab" 
+                                    data-bs-toggle="tab" 
+                                    data-bs-target="#no-date" 
+                                    type="button" 
+                                    role="tab" 
+                                    aria-controls="no-date" 
+                                    aria-selected="{% if sorted_years|length == 0 %}true{% else %}false{% endif %}">
+                                No Date <span class="badge bg-dark ms-1">{{ no_date_guests|length }}</span>
+                            </button>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    
+                    <!-- Tab content -->
+                    <div class="tab-content mt-3" id="guestTabContent">
+                        {% for year in sorted_years %}
+                        <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
+                             id="year-{{ year }}" 
+                             role="tabpanel" 
+                             aria-labelledby="year-{{ year }}-tab">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>First name</th>
+                                            <th>Last name</th>
+                                            <th>Email address</th>
+                                            <th>Last Tournament</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for guest in years_dict[year]|sort(attribute=7, reverse=true) %}
+                                        <tr>
+                                            <td>{{ guest[0].split(' ')[0] }}</td>
+                                            <td>{{ guest[0].split(' ')[-1] }}</td>
+                                            <td>
+                                                {% if guest[1] %}
+                                                    {{ guest[1] }}
+                                                {% else %}
+                                                    —
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ guest[7] }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        {% if no_date_guests|length > 0 %}
+                        <div class="tab-pane fade {% if sorted_years|length == 0 %}show active{% endif %}" 
+                             id="no-date" 
+                             role="tabpanel" 
+                             aria-labelledby="no-date-tab">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>First name</th>
+                                            <th>Last name</th>
+                                            <th>Email address</th>
+                                            <th>Last Tournament</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for guest in no_date_guests|sort(attribute=0) %}
+                                        <tr>
+                                            <td>{{ guest[0].split(' ')[0] }}</td>
+                                            <td>{{ guest[0].split(' ')[-1] }}</td>
+                                            <td>
+                                                {% if guest[1] %}
+                                                    {{ guest[1] }}
+                                                {% else %}
+                                                    —
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="text-muted">No recent tournaments</span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No guest members at this time
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Roster Statistics -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <h3 class="card-title">{{ officers|length }}</h3>
+                <p class="card-text">Officers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3 class="card-title">{{ members|selectattr(2, 'equalto', 1)|list|length }}</h3>
+                <p class="card-text">Active Members</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-secondary text-white">
+            <div class="card-body text-center">
+                <h3 class="card-title">{{ members|selectattr(2, 'equalto', 0)|list|length }}</h3>
+                <p class="card-text">Guests</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Override darkly theme for better table readability */
+.table {
+    color: #fff !important;
+}
+
+.table td, .table th {
+    color: #fff !important;
+    border: 1px solid #495057;
+}
+
+.table th {
+    background-color: rgba(0,0,0,0.3) !important;
+}
+
+.table tbody tr {
+    background-color: rgba(0,0,0,0.1) !important;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(255,255,255,0.2) !important;
+}
+
+/* Make tables more compact */
+.table td, .table th {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* Guest tabs styling */
+#guestTabs {
+    border-bottom: 2px solid #495057;
+}
+
+#guestTabs .nav-link {
+    color: #adb5bd;
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-bottom: none;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+#guestTabs .nav-link:hover {
+    color: #fff;
+    background-color: rgba(255,255,255,0.1);
+    border-color: #495057;
+}
+
+#guestTabs .nav-link.active {
+    color: #fff;
+    background-color: #2b3035;
+    border-color: #495057 #495057 #2b3035;
+    border-bottom: 2px solid #2b3035;
+    margin-bottom: -2px;
+}
+
+#guestTabs .badge {
+    font-size: 0.75rem;
+    padding: 0.25em 0.5em;
+}
+
+.tab-content {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+</style>
+{% endblock %}

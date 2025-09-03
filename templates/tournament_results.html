@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% block title %}{{ tournament[5] | title if tournament[5] else (tournament[4] | title if tournament[4] else "Tournament") }} {{ tournament[2] | date_format }} Results{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="mb-4">
+            <div class="text-muted mb-2">
+                {{ tournament[2] | date_format }}
+            </div>
+            
+            <h1>{{ tournament[5] | upper if tournament[5] else "TOURNAMENT" }} - <small class="text-muted">RESULTS</small></h1>
+        </div>
+
+        <!-- Tournament Information Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Tournament Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless">
+                <tbody>
+                    <tr>
+                        <td class="text-end"><strong>Date:</strong></td>
+                        <td>{{ tournament[2] | date_format }}</td>
+                        <td class="text-end"><strong>Entry Fee:</strong></td>
+                        <td>${{ "%.2f"|format(tournament[7] or 25.00) }}/angler</td>
+                        <td class="text-end"><strong>AoY Points:</strong></td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td class="text-end"><strong>Limit:</strong></td>
+                        <td>{{ tournament[8] or 5 }} fish/angler</td>
+                        <td class="text-end"><strong>Team Payout:</strong></td>
+                        <td>Yes</td>
+                        <td class="text-end"><strong>Location:</strong></td>
+                        <td>{{ tournament[5] | title if tournament[5] else "" }} {{ tournament[6] | title if tournament[6] else "" }}</td>
+                    </tr>
+                </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tournament Statistics Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Tournament Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Anglers</th>
+                        <th>Total fish</th>
+                        <th>Total weight</th>
+                        <th>Limits</th>
+                        <th>Zeros</th>
+                        <th>Buy ins</th>
+                        <th>Big bass</th>
+                        <th>Heavy stringer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ tournament_stats[0] }}</td>
+                        <td>{{ tournament_stats[1] }}</td>
+                        <td>{{ "%.2f"|format(tournament_stats[2] or 0) }}lbs</td>
+                        <td>{{ tournament_stats[3] }}</td>
+                        <td>{{ tournament_stats[4] }}</td>
+                        <td>{{ tournament_stats[5] }}</td>
+                        <td>
+                            {% if tournament_stats[6] and tournament_stats[6] > 0 %}
+                                {{ "%.2f"|format(tournament_stats[6]) }}lbs
+                            {% else %}
+                                --
+                            {% endif %}
+                        </td>
+                        <td>{{ "%.2f"|format(tournament_stats[7] or 0) }}lbs</td>
+                    </tr>
+                </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Results Card -->
+        {% if team_results %}
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-people me-2"></i>Team Results</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Place finish</th>
+                        <th>Team name</th>
+                        <th>Num fish</th>
+                        <th>Total weight</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in team_results %}
+                    <tr {% if loop.index <= 3 %}class="table-success"{% endif %}>
+                        <td>{{ result[0] }}</td>
+                        <td>{{ result[1] }}</td>
+                        <td>{{ result[2] }}</td>
+                        <td>{{ "%.2f"|format(result[3]) }}lbs</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Individual Results Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="bi bi-person me-2"></i>Individual Results</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Place finish</th>
+                        <th>Name</th>
+                        <th>Num fish</th>
+                        <th>Total weight</th>
+                        <th>Points</th>
+                        <th>Big bass weight</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in individual_results %}
+                    <tr>
+                        <td>{{ result[0] }}</td>
+                        <td>{{ result[1] }}</td>
+                        <td>{{ result[2] }}</td>
+                        <td>{{ "%.2f"|format(result[3]) }}</td>
+                        <td>{{ result[5] }}</td>
+                        <td>
+                            {% if result[4] and result[4] > 0 %}
+                                {{ "%.2f"|format(result[4]) }}
+                            {% else %}
+                                0.00
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {% if not individual_results %}
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>No Results Available</h5>
+            </div>
+            <div class="card-body">
+                <h6>Tournament Results Not Available</h6>
+                <p class="mb-0 text-muted">Results for this tournament have not been entered yet or this tournament has not been completed.</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Buy-in Results Card -->
+        {% if buy_in_results %}
+        <div class="card mb-4">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-currency-dollar me-2"></i>Buy-in Results</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Place finish</th>
+                        <th>Name</th>
+                        <th>Points</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in buy_in_results %}
+                    <tr>
+                        <td>{{ result[1] }}</td>
+                        <td>{{ result[0] }}</td>
+                        <td>{{ result[2] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Navigation -->
+        <div class="mt-4">
+            <a href="/" class="btn btn-primary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Home
+            </a>
+            <a href="/calendar" class="btn btn-secondary ms-2">
+                <i class="bi bi-calendar me-2"></i>View Calendar
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Tournament results styling for dark theme consistency */
+.table-warning {
+    background-color: rgba(255, 193, 7, 0.2) !important;
+}
+
+.table-danger {
+    background-color: rgba(220, 53, 69, 0.2) !important;
+}
+
+.table-success {
+    background-color: rgba(25, 135, 84, 0.2) !important;
+}
+
+.text-end {
+    text-align: right !important;
+}
+
+h1 small {
+    font-size: 0.6em;
+}
+
+/* Enhanced table styling for dark theme */
+.table td, .table th {
+    vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Card enhancements */
+.card-header h5 {
+    font-weight: 600;
+}
+
+.card-body h6 {
+    color: inherit;
+    margin-bottom: 0.5rem;
+}
+</style>
+{% endblock %}

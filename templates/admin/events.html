@@ -1,0 +1,613 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Events - South Austin Bass Club{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="mb-4">
+        <h1 class="display-5">
+            <i class="bi bi-calendar3 me-2"></i>Event Management
+        </h1>
+        <p class="lead text-muted">Create and manage tournament events</p>
+    </div>
+
+    <!-- Add Event Form -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-plus-circle me-2"></i>Add New Event
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+            
+            <form method="POST" action="/admin/events/create">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="date" class="form-label">Event Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="date" name="date" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="event_type" class="form-label">Event Type <span class="text-danger">*</span></label>
+                        <select class="form-select" id="event_type" name="event_type" required>
+                            <option value="sabc_tournament">SABC Tournament</option>
+                            <option value="other_tournament">Other Tournament</option>
+                            <option value="generic_event">Generic Event</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="name" class="form-label">Event Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               placeholder="e.g., August Tournament" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="description" name="description" 
+                               placeholder="e.g., Lake Travis - Main Basin">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Add Event
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Existing Events -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark">
+            <h5 class="mb-0">
+                <i class="bi bi-calendar-event me-2"></i>Upcoming Events
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Poll Status</th>
+                            <th>Tournament Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for event in events %}
+                        <tr>
+                            <td>
+                                <strong>{{ event.date }}</strong>
+                                <br><small class="text-muted">{{ event.day_name }}</small>
+                            </td>
+                            <td>
+                                {% if event.event_type == 'sabc_tournament' %}
+                                    <span class="badge bg-primary"><i class="bi bi-trophy"></i> SABC</span>
+                                {% elif event.event_type == 'other_tournament' %}
+                                    <span class="badge bg-warning"><i class="bi bi-calendar"></i> Other</span>
+                                {% else %}
+                                    <span class="badge bg-secondary"><i class="bi bi-calendar-event"></i> Event</span>
+                                {% endif %}
+                            </td>
+                            <td><strong>{{ event.name }}</strong></td>
+                            <td>{{ event.description }}</td>
+                            <td>
+                                {% if event.has_poll %}
+                                    {% if event.poll_active %}
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-clock-history me-1"></i>Active
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle me-1"></i>Closed
+                                        </span>
+                                    {% endif %}
+                                {% elif event.event_type == 'sabc_tournament' %}
+                                    <a href="/admin/polls/create?event_id={{ event.id }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-plus"></i> Create Poll
+                                    </a>
+                                {% else %}
+                                    <span class="badge bg-secondary">No Poll Needed</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if event.has_tournament %}
+                                    {% if event.tournament_complete %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle me-1"></i>Complete
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-clock me-1"></i>Upcoming
+                                        </span>
+                                    {% endif %}
+                                {% elif event.event_type == 'sabc_tournament' %}
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-calendar-plus me-1"></i>Not Created
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">No Tournament</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-warning edit-event-btn" 
+                                            data-event-id="{{ event.id }}"
+                                            data-event-date="{{ event.date }}"
+                                            data-event-type="{{ event.event_type }}"
+                                            data-event-name="{{ event.name }}"
+                                            data-event-description="{{ event.description }}"
+                                            data-has-poll="{{ event.has_poll|tojson }}"
+                                            data-poll-active="{{ event.poll_active|tojson }}">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-danger" onclick="deleteEvent({{ event.id }}, {{ (event.has_poll or event.has_tournament)|tojson }})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        
+                        {% if not events %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                No upcoming events found. Add one above!
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Upcoming Events Pagination -->
+            {% if upcoming_total_pages > 1 %}
+            <div class="card-footer">
+                <nav aria-label="Upcoming events pagination">
+                    <ul class="pagination pagination-sm justify-content-center mb-0">
+                        {% if upcoming_has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="/admin/events?upcoming_page={{ upcoming_prev_page }}&past_page={{ past_page }}">Previous</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Previous</span>
+                            </li>
+                        {% endif %}
+                        
+                        {% for page_num in range(1, upcoming_total_pages + 1) %}
+                            {% if page_num == upcoming_page %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% elif page_num <= 3 or page_num > upcoming_total_pages - 3 or (page_num >= upcoming_page - 2 and page_num <= upcoming_page + 2) %}
+                                <li class="page-item">
+                                    <a class="page-link" href="/admin/events?upcoming_page={{ page_num }}&past_page={{ past_page }}">{{ page_num }}</a>
+                                </li>
+                            {% elif page_num == 4 and upcoming_page > 6 %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">…</span>
+                                </li>
+                            {% elif page_num == upcoming_total_pages - 3 and upcoming_page < upcoming_total_pages - 5 %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">…</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if upcoming_has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="/admin/events?upcoming_page={{ upcoming_next_page }}&past_page={{ past_page }}">Next</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Next</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                    <div class="text-center mt-2">
+                        <small class="text-muted">
+                            Showing page {{ upcoming_page }} of {{ upcoming_total_pages }} 
+                            ({{ total_upcoming }} upcoming events)
+                        </small>
+                    </div>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Past Events -->
+    {% if total_past > 0 %}
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-secondary">
+            <h5 class="mb-0">
+                <i class="bi bi-calendar-x me-2"></i>Past Events
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Tournament</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if past_events %}
+                        {% for event in past_events %}
+                        <tr>
+                            <td>{{ event.date }}</td>
+                            <td>
+                                {% if event.event_type == 'sabc_tournament' %}
+                                    <span class="badge bg-primary"><i class="bi bi-trophy"></i> SABC</span>
+                                {% elif event.event_type == 'other_tournament' %}
+                                    <span class="badge bg-warning"><i class="bi bi-calendar"></i> Other</span>
+                                {% else %}
+                                    <span class="badge bg-secondary"><i class="bi bi-calendar-event"></i> Event</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ event.name }}</td>
+                            <td>{{ event.description }}</td>
+                            <td>
+                                {% if event.tournament_complete %}
+                                    <span class="badge bg-success">Complete</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">No Results</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                {% if event.has_results %}
+                                <button class="btn btn-secondary btn-sm" disabled 
+                                        title="Cannot delete: Tournament has results">
+                                    <i class="bi bi-lock"></i>
+                                </button>
+                                {% else %}
+                                <button class="btn btn-danger btn-sm delete-past-event" 
+                                        data-event-id="{{ event.id }}" 
+                                        data-event-name="{{ event.name }}" 
+                                        data-has-deps="{{ (event.has_poll or (event.has_tournament and not event.has_results))|tojson }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No past events found on this page.
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Past Events Pagination -->
+            {% if past_total_pages > 1 %}
+            <div class="card-footer">
+                <nav aria-label="Past events pagination">
+                    <ul class="pagination pagination-sm justify-content-center mb-0">
+                        {% if past_has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="/admin/events?upcoming_page={{ upcoming_page }}&past_page={{ past_prev_page }}">Previous</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Previous</span>
+                            </li>
+                        {% endif %}
+                        
+                        {% for page_num in range(1, past_total_pages + 1) %}
+                            {% if page_num == past_page %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% elif page_num <= 3 or page_num > past_total_pages - 3 or (page_num >= past_page - 2 and page_num <= past_page + 2) %}
+                                <li class="page-item">
+                                    <a class="page-link" href="/admin/events?upcoming_page={{ upcoming_page }}&past_page={{ page_num }}">{{ page_num }}</a>
+                                </li>
+                            {% elif page_num == 4 and past_page > 6 %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">…</span>
+                                </li>
+                            {% elif page_num == past_total_pages - 3 and past_page < past_total_pages - 5 %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">…</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if past_has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="/admin/events?upcoming_page={{ upcoming_page }}&past_page={{ past_next_page }}">Next</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Next</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                    <div class="text-center mt-2">
+                        <small class="text-muted">
+                            Showing page {{ past_page }} of {{ past_total_pages }} 
+                            ({{ total_past }} past events)
+                        </small>
+                    </div>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Edit Event Modal -->
+<div class="modal fade" id="editEventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/admin/events/edit" id="editEventForm">
+                <div class="modal-body">
+                    <input type="hidden" id="edit_event_id" name="event_id">
+                    <div class="mb-3">
+                        <label for="edit_date" class="form-label">Event Date</label>
+                        <input type="date" class="form-control" id="edit_date" name="date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_event_type" class="form-label">Event Type</label>
+                        <select class="form-select" id="edit_event_type" name="event_type" required>
+                            <option value="sabc_tournament">SABC Tournament</option>
+                            <option value="other_tournament">Other Tournament</option>
+                            <option value="generic_event">Generic Event</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="edit_poll_closes_container" style="display: none;">
+                        <label for="edit_poll_closes_date" class="form-label">Poll Closes Date & Time</label>
+                        <input type="datetime-local" class="form-control" id="edit_poll_closes_date" name="poll_closes_date" 
+                               title="Date and time when tournament location poll closes">
+                        <div class="form-text">Only shown for SABC tournaments with existing polls</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_name" class="form-label">Event Name</label>
+                        <input type="text" class="form-control" id="edit_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="edit_description" name="description">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Past Event Modal -->
+<div class="modal fade" id="deletePastEventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Delete Past Event</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Warning:</strong> You are about to delete a past event. This action cannot be undone.
+                </div>
+                <p>Event: <strong id="delete-event-name"></strong></p>
+                <p id="delete-dependencies-warning" class="text-warning" style="display: none;">
+                    <i class="bi bi-info-circle me-1"></i>This event has associated data that will also be removed:
+                    <ul class="mt-2">
+                        <li>Polls and poll votes (if any)</li>
+                        <li>Tournament setup (if no results exist)</li>
+                    </ul>
+                </p>
+                <p class="mt-3">To confirm deletion, please type <code>DELETE</code> in the field below:</p>
+                <input type="text" class="form-control" id="delete-confirmation" placeholder="Type DELETE to confirm">
+                <input type="hidden" id="delete-event-id">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeletePastEvent()">
+                    <i class="bi bi-trash me-1"></i>Delete Event
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add event listeners when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Add listeners to edit event buttons
+    document.querySelectorAll('.edit-event-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            var eventId = this.getAttribute('data-event-id');
+            var eventDate = this.getAttribute('data-event-date');
+            var eventType = this.getAttribute('data-event-type');
+            var eventName = this.getAttribute('data-event-name');
+            var eventDescription = this.getAttribute('data-event-description');
+            var hasPoll = this.getAttribute('data-has-poll') === 'true';
+            var pollActive = this.getAttribute('data-poll-active') === 'true';
+            
+            editEvent(eventId, eventDate, eventType, eventName, eventDescription, hasPoll, pollActive);
+        });
+    });
+    
+    // Add listeners to past event delete buttons
+    document.querySelectorAll('.delete-past-event').forEach(function(button) {
+        button.addEventListener('click', function() {
+            var eventId = this.getAttribute('data-event-id');
+            var eventName = this.getAttribute('data-event-name');
+            var hasDeps = this.getAttribute('data-has-deps') === 'true';
+            
+            deletePastEvent(eventId, eventName, hasDeps);
+        });
+    });
+    
+});
+
+function editEvent(id, date, eventType, name, description, hasPoll, pollActive) {
+    document.getElementById('edit_event_id').value = id;
+    document.getElementById('edit_date').value = date;
+    document.getElementById('edit_event_type').value = eventType;
+    document.getElementById('edit_name').value = name;
+    document.getElementById('edit_description').value = description || '';
+    
+    // Show/hide poll closes field based on event type and poll existence
+    var pollClosesContainer = document.getElementById('edit_poll_closes_container');
+    var pollClosesInput = document.getElementById('edit_poll_closes_date');
+    
+    if (eventType === 'sabc_tournament' && hasPoll) {
+        pollClosesContainer.style.display = 'block';
+        // Fetch the current poll closes date via AJAX
+        fetchPollClosesDate(id, pollClosesInput);
+    } else {
+        pollClosesContainer.style.display = 'none';
+        pollClosesInput.value = '';
+    }
+    
+    // Add event listener to event type select to show/hide poll field
+    document.getElementById('edit_event_type').addEventListener('change', function() {
+        if (this.value === 'sabc_tournament' && hasPoll) {
+            pollClosesContainer.style.display = 'block';
+        } else {
+            pollClosesContainer.style.display = 'none';
+            pollClosesInput.value = '';
+        }
+    });
+    
+    new bootstrap.Modal(document.getElementById('editEventModal')).show();
+}
+
+function fetchPollClosesDate(eventId, inputElement) {
+    fetch(`/admin/events/${eventId}/poll-info`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.closes_at) {
+                // Convert ISO datetime to datetime-local format (YYYY-MM-DDTHH:MM)
+                var date = new Date(data.closes_at);
+                var year = date.getFullYear();
+                var month = String(date.getMonth() + 1).padStart(2, '0');
+                var day = String(date.getDate()).padStart(2, '0');
+                var hours = String(date.getHours()).padStart(2, '0');
+                var minutes = String(date.getMinutes()).padStart(2, '0');
+                
+                inputElement.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching poll data:', error);
+        });
+}
+
+function deleteEvent(id, hasDependencies) {
+    var message = hasDependencies 
+        ? 'This event has associated polls or tournaments. Deleting it will also remove these. Are you sure?' 
+        : 'Are you sure you want to delete this event?';
+    
+    if (confirm(message)) {
+        fetch(`/admin/events/${id}`, { 
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else if (response.status === 400) {
+                return response.json().then(data => {
+                    alert(data.error || 'Cannot delete event with dependencies.');
+                });
+            } else {
+                alert('Error deleting event');
+            }
+        });
+    }
+}
+
+function deletePastEvent(id, name, hasDependencies) {
+    // Set the event name in the modal
+    document.getElementById('delete-event-name').textContent = name;
+    document.getElementById('delete-event-id').value = id;
+    
+    // Show/hide dependencies warning
+    var warningElement = document.getElementById('delete-dependencies-warning');
+    if (hasDependencies) {
+        warningElement.style.display = 'block';
+    } else {
+        warningElement.style.display = 'none';
+    }
+    
+    // Clear the confirmation input
+    document.getElementById('delete-confirmation').value = '';
+    
+    // Show the modal
+    var modal = new bootstrap.Modal(document.getElementById('deletePastEventModal'));
+    modal.show();
+}
+
+function confirmDeletePastEvent() {
+    var confirmText = document.getElementById('delete-confirmation').value;
+    var eventId = document.getElementById('delete-event-id').value;
+    
+    if (confirmText.trim() !== 'DELETE') {
+        alert('Please type DELETE to confirm');
+        return;
+    }
+    
+    // Close the modal
+    bootstrap.Modal.getInstance(document.getElementById('deletePastEventModal')).hide();
+    
+    // Delete the event
+    fetch(`/admin/events/${eventId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            location.reload();
+        } else {
+            // Try to get the error message from the response
+            return response.json().then(data => {
+                if (response.status === 400) {
+                    alert('Cannot delete event: ' + (data.error || 'Event has dependencies'));
+                } else {
+                    alert('Error deleting event: ' + (data.error || 'Server error'));
+                }
+            }).catch(() => {
+                // If JSON parsing fails, show generic error
+                alert('Error deleting event (status: ' + response.status + ')');
+            });
+        }
+    })
+    .catch(error => {
+        alert('Network error deleting event: ' + error.message);
+    });
+}
+</script>
+{% endblock %}

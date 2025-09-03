@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Poll - South Austin Bass Club{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="display-5">
+                <i class="bi bi-pencil-square me-2"></i>Edit Poll
+            </h1>
+            <p class="lead text-muted mb-0">Edit poll settings and manage voting options</p>
+        </div>
+        <a href="/polls" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Polls
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <!-- Error and Success Messages -->
+        {% if request.query_params.get('error') %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>{{ request.query_params.get('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        {% if request.query_params.get('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>{{ request.query_params.get('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/admin/polls/{{ poll[0] }}/edit" id="edit-poll-form">
+            <div class="mb-3">
+                <label for="title" class="form-label">Poll Title</label>
+                <input type="text" class="form-control" id="title" name="title" 
+                       value="{{ poll[1] }}" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="2">{{ poll[5] if poll[5] else '' }}</textarea>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="starts_at" class="form-label">
+                            <i class="bi bi-play-circle me-1 text-success"></i>Poll Starts
+                        </label>
+                        <input type="datetime-local" class="form-control" id="starts_at" name="starts_at" 
+                               value="{{ poll[4][:16] if poll[4] else '' }}">
+                        <div class="form-text">When members can start voting</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="closes_at" class="form-label">
+                            <i class="bi bi-stop-circle me-1 text-warning"></i>Poll Closes <span class="text-danger">*</span>
+                        </label>
+                        <input type="datetime-local" class="form-control" id="closes_at" name="closes_at" 
+                               value="{{ poll[2][:16] }}" required>
+                        <div class="form-text">When voting will end</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label fw-semibold">
+                    <i class="bi bi-list-ul me-2 text-primary"></i>Poll Options
+                </label>
+                <div class="form-text mb-3">Edit the options that members can vote for. You need at least 2 options.</div>
+                
+                <div id="poll-options-container">
+                    {% for option in poll_options %}
+                    <div class="poll-option-row mb-2" data-option-id="{{ option.id }}">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="poll_options[]" 
+                                   value="{{ option.text }}" placeholder="Option {{ loop.index }}" required>
+                            <input type="hidden" name="option_ids[]" value="{{ option.id }}">
+                            <button class="btn btn-outline-danger" type="button" onclick="removeOption(this)">
+                                <i class="bi bi-x"></i>
+                            </button>
+                            {% if option.votes %}
+                            <span class="input-group-text bg-info text-white">
+                                <i class="bi bi-people me-1"></i>{{ option.votes|length }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <button type="button" class="btn btn-sm btn-outline-success" onclick="addOption()">
+                    <i class="bi bi-plus-circle me-1"></i>Add Option
+                </button>
+            </div>
+            
+            <hr class="my-4">
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="/polls" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-1"></i>Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Individual Votes Management Section -->
+<div class="card shadow-sm mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-person-gear me-2"></i>Individual Votes Management
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if poll_options %}
+            {% for option in poll_options %}
+                {% if option.votes %}
+                <div class="mb-4">
+                    <h6 class="text-primary border-bottom pb-2">
+                        {{ option.text }} 
+                        <span class="badge bg-primary ms-2">{{ option.votes|length }} votes</span>
+                    </h6>
+                    
+                    {% for vote in option.votes %}
+                    <div class="d-flex justify-content-between align-items-center bg-light rounded p-2 mb-2">
+                        <div>
+                            <strong>{{ vote.voter_name }}</strong>
+                            <small class="text-muted ms-2">{{ vote.voted_at }}</small>
+                        </div>
+                        <button class="btn btn-outline-danger btn-sm" 
+                                onclick="if(confirm('Delete vote by {{ vote.voter_name }}?')) deleteVote({{ vote.vote_id }})"
+                                title="Delete this vote">
+                            <i class="bi bi-trash"></i> Delete Vote
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                No votes have been cast for this poll yet.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Poll option management
+function addOption() {
+    const container = document.getElementById('poll-options-container');
+    const optionCount = container.children.length + 1;
+    
+    const optionRow = document.createElement('div');
+    optionRow.className = 'poll-option-row mb-2';
+    optionRow.innerHTML = `
+        <div class="input-group">
+            <input type="text" class="form-control" name="poll_options[]" placeholder="Option ${optionCount}" required>
+            <input type="hidden" name="option_ids[]" value="">
+            <button class="btn btn-outline-danger" type="button" onclick="removeOption(this)">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+    `;
+    
+    container.appendChild(optionRow);
+    updateRemoveButtons();
+}
+
+function removeOption(button) {
+    const row = button.closest('.poll-option-row');
+    
+    // Check if this option has votes
+    const votesBadge = row.querySelector('.input-group-text');
+    if (votesBadge) {
+        if (!confirm('This option has votes. Are you sure you want to remove it? All votes for this option will be deleted.')) {
+            return;
+        }
+    }
+    
+    row.remove();
+    updateRemoveButtons();
+    updatePlaceholders();
+}
+
+function updateRemoveButtons() {
+    const container = document.getElementById('poll-options-container');
+    const removeButtons = container.querySelectorAll('button[onclick*="removeOption"]');
+    
+    // Disable remove buttons if only 2 options remain
+    removeButtons.forEach(button => {
+        button.disabled = container.children.length <= 2;
+    });
+}
+
+function updatePlaceholders() {
+    const container = document.getElementById('poll-options-container');
+    const inputs = container.querySelectorAll('input[name="poll_options[]"]');
+    
+    inputs.forEach((input, index) => {
+        if (!input.value) {
+            input.placeholder = `Option ${index + 1}`;
+        }
+    });
+}
+
+// Vote management
+async function deleteVote(voteId) {
+    try {
+        const response = await fetch(`/admin/votes/${voteId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Vote deleted successfully: ' + result.message);
+            location.reload();
+        } else {
+            alert('Error: ' + result.error);
+        }
+    } catch (error) {
+        alert('Error deleting vote: ' + error.message);
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateRemoveButtons();
+});
+</script>
+{% endblock %}
+
+{% endblock %}

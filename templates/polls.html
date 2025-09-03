@@ -1,0 +1,989 @@
+{% extends "base.html" %}
+
+{% block title %}Polls - South Austin Bass Club{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="display-5">
+        <i class="bi bi-card-checklist me-2"></i>Club Polls
+    </h1>
+    <p class="lead text-muted">Member voting and tournament location polls</p>
+</div>
+
+<!-- Error and Success Messages -->
+{% if request.query_params.get('error') %}
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle me-2"></i>{{ request.query_params.get('error') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+{% if request.query_params.get('success') %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="bi bi-check-circle me-2"></i>{{ request.query_params.get('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<div class="row g-4">
+    {% if polls %}
+        {% for poll in polls %}
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header {{ 'bg-success' if poll.status == 'closed' else ('bg-warning' if poll.status == 'active' else 'bg-secondary') }} text-white d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">{{ poll.title }}</h5>
+                        <small>
+                            {% if poll.status == 'upcoming' %}
+                                Poll Opens on {{ poll.starts_at[:10] }} at {{ poll.starts_at[11:16] }}
+                            {% elif poll.status == 'active' %}
+                                Poll Closes on {{ poll.closes_at[:10] }} at {{ poll.closes_at[11:16] }}
+                            {% else %}
+                                Poll Closed on {{ poll.closes_at[:10] }}
+                            {% endif %}
+                        </small>
+                    </div>
+                    {% if user and user.is_admin %}
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-warning" 
+                                onclick="window.location.href='/admin/polls/{{ poll.id }}/edit'">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" 
+                                onclick="if(confirm('Delete this poll?')) fetch('/admin/polls/{{ poll.id }}', {method: 'DELETE'}).then(() => location.reload())">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if poll.description %}
+                    <div class="mb-3">
+                        <p class="text-muted" style="white-space: pre-line;">{{ poll.description }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if poll.options %}
+                        {% if poll.status == 'active' and user.member and not poll.user_has_voted %}
+                            <!-- Voting Interface -->
+                            <form method="POST" action="/polls/{{ poll.id }}/vote">
+                                <div class="mb-3">
+                                    <p class="fw-bold text-primary">
+                                        <i class="bi bi-check-circle me-2"></i>Cast your vote:
+                                    </p>
+                                    {% if poll.poll_type == 'tournament_location' %}
+                                    <!-- Tournament location polls - interactive selection -->
+                                    <div class="card mb-3">
+                                        <div class="card-body">
+                                            <!-- Three Column Layout -->
+                                            <div class="row g-3">
+                                                <!-- Lake Selection -->
+                                                <div class="col-md-4">
+                                                    <label for="lake_select" class="form-label fw-bold small">
+                                                        <i class="bi bi-geo-alt me-1"></i>Lake
+                                                    </label>
+                                                    <select id="lake_select" class="form-select form-select-sm" required onchange="updateRamps()">
+                                                        <option value="">Choose a lake...</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <!-- Ramp Selection -->
+                                                <div class="col-md-4">
+                                                    <label for="ramp_select" class="form-label fw-bold small">
+                                                        <i class="bi bi-signpost me-1"></i>Ramp
+                                                    </label>
+                                                    <select id="ramp_select" class="form-select form-select-sm" required disabled>
+                                                        <option value="">First select a lake</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <!-- Time Selection -->
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-bold small">
+                                                        <i class="bi bi-clock me-1"></i>Times
+                                                    </label>
+                                                    <div class="d-flex gap-2">
+                                                        <div class="flex-fill">
+                                                            <select id="start_time" class="form-select form-select-sm" required title="Start Time">
+                                                                <option value="">Start...</option>
+                                                                <option value="05:00" selected>5:00 AM</option>
+                                                                <option value="05:30">5:30 AM</option>
+                                                                <option value="06:00">6:00 AM</option>
+                                                                <option value="06:30">6:30 AM</option>
+                                                                <option value="07:00">7:00 AM</option>
+                                                                <option value="07:30">7:30 AM</option>
+                                                                <option value="08:00">8:00 AM</option>
+                                                                <option value="08:30">8:30 AM</option>
+                                                                <option value="09:00">9:00 AM</option>
+                                                                <option value="09:30">9:30 AM</option>
+                                                                <option value="10:00">10:00 AM</option>
+                                                                <option value="10:30">10:30 AM</option>
+                                                                <option value="11:00">11:00 AM</option>
+                                                                <option value="11:30">11:30 AM</option>
+                                                                <option value="12:00">12:00 PM</option>
+                                                                <option value="12:30">12:30 PM</option>
+                                                                <option value="13:00">1:00 PM</option>
+                                                                <option value="13:30">1:30 PM</option>
+                                                                <option value="14:00">2:00 PM</option>
+                                                                <option value="14:30">2:30 PM</option>
+                                                                <option value="15:00">3:00 PM</option>
+                                                                <option value="15:30">3:30 PM</option>
+                                                                <option value="16:00">4:00 PM</option>
+                                                                <option value="16:30">4:30 PM</option>
+                                                                <option value="17:00">5:00 PM</option>
+                                                                <option value="17:30">5:30 PM</option>
+                                                                <option value="18:00">6:00 PM</option>
+                                                                <option value="18:30">6:30 PM</option>
+                                                                <option value="19:00">7:00 PM</option>
+                                                                <option value="19:30">7:30 PM</option>
+                                                                <option value="20:00">8:00 PM</option>
+                                                            </select>
+                                                            <small class="text-muted d-block text-center mt-1">Start</small>
+                                                        </div>
+                                                        <div class="flex-fill">
+                                                            <select id="end_time" class="form-select form-select-sm" required title="End Time">
+                                                                <option value="">End...</option>
+                                                                <option value="05:00">5:00 AM</option>
+                                                                <option value="05:30">5:30 AM</option>
+                                                                <option value="06:00">6:00 AM</option>
+                                                                <option value="06:30">6:30 AM</option>
+                                                                <option value="07:00">7:00 AM</option>
+                                                                <option value="07:30">7:30 AM</option>
+                                                                <option value="08:00">8:00 AM</option>
+                                                                <option value="08:30">8:30 AM</option>
+                                                                <option value="09:00">9:00 AM</option>
+                                                                <option value="09:30">9:30 AM</option>
+                                                                <option value="10:00">10:00 AM</option>
+                                                                <option value="10:30">10:30 AM</option>
+                                                                <option value="11:00">11:00 AM</option>
+                                                                <option value="11:30">11:30 AM</option>
+                                                                <option value="12:00">12:00 PM</option>
+                                                                <option value="12:30">12:30 PM</option>
+                                                                <option value="13:00">1:00 PM</option>
+                                                                <option value="13:30">1:30 PM</option>
+                                                                <option value="14:00">2:00 PM</option>
+                                                                <option value="14:30">2:30 PM</option>
+                                                                <option value="15:00" selected>3:00 PM</option>
+                                                                <option value="15:30">3:30 PM</option>
+                                                                <option value="16:00">4:00 PM</option>
+                                                                <option value="16:30">4:30 PM</option>
+                                                                <option value="17:00">5:00 PM</option>
+                                                                <option value="17:30">5:30 PM</option>
+                                                                <option value="18:00">6:00 PM</option>
+                                                                <option value="18:30">6:30 PM</option>
+                                                                <option value="19:00">7:00 PM</option>
+                                                                <option value="19:30">7:30 PM</option>
+                                                                <option value="20:00">8:00 PM</option>
+                                                            </select>
+                                                            <small class="text-muted d-block text-center mt-1">End</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Vote Preview -->
+                                            <div class="mt-3 p-3 border rounded d-none" id="vote_preview" style="background-color: #f8f9fa; border-color: #dee2e6 !important;">
+                                                <h6 class="mb-2 text-dark">Your Vote:</h6>
+                                                <div id="vote_summary" class="text-dark"></div>
+                                            </div>
+                                            
+                                            <input type="hidden" name="option_id" id="vote_option_id" required>
+                                        </div>
+                                    </div>
+                                    
+                                    <style>
+                                        /* Make all form selects consistent height */
+                                        .form-select-sm {
+                                            min-height: calc(1.5em + 0.5rem + 2px);
+                                            font-size: 0.875rem;
+                                        }
+                                        
+                                        /* Ensure good contrast in vote preview */
+                                        #vote_preview {
+                                            background-color: #f8f9fa !important;
+                                            border: 1px solid #dee2e6 !important;
+                                        }
+                                        
+                                        #vote_preview h6,
+                                        #vote_preview .text-dark {
+                                            color: #212529 !important;
+                                        }
+                                        
+                                        #vote_preview .text-secondary {
+                                            color: #6c757d !important;
+                                        }
+                                    </style>
+                                    {% else %}
+                                    <!-- Regular polls - single column -->
+                                    {% for option in poll.options %}
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="option_id" 
+                                               id="option_{{ option.id }}" value="{{ option.id }}" required>
+                                        <label class="form-check-label" for="option_{{ option.id }}">
+                                            {{ option.text }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <button type="submit" class="btn btn-primary" onclick="return validateVote()">
+                                    <i class="bi bi-check2 me-1"></i>Cast Vote
+                                </button>
+                            </form>
+                        {% elif poll.status == 'active' and not user.member %}
+                            <!-- Non-member message -->
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                Only club members can vote in polls.
+                            </div>
+                        {% elif poll.status == 'upcoming' %}
+                            <!-- Poll not yet open -->
+                            <div class="alert alert-info">
+                                <i class="bi bi-clock me-2"></i>
+                                This poll will open for voting on {{ poll.starts_at[:10] }} at {{ poll.starts_at[11:16] }}.
+                            </div>
+                        {% else %}
+                        {% endif %}
+                        
+                        <!-- Always show results if there are any votes -->
+                        {% if poll.status == 'closed' or poll.user_has_voted or (poll.options | sum(attribute='vote_count')) > 0 %}
+                            <div class="mt-3">
+                                {% set total_votes = poll.options | sum(attribute='vote_count') %}
+                                {% if poll.poll_type == 'tournament_location' %}
+                                <!-- Tournament location polls - interactive bar chart -->
+                                <div class="tournament-results-container" 
+                                     data-poll-type="tournament_location"
+                                     data-poll-id="{{ poll.id }}"
+                                     style="display: none;">
+                                    <!-- Hidden data elements for JavaScript -->
+                                    {% for option in poll.options %}
+                                    <div data-option-id="{{ option.id }}"
+                                         data-option-text="{{ option.text | escape }}"
+                                         data-option-data='{{ option.data if option.data else "{}" }}'
+                                         data-vote-count="{{ option.vote_count }}"
+                                         data-votes='{{ option.votes | tojson if option.votes else "[]" }}'
+                                         style="display: none;"></div>
+                                    {% endfor %}
+                                    <div class="row">
+                                        <!-- Two-Level Bar Chart (Left Panel) -->
+                                        <div class="col-lg-8">
+                                            <!-- Lake Level Chart -->
+                                            <div class="card border-0 shadow-sm mb-3">
+                                                <div class="card-header bg-success text-white py-2">
+                                                    <h6 class="mb-0"><i class="bi bi-geo-alt me-1"></i>Lakes</h6>
+                                                </div>
+                                                <div class="card-body p-3">
+                                                    <div class="lakes-chart-container" id="lakesChart" style="height: 120px;">
+                                                        <!-- Lakes chart will be drawn here -->
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Ramp Level Chart -->
+                                            <div class="card border-0 shadow-sm">
+                                                <div class="card-header bg-success text-white py-2 d-flex justify-content-between align-items-center">
+                                                    <h6 class="mb-0"><i class="bi bi-signpost me-1"></i>Ramps</h6>
+                                                    <small id="selectedLake" class="opacity-75">Click a lake above</small>
+                                                </div>
+                                                <div class="card-body p-3">
+                                                    <div class="ramps-chart-container" id="rampsChart" style="height: 120px;">
+                                                        <div class="text-muted text-center py-4">
+                                                            <i class="bi bi-arrow-up me-2"></i>Select a lake above to see ramp breakdown
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Time Slots Table (Right Panel) -->
+                                        <div class="col-lg-4">
+                                            <div class="card border-0 shadow-sm h-100">
+                                                <div class="card-header bg-dark text-white py-2">
+                                                    <h6 class="mb-0"><i class="bi bi-clock me-1"></i>Time Slots</h6>
+                                                </div>
+                                                <div class="card-body p-2">
+                                                    <div class="time-table-container" style="max-height: 300px; overflow-y: auto;">
+                                                        <table class="table table-sm table-hover mb-0" id="timeTable">
+                                                            <thead class="table-light sticky-top">
+                                                                <tr>
+                                                                    <th class="text-dark fw-semibold" style="font-size: 0.75rem;">Start</th>
+                                                                    <th class="text-dark fw-semibold" style="font-size: 0.75rem;">End</th>
+                                                                    <th class="text-dark fw-semibold text-center" style="font-size: 0.75rem;">Votes</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <!-- Time slots will be populated by JavaScript -->
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Vote count summary for tournament polls -->
+                                    <div class="text-center mt-3 text-muted">
+                                        <small><i class="bi bi-people-fill me-1"></i>{{ total_votes }} member{{ 's' if total_votes != 1 else '' }} voted</small>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <!-- Regular polls - vertical bar chart results -->
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-header bg-primary text-white py-2">
+                                        <h6 class="mb-0"><i class="bi bi-bar-chart-fill me-1"></i>Poll Results</h6>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <!-- Vertical Bar Chart Container -->
+                                        <div class="d-flex align-items-end justify-content-around mb-4 mt-2" style="height: 180px; position: relative;">
+                                            {% set max_votes = poll.options | map(attribute='vote_count') | max %}
+                                            {% for option in poll.options %}
+                                                {% if option.vote_count > 0 %}
+                                                {% set percentage = (option.vote_count / total_votes * 100) if total_votes > 0 else 0 %}
+                                                {% set bar_height = (option.vote_count / max_votes * 140) if max_votes > 0 else 0 %}
+                                                {% set colors = ['#0d6efd', '#198754', '#fd7e14', '#dc3545', '#6f42c1', '#20c997', '#ffc107'] %}
+                                                {% set color = colors[loop.index0 % colors|length] %}
+                                                
+                                                <div class="text-center d-flex flex-column align-items-center justify-content-end" style="flex: 1; max-width: 120px;">
+                                                    <!-- The vertical bar with vote count inside -->
+                                                    <div class="rounded-top position-relative d-flex align-items-start justify-content-center" 
+                                                         style="height: {{ bar_height if bar_height > 20 else (20 if option.vote_count > 0 else 0) }}px; 
+                                                                width: 40px; 
+                                                                background: linear-gradient(to top, {{ color }}, {{ color }}dd); 
+                                                                transition: all 0.6s ease-in-out;
+                                                                box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+                                                         onmouseover="this.style.transform='scaleY(1.05)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
+                                                         onmouseout="this.style.transform='scaleY(1)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+                                                        {% if option.vote_count > 0 %}
+                                                            <span class="fw-bold text-white small" style="margin-top: 4px;">{{ option.vote_count }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    
+                                                    <!-- Option text below bar -->
+                                                    <div class="mt-2 small text-center" style="max-width: 80px; line-height: 1.2;">
+                                                        <span class="fw-medium text-white">{{ option.text }}</span>
+                                                        <div class="text-muted small">{{ "%.1f" | format(percentage) }}%</div>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Vote count summary for generic polls -->
+                                    <div class="text-center mt-4 text-muted">
+                                        <small><i class="bi bi-people-fill me-1"></i>{{ total_votes }} member{{ 's' if total_votes != 1 else '' }} voted</small>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <!-- No options -->
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            This poll has no voting options yet.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card-body text-white py-4">
+                <h4 class="mb-3"><i class="bi bi-inbox me-2"></i>No Polls Available</h4>
+                <p class="mb-0 opacity-90">There are currently no polls available. Check back later!</p>
+                {% if user and user.is_admin %}
+                <hr class="border-white opacity-25">
+                <p class="mb-0">
+                    <a href="/admin/polls/create" class="btn btn-light btn-sm">
+                        <i class="bi bi-plus-circle me-1 text-dark"></i><span class="text-dark">Create New Poll</span>
+                    </a>
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Lake and ramp data (populated by template)
+const lakesAndRamps = {
+    {% for lake in lakes_data %}
+    {{ lake.id }}: {
+        name: "{{ lake.name }}",
+        ramps: [
+            {% for ramp in lake.ramps %}
+            {id: "{{ ramp.id }}", name: "{{ ramp.name }}"}{{ "," if not loop.last }}
+            {% endfor %}
+        ]
+    }{{ "," if not loop.last }}
+    {% endfor %}
+};
+
+// Initialize lake dropdown on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const lakeSelect = document.getElementById('lake_select');
+    if (lakeSelect) {
+        // Populate lake dropdown
+        Object.keys(lakesAndRamps).forEach(lakeId => {
+            const option = document.createElement('option');
+            option.value = lakeId;
+            option.textContent = lakesAndRamps[lakeId].name;
+            lakeSelect.appendChild(option);
+        });
+        
+        // Add change listeners for vote preview
+        ['lake_select', 'ramp_select', 'start_time', 'end_time'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('change', updateVotePreview);
+            }
+        });
+    }
+});
+
+function updateRamps() {
+    const lakeSelect = document.getElementById('lake_select');
+    const rampSelect = document.getElementById('ramp_select');
+    const selectedLakeId = lakeSelect.value;
+    
+    // Clear ramp options
+    rampSelect.innerHTML = '<option value="">Choose a ramp...</option>';
+    
+    if (selectedLakeId && lakesAndRamps[selectedLakeId]) {
+        // Enable ramp selection
+        rampSelect.disabled = false;
+        
+        // Populate ramps for selected lake
+        lakesAndRamps[selectedLakeId].ramps.forEach(ramp => {
+            const option = document.createElement('option');
+            option.value = ramp.id;
+            option.textContent = ramp.name;
+            rampSelect.appendChild(option);
+        });
+    } else {
+        rampSelect.disabled = true;
+    }
+    
+    updateVotePreview();
+}
+
+function validateVote() {
+    const lakeId = document.getElementById('lake_select').value;
+    const rampId = document.getElementById('ramp_select').value;
+    const startTime = document.getElementById('start_time').value;
+    const endTime = document.getElementById('end_time').value;
+    const optionId = document.getElementById('vote_option_id').value;
+    
+    console.log('Validating vote:', {lakeId, rampId, startTime, endTime, optionId});
+    
+    if (!lakeId) {
+        alert('Please select a lake');
+        return false;
+    }
+    
+    if (!rampId) {
+        alert('Please select a ramp');
+        return false;
+    }
+    
+    if (!startTime) {
+        alert('Please select a start time');
+        return false;
+    }
+    
+    if (!endTime) {
+        alert('Please select an end time');
+        return false;
+    }
+    
+    if (!optionId) {
+        alert('Vote data not properly formatted. Please try making your selections again.');
+        return false;
+    }
+    
+    return true; // Allow form submission
+}
+
+function updateVotePreview() {
+    const lakeId = document.getElementById('lake_select').value;
+    const rampId = document.getElementById('ramp_select').value;
+    const startTime = document.getElementById('start_time').value;
+    const endTime = document.getElementById('end_time').value;
+    
+    const preview = document.getElementById('vote_preview');
+    const summary = document.getElementById('vote_summary');
+    const optionIdInput = document.getElementById('vote_option_id');
+    
+    if (lakeId && rampId && startTime && endTime) {
+        const lakeName = lakesAndRamps[lakeId].name;
+        const rampName = lakesAndRamps[lakeId].ramps.find(r => r.id == rampId).name;
+        
+        // Format times (convert from 24h to 12h format)
+        const formatTime = (time24) => {
+            const [hours, minutes] = time24.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+            return `${hour12}:${minutes} ${ampm}`;
+        };
+        
+        const startFormatted = formatTime(startTime);
+        const endFormatted = formatTime(endTime);
+        
+        summary.innerHTML = `
+            <div class="mb-1"><strong class="text-dark">${lakeName}</strong> - <span class="text-dark">${rampName}</span></div>
+            <div class="small text-secondary">Start: ${startFormatted} | End: ${endFormatted}</div>
+        `;
+        
+        // Create a dynamic option ID (we'll handle this on the backend)
+        const voteData = {
+            lake_id: lakeId,
+            ramp_id: rampId,
+            start_time: startTime,
+            end_time: endTime
+        };
+        
+        // Set the option_id to a JSON string that the backend can parse
+        optionIdInput.value = JSON.stringify(voteData);
+        
+        preview.classList.remove('d-none');
+    } else {
+        preview.classList.add('d-none');
+        optionIdInput.value = '';
+    }
+}
+
+async function deleteVote(voteId) {
+    try {
+        const response = await fetch(`/admin/votes/${voteId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Show success message and reload page
+            alert('Vote deleted successfully: ' + result.message);
+            location.reload();
+        } else {
+            alert('Error: ' + result.error);
+        }
+    } catch (error) {
+        alert('Error deleting vote: ' + error.message);
+    }
+}
+
+// Tournament location poll visualization
+let pollData = null;
+let currentFilter = 'all';
+let chartData = {};
+
+// Initialize tournament results visualization
+function initTournamentResults() {
+    // Find tournament location polls and initialize their charts
+    const containers = document.querySelectorAll('[data-poll-type="tournament_location"]');
+    
+    containers.forEach(container => {
+        const pollId = container.dataset.pollId;
+        if (pollId) {
+            loadPollResults(pollId, container);
+        }
+    });
+}
+
+// Load and process poll results data
+function loadPollResults(pollId, container) {
+    const options = [];
+    
+    // Extract poll options data from hidden data elements
+    const optionElements = container.querySelectorAll('[data-option-data]');
+    
+    optionElements.forEach(el => {
+        try {
+            const data = JSON.parse(el.dataset.optionData || '{}');
+            const voteCount = parseInt(el.dataset.voteCount || '0');
+            const optionText = el.dataset.optionText || '';
+            const votes = JSON.parse(el.dataset.votes || '[]');
+            
+            options.push({
+                id: el.dataset.optionId,
+                text: optionText,
+                data: data,
+                voteCount: voteCount,
+                votes: votes
+            });
+        } catch (e) {
+            console.error('Error parsing option data:', e, el);
+        }
+    });
+    
+    if (options.length === 0) {
+        return;
+    }
+    
+    pollData = { pollId, options };
+    processChartData();
+    drawTimeTable();
+    drawLakesChart();
+    
+    // Check if there's only one lake with votes and auto-select it
+    const lakesWithVotes = Object.keys(chartData.lakes).filter(lakeId => chartData.lakes[lakeId].totalVotes > 0);
+    if (lakesWithVotes.length === 1) {
+        // Auto-select the single lake with votes
+        const onlyLakeId = lakesWithVotes[0];
+        const onlyLakeData = chartData.lakes[onlyLakeId];
+        selectLake(onlyLakeId, onlyLakeData);
+    } else {
+        drawRampsChart(); // Show placeholder for multiple lakes
+    }
+    
+    // Show the container now that data is loaded
+    container.style.display = 'block';
+}
+
+// Process raw poll data into chart-friendly format
+function processChartData() {
+    if (!pollData) return;
+    
+    chartData = {
+        lakes: {},
+        timeSlots: {},
+        totalVotes: 0
+    };
+    
+    pollData.options.forEach(option => {
+        // Skip options with no votes
+        if (option.voteCount <= 0) {
+            return;
+        }
+        
+        const data = option.data || {};
+        const lakeId = data.lake_id;
+        const rampId = data.ramp_id;
+        const startTime = data.start_time || 'Unknown';
+        const endTime = data.end_time || 'Unknown';
+        const timeSlot = `${startTime}-${endTime}`;
+        
+        chartData.totalVotes += option.voteCount;
+        
+        // Group by lake
+        if (!chartData.lakes[lakeId]) {
+            chartData.lakes[lakeId] = {
+                name: getLakeName(lakeId),
+                totalVotes: 0,
+                ramps: {}
+            };
+        }
+        
+        chartData.lakes[lakeId].totalVotes += option.voteCount;
+        
+        // Group by ramp within lake
+        if (!chartData.lakes[lakeId].ramps[rampId]) {
+            chartData.lakes[lakeId].ramps[rampId] = {
+                name: getRampName(rampId),
+                totalVotes: 0,
+                timeSlots: {}
+            };
+        }
+        
+        chartData.lakes[lakeId].ramps[rampId].totalVotes += option.voteCount;
+        chartData.lakes[lakeId].ramps[rampId].timeSlots[timeSlot] = 
+            (chartData.lakes[lakeId].ramps[rampId].timeSlots[timeSlot] || 0) + option.voteCount;
+        
+        // Group by time slot
+        if (!chartData.timeSlots[timeSlot]) {
+            chartData.timeSlots[timeSlot] = {
+                startTime,
+                endTime,
+                totalVotes: 0
+            };
+        }
+        chartData.timeSlots[timeSlot].totalVotes += option.voteCount;
+    });
+}
+
+// Draw the time slots table
+function drawTimeTable() {
+    const tbody = document.querySelector('#timeTable tbody');
+    if (!tbody || !chartData.timeSlots) return;
+    
+    tbody.innerHTML = '';
+    
+    // Sort time slots by total votes (descending) and filter out ones with 0 votes
+    const sortedTimeSlots = Object.entries(chartData.timeSlots)
+        .filter(([,data]) => data.totalVotes > 0)
+        .sort(([,a], [,b]) => b.totalVotes - a.totalVotes);
+    
+    if (sortedTimeSlots.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">No time slot votes yet</td></tr>';
+        return;
+    }
+    
+    sortedTimeSlots.forEach(([timeSlot, data]) => {
+        const row = document.createElement('tr');
+        
+        const startFormatted = formatTime(data.startTime);
+        const endFormatted = formatTime(data.endTime);
+        
+        row.innerHTML = `
+            <td class="text-muted" style="font-size: 0.75rem;">${startFormatted}</td>
+            <td class="text-muted" style="font-size: 0.75rem;">${endFormatted}</td>
+            <td class="text-center" style="font-size: 0.75rem;">
+                <span class="badge bg-light text-dark border">${data.totalVotes}</span>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+// Draw the lakes chart (top level - vertical bars)
+function drawLakesChart() {
+    const chartContainer = document.getElementById('lakesChart');
+    if (!chartContainer || !chartData.lakes) return;
+    
+    chartContainer.innerHTML = '';
+    
+    // Create vertical bar chart container with fixed height for proper alignment
+    const chartWrapper = document.createElement('div');
+    chartWrapper.className = 'd-flex align-items-end justify-content-around px-2';
+    chartWrapper.style.height = '120px';
+    chartWrapper.style.position = 'relative';
+    
+    const sortedLakes = Object.entries(chartData.lakes)
+        .filter(([,lake]) => lake.totalVotes > 0)
+        .sort(([,a], [,b]) => b.totalVotes - a.totalVotes);
+    
+    if (sortedLakes.length === 0) {
+        chartContainer.innerHTML = '<div class="text-center text-muted py-4">No lake votes yet</div>';
+        return;
+    }
+    
+    const maxVotes = Math.max(...sortedLakes.map(([,lake]) => lake.totalVotes));
+    
+    sortedLakes.forEach(([lakeId, lakeData], index) => {
+        const lakeContainer = document.createElement('div');
+        lakeContainer.className = 'text-center lake-bar-container';
+        lakeContainer.style.flex = '1';
+        lakeContainer.style.maxWidth = '120px';
+        lakeContainer.style.cursor = 'pointer';
+        lakeContainer.dataset.lakeId = lakeId;
+        
+        // Calculate bar height in pixels (max 80px for tallest bar)
+        const maxBarHeight = 80;
+        const barHeight = maxVotes > 0 ? (lakeData.totalVotes / maxVotes) * maxBarHeight : 0;
+        
+        // Color scheme for bars
+        const colors = ['#0d6efd', '#198754', '#fd7e14', '#dc3545', '#6f42c1'];
+        const color = colors[index % colors.length];
+        
+        lakeContainer.innerHTML = `
+            <div class="d-flex flex-column" style="height: 120px; align-items: center;">
+                <!-- Lake name at top - FIXED HEIGHT -->
+                <div class="lake-label text-center" style="height: 32px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center;">
+                    <div class="fw-bold" style="font-size: 0.72rem; line-height: 1.0; max-width: 80px; word-wrap: break-word;">
+                        ${lakeData.name.replace(' Lake', '').replace(' Reservoir', '').replace('Walter E. Long (Decker)', 'Walter E. Long')}
+                    </div>
+                </div>
+                <!-- The bar itself with vote count inside - grows upward from bottom -->
+                <div class="lake-bar" 
+                     style="height: ${Math.max(barHeight, 20)}px; background: linear-gradient(to top, ${color}, ${color}dd); 
+                            border-radius: 4px; width: 60px; transition: all 0.3s ease; margin-top: auto;
+                            display: flex; align-items: start; justify-content: center;"
+                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
+                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
+                    <span style="font-size: 0.85rem; font-weight: bold; color: white; margin-top: 4px;">
+                        ${lakeData.totalVotes}
+                    </span>
+                </div>
+            </div>
+        `;
+        
+        // Add click handler for lake selection
+        lakeContainer.onclick = () => selectLake(lakeId, lakeData);
+        
+        chartWrapper.appendChild(lakeContainer);
+    });
+    
+    chartContainer.appendChild(chartWrapper);
+}
+
+// Draw the ramps chart (bottom level - shows selected lake's ramps)
+function drawRampsChart(selectedLakeId = null) {
+    const chartContainer = document.getElementById('rampsChart');
+    if (!chartContainer) return;
+    
+    if (!selectedLakeId || !chartData.lakes[selectedLakeId]) {
+        // Count lakes with votes to determine appropriate message
+        const lakesWithVotes = Object.keys(chartData.lakes).filter(lakeId => chartData.lakes[lakeId].totalVotes > 0);
+        const message = lakesWithVotes.length > 1 ? 
+            "Select a lake above to see ramp breakdown" : 
+            "No ramp data available";
+        
+        chartContainer.innerHTML = `
+            <div class="text-muted text-center py-4">
+                <i class="bi bi-arrow-up me-2"></i>${message}
+            </div>
+        `;
+        return;
+    }
+    
+    const lakeData = chartData.lakes[selectedLakeId];
+    const sortedRamps = Object.entries(lakeData.ramps)
+        .filter(([,rampData]) => rampData.totalVotes > 0)  // Only show ramps with votes
+        .sort(([,a], [,b]) => b.totalVotes - a.totalVotes);
+    
+    const maxRampVotes = Math.max(...sortedRamps.map(([,ramp]) => ramp.totalVotes));
+    
+    chartContainer.innerHTML = '';
+    
+    sortedRamps.forEach(([rampId, rampData], index) => {
+        const barContainer = document.createElement('div');
+        barContainer.className = 'd-flex align-items-center mb-2';
+        
+        const widthPercent = maxRampVotes > 0 ? (rampData.totalVotes / maxRampVotes) * 100 : 0;
+        const colors = ['#4285f4', '#34a853', '#fbbc05', '#ea4335', '#9c27b0'];
+        const color = colors[index % colors.length];
+        
+        barContainer.innerHTML = `
+            <div class="ramp-name me-3" style="min-width: 120px; text-align: right; font-size: 0.85rem;">
+                ${rampData.name}
+            </div>
+            <div class="flex-grow-1 position-relative">
+                <div class="ramp-bar" 
+                     style="height: 20px; width: ${Math.max(widthPercent, 8)}%; background: ${color}; 
+                            border-radius: 3px; transition: all 0.3s ease; position: relative;
+                            display: flex; align-items: center; justify-content: center;"
+                     onmouseover="this.style.transform='scaleY(1.3)'; this.style.boxShadow='0 2px 6px rgba(0,0,0,0.15)'"
+                     onmouseout="this.style.transform='scaleY(1)'; this.style.boxShadow='none'">
+                    <span style="color: white; font-size: 0.75rem; font-weight: bold;">
+                        ${rampData.totalVotes}
+                    </span>
+                </div>
+            </div>
+        `;
+        
+        chartContainer.appendChild(barContainer);
+    });
+}
+
+// Handle lake selection
+let selectedLakeId = null;
+
+function selectLake(lakeId, lakeData) {
+    selectedLakeId = lakeId;
+    
+    // Update the selected lake indicator
+    document.getElementById('selectedLake').textContent = `${lakeData.name} (${lakeData.totalVotes} votes)`;
+    
+    // Highlight selected lake bar (for vertical layout)
+    document.querySelectorAll('.lake-bar-container').forEach(container => {
+        container.style.opacity = '0.6';
+    });
+    document.querySelector(`[data-lake-id="${lakeId}"]`).style.opacity = '1';
+    
+    // Add subtle selection indicator
+    document.querySelectorAll('.lake-bar').forEach(bar => {
+        bar.style.boxShadow = 'none';
+    });
+    document.querySelector(`[data-lake-id="${lakeId}"] .lake-bar`).style.boxShadow = '0 0 0 3px rgba(255,255,255,0.3)';
+    
+    // Draw ramps chart for selected lake
+    drawRampsChart(lakeId);
+}
+
+// No filtering functionality needed - times are independent of lake/ramp choices
+
+// Lake drill-down functionality
+function drillDownLake(lakeId, lakeData) {
+    // Redirect to the new selectLake functionality
+    selectLake(lakeId, lakeData);
+}
+
+// Admin vote management moved to edit poll view
+
+// Helper functions
+function getLakeName(lakeId) {
+    if (!lakeId) return 'Unknown Lake';
+    
+    // Try to get from lakesAndRamps if available
+    if (typeof lakesAndRamps !== 'undefined' && lakesAndRamps[lakeId]) {
+        return lakesAndRamps[lakeId].name;
+    }
+    
+    // Fallback: extract from option text
+    const lakeNames = {
+        '1': 'Lake Travis',
+        '3': 'Bastrop Lake', 
+        '4': 'Walter E. Long Lake',
+        '16': 'Belton Lake'
+    };
+    
+    return lakeNames[lakeId] || `Lake ${lakeId}`;
+}
+
+function getRampName(rampId) {
+    if (!rampId) return 'Unknown Ramp';
+    
+    // Try to get from lakesAndRamps if available
+    if (typeof lakesAndRamps !== 'undefined') {
+        for (const lake of Object.values(lakesAndRamps)) {
+            const ramp = lake.ramps.find(r => r.id == rampId);
+            if (ramp) {
+                // Apply title case to match backend formatting
+                return ramp.name.split(' ').map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                ).join(' ');
+            }
+        }
+    }
+    
+    // If we can't find the ramp name, return a cleaner fallback
+    return rampId.toString().replace(/_\d+$/, '').replace(/_/g, ' ')
+        .split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+
+function formatTime(time24) {
+    if (!time24 || time24 === 'Unknown') return time24;
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${hour12}:${minutes} ${ampm}`;
+}
+
+// CSS for chart elements
+const style = document.createElement('style');
+style.textContent = `
+    .lake-bar-container:hover {
+        transform: translateY(-2px);
+        transition: transform 0.2s ease;
+    }
+    .tournament-results-container {
+        margin-top: 1rem;
+    }
+`;
+document.head.appendChild(style);
+
+// Initialize on DOM content loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize existing functionality
+    const lakeSelect = document.getElementById('lake_select');
+    if (lakeSelect) {
+        // ... existing lake select code ...
+    }
+    
+    // Initialize tournament results visualization
+    setTimeout(initTournamentResults, 100); // Small delay to ensure DOM is ready
+});
+
+</script>
+
+{% endblock %}

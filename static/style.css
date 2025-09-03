@@ -1,0 +1,19 @@
+:root{--bg:#212529;--bg2:#343a40;--text:#f8f9fa;--muted:#adb5bd;--border:#495057;--primary:#0d6efd}
+*,::before,::after{color:inherit}
+body{background:var(--bg)!important;color:var(--text)!important}
+input,textarea,select,.form-control,.form-select,.modal-content,.card{background:var(--bg2)!important;color:var(--text)!important;border-color:var(--border)!important}
+.table,th,td{color:var(--text)!important;border-color:var(--border)!important}
+.dropdown-menu{background:var(--bg2)!important}
+.dropdown-item{color:var(--text)!important}
+.dropdown-item:hover{background:var(--bg)!important}
+label,h1,h2,h3,h4,h5,h6{color:var(--text)!important}
+.text-muted{color:var(--muted)!important}
+.btn-close{filter:invert(1) brightness(200%)}
+a{color:#6ea8fe}
+a:hover{color:#8bb9fe}
+.nav-tabs .nav-link{color:var(--muted)!important}
+.nav-tabs .nav-link.active{color:var(--text)!important;background:var(--bg2)!important;border-color:var(--border) var(--border) var(--bg2)!important}
+.alert{color:var(--text)!important}
+.form-check-input{background-color:var(--bg)!important;border-color:var(--border)!important}
+.form-check-input:checked{background-color:var(--primary)!important;border-color:var(--primary)!important}
+.card-header{background-color:var(--bg2)!important;border-bottom:2px solid var(--border)!important}

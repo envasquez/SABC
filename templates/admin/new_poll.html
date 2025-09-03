@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Select Event for New Poll{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="display-5">
+        <i class="bi bi-plus-circle me-2"></i>Create New Poll
+    </h1>
+    <p class="lead text-muted">Select an event to create a poll for</p>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+                    
+                    <!-- Generic Poll Option -->
+                    <div class="mb-4">
+                        <div class="card border-info">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="card-title">
+                                            <i class="bi bi-card-checklist me-2 text-info"></i>Generic Poll
+                                        </h6>
+                                        <p class="card-text text-muted mb-0">
+                                            Create a poll not tied to specific events (officer elections, policy decisions, etc.)
+                                        </p>
+                                    </div>
+                                    <button class="btn btn-outline-info" onclick="createGenericPoll()">
+                                        <i class="bi bi-plus me-1"></i>Create
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if available_events %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-calendar-event me-2 text-primary"></i>Tournament Events
+                            </label>
+                            <div class="form-text mb-3">Choose an upcoming tournament event to create a location poll for. Only future events without existing polls are shown.</div>
+                        </div>
+                        
+                        <div class="list-group list-group-flush">
+                            {% for event in available_events %}
+                            <a href="/admin/polls/create?event_id={{ event[0] }}" class="list-group-item list-group-item-action border rounded mb-2">
+                                <div class="d-flex w-100 justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">
+                                            <i class="bi bi-calendar3 me-2 text-success"></i>
+                                            {% if event[2] %}
+                                                {{ event[2] }}
+                                            {% else %}
+                                                {% if event[3] == 'sabc_tournament' %}
+                                                    Tournament Event
+                                                {% elif event[3] == 'other_tournament' %}
+                                                    Other Tournament
+                                                {% elif event[3] == 'generic_event' %}
+                                                    Generic Event
+                                                {% else %}
+                                                    {{ event[3] | title }} Event
+                                                {% endif %}
+                                            {% endif %}
+                                        </h6>
+                                        {% if event[4] %}
+                                        <p class="mb-1 text-muted">{{ event[4][:100] }}{% if event[4]|length > 100 %}...{% endif %}</p>
+                                        {% endif %}
+                                        <small class="badge bg-secondary">
+                                            {% if event[3] == 'sabc_tournament' %}
+                                                SABC Tournament
+                                            {% elif event[3] == 'other_tournament' %}
+                                                Other Tournament
+                                            {% elif event[3] == 'generic_event' %}
+                                                Generic Event
+                                            {% else %}
+                                                {{ event[3] | title }}
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-muted d-block">{{ event[1] }}</small>
+                                        <i class="bi bi-chevron-right text-muted"></i>
+                                    </div>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-calendar-x display-4 text-muted mb-3"></i>
+                            <h5 class="text-muted">No Upcoming Events Available</h5>
+                            <p class="text-muted">All upcoming events already have polls, or there are no future events scheduled.</p>
+                            <div class="mt-4">
+                                <a href="/admin/events" class="btn btn-primary">
+                                    <i class="bi bi-calendar-plus me-2"></i>Create New Event
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+        
+        <div class="mt-4">
+            <a href="/admin/events" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to Events
+            </a>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function createGenericPoll() {
+    // Go directly to generic poll creation (no event needed)
+    window.location.href = '/admin/polls/create/generic';
+}
+</script>
+{% endblock %}
+{% endblock %}

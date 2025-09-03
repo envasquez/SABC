@@ -1,62 +1,16 @@
-[tool.poetry]
-name = "sabc"
-version = "0.1.0"
-description = "South Austin Bass Club Webapp"
-authors = ["Eric Vasquez"]
-readme = "README.md"
+[tool.ruff]
+line-length = 100
 
-[tool.poetry.dependencies]
-python = "^3.10"
-Django = "^5.1.5"
-crispy-bootstrap4 = "^2024.1"
-psycopg2-binary = "^2.9.9"
-django-tables2 = "^2.7.0"
-django-phonenumber-field = "^8.0.0"
-django-extensions = "^3.2.3"
-django-phonenumbers = "^1.0.1"
-pillow = "^11.0.0"
-pytz = "^2024.1"
-pyyaml = "^6.0.1"
-names = "^0.3.0"
-pyright = "^1.1.372"
-requests = "^2.32.3"
-urllib3 = "^2.2.3"
-
-[tool.poetry.group.dev.dependencies]
-pytest-cov = "^5.0.0"
-ruff = "^0.8.0"
-pyright = "^1.1.370"
-coverage = "^7.5.4"
-pytest-coverage = "^0.0"
-pytest = "^8.2.2"
-pytest-django = "^4.8.0"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "sabc.settings"
-
-[tool.coverage.run]
-omit = [
-    "*/tests/*",
-    "*/test*.py",
-    "manage.py",
-    "*/migrations/*",
-    "*/venv/*",
-    "*/.venv/*",
-    "*/env/*",
-    "*/.env/*",
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N"]
+ignore = [
+    "F403",  # Star imports (intentional for minimal code)
+    "F405",  # May be undefined from star imports
+    "E722",  # Bare except (minimal error handling)
+    "E501",  # Line too long (SQL queries)
 ]
 
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if __name__ == .__main__.:",
-    "class .*\\bProtocol\\):",
-    "@(abc\\.)?abstractmethod",
-]
+[tool.mypy]
+ignore_missing_imports = true
+warn_return_any = false
+warn_unused_ignores = false

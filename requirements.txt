@@ -1,0 +1,20 @@
+# SABC Tournament Management System - Python Dependencies
+# FastAPI web framework and ASGI server
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Database
+sqlalchemy==2.0.23
+
+# Security and authentication
+bcrypt==4.1.1
+
+# Configuration and templates
+pyyaml==6.0.1
+jinja2==3.1.2
+
+# Form handling
+python-multipart==0.0.6
+
+# Production WSGI server (optional, for production deployment)
+gunicorn==21.2.0

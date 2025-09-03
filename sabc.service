@@ -1,0 +1,43 @@
+# Systemd service file for SABC Tournament Management System
+# Copy to /etc/systemd/system/sabc.service
+
+[Unit]
+Description=SABC Tournament Management System
+After=network.target
+Wants=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/path/to/your/sabc
+Environment=PATH=/path/to/your/sabc/venv/bin
+ExecStart=/path/to/your/sabc/venv/bin/gunicorn app:app -c gunicorn.conf.py
+ExecReload=/bin/kill -s HUP $MAINPID
+
+# Restart policy
+Restart=always
+RestartSec=5
+StartLimitInterval=60
+StartLimitBurst=3
+
+# Security settings
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/path/to/your/sabc
+ReadWritePaths=/tmp
+ReadWritePaths=/var/log
+
+# Resource limits
+LimitNOFILE=65536
+TimeoutStopSec=30
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=sabc
+
+[Install]
+WantedBy=multi-user.target
