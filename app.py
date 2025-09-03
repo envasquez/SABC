@@ -1002,6 +1002,133 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
     return templates.TemplateResponse(f"admin/{page}.html", ctx)
 
 
+def validate_event_data(date, name, event_type, start_time=None, weigh_in_time=None, entry_fee=None):
+    """Validate event data and return validation results."""
+    from datetime import datetime, time
+    import re
+    
+    errors = []
+    warnings = []
+    
+    # Validate date format and check for duplicates
+    try:
+        date_obj = datetime.strptime(date, "%Y-%m-%d")
+        
+        # Check for past dates (warning only)
+        if date_obj.date() < datetime.now().date():
+            warnings.append(f"Creating event for past date: {date}")
+            
+        # Check for duplicate dates
+        existing = db("SELECT id, name FROM events WHERE date = ?", (date,))
+        if existing:
+            existing_name = existing[0][1]
+            warnings.append(f"Date {date} already has event: {existing_name}")
+            
+    except ValueError:
+        errors.append("Invalid date format. Use YYYY-MM-DD")
+    
+    # Validate name
+    if not name or len(name.strip()) < 3:
+        errors.append("Event name must be at least 3 characters")
+    
+    # Validate event type specific requirements
+    if event_type == "sabc_tournament":
+        # Validate times if provided
+        if start_time:
+            if not re.match(r'^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$', start_time):
+                errors.append("Invalid start time format. Use HH:MM (24-hour)")
+                
+        if weigh_in_time:
+            if not re.match(r'^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$', weigh_in_time):
+                errors.append("Invalid weigh-in time format. Use HH:MM (24-hour)")
+                
+        # Validate that weigh-in is after start time
+        if start_time and weigh_in_time:
+            try:
+                start = datetime.strptime(start_time, "%H:%M").time()
+                weigh_in = datetime.strptime(weigh_in_time, "%H:%M").time()
+                if weigh_in <= start:
+                    errors.append("Weigh-in time must be after start time")
+            except ValueError:
+                pass  # Time format errors already caught above
+                
+        # Validate entry fee
+        if entry_fee is not None:
+            if entry_fee < 0:
+                errors.append("Entry fee cannot be negative")
+            elif entry_fee > 200:
+                warnings.append(f"Entry fee ${entry_fee} is unusually high for SABC tournament")
+    
+    elif event_type == "federal_holiday":
+        # Federal holidays shouldn't have tournament-specific fields
+        if start_time or weigh_in_time or entry_fee:
+            warnings.append("Federal holidays don't typically need tournament details")
+    
+    return {"errors": errors, "warnings": warnings}
+
+
+def get_federal_holidays(year):
+    """Get list of federal holidays for a given year."""
+    from datetime import date, timedelta
+    import calendar
+    
+    holidays = []
+    
+    # Fixed date holidays
+    holidays.append((f"{year}-01-01", "New Year's Day"))
+    holidays.append((f"{year}-07-04", "Independence Day"))
+    holidays.append((f"{year}-11-11", "Veterans Day"))
+    holidays.append((f"{year}-12-25", "Christmas Day"))
+    
+    # MLK Day - 3rd Monday in January
+    jan_1 = date(year, 1, 1)
+    days_to_monday = (7 - jan_1.weekday()) % 7
+    first_monday = jan_1 + timedelta(days=days_to_monday)
+    mlk_day = first_monday + timedelta(days=14)  # 3rd Monday
+    holidays.append((mlk_day.strftime("%Y-%m-%d"), "Martin Luther King Jr. Day"))
+    
+    # Presidents Day - 3rd Monday in February
+    feb_1 = date(year, 2, 1)
+    days_to_monday = (7 - feb_1.weekday()) % 7
+    first_monday = feb_1 + timedelta(days=days_to_monday)
+    presidents_day = first_monday + timedelta(days=14)  # 3rd Monday
+    holidays.append((presidents_day.strftime("%Y-%m-%d"), "Presidents Day"))
+    
+    # Memorial Day - Last Monday in May
+    may_31 = date(year, 5, 31)
+    days_back = (may_31.weekday() + 1) % 7
+    memorial_day = may_31 - timedelta(days=days_back)
+    holidays.append((memorial_day.strftime("%Y-%m-%d"), "Memorial Day"))
+    
+    # Labor Day - 1st Monday in September
+    sep_1 = date(year, 9, 1)
+    days_to_monday = (7 - sep_1.weekday()) % 7
+    labor_day = sep_1 + timedelta(days=days_to_monday)
+    holidays.append((labor_day.strftime("%Y-%m-%d"), "Labor Day"))
+    
+    # Thanksgiving - 4th Thursday in November
+    nov_1 = date(year, 11, 1)
+    days_to_thursday = (3 - nov_1.weekday()) % 7  # Thursday is weekday 3
+    first_thursday = nov_1 + timedelta(days=days_to_thursday)
+    thanksgiving = first_thursday + timedelta(days=21)  # 4th Thursday
+    holidays.append((thanksgiving.strftime("%Y-%m-%d"), "Thanksgiving Day"))
+    
+    return sorted(holidays)
+
+
+@app.get("/admin/federal-holidays/{year}")
+async def get_federal_holidays_api(request: Request, year: int):
+    """API endpoint to get federal holidays for a year."""
+    if isinstance(admin(request), RedirectResponse):
+        return JSONResponse({"error": "Authentication required"}, status_code=401)
+    
+    try:
+        holidays = get_federal_holidays(year)
+        return JSONResponse({"holidays": holidays})
+    except Exception as e:
+        return JSONResponse({"error": f"Error getting holidays: {str(e)}"}, status_code=500)
+
+
 @app.post("/admin/events/create")
 async def create_event(
     request: Request,
@@ -1022,6 +1149,19 @@ async def create_event(
 
     try:
         from datetime import datetime, timedelta
+        
+        # Validate input data
+        validation = validate_event_data(date, name, event_type, start_time, weigh_in_time, entry_fee)
+        
+        # If there are errors, return with error message
+        if validation["errors"]:
+            error_msg = "; ".join(validation["errors"])
+            return RedirectResponse(f"/admin/events?error=Validation failed: {error_msg}", status_code=302)
+        
+        # Show warnings in success message if any
+        warning_msg = ""
+        if validation["warnings"]:
+            warning_msg = f"&warnings={'; '.join(validation['warnings'])}"
 
         # Parse the date to extract year
         date_obj = datetime.strptime(date, "%Y-%m-%d")
@@ -1094,7 +1234,7 @@ async def create_event(
                     },
                 )
 
-        return RedirectResponse("/admin/events", status_code=302)
+        return RedirectResponse(f"/admin/events?success=Event created successfully{warning_msg}", status_code=302)
 
     except Exception as e:
         # Return to events page with error
@@ -1189,6 +1329,33 @@ async def get_event_poll_info(request: Request, event_id: int):
         return JSONResponse({"error": f"Database error: {str(e)}"}, status_code=500)
 
 
+@app.post("/admin/events/validate")
+async def validate_event(request: Request):
+    """Validate event data via AJAX."""
+    if isinstance(admin(request), RedirectResponse):
+        return JSONResponse({"error": "Authentication required"}, status_code=401)
+    
+    try:
+        data = await request.json()
+        validation = validate_event_data(
+            data.get("date", ""),
+            data.get("name", ""),
+            data.get("event_type", "sabc_tournament"),
+            data.get("start_time"),
+            data.get("weigh_in_time"),
+            data.get("entry_fee")
+        )
+        
+        return JSONResponse({
+            "valid": len(validation["errors"]) == 0,
+            "errors": validation["errors"],
+            "warnings": validation["warnings"]
+        })
+        
+    except Exception as e:
+        return JSONResponse({"error": f"Validation error: {str(e)}"}, status_code=500)
+
+
 @app.post("/admin/events/edit")
 async def edit_event(
     request: Request,
@@ -1212,6 +1379,32 @@ async def edit_event(
 
     try:
         from datetime import datetime
+        
+        # Validate input data (but allow same date for same event)
+        validation = validate_event_data(date, name, event_type, start_time, weigh_in_time, entry_fee)
+        
+        # Filter out duplicate date warning if it's for the same event
+        if validation["warnings"]:
+            filtered_warnings = []
+            for warning in validation["warnings"]:
+                if "already has event" in warning:
+                    # Check if it's the same event
+                    existing = db("SELECT id FROM events WHERE date = ? AND id != ?", (date, event_id))
+                    if existing:
+                        filtered_warnings.append(warning)
+                else:
+                    filtered_warnings.append(warning)
+            validation["warnings"] = filtered_warnings
+        
+        # If there are errors, return with error message
+        if validation["errors"]:
+            error_msg = "; ".join(validation["errors"])
+            return RedirectResponse(f"/admin/events?error=Validation failed: {error_msg}", status_code=302)
+        
+        # Show warnings in success message if any
+        warning_msg = ""
+        if validation["warnings"]:
+            warning_msg = f"&warnings={'; '.join(validation['warnings'])}"
 
         # Parse the date to extract year
         date_obj = datetime.strptime(date, "%Y-%m-%d")
@@ -1264,7 +1457,7 @@ async def edit_event(
                 # Log the error but don't fail the entire event update
                 print(f"Failed to parse poll closes date: {ve}")
 
-        return RedirectResponse("/admin/events", status_code=302)
+        return RedirectResponse(f"/admin/events?success=Event updated successfully{warning_msg}", status_code=302)
 
     except Exception as e:
         return RedirectResponse(
