@@ -49,10 +49,69 @@
                                placeholder="e.g., Lake Travis - Main Basin">
                     </div>
                 </div>
+                
+                <!-- Tournament-specific fields -->
+                <div id="tournament-fields" class="row g-3 mt-2" style="display: none;">
+                    <div class="col-md-2">
+                        <label for="start_time" class="form-label">Start Time</label>
+                        <input type="time" class="form-control" id="start_time" name="start_time" value="06:00">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="weigh_in_time" class="form-label">Weigh-in Time</label>
+                        <input type="time" class="form-control" id="weigh_in_time" name="weigh_in_time" value="15:00">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="entry_fee" class="form-label">Entry Fee</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" id="entry_fee" name="entry_fee" value="25.00" step="0.01" min="0">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="lake_name" class="form-label">Lake</label>
+                        <input type="text" class="form-control" id="lake_name" name="lake_name" placeholder="e.g., Lake Travis">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="ramp_name" class="form-label">Ramp</label>
+                        <input type="text" class="form-control" id="ramp_name" name="ramp_name" placeholder="e.g., Mansfield Dam">
+                    </div>
+                </div>
+                
+                <!-- Holiday-specific fields -->
+                <div id="holiday-fields" class="row g-3 mt-2" style="display: none;">
+                    <div class="col-md-6">
+                        <label for="holiday_name" class="form-label">Holiday Name</label>
+                        <input type="text" class="form-control" id="holiday_name" name="holiday_name" placeholder="e.g., Independence Day">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mt-4">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="populateHolidayFromDate()">
+                                <i class="bi bi-magic me-1"></i>Auto-fill from date
+                            </button>
+                            <br><small class="form-text text-muted">Automatically populate holiday name based on selected date</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- General event options -->
+                <div class="row g-3 mt-2">
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="is_cancelled" name="is_cancelled">
+                            <label class="form-check-label" for="is_cancelled">
+                                Mark as cancelled
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="row mt-3">
                     <div class="col-12">
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-plus-circle me-1"></i>Add Event
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary ms-2" onclick="validateEventForm()">
+                            <i class="bi bi-check-circle me-1"></i>Validate
                         </button>
                     </div>
                 </div>
@@ -198,6 +257,55 @@
                         <label for="edit_description" class="form-label">Description</label>
                         <input type="text" class="form-control" id="edit_description" name="description">
                     </div>
+                    
+                    <!-- Tournament-specific fields -->
+                    <div id="edit-tournament-fields" style="display: none;">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="edit_start_time" class="form-label">Start Time</label>
+                                <input type="time" class="form-control" id="edit_start_time" name="start_time">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="edit_weigh_in_time" class="form-label">Weigh-in Time</label>
+                                <input type="time" class="form-control" id="edit_weigh_in_time" name="weigh_in_time">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="edit_entry_fee" class="form-label">Entry Fee</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="edit_entry_fee" name="entry_fee" step="0.01" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="edit_lake_name" class="form-label">Lake</label>
+                                <input type="text" class="form-control" id="edit_lake_name" name="lake_name">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="edit_ramp_name" class="form-label">Ramp</label>
+                                <input type="text" class="form-control" id="edit_ramp_name" name="ramp_name">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Holiday-specific fields -->
+                    <div id="edit-holiday-fields" style="display: none;">
+                        <div class="mb-3">
+                            <label for="edit_holiday_name" class="form-label">Holiday Name</label>
+                            <input type="text" class="form-control" id="edit_holiday_name" name="holiday_name">
+                        </div>
+                    </div>
+                    
+                    <!-- General options -->
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="edit_is_cancelled" name="is_cancelled">
+                            <label class="form-check-label" for="edit_is_cancelled">
+                                Mark as cancelled
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -244,67 +352,74 @@
 </div>
 
 <script>
-// Add event listeners when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    // Add listeners to edit event buttons
-    document.querySelectorAll('.edit-event-btn').forEach(function(button) {
-        button.addEventListener('click', function() {
-            var eventId = this.getAttribute('data-event-id');
-            var eventDate = this.getAttribute('data-event-date');
-            var eventType = this.getAttribute('data-event-type');
-            var eventName = this.getAttribute('data-event-name');
-            var eventDescription = this.getAttribute('data-event-description');
-            var hasPoll = this.getAttribute('data-has-poll') === 'true';
-            var pollActive = this.getAttribute('data-poll-active') === 'true';
-            
-            editEvent(eventId, eventDate, eventType, eventName, eventDescription, hasPoll, pollActive);
-        });
-    });
-    
-    // Add listeners to past event delete buttons
-    document.querySelectorAll('.delete-past-event').forEach(function(button) {
-        button.addEventListener('click', function() {
-            var eventId = this.getAttribute('data-event-id');
-            var eventName = this.getAttribute('data-event-name');
-            var hasDeps = this.getAttribute('data-has-deps') === 'true';
-            
-            deletePastEvent(eventId, eventName, hasDeps);
-        });
-    });
-    
-});
+// This section is handled by the main DOMContentLoaded listener below
 
 function editEvent(id, date, eventType, name, description, hasPoll, pollActive) {
-    document.getElementById('edit_event_id').value = id;
-    document.getElementById('edit_date').value = date;
-    document.getElementById('edit_event_type').value = eventType;
-    document.getElementById('edit_name').value = name;
-    document.getElementById('edit_description').value = description || '';
+    // Fetch complete event data
+    fetch(`/admin/events/${id}/info`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Error loading event data: ' + data.error);
+                return;
+            }
+            
+            // Populate basic fields
+            document.getElementById('edit_event_id').value = data.id;
+            document.getElementById('edit_date').value = data.date;
+            document.getElementById('edit_event_type').value = data.event_type;
+            document.getElementById('edit_name').value = data.name;
+            document.getElementById('edit_description').value = data.description;
+            
+            // Populate tournament fields
+            document.getElementById('edit_start_time').value = data.start_time || '06:00';
+            document.getElementById('edit_weigh_in_time').value = data.weigh_in_time || '15:00';
+            document.getElementById('edit_entry_fee').value = data.entry_fee || 25.00;
+            document.getElementById('edit_lake_name').value = data.lake_name || '';
+            document.getElementById('edit_ramp_name').value = data.ramp_name || '';
+            
+            // Populate holiday fields
+            document.getElementById('edit_holiday_name').value = data.holiday_name || '';
+            
+            // Populate general fields
+            document.getElementById('edit_is_cancelled').checked = data.is_cancelled;
+            
+            // Show/hide conditional fields
+            toggleEditEventFields();
+            
+            // Handle poll fields (existing logic)
+            setupPollFields(data.event_type, hasPoll, data.poll_closes_at);
+            
+            // Show the modal
+            new bootstrap.Modal(document.getElementById('editEventModal')).show();
+        })
+        .catch(error => {
+            console.error('Error fetching event data:', error);
+            alert('Failed to load event data');
+        });
+}
+
+function setupPollFields(eventType, hasPoll, pollClosesAt) {
     
-    // Show/hide poll closes field based on event type and poll existence
     var pollClosesContainer = document.getElementById('edit_poll_closes_container');
     var pollClosesInput = document.getElementById('edit_poll_closes_date');
     
     if (eventType === 'sabc_tournament' && hasPoll) {
         pollClosesContainer.style.display = 'block';
-        // Fetch the current poll closes date via AJAX
-        fetchPollClosesDate(id, pollClosesInput);
+        if (pollClosesAt) {
+            // Convert ISO datetime to datetime-local format
+            var date = new Date(pollClosesAt);
+            var year = date.getFullYear();
+            var month = String(date.getMonth() + 1).padStart(2, '0');
+            var day = String(date.getDate()).padStart(2, '0');
+            var hours = String(date.getHours()).padStart(2, '0');
+            var minutes = String(date.getMinutes()).padStart(2, '0');
+            pollClosesInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
     } else {
         pollClosesContainer.style.display = 'none';
         pollClosesInput.value = '';
     }
-    
-    // Add event listener to event type select to show/hide poll field
-    document.getElementById('edit_event_type').addEventListener('change', function() {
-        if (this.value === 'sabc_tournament' && hasPoll) {
-            pollClosesContainer.style.display = 'block';
-        } else {
-            pollClosesContainer.style.display = 'none';
-            pollClosesInput.value = '';
-        }
-    });
-    
-    new bootstrap.Modal(document.getElementById('editEventModal')).show();
 }
 
 function fetchPollClosesDate(eventId, inputElement) {
@@ -415,5 +530,212 @@ function confirmDeletePastEvent() {
         alert('Network error deleting event: ' + error.message);
     });
 }
+
+// Event type conditional fields for create form
+function toggleEventFields() {
+    const eventType = document.getElementById('event_type').value;
+    const tournamentFields = document.getElementById('tournament-fields');
+    const holidayFields = document.getElementById('holiday-fields');
+    
+    // Hide all conditional fields first
+    tournamentFields.style.display = 'none';
+    holidayFields.style.display = 'none';
+    
+    // Show relevant fields based on event type
+    if (eventType === 'sabc_tournament' || eventType === 'other_tournament') {
+        tournamentFields.style.display = 'flex';
+    } else if (eventType === 'federal_holiday') {
+        holidayFields.style.display = 'flex';
+    }
+    
+    // Update form validation
+    updateFieldRequirements(eventType);
+}
+
+// Event type conditional fields for edit modal
+function toggleEditEventFields() {
+    const eventType = document.getElementById('edit_event_type').value;
+    const tournamentFields = document.getElementById('edit-tournament-fields');
+    const holidayFields = document.getElementById('edit-holiday-fields');
+    const pollClosesContainer = document.getElementById('edit_poll_closes_container');
+    
+    // Hide all conditional fields first
+    tournamentFields.style.display = 'none';
+    holidayFields.style.display = 'none';
+    
+    // Show relevant fields based on event type
+    if (eventType === 'sabc_tournament' || eventType === 'other_tournament') {
+        tournamentFields.style.display = 'block';
+    } else if (eventType === 'federal_holiday') {
+        holidayFields.style.display = 'block';
+        // Hide poll field for holidays
+        if (pollClosesContainer) {
+            pollClosesContainer.style.display = 'none';
+        }
+    }
+}
+
+function updateFieldRequirements(eventType) {
+    const startTime = document.getElementById('start_time');
+    const weighInTime = document.getElementById('weigh_in_time');
+    const entryFee = document.getElementById('entry_fee');
+    const holidayName = document.getElementById('holiday_name');
+    
+    // Clear all requirements first
+    [startTime, weighInTime, entryFee, holidayName].forEach(field => {
+        field.required = false;
+    });
+    
+    // Set requirements based on event type
+    if (eventType === 'sabc_tournament') {
+        startTime.required = true;
+        weighInTime.required = true;
+        entryFee.required = true;
+    } else if (eventType === 'federal_holiday') {
+        holidayName.required = true;
+    }
+}
+
+// Auto-populate holiday name from date
+function populateHolidayFromDate() {
+    const dateInput = document.getElementById('date');
+    const holidayNameInput = document.getElementById('holiday_name');
+    
+    if (!dateInput.value) {
+        alert('Please select a date first');
+        return;
+    }
+    
+    const selectedDate = new Date(dateInput.value);
+    const year = selectedDate.getFullYear();
+    
+    // Check common federal holidays
+    const holidays = {
+        [`${year}-01-01`]: "New Year's Day",
+        [`${year}-07-04`]: "Independence Day",
+        [`${year}-11-11`]: "Veterans Day",
+        [`${year}-12-25`]: "Christmas Day"
+    };
+    
+    const dateStr = dateInput.value;
+    if (holidays[dateStr]) {
+        holidayNameInput.value = holidays[dateStr];
+    } else {
+        // For floating holidays, make a simple API call
+        fetch(`/admin/federal-holidays/${year}`)
+            .then(response => response.json())
+            .then(data => {
+                const holiday = data.holidays.find(h => h[0] === dateStr);
+                if (holiday) {
+                    holidayNameInput.value = holiday[1];
+                } else {
+                    alert('No federal holiday found for this date');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching holidays:', error);
+                alert('Could not fetch holiday information');
+            });
+    }
+}
+
+// Real-time form validation
+function validateEventForm() {
+    const formData = {
+        date: document.getElementById('date').value,
+        name: document.getElementById('name').value,
+        event_type: document.getElementById('event_type').value,
+        start_time: document.getElementById('start_time').value,
+        weigh_in_time: document.getElementById('weigh_in_time').value,
+        entry_fee: document.getElementById('entry_fee').value
+    };
+    
+    fetch('/admin/events/validate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        let message = 'Validation Results:\n\n';
+        
+        if (data.valid) {
+            message += '✅ All validations passed!\n';
+        } else {
+            message += '❌ Errors found:\n';
+            data.errors.forEach(error => {
+                message += `  • ${error}\n`;
+            });
+        }
+        
+        if (data.warnings.length > 0) {
+            message += '\n⚠️  Warnings:\n';
+            data.warnings.forEach(warning => {
+                message += `  • ${warning}\n`;
+            });
+        }
+        
+        alert(message);
+    })
+    .catch(error => {
+        console.error('Validation error:', error);
+        alert('Validation failed: ' + error.message);
+    });
+}
+
+// Initialize event type handling
+document.addEventListener('DOMContentLoaded', function() {
+    // Set up create form event type change handler
+    document.getElementById('event_type').addEventListener('change', toggleEventFields);
+    
+    // Set up edit form event type change handler
+    document.getElementById('edit_event_type').addEventListener('change', toggleEditEventFields);
+    
+    // Initialize with default state
+    toggleEventFields();
+    
+    // Auto-populate tournament name based on date
+    document.getElementById('date').addEventListener('change', function() {
+        const dateInput = this;
+        const nameInput = document.getElementById('name');
+        const eventType = document.getElementById('event_type').value;
+        
+        if (eventType === 'sabc_tournament' && dateInput.value && !nameInput.value) {
+            const date = new Date(dateInput.value);
+            const month = date.toLocaleString('default', { month: 'long' });
+            const year = date.getFullYear();
+            nameInput.value = `${month} ${year} Tournament`;
+        }
+    });
+    
+    // Initialize edit event listeners (existing code)
+    document.querySelectorAll('.edit-event-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            var eventId = this.getAttribute('data-event-id');
+            var eventDate = this.getAttribute('data-event-date');
+            var eventType = this.getAttribute('data-event-type');
+            var eventName = this.getAttribute('data-event-name');
+            var eventDescription = this.getAttribute('data-event-description');
+            var hasPoll = this.getAttribute('data-has-poll') === 'true';
+            var pollActive = this.getAttribute('data-poll-active') === 'true';
+            
+            editEvent(eventId, eventDate, eventType, eventName, eventDescription, hasPoll, pollActive);
+        });
+    });
+    
+    // Initialize past event delete listeners (existing code)
+    document.querySelectorAll('.delete-past-event').forEach(function(button) {
+        button.addEventListener('click', function() {
+            var eventId = this.getAttribute('data-event-id');
+            var eventName = this.getAttribute('data-event-name');
+            var hasDeps = this.getAttribute('data-has-deps') === 'true';
+            
+            deletePastEvent(eventId, eventName, hasDeps);
+        });
+    });
+});
+
 </script>
 {% endblock %}
