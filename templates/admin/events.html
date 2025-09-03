@@ -165,6 +165,50 @@
                             </button>
                         </div>
                     </div>
+                    
+                    <!-- Search and Filter for SABC -->
+                    <div class="p-3 border-bottom bg-white">
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text" class="form-control" id="sabc-search" placeholder="Search tournaments..." onkeyup="filterEvents('sabc')">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select form-select-sm" id="sabc-year-filter" onchange="filterEvents('sabc')">
+                                    <option value="">All Years</option>
+                                    {% for year in range(2023, 2027) %}
+                                    <option value="{{ year }}" {% if year == 2025 %}selected{% endif %}>{{ year }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select form-select-sm" id="sabc-status-filter" onchange="filterEvents('sabc')">
+                                    <option value="">All Status</option>
+                                    <option value="complete">Complete</option>
+                                    <option value="upcoming">Upcoming</option>
+                                    <option value="no-poll">No Poll</option>
+                                    <option value="poll-active">Poll Active</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select form-select-sm" id="sabc-lake-filter" onchange="filterEvents('sabc')">
+                                    <option value="">All Lakes</option>
+                                    <option value="travis">Lake Travis</option>
+                                    <option value="austin">Lake Austin</option>
+                                    <option value="bastrop">Lake Bastrop</option>
+                                    <option value="buchanan">Lake Buchanan</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters('sabc')">
+                                    <i class="bi bi-x-circle me-1"></i>Clear
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
                     {% set sabc_events = events|selectattr('event_type', 'equalto', 'sabc_tournament')|list %}
                     {% include 'admin/events_table.html' with context %}
                 </div>
@@ -182,6 +226,32 @@
                             </button>
                         </div>
                     </div>
+                    
+                    <!-- Search and Filter for Holidays -->
+                    <div class="p-3 border-bottom bg-white">
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text" class="form-control" id="holidays-search" placeholder="Search holidays..." onkeyup="filterEvents('holidays')">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select form-select-sm" id="holidays-year-filter" onchange="filterEvents('holidays')">
+                                    <option value="">All Years</option>
+                                    {% for year in range(2023, 2027) %}
+                                    <option value="{{ year }}" {% if year == 2025 %}selected{% endif %}>{{ year }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters('holidays')">
+                                    <i class="bi bi-x-circle me-1"></i>Clear
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
                     {% set sabc_events = events|selectattr('event_type', 'equalto', 'federal_holiday')|list %}
                     {% include 'admin/events_table.html' with context %}
                 </div>
@@ -196,6 +266,39 @@
                             </button>
                         </div>
                     </div>
+                    
+                    <!-- Search and Filter for Other Events -->
+                    <div class="p-3 border-bottom bg-white">
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text" class="form-control" id="other-search" placeholder="Search events..." onkeyup="filterEvents('other')">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select form-select-sm" id="other-year-filter" onchange="filterEvents('other')">
+                                    <option value="">All Years</option>
+                                    {% for year in range(2023, 2027) %}
+                                    <option value="{{ year }}" {% if year == 2025 %}selected{% endif %}>{{ year }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select form-select-sm" id="other-type-filter" onchange="filterEvents('other')">
+                                    <option value="">All Types</option>
+                                    <option value="other_tournament">Other Tournaments</option>
+                                    <option value="club_event">Club Events</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters('other')">
+                                    <i class="bi bi-x-circle me-1"></i>Clear
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
                     {% set sabc_events = events|selectattr('event_type', 'in', ['other_tournament', 'club_event'])|list %}
                     {% include 'admin/events_table.html' with context %}
                 </div>
@@ -210,6 +313,48 @@
                             </button>
                         </div>
                     </div>
+                    
+                    <!-- Search and Filter for Past Events -->
+                    <div class="p-3 border-bottom bg-white">
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text" class="form-control" id="past-search" placeholder="Search past events..." onkeyup="filterEvents('past')">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select form-select-sm" id="past-year-filter" onchange="filterEvents('past')">
+                                    <option value="">All Years</option>
+                                    {% for year in range(2020, 2025) %}
+                                    <option value="{{ year }}">{{ year }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select form-select-sm" id="past-type-filter" onchange="filterEvents('past')">
+                                    <option value="">All Types</option>
+                                    <option value="sabc_tournament">SABC</option>
+                                    <option value="federal_holiday">Holidays</option>
+                                    <option value="other_tournament">Other Tournaments</option>
+                                    <option value="club_event">Club Events</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select form-select-sm" id="past-results-filter" onchange="filterEvents('past')">
+                                    <option value="">All Results</option>
+                                    <option value="has-results">Has Results</option>
+                                    <option value="no-results">No Results</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters('past')">
+                                    <i class="bi bi-x-circle me-1"></i>Clear
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
                     {% include 'admin/past_events_table.html' with context %}
                 </div>
 
@@ -736,6 +881,167 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// Search and Filter Functions
+function filterEvents(tabType) {
+    const searchTerm = document.getElementById(`${tabType}-search`).value.toLowerCase();
+    const yearFilter = document.getElementById(`${tabType}-year-filter`)?.value || '';
+    const statusFilter = document.getElementById(`${tabType}-status-filter`)?.value || '';
+    const lakeFilter = document.getElementById(`${tabType}-lake-filter`)?.value || '';
+    const typeFilter = document.getElementById(`${tabType}-type-filter`)?.value || '';
+    const resultsFilter = document.getElementById(`${tabType}-results-filter`)?.value || '';
+    
+    let tableSelector;
+    if (tabType === 'past') {
+        tableSelector = '#past-events-tab table tbody tr';
+    } else {
+        tableSelector = `#${tabType}-events table tbody tr`;
+    }
+    
+    const rows = document.querySelectorAll(tableSelector);
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        // Skip empty state rows
+        if (row.cells.length <= 2 || row.textContent.includes('No events')) {
+            return;
+        }
+        
+        let visible = true;
+        const rowText = row.textContent.toLowerCase();
+        
+        // Search term filter
+        if (searchTerm && !rowText.includes(searchTerm)) {
+            visible = false;
+        }
+        
+        // Year filter
+        if (yearFilter && !rowText.includes(yearFilter)) {
+            visible = false;
+        }
+        
+        // Status filter for tournaments
+        if (statusFilter) {
+            if (statusFilter === 'complete' && !rowText.includes('complete')) {
+                visible = false;
+            } else if (statusFilter === 'upcoming' && !rowText.includes('upcoming')) {
+                visible = false;
+            } else if (statusFilter === 'no-poll' && !rowText.includes('create poll')) {
+                visible = false;
+            } else if (statusFilter === 'poll-active' && !rowText.includes('active')) {
+                visible = false;
+            }
+        }
+        
+        // Lake filter (basic text matching)
+        if (lakeFilter) {
+            const lakeName = lakeFilter.charAt(0).toUpperCase() + lakeFilter.slice(1);
+            if (!rowText.includes(lakeName.toLowerCase())) {
+                visible = false;
+            }
+        }
+        
+        // Type filter
+        if (typeFilter) {
+            if (typeFilter === 'sabc_tournament' && !row.innerHTML.includes('bi-trophy')) {
+                visible = false;
+            } else if (typeFilter === 'federal_holiday' && !row.innerHTML.includes('bi-calendar-heart')) {
+                visible = false;
+            } else if (typeFilter === 'other_tournament' && !row.innerHTML.includes('bi-calendar')) {
+                visible = false;
+            } else if (typeFilter === 'club_event' && !row.innerHTML.includes('bi-calendar-event')) {
+                visible = false;
+            }
+        }
+        
+        // Results filter for past events
+        if (resultsFilter) {
+            if (resultsFilter === 'has-results' && !rowText.includes('yes')) {
+                visible = false;
+            } else if (resultsFilter === 'no-results' && rowText.includes('yes')) {
+                visible = false;
+            }
+        }
+        
+        row.style.display = visible ? '' : 'none';
+        if (visible) visibleCount++;
+    });
+    
+    // Update empty state
+    updateEmptyState(tabType, visibleCount);
+}
+
+function clearFilters(tabType) {
+    // Clear all filter inputs for this tab
+    document.getElementById(`${tabType}-search`).value = '';
+    
+    const yearFilter = document.getElementById(`${tabType}-year-filter`);
+    if (yearFilter) yearFilter.value = '';
+    
+    const statusFilter = document.getElementById(`${tabType}-status-filter`);
+    if (statusFilter) statusFilter.value = '';
+    
+    const lakeFilter = document.getElementById(`${tabType}-lake-filter`);
+    if (lakeFilter) lakeFilter.value = '';
+    
+    const typeFilter = document.getElementById(`${tabType}-type-filter`);
+    if (typeFilter) typeFilter.value = '';
+    
+    const resultsFilter = document.getElementById(`${tabType}-results-filter`);
+    if (resultsFilter) resultsFilter.value = '';
+    
+    // Show all rows
+    let tableSelector;
+    if (tabType === 'past') {
+        tableSelector = '#past-events-tab table tbody tr';
+    } else {
+        tableSelector = `#${tabType}-events table tbody tr`;
+    }
+    
+    const rows = document.querySelectorAll(tableSelector);
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        if (row.cells.length > 2 && !row.textContent.includes('No events')) {
+            row.style.display = '';
+            visibleCount++;
+        }
+    });
+    
+    updateEmptyState(tabType, visibleCount);
+}
+
+function updateEmptyState(tabType, visibleCount) {
+    // Update tab badges with filtered counts
+    const tabBadge = document.getElementById(`${tabType === 'sabc' ? 'sabc' : tabType === 'holidays' ? 'holidays' : tabType === 'other' ? 'other' : 'past'}-count`);
+    
+    if (tabBadge && visibleCount !== undefined) {
+        // Store original count if not already stored
+        if (!tabBadge.dataset.originalCount) {
+            tabBadge.dataset.originalCount = tabBadge.textContent;
+        }
+        
+        // Show filtered count if different from original
+        if (document.getElementById(`${tabType}-search`).value || 
+            document.getElementById(`${tabType}-year-filter`)?.value ||
+            document.getElementById(`${tabType}-status-filter`)?.value ||
+            document.getElementById(`${tabType}-lake-filter`)?.value ||
+            document.getElementById(`${tabType}-type-filter`)?.value ||
+            document.getElementById(`${tabType}-results-filter`)?.value) {
+            tabBadge.textContent = visibleCount;
+            tabBadge.classList.add('bg-warning');
+            tabBadge.classList.remove('bg-primary', 'bg-info', 'bg-secondary');
+        } else {
+            tabBadge.textContent = tabBadge.dataset.originalCount;
+            tabBadge.classList.remove('bg-warning');
+            // Restore original badge color based on tab
+            if (tabType === 'sabc') tabBadge.classList.add('bg-primary');
+            else if (tabType === 'holidays') tabBadge.classList.add('bg-info');
+            else if (tabType === 'other') tabBadge.classList.add('bg-warning');
+            else tabBadge.classList.add('bg-secondary');
+        }
+    }
+}
 
 </script>
 {% endblock %}
