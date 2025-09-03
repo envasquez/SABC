@@ -1,4 +1,5 @@
 import os
+
 from sqlalchemy import create_engine, text
 
 # Support environment variable for database path
@@ -23,7 +24,14 @@ TABLE_DEFINITIONS = [
         year INTEGER NOT NULL,
         name TEXT NOT NULL,
         description TEXT,
-        event_type TEXT DEFAULT 'sabc_tournament' CHECK (event_type IN ('sabc_tournament', 'other_tournament', 'generic_event'))
+        event_type TEXT DEFAULT 'sabc_tournament' CHECK (event_type IN ('sabc_tournament', 'federal_holiday', 'other_tournament', 'club_event')),
+        start_time TIME,
+        weigh_in_time TIME,
+        lake_name TEXT,
+        ramp_name TEXT,
+        entry_fee DECIMAL DEFAULT 25.00,
+        is_cancelled BOOLEAN DEFAULT 0,
+        holiday_name TEXT
     )""",
     """polls(
         id INTEGER PRIMARY KEY,
