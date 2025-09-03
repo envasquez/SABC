@@ -1,3 +1,4 @@
+import json
 import os
 from datetime import datetime
 
@@ -8,16 +9,17 @@ from fastapi import *
 from fastapi.responses import *
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 from starlette.middleware.sessions import SessionMiddleware
 
+from database import engine  # Import database engine (supports environment variables)
+
 app = FastAPI(redirect_slashes=False)
-app.add_middleware(SessionMiddleware, secret_key=os.environ.get("SECRET_KEY", "dev-key-change-in-production"))
+app.add_middleware(
+    SessionMiddleware, secret_key=os.environ.get("SECRET_KEY", "dev-key-change-in-production")
+)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
-
-# Add JSON filter to templates
-import json
 
 
 def from_json_filter(value):
@@ -35,8 +37,6 @@ def date_format_filter(date_str):
     if not date_str:
         return ""
     try:
-        from datetime import datetime
-
         # Parse the date string (assuming YYYY-MM-DD format from database)
         date_obj = datetime.strptime(str(date_str), "%Y-%m-%d")
         # Format as "Aug. 24, 2025" like reference site
@@ -50,8 +50,6 @@ def time_format_filter(time_str):
     if not time_str:
         return ""
     try:
-        from datetime import datetime
-
         # Handle time string (e.g., "06:00", "06:00:00", "15:00", "15:00:00")
         if isinstance(time_str, str):
             # Try parsing time formats (with or without seconds)
@@ -75,8 +73,6 @@ def date_format_dd_mm_yyyy_filter(date_str):
     if not date_str:
         return ""
     try:
-        from datetime import datetime
-
         # Parse the date string (assuming YYYY-MM-DD format from database)
         date_obj = datetime.strptime(str(date_str), "%Y-%m-%d")
         # Format as DD-MM-YYYY
@@ -90,8 +86,6 @@ def month_number_filter(date_str):
     if not date_str:
         return "00"
     try:
-        from datetime import datetime
-
         # Parse the date string (assuming YYYY-MM-DD format from database)
         date_obj = datetime.strptime(str(date_str), "%Y-%m-%d")
         # Return month number with zero-padding (01, 02, ..., 12)
@@ -105,8 +99,6 @@ templates.env.filters["date_format"] = date_format_filter
 templates.env.filters["time_format"] = time_format_filter
 templates.env.filters["date_format_dd_mm_yyyy"] = date_format_dd_mm_yyyy_filter
 templates.env.filters["month_number"] = month_number_filter
-# Import database engine (supports environment variables)
-from database import engine
 
 # Lakes and Ramps YAML Data Loading
 _lakes_data_cache = None  # Clear cache for YAML reload
@@ -890,7 +882,14 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
                     AND p.closed = 0
                 ) as poll_active,
                 EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id) as has_tournament,
-                EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id AND t.complete = 1) as tournament_complete
+                EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id AND t.complete = 1) as tournament_complete,
+                e.start_time,
+                e.weigh_in_time,
+                e.lake_name,
+                e.ramp_name,
+                e.entry_fee,
+                e.is_cancelled,
+                e.holiday_name
             FROM events e
             WHERE e.date >= date('now')
             ORDER BY e.date
@@ -912,6 +911,13 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
                 "poll_active": bool(event[8]),
                 "has_tournament": bool(event[9]),
                 "tournament_complete": bool(event[10]),
+                "start_time": event[11],
+                "weigh_in_time": event[12],
+                "lake_name": event[13],
+                "ramp_name": event[14],
+                "entry_fee": event[15],
+                "is_cancelled": bool(event[16]),
+                "holiday_name": event[17],
             }
             for event in events
         ]
@@ -928,7 +934,14 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
                     WHERE t.event_id = e.id
                     AND (EXISTS(SELECT 1 FROM results WHERE tournament_id = t.id)
                          OR EXISTS(SELECT 1 FROM team_results WHERE tournament_id = t.id))
-                ) as has_results
+                ) as has_results,
+                e.start_time,
+                e.weigh_in_time,
+                e.lake_name,
+                e.ramp_name,
+                e.entry_fee,
+                e.is_cancelled,
+                e.holiday_name
             FROM events e
             WHERE e.date < date('now')
             ORDER BY e.date DESC
@@ -948,6 +961,13 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
                 "has_poll": bool(event[6]),
                 "has_tournament": bool(event[7]),
                 "has_results": bool(event[8]),
+                "start_time": event[9],
+                "weigh_in_time": event[10],
+                "lake_name": event[11],
+                "ramp_name": event[12],
+                "entry_fee": event[13],
+                "is_cancelled": bool(event[14]),
+                "holiday_name": event[15],
             }
             for event in past_events
         ]
@@ -989,6 +1009,12 @@ async def create_event(
     name: str = Form(),
     event_type: str = Form(default="sabc_tournament"),
     description: str = Form(default=""),
+    start_time: str = Form(default="06:00"),
+    weigh_in_time: str = Form(default="15:00"),
+    lake_name: str = Form(default=""),
+    ramp_name: str = Form(default=""),
+    entry_fee: float = Form(default=25.00),
+    holiday_name: str = Form(default=""),
 ):
     """Create a new event and optionally auto-create poll for SABC tournaments."""
     if isinstance(user := admin(request), RedirectResponse):
@@ -1001,11 +1027,15 @@ async def create_event(
         date_obj = datetime.strptime(date, "%Y-%m-%d")
         year = date_obj.year
 
-        # Insert the event
+        # Insert the event with all new fields
         event_id = db(
             """
-            INSERT INTO events (date, year, name, event_type, description)
-            VALUES (:date, :year, :name, :event_type, :description)
+            INSERT INTO events (date, year, name, event_type, description,
+                              start_time, weigh_in_time, lake_name, ramp_name, 
+                              entry_fee, holiday_name, is_cancelled)
+            VALUES (:date, :year, :name, :event_type, :description,
+                   :start_time, :weigh_in_time, :lake_name, :ramp_name,
+                   :entry_fee, :holiday_name, 0)
         """,
             {
                 "date": date,
@@ -1013,6 +1043,12 @@ async def create_event(
                 "name": name,
                 "event_type": event_type,
                 "description": description,
+                "start_time": start_time if event_type == "sabc_tournament" else None,
+                "weigh_in_time": weigh_in_time if event_type == "sabc_tournament" else None,
+                "lake_name": lake_name if lake_name else None,
+                "ramp_name": ramp_name if ramp_name else None,
+                "entry_fee": entry_fee if event_type == "sabc_tournament" else None,
+                "holiday_name": holiday_name if event_type == "federal_holiday" else None,
             },
         )
 
@@ -1067,10 +1103,62 @@ async def create_event(
         )
 
 
+@app.get("/admin/events/{event_id}/info")
+async def get_event_info(request: Request, event_id: int):
+    """Get complete event information (for edit modal)."""
+    if isinstance(admin(request), RedirectResponse):
+        return JSONResponse({"error": "Authentication required"}, status_code=401)
+
+    try:
+        # Get event info with poll info if it exists
+        event_info = db(
+            """
+            SELECT e.id, e.date, e.name, e.description, e.event_type,
+                   e.start_time, e.weigh_in_time, e.lake_name, e.ramp_name, 
+                   e.entry_fee, e.is_cancelled, e.holiday_name,
+                   p.closes_at, p.starts_at, p.id as poll_id, p.closed
+            FROM events e
+            LEFT JOIN polls p ON p.event_id = e.id
+            WHERE e.id = :event_id
+            ORDER BY p.id DESC
+            LIMIT 1
+        """,
+            {"event_id": event_id},
+        )
+
+        if event_info:
+            event = event_info[0]
+            return JSONResponse(
+                {
+                    "id": event[0],
+                    "date": event[1],
+                    "name": event[2],
+                    "description": event[3] or "",
+                    "event_type": event[4],
+                    "start_time": event[5],
+                    "weigh_in_time": event[6],
+                    "lake_name": event[7] or "",
+                    "ramp_name": event[8] or "",
+                    "entry_fee": float(event[9]) if event[9] else 25.00,
+                    "is_cancelled": bool(event[10]),
+                    "holiday_name": event[11] or "",
+                    "poll_closes_at": event[12],
+                    "poll_starts_at": event[13],
+                    "poll_id": event[14],
+                    "poll_closed": bool(event[15]) if event[15] is not None else None,
+                }
+            )
+        else:
+            return JSONResponse({"error": "Event not found"}, status_code=404)
+
+    except Exception as e:
+        return JSONResponse({"error": f"Database error: {str(e)}"}, status_code=500)
+
+
 @app.get("/admin/events/{event_id}/poll-info")
 async def get_event_poll_info(request: Request, event_id: int):
-    """Get poll information for an event (for edit modal)."""
-    if isinstance(user := admin(request), RedirectResponse):
+    """Get poll information for an event (for backward compatibility)."""
+    if isinstance(admin(request), RedirectResponse):
         return JSONResponse({"error": "Authentication required"}, status_code=401)
 
     try:
@@ -1110,6 +1198,13 @@ async def edit_event(
     event_type: str = Form(default="sabc_tournament"),
     description: str = Form(default=""),
     poll_closes_date: str = Form(default=""),
+    start_time: str = Form(default=""),
+    weigh_in_time: str = Form(default=""),
+    lake_name: str = Form(default=""),
+    ramp_name: str = Form(default=""),
+    entry_fee: float = Form(default=25.00),
+    holiday_name: str = Form(default=""),
+    is_cancelled: bool = Form(default=False),
 ):
     """Edit an existing event."""
     if isinstance(user := admin(request), RedirectResponse):
@@ -1122,11 +1217,14 @@ async def edit_event(
         date_obj = datetime.strptime(date, "%Y-%m-%d")
         year = date_obj.year
 
-        # Update the event
+        # Update the event with all fields
         db(
             """
             UPDATE events
-            SET date = :date, year = :year, name = :name, event_type = :event_type, description = :description
+            SET date = :date, year = :year, name = :name, event_type = :event_type, 
+                description = :description, start_time = :start_time, weigh_in_time = :weigh_in_time,
+                lake_name = :lake_name, ramp_name = :ramp_name, entry_fee = :entry_fee,
+                holiday_name = :holiday_name, is_cancelled = :is_cancelled
             WHERE id = :id
         """,
             {
@@ -1135,6 +1233,13 @@ async def edit_event(
                 "name": name,
                 "event_type": event_type,
                 "description": description,
+                "start_time": start_time if start_time and event_type == "sabc_tournament" else None,
+                "weigh_in_time": weigh_in_time if weigh_in_time and event_type == "sabc_tournament" else None,
+                "lake_name": lake_name if lake_name else None,
+                "ramp_name": ramp_name if ramp_name else None,
+                "entry_fee": entry_fee if event_type == "sabc_tournament" else None,
+                "holiday_name": holiday_name if holiday_name and event_type == "federal_holiday" else None,
+                "is_cancelled": is_cancelled,
                 "id": event_id,
             },
         )
@@ -1763,7 +1868,7 @@ async def edit_poll(request: Request, poll_id: int):
 @app.delete("/admin/polls/{poll_id}")
 async def delete_poll(request: Request, poll_id: int):
     """Delete a poll and all associated votes."""
-    if isinstance(user := admin(request), RedirectResponse):
+    if isinstance(admin(request), RedirectResponse):
         return JSONResponse({"error": "Authentication required"}, status_code=401)
 
     try:
@@ -1781,7 +1886,7 @@ async def delete_poll(request: Request, poll_id: int):
 @app.delete("/admin/votes/{vote_id}")
 async def delete_vote(request: Request, vote_id: int):
     """Delete an individual poll vote (admin only)."""
-    if isinstance(user := admin(request), RedirectResponse):
+    if isinstance(admin(request), RedirectResponse):
         return JSONResponse({"error": "Authentication required"}, status_code=401)
 
     try:
@@ -2335,7 +2440,6 @@ async def calendar_page(request: Request):
     )
 
 
-
 def build_calendar_data_with_polls(calendar_events, tournament_events, year=2025):
     """Build calendar data structure with enhanced poll and tournament information."""
     import calendar
@@ -2755,7 +2859,7 @@ async def awards(request: Request, year: int = None):
     current_year = datetime.now().year
     available_years = db(
         "SELECT DISTINCT year FROM events WHERE year IS NOT NULL AND year <= :year ORDER BY year DESC",
-        {"year": current_year}
+        {"year": current_year},
     )
     years = [row[0] for row in available_years]
 
