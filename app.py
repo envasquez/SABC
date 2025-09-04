@@ -1587,6 +1587,9 @@ async def edit_event(
     if isinstance(user := admin(request), RedirectResponse):
         return user
 
+    # Debug logging
+    print(f"DEBUG: Received is_cancelled value: '{is_cancelled}' (type: {type(is_cancelled)})")
+
     try:
         from datetime import datetime
         
