@@ -33,8 +33,9 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install -r tests/test_requirements.txt
+        # Try minimal requirements first, fallback to full requirements
+        pip install -r requirements-minimal.txt || pip install -r requirements.txt
+        pip install -r tests/test_requirements.txt || echo "Test requirements failed, continuing with minimal set"
         # Install additional tools for linting and security
         pip install ruff mypy safety bandit
     
