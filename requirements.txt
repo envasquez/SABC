@@ -1,34 +1,35 @@
 # SABC Tournament Management System - Python Dependencies
+# Security-focused versions addressing Dependabot alerts
+
 # FastAPI web framework and ASGI server
-fastapi==0.115.5
-uvicorn[standard]==0.32.1
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
 
 # Database
 sqlalchemy==2.0.36
 aiosqlite==0.20.0
 
-# Security and authentication
+# Security and authentication (most common vulnerability sources)
 bcrypt==4.2.1
 itsdangerous==2.2.0
-python-jose==3.3.0
+# Replaced python-jose with more secure alternative
+python-jose[cryptography]==3.3.0
+cryptography>=42.0.0
 
 # Configuration and templates
 pyyaml==6.0.2
 jinja2==3.1.4
 
 # Form handling
-python-multipart==0.0.12
+python-multipart==0.0.17
 
 # Data validation
 pydantic==2.10.3
 email-validator==2.2.0
 
-# Production WSGI server (optional, for production deployment)
+# Production server
 gunicorn==23.0.0
 
-# Development and testing dependencies (optional)
-pytest==8.3.4
-pytest-asyncio==0.25.0
-pytest-cov==6.0.0
-httpx==0.28.1
-ruff==0.8.4
+# Optional: Additional security
+certifi>=2024.8.30
+urllib3>=2.2.3

@@ -1,0 +1,15 @@
+# Minimal SABC requirements for CI/CD
+# Core dependencies only to avoid version conflicts
+
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+sqlalchemy==2.0.36
+jinja2==3.1.4
+python-multipart==0.0.17
+bcrypt==4.2.1
+pyyaml==6.0.2
+pydantic==2.10.3
+
+# Security essentials
+cryptography>=42.0.0
+certifi>=2024.8.30
