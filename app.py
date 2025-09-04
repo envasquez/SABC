@@ -1350,6 +1350,7 @@ async def create_event(
     ramp_name: str = Form(default=""),
     entry_fee: float = Form(default=25.00),
     holiday_name: str = Form(default=""),
+    is_cancelled: str = Form(default="false"),
 ):
     """Create a new event and optionally auto-create poll for SABC tournaments."""
     if isinstance(user := admin(request), RedirectResponse):
@@ -1383,7 +1384,7 @@ async def create_event(
                               entry_fee, holiday_name, is_cancelled)
             VALUES (:date, :year, :name, :event_type, :description,
                    :start_time, :weigh_in_time, :lake_name, :ramp_name,
-                   :entry_fee, :holiday_name, 0)
+                   :entry_fee, :holiday_name, :is_cancelled)
         """,
             {
                 "date": date,
@@ -1397,6 +1398,7 @@ async def create_event(
                 "ramp_name": ramp_name if ramp_name else None,
                 "entry_fee": entry_fee if event_type == "sabc_tournament" else None,
                 "holiday_name": holiday_name if event_type == "federal_holiday" else None,
+                "is_cancelled": is_cancelled.lower() == "true",
             },
         )
 
@@ -1579,7 +1581,7 @@ async def edit_event(
     ramp_name: str = Form(default=""),
     entry_fee: float = Form(default=25.00),
     holiday_name: str = Form(default=""),
-    is_cancelled: bool = Form(default=False),
+    is_cancelled: str = Form(default="false"),
 ):
     """Edit an existing event."""
     if isinstance(user := admin(request), RedirectResponse):
@@ -1640,7 +1642,7 @@ async def edit_event(
                 "ramp_name": ramp_name if ramp_name else None,
                 "entry_fee": entry_fee if event_type == "sabc_tournament" else None,
                 "holiday_name": holiday_name if holiday_name and event_type == "federal_holiday" else None,
-                "is_cancelled": is_cancelled,
+                "is_cancelled": is_cancelled.lower() == "true",
                 "id": event_id,
             },
         )

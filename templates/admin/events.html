@@ -97,7 +97,8 @@
                 <div class="row g-3 mt-2">
                     <div class="col-md-6">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="is_cancelled" name="is_cancelled">
+                            <input type="hidden" name="is_cancelled" value="false">
+                            <input class="form-check-input" type="checkbox" id="is_cancelled" name="is_cancelled" value="true">
                             <label class="form-check-label" for="is_cancelled">
                                 Mark as cancelled
                             </label>
@@ -419,7 +420,8 @@
                     <!-- General options -->
                     <div class="mb-3">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="edit_is_cancelled" name="is_cancelled">
+                            <input type="hidden" name="is_cancelled" value="false">
+                            <input class="form-check-input" type="checkbox" id="edit_is_cancelled" name="is_cancelled" value="true">
                             <label class="form-check-label" for="edit_is_cancelled">
                                 Mark as cancelled
                             </label>
