@@ -43,20 +43,29 @@ python validate_against_reference.py
 # Enter development environment (Nix required)
 nix develop
 
-# Quick development (Nix shell commands)
-start-app       # Run FastAPI development server  
-setup-db        # Initialize database with schema
-run-tests       # Run test suite
-format-code     # Auto-format Python code with ruff
-check-code      # Run linting and type checking
+# Core development commands (in Nix shell)
+start-app        # Run FastAPI development server  
+setup-db         # Initialize database with schema
+reset-db         # Reset database (delete and recreate)
 
-# Alternative: Make targets (work outside Nix shell)
-make code-format    # Format Python code with ruff
-make code-check     # Run linting and type checking
+# Testing commands (in Nix shell)
+run-tests        # Run complete test suite
+test-backend     # Run backend tests only
+test-frontend    # Run frontend tests only
+test-integration # Run integration tests
+test-quick       # Run quick test subset
+test-coverage    # Generate coverage report
+clean-tests      # Clean test artifacts
 
-# Manual commands
+# Code quality commands (in Nix shell)
+format-code      # Auto-format Python code with ruff
+check-code       # Run linting and type checking
+deploy-app       # Run all checks for deployment
+
+# Manual commands (if not using Nix)
 python database.py              # Initialize database
 python bootstrap_admin.py       # Create admin user
+python run_tests.py             # Run test suite
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
 ```
 

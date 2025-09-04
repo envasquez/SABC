@@ -10,8 +10,9 @@ Test Categories:
 - Integration: End-to-end workflows, system behavior
 
 Usage:
-    python -m pytest tests/
-    make test
+    nix develop        # Enter development environment
+    run-tests          # Run all tests (in Nix shell)
+    python -m pytest tests/  # Direct pytest usage
 """
 
 __version__ = "1.0.0"

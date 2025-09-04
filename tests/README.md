@@ -38,66 +38,65 @@ This test suite provides complete coverage for both backend API functionality an
 
 ## Quick Start
 
-### 1. Install Dependencies
+### 1. Enter Development Environment
 ```bash
-make install
+# Enter the Nix development shell
+nix develop
 ```
 
-### 2. Set Up Development Environment
+### 2. Set Up Database
 ```bash
-make setup-dev
+# Initialize database with test data
+setup-db
 ```
 
 ### 3. Run All Tests
 ```bash
-make test
+# Run complete test suite
+run-tests
 ```
 
 ## Test Commands
 
+All commands should be run within the Nix development shell (`nix develop`).
+
 ### Basic Testing
 ```bash
 # Run all tests
-make test
+run-tests
 
 # Backend tests only
-make test-backend
+test-backend
 
 # Frontend tests only
-make test-frontend
+test-frontend
 
 # Integration tests only
-make test-integration
+test-integration
 
 # Quick test subset (excludes slow tests)
-make test-quick
+test-quick
 ```
 
-### Specific Test Categories
+### Coverage and Reports
 ```bash
-# Performance tests
-make test-performance
+# Generate coverage report
+test-coverage
 
-# Security tests
-make test-security
-
-# Accessibility tests
-make test-accessibility
+# Clean test artifacts
+clean-tests
 ```
 
-### Advanced Usage
+### Manual Testing (without Nix)
 ```bash
-# Run with coverage report
-make coverage
+# Run test suite directly
+python run_tests.py
 
-# Run specific test filter
-make test-filter
-
-# Run tests in parallel
-make test-parallel
-
-# Watch tests during development
-make watch-tests
+# Run with specific options
+python run_tests.py --backend-only
+python run_tests.py --frontend-only
+python run_tests.py --filter "test_name"
+python run_tests.py --headed  # Show browser for frontend tests
 ```
 
 ## Test Configuration
@@ -197,8 +196,8 @@ jobs:
 
 ### Local CI Simulation
 ```bash
-# Run the same tests as CI
-make ci-test
+# Run deployment checks (linting, tests, etc.)
+deploy-app
 ```
 
 ## Browser Testing
@@ -320,7 +319,7 @@ def test_create_event_with_valid_data(self, admin_client, sample_event_data):
 #### Database Connection Errors
 ```bash
 # Reset test database
-make db-reset
+reset-db
 ```
 
 #### Frontend Tests Timing Out
@@ -357,10 +356,10 @@ chmod +x run_tests.py
 ### Cleaning Up
 ```bash
 # Clean all test artifacts
-make clean
+clean-tests
 
 # Reset everything
-make clean && make setup-dev
+reset-db && setup-db
 ```
 
 ## Contact
@@ -368,4 +367,4 @@ make clean && make setup-dev
 For questions about the test suite:
 - Check existing issues in the repository
 - Review test documentation in code comments
-- Run `make help` for command reference
+- Run `nix develop` to see all available commands
