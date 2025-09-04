@@ -39,6 +39,13 @@
           # Utilities
           pydantic
           pyyaml  # for config/data loading
+
+          # Testing dependencies
+          pytest-cov
+          pytest-html
+          pytest-xdist  # for parallel testing
+          httpx  # for API testing
+          playwright  # for frontend testing
         ]);
 
         devPackages = with pkgs; [
@@ -70,7 +77,51 @@
         runTests = pkgs.writeShellScriptBin "run-tests" ''
           echo "🧪 Running SABC Tests"
           echo "===================="
-          pytest -v --tb=short
+          python run_tests.py
+        '';
+
+        testBackend = pkgs.writeShellScriptBin "test-backend" ''
+          echo "🧪 Running Backend Tests"
+          echo "======================="
+          python run_tests.py --backend-only
+        '';
+
+        testFrontend = pkgs.writeShellScriptBin "test-frontend" ''
+          echo "🖥️  Running Frontend Tests"
+          echo "========================"
+          python run_tests.py --frontend-only
+        '';
+
+        testIntegration = pkgs.writeShellScriptBin "test-integration" ''
+          echo "🔗 Running Integration Tests"
+          echo "==========================="
+          python -m pytest tests/test_integration.py -v -m integration
+        '';
+
+        testQuick = pkgs.writeShellScriptBin "test-quick" ''
+          echo "⚡ Running Quick Tests"
+          echo "====================="
+          python run_tests.py --filter "not slow"
+        '';
+
+        testCoverage = pkgs.writeShellScriptBin "test-coverage" ''
+          echo "📊 Generating Coverage Report"
+          echo "============================"
+          python -m pytest tests/test_backend.py --cov=app --cov-report=html --cov-report=term
+          echo "📁 Coverage report: htmlcov/index.html"
+        '';
+
+        cleanTests = pkgs.writeShellScriptBin "clean-tests" ''
+          echo "🧹 Cleaning Test Artifacts"
+          echo "========================="
+          rm -rf htmlcov/
+          rm -rf .pytest_cache/
+          rm -rf __pycache__/
+          rm -rf .coverage
+          rm -f *.xml
+          rm -f *_test_report.html
+          rm -f test_report.md
+          echo "✅ Cleanup complete"
         '';
 
         checkCode = pkgs.writeShellScriptBin "check-code" ''
@@ -151,6 +202,12 @@ print('Database setup complete!')
           buildInputs = [ pythonEnv ] ++ devPackages ++ [
             startApp
             runTests
+            testBackend
+            testFrontend
+            testIntegration
+            testQuick
+            testCoverage
+            cleanTests
             checkCode
             formatCode
             setupDb
@@ -169,13 +226,23 @@ print('Database setup complete!')
             echo "  • SQLAlchemy ${python.pkgs.sqlalchemy.version}"
             echo ""
             echo "🚀 Available commands:"
-            echo "  start-app    - Start FastAPI development server"
-            echo "  setup-db     - Initialize database with schema and views"
-            echo "  reset-db     - Reset database (delete and recreate)"
-            echo "  run-tests    - Run test suite"
-            echo "  check-code   - Run linting and type checking"
-            echo "  format-code  - Auto-format Python code with ruff"
-            echo "  deploy-app   - Run all checks for deployment"
+            echo "  start-app        - Start FastAPI development server"
+            echo "  setup-db         - Initialize database with schema and views"
+            echo "  reset-db         - Reset database (delete and recreate)"
+            echo ""
+            echo "🧪 Testing commands:"
+            echo "  run-tests        - Run complete test suite"
+            echo "  test-backend     - Run backend tests only"
+            echo "  test-frontend    - Run frontend tests only"
+            echo "  test-integration - Run integration tests"
+            echo "  test-quick       - Run quick test subset"
+            echo "  test-coverage    - Generate coverage report"
+            echo "  clean-tests      - Clean test artifacts"
+            echo ""
+            echo "🔧 Development commands:"
+            echo "  check-code       - Run linting and type checking"
+            echo "  format-code      - Auto-format Python code with ruff"
+            echo "  deploy-app       - Run all checks for deployment"
             echo ""
             echo "💡 Quick start:"
             echo "  1. setup-db     # First time only"
