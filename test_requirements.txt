@@ -1,0 +1,50 @@
+# Testing requirements for SABC application
+
+# Core testing framework
+pytest==7.4.3
+pytest-html==4.1.1
+pytest-cov==4.1.0
+pytest-xdist==3.3.1
+pytest-mock==3.12.0
+pytest-asyncio==0.21.1
+
+# Frontend testing with Playwright
+playwright==1.40.0
+pytest-playwright==0.4.3
+
+# HTTP testing
+httpx==0.25.2
+requests==2.31.0
+
+# Database testing
+pytest-postgresql==5.0.0
+pytest-sqlite==0.2.1
+
+# API testing
+fastapi[testing]==0.104.1
+httpx==0.25.2
+
+# Performance testing
+pytest-benchmark==4.0.0
+locust==2.17.0
+
+# Visual regression testing
+pytest-visual==0.2.0
+selenium==4.15.2
+
+# Accessibility testing
+axe-core-python==4.7.0
+pytest-axe==0.2.3
+
+# Load testing
+pytest-loadtesting==1.2.0
+
+# Mocking and fixtures
+responses==0.24.1
+factory-boy==3.3.0
+faker==20.1.0
+
+# Utilities
+pillow==10.1.0  # For image processing in tests
+beautifulsoup4==4.12.2  # For HTML parsing
+lxml==4.9.3  # XML/HTML parsing
