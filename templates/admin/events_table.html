@@ -1,1 +1,160 @@
-<!-- Reusable events table for tabs -->\n<div class="table-responsive">\n    <table class="table table-hover mb-0">\n        <thead>\n            <tr>\n                <th width="15%">Date</th>\n                <th width="15%">Name</th>\n                <th width="20%">Description</th>\n                {% if sabc_events|selectattr('event_type', 'equalto', 'sabc_tournament')|list %}\n                <th width="10%">Times</th>\n                <th width="8%">Fee</th>\n                <th width="12%">Poll Status</th>\n                <th width="12%">Tournament</th>\n                {% elif sabc_events|selectattr('event_type', 'equalto', 'federal_holiday')|list %}\n                <th width="20%">Holiday</th>\n                <th width="20%">Details</th>\n                {% else %}\n                <th width="15%">Type</th>\n                <th width="15%">Status</th>\n                {% endif %}\n                <th width="8%" class="text-end">Actions</th>\n            </tr>\n        </thead>\n        <tbody>\n            {% for event in sabc_events %}\n            <tr>\n                <td>\n                    <strong>{{ event.date }}</strong>\n                    <br><small class="text-muted">{{ event.day_name }}</small>\n                    {% if event.is_cancelled %}\n                    <br><span class="badge bg-danger">Cancelled</span>\n                    {% endif %}\n                </td>\n                <td><strong>{{ event.name }}</strong></td>\n                <td>{{ event.description }}</td>\n                \n                {% if event.event_type == 'sabc_tournament' %}\n                <td>\n                    {% if event.start_time %}\n                    <small class="text-muted">Start:</small> {{ event.start_time }}<br>\n                    {% endif %}\n                    {% if event.weigh_in_time %}\n                    <small class="text-muted">Weigh:</small> {{ event.weigh_in_time }}\n                    {% endif %}\n                </td>\n                <td>\n                    {% if event.entry_fee %}\n                    ${{ "%.2f"|format(event.entry_fee) }}\n                    {% else %}\n                    <span class="text-muted">-</span>\n                    {% endif %}\n                </td>\n                <td>\n                    {% if event.has_poll %}\n                        {% if event.poll_active %}\n                            <span class="badge bg-warning">\n                                <i class="bi bi-clock-history me-1"></i>Active\n                            </span>\n                        {% else %}\n                            <span class="badge bg-success">\n                                <i class="bi bi-check-circle me-1"></i>Closed\n                            </span>\n                        {% endif %}\n                    {% else %}\n                        <a href="/admin/polls/create?event_id={{ event.id }}" class="btn btn-sm btn-outline-primary">\n                            <i class="bi bi-plus"></i> Create\n                        </a>\n                    {% endif %}\n                </td>\n                <td>\n                    {% if event.has_tournament %}\n                        {% if event.tournament_complete %}\n                            <span class="badge bg-success">\n                                <i class="bi bi-check-circle me-1"></i>Complete\n                            </span>\n                        {% else %}\n                            <span class="badge bg-warning">\n                                <i class="bi bi-clock me-1"></i>Upcoming\n                            </span>\n                        {% endif %}\n                    {% else %}\n                        <span class="badge bg-secondary">\n                            <i class="bi bi-calendar-plus me-1"></i>Not Created\n                        </span>\n                    {% endif %}\n                </td>\n                \n                {% elif event.event_type == 'federal_holiday' %}\n                <td>\n                    <span class="badge bg-info">\n                        <i class="bi bi-calendar-heart me-1"></i>{{ event.holiday_name or event.name }}\n                    </span>\n                </td>\n                <td>\n                    <small class="text-muted">Federal Holiday</small>\n                    {% if event.description %}\n                    <br>{{ event.description }}\n                    {% endif %}\n                </td>\n                \n                {% else %}\n                <td>\n                    {% if event.event_type == 'other_tournament' %}\n                        <span class="badge bg-warning"><i class="bi bi-calendar"></i> Tournament</span>\n                    {% elif event.event_type == 'club_event' %}\n                        <span class="badge bg-secondary"><i class="bi bi-calendar-event"></i> Club Event</span>\n                    {% else %}\n                        <span class="badge bg-light text-dark">{{ event.event_type }}</span>\n                    {% endif %}\n                </td>\n                <td>\n                    {% if event.is_cancelled %}\n                        <span class="badge bg-danger">Cancelled</span>\n                    {% else %}\n                        <span class="badge bg-success">Scheduled</span>\n                    {% endif %}\n                </td>\n                {% endif %}\n                \n                <td class="text-end">\n                    <div class="btn-group btn-group-sm">\n                        <button class="btn btn-warning edit-event-btn" \n                                data-event-id="{{ event.id }}"\n                                data-event-date="{{ event.date }}"\n                                data-event-type="{{ event.event_type }}"\n                                data-event-name="{{ event.name }}"\n                                data-event-description="{{ event.description }}"\n                                data-start-time="{{ event.start_time or '' }}"\n                                data-weigh-in-time="{{ event.weigh_in_time or '' }}"\n                                data-lake-name="{{ event.lake_name or '' }}"\n                                data-ramp-name="{{ event.ramp_name or '' }}"\n                                data-entry-fee="{{ event.entry_fee or 25.00 }}"\n                                data-holiday-name="{{ event.holiday_name or '' }}"\n                                data-is-cancelled="{{ event.is_cancelled|tojson }}"\n                                data-has-poll="{{ event.has_poll|tojson }}"\n                                data-poll-active="{{ event.poll_active|tojson }}">\n                            <i class="bi bi-pencil"></i>\n                        </button>\n                        <button class="btn btn-danger" onclick="deleteEvent({{ event.id }}, {{ (event.has_poll or event.has_tournament)|tojson }})">\n                            <i class="bi bi-trash"></i>\n                        </button>\n                    </div>\n                </td>\n            </tr>\n            {% endfor %}\n            \n            {% if not sabc_events %}\n            <tr>\n                <td colspan="8" class="text-center text-muted py-4">\n                    {% if request.url.path == '/admin/events' %}\n                        No events of this type found. Use the form above to create some!\n                    {% else %}\n                        No events found in this category.\n                    {% endif %}\n                </td>\n            </tr>\n            {% endif %}\n        </tbody>\n    </table>\n</div>
+<!-- Reusable events table for tabs -->
+<div class="table-responsive">
+    <table class="table table-hover mb-0">
+        <thead>
+            <tr>
+                <th width="15%">Date</th>
+                <th width="15%">Name</th>
+                <th width="20%">Description</th>
+                {% if sabc_events|selectattr('event_type', 'equalto', 'sabc_tournament')|list %}
+                <th width="10%">Times</th>
+                <th width="8%">Fee</th>
+                <th width="12%">Poll Status</th>
+                <th width="12%">Tournament</th>
+                {% elif sabc_events|selectattr('event_type', 'equalto', 'federal_holiday')|list %}
+                <th width="20%">Holiday</th>
+                <th width="20%">Details</th>
+                {% else %}
+                <th width="15%">Type</th>
+                <th width="15%">Status</th>
+                {% endif %}
+                <th width="8%" class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for event in sabc_events %}
+            <tr>
+                <td>
+                    <strong>{{ event.date }}</strong>
+                    <br><small class="text-muted">{{ event.day_name }}</small>
+                    {% if event.is_cancelled %}
+                    <br><span class="badge bg-danger">Cancelled</span>
+                    {% endif %}
+                </td>
+                <td><strong>{{ event.name }}</strong></td>
+                <td>{{ event.description }}</td>
+                
+                {% if event.event_type == 'sabc_tournament' %}
+                <td>
+                    {% if event.start_time %}
+                    <small class="text-muted">Start:</small> {{ event.start_time }}<br>
+                    {% endif %}
+                    {% if event.weigh_in_time %}
+                    <small class="text-muted">Weigh:</small> {{ event.weigh_in_time }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if event.entry_fee %}
+                    ${{ "%.2f"|format(event.entry_fee) }}
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if event.has_poll %}
+                        {% if event.poll_active %}
+                            <span class="badge bg-warning">
+                                <i class="bi bi-clock-history me-1"></i>Active
+                            </span>
+                        {% else %}
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle me-1"></i>Closed
+                            </span>
+                        {% endif %}
+                    {% else %}
+                        <a href="/admin/polls/create?event_id={{ event.id }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus"></i> Create
+                        </a>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if event.has_tournament %}
+                        {% if event.tournament_complete %}
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle me-1"></i>Complete
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning">
+                                <i class="bi bi-clock me-1"></i>Upcoming
+                            </span>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge bg-secondary">
+                            <i class="bi bi-calendar-plus me-1"></i>Not Created
+                        </span>
+                    {% endif %}
+                </td>
+                
+                {% elif event.event_type == 'federal_holiday' %}
+                <td>
+                    <span class="badge bg-info">
+                        <i class="bi bi-calendar-heart me-1"></i>{{ event.holiday_name or event.name }}
+                    </span>
+                </td>
+                <td>
+                    <small class="text-muted">Federal Holiday</small>
+                    {% if event.description %}
+                    <br>{{ event.description }}
+                    {% endif %}
+                </td>
+                
+                {% else %}
+                <td>
+                    {% if event.event_type == 'other_tournament' %}
+                        <span class="badge bg-warning"><i class="bi bi-calendar"></i> Tournament</span>
+                    {% elif event.event_type == 'club_event' %}
+                        <span class="badge bg-secondary"><i class="bi bi-calendar-event"></i> Club Event</span>
+                    {% else %}
+                        <span class="badge bg-light text-dark">{{ event.event_type }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if event.is_cancelled %}
+                        <span class="badge bg-danger">Cancelled</span>
+                    {% else %}
+                        <span class="badge bg-success">Scheduled</span>
+                    {% endif %}
+                </td>
+                {% endif %}
+                
+                <td class="text-end">
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-warning edit-event-btn" 
+                                data-event-id="{{ event.id }}"
+                                data-event-date="{{ event.date }}"
+                                data-event-type="{{ event.event_type }}"
+                                data-event-name="{{ event.name }}"
+                                data-event-description="{{ event.description }}"
+                                data-start-time="{{ event.start_time or '' }}"
+                                data-weigh-in-time="{{ event.weigh_in_time or '' }}"
+                                data-lake-name="{{ event.lake_name or '' }}"
+                                data-ramp-name="{{ event.ramp_name or '' }}"
+                                data-entry-fee="{{ event.entry_fee or 25.00 }}"
+                                data-holiday-name="{{ event.holiday_name or '' }}"
+                                data-is-cancelled="{{ event.is_cancelled|tojson }}"
+                                data-has-poll="{{ event.has_poll|tojson }}"
+                                data-poll-active="{{ event.poll_active|tojson }}">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteEvent({{ event.id }}, {{ (event.has_poll or event.has_tournament)|tojson }})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            
+            {% if not sabc_events %}
+            <tr>
+                <td colspan="8" class="text-center text-muted py-4">
+                    {% if request.url.path == '/admin/events' %}
+                        No events of this type found. Use the form above to create some!
+                    {% else %}
+                        No events found in this category.
+                    {% endif %}
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
