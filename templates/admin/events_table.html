@@ -27,9 +27,6 @@
                 <td>
                     <strong>{{ event.date }}</strong>
                     <br><small class="text-muted">{{ event.day_name }}</small>
-                    {% if event.is_cancelled %}
-                    <br><span class="badge bg-danger">Cancelled</span>
-                    {% endif %}
                 </td>
                 <td><strong>{{ event.name }}</strong></td>
                 <td>{{ event.description }}</td>
@@ -109,11 +106,7 @@
                     {% endif %}
                 </td>
                 <td>
-                    {% if event.is_cancelled %}
-                        <span class="badge bg-danger">Cancelled</span>
-                    {% else %}
                         <span class="badge bg-success">Scheduled</span>
-                    {% endif %}
                 </td>
                 {% endif %}
                 
@@ -131,7 +124,6 @@
                                 data-ramp-name="{{ event.ramp_name or '' }}"
                                 data-entry-fee="{{ event.entry_fee or 25.00 }}"
                                 data-holiday-name="{{ event.holiday_name or '' }}"
-                                data-is-cancelled="{{ event.is_cancelled|tojson }}"
                                 data-has-poll="{{ event.has_poll|tojson }}"
                                 data-poll-active="{{ event.poll_active|tojson }}">
                             <i class="bi bi-pencil"></i>

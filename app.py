@@ -888,7 +888,6 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
                 e.lake_name,
                 e.ramp_name,
                 e.entry_fee,
-                e.is_cancelled,
                 e.holiday_name
             FROM events e
             WHERE e.date >= date('now')
@@ -916,8 +915,7 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
                 "lake_name": event[13],
                 "ramp_name": event[14],
                 "entry_fee": event[15],
-                "is_cancelled": bool(event[16]),
-                "holiday_name": event[17],
+                "holiday_name": event[16],
             }
             for event in events
         ]
@@ -940,7 +938,6 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
                 e.lake_name,
                 e.ramp_name,
                 e.entry_fee,
-                e.is_cancelled,
                 e.holiday_name
             FROM events e
             WHERE e.date < date('now')
@@ -966,8 +963,7 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
                 "lake_name": event[11],
                 "ramp_name": event[12],
                 "entry_fee": event[13],
-                "is_cancelled": bool(event[14]),
-                "holiday_name": event[15],
+                "holiday_name": event[14],
             }
             for event in past_events
         ]
@@ -1218,8 +1214,8 @@ async def bulk_create_holidays(request: Request):
             # Create the holiday event
             db(
                 """
-                INSERT INTO events (date, year, name, event_type, description, holiday_name, is_cancelled)
-                VALUES (?, ?, ?, 'federal_holiday', ?, ?, 0)
+                INSERT INTO events (date, year, name, event_type, description, holiday_name)
+                VALUES (?, ?, ?, 'federal_holiday', ?, ?)
             """,
                 (
                     holiday_date,
@@ -1310,8 +1306,8 @@ async def bulk_create_tournaments(request: Request):
             db(
                 """
                 INSERT INTO events (date, year, name, event_type, description, 
-                                  start_time, weigh_in_time, entry_fee, is_cancelled)
-                VALUES (?, ?, ?, 'sabc_tournament', ?, '06:00', '15:00', 25.00, 0)
+                                  start_time, weigh_in_time, entry_fee)
+                VALUES (?, ?, ?, 'sabc_tournament', ?, '06:00', '15:00', 25.00)
             """,
                 (
                     tournament_date_str,
@@ -1350,7 +1346,6 @@ async def create_event(
     ramp_name: str = Form(default=""),
     entry_fee: float = Form(default=25.00),
     holiday_name: str = Form(default=""),
-    is_cancelled: str = Form(default="false"),
 ):
     """Create a new event and optionally auto-create poll for SABC tournaments."""
     if isinstance(user := admin(request), RedirectResponse):
@@ -1381,10 +1376,10 @@ async def create_event(
             """
             INSERT INTO events (date, year, name, event_type, description,
                               start_time, weigh_in_time, lake_name, ramp_name, 
-                              entry_fee, holiday_name, is_cancelled)
+                              entry_fee, holiday_name)
             VALUES (:date, :year, :name, :event_type, :description,
                    :start_time, :weigh_in_time, :lake_name, :ramp_name,
-                   :entry_fee, :holiday_name, :is_cancelled)
+                   :entry_fee, :holiday_name)
         """,
             {
                 "date": date,
@@ -1398,7 +1393,6 @@ async def create_event(
                 "ramp_name": ramp_name if ramp_name else None,
                 "entry_fee": entry_fee if event_type == "sabc_tournament" else None,
                 "holiday_name": holiday_name if event_type == "federal_holiday" else None,
-                "is_cancelled": is_cancelled.lower() == "true",
             },
         )
 
@@ -1465,7 +1459,7 @@ async def get_event_info(request: Request, event_id: int):
             """
             SELECT e.id, e.date, e.name, e.description, e.event_type,
                    e.start_time, e.weigh_in_time, e.lake_name, e.ramp_name, 
-                   e.entry_fee, e.is_cancelled, e.holiday_name,
+                   e.entry_fee, e.holiday_name,
                    p.closes_at, p.starts_at, p.id as poll_id, p.closed
             FROM events e
             LEFT JOIN polls p ON p.event_id = e.id
@@ -1490,9 +1484,8 @@ async def get_event_info(request: Request, event_id: int):
                     "lake_name": event[7] or "",
                     "ramp_name": event[8] or "",
                     "entry_fee": float(event[9]) if event[9] else 25.00,
-                    "is_cancelled": bool(event[10]),
-                    "holiday_name": event[11] or "",
-                    "poll_closes_at": event[12],
+                    "holiday_name": event[10] or "",
+                    "poll_closes_at": event[11],
                     "poll_starts_at": event[13],
                     "poll_id": event[14],
                     "poll_closed": bool(event[15]) if event[15] is not None else None,
@@ -1581,14 +1574,10 @@ async def edit_event(
     ramp_name: str = Form(default=""),
     entry_fee: float = Form(default=25.00),
     holiday_name: str = Form(default=""),
-    is_cancelled: str = Form(default="false"),
 ):
     """Edit an existing event."""
     if isinstance(user := admin(request), RedirectResponse):
         return user
-
-    # Debug logging
-    print(f"DEBUG: Received is_cancelled value: '{is_cancelled}' (type: {type(is_cancelled)})")
 
     try:
         from datetime import datetime
@@ -1630,7 +1619,7 @@ async def edit_event(
             SET date = :date, year = :year, name = :name, event_type = :event_type, 
                 description = :description, start_time = :start_time, weigh_in_time = :weigh_in_time,
                 lake_name = :lake_name, ramp_name = :ramp_name, entry_fee = :entry_fee,
-                holiday_name = :holiday_name, is_cancelled = :is_cancelled
+                holiday_name = :holiday_name
             WHERE id = :id
         """,
             {
@@ -1645,7 +1634,6 @@ async def edit_event(
                 "ramp_name": ramp_name if ramp_name else None,
                 "entry_fee": entry_fee if event_type == "sabc_tournament" else None,
                 "holiday_name": holiday_name if holiday_name and event_type == "federal_holiday" else None,
-                "is_cancelled": is_cancelled.lower() == "true",
                 "id": event_id,
             },
         )

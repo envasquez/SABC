@@ -18,9 +18,6 @@
             <tr>
                 <td>
                     {{ event.date }}
-                    {% if event.is_cancelled %}
-                    <br><span class="badge bg-danger badge-sm">Cancelled</span>
-                    {% endif %}
                 </td>
                 <td>
                     {% if event.event_type == 'sabc_tournament' %}
