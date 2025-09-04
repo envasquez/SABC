@@ -26,7 +26,7 @@ help:
 # Install test dependencies
 install:
 	@echo "📦 Installing test dependencies..."
-	pip install -r test_requirements.txt
+	pip install -r tests/test_requirements.txt
 	playwright install chromium
 	@echo "✅ Dependencies installed"
 
@@ -55,7 +55,7 @@ test-frontend:
 # Run integration tests
 test-integration:
 	@echo "🔗 Running integration tests..."
-	python -m pytest test_integration.py -v -m integration
+	python -m pytest tests/test_integration.py -v -m integration
 
 # Run quick test subset
 test-quick:
@@ -71,7 +71,7 @@ test-filter:
 # Generate coverage report
 coverage:
 	@echo "📊 Generating coverage report..."
-	python -m pytest test_backend.py --cov=app --cov-report=html --cov-report=term
+	python -m pytest tests/test_backend.py --cov=app --cov-report=html --cov-report=term
 	@echo "📁 Coverage report: htmlcov/index.html"
 
 # Run linting
@@ -118,28 +118,28 @@ db-reset:
 # Performance testing
 test-performance:
 	@echo "⚡ Running performance tests..."
-	python -m pytest test_backend.py::TestPerformance -v
+	python -m pytest tests/test_backend.py::TestPerformance -v
 
 # Accessibility testing
 test-accessibility:
 	@echo "♿ Running accessibility tests..."
-	python -m pytest test_frontend.py::TestAccessibility -v
+	python -m pytest tests/test_frontend.py::TestAccessibility -v
 
 # Security testing  
 test-security:
 	@echo "🔒 Running security tests..."
-	python -m pytest test_backend.py::TestSecurity -v
+	python -m pytest tests/test_backend.py::TestSecurity -v
 
 # CI/CD pipeline commands
 ci-test:
 	@echo "🤖 Running CI tests..."
 	python run_tests.py --backend-only
-	python -m pytest test_integration.py -v
+	python -m pytest tests/test_integration.py -v
 
 # Generate test data
 generate-test-data:
 	@echo "📝 Generating test data..."
-	python -c "from conftest import test_database; print('Test data generated')"
+	python -c "from tests.conftest import test_database; print('Test data generated')"
 
 # Validate configuration
 validate-config:
@@ -161,11 +161,11 @@ docs:
 # Advanced test commands
 test-stress:
 	@echo "💪 Running stress tests..."
-	python -m pytest test_integration.py::TestSystemLimits -v
+	python -m pytest tests/test_integration.py::TestSystemLimits -v
 
 test-parallel:
 	@echo "⚡ Running tests in parallel..."
-	python -m pytest -n auto test_backend.py
+	python -m pytest -n auto tests/test_backend.py
 
 # Environment-specific commands
 test-local: test-backend test-integration
@@ -175,7 +175,7 @@ test-production: test-security test-performance
 # Development helpers
 watch-tests:
 	@echo "👀 Watching tests..."
-	python -m pytest-watch test_backend.py
+	python -m pytest-watch tests/test_backend.py
 
 check-all: lint test coverage
 	@echo "✅ All checks passed"

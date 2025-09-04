@@ -616,4 +616,4 @@ class TestPerformance:
 
 if __name__ == "__main__":
     # Run tests with coverage
-    pytest.main([__file__, "-v", "--cov=app", "--cov-report=html"])
+    pytest.main(["tests/test_backend.py", "-v", "--cov=app", "--cov-report=html"])

@@ -288,4 +288,4 @@ class TestCrossPageNavigation:
 
 
 if __name__ == "__main__":
-    pytest.main([__file__, "-v", "-m", "integration"])
+    pytest.main(["tests/test_integration.py", "-v", "-m", "integration"])

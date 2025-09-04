@@ -159,7 +159,7 @@ class TestRunner:
         try:
             cmd = [
                 "python", "-m", "pytest", 
-                "test_backend.py",
+                "tests/test_backend.py",
                 "-v",
                 "--tb=short",
                 "--cov=app",
@@ -204,7 +204,7 @@ class TestRunner:
             
             cmd = [
                 "python", "-m", "pytest",
-                "test_frontend.py",
+                "tests/test_frontend.py",
                 "-v",
                 "--tb=short",
                 "--html=frontend_test_report.html",
