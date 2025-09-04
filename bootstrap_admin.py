@@ -4,6 +4,7 @@ Bootstrap script to create the first admin user for SABC
 Run this script after setting up the database to create initial admin access.
 """
 
+import argparse
 import getpass
 import re
 import sys
@@ -26,7 +27,7 @@ def hash_password(password):
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
-def create_admin_user():
+def create_admin_user(email=None, password=None, name=None, force=False):
     """Create the first admin user"""
     print("🎣 SABC Admin User Setup")
     print("=" * 40)
@@ -42,10 +43,13 @@ def create_admin_user():
 
             if result[0] > 0:
                 print(f"⚠️  {result[0]} admin user(s) already exist.")
-                confirm = input("Do you want to create another admin? (y/N): ").lower()
-                if confirm != "y":
-                    print("Exiting...")
-                    return False
+                if force:
+                    print("Force flag set, creating admin anyway...")
+                else:
+                    confirm = input("Do you want to create another admin? (y/N): ").lower()
+                    if confirm != "y":
+                        print("Exiting...")
+                        return False
 
     except SQLAlchemyError as e:
         print(f"❌ Database connection failed: {e}")
@@ -53,49 +57,77 @@ def create_admin_user():
         return False
 
     # Get user information
-    print("\nEnter admin user details:")
+    if not all([name, email, password]):
+        print("\nEnter admin user details:")
 
     # Name
-    while True:
-        name = input("Full Name: ").strip()
-        if name:
-            break
-        print("Name cannot be empty.")
+    if not name:
+        while True:
+            name = input("Full Name: ").strip()
+            if name:
+                break
+            print("Name cannot be empty.")
 
     # Email
-    while True:
-        email = input("Email Address: ").strip().lower()
-        if validate_email(email):
-            # Check if email already exists
-            try:
-                with engine.connect() as conn:
-                    result = conn.execute(
-                        text("SELECT COUNT(*) FROM anglers WHERE email = :email"), {"email": email}
-                    ).fetchone()
+    if not email:
+        while True:
+            email = input("Email Address: ").strip().lower()
+            if validate_email(email):
+                # Check if email already exists
+                try:
+                    with engine.connect() as conn:
+                        result = conn.execute(
+                            text("SELECT COUNT(*) FROM anglers WHERE email = :email"), {"email": email}
+                        ).fetchone()
 
-                    if result[0] > 0:
-                        print("❌ Email already exists. Please use a different email.")
-                        continue
-                    break
-            except SQLAlchemyError as e:
-                print(f"❌ Database error: {e}")
-                continue
-        else:
-            print("❌ Invalid email format.")
+                        if result[0] > 0:
+                            print("❌ Email already exists. Please use a different email.")
+                            continue
+                        break
+                except SQLAlchemyError as e:
+                    print(f"❌ Database error: {e}")
+                    continue
+            else:
+                print("❌ Invalid email format.")
+    else:
+        # Validate provided email
+        if not validate_email(email):
+            print(f"❌ Invalid email format: {email}")
+            return False
+        
+        # Check if email already exists
+        try:
+            with engine.connect() as conn:
+                result = conn.execute(
+                    text("SELECT COUNT(*) FROM anglers WHERE email = :email"), {"email": email}
+                ).fetchone()
+
+                if result[0] > 0 and not force:
+                    print(f"❌ Email already exists: {email}")
+                    return False
+        except SQLAlchemyError as e:
+            print(f"❌ Database error: {e}")
+            return False
 
     # Password
-    while True:
-        password = getpass.getpass("Password (min 8 characters): ")
+    if not password:
+        while True:
+            password = getpass.getpass("Password (min 8 characters): ")
+            if len(password) < 8:
+                print("❌ Password must be at least 8 characters.")
+                continue
+
+            password_confirm = getpass.getpass("Confirm Password: ")
+            if password != password_confirm:
+                print("❌ Passwords do not match.")
+                continue
+
+            break
+    else:
+        # Validate provided password
         if len(password) < 8:
             print("❌ Password must be at least 8 characters.")
-            continue
-
-        password_confirm = getpass.getpass("Confirm Password: ")
-        if password != password_confirm:
-            print("❌ Passwords do not match.")
-            continue
-
-        break
+            return False
 
     # Confirm creation
     print("\nCreating admin user:")
@@ -104,10 +136,11 @@ def create_admin_user():
     print("Admin: Yes")
     print("Member: Yes")
 
-    confirm = input("\nCreate this admin user? (y/N): ").lower()
-    if confirm != "y":
-        print("❌ User creation cancelled.")
-        return False
+    if not force:
+        confirm = input("\nCreate this admin user? (y/N): ").lower()
+        if confirm != "y":
+            print("❌ User creation cancelled.")
+            return False
 
     # Create user
     try:
@@ -163,18 +196,29 @@ def list_admin_users():
 
 def main():
     """Main function"""
-    if len(sys.argv) > 1 and sys.argv[1] == "list":
+    parser = argparse.ArgumentParser(description="SABC Admin Bootstrap Script")
+    parser.add_argument("action", nargs="?", default="create", 
+                       choices=["create", "list"], 
+                       help="Action to perform (default: create)")
+    parser.add_argument("--email", help="Admin email address")
+    parser.add_argument("--password", help="Admin password (min 8 characters)")
+    parser.add_argument("--name", help="Admin full name")
+    parser.add_argument("--force", action="store_true", 
+                       help="Force creation without prompts (for CI)")
+    
+    args = parser.parse_args()
+    
+    if args.action == "list":
         list_admin_users()
         return
 
-    if len(sys.argv) > 1 and sys.argv[1] == "--help":
-        print("SABC Admin Bootstrap Script")
-        print("\nUsage:")
-        print("  python bootstrap_admin.py       - Create new admin user")
-        print("  python bootstrap_admin.py list  - List existing admin users")
-        return
-
-    success = create_admin_user()
+    success = create_admin_user(
+        email=args.email,
+        password=args.password, 
+        name=args.name,
+        force=args.force
+    )
+    
     if success:
         print("\n🚀 Next steps:")
         print("1. Start the development server: nix develop -> start-app")

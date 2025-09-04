@@ -3416,6 +3416,32 @@ async def awards(request: Request, year: int = None):
     return templates.TemplateResponse("awards.html", ctx)
 
 
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for CI/CD and monitoring."""
+    try:
+        # Test database connection
+        result = db("SELECT COUNT(*) as count FROM anglers")
+        angler_count = result[0]["count"] if result else 0
+        
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "angler_count": angler_count,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "unhealthy",
+                "database": "disconnected", 
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        )
+
+
 # Catch-all route for static pages (must be last)
 @app.get("/{page:path}")
 async def page(request: Request, page: str = "", p: int = 1):

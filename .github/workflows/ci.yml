@@ -1,0 +1,189 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r tests/test_requirements.txt
+    
+    - name: Install Playwright browsers
+      run: |
+        playwright install chromium
+    
+    - name: Set up test database
+      run: |
+        python database.py
+        python bootstrap_admin.py --email "admin@test.com" --password "adminpass123" --name "CI Admin" --force
+    
+    - name: Run linting checks
+      run: |
+        ruff check . --output-format=github
+    
+    - name: Run type checking
+      run: |
+        mypy app.py --ignore-missing-imports --no-strict-optional
+    
+    - name: Run backend tests
+      run: |
+        python run_tests.py --backend-only
+    
+    - name: Run frontend tests (headless)
+      run: |
+        python run_tests.py --frontend-only
+    
+    - name: Run integration tests
+      run: |
+        python -m pytest tests/test_integration.py -v -m integration
+    
+    - name: Generate coverage report
+      run: |
+        python -m pytest tests/test_backend.py --cov=app --cov-report=xml --cov-report=term
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: backend
+        name: codecov-umbrella
+        fail_ci_if_error: false
+    
+    - name: Archive test reports
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-reports-python-${{ matrix.python-version }}
+        path: |
+          htmlcov/
+          *_test_report.html
+          *.xml
+          test_report.md
+
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install safety bandit
+    
+    - name: Run safety check (known vulnerabilities)
+      run: |
+        safety check --json --output safety-report.json || true
+    
+    - name: Run bandit security scan
+      run: |
+        bandit -r . -f json -o bandit-report.json || true
+    
+    - name: Upload security reports
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: |
+          safety-report.json
+          bandit-report.json
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Test application startup
+      run: |
+        python database.py
+        timeout 10s uvicorn app:app --host 127.0.0.1 --port 8000 &
+        sleep 5
+        curl -f http://127.0.0.1:8000/ || exit 1
+        curl -f http://127.0.0.1:8000/health || exit 1
+    
+    - name: Build deployment package
+      run: |
+        mkdir -p dist
+        tar -czf dist/sabc-${{ github.sha }}.tar.gz \
+          --exclude='.git' \
+          --exclude='tests' \
+          --exclude='htmlcov' \
+          --exclude='*.pyc' \
+          --exclude='__pycache__' \
+          --exclude='.pytest_cache' \
+          .
+    
+    - name: Upload build artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: deployment-package
+        path: dist/sabc-${{ github.sha }}.tar.gz
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: [test, security, build]
+    if: always()
+    
+    steps:
+    - name: Notify on success
+      if: ${{ needs.test.result == 'success' && needs.security.result == 'success' && needs.build.result == 'success' }}
+      run: |
+        echo "✅ All CI checks passed successfully!"
+        echo "- Tests: ${{ needs.test.result }}"
+        echo "- Security: ${{ needs.security.result }}" 
+        echo "- Build: ${{ needs.build.result }}"
+    
+    - name: Notify on failure
+      if: ${{ needs.test.result == 'failure' || needs.security.result == 'failure' || needs.build.result == 'failure' }}
+      run: |
+        echo "❌ CI pipeline failed!"
+        echo "- Tests: ${{ needs.test.result }}"
+        echo "- Security: ${{ needs.security.result }}"
+        echo "- Build: ${{ needs.build.result }}"
+        exit 1
