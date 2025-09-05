@@ -1,9 +1,12 @@
 #!/bin/bash
 
 # Run CI tests locally - mimics what GitHub Actions does
-# Usage: ./run_ci_locally.sh
+# Usage: ./tests/run_ci_locally.sh (from project root)
 
 set -e  # Exit on error
+
+# Ensure we're in the project root
+cd "$(dirname "$0")/.."
 
 echo "🚀 Running CI tests locally..."
 echo "================================"
