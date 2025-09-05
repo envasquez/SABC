@@ -2,17 +2,17 @@
 Pytest configuration and shared fixtures for SABC tests.
 """
 
-import pytest
-import tempfile
 import shutil
 import sqlite3
+import tempfile
 from pathlib import Path
+
+import pytest
 from fastapi.testclient import TestClient
 from playwright.sync_api import sync_playwright
 
 # Import app components
 from app import app
-from database import init_db, create_views
 
 
 @pytest.fixture(scope="session")
@@ -21,44 +21,42 @@ def test_database():
     # Create temporary directory
     temp_dir = tempfile.mkdtemp()
     test_db_path = Path(temp_dir) / "test.db"
-    
+
     # Initialize test database
     conn = sqlite3.connect(test_db_path)
     cursor = conn.cursor()
-    
+
     # Run table creation from database.py
     from database import TABLE_DEFINITIONS
-    
+
     for table_def in TABLE_DEFINITIONS:
         cursor.execute(f"CREATE TABLE IF NOT EXISTS {table_def}")
-    
+
     # Add test data
     test_data = [
         # Test users
-        """INSERT INTO anglers (id, name, email, password, member, is_admin, active) VALUES 
+        """INSERT INTO anglers (id, name, email, password, member, is_admin, active) VALUES
            (1, 'Admin User', 'admin@test.com', '$2b$12$test', 1, 1, 1),
            (2, 'Member User', 'member@test.com', '$2b$12$test', 1, 0, 1),
            (3, 'Guest User', 'guest@test.com', '$2b$12$test', 0, 0, 1)""",
-        
         # Test events
         """INSERT INTO events (id, date, year, name, event_type, description) VALUES
            (1, '2025-06-15', 2025, 'June Tournament', 'sabc_tournament', 'Test tournament'),
            (2, '2025-07-04', 2025, 'Independence Day', 'federal_holiday', 'Federal holiday'),
            (3, '2025-08-15', 2025, 'August Tournament', 'sabc_tournament', 'Another tournament')""",
-        
         # Test news
         """INSERT INTO news (id, title, content, author_id, published, priority) VALUES
            (1, 'Test News', 'Test content', 1, 1, 0),
            (2, 'Draft News', 'Draft content', 1, 0, 1)""",
     ]
-    
+
     for sql in test_data:
         cursor.execute(sql)
-    
+
     conn.commit()
-    
+
     yield test_db_path
-    
+
     # Cleanup
     conn.close()
     shutil.rmtree(temp_dir)
@@ -74,10 +72,7 @@ def client():
 def authenticated_client(client):
     """Authenticated test client."""
     # Login
-    response = client.post("/login", data={
-        "email": "member@test.com",
-        "password": "testpass"
-    })
+    client.post("/login", data={"email": "member@test.com", "password": "testpass"})
     return client
 
 
@@ -85,10 +80,7 @@ def authenticated_client(client):
 def admin_client(client):
     """Admin authenticated test client."""
     # Login as admin
-    response = client.post("/login", data={
-        "email": "admin@test.com", 
-        "password": "adminpass"
-    })
+    client.post("/login", data={"email": "admin@test.com", "password": "adminpass"})
     return client
 
 
@@ -98,7 +90,7 @@ def browser():
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=True,  # Set to False for debugging
-            args=['--disable-web-security', '--disable-features=VizDisplayCompositor']
+            args=["--disable-web-security", "--disable-features=VizDisplayCompositor"],
         )
         yield browser
         browser.close()
@@ -108,56 +100,51 @@ def browser():
 def page(browser):
     """Playwright page for frontend tests."""
     context = browser.new_context(
-        viewport={"width": 1920, "height": 1080},
-        ignore_https_errors=True
+        viewport={"width": 1920, "height": 1080}, ignore_https_errors=True
     )
     page = context.new_page()
-    
+
     # Set longer timeout for slow operations
     page.set_default_timeout(30000)
-    
+
     yield page
-    
+
     context.close()
 
 
 @pytest.fixture
 def authenticated_page(browser):
     """Authenticated Playwright page."""
-    context = browser.new_context(
-        viewport={"width": 1920, "height": 1080}
-    )
+    context = browser.new_context(viewport={"width": 1920, "height": 1080})
     page = context.new_page()
-    
+
     # Login process
     page.goto("http://localhost:8000/login")
     page.fill('input[name="email"]', "member@test.com")
     page.fill('input[name="password"]', "testpass")
     page.click('button[type="submit"]')
     page.wait_for_url("http://localhost:8000/")
-    
+
     yield page
-    
+
     context.close()
 
 
 @pytest.fixture
 def admin_page(browser):
     """Admin authenticated Playwright page."""
-    context = browser.new_context(
-        viewport={"width": 1920, "height": 1080}
-    )
+    context = browser.new_context(viewport={"width": 1920, "height": 1080})
     page = context.new_page()
-    
+
     # Admin login
     page.goto("http://localhost:8000/login")
     page.fill('input[name="email"]', "admin@test.com")
     page.fill('input[name="password"]', "adminpass")
     page.click('button[type="submit"]')
     page.wait_for_url("http://localhost:8000/")
-    
+
     yield page
-    
+
     context.close()
 
 
@@ -168,13 +155,13 @@ def sample_event_data():
     return {
         "date": "2025-12-01",
         "name": "Test Tournament",
-        "event_type": "sabc_tournament", 
+        "event_type": "sabc_tournament",
         "description": "Test tournament event",
         "start_time": "06:00",
         "weigh_in_time": "15:00",
         "entry_fee": 25.00,
         "lake_name": "Test Lake",
-        "ramp_name": "Test Ramp"
+        "ramp_name": "Test Ramp",
     }
 
 
@@ -185,7 +172,7 @@ def sample_news_data():
         "title": "Test News Article",
         "content": "This is test news content.",
         "published": True,
-        "priority": 0
+        "priority": 0,
     }
 
 
@@ -197,8 +184,8 @@ def sample_poll_data():
         "poll_type": "tournament_location",
         "options": [
             {"lake": "Lake Travis", "ramp": "Mansfield Dam"},
-            {"lake": "Lake Austin", "ramp": "Red Bud Isle"}
-        ]
+            {"lake": "Lake Austin", "ramp": "Red Bud Isle"},
+        ],
     }
 
 
@@ -234,11 +221,11 @@ def pytest_runtest_setup(item):
 def track_performance(request):
     """Track test performance automatically."""
     import time
-    
+
     start_time = time.time()
-    
+
     yield
-    
+
     duration = time.time() - start_time
     if duration > 5.0:  # Log slow tests
         print(f"\n⚠️  Slow test: {request.node.name} took {duration:.2f}s")

@@ -90,13 +90,13 @@ clean-tests
 ### Manual Testing (without Nix)
 ```bash
 # Run test suite directly
-python run_tests.py
+python tests/run_tests.py
 
 # Run with specific options
-python run_tests.py --backend-only
-python run_tests.py --frontend-only
-python run_tests.py --filter "test_name"
-python run_tests.py --headed  # Show browser for frontend tests
+python tests/run_tests.py --backend-only
+python tests/run_tests.py --frontend-only
+python tests/run_tests.py --filter "test_name"
+python tests/run_tests.py --headed  # Show browser for frontend tests
 ```
 
 ## Test Configuration
@@ -212,10 +212,10 @@ Frontend tests use Playwright for cross-browser testing:
 ### Headed vs Headless
 ```bash
 # Run with visible browser (for debugging)
-python run_tests.py --frontend-only --headed
+python tests/run_tests.py --frontend-only --headed
 
 # Run headless (default)
-python run_tests.py --frontend-only
+python tests/run_tests.py --frontend-only
 ```
 
 ## Performance Testing
@@ -337,7 +337,7 @@ playwright install
 #### Permission Errors
 ```bash
 # Fix file permissions
-chmod +x run_tests.py
+chmod +x tests/run_tests.py
 ```
 
 ### Test Environment Issues

@@ -65,7 +65,7 @@ deploy-app       # Run all checks for deployment
 # Manual commands (if not using Nix)
 python database.py              # Initialize database
 python bootstrap_admin.py       # Create admin user
-python run_tests.py             # Run test suite
+python tests/run_tests.py       # Run test suite
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
 ```
 

@@ -77,19 +77,19 @@
         runTests = pkgs.writeShellScriptBin "run-tests" ''
           echo "🧪 Running SABC Tests"
           echo "===================="
-          python run_tests.py
+          python tests/run_tests.py
         '';
 
         testBackend = pkgs.writeShellScriptBin "test-backend" ''
           echo "🧪 Running Backend Tests"
           echo "======================="
-          python run_tests.py --backend-only
+          python tests/run_tests.py --backend-only
         '';
 
         testFrontend = pkgs.writeShellScriptBin "test-frontend" ''
           echo "🖥️  Running Frontend Tests"
           echo "========================"
-          python run_tests.py --frontend-only
+          python tests/run_tests.py --frontend-only
         '';
 
         testIntegration = pkgs.writeShellScriptBin "test-integration" ''
@@ -101,7 +101,7 @@
         testQuick = pkgs.writeShellScriptBin "test-quick" ''
           echo "⚡ Running Quick Tests"
           echo "====================="
-          python run_tests.py --filter "not slow"
+          python tests/run_tests.py --filter "not slow"
         '';
 
         testCoverage = pkgs.writeShellScriptBin "test-coverage" ''

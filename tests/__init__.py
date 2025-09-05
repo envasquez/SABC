@@ -6,7 +6,7 @@ tournament management system.
 
 Test Categories:
 - Backend: API endpoints, database operations, business logic
-- Frontend: User interface, browser interactions, accessibility  
+- Frontend: User interface, browser interactions, accessibility
 - Integration: End-to-end workflows, system behavior
 
 Usage:

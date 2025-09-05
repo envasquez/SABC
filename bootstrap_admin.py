@@ -7,7 +7,6 @@ Run this script after setting up the database to create initial admin access.
 import argparse
 import getpass
 import re
-import sys
 
 import bcrypt
 from sqlalchemy import create_engine, text
@@ -77,7 +76,8 @@ def create_admin_user(email=None, password=None, name=None, force=False):
                 try:
                     with engine.connect() as conn:
                         result = conn.execute(
-                            text("SELECT COUNT(*) FROM anglers WHERE email = :email"), {"email": email}
+                            text("SELECT COUNT(*) FROM anglers WHERE email = :email"),
+                            {"email": email},
                         ).fetchone()
 
                         if result[0] > 0:
@@ -94,7 +94,7 @@ def create_admin_user(email=None, password=None, name=None, force=False):
         if not validate_email(email):
             print(f"❌ Invalid email format: {email}")
             return False
-        
+
         # Check if email already exists
         try:
             with engine.connect() as conn:
@@ -197,28 +197,30 @@ def list_admin_users():
 def main():
     """Main function"""
     parser = argparse.ArgumentParser(description="SABC Admin Bootstrap Script")
-    parser.add_argument("action", nargs="?", default="create", 
-                       choices=["create", "list"], 
-                       help="Action to perform (default: create)")
+    parser.add_argument(
+        "action",
+        nargs="?",
+        default="create",
+        choices=["create", "list"],
+        help="Action to perform (default: create)",
+    )
     parser.add_argument("--email", help="Admin email address")
     parser.add_argument("--password", help="Admin password (min 8 characters)")
     parser.add_argument("--name", help="Admin full name")
-    parser.add_argument("--force", action="store_true", 
-                       help="Force creation without prompts (for CI)")
-    
+    parser.add_argument(
+        "--force", action="store_true", help="Force creation without prompts (for CI)"
+    )
+
     args = parser.parse_args()
-    
+
     if args.action == "list":
         list_admin_users()
         return
 
     success = create_admin_user(
-        email=args.email,
-        password=args.password, 
-        name=args.name,
-        force=args.force
+        email=args.email, password=args.password, name=args.name, force=args.force
     )
-    
+
     if success:
         print("\n🚀 Next steps:")
         print("1. Start the development server: nix develop -> start-app")
