@@ -38,6 +38,23 @@ python validate_against_reference.py
 
 **If validation fails, STOP and fix discrepancies before proceeding.**
 
+## CRITICAL RULES
+
+### NEVER CONDITIONALLY IMPORT MODULES
+**NEVER EVER EVER EVER conditionally import things.** All dependencies that are needed for testing must be properly installed in the environment. Do not use try/except blocks around imports. If something needs to be tested, the environment must be set up properly to support it.
+
+```python
+# ❌ NEVER DO THIS
+try:
+    from playwright.sync_api import sync_playwright
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
+
+# ✅ DO THIS INSTEAD  
+from playwright.sync_api import sync_playwright
+```
+
 ## Development Commands
 ```bash
 # Enter development environment (Nix required)

@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+
 from playwright.sync_api import sync_playwright
 
 # Import app components
