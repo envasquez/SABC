@@ -6,13 +6,25 @@ import shutil
 import sqlite3
 import tempfile
 from pathlib import Path
+import asyncio
 
 import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
 from playwright.sync_api import sync_playwright
 
 # Import app components
 from app import app
+
+# Configure asyncio for pytest
+pytest_plugins = ('pytest_asyncio',)
+
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create an instance of the default event loop for the test session."""
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
 
 
 @pytest.fixture(scope="session")

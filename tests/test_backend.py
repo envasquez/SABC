@@ -712,19 +712,19 @@ class TestDatabase:
         """Test database check constraints."""
         cursor = test_db.cursor()
 
-        # Test that invalid event_type can be inserted (no constraint exists)
-        # This documents current behavior - constraint could be added later
+        # Test that event_type constraint is enforced
+        # Valid types: 'sabc_tournament', 'federal_holiday', 'other_tournament', 'club_event'
         try:
             cursor.execute("""
                 INSERT INTO events (date, year, name, event_type)
                 VALUES ('2025-01-01', 2025, 'Test Event', 'invalid_type')
             """)
             test_db.commit()
-            # Success means no constraint exists (current implementation)
-            assert True
+            # Should not reach here - constraint should prevent invalid type
+            assert False, "Event type constraint should have prevented invalid type"
         except sqlite3.IntegrityError:
-            # Would fail if constraint was added (future implementation)
-            assert False, "No event_type constraint expected in current implementation"
+            # Expected - constraint is working correctly
+            assert True
         finally:
             # Cleanup
             cursor.execute("DELETE FROM events WHERE name = 'Test Event'")

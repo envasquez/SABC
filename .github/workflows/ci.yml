@@ -45,7 +45,9 @@ jobs:
     
     - name: Set up test database
       run: |
+        rm -f sabc.db
         python database.py
+        python migrate_database.py
         python bootstrap_admin.py --email "admin@test.com" --password "adminpass123" --name "CI Admin" --force
     
     - name: Run linting checks

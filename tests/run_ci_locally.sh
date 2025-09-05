@@ -21,6 +21,7 @@ pip install pytest pytest-asyncio httpx
 echo "🗄️ Setting up test database..."
 rm -f sabc.db  # Clean slate
 python database.py
+python migrate_database.py
 python bootstrap_admin.py --email "admin@test.com" --password "adminpass123" --name "CI Admin" --force
 
 # Run backend tests
