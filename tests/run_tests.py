@@ -81,11 +81,21 @@ class TestRunner:
         cursor = conn.cursor()
 
         try:
-            # Test users
+            # Import bcrypt to hash passwords properly
+            import bcrypt
+            
+            # Create password hashes for frontend test users
+            admin_hash = bcrypt.hashpw("admin123".encode(), bcrypt.gensalt()).decode()
+            member_hash = bcrypt.hashpw("member123".encode(), bcrypt.gensalt()).decode()
+            guest_hash = bcrypt.hashpw("guest123".encode(), bcrypt.gensalt()).decode()
+            test_hash = bcrypt.hashpw("testpass".encode(), bcrypt.gensalt()).decode()
+            
+            # Test users with credentials that match frontend tests
             test_users = [
-                ("Test Admin", "admin@test.com", "$2b$12$hashedpassword", 1, 1, 1),  # admin
-                ("Test Member", "member@test.com", "$2b$12$hashedpassword", 1, 0, 1),  # member
-                ("Test Guest", "guest@test.com", "$2b$12$hashedpassword", 0, 0, 1),  # guest
+                ("Test Admin", "admin@sabc.com", admin_hash, 1, 1, 1),  # admin@sabc.com / admin123
+                ("Test Member", "member@sabc.com", member_hash, 1, 0, 1),  # member@sabc.com / member123
+                ("Test Guest", "guest@sabc.com", guest_hash, 0, 0, 1),  # guest@sabc.com / guest123
+                ("Test User", "test@sabc.com", test_hash, 1, 0, 1),  # test@sabc.com / testpass
             ]
 
             cursor.executemany(
@@ -240,9 +250,15 @@ class TestRunner:
 
         try:
             # Install playwright browsers if needed
-            subprocess.run(
-                ["python", "-m", "playwright", "install", "chromium"], capture_output=True
+            print("🔧 Installing Playwright browsers...")
+            install_result = subprocess.run(
+                ["python", "-m", "playwright", "install", "chromium"], 
+                capture_output=True, text=True
             )
+            if install_result.returncode != 0:
+                print(f"⚠️ Browser installation warning: {install_result.stderr}")
+            else:
+                print("✅ Playwright browsers ready")
 
             cmd = [
                 "python",
@@ -259,7 +275,8 @@ class TestRunner:
             if test_filter:
                 cmd.extend(["-k", test_filter])
 
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            # Run with a shorter timeout - if it takes this long, there's an issue
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)  # 1 minute
 
             # Parse results
             if result.returncode == 0:
@@ -281,8 +298,10 @@ class TestRunner:
             return result.returncode == 0
 
         except subprocess.TimeoutExpired:
-            print("⏰ Frontend tests timed out (5 minutes)")
-            self.test_results["frontend"]["errors"].append("Frontend tests timed out after 5 minutes")
+            print("⏰ Frontend tests timed out (1 minute)")
+            print("💡 This usually means authentication fixtures are hanging")
+            print("💡 Consider running: pytest tests/test_frontend.py::TestNavigation -v")
+            self.test_results["frontend"]["errors"].append("Frontend tests timed out after 1 minute")
             return False
         except Exception as e:
             print(f"❌ Error running frontend tests: {e}")

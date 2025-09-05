@@ -42,16 +42,26 @@ def admin_page(context: BrowserContext):
     """Create an authenticated admin page."""
     page = context.new_page()
 
-    # Navigate to login
-    page.goto("http://localhost:8000/login")
+    try:
+        # Navigate to login with timeout
+        page.goto("http://localhost:8000/login", timeout=5000)
 
-    # Login as admin (assuming admin user exists)
-    page.fill('input[name="email"]', "admin@sabc.com")
-    page.fill('input[name="password"]', "admin123")
-    page.click('button[type="submit"]')
+        # Login as admin
+        page.fill('input[name="email"]', "admin@sabc.com")
+        page.fill('input[name="password"]', "admin123")
+        
+        # Submit with explicit timeout
+        with page.expect_navigation(timeout=5000):
+            page.click('button[type="submit"]')
 
-    # Wait for redirect
-    page.wait_for_url("http://localhost:8000/")
+        # Verify we're no longer on login page
+        if "login" in page.url:
+            raise Exception(f"Admin login failed - still on login page: {page.url}")
+
+    except Exception as e:
+        print(f"Admin page fixture failed: {e}")
+        print(f"Current URL: {page.url}")
+        raise
 
     yield page
 
@@ -61,16 +71,26 @@ def member_page(context: BrowserContext):
     """Create an authenticated member page."""
     page = context.new_page()
 
-    # Navigate to login
-    page.goto("http://localhost:8000/login")
+    try:
+        # Navigate to login with timeout
+        page.goto("http://localhost:8000/login", timeout=5000)
 
-    # Login as member
-    page.fill('input[name="email"]', "member@sabc.com")
-    page.fill('input[name="password"]', "member123")
-    page.click('button[type="submit"]')
+        # Login as member
+        page.fill('input[name="email"]', "member@sabc.com")
+        page.fill('input[name="password"]', "member123")
+        
+        # Submit with explicit timeout
+        with page.expect_navigation(timeout=5000):
+            page.click('button[type="submit"]')
 
-    # Wait for redirect
-    page.wait_for_url("http://localhost:8000/")
+        # Verify we're no longer on login page
+        if "login" in page.url:
+            raise Exception(f"Member login failed - still on login page: {page.url}")
+
+    except Exception as e:
+        print(f"Member page fixture failed: {e}")
+        print(f"Current URL: {page.url}")
+        raise
 
     yield page
 
@@ -172,11 +192,19 @@ class TestAuthentication:
         """Test logout functionality."""
         # Click logout (might be in dropdown)
         member_page.click(".dropdown-toggle:has(.bi-person-gear)")
-        member_page.click('text="Logout"')
+        
+        # Wait for logout with explicit navigation expectation
+        with member_page.expect_navigation(timeout=5000):
+            member_page.click('text="Logout"')
 
-        # Should redirect to login page
-        member_page.wait_for_url("http://localhost:8000/login")
-        assert "login" in member_page.url
+        # Verify we're redirected after logout (should go to homepage)
+        member_page.wait_for_load_state("networkidle")
+        # After logout, user should be redirected to homepage and no longer authenticated
+        assert member_page.url == "http://localhost:8000/"
+        
+        # Verify we're logged out by checking if login link is visible
+        login_link = member_page.locator('a[href="/login"], button:text("Login")')
+        assert login_link.count() > 0
 
     def test_admin_dropdown_visibility(self, admin_page: Page):
         """Test admin dropdown only shows for admins."""
