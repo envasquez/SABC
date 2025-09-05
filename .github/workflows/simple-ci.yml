@@ -64,7 +64,7 @@ jobs:
     - name: Run basic backend tests (if available)
       run: |
         if [ -f "tests/test_backend.py" ]; then
-          python -m pytest tests/test_backend.py::TestAuthentication::test_login_page -v || echo "Some tests failed"
+          python -m pytest tests/test_backend.py::TestAuthentication -v || echo "Some tests failed"
         else
           echo "No backend tests found"
         fi
