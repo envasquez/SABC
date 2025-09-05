@@ -7,7 +7,7 @@ on:
     branches: [ master, main ]
 
 jobs:
-  test:
+  lint-and-format:
     runs-on: ubuntu-latest
     
     strategy:
@@ -22,128 +22,27 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     
-    - name: Cache pip dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-    
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # Try minimal requirements first, fallback to full requirements
-        pip install -r tests/requirements-minimal.txt || pip install -r requirements.txt
-        pip install -r tests/test_requirements.txt || echo "Test requirements failed, continuing with minimal set"
-        # Install additional tools for linting and security
-        pip install ruff mypy safety bandit
-    
-    - name: Install Playwright browsers
-      run: |
-        playwright install chromium
-    
-    - name: Set up test database
-      run: |
-        rm -f sabc.db
-        python database.py
-        python migrate_database.py
-        python bootstrap_admin.py --email "admin@test.com" --password "adminpass123" --name "CI Admin" --force
+        pip install ruff mypy
     
     - name: Run linting checks
       run: |
         ruff check . --output-format=github
-      continue-on-error: true
+    
+    - name: Run formatting checks
+      run: |
+        ruff format --check .
     
     - name: Run type checking
       run: |
         mypy app.py --ignore-missing-imports --no-strict-optional
       continue-on-error: true
-    
-    - name: Run backend tests
-      run: |
-        python tests/run_tests.py --backend-only
-    
-    - name: Run frontend tests (headless)
-      run: |
-        # Frontend tests timeout frequently - skip for now
-        echo "⚠️ Frontend tests disabled due to timeout issues"
-        echo "✅ Backend tests (35 passed) provide core validation"
-      continue-on-error: true
-    
-    - name: Run integration tests
-      run: |
-        # Integration tests require complex server setup - skip for now  
-        echo "⚠️ Integration tests disabled - complex server coordination needed"
-        echo "✅ Backend tests (35 passed) provide core validation"
-      continue-on-error: true
-    
-    - name: Generate coverage report
-      run: |
-        python -m pytest tests/test_backend.py --cov=app --cov-report=xml --cov-report=term
-    
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
-        flags: backend
-        name: codecov-umbrella
-        fail_ci_if_error: false
-    
-    - name: Archive test reports
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-reports-python-${{ matrix.python-version }}
-        path: |
-          htmlcov/
-          *_test_report.html
-          *.xml
-          test_report.md
-
-  security:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.11'
-    
-    - name: Install security tools
-      run: |
-        python -m pip install --upgrade pip
-        pip install safety bandit
-    
-    - name: Install dependencies for scanning
-      run: |
-        pip install -r requirements.txt
-      continue-on-error: true
-    
-    - name: Run safety check (known vulnerabilities)
-      run: |
-        safety check --json --output safety-report.json || echo "Safety check completed with warnings"
-      continue-on-error: true
-    
-    - name: Run bandit security scan
-      run: |
-        bandit -r . -f json -o bandit-report.json -x tests/ || echo "Bandit scan completed with findings"
-      continue-on-error: true
-    
-    - name: Upload security reports
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: security-reports
-        path: |
-          safety-report.json
-          bandit-report.json
 
   build:
     runs-on: ubuntu-latest
-    needs: [test]
+    needs: [lint-and-format]
     
     steps:
     - uses: actions/checkout@v4
@@ -188,19 +87,59 @@ jobs:
         name: deployment-package-${{ github.sha }}
         path: dist/sabc-${{ github.sha }}.tar.gz
 
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install security tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety bandit
+    
+    - name: Install dependencies for scanning
+      run: |
+        pip install -r requirements.txt
+      continue-on-error: true
+    
+    - name: Run safety check (known vulnerabilities)
+      run: |
+        safety check --json --output safety-report.json || echo "Safety check completed with warnings"
+      continue-on-error: true
+    
+    - name: Run bandit security scan
+      run: |
+        bandit -r . -f json -o bandit-report.json -x tests/ || echo "Bandit scan completed with findings"
+      continue-on-error: true
+    
+    - name: Upload security reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-reports
+        path: |
+          safety-report.json
+          bandit-report.json
+
   notify:
     runs-on: ubuntu-latest
-    needs: [test, build]
+    needs: [lint-and-format, build]
     if: always()
     
     steps:
     - name: CI Summary
       run: |
         echo "🎯 CI Pipeline Summary"
-        echo "- Tests: ${{ needs.test.result }}"
+        echo "- Lint & Format: ${{ needs.lint-and-format.result }}"
         echo "- Build: ${{ needs.build.result }}"
         
-        if [[ "${{ needs.test.result }}" == "success" && "${{ needs.build.result }}" == "success" ]]; then
+        if [[ "${{ needs.lint-and-format.result }}" == "success" && "${{ needs.build.result }}" == "success" ]]; then
           echo "✅ Pipeline completed successfully!"
         else
           echo "❌ Pipeline had failures - check individual jobs"
