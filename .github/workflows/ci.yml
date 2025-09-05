@@ -84,7 +84,7 @@ jobs:
     
     - name: Archive test reports
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-reports-python-${{ matrix.python-version }}
         path: |
@@ -126,7 +126,7 @@ jobs:
     
     - name: Upload security reports
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: security-reports
         path: |
@@ -175,7 +175,7 @@ jobs:
           .
     
     - name: Upload build artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: deployment-package-${{ github.sha }}
         path: dist/sabc-${{ github.sha }}.tar.gz
