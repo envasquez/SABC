@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import date, datetime, timedelta
+from typing import Optional
 
 import bcrypt
 import uvicorn
@@ -1702,7 +1703,8 @@ async def delete_event(request: Request, event_id: int):
             event_result = conn.execute(
                 text("SELECT COUNT(*) FROM events WHERE id = :id"), {"id": event_id}
             )
-            event_count = event_result.fetchone()[0]
+            row = event_result.fetchone()
+            event_count = row[0] if row else 0
             if event_count == 0:
                 return JSONResponse({"error": "Event not found"}, status_code=404)
 
@@ -1723,7 +1725,8 @@ async def delete_event(request: Request, event_id: int):
                         (SELECT COUNT(*) FROM team_results WHERE tournament_id = :tid) as total_results
                 """)
                 results_result = conn.execute(results_count_query, {"tid": tournament_id})
-                total_results = results_result.fetchone()[0]
+                row = results_result.fetchone()
+                total_results = row[0] if row else 0
 
                 if total_results > 0:
                     return JSONResponse(
@@ -1868,9 +1871,10 @@ async def create_poll(request: Request):
     try:
         form = await request.form()
 
-        event_id = form.get("event_id")
-        if event_id:
-            event_id = int(event_id)
+        event_id_raw = form.get("event_id")
+        event_id = None
+        if event_id_raw and isinstance(event_id_raw, str):
+            event_id = int(event_id_raw)
         poll_type = form.get("poll_type", "")
         title = form.get("title", "")
         description = form.get("description", "")
@@ -1955,20 +1959,21 @@ async def create_poll(request: Request):
 
             if selected_lake_ids:
                 # Create poll options from selected lakes (simple lake names only)
-                for lake_id in selected_lake_ids:
-                    lake_name = find_lake_by_id(int(lake_id), "name")
-                    if lake_name:
-                        db(
-                            """
-                            INSERT INTO poll_options (poll_id, option_text, option_data)
-                            VALUES (:poll_id, :option_text, :option_data)
-                        """,
-                            {
-                                "poll_id": poll_id,
-                                "option_text": lake_name,
-                                "option_data": json.dumps({"lake_id": int(lake_id)}),
-                            },
-                        )
+                for lake_id_raw in selected_lake_ids:
+                    if isinstance(lake_id_raw, str):
+                        lake_name = find_lake_by_id(int(lake_id_raw), "name")
+                        if lake_name:
+                            db(
+                                """
+                                INSERT INTO poll_options (poll_id, option_text, option_data)
+                                VALUES (:poll_id, :option_text, :option_data)
+                            """,
+                                {
+                                    "poll_id": poll_id,
+                                    "option_text": lake_name,
+                                    "option_data": json.dumps({"lake_id": int(lake_id_raw)}),
+                                },
+                            )
             else:
                 # If no lakes selected, add all lakes as fallback
                 all_lakes = get_lakes_list()
@@ -1990,8 +1995,8 @@ async def create_poll(request: Request):
             poll_options = form.getlist("poll_options[]")
             import json
 
-            for option_text in poll_options:
-                if option_text and option_text.strip():
+            for option_text_raw in poll_options:
+                if isinstance(option_text_raw, str) and option_text_raw.strip():
                     db(
                         """
                         INSERT INTO poll_options (poll_id, option_text, option_data)
@@ -1999,7 +2004,7 @@ async def create_poll(request: Request):
                     """,
                         {
                             "poll_id": poll_id,
-                            "option_text": option_text.strip(),
+                            "option_text": option_text_raw.strip(),
                             "option_data": json.dumps({}),
                         },
                     )
@@ -2007,7 +2012,8 @@ async def create_poll(request: Request):
         else:
             # Handle legacy generic poll options (fallback)
             for key in form.keys():
-                if key.startswith("option_") and form[key].strip():
+                value = form[key]
+                if key.startswith("option_") and isinstance(value, str) and value.strip():
                     db(
                         """
                         INSERT INTO poll_options (poll_id, option_text, option_data)
@@ -2015,7 +2021,7 @@ async def create_poll(request: Request):
                     """,
                         {
                             "poll_id": poll_id,
-                            "option_text": form[key].strip(),
+                            "option_text": value.strip(),
                             "option_data": json.dumps({}),
                         },
                     )
@@ -2172,22 +2178,23 @@ async def edit_poll(request: Request, poll_id: int):
             db("DELETE FROM poll_options WHERE poll_id = :poll_id", {"poll_id": poll_id})
 
             # Create new lake options (just lake names, no specific ramp/time yet)
-            for lake_id in selected_lake_ids:
-                lake_name = find_lake_by_id(int(lake_id), "name")
-                if lake_name:
-                    option_data = {"lake_id": int(lake_id)}
+            for lake_id_raw in selected_lake_ids:
+                if isinstance(lake_id_raw, str):
+                    lake_name = find_lake_by_id(int(lake_id_raw), "name")
+                    if lake_name:
+                        option_data = {"lake_id": int(lake_id_raw)}
 
-                    db(
-                        """
-                        INSERT INTO poll_options (poll_id, option_text, option_data)
-                        VALUES (:poll_id, :option_text, :option_data)
-                    """,
-                        {
-                            "poll_id": poll_id,
-                            "option_text": lake_name,
-                            "option_data": json.dumps(option_data),
-                        },
-                    )
+                        db(
+                            """
+                            INSERT INTO poll_options (poll_id, option_text, option_data)
+                            VALUES (:poll_id, :option_text, :option_data)
+                        """,
+                            {
+                                "poll_id": poll_id,
+                                "option_text": lake_name,
+                                "option_data": json.dumps(option_data),
+                            },
+                        )
 
             return RedirectResponse(
                 f"/admin/polls/{poll_id}/edit?success=Tournament poll updated with {len(selected_lake_ids)} lakes",
@@ -2225,17 +2232,18 @@ async def edit_poll(request: Request, poll_id: int):
 
                 # Process submitted options
                 submitted_option_ids = []
-                for i, option_text in enumerate(poll_options):
-                    if not option_text.strip():
+                for i, option_text_raw in enumerate(poll_options):
+                    if not isinstance(option_text_raw, str) or not option_text_raw.strip():
                         continue
 
-                    option_id = option_ids[i] if i < len(option_ids) else ""
+                    option_id_raw = option_ids[i] if i < len(option_ids) else ""
+                    option_id = option_id_raw if isinstance(option_id_raw, str) else ""
 
                     if option_id and option_id != "":
                         # Update existing option
                         db(
                             "UPDATE poll_options SET option_text = :text WHERE id = :id",
-                            {"text": option_text.strip(), "id": int(option_id)},
+                            {"text": option_text_raw.strip(), "id": int(option_id)},
                         )
                         submitted_option_ids.append(option_id)
                     else:
@@ -2247,7 +2255,7 @@ async def edit_poll(request: Request, poll_id: int):
                             """,
                             {
                                 "poll_id": poll_id,
-                                "option_text": option_text.strip(),
+                                "option_text": option_text_raw.strip(),
                                 "option_data": json.dumps({}),
                             },
                         )
@@ -2796,10 +2804,12 @@ async def create_tournament(request: Request):
 
     try:
         form = await request.form()
-        event_id = int(form.get("event_id"))
+        event_id_raw = form.get("event_id")
+        event_id = int(event_id_raw) if isinstance(event_id_raw, str) else 0
         name = form.get("name")
         lake_name = form.get("lake_name", "")
-        entry_fee = float(form.get("entry_fee", 25.0))
+        entry_fee_raw = form.get("entry_fee", "25.0")
+        entry_fee = float(entry_fee_raw) if isinstance(entry_fee_raw, str) else 25.0
 
         # Insert tournament
         db(
@@ -3294,7 +3304,7 @@ async def home_paginated(request: Request, page: int = 1):
 # Awards page with year selection
 @app.get("/awards")
 @app.get("/awards/{year}")
-async def awards(request: Request, year: int = None):
+async def awards(request: Request, year: Optional[int] = None):
     user = u(request)
 
     # Default to current year if none provided
