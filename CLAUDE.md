@@ -65,15 +65,6 @@ start-app        # Run FastAPI development server
 setup-db         # Initialize database with schema
 reset-db         # Reset database (delete and recreate)
 
-# Testing commands (in Nix shell)
-run-tests        # Run complete test suite
-test-backend     # Run backend tests only
-test-frontend    # Run frontend tests only
-test-integration # Run integration tests
-test-quick       # Run quick test subset
-test-coverage    # Generate coverage report
-clean-tests      # Clean test artifacts
-
 # Code quality commands (in Nix shell)
 format-code      # Auto-format Python code with ruff
 check-code       # Run linting and type checking
@@ -82,8 +73,12 @@ deploy-app       # Run all checks for deployment
 # Manual commands (if not using Nix)
 python database.py              # Initialize database
 python bootstrap_admin.py       # Create admin user
-python tests/run_tests.py       # Run test suite
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
+
+# CI Commands (used in GitHub Actions)
+ruff check . --output-format=github    # Lint code
+ruff format --check .                  # Check formatting
+mypy app.py --ignore-missing-imports   # Type checking
 ```
 
 ## File Structure
@@ -235,11 +230,11 @@ else:  # Past event
 - **Memory usage**: < 50MB
 - **Lines of code**: < 1000 total
 
-## Testing Strategy
-- **Real data testing** - Use migrated Django data
-- **Admin workflow testing** - Poll creation → Tournament → Results
-- **Member voting testing** - Ensure only members can vote
-- **Edge case testing** - Ties, empty polls, cancellations
+## Code Quality & CI
+- **Linting** - Ruff for code style and error detection
+- **Type checking** - MyPy for static type analysis
+- **Formatting** - Ruff for consistent code formatting
+- **CI Pipeline** - Automated checks on every commit
 
 ## Deployment
 - **Digital Ocean droplet** - Keep current hosting

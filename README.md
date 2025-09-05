@@ -89,15 +89,6 @@ start-app                      # Start FastAPI development server
 setup-db                       # Initialize database with schema
 reset-db                       # Reset database (delete and recreate)
 
-# Testing
-run-tests                      # Run complete test suite
-test-backend                   # Backend tests only
-test-frontend                  # Frontend tests only
-test-integration               # Integration tests
-test-quick                     # Quick test subset
-test-coverage                  # Generate coverage report
-clean-tests                    # Clean test artifacts
-
 # Code quality
 format-code                    # Auto-format Python code with ruff
 check-code                     # Run linting and type checking
@@ -113,9 +104,6 @@ python bootstrap_admin.py      # Create admin user
 
 # Development
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
-
-# Testing
-python tests/run_tests.py      # Run test suite
 
 # Code quality
 ruff format .                  # Format code
@@ -200,28 +188,28 @@ The system supports multiple poll types:
 - **Multiple choice** - Various options
 - **Officer elections** - Candidate selection
 
-## 🧪 Testing
+## 🔍 Code Quality
 
-### Running Tests
+### Linting and Formatting
 ```bash
-# Complete test suite
-run-tests
+# Auto-format code with ruff
+format-code                    # Using Nix environment
+ruff format .                  # Manual command
 
-# Specific test types
-test-backend                   # API and business logic
-test-frontend                  # UI and user interactions  
-test-integration               # End-to-end workflows
+# Check code style and errors
+check-code                     # Using Nix environment
+ruff check .                   # Manual command
 
-# Test options
-run-tests --filter "poll"      # Filter by name
-test-coverage                  # Generate coverage report
+# Type checking
+mypy app.py --ignore-missing-imports
 ```
 
-### Test Coverage
-- **Backend Tests**: API endpoints, business logic, database operations
-- **Frontend Tests**: UI interactions, form submissions, navigation
-- **Integration Tests**: Complete user workflows
-- **Security Tests**: Input validation, authentication, authorization
+### CI Pipeline
+The project uses GitHub Actions for continuous integration with:
+- **Code formatting checks** - Ensures consistent style
+- **Linting** - Catches errors and enforces best practices  
+- **Type checking** - Static analysis with MyPy
+- **Build verification** - Ensures deployable state
 
 ## 🚀 Deployment
 
@@ -275,21 +263,21 @@ Once the application is running, visit:
 1. **Fork and clone** the repository
 2. **Enter development environment**: `nix develop`
 3. **Set up database**: `setup-db`
-4. **Make changes** and test: `run-tests`
-5. **Format code**: `format-code`
+4. **Make changes** and verify functionality
+5. **Format and check code**: `format-code` and `check-code`
 6. **Submit pull request**
 
 ### Code Standards
 - **Minimal complexity** - Keep it simple
 - **Inline admin controls** - No separate admin interface
 - **Database calculations** - Use SQL views for math
-- **Test coverage** - Maintain existing test coverage
+- **Code quality** - Follow linting and formatting standards
 - **Security first** - Never expose sensitive data
 
 ### Before Submitting
-- [ ] Tests pass: `run-tests`
 - [ ] Code formatted: `format-code`  
 - [ ] Linting clean: `check-code`
+- [ ] Type checking passes: `mypy app.py --ignore-missing-imports`
 - [ ] Documentation updated if needed
 
 ## 🔒 Security
