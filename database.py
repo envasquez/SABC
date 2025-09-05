@@ -16,6 +16,8 @@ TABLE_DEFINITIONS = [
         is_admin BOOLEAN DEFAULT 0,
         active BOOLEAN DEFAULT 1,
         password_hash TEXT,
+        year_joined INTEGER,
+        phone TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )""",
     """events(
@@ -77,7 +79,8 @@ TABLE_DEFINITIONS = [
         is_paper BOOLEAN DEFAULT 0,
         big_bass_carryover DECIMAL DEFAULT 0.0,
         complete BOOLEAN DEFAULT 0,
-        created_by INTEGER
+        created_by INTEGER,
+        limit_type TEXT DEFAULT 'angler'
     )""",
     """results(
         id INTEGER PRIMARY KEY,
