@@ -290,7 +290,8 @@ async def login_page(request: Request):
         else templates.TemplateResponse("login.html", {"request": request})
     )
 
-@app.get("/register")  
+
+@app.get("/register")
 async def register_page(request: Request):
     return (
         RedirectResponse("/")

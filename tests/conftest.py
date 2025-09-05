@@ -2,14 +2,13 @@
 Pytest configuration and shared fixtures for SABC tests.
 """
 
+import asyncio
 import shutil
 import sqlite3
 import tempfile
 from pathlib import Path
-import asyncio
 
 import pytest
-import pytest_asyncio
 from fastapi.testclient import TestClient
 from playwright.sync_api import sync_playwright
 
@@ -17,7 +16,8 @@ from playwright.sync_api import sync_playwright
 from app import app
 
 # Configure asyncio for pytest
-pytest_plugins = ('pytest_asyncio',)
+pytest_plugins = ("pytest_asyncio",)
+
 
 @pytest.fixture(scope="session")
 def event_loop():
