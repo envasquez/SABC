@@ -49,7 +49,7 @@ def admin_page(context: BrowserContext):
         # Login as admin
         page.fill('input[name="email"]', "admin@sabc.com")
         page.fill('input[name="password"]', "admin123")
-        
+
         # Submit with explicit timeout
         with page.expect_navigation(timeout=5000):
             page.click('button[type="submit"]')
@@ -78,7 +78,7 @@ def member_page(context: BrowserContext):
         # Login as member
         page.fill('input[name="email"]', "member@sabc.com")
         page.fill('input[name="password"]', "member123")
-        
+
         # Submit with explicit timeout
         with page.expect_navigation(timeout=5000):
             page.click('button[type="submit"]')
@@ -192,7 +192,7 @@ class TestAuthentication:
         """Test logout functionality."""
         # Click logout (might be in dropdown)
         member_page.click(".dropdown-toggle:has(.bi-person-gear)")
-        
+
         # Wait for logout with explicit navigation expectation
         with member_page.expect_navigation(timeout=5000):
             member_page.click('text="Logout"')
@@ -201,7 +201,7 @@ class TestAuthentication:
         member_page.wait_for_load_state("networkidle")
         # After logout, user should be redirected to homepage and no longer authenticated
         assert member_page.url == "http://localhost:8000/"
-        
+
         # Verify we're logged out by checking if login link is visible
         login_link = member_page.locator('a[href="/login"], button:text("Login")')
         assert login_link.count() > 0

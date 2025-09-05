@@ -12,7 +12,6 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
-from datetime import datetime
 from pathlib import Path
 
 # Add parent directory to Python path to find app modules
@@ -83,17 +82,24 @@ class TestRunner:
         try:
             # Import bcrypt to hash passwords properly
             import bcrypt
-            
+
             # Create password hashes for frontend test users
             admin_hash = bcrypt.hashpw("admin123".encode(), bcrypt.gensalt()).decode()
             member_hash = bcrypt.hashpw("member123".encode(), bcrypt.gensalt()).decode()
             guest_hash = bcrypt.hashpw("guest123".encode(), bcrypt.gensalt()).decode()
             test_hash = bcrypt.hashpw("testpass".encode(), bcrypt.gensalt()).decode()
-            
+
             # Test users with credentials that match frontend tests
             test_users = [
                 ("Test Admin", "admin@sabc.com", admin_hash, 1, 1, 1),  # admin@sabc.com / admin123
-                ("Test Member", "member@sabc.com", member_hash, 1, 0, 1),  # member@sabc.com / member123
+                (
+                    "Test Member",
+                    "member@sabc.com",
+                    member_hash,
+                    1,
+                    0,
+                    1,
+                ),  # member@sabc.com / member123
                 ("Test Guest", "guest@sabc.com", guest_hash, 0, 0, 1),  # guest@sabc.com / guest123
                 ("Test User", "test@sabc.com", test_hash, 1, 0, 1),  # test@sabc.com / testpass
             ]
@@ -183,7 +189,7 @@ class TestRunner:
 
             try:
                 with httpx.Client() as client:
-                    response = client.get("http://127.0.0.1:8000/", timeout=5)
+                    client.get("http://127.0.0.1:8000/", timeout=5)
                 print("✅ Test server started successfully")
                 return True
             except httpx.RequestError:
@@ -197,7 +203,7 @@ class TestRunner:
     def run_backend_tests(self, test_filter=""):
         """Run backend/API tests."""
         print("🧪 Running backend tests...")
-        
+
         # Change to parent directory so app imports and static files work
         original_dir = os.getcwd()
         os.chdir(str(parent_dir))
@@ -239,7 +245,7 @@ class TestRunner:
         except Exception as e:
             print(f"❌ Error running backend tests: {e}")
             return False
-        
+
         finally:
             # Restore original directory
             os.chdir(original_dir)
@@ -252,8 +258,9 @@ class TestRunner:
             # Install playwright browsers if needed
             print("🔧 Installing Playwright browsers...")
             install_result = subprocess.run(
-                ["python", "-m", "playwright", "install", "chromium"], 
-                capture_output=True, text=True
+                ["python", "-m", "playwright", "install", "chromium"],
+                capture_output=True,
+                text=True,
             )
             if install_result.returncode != 0:
                 print(f"⚠️ Browser installation warning: {install_result.stderr}")
@@ -301,7 +308,9 @@ class TestRunner:
             print("⏰ Frontend tests timed out (1 minute)")
             print("💡 This usually means authentication fixtures are hanging")
             print("💡 Consider running: pytest tests/test_frontend.py::TestNavigation -v")
-            self.test_results["frontend"]["errors"].append("Frontend tests timed out after 1 minute")
+            self.test_results["frontend"]["errors"].append(
+                "Frontend tests timed out after 1 minute"
+            )
             return False
         except Exception as e:
             print(f"❌ Error running frontend tests: {e}")
@@ -320,12 +329,18 @@ class TestRunner:
     def print_test_summary(self):
         """Print test summary to console."""
         print("📊 Test Results Summary:")
-        print(f"Backend Tests: {self.test_results['backend']['passed']} passed, {self.test_results['backend']['failed']} failed")
-        print(f"Frontend Tests: {self.test_results['frontend']['passed']} passed, {self.test_results['frontend']['failed']} failed")
-        
+        print(
+            f"Backend Tests: {self.test_results['backend']['passed']} passed, {self.test_results['backend']['failed']} failed"
+        )
+        print(
+            f"Frontend Tests: {self.test_results['frontend']['passed']} passed, {self.test_results['frontend']['failed']} failed"
+        )
+
         if self.test_results["backend"]["errors"] or self.test_results["frontend"]["errors"]:
             print("\n❌ Errors:")
-            for error in self.test_results["backend"]["errors"] + self.test_results["frontend"]["errors"]:
+            for error in (
+                self.test_results["backend"]["errors"] + self.test_results["frontend"]["errors"]
+            ):
                 if error.strip():
                     print(error)
 
@@ -371,7 +386,9 @@ class TestRunner:
                 if self.start_test_server():
                     frontend_success = self.run_frontend_tests(test_filter, headless)
                     if not frontend_success:
-                        print("⚠️  Frontend tests failed or timed out - continuing with backend results")
+                        print(
+                            "⚠️  Frontend tests failed or timed out - continuing with backend results"
+                        )
                         # Don't fail the entire suite just because frontend tests timed out
                         # Backend tests are more critical
                 else:
@@ -382,9 +399,12 @@ class TestRunner:
             self.print_test_summary()
 
             print("=" * 50)
-            backend_passed = self.test_results["backend"]["passed"] > 0 and self.test_results["backend"]["failed"] == 0
+            backend_passed = (
+                self.test_results["backend"]["passed"] > 0
+                and self.test_results["backend"]["failed"] == 0
+            )
             frontend_issues = self.test_results["frontend"]["errors"]
-            
+
             if backend_passed and not frontend_issues:
                 print("🎉 All tests completed successfully!")
             elif backend_passed and frontend_issues:

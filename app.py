@@ -1,6 +1,6 @@
-import os
 import json
-from datetime import datetime, date, timedelta
+import os
+from datetime import date, datetime, timedelta
 
 import bcrypt
 import uvicorn
@@ -1027,7 +1027,6 @@ def validate_event_data(
 
 def get_federal_holidays(year):
     """Get list of federal holidays for a given year."""
-    from datetime import date, timedelta
 
     holidays = []
 
@@ -1134,7 +1133,8 @@ async def bulk_delete_events(request: Request):
             )
             db("DELETE FROM polls WHERE event_id = :event_id", {"event_id": event_id})
             db(
-                "DELETE FROM tournaments WHERE event_id = :event_id AND complete = 0", {"event_id": event_id}
+                "DELETE FROM tournaments WHERE event_id = :event_id AND complete = 0",
+                {"event_id": event_id},
             )  # Only uncompleted tournaments
             db("DELETE FROM events WHERE id = :id", {"id": event_id})
             deleted_count += 1
@@ -1331,7 +1331,6 @@ async def create_event(
     """Create a new event and optionally auto-create poll for SABC tournaments."""
     if isinstance(user := admin(request), RedirectResponse):
         return user
-    
 
     try:
         from datetime import datetime, timedelta
@@ -2785,31 +2784,28 @@ async def create_tournament(request: Request):
     """Create a new tournament."""
     if isinstance(user := admin(request), RedirectResponse):
         return user
-    
+
     try:
         form = await request.form()
         event_id = int(form.get("event_id"))
         name = form.get("name")
         lake_name = form.get("lake_name", "")
         entry_fee = float(form.get("entry_fee", 25.0))
-        
+
         # Insert tournament
         db(
             """
             INSERT INTO tournaments (event_id, name, lake_name, entry_fee, complete)
             VALUES (:event_id, :name, :lake_name, :entry_fee, 0)
             """,
-            {
-                "event_id": event_id,
-                "name": name, 
-                "lake_name": lake_name,
-                "entry_fee": entry_fee
-            }
+            {"event_id": event_id, "name": name, "lake_name": lake_name, "entry_fee": entry_fee},
         )
-        
+
         return RedirectResponse("/admin/events?success=Tournament created", status_code=302)
     except Exception as e:
-        return RedirectResponse(f"/admin/events?error=Failed to create tournament: {str(e)}", status_code=302)
+        return RedirectResponse(
+            f"/admin/events?error=Failed to create tournament: {str(e)}", status_code=302
+        )
 
 
 @app.post("/tournaments/{tournament_id}/results")
@@ -2817,7 +2813,7 @@ async def submit_tournament_results(request: Request, tournament_id: int):
     """Submit tournament results."""
     if isinstance(user := admin(request), RedirectResponse):
         return user
-    
+
     try:
         # This endpoint would handle results submission
         # For now, just return success to make the test pass
@@ -3529,10 +3525,12 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
 
 
 @app.post("/register")
-async def register(request: Request, name: str = Form(...), email: str = Form(...), password: str = Form(...)):
+async def register(
+    request: Request, name: str = Form(...), email: str = Form(...), password: str = Form(...)
+):
     try:
         email = email.lower().strip()
-        
+
         # Check if email already exists
         existing = db(
             "SELECT id FROM anglers WHERE email=:email",
@@ -3542,14 +3540,14 @@ async def register(request: Request, name: str = Form(...), email: str = Form(..
             return templates.TemplateResponse(
                 "login.html", {"request": request, "error": "Email already exists"}
             )
-        
+
         # Hash password and create user
         password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
         db(
             "INSERT INTO anglers (name, email, password_hash, member, is_admin, active) VALUES (:name, :email, :password_hash, 1, 0, 1)",
             {"name": name.strip(), "email": email, "password_hash": password_hash},
         )
-        
+
         # Auto-login the new user
         user = db(
             "SELECT id FROM anglers WHERE email=:email",
@@ -3558,13 +3556,13 @@ async def register(request: Request, name: str = Form(...), email: str = Form(..
         if user:
             request.session["user_id"] = user[0][0]
             return RedirectResponse("/", status_code=302)
-            
+
     except Exception as e:
         print(f"Registration error: {e}")
         return templates.TemplateResponse(
             "login.html", {"request": request, "error": "Registration failed"}
         )
-    
+
     return RedirectResponse("/login", status_code=302)
 
 

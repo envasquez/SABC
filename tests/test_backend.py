@@ -50,19 +50,19 @@ def client():
 def admin_session(client):
     """Create an authenticated admin session."""
     import sqlite3
-    from pathlib import Path
     import uuid
-    
+    from pathlib import Path
+
     # Use unique email to avoid conflicts
     admin_email = f"admin-{uuid.uuid4().hex[:8]}@test.com"
-    
+
     # First create an admin user
     reg_response = client.post(
         "/register",
         data={"name": "Test Admin", "email": admin_email, "password": "testpass123"},
-        follow_redirects=False
+        follow_redirects=False,
     )
-    
+
     # Verify registration succeeded
     if reg_response.status_code != 302:
         raise Exception(f"Admin registration failed: {reg_response.status_code}")
@@ -72,17 +72,17 @@ def admin_session(client):
     if db_path.exists():
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        cursor.execute("UPDATE anglers SET is_admin = 1 WHERE email = :email", {"email": admin_email})
+        cursor.execute(
+            "UPDATE anglers SET is_admin = 1 WHERE email = :email", {"email": admin_email}
+        )
         conn.commit()
         conn.close()
 
     # Login as admin
     login_response = client.post(
-        "/login", 
-        data={"email": admin_email, "password": "testpass123"},
-        follow_redirects=False
+        "/login", data={"email": admin_email, "password": "testpass123"}, follow_redirects=False
     )
-    
+
     # Verify login succeeded
     if login_response.status_code != 302:
         raise Exception(f"Admin login failed: {login_response.status_code}")
@@ -90,31 +90,29 @@ def admin_session(client):
     return client
 
 
-@pytest.fixture  
+@pytest.fixture
 def member_session(client):
     """Create an authenticated member session."""
     import uuid
-    
+
     # Use unique email to avoid conflicts
     member_email = f"member-{uuid.uuid4().hex[:8]}@test.com"
-    
+
     reg_response = client.post(
         "/register",
         data={"name": "Test Member", "email": member_email, "password": "testpass123"},
-        follow_redirects=False
+        follow_redirects=False,
     )
-    
+
     # Verify registration succeeded
     if reg_response.status_code != 302:
         raise Exception(f"Member registration failed: {reg_response.status_code}")
 
     login_response = client.post(
-        "/login", 
-        data={"email": member_email, "password": "testpass123"},
-        follow_redirects=False
+        "/login", data={"email": member_email, "password": "testpass123"}, follow_redirects=False
     )
-    
-    # Verify login succeeded  
+
+    # Verify login succeeded
     if login_response.status_code != 302:
         raise Exception(f"Member login failed: {login_response.status_code}")
 
@@ -127,11 +125,12 @@ class TestAuthentication:
     def test_register_new_user(self, client):
         """Test user registration."""
         import uuid
+
         unique_email = f"newuser-{uuid.uuid4().hex[:8]}@test.com"
         response = client.post(
             "/register",
             data={"name": "New User", "email": unique_email, "password": "password123"},
-            follow_redirects=False
+            follow_redirects=False,
         )
         assert response.status_code == 302  # Redirect after successful registration
         assert response.headers["location"] == "/"
@@ -139,8 +138,9 @@ class TestAuthentication:
     def test_register_duplicate_email(self, client):
         """Test registration with duplicate email."""
         import uuid
+
         duplicate_email = f"duplicate-{uuid.uuid4().hex[:8]}@test.com"
-        
+
         # Register first user
         client.post(
             "/register",
@@ -157,8 +157,9 @@ class TestAuthentication:
     def test_login_valid_credentials(self, client):
         """Test login with valid credentials."""
         import uuid
+
         unique_email = f"login-{uuid.uuid4().hex[:8]}@test.com"
-        
+
         # Register user
         client.post(
             "/register",
@@ -166,7 +167,9 @@ class TestAuthentication:
         )
 
         # Login
-        response = client.post("/login", data={"email": unique_email, "password": "testpass"}, follow_redirects=False)
+        response = client.post(
+            "/login", data={"email": unique_email, "password": "testpass"}, follow_redirects=False
+        )
         assert response.status_code == 302  # Redirect after successful login
         assert response.headers["location"] == "/"
 
@@ -200,7 +203,7 @@ class TestEvents:
             "/admin/events/create",
             data={
                 "date": "2025-12-01",
-                "name": "December Tournament", 
+                "name": "December Tournament",
                 "event_type": "sabc_tournament",
                 "description": "Monthly tournament",
                 "start_time": "06:00",
@@ -209,7 +212,7 @@ class TestEvents:
                 "lake_name": "Lake Travis",
                 "ramp_name": "Mansfield Dam",
             },
-            follow_redirects=False
+            follow_redirects=False,
         )
         assert response.status_code == 302
         assert "success" in response.headers.get("location", "").lower()
@@ -225,7 +228,7 @@ class TestEvents:
                 "description": "Federal Holiday",
                 "holiday_name": "Independence Day",
             },
-            follow_redirects=False
+            follow_redirects=False,
         )
         assert response.status_code == 302
 
@@ -250,14 +253,14 @@ class TestEvents:
                 "event_type": "sabc_tournament",
                 "description": "Updated description",
             },
-            follow_redirects=False
+            follow_redirects=False,
         )
         assert response.status_code == 302
 
     def test_delete_event_without_dependencies(self, admin_session):
         """Test deleting an event that has no dependencies."""
         import sqlite3
-        
+
         # Create event in main database (same one admin_session uses)
         conn = sqlite3.connect("sabc.db")
         cursor = conn.cursor()
@@ -267,7 +270,7 @@ class TestEvents:
         """)
         event_id = cursor.lastrowid
         conn.commit()
-        
+
         try:
             response = admin_session.delete(f"/admin/events/{event_id}")
             assert response.status_code == 200
@@ -331,7 +334,7 @@ class TestPolls:
                     ]
                 ),
             },
-            follow_redirects=False
+            follow_redirects=False,
         )
         assert response.status_code == 302
 
@@ -339,34 +342,46 @@ class TestPolls:
         """Test that members can vote in polls."""
         import sqlite3
         from datetime import datetime, timedelta
-        
+
         # Create poll in main database (same one member_session uses)
         conn = sqlite3.connect("sabc.db")
         cursor = conn.cursor()
-        
+
         # Create poll with future close date
         now = datetime.now()
         close_time = now + timedelta(days=7)
-        
-        cursor.execute("""
+
+        cursor.execute(
+            """
             INSERT INTO polls (title, poll_type, starts_at, closes_at, closed)
             VALUES ('Test Member Vote Poll', 'yes_no', ?, ?, 0)
-        """, (now.isoformat(), close_time.isoformat()))
+        """,
+            (now.isoformat(), close_time.isoformat()),
+        )
         poll_id = cursor.lastrowid
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO poll_options (poll_id, option_text, display_order)
             VALUES (?, 'Yes', 1), (?, 'No', 2)
-        """, (poll_id, poll_id))
+        """,
+            (poll_id, poll_id),
+        )
         conn.commit()
 
         # Get the actual option ID for "Yes"
-        cursor.execute("SELECT id FROM poll_options WHERE poll_id = ? AND option_text = 'Yes'", (poll_id,))
+        cursor.execute(
+            "SELECT id FROM poll_options WHERE poll_id = ? AND option_text = 'Yes'", (poll_id,)
+        )
         yes_option_id = cursor.fetchone()[0]
 
         try:
             # Vote using Form data (as expected by endpoint)
-            response = member_session.post(f"/polls/{poll_id}/vote", data={"option_id": str(yes_option_id)}, follow_redirects=False)
+            response = member_session.post(
+                f"/polls/{poll_id}/vote",
+                data={"option_id": str(yes_option_id)},
+                follow_redirects=False,
+            )
             # Endpoint returns redirect on success, not 200 with JSON
             assert response.status_code == 302
             assert "error" not in response.headers.get("location", "").lower()
@@ -382,34 +397,46 @@ class TestPolls:
         """Test that guests cannot vote in polls."""
         import sqlite3
         from datetime import datetime, timedelta
-        
-        # Create poll in main database 
+
+        # Create poll in main database
         conn = sqlite3.connect("sabc.db")
         cursor = conn.cursor()
-        
+
         # Create poll with future close date
         now = datetime.now()
         close_time = now + timedelta(days=7)
-        
-        cursor.execute("""
+
+        cursor.execute(
+            """
             INSERT INTO polls (title, poll_type, starts_at, closes_at, closed)
             VALUES ('Test Guest Vote Poll', 'yes_no', ?, ?, 0)
-        """, (now.isoformat(), close_time.isoformat()))
+        """,
+            (now.isoformat(), close_time.isoformat()),
+        )
         poll_id = cursor.lastrowid
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO poll_options (poll_id, option_text, display_order)
             VALUES (?, 'Yes', 1), (?, 'No', 2)
-        """, (poll_id, poll_id))
+        """,
+            (poll_id, poll_id),
+        )
         conn.commit()
 
         # Get the actual option ID for "Yes"
-        cursor.execute("SELECT id FROM poll_options WHERE poll_id = ? AND option_text = 'Yes'", (poll_id,))
+        cursor.execute(
+            "SELECT id FROM poll_options WHERE poll_id = ? AND option_text = 'Yes'", (poll_id,)
+        )
         yes_option_id = cursor.fetchone()[0]
 
         try:
             # Try to vote without login (should redirect to login)
-            response = client.post(f"/polls/{poll_id}/vote", data={"option_id": str(yes_option_id)}, follow_redirects=False)
+            response = client.post(
+                f"/polls/{poll_id}/vote",
+                data={"option_id": str(yes_option_id)},
+                follow_redirects=False,
+            )
             assert response.status_code in [302, 307]  # Both are valid redirect codes
             # Should redirect to login
             assert "/login" in response.headers.get("location", "")
@@ -428,7 +455,7 @@ class TestTournaments:
     def test_create_tournament(self, admin_session):
         """Test creating a tournament."""
         import sqlite3
-        
+
         # Create event in main database
         conn = sqlite3.connect("sabc.db")
         cursor = conn.cursor()
@@ -448,7 +475,7 @@ class TestTournaments:
                     "lake_name": "Lake Travis",
                     "entry_fee": 25.00,
                 },
-                follow_redirects=False
+                follow_redirects=False,
             )
             assert response.status_code == 302
             assert "success" in response.headers.get("location", "").lower()
@@ -462,7 +489,7 @@ class TestTournaments:
     def test_enter_tournament_results(self, admin_session):
         """Test entering tournament results."""
         import sqlite3
-        
+
         # Create tournament in main database
         conn = sqlite3.connect("sabc.db")
         cursor = conn.cursor()
@@ -479,8 +506,18 @@ class TestTournaments:
                 f"/tournaments/{tournament_id}/results",
                 json={
                     "results": [
-                        {"angler_id": 1, "num_fish": 5, "total_weight": 15.5, "big_bass_weight": 4.2},
-                        {"angler_id": 2, "num_fish": 3, "total_weight": 8.3, "big_bass_weight": 3.1},
+                        {
+                            "angler_id": 1,
+                            "num_fish": 5,
+                            "total_weight": 15.5,
+                            "big_bass_weight": 4.2,
+                        },
+                        {
+                            "angler_id": 2,
+                            "num_fish": 3,
+                            "total_weight": 8.3,
+                            "big_bass_weight": 3.1,
+                        },
                     ]
                 },
             )
@@ -538,7 +575,7 @@ class TestNews:
                 "published": True,
                 "priority": 0,
             },
-            follow_redirects=False
+            follow_redirects=False,
         )
         assert response.status_code == 302
         assert "success" in response.headers.get("location", "").lower()
@@ -563,7 +600,7 @@ class TestNews:
                 "published": True,
                 "priority": 1,
             },
-            follow_redirects=False
+            follow_redirects=False,
         )
         assert response.status_code == 302
 
@@ -611,14 +648,14 @@ class TestRoster:
     def test_member_profile_update(self, member_session):
         """Test member updating their own profile."""
         import uuid
-        
+
         # Use unique email to avoid conflicts
         unique_email = f"updated-{uuid.uuid4().hex[:8]}@test.com"
-        
+
         response = member_session.post(
-            "/profile/update", 
+            "/profile/update",
             data={"email": unique_email, "phone": "555-1234", "year_joined": 2023},
-            follow_redirects=False
+            follow_redirects=False,
         )
         assert response.status_code == 302
         assert "success" in response.headers.get("location", "").lower()
@@ -748,38 +785,42 @@ class TestSecurity:
     def test_xss_prevention(self, admin_session):
         """Test that XSS is prevented in user input."""
         import sqlite3
-        
+
         # Create news with XSS payload
         create_response = admin_session.post(
             "/admin/news/create",
             data={
-                "title": "<script>alert('XSS')</script>", 
+                "title": "<script>alert('XSS')</script>",
                 "content": "Test content",
                 "published": True,
             },
-            follow_redirects=False
+            follow_redirects=False,
         )
-        
+
         # Verify news was created successfully
         assert create_response.status_code == 302
         assert "success" in create_response.headers.get("location", "").lower()
-        
+
         # Check that the XSS script is stored safely in the database
         conn = sqlite3.connect("sabc.db")
         cursor = conn.cursor()
-        cursor.execute("SELECT title FROM news WHERE title LIKE '%script%' ORDER BY id DESC LIMIT 1")
+        cursor.execute(
+            "SELECT title FROM news WHERE title LIKE '%script%' ORDER BY id DESC LIMIT 1"
+        )
         result = cursor.fetchone()
-        
+
         try:
             # Verify the malicious script is stored as-is (not executable)
             assert result is not None, "News item should be created"
             stored_title = result[0]
-            assert stored_title == "<script>alert('XSS')</script>", "Script should be stored as text"
-            
+            assert stored_title == "<script>alert('XSS')</script>", (
+                "Script should be stored as text"
+            )
+
             # Verify XSS protection: the raw script should not be executable
             # This test documents that user input is safely stored and displayed
             assert "<script>" in stored_title, "Script tags stored as text, not executable code"
-            
+
         finally:
             # Cleanup
             cursor.execute("DELETE FROM news WHERE title LIKE '%script%'")
@@ -790,10 +831,14 @@ class TestSecurity:
         """Test CSRF protection on state-changing operations."""
         # Attempt to make unauthorized state change
         response = client.post(
-            "/admin/events/create", data={"date": "2025-01-01", "name": "Unauthorized Event"},
-            follow_redirects=False
+            "/admin/events/create",
+            data={"date": "2025-01-01", "name": "Unauthorized Event"},
+            follow_redirects=False,
         )
-        assert response.status_code in [302, 307]  # Should redirect to login (both status codes are valid)
+        assert response.status_code in [
+            302,
+            307,
+        ]  # Should redirect to login (both status codes are valid)
 
 
 class TestPerformance:
