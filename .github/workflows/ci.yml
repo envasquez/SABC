@@ -70,7 +70,17 @@ jobs:
     
     - name: Run integration tests
       run: |
-        python -m pytest tests/test_integration.py -v -m integration
+        # Start the application server in background
+        uvicorn app:app --host 127.0.0.1 --port 8000 &
+        SERVER_PID=$!
+        # Wait for server to be ready
+        sleep 5
+        # Run integration tests
+        python -m pytest tests/test_integration.py -v -m integration || TEST_RESULT=$?
+        # Kill the server
+        kill $SERVER_PID
+        # Exit with test result
+        exit ${TEST_RESULT:-0}
     
     - name: Generate coverage report
       run: |

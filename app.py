@@ -290,6 +290,14 @@ async def login_page(request: Request):
         else templates.TemplateResponse("login.html", {"request": request})
     )
 
+@app.get("/register")  
+async def register_page(request: Request):
+    return (
+        RedirectResponse("/")
+        if u(request)
+        else templates.TemplateResponse("register.html", {"request": request})
+    )
+
 
 @app.get("/roster")
 async def roster(request: Request):
