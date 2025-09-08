@@ -2,11 +2,9 @@ import os
 
 from sqlalchemy import create_engine, text
 
-# Support environment variable for database path
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///sabc.db")
 engine = create_engine(DATABASE_URL, echo=False)
 
-# Table definitions for database schema
 TABLE_DEFINITIONS = [
     """anglers(
         id INTEGER PRIMARY KEY,
@@ -225,17 +223,17 @@ def init_db():
         try:
             c.execute(text("ALTER TABLE anglers ADD COLUMN active BOOLEAN DEFAULT 1"))
         except Exception:
-            pass  # Column already exists
+            pass
         try:
             c.execute(text("ALTER TABLE events ADD COLUMN name TEXT"))
         except Exception:
-            pass  # Column already exists
+            pass
         try:
             c.execute(
                 text("ALTER TABLE events ADD COLUMN event_type TEXT DEFAULT 'sabc_tournament'")
             )
         except Exception:
-            pass  # Column already exists
+            pass
         c.commit()
 
 

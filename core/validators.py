@@ -9,7 +9,6 @@ def validate_event_data(
 ):
     errors = []
     warnings = []
-
     date_obj = datetime.strptime(date_str, "%Y-%m-%d")
     if date_obj.date() < datetime.now().date():
         warnings.append(f"Creating event for past date: {date_str}")
@@ -26,27 +25,22 @@ def validate_event_data(
         if start_time:
             if not re.match(r"^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$", start_time):
                 errors.append("Invalid start time format. Use HH:MM (24-hour)")
-
         if weigh_in_time:
             if not re.match(r"^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$", weigh_in_time):
                 errors.append("Invalid weigh-in time format. Use HH:MM (24-hour)")
-
         if start_time and weigh_in_time:
             start = datetime.strptime(start_time, "%H:%M").time()
             weigh_in = datetime.strptime(weigh_in_time, "%H:%M").time()
             if weigh_in <= start:
                 errors.append("Weigh-in time must be after start time")
-
         if entry_fee is not None:
             if entry_fee < 0:
                 errors.append("Entry fee cannot be negative")
             elif entry_fee > 200:
                 warnings.append(f"Entry fee ${entry_fee} is unusually high for SABC tournament")
-
     elif event_type == "federal_holiday":
         if start_time or weigh_in_time or entry_fee:
             warnings.append("Federal holidays don't typically need tournament details")
-
     return {"errors": errors, "warnings": warnings}
 
 

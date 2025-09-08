@@ -9,10 +9,9 @@ def u(r):
             "SELECT id, name, email, member, is_admin, year_joined, phone FROM anglers WHERE id=:id AND active=1",
             {"id": uid},
         )
-        if res:
-            return dict(
-                zip(["id", "name", "email", "member", "is_admin", "year_joined", "phone"], res[0])
-            )
+        return dict(
+            zip(["id", "name", "email", "member", "is_admin", "year_joined", "phone"], res[0])
+        ) if res else None
 
 
 def admin(r):

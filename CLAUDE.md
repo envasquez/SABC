@@ -38,6 +38,19 @@ python validate_against_reference.py
 
 ## CRITICAL RULES
 
+### NEVER USE WILDCARD IMPORTS
+**NEVER use wildcard imports like `from module import *`.** Always explicitly import what you need. This makes code clearer, avoids namespace pollution, and helps with debugging.
+
+```python
+# ❌ NEVER DO THIS
+from fastapi import *
+from fastapi.responses import *
+
+# ✅ DO THIS INSTEAD
+from fastapi import FastAPI, Request, Form, Query, HTTPException
+from fastapi.responses import RedirectResponse, JSONResponse, Response
+```
+
 ### NEVER CONDITIONALLY IMPORT MODULES
 **NEVER EVER EVER EVER conditionally import things.** All dependencies that are needed for testing must be properly installed in the environment. Do not use try/except blocks around imports. If something needs to be tested, the environment must be set up properly to support it.
 
