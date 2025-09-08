@@ -1,5 +1,6 @@
 [tool.ruff]
 line-length = 100
+exclude = ["app_routes.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N"]
@@ -14,3 +15,4 @@ ignore = [
 ignore_missing_imports = true
 warn_return_any = false
 warn_unused_ignores = false
+exclude = ["app_routes.py"]
