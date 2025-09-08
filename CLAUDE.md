@@ -7,7 +7,6 @@ South Austin Bass Club tournament management system - complete rewrite from Djan
 
 ## Key Constraints & Philosophy
 - **MINIMAL COMPLEXITY** - Absolute minimum code to meet requirements
-- **NO SEPARATE ADMIN PAGES** - All admin controls inline with main interface
 - **DATABASE CALCULATIONS** - Push all math to SQL views, not Python
 - **MEMBERS ONLY VOTING** - Only `member=true` can vote (never anonymous)
 - **ADMIN-ONLY CRITICAL FUNCTIONS** - Results entry, poll creation, member management
@@ -18,12 +17,11 @@ South Austin Bass Club tournament management system - complete rewrite from Djan
 **CRITICAL**: The reference site is on PORT 80, NOT PORT 443. Always use http://167.71.20.3 (port 80) when accessing the reference site.
 
 ### Validation Requirements:
-1. **BEFORE any database modification**, run `python validate_against_reference.py`
-2. **All membership data** must exactly match reference site (names, emails, member/guest status)
-3. **Tournament results** must match reference tournaments by date and participants
-4. **AoY standings** must match reference site calculations within 1 point
-5. **NO placeholder names** - all names must be real people from reference site
-6. **NO Guest Angler entries** - convert to actual names or remove
+1. **All membership data** must exactly match reference site (names, emails, member/guest status)
+2. **Tournament results** must match reference tournaments by date and participants
+3. **AoY standings** must match reference site calculations within 1 point
+4. **NO placeholder names** - all names must be real people from reference site
+5. **NO Guest Angler entries** - convert to actual names or remove
 
 ### Validation Workflow:
 ```bash
@@ -51,7 +49,7 @@ try:
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
 
-# ✅ DO THIS INSTEAD  
+# ✅ DO THIS INSTEAD
 from playwright.sync_api import sync_playwright
 ```
 
@@ -61,9 +59,18 @@ from playwright.sync_api import sync_playwright
 nix develop
 
 # Core development commands (in Nix shell)
-start-app        # Run FastAPI development server  
+start-app        # Run FastAPI development server
 setup-db         # Initialize database with schema
 reset-db         # Reset database (delete and recreate)
+
+# Testing commands (in Nix shell)
+run-tests        # Run complete test suite
+test-backend     # Run backend tests only
+test-frontend    # Run frontend tests only
+test-integration # Run integration tests
+test-quick       # Run quick test subset
+test-coverage    # Generate coverage report
+clean-tests      # Clean test artifacts
 
 # Code quality commands (in Nix shell)
 format-code      # Auto-format Python code with ruff
@@ -73,12 +80,8 @@ deploy-app       # Run all checks for deployment
 # Manual commands (if not using Nix)
 python database.py              # Initialize database
 python bootstrap_admin.py       # Create admin user
+python tests/run_tests.py       # Run test suite
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
-
-# CI Commands (used in GitHub Actions)
-ruff check . --output-format=github    # Lint code
-ruff format --check .                  # Check formatting
-mypy app.py --ignore-missing-imports   # Type checking
 ```
 
 ## File Structure
@@ -127,7 +130,7 @@ Admin dropdown menu additions:
 -- Essential tables only
 anglers (id, name, email, member, is_admin)
 events (id, date, year, description)
-lakes (id, name, location) 
+lakes (id, name, location)
 ramps (id, lake_id, name, coordinates)
 polls (id, title, poll_type, starts_at, closes_at, winning_option_id)
 poll_options (id, poll_id, option_text, option_data JSON)
@@ -172,7 +175,7 @@ team_results (id, tournament_id, angler1_id, angler2_id, total_weight)
 # Poll types with different option_data structures
 tournament_location: {"lake_id": 1, "ramp_id": 3, "start_time": "06:00", "end_time": "15:00"}
 yes_no: {} # Simple text options
-multiple_choice: {} # Simple text options  
+multiple_choice: {} # Simple text options
 officer_election: {} # Simple text options
 ```
 
@@ -230,11 +233,11 @@ else:  # Past event
 - **Memory usage**: < 50MB
 - **Lines of code**: < 1000 total
 
-## Code Quality & CI
-- **Linting** - Ruff for code style and error detection
-- **Type checking** - MyPy for static type analysis
-- **Formatting** - Ruff for consistent code formatting
-- **CI Pipeline** - Automated checks on every commit
+## Testing Strategy
+- **Real data testing** - Use migrated Django data
+- **Admin workflow testing** - Poll creation → Tournament → Results
+- **Member voting testing** - Ensure only members can vote
+- **Edge case testing** - Ties, empty polls, cancellations
 
 ## Deployment
 - **Digital Ocean droplet** - Keep current hosting
@@ -271,7 +274,7 @@ async def create_poll(user: User = Depends(require_admin)):
 # Tournament location poll
 option_data = {
     "lake_id": 1,
-    "ramp_id": 3, 
+    "ramp_id": 3,
     "start_time": "06:00",
     "end_time": "15:00"
 }
@@ -310,15 +313,14 @@ option_data = {}  # Just use option_text
 - **Responsive Layout**: Aligned column widths between poll types for visual consistency
 
 ### Development Tools
-- **Vote Simulation System**: Scripts to generate realistic voting patterns for testing
 - **Data Validation**: Complete lake/ramp/time combinations from YAML configuration
 - **Edge Case Testing**: Proper handling of single votes and various vote distributions
 
 ## Success Criteria
-✅ Faster than Django (< 200ms load times)  
-✅ Easier to maintain (< 1000 lines of code)  
-✅ All bylaws requirements met  
-✅ All admin functions inline  
-✅ Members can vote, admins can manage  
-✅ Historical data migrated successfully  
+✅ Faster than Django (< 200ms load times)
+✅ Easier to maintain (< 1000 lines of code)
+✅ All bylaws requirements met
+✅ All admin functions inline
+✅ Members can vote, admins can manage
+✅ Historical data migrated successfully
 ✅ Professional poll visualization system

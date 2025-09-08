@@ -56,12 +56,6 @@
                             <small class="text-muted">Higher priority items appear first</small>
                         </div>
                         
-                        <div class="form-check mb-3">
-                            <input class="form-check-input" type="checkbox" id="published" name="published" value="1" checked>
-                            <label class="form-check-label" for="published">
-                                Publish immediately
-                            </label>
-                        </div>
                         
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="bi bi-plus-circle"></i> Create News
@@ -78,7 +72,6 @@
                     <h5 class="mb-0"><i class="bi bi-list-ul"></i> Existing News Items</h5>
                 </div>
                 <div class="card-body">
-                    <!-- DEBUG: news_items length = {{ news_items|length }} -->
                     {% if news_items %}
                     <div class="table-responsive">
                         <table class="table table-hover">
@@ -86,6 +79,7 @@
                                 <tr>
                                     <th>Title</th>
                                     <th>Content</th>
+                                    <th>Author</th>
                                     <th>Status</th>
                                     <th>Priority</th>
                                     <th>Created</th>
@@ -100,6 +94,18 @@
                                     </td>
                                     <td>
                                         <small>{{ item[2][:100] }}{% if item[2]|length > 100 %}...{% endif %}</small>
+                                    </td>
+                                    <td>
+                                        {% if item[7] %}
+                                            {% set name_parts = item[7].split() %}
+                                            {% if name_parts|length >= 2 %}
+                                                <small>{{ name_parts[0][0] }}.{{ name_parts[-1] }}</small>
+                                            {% else %}
+                                                <small>{{ item[7] }}</small>
+                                            {% endif %}
+                                        {% else %}
+                                            <small class="text-muted">-</small>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         {% if item[4] %}
@@ -121,10 +127,16 @@
                                         <small>{{ item[3][:10] if item[3] else '' }}</small>
                                     </td>
                                     <td>
-                                        <button class="btn btn-sm btn-warning" onclick="editNews({{ item[0] }}, {{ item[1] | tojson }}, {{ item[2] | tojson }}, {{ item[4] | lower }}, {{ item[5] }})">
+                                        <button class="btn btn-sm btn-warning edit-btn" 
+                                                data-id="{{ item[0] }}" 
+                                                data-title="{{ item[1] }}" 
+                                                data-content="{{ item[2] }}" 
+                                                data-priority="{{ item[5] }}">
                                             <i class="bi bi-pencil"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteNews({{ item[0] }}, {{ item[1] | tojson }})">
+                                        <button class="btn btn-sm btn-danger delete-btn" 
+                                                data-id="{{ item[0] }}" 
+                                                data-title="{{ item[1] }}">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </td>
@@ -174,12 +186,6 @@
                         </select>
                     </div>
                     
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="edit_published" name="published" value="1">
-                        <label class="form-check-label" for="edit_published">
-                            Published
-                        </label>
-                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -191,14 +197,37 @@
 </div>
 
 <script>
-function editNews(id, title, content, published, priority) {
+document.addEventListener('DOMContentLoaded', function() {
+    // Edit button event listeners
+    document.querySelectorAll('.edit-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const title = this.dataset.title;
+            const content = this.dataset.content;
+            const priority = this.dataset.priority;
+            
+            editNews(id, title, content, priority);
+        });
+    });
+    
+    // Delete button event listeners
+    document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.dataset.id;
+            const title = this.dataset.title;
+            
+            deleteNews(id, title);
+        });
+    });
+});
+
+function editNews(id, title, content, priority) {
     // Set form action
     document.getElementById('editForm').action = `/admin/news/${id}/update`;
     
     // Fill form fields
     document.getElementById('edit_title').value = title;
     document.getElementById('edit_content').value = content;
-    document.getElementById('edit_published').checked = published;
     document.getElementById('edit_priority').value = priority;
     
     // Show modal

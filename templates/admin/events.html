@@ -391,11 +391,15 @@
                             </div>
                             <div class="col-md-4">
                                 <label for="edit_lake_name" class="form-label">Lake</label>
-                                <input type="text" class="form-control" id="edit_lake_name" name="lake_name">
+                                <select class="form-select" id="edit_lake_name" name="lake_name">
+                                    <option value="">-- Select Lake --</option>
+                                </select>
                             </div>
                             <div class="col-md-4">
                                 <label for="edit_ramp_name" class="form-label">Ramp</label>
-                                <input type="text" class="form-control" id="edit_ramp_name" name="ramp_name">
+                                <select class="form-select" id="edit_ramp_name" name="ramp_name" disabled>
+                                    <option value="">-- Select Ramp --</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -456,7 +460,69 @@
 <script>
 // This section is handled by the main DOMContentLoaded listener below
 
+// Load lakes when page loads
+let lakesData = [];
+function loadLakes() {
+    fetch('/api/lakes')
+        .then(response => response.json())
+        .then(lakes => {
+            lakesData = lakes;
+            const lakeSelect = document.getElementById('edit_lake_name');
+            lakeSelect.innerHTML = '<option value="">-- Select Lake --</option>';
+            lakes.forEach(lake => {
+                const option = document.createElement('option');
+                option.value = lake.name;
+                option.textContent = lake.name;
+                option.dataset.lakeKey = lake.key;
+                lakeSelect.appendChild(option);
+            });
+        });
+}
+
+// Load ramps when lake is selected
+function loadRamps(lakeName) {
+    const rampSelect = document.getElementById('edit_ramp_name');
+    
+    if (!lakeName) {
+        rampSelect.innerHTML = '<option value="">-- Select Ramp --</option>';
+        rampSelect.disabled = true;
+        return;
+    }
+    
+    // Find the lake key from lakesData
+    const lake = lakesData.find(l => l.name === lakeName);
+    if (!lake) {
+        rampSelect.innerHTML = '<option value="">-- Select Ramp --</option>';
+        rampSelect.disabled = true;
+        return;
+    }
+    
+    fetch(`/api/lakes/${lake.key}/ramps`)
+        .then(response => response.json())
+        .then(data => {
+            rampSelect.innerHTML = '<option value="">-- Select Ramp --</option>';
+            if (data.ramps && data.ramps.length > 0) {
+                data.ramps.forEach(ramp => {
+                    const option = document.createElement('option');
+                    // Handle both string ramps and object ramps with name property
+                    const rampName = typeof ramp === 'string' ? ramp : ramp.name;
+                    option.value = rampName;
+                    option.textContent = rampName;
+                    rampSelect.appendChild(option);
+                });
+                rampSelect.disabled = false;
+            } else {
+                rampSelect.disabled = true;
+            }
+        });
+}
+
 function editEvent(id, date, eventType, name, description, hasPoll, pollActive) {
+    // Load lakes if not already loaded
+    if (lakesData.length === 0) {
+        loadLakes();
+    }
+    
     // Fetch complete event data
     fetch(`/admin/events/${id}/info`)
         .then(response => response.json())
@@ -477,8 +543,17 @@ function editEvent(id, date, eventType, name, description, hasPoll, pollActive) 
             document.getElementById('edit_start_time').value = data.start_time || '06:00';
             document.getElementById('edit_weigh_in_time').value = data.weigh_in_time || '15:00';
             document.getElementById('edit_entry_fee').value = data.entry_fee || 25.00;
-            document.getElementById('edit_lake_name').value = data.lake_name || '';
-            document.getElementById('edit_ramp_name').value = data.ramp_name || '';
+            
+            // Set lake and load ramps
+            const lakeSelect = document.getElementById('edit_lake_name');
+            lakeSelect.value = data.lake_name || '';
+            if (data.lake_name) {
+                loadRamps(data.lake_name);
+                // Set ramp value after ramps are loaded
+                setTimeout(() => {
+                    document.getElementById('edit_ramp_name').value = data.ramp_name || '';
+                }, 500);
+            }
             
             // Populate holiday fields
             document.getElementById('edit_holiday_name').value = data.holiday_name || '';
@@ -787,12 +862,19 @@ function validateEventForm() {
 
 // Initialize event type handling
 document.addEventListener('DOMContentLoaded', function() {
+    // Load lakes on page load
+    loadLakes();
+    
     // Set up create form event type change handler
     document.getElementById('event_type').addEventListener('change', toggleEventFields);
     
     // Set up edit form event type change handler
     document.getElementById('edit_event_type').addEventListener('change', toggleEditEventFields);
     
+    // Set up lake change handler for dynamic ramp loading
+    document.getElementById('edit_lake_name').addEventListener('change', function() {
+        loadRamps(this.value);
+    });
     
     // Initialize with default state
     toggleEventFields();

@@ -10,13 +10,18 @@
         <div class="card mb-4">
             <div class="card-header {% if tournament.complete %}bg-success{% else %}bg-primary{% endif %} text-white">
                 <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        {% if tournament.lake_name %}
-                            {{ tournament.lake_name|upper }}
-                        {% else %}
-                            Location TBD
+                    <div>
+                        <h5 class="mb-0">
+                            {% if tournament.lake_name %}
+                                {{ tournament.lake_name|upper }}
+                            {% else %}
+                                Location TBD
+                            {% endif %}
+                        </h5>
+                        {% if tournament.ramp_name %}
+                            <small class="text-white-50">{{ tournament.ramp_name }}</small>
                         {% endif %}
-                    </h5>
+                    </div>
                     <span class="badge {% if tournament.complete %}bg-warning text-dark{% else %}bg-light text-primary{% endif %}">
                         {% if tournament.complete %}Complete{% else %}Upcoming{% endif %}
                     </span>
@@ -110,7 +115,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Tournament Results Table (below maps) -->
                 {% if tournament.complete and tournament.tournament_stats and tournament.tournament_stats.top_3 %}
                 <div class="mb-3">
@@ -219,7 +224,7 @@
                         </a>
                     </li>
                 {% endif %}
-                
+
                 {% for page_num in page_range %}
                     {% if page_num == current_page %}
                         <li class="page-item active" aria-current="page">
@@ -231,7 +236,7 @@
                         </li>
                     {% endif %}
                 {% endfor %}
-                
+
                 {% if current_page < total_pages %}
                     <li class="page-item">
                         <a class="page-link" href="/?p={{ current_page + 1 }}" aria-label="Next">
@@ -246,7 +251,7 @@
                 {% endif %}
             </ul>
         </nav>
-        
+
         <div class="text-center text-muted small mb-4">
             Showing {{ start_index }}–{{ end_index }} of {{ total_tournaments }} tournaments
         </div>
@@ -261,25 +266,31 @@
                 <h6 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Latest</h6>
             </div>
             <div class="card-body">
-                {% if next_tournament %}
-                <div class="mb-3">
-                    <strong>Next Tournament:</strong>
-                    <div>{{ next_tournament.name }}</div>
-                    <div class="small text-muted">{{ next_tournament.event_date }}</div>
-                    {% if next_tournament.lake_name %}
-                    <div class="small text-success">{{ next_tournament.lake_name }}</div>
-                    {% endif %}
-                </div>
-                <hr>
-                {% endif %}
-                
+
                 {% if latest_news %}
                     {% for news_item in latest_news %}
                     <div class="mb-3 {% if not loop.last %}border-bottom pb-2{% endif %}">
-                        <h6 class="small fw-bold mb-1">{{ news_item[1] | safe }}</h6>
+                        <div class="d-flex align-items-start justify-content-between mb-1">
+                            <h6 class="small fw-bold mb-0">{{ news_item[1] | safe }}</h6>
+                            {% if news_item[4] == 2 %}
+                                <span class="badge bg-danger ms-2" style="font-size: 0.7rem;">Urgent</span>
+                            {% elif news_item[4] == 1 %}
+                                <span class="badge bg-warning text-dark ms-2" style="font-size: 0.7rem;">High</span>
+                            {% else %}
+                                <span class="badge bg-success ms-2" style="font-size: 0.7rem;">Normal</span>
+                            {% endif %}
+                        </div>
                         <p class="small mb-1">{{ news_item[2] | safe }}</p>
                         <small class="text-muted">
                             <span>{{ news_item[3][:10] if news_item[3] else '' }}</span>
+                            {% if news_item[5] %}
+                                {% set name_parts = news_item[5].split() %}
+                                {% if name_parts|length >= 2 %}
+                                    - {{ name_parts[0][0] }}.{{ name_parts[-1] }}
+                                {% else %}
+                                    - {{ news_item[5] }}
+                                {% endif %}
+                            {% endif %}
                         </small>
                     </div>
                     {% endfor %}
@@ -290,7 +301,7 @@
                 {% endif %}
             </div>
         </div>
-        
+
         <!-- Club Info Card -->
         <div class="card mt-4 bg-secondary">
             <div class="card-header">
@@ -298,9 +309,9 @@
             </div>
             <div class="card-body text-center">
                 <div class="mb-3">
-                    <img src="/static/sabc_logo.png" alt="South Austin Bass Club Logo" class="img-fluid" style="max-height: 120px;">
+                    <img src="/static/sabc_logo.png" alt="South Austin Bass Club Logo" class="img-fluid" style="max-height: 250px;">
                 </div>
-                <p class="mb-2"><strong>Founded:</strong> 1982</p>
+                <p class="mb-2"><strong>Founded:</strong> 1983</p>
                 <p class="mb-2"><strong>Members:</strong> {{ member_count }}+ Active Anglers</p>
                 <p class="mb-0"><strong>Waters:</strong> Central Texas Lakes</p>
             </div>
@@ -326,11 +337,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             pollData[lakeName] += {{ option.vote_count }};
             {% endfor %}
-            
+
             const labels = Object.keys(pollData);
             const data = Object.values(pollData);
             const total = data.reduce((a, b) => a + b, 0);
-            
+
             if (total > 0) {
                 new Chart(ctx{{ tournament.id }}, {
                     type: 'bar',
