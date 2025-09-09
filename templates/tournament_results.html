@@ -141,7 +141,12 @@
                     {% for result in individual_results %}
                     <tr>
                         <td>{{ result[0] }}</td>
-                        <td>{{ result[1] }}</td>
+                        <td>
+                            {{ result[1] }}
+                            {% if result|length > 6 and result[6] == 0 %}
+                                <span class="badge bg-secondary ms-2">Guest</span>
+                            {% endif %}
+                        </td>
                         <td>{{ result[2] }}</td>
                         <td>{{ "%.2f"|format(result[3]) }}</td>
                         <td>{{ result[5] }}</td>
@@ -192,7 +197,12 @@
                     {% for result in buy_in_results %}
                     <tr>
                         <td>{{ result[1] }}</td>
-                        <td>{{ result[0] }}</td>
+                        <td>
+                            {{ result[0] }}
+                            {% if result|length > 3 and result[3] == 0 %}
+                                <span class="badge bg-secondary ms-2">Guest</span>
+                            {% endif %}
+                        </td>
                         <td>{{ result[2] }}</td>
                     </tr>
                     {% endfor %}
