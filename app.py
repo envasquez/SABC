@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from datetime import date, datetime, timedelta
 from typing import Optional
@@ -31,6 +32,10 @@ from core.lakes import (
     validate_lake_ramp_combo,
 )
 from core.validators import get_federal_holidays, validate_event_data
+from logging_config import get_logger, log_audit_event, log_security_event
+
+# Initialize logger for this module
+logger = get_logger(__name__)
 
 app = FastAPI(redirect_slashes=False)
 app.add_middleware(
