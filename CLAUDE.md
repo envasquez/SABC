@@ -66,6 +66,16 @@ except ImportError:
 from playwright.sync_api import sync_playwright
 ```
 
+## Code Organization and Linting
+
+**Current Architecture**: The application uses `exec(open("app_routes.py").read())` pattern for loading 3,292 lines of routes. While not ideal architecturally, this approach is necessary due to template filter dependencies.
+
+**Linting Configuration**: The pyproject.toml file is configured to ignore unused imports in app.py (F401) because these imports are used by the exec'd code. This allows format-code and check-code to pass without breaking the application.
+
+**Alternative Considered**: A modular FastAPI router architecture was implemented in the routes/ directory but had complex template sharing issues. The router files remain as reference but are excluded from linting/type checking.
+
+**Running format-code is SAFE**: The configuration prevents the formatter from removing necessary imports, so you can safely run format-code without breaking the application.
+
 ## Development Commands
 ```bash
 # Enter development environment (Nix required)
