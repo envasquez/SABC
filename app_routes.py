@@ -25,7 +25,7 @@ async def roster(request: Request):
     members = db("""
         SELECT DISTINCT a.name, a.email, a.member, a.is_admin, a.active, a.created_at, a.phone,
                CASE
-                   WHEN a.member = 0 THEN (
+                   WHEN a.active = 0 THEN (
                        SELECT e.date
                        FROM results r
                        JOIN tournaments t ON r.tournament_id = t.id
