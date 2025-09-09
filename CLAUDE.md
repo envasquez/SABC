@@ -97,6 +97,37 @@ python tests/run_tests.py       # Run test suite
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
 ```
 
+## MANDATORY: Code Quality Before Commits
+
+**CRITICAL**: Always run code quality checks before committing and pushing code to git.
+
+### Required Workflow for ALL Code Changes:
+```bash
+# 1. Make your code changes
+# 2. ALWAYS run these commands before committing:
+nix develop -c format-code      # Auto-format all code
+nix develop -c check-code       # Run linting and type checking
+
+# 3. Only commit if both commands pass without errors
+git add .
+git commit -m "Your commit message"
+git push
+```
+
+### Code Quality Requirements:
+- ✅ **format-code MUST pass** - Ensures consistent code formatting
+- ✅ **check-code MUST pass** - Ensures no linting errors or type issues
+- ✅ **Application MUST still load** - Test with `python -c "import app"`
+- ❌ **Never commit with failing checks** - Fix issues before committing
+
+### If Code Quality Checks Fail:
+1. **Fix the issues** reported by the tools
+2. **Re-run the checks** until they pass
+3. **Test the application** to ensure it still works
+4. **Then commit and push**
+
+This ensures the repository maintains high code quality and prevents regressions.
+
 ## File Structure
 ```
 sabc/
