@@ -124,7 +124,7 @@
                 <li class="nav-item" role="presentation">
                     <button class="nav-link text-light" id="holidays-tab" data-bs-toggle="tab" data-bs-target="#holidays-events" type="button" role="tab" aria-controls="holidays-events" aria-selected="false">
                         <i class="bi bi-calendar-heart me-2"></i>Federal Holidays
-                        <span class="badge bg-info ms-2" id="holidays-count">{{ events|selectattr('event_type', 'equalto', 'federal_holiday')|list|length }}</span>
+                        <span class="badge bg-info ms-2" id="holidays-count">{{ events|selectattr('event_type', 'equalto', 'holiday')|list|length }}</span>
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -228,7 +228,7 @@
                         </div>
                     </div>
                     
-                    {% set sabc_events = events|selectattr('event_type', 'equalto', 'federal_holiday')|list %}
+                    {% set sabc_events = events|selectattr('event_type', 'equalto', 'holiday')|list %}
                     {% include 'admin/events_table.html' with context %}
                 </div>
 
