@@ -6,7 +6,7 @@ set -e
 # Load environment variables if .env exists
 if [ -f .env ]; then
     echo "Loading environment from .env file..."
-    export $(cat .env | grep -v '^#' | xargs)
+    export "$(grep -v '^#' .env | xargs)"
 fi
 
 # Check if database exists, create if not

@@ -12,9 +12,9 @@ South Austin Bass Club tournament management system - complete rewrite from Djan
 - **ADMIN-ONLY CRITICAL FUNCTIONS** - Results entry, poll creation, member management
 
 ## CRITICAL: Reference Site Synchronization Requirements
-**MANDATORY VALIDATION**: All database changes MUST be validated against the authoritative reference site at http://167.71.20.3
+**MANDATORY VALIDATION**: All database changes MUST be validated against the authoritative reference site at <http://167.71.20.3>
 
-**CRITICAL**: The reference site is on PORT 80, NOT PORT 443. Always use http://167.71.20.3 (port 80) when accessing the reference site.
+**CRITICAL**: The reference site is on PORT 80, NOT PORT 443. Always use <http://167.71.20.3> (port 80) when accessing the reference site.
 
 ### Validation Requirements:
 1. **All membership data** must exactly match reference site (names, emails, member/guest status)
