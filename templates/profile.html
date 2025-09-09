@@ -3,6 +3,18 @@
 <div class="mb-4"><h1><i class="bi bi-person-circle me-2"></i>Member Profile</h1></div>
 {% if error %}<div class="alert alert-danger">{{error}}</div>{% endif %}
 {% if success %}<div class="alert alert-success">{{success}}</div>{% endif %}
+{% if request.args.get('welcome') == 'true' and not user.member %}
+<div class="alert alert-info">
+<h5><i class="bi bi-info-circle me-2"></i>Welcome to South Austin Bass Club!</h5>
+<p class="mb-2">Your account has been created as an <strong>inactive member</strong>. To become an active member:</p>
+<ol class="mb-2">
+<li>Pay the $25 annual membership fee</li>
+<li>Contact an admin to verify your payment</li>
+<li>Once verified, you'll gain access to polls, roster, and voting privileges</li>
+</ol>
+<p class="mb-0"><small>Until then, you can browse public pages and view your profile.</small></p>
+</div>
+{% endif %}
 
 <div class="row g-4">
 <div class="col-lg-8">
@@ -20,8 +32,8 @@
 <tr><th>Phone</th><td>{{user.phone or 'Not provided'}}</td></tr>
 <tr><th>Year Joined</th><td>{{user.year_joined or 'Not specified'}}</td></tr>
 <tr><th>Status</th><td>
-{% if user.member %}<span class="badge bg-success">Active Member</span>{% else %}<span class="badge bg-secondary">Guest</span>{% endif %}
-{% if user.is_admin %}<span class="badge bg-warning text-dark">Admin</span>{% endif %}
+{% if user.member %}<span class="badge bg-success">Active Member</span>{% else %}<span class="badge bg-warning">Inactive Member</span>{% endif %}
+{% if user.is_admin %}<span class="badge bg-danger">Admin</span>{% endif %}
 </td></tr>
 </table>
 </div>

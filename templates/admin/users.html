@@ -22,12 +22,18 @@
             <td class="text-white">{{ u[1] }}</td>
             <td>{{ u[2] or '-' }}</td>
             <td>
-                <span class="badge bg-{{ 'success' if u[3] else 'secondary' }}">{{ 'Member' if u[3] else 'Guest' }}</span>
-                {% if u[4] %}<span class="badge bg-danger ms-1">Admin</span>{% endif %}
-                {% if current_tab == 'inactive' %}<span class="badge bg-warning text-dark ms-1">Inactive</span>{% endif %}
+                {% if current_tab == 'inactive' %}
+                    <span class="badge bg-warning text-dark">Inactive Member</span>
+                {% else %}
+                    <span class="badge bg-success">Active Member</span>
+                    {% if u[4] %}<span class="badge bg-danger ms-1">Admin</span>{% endif %}
+                {% endif %}
             </td>
             <td>
                 <div class="btn-group btn-group-sm">
+                    {% if current_tab == 'inactive' %}
+                        <button class="btn btn-success" onclick="if(confirm('Activate this member?'))fetch('/admin/users/{{ u[0] }}/activate',{method:'POST'}).then(()=>location.reload())"><i class="bi bi-person-check"></i> Activate</button>
+                    {% endif %}
                     <button class="btn btn-warning" onclick="location='/admin/users/{{ u[0] }}/edit'"><i class="bi bi-pencil"></i></button>
                     <button class="btn btn-danger" {{ 'disabled' if u[0] == user.id else "onclick=\"if(confirm('Deactivate user?'))fetch('/admin/users/" + u[0]|string + "',{method:'DELETE'}).then(()=>location.reload())\"" }}><i class="bi bi-person-x"></i></button>
                 </div>
