@@ -1430,7 +1430,7 @@ async def edit_event(
 
             except ValueError as ve:
                 # Log the error but don't fail the entire event update
-                print(f"Failed to parse poll closes date: {ve}")
+                logger.warning(f"Failed to parse poll closes date: {ve}")
 
         return RedirectResponse(
             f"/admin/events?success=Event updated successfully{warning_msg}", status_code=302
@@ -1789,6 +1789,17 @@ async def create_poll(request: Request):
                         },
                     )
 
+        # Log audit event for poll creation
+        log_audit_event(
+            action="CREATE_POLL",
+            user_id=user.get("id"),
+            user_email=user.get("email"),
+            target_type="POLL",
+            target_id=poll_id,
+            new_value=title,
+            details=f"Created poll: {title}"
+        )
+        
         return RedirectResponse(
             f"/admin/polls/{poll_id}/edit?success=Poll created successfully", status_code=302
         )
@@ -1796,8 +1807,7 @@ async def create_poll(request: Request):
     except Exception as e:
         import traceback
 
-        print(f"Error creating poll: {e}")
-        print(traceback.format_exc())
+        logger.error(f"Error creating poll: {e}", exc_info=True)
         return RedirectResponse(
             f"/admin/events?error=Failed to create poll: {str(e)}", status_code=302
         )
@@ -2143,7 +2153,7 @@ async def update_user(
                     {"email": proposed_email, "id": user_id},
                 ):
                     final_email = proposed_email
-                    print(f"[AUTO-EMAIL] Generated {proposed_email} for guest {name}")
+                    logger.info(f"[AUTO-EMAIL] Generated {proposed_email} for guest {name}")
                 else:
                     for counter in range(2, 100):
                         numbered_email = f"{first_clean}.{last_clean}{counter}@sabc.com"
@@ -2152,7 +2162,7 @@ async def update_user(
                             {"email": numbered_email, "id": user_id},
                         ):
                             final_email = numbered_email
-                            print(f"[AUTO-EMAIL] Generated {numbered_email} for guest {name}")
+                            logger.info(f"[AUTO-EMAIL] Generated {numbered_email} for guest {name}")
                             break
 
         update_params = {
@@ -2163,7 +2173,7 @@ async def update_user(
             "is_admin": 1 if is_admin else 0,
             "active": 1 if active else 0,
         }
-        print(f"[UPDATE] User {user_id}: {before[0]} -> {update_params}")
+        logger.info(f"[UPDATE] User {user_id}: {before[0]} -> {update_params}")
         db(
             "UPDATE anglers SET name = :name, email = :email, member = :member, is_admin = :is_admin, active = :active WHERE id = :id",
             update_params,
@@ -2173,18 +2183,29 @@ async def update_user(
             {"id": user_id},
         )
         if after and after[0] != before[0]:
-            print(f"[VERIFIED] User {user_id} updated successfully: {after[0]}")
+            logger.info(f"[VERIFIED] User {user_id} updated successfully: {after[0]}")
+            # Log audit event for user update
+            log_audit_event(
+                action="UPDATE_USER",
+                user_id=user.get("id"),
+                user_email=user.get("email"),
+                target_type="USER",
+                target_id=user_id,
+                old_value=str(before[0]),
+                new_value=str(after[0]),
+                details=f"Updated user {name}"
+            )
             return RedirectResponse(
                 "/admin/users?success=User updated and verified", status_code=302
             )
         else:
-            print(f"[ERROR] User {user_id} update failed - no changes detected")
+            logger.error(f"User {user_id} update failed - no changes detected")
             return RedirectResponse(
                 "/admin/users?error=Update failed - no changes saved", status_code=302
             )
 
     except Exception as e:
-        print(f"[ERROR] User update exception: {str(e)}")
+        logger.error(f"User update exception: {str(e)}", exc_info=True)
         error_msg = str(e)
         if "UNIQUE constraint failed: anglers.email" in error_msg:
             existing = db(
@@ -3198,17 +3219,43 @@ async def page(request: Request, page: str = "", p: int = 1):
 # POST routes
 @app.post("/login")
 async def login(request: Request, email: str = Form(...), password: str = Form(...)):
+    client_ip = request.client.host if request.client else "Unknown"
+    email_lower = email.lower().strip()
+    
     try:
         res = db(
             "SELECT id, password_hash FROM anglers WHERE email=:email AND active=1",
-            {"email": email.lower().strip()},
+            {"email": email_lower},
         )
         if res and res[0][1]:  # Check if password_hash exists
             if bcrypt.checkpw(password.encode(), res[0][1].encode()):
                 request.session["user_id"] = res[0][0]
+                log_security_event(
+                    "LOGIN_SUCCESS",
+                    user_id=res[0][0],
+                    user_email=email_lower,
+                    ip_address=client_ip,
+                    success=True
+                )
                 return RedirectResponse("/", status_code=302)
+        
+        # Login failed
+        log_security_event(
+            "LOGIN_FAILED",
+            user_email=email_lower,
+            ip_address=client_ip,
+            success=False,
+            details="Invalid credentials"
+        )
     except Exception as e:
-        print(f"Login error: {e}")  # Log the error for debugging
+        logger.error(f"Login error: {e}", exc_info=True)
+        log_security_event(
+            "LOGIN_ERROR",
+            user_email=email_lower,
+            ip_address=client_ip,
+            success=False,
+            details=str(e)
+        )
 
     return templates.TemplateResponse(
         "login.html", {"request": request, "error": "Invalid email or password"}
@@ -3219,15 +3266,23 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
 async def register(
     request: Request, name: str = Form(...), email: str = Form(...), password: str = Form(...)
 ):
+    client_ip = request.client.host if request.client else "Unknown"
+    email_lower = email.lower().strip()
+    
     try:
-        email = email.lower().strip()
-
         # Check if email already exists
         existing = db(
             "SELECT id FROM anglers WHERE email=:email",
-            {"email": email},
+            {"email": email_lower},
         )
         if existing:
+            log_security_event(
+                "REGISTRATION_FAILED",
+                user_email=email_lower,
+                ip_address=client_ip,
+                success=False,
+                details="Email already exists"
+            )
             return templates.TemplateResponse(
                 "login.html", {"request": request, "error": "Email already exists"}
             )
@@ -3235,22 +3290,35 @@ async def register(
         # Hash password and create user
         password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
         db(
-            "INSERT INTO anglers (name, email, password_hash, member, is_admin, active) VALUES (:name, :email, :password_hash, 0, 0, 1)",
-            {"name": name.strip(), "email": email, "password_hash": password_hash},
+            "INSERT INTO anglers (name, email, password_hash, member, is_admin, active) VALUES (:name, :email, :password_hash, 1, 0, 1)",
+            {"name": name.strip(), "email": email_lower, "password_hash": password_hash},
         )
 
         # Auto-login the new user
         user = db(
             "SELECT id FROM anglers WHERE email=:email",
-            {"email": email},
+            {"email": email_lower},
         )
         if user:
             request.session["user_id"] = user[0][0]
-            # Redirect to profile page to show inactive status
-            return RedirectResponse("/profile?welcome=true", status_code=302)
-
+            log_security_event(
+                "REGISTRATION_SUCCESS",
+                user_id=user[0][0],
+                user_email=email_lower,
+                ip_address=client_ip,
+                success=True,
+                details=f"New user registered: {name.strip()}"
+            )
+            return RedirectResponse("/", status_code=302)
     except Exception as e:
-        print(f"Registration error: {e}")
+        logger.error(f"Registration error: {e}", exc_info=True)
+        log_security_event(
+            "REGISTRATION_ERROR",
+            user_email=email_lower,
+            ip_address=client_ip,
+            success=False,
+            details=str(e)
+        )
         return templates.TemplateResponse(
             "login.html", {"request": request, "error": "Registration failed"}
         )
@@ -3260,6 +3328,15 @@ async def register(
 
 @app.post("/logout")
 async def logout(request: Request):
+    user = u(request)
+    if user:
+        log_security_event(
+            "LOGOUT",
+            user_id=user.get("id"),
+            user_email=user.get("email"),
+            ip_address=request.client.host if request.client else "Unknown",
+            success=True
+        )
     request.session.clear()
     return RedirectResponse("/", status_code=302)
 

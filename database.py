@@ -1,6 +1,9 @@
+import logging
 import os
 
 from sqlalchemy import create_engine, text
+
+logger = logging.getLogger(__name__)
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///sabc.db")
 engine = create_engine(DATABASE_URL, echo=False)
@@ -121,7 +124,7 @@ TABLE_DEFINITIONS = [
         paid BOOLEAN DEFAULT 0,
         UNIQUE(angler_id, year)
     )""",
-    """officers(
+    """officer_positions(
         id INTEGER PRIMARY KEY,
         angler_id INTEGER,
         position TEXT NOT NULL,
@@ -216,10 +219,27 @@ ORDER BY e.year DESC, total_points DESC
 
 def init_db():
     """Initialize database with SABC schema."""
-    print("Init DB...")
+    logger.info("Initializing database...")
     with engine.connect() as c:
+        # Handle migration BEFORE creating tables
+        try:
+            # Check if old 'officers' table exists
+            officers_exists = c.execute(
+                text("SELECT name FROM sqlite_master WHERE type='table' AND name='officers'")
+            ).fetchone()
+            if officers_exists:
+                # Rename the table before new schema creation
+                c.execute(text("ALTER TABLE officers RENAME TO officer_positions"))
+                print("Migrated 'officers' table to 'officer_positions'")
+        except Exception:
+            # Migration failed, continue silently
+            pass
+
+        # Create tables
         for table_def in TABLE_DEFINITIONS:
             c.execute(text(f"CREATE TABLE IF NOT EXISTS {table_def}"))
+
+        # Handle other schema migrations
         try:
             c.execute(text("ALTER TABLE anglers ADD COLUMN active BOOLEAN DEFAULT 1"))
         except Exception:
@@ -234,6 +254,7 @@ def init_db():
             )
         except Exception:
             pass
+
         c.commit()
 
 
@@ -249,4 +270,4 @@ def create_views():
 if __name__ == "__main__":
     init_db()
     create_views()
-    print("Done!")
+    logger.info("Database initialization complete!")
