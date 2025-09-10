@@ -66,7 +66,7 @@
                         </thead>
                         <tbody>
                             {% for member in members %}
-                                {% if member[2] %}  <!-- member=1 (active members) -->
+                                {% if member[4] %}  <!-- active=1 (active members) -->
                                 <tr>
                                     <td>{{ member[0].split(' ')[0] }}</td>
                                     <td>{{ member[0].split(' ')[-1] }}</td>
@@ -90,7 +90,7 @@
                 </h4>
             </div>
             <div class="card-body">
-                {% set guests = members|selectattr(2, 'equalto', 0)|list %}
+                {% set guests = members|selectattr(4, 'equalto', 0)|list %}
                 {% if guests|length > 0 %}
                     <!-- Group guests by year -->
                     {% set years_dict = {} %}
@@ -242,7 +242,7 @@
     <div class="col-md-4">
         <div class="card bg-success text-white">
             <div class="card-body text-center">
-                <h3 class="card-title">{{ members|selectattr(2, 'equalto', 1)|list|length }}</h3>
+                <h3 class="card-title">{{ members|selectattr(4, 'equalto', 1)|list|length }}</h3>
                 <p class="card-text">Active Members</p>
             </div>
         </div>
@@ -250,7 +250,7 @@
     <div class="col-md-4">
         <div class="card bg-secondary text-white">
             <div class="card-body text-center">
-                <h3 class="card-title">{{ members|selectattr(2, 'equalto', 0)|list|length }}</h3>
+                <h3 class="card-title">{{ members|selectattr(4, 'equalto', 0)|list|length }}</h3>
                 <p class="card-text">Guests</p>
             </div>
         </div>
