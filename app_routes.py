@@ -1548,6 +1548,7 @@ async def create_poll_form(request: Request, event_id: int = Query(None)):
                 LEFT JOIN polls p ON e.id = p.event_id
                 WHERE p.id IS NULL
                 AND e.date >= date('now')
+                AND e.event_type = 'sabc_tournament'
                 ORDER BY e.date ASC
             """)
 

@@ -22,7 +22,7 @@
                 <td>
                     {% if event.event_type == 'sabc_tournament' %}
                         <span class="badge bg-primary"><i class="bi bi-trophy"></i></span>
-                    {% elif event.event_type == 'federal_holiday' %}
+                    {% elif event.event_type == 'holiday' %}
                         <span class="badge bg-info"><i class="bi bi-calendar-heart"></i></span>
                     {% elif event.event_type == 'other_tournament' %}
                         <span class="badge bg-warning"><i class="bi bi-calendar"></i></span>
@@ -47,7 +47,7 @@
                         {% if event.start_time %}
                         <br><small class="text-muted"><i class="bi bi-clock"></i> {{ event.start_time }} - {{ event.weigh_in_time or '15:00' }}</small>
                         {% endif %}
-                    {% elif event.event_type == 'federal_holiday' %}
+                    {% elif event.event_type == 'holiday' %}
                         <br><small class="text-info">{{ event.holiday_name }}</small>
                     {% endif %}
                 </td>

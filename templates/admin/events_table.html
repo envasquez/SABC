@@ -11,7 +11,7 @@
                 <th width="8%">Fee</th>
                 <th width="12%">Poll Status</th>
                 <th width="12%">Tournament</th>
-                {% elif sabc_events|selectattr('event_type', 'equalto', 'federal_holiday')|list %}
+                {% elif sabc_events|selectattr('event_type', 'equalto', 'holiday')|list %}
                 <th width="20%">Holiday</th>
                 <th width="20%">Details</th>
                 {% else %}
@@ -82,7 +82,7 @@
                     {% endif %}
                 </td>
                 
-                {% elif event.event_type == 'federal_holiday' %}
+                {% elif event.event_type == 'holiday' %}
                 <td>
                     <span class="badge bg-info">
                         <i class="bi bi-calendar-heart me-1"></i>{{ event.holiday_name or event.name }}
