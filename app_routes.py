@@ -778,12 +778,16 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
 
     elif page == "users":
         tab = request.query_params.get("tab", "active")
-        ctx["users"] = db(
-            "SELECT id, name, email, member, is_admin, active FROM anglers WHERE "
-            + ("member = 1 AND active = 0" if tab == "inactive" else "active = 1")
-            + " ORDER BY "
-            + ("name" if tab == "inactive" else "is_admin DESC, member DESC, name")
-        )
+        if tab == "inactive":
+            # Show inactive members (member=0, active=1)
+            ctx["users"] = db(
+                "SELECT id, name, email, member, is_admin, active FROM anglers WHERE member = 0 AND active = 1 ORDER BY name"
+            )
+        else:
+            # Show active members (member=1, active=1)
+            ctx["users"] = db(
+                "SELECT id, name, email, member, is_admin, active FROM anglers WHERE member = 1 AND active = 1 ORDER BY is_admin DESC, name"
+            )
         ctx["current_tab"] = tab
     return templates.TemplateResponse(f"admin/{page}.html", ctx)
 
@@ -2252,6 +2256,18 @@ async def deactivate_user(request: Request, user_id: int):
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
+@app.post("/admin/users/{user_id}/activate")
+async def activate_user(request: Request, user_id: int):
+    if not (user := u(request)) or not user.get("is_admin"):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    try:
+        # Activate user by setting member=1 (active member status)
+        db("UPDATE anglers SET member = 1 WHERE id = :id", {"id": user_id})
+        return JSONResponse({"success": True})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 @app.get("/tournaments/{tournament_id}")
 async def tournament_results(request: Request, tournament_id: int):
     """Display tournament results page matching reference site format."""
@@ -3294,7 +3310,6 @@ async def register(
                 details=f"New user registered: {name.strip()}"
             )
             return RedirectResponse("/", status_code=302)
-
     except Exception as e:
         logger.error(f"Registration error: {e}", exc_info=True)
         log_security_event(
