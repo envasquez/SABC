@@ -25,7 +25,7 @@ async def roster(request: Request):
     members = db("""
         SELECT DISTINCT a.name, a.email, a.member, a.is_admin, a.active, a.created_at, a.phone,
                CASE
-                   WHEN a.member = 0 THEN (
+                   WHEN a.active = 0 THEN (
                        SELECT e.date
                        FROM results r
                        JOIN tournaments t ON r.tournament_id = t.id
@@ -1544,6 +1544,7 @@ async def create_poll_form(request: Request, event_id: int = Query(None)):
                 LEFT JOIN polls p ON e.id = p.event_id
                 WHERE p.id IS NULL
                 AND e.date >= date('now')
+                AND e.event_type = 'sabc_tournament'
                 ORDER BY e.date ASC
             """)
 
@@ -2331,20 +2332,21 @@ async def tournament_results(request: Request, tournament_id: int):
             r.total_weight - r.dead_fish_penalty as final_weight,
             r.big_bass_weight,
             CASE
-                WHEN a.member = 0 THEN
+                WHEN a.active = 0 THEN
                     0  -- Guests always get 0 points
-                WHEN r.num_fish > 0 AND a.member = 1 THEN
+                WHEN r.num_fish > 0 AND a.active = 1 THEN
                     100 - ROW_NUMBER() OVER (
-                        PARTITION BY CASE WHEN r.num_fish > 0 AND a.member = 1 THEN 1 ELSE 0 END
+                        PARTITION BY CASE WHEN r.num_fish > 0 AND a.active = 1 THEN 1 ELSE 0 END
                         ORDER BY (r.total_weight - r.dead_fish_penalty) DESC, r.big_bass_weight DESC
                     ) + 1
-                WHEN r.buy_in = 1 AND a.member = 1 THEN
+                WHEN r.buy_in = 1 AND a.active = 1 THEN
                     :last_place_points - 4  -- Member buy-ins get 4 points less
-                WHEN a.member = 1 THEN
+                WHEN a.active = 1 THEN
                     :last_place_points - 2  -- Member zeros get 2 points less
                 ELSE
-                    0  -- Fallback for any non-member
-            END as points
+                    0  -- Fallback for any inactive member
+            END as points,
+            a.active
         FROM results r
         JOIN anglers a ON r.angler_id = a.id
         WHERE r.tournament_id = :tournament_id
@@ -2384,10 +2386,11 @@ async def tournament_results(request: Request, tournament_id: int):
             a.name,
             :buy_in_place as place_finish,
             CASE
-                WHEN a.member = 0 THEN 0  -- Guests always get 0 points
-                WHEN a.member = 1 THEN :last_place_points - 4  -- Member buy-ins: last place with fish - 4 points
+                WHEN a.active = 0 THEN 0  -- Guests always get 0 points
+                WHEN a.active = 1 THEN :last_place_points - 4  -- Member buy-ins: last place with fish - 4 points
                 ELSE 0
-            END as points
+            END as points,
+            a.active
         FROM results r
         JOIN anglers a ON r.angler_id = a.id
         WHERE r.tournament_id = :tournament_id
@@ -2989,13 +2992,13 @@ async def awards(request: Request, year: Optional[int] = None):
         )
         SELECT
             a.name,
-            SUM(CASE WHEN a.member = 1 THEN pc.points ELSE 0 END) as total_points,
+            SUM(CASE WHEN a.active = 1 THEN pc.points ELSE 0 END) as total_points,
             SUM(pc.num_fish) as total_fish,
             SUM(pc.adjusted_weight) as total_weight,
             COUNT(DISTINCT pc.tournament_id) as events_fished
         FROM anglers a
         JOIN points_calc pc ON a.id = pc.angler_id
-        WHERE a.member = 1
+        WHERE a.active = 1
         GROUP BY a.id, a.name
         ORDER BY total_points DESC, total_weight DESC
     """
