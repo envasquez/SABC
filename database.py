@@ -1,6 +1,9 @@
+import logging
 import os
 
 from sqlalchemy import create_engine, text
+
+logger = logging.getLogger(__name__)
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///sabc.db")
 engine = create_engine(DATABASE_URL, echo=False)
@@ -216,7 +219,7 @@ ORDER BY e.year DESC, total_points DESC
 
 def init_db():
     """Initialize database with SABC schema."""
-    print("Init DB...")
+    logger.info("Initializing database...")
     with engine.connect() as c:
         # Handle migration BEFORE creating tables
         try:
@@ -267,4 +270,4 @@ def create_views():
 if __name__ == "__main__":
     init_db()
     create_views()
-    print("Done!")
+    logger.info("Database initialization complete!")
