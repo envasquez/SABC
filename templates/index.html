@@ -12,14 +12,23 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h5 class="mb-0">
-                            {% if tournament.lake_name %}
-                                {{ tournament.lake_name|upper }}
+                            {% if tournament.lake_display_name %}
+                                {{ tournament.lake_display_name|upper }}
                             {% else %}
                                 Location TBD
                             {% endif %}
                         </h5>
                         {% if tournament.ramp_name %}
-                            <small class="text-white-50">{{ tournament.ramp_name }}</small>
+                            <small class="text-white-50">
+                                {% if tournament.ramp_google_maps %}
+                                    <a href="#" class="text-white-50 text-decoration-none" 
+                                       data-bs-toggle="modal" data-bs-target="#rampModal{{ tournament.id }}">
+                                        <i class="bi bi-geo-alt me-1"></i>{{ tournament.ramp_name|title }}
+                                    </a>
+                                {% else %}
+                                    {{ tournament.ramp_name|title }}
+                                {% endif %}
+                            </small>
                         {% endif %}
                     </div>
                     <span class="badge {% if tournament.complete %}bg-warning text-dark{% else %}bg-light text-primary{% endif %}">
@@ -117,30 +126,46 @@
                 </div>
 
                 <!-- Tournament Results Table (below maps) -->
-                {% if tournament.complete and tournament.tournament_stats and tournament.tournament_stats.top_3 %}
+                {% if tournament.complete and tournament.top_results %}
                 <div class="mb-3">
-                    <div class="bg-light rounded p-3">
-                        <h6 class="mb-2"><i class="bi bi-trophy-fill text-warning"></i> Top 3 Results</h6>
-                        <div class="row">
-                            {% for team in tournament.tournament_stats.top_3 %}
-                            <div class="col-md-4 mb-2">
-                                <div class="d-flex align-items-center">
-                                    <div class="me-2">
-                                        {% if loop.index == 1 %}
-                                        <span class="badge bg-warning text-dark">1st</span>
-                                        {% elif loop.index == 2 %}
-                                        <span class="badge bg-secondary">2nd</span>
-                                        {% elif loop.index == 3 %}
-                                        <span class="badge bg-info">3rd</span>
-                                        {% endif %}
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <div class="fw-semibold text-primary" style="font-size: 0.9rem;">{{ team.name }}</div>
-                                        <div class="small text-primary">{{ "%.2f"|format(team.weight) }} lbs</div>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
+                    <div class="bg-light rounded p-3" style="border: 2px solid #6c757d;">
+                        <h6 class="mb-3 text-dark"><i class="bi bi-trophy-fill text-warning"></i> Top 3 Results</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        {% for result in tournament.top_results %}
+                                        <th class="text-center">
+                                            {% if result[0] == 1 %}
+                                            <span class="badge bg-warning text-dark">1st Place</span>
+                                            {% elif result[0] == 2 %}
+                                            <span class="badge bg-secondary">2nd Place</span>
+                                            {% elif result[0] == 3 %}
+                                            <span class="badge bg-info">3rd Place</span>
+                                            {% endif %}
+                                        </th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        {% for result in tournament.top_results %}
+                                        <td class="text-center">
+                                            <div class="fw-semibold text-primary mb-1">
+                                                {% set name1_parts = result[1].split() %}
+                                                {% set name2_parts = result[2].split() %}
+                                                {% if name1_parts|length >= 2 and name2_parts|length >= 2 %}
+                                                    {{ name1_parts[0][0] }}.{{ name1_parts[-1] }} / {{ name2_parts[0][0] }}.{{ name2_parts[-1] }}
+                                                {% else %}
+                                                    {{ result[1] }} / {{ result[2] }}
+                                                {% endif %}
+                                            </div>
+                                            <div class="text-muted">{{ "%.2f"|format(result[3]) }} lbs</div>
+                                        </td>
+                                        {% endfor %}
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -272,9 +297,9 @@
                     <div class="mb-3 {% if not loop.last %}border-bottom pb-2{% endif %}">
                         <div class="d-flex align-items-start justify-content-between mb-1">
                             <h6 class="small fw-bold mb-0">{{ news_item[1] | safe }}</h6>
-                            {% if news_item[4] == 2 %}
+                            {% if news_item[5] == 2 %}
                                 <span class="badge bg-danger ms-2" style="font-size: 0.7rem;">Urgent</span>
-                            {% elif news_item[4] == 1 %}
+                            {% elif news_item[5] == 1 %}
                                 <span class="badge bg-warning text-dark ms-2" style="font-size: 0.7rem;">High</span>
                             {% else %}
                                 <span class="badge bg-success ms-2" style="font-size: 0.7rem;">Normal</span>
@@ -282,13 +307,15 @@
                         </div>
                         <p class="small mb-1">{{ news_item[2] | safe }}</p>
                         <small class="text-muted">
-                            <span>{{ news_item[3][:10] if news_item[3] else '' }}</span>
-                            {% if news_item[5] %}
-                                {% set name_parts = news_item[5].split() %}
+                            {% set display_date = news_item[4] if news_item[8] else news_item[3] %}
+                            {% set display_author = news_item[6] %}
+                            <span>{{ display_date[:10] if display_date else '' }}</span>
+                            {% if display_author %}
+                                {% set name_parts = display_author.split() %}
                                 {% if name_parts|length >= 2 %}
-                                    - {{ name_parts[0][0] }}.{{ name_parts[-1] }}
+                                    - posted by: {{ name_parts[0][0] }}.{{ name_parts[-1] }}
                                 {% else %}
-                                    - {{ news_item[5] }}
+                                    - posted by: {{ display_author }}
                                 {% endif %}
                             {% endif %}
                         </small>
@@ -443,5 +470,32 @@ document.addEventListener('DOMContentLoaded', function() {
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 </style>
+
+<!-- Ramp Location Modals -->
+{% for tournament in all_tournaments %}
+    {% if tournament.ramp_google_maps %}
+        <div class="modal fade" id="rampModal{{ tournament.id }}" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-geo-alt me-2"></i>{{ tournament.ramp_name|title }}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <div style="height: 400px; width: 100%;">
+                            {{ tournament.ramp_google_maps|safe }}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <small class="text-muted">{{ tournament.lake_display_name }}</small>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endfor %}
 
 {% endblock content %}
