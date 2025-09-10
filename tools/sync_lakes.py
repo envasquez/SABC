@@ -9,11 +9,12 @@ Usage:
     python sync_lakes.py --check   # Check what would be updated without making changes
 """
 
-import sqlite3
-import yaml
-import sys
 import argparse
+import sqlite3
+import sys
 from pathlib import Path
+
+import yaml
 
 
 def load_yaml_data():
@@ -96,7 +97,7 @@ def apply_lake_changes(cursor, yaml_key, lake_data, dry_run=False):
         if not dry_run:
             cursor.execute(
                 """
-                UPDATE lakes 
+                UPDATE lakes
                 SET display_name = ?, google_maps_iframe = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE yaml_key = ?
             """,
@@ -133,7 +134,7 @@ def apply_ramp_changes(cursor, lake_id, ramp_data, dry_run=False):
         if not dry_run:
             cursor.execute(
                 """
-                UPDATE ramps 
+                UPDATE ramps
                 SET google_maps_iframe = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE lake_id = ? AND name = ?
             """,

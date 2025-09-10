@@ -789,7 +789,7 @@ async def home_paginated(request: Request, page: int = 1):
     # Tournament results are truncated, so we'll get the first few results
     tournaments = db(
         """
-        SELECT t.id, e.date, e.name, e.description, 
+        SELECT t.id, e.date, e.name, e.description,
                l.display_name as lake_display_name, l.yaml_key as lake_name,
                ra.name as ramp_name, ra.google_maps_iframe as ramp_google_maps,
                l.google_maps_iframe as lake_google_maps,
@@ -803,7 +803,7 @@ async def home_paginated(request: Request, page: int = 1):
         LEFT JOIN lakes l ON t.lake_id = l.id
         LEFT JOIN ramps ra ON t.ramp_id = ra.id
         LEFT JOIN results r ON t.id = r.tournament_id AND NOT r.disqualified
-        GROUP BY t.id, e.date, e.name, e.description, 
+        GROUP BY t.id, e.date, e.name, e.description,
                  l.display_name, l.yaml_key, ra.name, ra.google_maps_iframe, l.google_maps_iframe,
                  t.start_time, t.end_time, t.entry_fee, t.fish_limit, t.limit_type,
                  t.is_team, t.is_paper, t.complete, t.poll_id
