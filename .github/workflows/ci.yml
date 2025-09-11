@@ -59,7 +59,7 @@ jobs:
     
     - name: Initialize database
       run: |
-        python core/database.py
+        python -m core.database
     
     - name: Test health endpoint
       run: |
