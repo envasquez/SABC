@@ -320,6 +320,57 @@ async def edit_poll_form(request: Request, poll_id: int):
         return RedirectResponse(f"/polls?error=Failed to load poll: {str(e)}", status_code=302)
 
 
+@router.post("/admin/polls/{poll_id}/edit")
+async def update_poll(request: Request, poll_id: int):
+    """Update poll information."""
+    if isinstance(user := admin(request), RedirectResponse):
+        return user
+    
+    try:
+        form = await request.form()
+        title = form.get("title", "").strip()
+        description = form.get("description", "").strip()
+        closes_at = form.get("closes_at", "")
+        
+        if not title:
+            return RedirectResponse(f"/admin/polls/{poll_id}/edit?error=Title is required", status_code=302)
+        
+        # Update poll
+        db("""
+            UPDATE polls 
+            SET title = :title, description = :description, closes_at = :closes_at
+            WHERE id = :poll_id
+        """, {
+            "title": title,
+            "description": description, 
+            "closes_at": closes_at if closes_at else None,
+            "poll_id": poll_id
+        })
+        
+        logger.info(
+            "Poll updated successfully",
+            extra={
+                "admin_user_id": user.get("id"),
+                "poll_id": poll_id,
+                "title": title,
+            }
+        )
+        
+        return RedirectResponse(f"/admin/polls/{poll_id}/edit?success=Poll updated successfully", status_code=302)
+        
+    except Exception as e:
+        logger.error(
+            "Error updating poll",
+            extra={
+                "admin_user_id": user.get("id"),
+                "poll_id": poll_id,
+                "error": str(e),
+            },
+            exc_info=True,
+        )
+        return RedirectResponse(f"/admin/polls/{poll_id}/edit?error=Failed to update poll: {str(e)}", status_code=302)
+
+
 @router.delete("/admin/polls/{poll_id}")
 async def delete_poll(request: Request, poll_id: int):
     """Delete a poll and all its votes."""
