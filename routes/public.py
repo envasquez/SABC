@@ -62,7 +62,7 @@ async def roster(request: Request):
     # Get officer positions
     officers = db("""
         SELECT o.position, a.name, a.email, a.phone
-        FROM officers o
+        FROM officer_positions o
         JOIN anglers a ON o.angler_id = a.id
         WHERE o.year = 2025
         ORDER BY

@@ -12,8 +12,8 @@ from routes.dependencies import db, find_lake_by_id, find_lake_data_by_db_name, 
 router = APIRouter()
 
 
-def build_calendar_data_with_polls(calendar_events, tournament_events, year=2025):
-    """Build calendar data structure with enhanced poll and tournament information."""
+def build_calendar_data_with_events(calendar_events, tournament_events, year=2025):
+    """Build calendar data structure with holidays, tournaments, and poll information."""
     calendar.setfirstweekday(calendar.SUNDAY)
     all_events, event_details, event_types_present = {}, {}, set()
 
@@ -120,13 +120,13 @@ def build_calendar_data_with_polls(calendar_events, tournament_events, year=2025
                     if month_idx in all_events and day in all_events[month_idx]:
                         events_for_day = all_events[month_idx][day]
                         has_sabc = any(e["type"] == "sabc_tournament" for e in events_for_day)
-                        has_holiday = any(e["type"] == "holiday" for e in events_for_day)
+                        has_federal_holiday = any(e["type"] == "federal_holiday" for e in events_for_day)
                         has_other = any(e["type"] == "other_tournament" for e in events_for_day)
                         if has_sabc:
                             day_str += "†"
                         elif has_other:
                             day_str += "‡"
-                        elif has_holiday:
+                        elif has_federal_holiday:
                             day_str += "*"
                     week_days.append(day_str)
             weeks.append(week_days)
@@ -141,7 +141,7 @@ async def calendar_page(request: Request):
     user, current_year, next_year = u(request), datetime.now().year, datetime.now().year + 1
 
     def get_year_calendar_data(year):
-        tournament_events = db(
+        all_events = db(
             """
             SELECT e.id as event_id, e.date, e.name, e.event_type, e.description,
                    p.id as poll_id, p.title as poll_title, p.starts_at, p.closes_at, p.closed,
@@ -150,7 +150,21 @@ async def calendar_page(request: Request):
             WHERE strftime('%Y', e.date) = :year ORDER BY e.date""",
             {"year": str(year)},
         )
-        return build_calendar_data_with_polls([], tournament_events, year)
+        
+        # Separate calendar events (holidays) from tournament events
+        calendar_events = []
+        tournament_events = []
+        
+        for event in all_events:
+            if event[3] == 'federal_holiday':  # event_type
+                # Format for calendar_events: (date, name, event_type, description)
+                calendar_events.append((event[1], event[2], event[3], event[4]))
+            else:
+                # Keep full tournament event data
+                tournament_events.append(event)
+        
+        
+        return build_calendar_data_with_events(calendar_events, tournament_events, year)
 
     current_calendar_data, current_event_details, current_event_types = get_year_calendar_data(
         current_year

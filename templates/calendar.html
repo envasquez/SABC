@@ -83,9 +83,14 @@
                         <span class="badge bg-warning text-dark me-2">&nbsp;</span>Other Tournaments
                     </div>
                     {% endif %}
-                    {% if 'holiday' in event_types_present %}
+                    {% if 'federal_holiday' in event_types_present %}
                     <div class="col">
                         <span class="badge bg-danger me-2">&nbsp;</span>Federal Holidays
+                    </div>
+                    {% endif %}
+                    {% if 'club_event' in event_types_present %}
+                    <div class="col">
+                        <span class="badge bg-success me-2">&nbsp;</span>Club Events
                     </div>
                     {% endif %}
                 </div>
@@ -154,9 +159,14 @@
                         <span class="badge bg-warning text-dark me-2">&nbsp;</span>Other Tournaments
                     </div>
                     {% endif %}
-                    {% if 'holiday' in event_types_present %}
+                    {% if 'federal_holiday' in event_types_present %}
                     <div class="col">
                         <span class="badge bg-danger me-2">&nbsp;</span>Federal Holidays
+                    </div>
+                    {% endif %}
+                    {% if 'club_event' in event_types_present %}
+                    <div class="col">
+                        <span class="badge bg-success me-2">&nbsp;</span>Club Events
                     </div>
                     {% endif %}
                 </div>
