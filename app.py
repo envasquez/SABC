@@ -50,7 +50,30 @@ templates.env.filters["time_format"] = time_format_filter
 templates.env.filters["date_format_dd_mm_yyyy"] = lambda d: date_format_filter(d, "dd-mm-yyyy")
 templates.env.filters["month_number"] = month_number_filter
 
-exec(open("app_routes.py").read())
+# Configure template filters globally and set in dependencies
+import routes.dependencies as deps
+deps.templates = templates
+
+# Import and include all routers
+from routes import (
+    admin_core, admin_events, admin_events_crud, admin_polls, 
+    admin_tournaments, admin_users, admin_news, api, auth, 
+    calendar, public, static, tournaments
+)
+
+app.include_router(auth.router)
+app.include_router(admin_core.router)
+app.include_router(admin_events.router)
+app.include_router(admin_events_crud.router)
+app.include_router(admin_polls.router)
+app.include_router(admin_tournaments.router)
+app.include_router(admin_users.router)
+app.include_router(admin_news.router)
+app.include_router(api.router)
+app.include_router(calendar.router)
+app.include_router(static.router)
+app.include_router(tournaments.router)
+app.include_router(public.router)  # MUST be last due to catch-all route
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
