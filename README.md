@@ -33,7 +33,7 @@ SABC Tournament Management System is a complete rewrite from Django to FastAPI, 
 ### Prerequisites
 
 - **Nix** (recommended) - For complete development environment
-- **Python 3.11+** - If not using Nix
+- **Python 3.12+** - If not using Nix
 - **SQLite** - Database (no additional setup required)
 
 ### Development Setup

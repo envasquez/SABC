@@ -14,7 +14,7 @@ The badge will show:
 ## What the CI Pipeline Tests
 
 ### 🧪 **Test Matrix**
-- Python 3.11 and 3.12 compatibility
+- Python 3.12 compatibility
 - Cross-version dependency compatibility
 
 ### 🔍 **Code Quality**
