@@ -3,7 +3,7 @@
 import json
 from datetime import datetime, timedelta
 
-from fastapi import Form, Request
+from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import text
 
@@ -15,8 +15,6 @@ from routes.dependencies import (
     get_lakes_list,
     validate_event_data,
 )
-
-from fastapi import APIRouter
 
 router = APIRouter()
 

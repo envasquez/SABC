@@ -2,13 +2,13 @@
 
 from datetime import datetime
 
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from routes.dependencies import db, load_lakes_data
 
-from fastapi import APIRouter
-
 router = APIRouter()
+
 
 @router.get("/health")
 async def health_check():

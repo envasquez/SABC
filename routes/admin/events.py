@@ -3,7 +3,7 @@
 import calendar
 from datetime import date, timedelta
 
-from fastapi import Request
+from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from routes.dependencies import (
@@ -11,8 +11,6 @@ from routes.dependencies import (
     db,
     get_federal_holidays,
 )
-
-from fastapi import APIRouter
 
 router = APIRouter()
 

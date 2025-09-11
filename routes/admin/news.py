@@ -1,14 +1,12 @@
 """Admin news management router module."""
 
-from fastapi import Form, Request
+from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.auth_helpers import u
 from core.database import db
 from core.response_helpers import error_redirect, success_redirect
 from core.template_config import templates
-
-from fastapi import APIRouter
 
 router = APIRouter()
 

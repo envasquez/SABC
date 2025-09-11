@@ -4,14 +4,12 @@ import json
 import traceback
 from datetime import datetime, timedelta
 
-from fastapi import Query, Request
+from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.db_helpers import get_poll_options_with_votes
 from core.response_helpers import error_redirect
 from routes.dependencies import admin, db, find_lake_by_id, get_all_ramps, get_lakes_list, templates
-
-from fastapi import APIRouter
 
 router = APIRouter()
 

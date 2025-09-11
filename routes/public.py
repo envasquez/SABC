@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 from typing import Optional
 
-from fastapi import Form, HTTPException, Request
+from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.db_helpers import (
@@ -24,8 +24,6 @@ from routes.dependencies import (
     u,
     validate_lake_ramp_combo,
 )
-
-from fastapi import APIRouter
 
 router = APIRouter()
 

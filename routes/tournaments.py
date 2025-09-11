@@ -1,12 +1,10 @@
 """Tournament-related routes."""
 
-from fastapi import Request
+from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.db_helpers import get_tournament_stats
 from routes.dependencies import admin, db, templates, u
-
-from fastapi import APIRouter
 
 router = APIRouter()
 

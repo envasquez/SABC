@@ -1,12 +1,10 @@
 """Admin users routes - user management."""
 
-from fastapi import Form, Request
+from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.response_helpers import error_redirect
 from routes.dependencies import db, templates, u
-
-from fastapi import APIRouter
 
 router = APIRouter()
 

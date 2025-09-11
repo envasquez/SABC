@@ -1,7 +1,7 @@
 """Static routes for favicon and catch-all pages."""
 
-from fastapi.responses import Response
 from fastapi import APIRouter
+from fastapi.responses import Response
 
 router = APIRouter()
 
