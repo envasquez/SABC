@@ -66,11 +66,23 @@ from routes import (  # noqa: E402
 )
 from routes.admin import (  # noqa: E402
     core as admin_core,
+)
+from routes.admin import (
     events as admin_events,
+)
+from routes.admin import (
     events_crud as admin_events_crud,
+)
+from routes.admin import (
     news as admin_news,
+)
+from routes.admin import (
     polls as admin_polls,
+)
+from routes.admin import (
     tournaments as admin_tournaments,
+)
+from routes.admin import (
     users as admin_users,
 )
 
