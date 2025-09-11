@@ -8,11 +8,12 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.db_helpers import get_poll_options_with_votes
+from core.logging_config import get_logger, log_security_event, SecurityEvent
 from core.response_helpers import error_redirect
 from routes.dependencies import admin, db, find_lake_by_id, get_all_ramps, get_lakes_list, templates
 
 router = APIRouter()
-
+logger = get_logger("admin.polls")
 
 @router.get("/admin/polls/create")
 async def create_poll_form(request: Request, event_id: int = Query(None)):
@@ -251,8 +252,13 @@ async def create_poll(request: Request):
         )
 
     except Exception as e:
-        print(f"Error creating poll: {e}")
-        print(traceback.format_exc())
+        logger.error("Error creating poll", extra={
+            "admin_user_id": user.get("id"),
+            "event_id": event_id if 'event_id' in locals() else None,
+            "poll_type": poll_type if 'poll_type' in locals() else None,
+            "error": str(e)
+        }, exc_info=True)
+        
         return RedirectResponse(
             f"/admin/events?error=Failed to create poll: {str(e)}", status_code=302
         )

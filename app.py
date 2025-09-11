@@ -16,6 +16,7 @@ from starlette.middleware.sessions import SessionMiddleware
 import routes.dependencies as deps
 from core.auth_helpers import admin, u
 from core.database import db
+from core.logging_config import configure_logging, get_logger
 from core.filters import (
     date_format_filter,
     from_json_filter,
@@ -33,9 +34,9 @@ from core.lakes import (
     validate_lake_ramp_combo,
 )
 from core.validators import get_federal_holidays, validate_event_data
-from logging_config import get_logger, log_audit_event, log_security_event
 
-# Initialize logger for this module
+# Initialize logging configuration
+configure_logging(log_level=os.environ.get("LOG_LEVEL", "INFO"))
 logger = get_logger(__name__)
 
 app = FastAPI(redirect_slashes=False)
