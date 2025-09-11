@@ -8,18 +8,11 @@ from typing import Optional
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core.auth_helpers import u
-from core.database import db
-from core.filters import time_format_filter
-from core.lakes import (
-    find_lake_by_id,
-    find_ramp_name_by_id,
-    get_lakes_list,
-    get_ramps_for_lake,
-    load_lakes_data,
-    validate_lake_ramp_combo,
+from .dependencies import (
+    u, db, time_format_filter, templates,
+    find_lake_by_id, find_ramp_name_by_id, get_lakes_list,
+    get_ramps_for_lake, load_lakes_data, validate_lake_ramp_combo
 )
-from core.template_config import templates
 
 router = APIRouter()
 

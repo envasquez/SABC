@@ -44,12 +44,10 @@ def build_calendar_data_with_polls(calendar_events, tournament_events, year=2025
 
     for event in tournament_events:
         date_obj = datetime.strptime(event[1], "%Y-%m-%d")
-        day, month, event_key, event_type = (
-            date_obj.day,
-            date_obj.month,
-            f"{date_obj.month}-{day}",
-            event[3],
-        )
+        day = date_obj.day
+        month = date_obj.month
+        event_key = f"{month}-{day}"
+        event_type = event[3]
         if month not in all_events:
             all_events[month] = {}
         if day not in all_events[month]:

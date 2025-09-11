@@ -112,11 +112,11 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
     if page == "events":
         per_page = 20
         upcoming_offset = (upcoming_page - 1) * per_page
-        (past_page - 1) * per_page
+        past_offset = (past_page - 1) * per_page
 
         # Get counts and events with pagination
         total_upcoming = db("SELECT COUNT(*) FROM events WHERE date >= date('now')")[0][0]
-        db("SELECT COUNT(*) FROM events WHERE date < date('now')")[0][0]
+        total_past = db("SELECT COUNT(*) FROM events WHERE date < date('now')")[0][0]
 
         events = db(
             """
@@ -128,7 +128,8 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
                        WHEN '6' THEN 'Saturday'
                    END as day_name,
                    EXISTS(SELECT 1 FROM polls p WHERE p.event_id = e.id) as has_poll,
-                   EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id) as has_tournament
+                   EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id) as has_tournament,
+                   EXISTS(SELECT 1 FROM polls p WHERE p.event_id = e.id AND datetime('now') BETWEEN p.starts_at AND p.closes_at) as poll_active
             FROM events e WHERE e.date >= date('now') ORDER BY e.date LIMIT :limit OFFSET :offset
         """,
             {"limit": per_page, "offset": upcoming_offset},
@@ -144,18 +145,68 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
                 "day_name": e[6],
                 "has_poll": bool(e[7]),
                 "has_tournament": bool(e[8]),
+                "poll_active": bool(e[9]),
             }
             for e in events
         ]
 
+        # Get past events for Past Events tab
+        past_events_raw = db(
+            """
+            SELECT e.id, e.date, e.name, e.description, e.event_type, e.entry_fee, 
+                   e.lake_name, e.start_time, e.weigh_in_time, e.holiday_name,
+                   EXISTS(SELECT 1 FROM polls p WHERE p.event_id = e.id) as has_poll,
+                   EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id) as has_tournament,
+                   EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id AND t.complete = 1) as tournament_complete,
+                   EXISTS(SELECT 1 FROM tournaments t JOIN results r ON t.id = r.tournament_id WHERE t.event_id = e.id) as has_results
+            FROM events e 
+            WHERE e.date < date('now') 
+            ORDER BY e.date DESC 
+            LIMIT :limit OFFSET :offset
+        """,
+            {"limit": per_page, "offset": past_offset},
+        )
+
+        ctx["past_events"] = [
+            {
+                "id": e[0],
+                "date": e[1],
+                "name": e[2] or "",
+                "description": e[3] or "",
+                "event_type": e[4] or "sabc_tournament",
+                "entry_fee": e[5],
+                "lake_name": e[6],
+                "start_time": e[7],
+                "weigh_in_time": e[8],
+                "holiday_name": e[9],
+                "has_poll": bool(e[10]),
+                "has_tournament": bool(e[11]),
+                "tournament_complete": bool(e[12]),
+                "has_results": bool(e[13]),
+            }
+            for e in past_events_raw
+        ]
+
         # Add pagination context
+        upcoming_total_pages = (total_upcoming + per_page - 1) // per_page
+        past_total_pages = (total_past + per_page - 1) // per_page
+        
         ctx.update(
             {
                 "upcoming_page": upcoming_page,
-                "upcoming_total_pages": (total_upcoming + per_page - 1) // per_page,
+                "upcoming_total_pages": upcoming_total_pages,
                 "upcoming_has_prev": upcoming_page > 1,
-                "upcoming_has_next": upcoming_page < (total_upcoming + per_page - 1) // per_page,
+                "upcoming_has_next": upcoming_page < upcoming_total_pages,
+                "upcoming_prev_page": upcoming_page - 1,
+                "upcoming_next_page": upcoming_page + 1,
                 "total_upcoming": total_upcoming,
+                "past_page": past_page,
+                "past_total_pages": past_total_pages,
+                "past_has_prev": past_page > 1,
+                "past_has_next": past_page < past_total_pages,
+                "past_prev_page": past_page - 1,
+                "past_next_page": past_page + 1,
+                "total_past": total_past,
                 "per_page": per_page,
             }
         )

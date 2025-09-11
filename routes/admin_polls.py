@@ -20,11 +20,12 @@ async def create_poll_form(request: Request, event_id: int = Query(None)):
 
     try:
         if event_id is None:
-            # Show event selection page
+            # Show event selection page - only upcoming tournaments without polls
             available_events = db("""
                 SELECT e.id, e.date, e.name, e.event_type, e.description
                 FROM events e LEFT JOIN polls p ON e.id = p.event_id
-                WHERE p.id IS NULL AND e.date >= date('now') ORDER BY e.date ASC
+                WHERE p.id IS NULL AND e.date >= date('now') AND e.event_type = 'sabc_tournament'
+                ORDER BY e.date ASC
             """)
 
             return templates.TemplateResponse(
@@ -53,9 +54,9 @@ async def create_poll_form(request: Request, event_id: int = Query(None)):
                 status_code=302,
             )
 
-        # Get all events for selector
+        # Get all tournament events for selector
         events = db(
-            "SELECT id, date, name, event_type, description FROM events WHERE date >= date('now') OR id = :event_id ORDER BY date",
+            "SELECT id, date, name, event_type, description FROM events WHERE (date >= date('now') OR id = :event_id) AND event_type = 'sabc_tournament' ORDER BY date",
             {"event_id": event_id},
         )
 

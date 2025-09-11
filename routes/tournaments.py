@@ -8,6 +8,51 @@ from .dependencies import *
 router = APIRouter()
 
 
+@router.get("/tournaments")
+async def tournaments_list(request: Request):
+    """List all tournaments."""
+    user = u(request)
+    
+    # Get all tournaments with event and result data
+    tournaments = db("""
+        SELECT t.id, t.event_id, e.date, e.name, t.lake_name, t.ramp_name, 
+               t.entry_fee, t.complete, t.fish_limit,
+               COUNT(DISTINCT r.id) as result_count,
+               COUNT(DISTINCT tr.id) as team_result_count
+        FROM tournaments t
+        JOIN events e ON t.event_id = e.id
+        LEFT JOIN results r ON t.id = r.tournament_id
+        LEFT JOIN team_results tr ON t.id = tr.tournament_id
+        GROUP BY t.id, t.event_id, e.date, e.name, t.lake_name, t.ramp_name, 
+                 t.entry_fee, t.complete, t.fish_limit
+        ORDER BY e.date DESC
+    """)
+    
+    tournaments_data = [
+        {
+            "id": t[0],
+            "event_id": t[1], 
+            "date": t[2],
+            "name": t[3],
+            "lake_name": t[4],
+            "ramp_name": t[5],
+            "entry_fee": t[6],
+            "complete": bool(t[7]),
+            "fish_limit": t[8],
+            "result_count": t[9],
+            "team_result_count": t[10],
+            "total_participants": t[9] + t[10]
+        }
+        for t in tournaments
+    ]
+    
+    return templates.TemplateResponse("admin/tournaments.html", {
+        "request": request, 
+        "user": user, 
+        "tournaments": tournaments_data
+    })
+
+
 @router.get("/tournaments/{tournament_id}")
 async def tournament_results(request: Request, tournament_id: int):
     """Display tournament results page matching reference site format."""

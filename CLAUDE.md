@@ -66,15 +66,38 @@ except ImportError:
 from playwright.sync_api import sync_playwright
 ```
 
+### NEVER EVER USE EXEC() PATTERN
+**NEVER EVER EVER FUCKING IMPLEMENT AN exec() FLOW!!!** The exec() pattern is absolutely forbidden and must never be used as an architectural solution. Always use proper FastAPI router modules with include_router().
+
+```python
+# ❌ NEVER EVER DO THIS
+exec(open("app_routes.py").read())
+
+# ✅ ALWAYS DO THIS INSTEAD
+from routes import auth, admin_core, public
+app.include_router(auth.router)
+app.include_router(admin_core.router)
+app.include_router(public.router)
+```
+
+**Why exec() is forbidden:**
+- Makes code impossible to debug and maintain
+- Breaks IDE support and type checking
+- Creates complex dependency sharing issues
+- Violates all Python best practices
+- Is a code smell that indicates poor architecture
+
+**Always use modular FastAPI routers instead.**
+
 ## Code Organization and Linting
 
-**Current Architecture**: The application uses `exec(open("app_routes.py").read())` pattern for loading 3,292 lines of routes. While not ideal architecturally, this approach is necessary due to template filter dependencies.
+**Current Architecture**: The application uses modular FastAPI routers in the routes/ directory. Template filters are configured in app.py and shared via routes/dependencies.py module.
 
-**Linting Configuration**: The pyproject.toml file is configured to ignore unused imports in app.py (F401) because these imports are used by the exec'd code. This allows format-code and check-code to pass without breaking the application.
+**Linting Configuration**: The pyproject.toml file supports the modular router architecture and all code quality checks pass.
 
-**Alternative Considered**: A modular FastAPI router architecture was implemented in the routes/ directory but had complex template sharing issues. The router files remain as reference but are excluded from linting/type checking.
+**Router Structure**: Each router module imports shared dependencies from routes/dependencies.py which includes templates, database connections, auth helpers, and all necessary imports.
 
-**Running format-code is SAFE**: The configuration prevents the formatter from removing necessary imports, so you can safely run format-code without breaking the application.
+**Running format-code is SAFE**: The configuration works with the modular router approach and all code quality checks pass.
 
 ## Development Commands
 ```bash
