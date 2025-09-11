@@ -57,19 +57,21 @@ deps.templates = templates
 
 # Now import routes AFTER templates are configured
 from routes import (  # noqa: E402
-    admin_core,
-    admin_events,
-    admin_events_crud,
-    admin_news,
-    admin_polls,
-    admin_tournaments,
-    admin_users,
     api,
     auth,
     calendar,
     public,
     static,
     tournaments,
+)
+from routes.admin import (  # noqa: E402
+    core as admin_core,
+    events as admin_events,
+    events_crud as admin_events_crud,
+    news as admin_news,
+    polls as admin_polls,
+    tournaments as admin_tournaments,
+    users as admin_users,
 )
 
 app.include_router(auth.router)
