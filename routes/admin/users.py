@@ -3,10 +3,12 @@
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from core.logging_config import SecurityEvent, get_logger, log_security_event
 from core.response_helpers import error_redirect
 from routes.dependencies import db, templates, u
 
 router = APIRouter()
+logger = get_logger("admin.users")
 
 
 @router.get("/admin/users/{user_id}/edit")
@@ -69,7 +71,14 @@ async def update_user(
                     {"email": proposed_email, "id": user_id},
                 ):
                     final_email = proposed_email
-                    print(f"[AUTO-EMAIL] Generated {proposed_email} for guest {name}")
+                    logger.info(
+                        "Auto-generated email for guest user",
+                        extra={
+                            "user_id": user_id,
+                            "user_name": name,
+                            "generated_email": proposed_email,
+                        },
+                    )
                 else:
                     # Try numbered versions
                     for counter in range(2, 100):
@@ -79,7 +88,15 @@ async def update_user(
                             {"email": numbered_email, "id": user_id},
                         ):
                             final_email = numbered_email
-                            print(f"[AUTO-EMAIL] Generated {numbered_email} for guest {name}")
+                            logger.info(
+                                "Auto-generated numbered email for guest user",
+                                extra={
+                                    "user_id": user_id,
+                                    "user_name": name,
+                                    "generated_email": numbered_email,
+                                    "counter": counter,
+                                },
+                            )
                             break
 
         update_params = {
@@ -91,7 +108,16 @@ async def update_user(
             "active": 1 if active else 0,
         }
 
-        print(f"[UPDATE] User {user_id}: {before[0]} -> {update_params}")
+        # Log the user update attempt
+        logger.info(
+            "Admin user update initiated",
+            extra={
+                "admin_user_id": user.get("id"),
+                "target_user_id": user_id,
+                "changes": update_params,
+                "before": dict(zip(["name", "email", "member", "is_admin", "active"], before[0])),
+            },
+        )
 
         db(
             """
@@ -108,18 +134,57 @@ async def update_user(
         )
 
         if after and after[0] != before[0]:
-            print(f"[VERIFIED] User {user_id} updated successfully: {after[0]}")
+            # Log successful update
+            log_security_event(
+                SecurityEvent.ADMIN_USER_UPDATE,
+                user_id=user.get("id"),
+                user_email=user.get("email"),
+                ip_address=request.client.host if request.client else "unknown",
+                details={
+                    "target_user_id": user_id,
+                    "changes": update_params,
+                    "before": dict(
+                        zip(["name", "email", "member", "is_admin", "active"], before[0])
+                    ),
+                    "after": dict(zip(["name", "email", "member", "is_admin", "active"], after[0])),
+                },
+            )
+            logger.info(
+                "User updated successfully",
+                extra={
+                    "admin_user_id": user.get("id"),
+                    "target_user_id": user_id,
+                    "after": dict(zip(["name", "email", "member", "is_admin", "active"], after[0])),
+                },
+            )
+
             return RedirectResponse(
                 "/admin/users?success=User updated and verified", status_code=302
             )
         else:
-            print(f"[ERROR] User {user_id} update failed - no changes detected")
+            logger.warning(
+                "User update failed - no changes detected",
+                extra={
+                    "admin_user_id": user.get("id"),
+                    "target_user_id": user_id,
+                    "update_params": update_params,
+                },
+            )
             return RedirectResponse(
                 "/admin/users?error=Update failed - no changes saved", status_code=302
             )
 
     except Exception as e:
-        print(f"[ERROR] User update exception: {str(e)}")
+        logger.error(
+            "User update exception",
+            extra={
+                "admin_user_id": user.get("id"),
+                "target_user_id": user_id,
+                "error": str(e),
+                "update_params": update_params if "update_params" in locals() else None,
+            },
+            exc_info=True,
+        )
         error_msg = str(e)
 
         if "UNIQUE constraint failed: anglers.email" in error_msg:
