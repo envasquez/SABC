@@ -9,9 +9,16 @@ from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from .dependencies import (
-    u, db, time_format_filter, templates,
-    find_lake_by_id, find_ramp_name_by_id, get_lakes_list,
-    get_ramps_for_lake, load_lakes_data, validate_lake_ramp_combo
+    db,
+    find_lake_by_id,
+    find_ramp_name_by_id,
+    get_lakes_list,
+    get_ramps_for_lake,
+    load_lakes_data,
+    templates,
+    time_format_filter,
+    u,
+    validate_lake_ramp_combo,
 )
 
 router = APIRouter()

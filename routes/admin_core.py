@@ -153,15 +153,15 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
         # Get past events for Past Events tab
         past_events_raw = db(
             """
-            SELECT e.id, e.date, e.name, e.description, e.event_type, e.entry_fee, 
+            SELECT e.id, e.date, e.name, e.description, e.event_type, e.entry_fee,
                    e.lake_name, e.start_time, e.weigh_in_time, e.holiday_name,
                    EXISTS(SELECT 1 FROM polls p WHERE p.event_id = e.id) as has_poll,
                    EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id) as has_tournament,
                    EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id AND t.complete = 1) as tournament_complete,
                    EXISTS(SELECT 1 FROM tournaments t JOIN results r ON t.id = r.tournament_id WHERE t.event_id = e.id) as has_results
-            FROM events e 
-            WHERE e.date < date('now') 
-            ORDER BY e.date DESC 
+            FROM events e
+            WHERE e.date < date('now')
+            ORDER BY e.date DESC
             LIMIT :limit OFFSET :offset
         """,
             {"limit": per_page, "offset": past_offset},
@@ -190,7 +190,7 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
         # Add pagination context
         upcoming_total_pages = (total_upcoming + per_page - 1) // per_page
         past_total_pages = (total_past + per_page - 1) // per_page
-        
+
         ctx.update(
             {
                 "upcoming_page": upcoming_page,
@@ -224,7 +224,7 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
     elif page == "tournaments":
         # Get all tournaments with event and result data
         tournaments = db("""
-            SELECT t.id, t.event_id, e.date, e.name, t.lake_name, t.ramp_name, 
+            SELECT t.id, t.event_id, e.date, e.name, t.lake_name, t.ramp_name,
                    t.entry_fee, t.complete, t.fish_limit,
                    COUNT(DISTINCT r.id) as result_count,
                    COUNT(DISTINCT tr.id) as team_result_count
@@ -232,15 +232,15 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
             JOIN events e ON t.event_id = e.id
             LEFT JOIN results r ON t.id = r.tournament_id
             LEFT JOIN team_results tr ON t.id = tr.tournament_id
-            GROUP BY t.id, t.event_id, e.date, e.name, t.lake_name, t.ramp_name, 
+            GROUP BY t.id, t.event_id, e.date, e.name, t.lake_name, t.ramp_name,
                      t.entry_fee, t.complete, t.fish_limit
             ORDER BY e.date DESC
         """)
-        
+
         ctx["tournaments"] = [
             {
                 "id": t[0],
-                "event_id": t[1], 
+                "event_id": t[1],
                 "date": t[2],
                 "name": t[3],
                 "lake_name": t[4],
@@ -250,7 +250,7 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
                 "fish_limit": t[8],
                 "result_count": t[9],
                 "team_result_count": t[10],
-                "total_participants": t[9] + t[10]
+                "total_participants": t[9] + t[10],
             }
             for t in tournaments
         ]

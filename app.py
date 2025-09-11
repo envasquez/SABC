@@ -13,6 +13,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import text
 from starlette.middleware.sessions import SessionMiddleware
 
+import routes.dependencies as deps
 from core.auth_helpers import admin, u
 from core.database import db
 from core.filters import (
@@ -33,6 +34,21 @@ from core.lakes import (
 )
 from core.validators import get_federal_holidays, validate_event_data
 from logging_config import get_logger, log_audit_event, log_security_event
+from routes import (
+    admin_core,
+    admin_events,
+    admin_events_crud,
+    admin_news,
+    admin_polls,
+    admin_tournaments,
+    admin_users,
+    api,
+    auth,
+    calendar,
+    public,
+    static,
+    tournaments,
+)
 
 # Initialize logger for this module
 logger = get_logger(__name__)
@@ -51,15 +67,7 @@ templates.env.filters["date_format_dd_mm_yyyy"] = lambda d: date_format_filter(d
 templates.env.filters["month_number"] = month_number_filter
 
 # Configure template filters globally and set in dependencies
-import routes.dependencies as deps
 deps.templates = templates
-
-# Import and include all routers
-from routes import (
-    admin_core, admin_events, admin_events_crud, admin_polls, 
-    admin_tournaments, admin_users, admin_news, api, auth, 
-    calendar, public, static, tournaments
-)
 
 app.include_router(auth.router)
 app.include_router(admin_core.router)

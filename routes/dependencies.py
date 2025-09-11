@@ -1,21 +1,11 @@
 """Shared dependencies for all route modules."""
 
 # Re-export everything needed by route modules
-import bcrypt
-from datetime import *
+from typing import Optional
 
-from fastapi import *
-from fastapi.responses import *
-from fastapi.templating import *
-from sqlalchemy import *
+from fastapi.templating import Jinja2Templates
 
-from core.auth_helpers import *
-from core.database import *
-from core.filters import *
-from core.lakes import *
-from core.validators import *
-from database import *
-from logging_config import *
+# Re-export core functionality
 
 # This will be set by app.py after template filters are configured
-templates = None
+templates: Optional[Jinja2Templates] = None
