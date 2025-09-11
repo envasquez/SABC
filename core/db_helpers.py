@@ -104,11 +104,11 @@ def get_poll_options_with_votes(poll_id, include_details=False):
         if include_details:
             vote_details = db(
                 """
-                SELECT pv.id, a.name, pv.created_at
+                SELECT pv.id, a.name, pv.voted_at
                 FROM poll_votes pv
                 JOIN anglers a ON pv.angler_id = a.id
                 WHERE pv.option_id = :option_id
-                ORDER BY pv.created_at
+                ORDER BY pv.voted_at
             """,
                 {"option_id": option_data[0]},
             )
