@@ -90,7 +90,7 @@
                 </h4>
             </div>
             <div class="card-body">
-                {% set guests = members|selectattr(4, 'equalto', 0)|list %}
+                {% set guests = members|selectattr(2, 'equalto', 0)|list %}
                 {% if guests|length > 0 %}
                     <!-- Group guests by year -->
                     {% set years_dict = {} %}
@@ -257,76 +257,4 @@
     </div>
 </div>
 
-<style>
-/* Override darkly theme for better table readability */
-.table {
-    color: #fff !important;
-}
-
-.table td, .table th {
-    color: #fff !important;
-    border: 1px solid #495057;
-}
-
-.table th {
-    background-color: rgba(0,0,0,0.3) !important;
-}
-
-.table tbody tr {
-    background-color: rgba(0,0,0,0.1) !important;
-}
-
-.table tbody tr:hover {
-    background-color: rgba(255,255,255,0.2) !important;
-}
-
-/* Make tables more compact */
-.table td, .table th {
-    padding: 0.5rem;
-    font-size: 0.9rem;
-}
-
-/* Guest tabs styling */
-#guestTabs {
-    border-bottom: 2px solid #495057;
-}
-
-#guestTabs .nav-link {
-    color: #adb5bd;
-    background-color: transparent;
-    border: 1px solid transparent;
-    border-bottom: none;
-    padding: 0.5rem 1rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-#guestTabs .nav-link:hover {
-    color: #fff;
-    background-color: rgba(255,255,255,0.1);
-    border-color: #495057;
-}
-
-#guestTabs .nav-link.active {
-    color: #fff;
-    background-color: #2b3035;
-    border-color: #495057 #495057 #2b3035;
-    border-bottom: 2px solid #2b3035;
-    margin-bottom: -2px;
-}
-
-#guestTabs .badge {
-    font-size: 0.75rem;
-    padding: 0.25em 0.5em;
-}
-
-.tab-content {
-    animation: fadeIn 0.3s ease-in;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-</style>
 {% endblock %}

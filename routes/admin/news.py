@@ -1,11 +1,14 @@
 """Admin news management router module."""
 
-from fastapi import APIRouter, Form, Request
+from fastapi import Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.auth_helpers import u
 from core.database import db
+from core.response_helpers import error_redirect, success_redirect
 from core.template_config import templates
+
+from fastapi import APIRouter
 
 router = APIRouter()
 
@@ -59,9 +62,9 @@ async def create_news(
                 "priority": priority,
             },
         )
-        return RedirectResponse("/admin/news?success=News created successfully", status_code=302)
+        return success_redirect("/admin/news", "News created successfully")
     except Exception as e:
-        return RedirectResponse(f"/admin/news?error={str(e)}", status_code=302)
+        return error_redirect("/admin/news", str(e))
 
 
 @router.post("/admin/news/{news_id}/update")
@@ -94,9 +97,9 @@ async def update_news(
                 "editor_id": user["id"],
             },
         )
-        return RedirectResponse("/admin/news?success=News updated successfully", status_code=302)
+        return success_redirect("/admin/news", "News updated successfully")
     except Exception as e:
-        return RedirectResponse(f"/admin/news?error={str(e)}", status_code=302)
+        return error_redirect("/admin/news", str(e))
 
 
 @router.delete("/admin/news/{news_id}")

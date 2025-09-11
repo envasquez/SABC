@@ -6,9 +6,9 @@ from typing import Optional
 import bcrypt
 from fastapi.templating import Jinja2Templates
 
-# Import core functionality to re-export
 from core.auth_helpers import admin, u
 from core.database import db
+from core.database_engine import engine
 from core.filters import time_format_filter
 from core.lakes import (
     find_lake_by_id,
@@ -21,9 +21,7 @@ from core.lakes import (
     validate_lake_ramp_combo,
 )
 from core.validators import get_federal_holidays, validate_event_data
-from database import engine
 
-# Re-export core functionality
 __all__ = [
     "admin",
     "u",
@@ -43,6 +41,4 @@ __all__ = [
     "validate_event_data",
     "time_format_filter",
 ]
-
-# This will be set by app.py after template filters are configured
 templates: Optional[Jinja2Templates] = None

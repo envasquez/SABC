@@ -4,10 +4,14 @@ import json
 import traceback
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Query, Request
+from fastapi import Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from core.db_helpers import get_poll_options_with_votes
+from core.response_helpers import error_redirect
 from routes.dependencies import admin, db, find_lake_by_id, get_all_ramps, get_lakes_list, templates
+
+from fastapi import APIRouter
 
 router = APIRouter()
 
@@ -40,7 +44,7 @@ async def create_poll_form(request: Request, event_id: int = Query(None)):
         )
 
         if not event_data:
-            return RedirectResponse("/admin/events?error=Event not found", status_code=302)
+            return error_redirect("/admin/events", "Event not found")
 
         event = event_data[0]
 
@@ -116,7 +120,7 @@ async def create_poll(request: Request):
                 {"event_id": event_id},
             )
             if not event_data:
-                return RedirectResponse("/admin/events?error=Event not found", status_code=302)
+                return error_redirect("/admin/events", "Event not found")
 
             event = event_data[0]
 
@@ -270,42 +274,13 @@ async def edit_poll_form(request: Request, poll_id: int):
         )
 
         if not poll_data:
-            return RedirectResponse("/polls?error=Poll not found", status_code=302)
+            return error_redirect("/polls", "Poll not found")
 
         poll = poll_data[0]
         context = {"request": request, "user": user, "poll": poll}
 
         # Get poll options and votes
-        poll_options_data = db(
-            """
-            SELECT po.id, po.option_text, po.option_data
-            FROM poll_options po WHERE po.poll_id = :poll_id ORDER BY po.id
-        """,
-            {"poll_id": poll_id},
-        )
-
-        poll_options = []
-        for option_data in poll_options_data:
-            option_dict = {"id": option_data[0], "text": option_data[1], "data": option_data[2]}
-
-            # Get individual votes
-            vote_details = db(
-                """
-                SELECT pv.id, a.name as voter_name, pv.voted_at
-                FROM poll_votes pv JOIN anglers a ON pv.angler_id = a.id
-                WHERE pv.option_id = :option_id ORDER BY pv.voted_at DESC
-            """,
-                {"option_id": option_data[0]},
-            )
-
-            option_dict["votes"] = [
-                {"vote_id": vote[0], "voter_name": vote[1], "voted_at": vote[2]}
-                for vote in vote_details
-            ]
-
-            poll_options.append(option_dict)
-
-        context["poll_options"] = poll_options
+        context["poll_options"] = get_poll_options_with_votes(poll_id, include_details=True)
 
         if poll[3] == "tournament_location":  # poll_type
             # Get all lakes from YAML

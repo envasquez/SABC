@@ -1,9 +1,11 @@
 """Admin tournaments routes - tournament management."""
 
-from fastapi import APIRouter, Request
+from fastapi import Request
 from fastapi.responses import RedirectResponse
 
 from routes.dependencies import admin, db, templates
+
+from fastapi import APIRouter
 
 router = APIRouter()
 

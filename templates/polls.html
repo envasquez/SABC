@@ -59,7 +59,7 @@
                 <div class="card-body">
                     {% if poll.description %}
                     <div class="mb-3">
-                        <p class="text-muted" style="white-space: pre-line;">{{ poll.description }}</p>
+                        <p class="text-muted">{{ poll.description }}</p>
                     </div>
                     {% endif %}
                     
@@ -182,7 +182,7 @@
                                             </div>
                                             
                                             <!-- Vote Preview -->
-                                            <div class="mt-3 p-3 border rounded d-none" id="vote_preview" style="background-color: #f8f9fa; border-color: #dee2e6 !important;">
+                                            <div class="mt-3 p-3 border rounded d-none" id="vote_preview">
                                                 <h6 class="mb-2 text-dark">Your Vote:</h6>
                                                 <div id="vote_summary" class="text-dark"></div>
                                             </div>
@@ -191,28 +191,6 @@
                                         </div>
                                     </div>
                                     
-                                    <style>
-                                        /* Make all form selects consistent height */
-                                        .form-select-sm {
-                                            min-height: calc(1.5em + 0.5rem + 2px);
-                                            font-size: 0.875rem;
-                                        }
-                                        
-                                        /* Ensure good contrast in vote preview */
-                                        #vote_preview {
-                                            background-color: #f8f9fa !important;
-                                            border: 1px solid #dee2e6 !important;
-                                        }
-                                        
-                                        #vote_preview h6,
-                                        #vote_preview .text-dark {
-                                            color: #212529 !important;
-                                        }
-                                        
-                                        #vote_preview .text-secondary {
-                                            color: #6c757d !important;
-                                        }
-                                    </style>
                                     {% else %}
                                     <!-- Regular polls - single column -->
                                     {% for option in poll.options %}
@@ -254,7 +232,7 @@
                                 <div class="tournament-results-container" 
                                      data-poll-type="tournament_location"
                                      data-poll-id="{{ poll.id }}"
-                                     style="display: none;">
+                                     class="d-none">
                                     <!-- Hidden data elements for JavaScript -->
                                     {% for option in poll.options %}
                                     <div data-option-id="{{ option.id }}"
@@ -262,7 +240,7 @@
                                          data-option-data='{{ option.data if option.data else "{}" }}'
                                          data-vote-count="{{ option.vote_count }}"
                                          data-votes='{{ option.votes | tojson if option.votes else "[]" }}'
-                                         style="display: none;"></div>
+                                         class="d-none"></div>
                                     {% endfor %}
                                     <div class="row">
                                         <!-- Two-Level Bar Chart (Left Panel) -->
@@ -273,7 +251,7 @@
                                                     <h6 class="mb-0"><i class="bi bi-geo-alt me-1"></i>Lakes</h6>
                                                 </div>
                                                 <div class="card-body p-3">
-                                                    <div class="lakes-chart-container" id="lakesChart" style="height: 120px;">
+                                                    <div class="lakes-chart-container" id="lakesChart">
                                                         <!-- Lakes chart will be drawn here -->
                                                     </div>
                                                 </div>
@@ -286,7 +264,7 @@
                                                     <small id="selectedLake" class="opacity-75">Click a lake above</small>
                                                 </div>
                                                 <div class="card-body p-3">
-                                                    <div class="ramps-chart-container" id="rampsChart" style="height: 120px;">
+                                                    <div class="ramps-chart-container" id="rampsChart">
                                                         <div class="text-muted text-center py-4">
                                                             <i class="bi bi-arrow-up me-2"></i>Select a lake above to see ramp breakdown
                                                         </div>
@@ -302,13 +280,13 @@
                                                     <h6 class="mb-0"><i class="bi bi-clock me-1"></i>Time Slots</h6>
                                                 </div>
                                                 <div class="card-body p-2">
-                                                    <div class="time-table-container" style="max-height: 300px; overflow-y: auto;">
+                                                    <div class="time-table-container">
                                                         <table class="table table-sm table-hover mb-0" id="timeTable">
                                                             <thead class="table-light sticky-top">
                                                                 <tr>
-                                                                    <th class="text-dark fw-semibold" style="font-size: 0.75rem;">Start</th>
-                                                                    <th class="text-dark fw-semibold" style="font-size: 0.75rem;">End</th>
-                                                                    <th class="text-dark fw-semibold text-center" style="font-size: 0.75rem;">Votes</th>
+                                                                    <th class="text-dark fw-semibold" class="small">Start</th>
+                                                                    <th class="text-dark fw-semibold" class="small">End</th>
+                                                                    <th class="text-dark fw-semibold text-center" class="small">Votes</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -733,9 +711,9 @@ function drawTimeTable() {
         const endFormatted = formatTime(data.endTime);
         
         row.innerHTML = `
-            <td class="text-muted" style="font-size: 0.75rem;">${startFormatted}</td>
-            <td class="text-muted" style="font-size: 0.75rem;">${endFormatted}</td>
-            <td class="text-center" style="font-size: 0.75rem;">
+            <td class="text-muted" class="small">${startFormatted}</td>
+            <td class="text-muted" class="small">${endFormatted}</td>
+            <td class="text-center" class="small">
                 <span class="badge bg-light text-dark border">${data.totalVotes}</span>
             </td>
         `;

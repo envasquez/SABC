@@ -107,19 +107,9 @@
 
                 <!-- Google Maps Section -->
                 {% if tournament.google_maps_iframe %}
-                <div class="mb-3" style="width: 100%;">
-                    <div style="height: 180px; border-radius: 0.375rem; overflow: hidden; width: 100%; position: relative;">
-                        <style>
-                            .maps-container iframe {
-                                width: 100% !important;
-                                height: 100% !important;
-                                border: 0 !important;
-                                position: absolute !important;
-                                top: 0 !important;
-                                left: 0 !important;
-                            }
-                        </style>
-                        <div class="maps-container" style="width: 100%; height: 100%;">
+                <div class="mb-3">
+                    <div class="rounded overflow-hidden position-relative w-100" style="height: 180px;">
+                        <div class="w-100 h-100">
                             {{ tournament.google_maps_iframe|safe }}
                         </div>
                     </div>
@@ -128,7 +118,7 @@
                 <!-- Tournament Results Table (below maps) -->
                 {% if tournament.complete and tournament.top_results %}
                 <div class="mb-3">
-                    <div class="bg-light rounded p-3" style="border: 2px solid #6c757d;">
+                    <div class="bg-light rounded p-3 border">
                         <h6 class="mb-3 text-dark"><i class="bi bi-trophy-fill text-warning"></i> Top 3 Results</h6>
                         <div class="table-responsive">
                             <table class="table table-sm mb-0">
@@ -173,7 +163,7 @@
                 {% elif tournament.poll_id and not tournament.complete %}
                 <!-- Show poll results for upcoming tournaments -->
                 <div class="mb-3">
-                    <div class="bg-light border rounded p-3" style="height: 200px; position: relative;">
+                    <div class="bg-light border rounded p-3 position-relative" style="height: 200px;">
                         <div class="text-center mb-2">
                             <small class="text-muted"><i class="bi bi-bar-chart-fill"></i> Current Poll Results</small>
                         </div>
@@ -206,7 +196,7 @@
                     <div class="col-md-6">
                         <div class="bg-light rounded p-2 text-center">
                             <div class="small text-secondary fw-medium">Winning Weight</div>
-                            <div class="fw-bold" style="color: #0d5f0d;">{{ "%.2f"|format(tournament.tournament_stats.winning_weight) }} lbs</div>
+                            <div class="fw-bold text-success">{{ "%.2f"|format(tournament.tournament_stats.winning_weight) }} lbs</div>
                         </div>
                     </div>
                 </div>
@@ -298,11 +288,11 @@
                         <div class="d-flex align-items-start justify-content-between mb-1">
                             <h6 class="small fw-bold mb-0">{{ news_item[1] | safe }}</h6>
                             {% if news_item[5] == 2 %}
-                                <span class="badge bg-danger ms-2" style="font-size: 0.7rem;">Urgent</span>
+                                <span class="badge bg-danger ms-2 small">Urgent</span>
                             {% elif news_item[5] == 1 %}
-                                <span class="badge bg-warning text-dark ms-2" style="font-size: 0.7rem;">High</span>
+                                <span class="badge bg-warning text-dark ms-2 small">High</span>
                             {% else %}
-                                <span class="badge bg-success ms-2" style="font-size: 0.7rem;">Normal</span>
+                                <span class="badge bg-success ms-2 small">Normal</span>
                             {% endif %}
                         </div>
                         <p class="small mb-1">{{ news_item[2] | safe }}</p>
@@ -434,42 +424,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<style>
-/* Custom pagination styling */
-.custom-pagination .page-link {
-    color: #6c757d;
-    background-color: transparent;
-    border: 1px solid #495057;
-}
-
-.custom-pagination .page-link:hover {
-    color: #ffffff;
-    background-color: #495057;
-    border-color: #6c757d;
-}
-
-.custom-pagination .page-item.active .page-link {
-    background-color: #495057;
-    border-color: #495057;
-    color: #ffffff;
-}
-
-.custom-pagination .page-item.disabled .page-link {
-    color: #6c757d;
-    background-color: transparent;
-    border-color: #495057;
-}
-
-/* Tournament card animations */
-.card {
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-</style>
 
 <!-- Ramp Location Modals -->
 {% for tournament in all_tournaments %}

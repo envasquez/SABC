@@ -5,9 +5,13 @@ import json
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Form, HTTPException, Request
+from fastapi import Form, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from core.db_helpers import (
+    get_poll_options_with_votes,
+    get_tournament_stats,
+)
 from routes.dependencies import (
     db,
     find_lake_by_id,
@@ -20,6 +24,8 @@ from routes.dependencies import (
     u,
     validate_lake_ramp_combo,
 )
+
+from fastapi import APIRouter
 
 router = APIRouter()
 
@@ -111,63 +117,18 @@ async def polls(request: Request):
     )
 
     # Convert to list of dicts for easier template access
+    member_count = db("SELECT COUNT(*) FROM anglers WHERE member = 1 AND active = 1")[0][0]
+
     polls = []
     for poll_data in polls_data:
-        poll_id = poll_data[0]
-
-        # Get poll options for this poll
-        options_data = db(
-            """
-            SELECT po.id, po.option_text, po.option_data,
-                   COUNT(pv.id) as vote_count
-            FROM poll_options po
-            LEFT JOIN poll_votes pv ON po.id = pv.option_id
-            WHERE po.poll_id = :poll_id
-            GROUP BY po.id, po.option_text, po.option_data
-            ORDER BY po.id
-        """,
-            {"poll_id": poll_id},
-        )
-
-        options = []
-        for option_data in options_data:
-            option_dict = {
-                "id": option_data[0],
-                "text": option_data[1],
-                "data": option_data[2],
-                "vote_count": option_data[3],
-            }
-
-            # For admins, include individual vote details
-            if user.get("is_admin"):
-                vote_details = db(
-                    """
-                    SELECT pv.id, a.name as voter_name, pv.voted_at
-                    FROM poll_votes pv
-                    JOIN anglers a ON pv.angler_id = a.id
-                    WHERE pv.option_id = :option_id
-                    ORDER BY pv.voted_at DESC
-                """,
-                    {"option_id": option_data[0]},
-                )
-
-                option_dict["votes"] = [
-                    {"vote_id": vote[0], "voter_name": vote[1], "voted_at": vote[2]}
-                    for vote in vote_details
-                ]
-
-            options.append(option_dict)
-
-        # Get member voting statistics for this poll
-        member_count = db("SELECT COUNT(*) FROM anglers WHERE member = 1 AND active = 1")[0][0]
         unique_voters = db(
             "SELECT COUNT(DISTINCT angler_id) FROM poll_votes WHERE poll_id = :poll_id",
-            {"poll_id": poll_id},
+            {"poll_id": poll_data[0]},
         )[0][0]
 
         polls.append(
             {
-                "id": poll_id,
+                "id": poll_data[0],
                 "title": poll_data[1],
                 "description": poll_data[2] if poll_data[2] else "",
                 "closes_at": poll_data[3],
@@ -177,7 +138,7 @@ async def polls(request: Request):
                 "event_id": poll_data[7],
                 "status": poll_data[8],
                 "user_has_voted": bool(poll_data[9]),
-                "options": options,
+                "options": get_poll_options_with_votes(poll_data[0], user.get("is_admin")),
                 "member_count": member_count,
                 "unique_voters": unique_voters,
                 "participation_percent": round(
@@ -187,20 +148,14 @@ async def polls(request: Request):
         )
 
     # Get lakes and ramps data for tournament location voting from YAML
-    lakes_data = []
-    lakes = get_lakes_list()
-    for lake_id, lake_name, location in lakes:
-        # Get ramps for this lake using the lake_id (numeric)
-        ramps_tuples = get_ramps_for_lake(lake_id)
-        # Convert tuple format (id, name, lake_id) to dict format for template with capitalized names
-        ramps = [{"id": r[0], "name": r[1].title()} for r in ramps_tuples]
-        lakes_data.append(
-            {
-                "id": lake_id,
-                "name": lake_name,
-                "ramps": ramps,
-            }
-        )
+    lakes_data = [
+        {
+            "id": lake_id,
+            "name": lake_name,
+            "ramps": [{"id": r[0], "name": r[1].title()} for r in get_ramps_for_lake(lake_id)],
+        }
+        for lake_id, lake_name, location in get_lakes_list()
+    ]
 
     return templates.TemplateResponse(
         "polls.html",
@@ -237,24 +192,21 @@ async def vote_in_poll(request: Request, poll_id: int, option_id: str = Form()):
         if not poll_check:
             return RedirectResponse("/polls?error=Poll not found", status_code=302)
 
-        poll = poll_check[0]
-        if poll[4]:  # already_voted
+        if poll_check[0][4]:  # already_voted
             return RedirectResponse(
                 "/polls?error=You have already voted in this poll", status_code=302
             )
-
-        if poll[1]:  # closed
+        if poll_check[0][1]:  # closed
             return RedirectResponse("/polls?error=This poll is closed", status_code=302)
-
-        now = datetime.now()
-        starts_at = datetime.fromisoformat(poll[2])
-        closes_at = datetime.fromisoformat(poll[3])
-        if now < starts_at or now > closes_at:  # not within voting window
+        if not (
+            datetime.fromisoformat(poll_check[0][2])
+            <= datetime.now()
+            <= datetime.fromisoformat(poll_check[0][3])
+        ):
             return RedirectResponse(
                 "/polls?error=This poll is not currently accepting votes", status_code=302
             )
 
-        # Get poll type to determine how to handle the vote
         poll_type = db("SELECT poll_type FROM polls WHERE id = :poll_id", {"poll_id": poll_id})[0][
             0
         ]
@@ -282,15 +234,12 @@ async def vote_in_poll(request: Request, poll_id: int, option_id: str = Form()):
                     )
 
                 # Create or find existing poll option for this combination
-                lake_name = find_lake_by_id(lake_id_int, "name")
-                ramp_name = find_ramp_name_by_id(vote_data["ramp_id"])
-
-                if not lake_name or not ramp_name:
+                if not (lake_name := find_lake_by_id(lake_id_int, "name")) or not (
+                    ramp_name := find_ramp_name_by_id(vote_data["ramp_id"])
+                ):
                     return RedirectResponse("/polls?error=Lake or ramp not found", status_code=302)
 
-                start_formatted = time_format_filter(vote_data["start_time"])
-                end_formatted = time_format_filter(vote_data["end_time"])
-                option_text = f"{lake_name} - {ramp_name} ({start_formatted} to {end_formatted})"
+                option_text = f"{lake_name} - {ramp_name} ({time_format_filter(vote_data['start_time'])} to {time_format_filter(vote_data['end_time'])})"
 
                 # Check if this exact option already exists
                 existing_option = db(
@@ -387,25 +336,7 @@ async def tournament_results(request: Request, tournament_id: int):
     tournament = tournament[0]
 
     # Get tournament statistics
-    stats = db(
-        """
-        SELECT
-            COUNT(DISTINCT r.angler_id) as total_anglers,
-            SUM(r.num_fish) as total_fish,
-            SUM(r.total_weight - r.dead_fish_penalty) as total_weight,
-            COUNT(CASE WHEN r.num_fish = :fish_limit THEN 1 END) as limits,
-            COUNT(CASE WHEN r.num_fish = 0 THEN 1 END) as zeros,
-            COUNT(CASE WHEN r.buy_in = 1 THEN 1 END) as buy_ins,
-            MAX(r.big_bass_weight) as big_bass,
-            MAX(r.total_weight - r.dead_fish_penalty) as heavy_stringer
-        FROM results r
-        WHERE r.tournament_id = :tournament_id
-        AND NOT r.disqualified
-    """,
-        {"tournament_id": tournament_id, "fish_limit": tournament[8]},
-    )
-
-    tournament_stats = stats[0] if stats else [0] * 8
+    tournament_stats = get_tournament_stats(tournament_id, tournament[8])
 
     # Get team results if this is a team tournament
     team_results = db(
@@ -452,50 +383,14 @@ async def tournament_results(request: Request, tournament_id: int):
     individual_results = db(
         """
         SELECT
-            ROW_NUMBER() OVER (
-                ORDER BY
-                    CASE WHEN r.num_fish > 0 THEN 0 ELSE 1 END,
-                    (r.total_weight - r.dead_fish_penalty) DESC,
-                    r.big_bass_weight DESC,
-                    r.buy_in,
-                    a.name
-            ) as place,
-            a.name,
-            r.num_fish,
-            r.total_weight - r.dead_fish_penalty as final_weight,
-            r.big_bass_weight,
-            CASE
-                WHEN a.member = 0 THEN
-                    0  -- Guests always get 0 points
-                WHEN r.num_fish > 0 AND a.member = 1 THEN
-                    100 - ROW_NUMBER() OVER (
-                        PARTITION BY CASE WHEN r.num_fish > 0 AND a.member = 1 THEN 1 ELSE 0 END
-                        ORDER BY (r.total_weight - r.dead_fish_penalty) DESC, r.big_bass_weight DESC
-                    ) + 1
-                WHEN r.buy_in = 1 AND a.member = 1 THEN
-                    :last_place_points - 4  -- Member buy-ins get 4 points less
-                WHEN a.member = 1 THEN
-                    :last_place_points - 2  -- Member zeros get 2 points less
-                ELSE
-                    0  -- Fallback for any non-member
-            END as points,
-            a.member
-        FROM results r
-        JOIN anglers a ON r.angler_id = a.id
-        WHERE r.tournament_id = :tournament_id
-        AND NOT r.disqualified
-        AND r.buy_in = 0  -- Exclude buy-ins from individual results
-        ORDER BY
-            CASE WHEN r.num_fish > 0 THEN 0 ELSE 1 END,  -- Fish first
-            (r.total_weight - r.dead_fish_penalty) DESC,  -- Then by weight
-            r.big_bass_weight DESC,
-            a.name  -- Finally alphabetical for ties
+            ROW_NUMBER() OVER (ORDER BY CASE WHEN r.num_fish > 0 THEN 0 ELSE 1 END, (r.total_weight - r.dead_fish_penalty) DESC, r.big_bass_weight DESC, r.buy_in, a.name) as place,
+            a.name, r.num_fish, r.total_weight - r.dead_fish_penalty as final_weight, r.big_bass_weight,
+            CASE WHEN a.member = 0 THEN 0 WHEN r.num_fish > 0 AND a.member = 1 THEN 100 - ROW_NUMBER() OVER (PARTITION BY CASE WHEN r.num_fish > 0 AND a.member = 1 THEN 1 ELSE 0 END ORDER BY (r.total_weight - r.dead_fish_penalty) DESC, r.big_bass_weight DESC) + 1 WHEN r.buy_in = 1 AND a.member = 1 THEN :last_place_points - 4 WHEN a.member = 1 THEN :last_place_points - 2 ELSE 0 END as points, a.member
+        FROM results r JOIN anglers a ON r.angler_id = a.id
+        WHERE r.tournament_id = :tournament_id AND NOT r.disqualified AND r.buy_in = 0
+        ORDER BY CASE WHEN r.num_fish > 0 THEN 0 ELSE 1 END, (r.total_weight - r.dead_fish_penalty) DESC, r.big_bass_weight DESC, a.name
     """,
-        {
-            "tournament_id": tournament_id,
-            "members_with_fish": members_with_fish,
-            "last_place_points": last_place_with_fish_points,
-        },
+        {"tournament_id": tournament_id, "last_place_points": last_place_with_fish_points},
     )
 
     # Get buy-in results separately for dedicated buy-ins table

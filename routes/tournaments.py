@@ -1,9 +1,12 @@
 """Tournament-related routes."""
 
-from fastapi import APIRouter, Request
+from fastapi import Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from core.db_helpers import get_tournament_stats
 from routes.dependencies import admin, db, templates, u
+
+from fastapi import APIRouter
 
 router = APIRouter()
 
@@ -67,11 +70,7 @@ async def tournament_results(request: Request, tournament_id: int):
     tournament = tournament[0]
 
     # Get tournament statistics
-    stats = db(
-        "SELECT COUNT(DISTINCT r.angler_id) as total_anglers, SUM(r.num_fish) as total_fish, SUM(r.total_weight - r.dead_fish_penalty) as total_weight, COUNT(CASE WHEN r.num_fish = :fish_limit THEN 1 END) as limits, COUNT(CASE WHEN r.num_fish = 0 THEN 1 END) as zeros, COUNT(CASE WHEN r.buy_in = 1 THEN 1 END) as buy_ins, MAX(r.big_bass_weight) as big_bass, MAX(r.total_weight - r.dead_fish_penalty) as heavy_stringer FROM results r WHERE r.tournament_id = :tournament_id AND NOT r.disqualified",
-        {"tournament_id": tournament_id, "fish_limit": tournament[8]},
-    )
-    tournament_stats = stats[0] if stats else [0] * 8
+    tournament_stats = get_tournament_stats(tournament_id, tournament[8])
 
     # Get team results if this is a team tournament
     team_results = db(

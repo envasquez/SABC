@@ -1,9 +1,12 @@
 """Admin core routes - news management and dashboard."""
 
-from fastapi import APIRouter, Form, Request
+from fastapi import Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from core.response_helpers import error_redirect
 from routes.dependencies import admin, db, templates, u
+
+from fastapi import APIRouter
 
 router = APIRouter()
 
@@ -52,7 +55,7 @@ async def create_news(
         )
         return RedirectResponse("/admin/news?success=News created successfully", status_code=302)
     except Exception as e:
-        return RedirectResponse(f"/admin/news?error={str(e)}", status_code=302)
+        return error_redirect("/admin/news", str(e))
 
 
 @router.post("/admin/news/{news_id}/update")
@@ -85,7 +88,7 @@ async def update_news(
         )
         return RedirectResponse("/admin/news?success=News updated successfully", status_code=302)
     except Exception as e:
-        return RedirectResponse(f"/admin/news?error={str(e)}", status_code=302)
+        return error_redirect("/admin/news", str(e))
 
 
 @router.delete("/admin/news/{news_id}")
@@ -215,7 +218,7 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
         tab = request.query_params.get("tab", "active")
         ctx["users"] = db(
             "SELECT id, name, email, member, is_admin, active FROM anglers WHERE "
-            + ("member = 1 AND active = 0" if tab == "inactive" else "active = 1")
+            + ("active = 0" if tab == "inactive" else "active = 1")
             + " ORDER BY "
             + ("name" if tab == "inactive" else "is_admin DESC, member DESC, name")
         )

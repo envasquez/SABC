@@ -1,9 +1,12 @@
 """Admin users routes - user management."""
 
-from fastapi import APIRouter, Form, Request
+from fastapi import Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from core.response_helpers import error_redirect
 from routes.dependencies import db, templates, u
+
+from fastapi import APIRouter
 
 router = APIRouter()
 
@@ -20,7 +23,7 @@ async def edit_user_page(request: Request, user_id: int):
     )
 
     if not edit_user:
-        return RedirectResponse("/admin/users?error=User not found", status_code=302)
+        return error_redirect("/admin/users", "User not found")
 
     return templates.TemplateResponse(
         "admin/edit_user.html", {"request": request, "user": user, "edit_user": edit_user[0]}
@@ -48,7 +51,7 @@ async def update_user(
         )
 
         if not before:
-            return RedirectResponse(f"/admin/users?error=User {user_id} not found", status_code=302)
+            return error_redirect("/admin/users", f"User {user_id} not found")
 
         email_cleaned = email.strip() if email else ""
         final_email = None
@@ -132,7 +135,7 @@ async def update_user(
                 else f"Email '{update_params['email']}' is already in use"
             )
 
-        return RedirectResponse(f"/admin/users?error={error_msg}", status_code=302)
+        return error_redirect("/admin/users", error_msg)
 
 
 @router.get("/admin/users/{user_id}/verify")

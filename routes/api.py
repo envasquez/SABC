@@ -2,22 +2,20 @@
 
 from datetime import datetime
 
-from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from routes.dependencies import db, load_lakes_data
 
-router = APIRouter()
+from fastapi import APIRouter
 
+router = APIRouter()
 
 @router.get("/health")
 async def health_check():
     """Health check endpoint for CI/CD and monitoring."""
     try:
-        # Test database connection
         result = db("SELECT COUNT(*) as count FROM anglers")
         angler_count = result[0][0] if result else 0
-
         return {
             "status": "healthy",
             "database": "connected",
@@ -55,7 +53,8 @@ async def api_get_lakes():
 async def api_get_lake_ramps(lake_key: str):
     """Get ramps for a specific lake."""
     lakes_data = load_lakes_data()
-    if lake_key in lakes_data:
-        ramps = lakes_data[lake_key].get("ramps", [])
-        return JSONResponse({"ramps": ramps})
-    return JSONResponse({"ramps": []})
+    return (
+        JSONResponse({"ramps": []})
+        if lake_key not in lakes_data
+        else JSONResponse({"ramps": lakes_data[lake_key].get("ramps", [])})
+    )

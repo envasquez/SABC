@@ -5,9 +5,11 @@ import json
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Request
+from fastapi import Request
 
 from routes.dependencies import db, find_lake_by_id, find_lake_data_by_db_name, templates, u
+
+from fastapi import APIRouter
 
 router = APIRouter()
 
