@@ -80,7 +80,7 @@
                         </thead>
                         <tbody>
                             {% for angler in aoy_standings %}
-                            <tr class="{% if loop.index <= 6 %}table-light{% endif %}">
+                            <tr class="{% if loop.index <= 6 %}table-secondary{% endif %}">
                                 <td class="fw-bold">{{ loop.index }}</td>
                                 <td>{{ angler[0] }}</td>
                                 <td class="fw-bold text-primary">{{ angler[1] }}</td>
