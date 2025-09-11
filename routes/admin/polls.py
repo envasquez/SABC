@@ -330,22 +330,56 @@ async def update_poll(request: Request, poll_id: int):
         form = await request.form()
         title = form.get("title", "").strip()
         description = form.get("description", "").strip()
+        starts_at = form.get("starts_at", "")
         closes_at = form.get("closes_at", "")
+        poll_options = form.getlist("poll_options[]")
+        option_ids = form.getlist("option_ids[]")
         
         if not title:
             return RedirectResponse(f"/admin/polls/{poll_id}/edit?error=Title is required", status_code=302)
         
-        # Update poll
+        # Update poll basic info
         db("""
             UPDATE polls 
-            SET title = :title, description = :description, closes_at = :closes_at
+            SET title = :title, description = :description, starts_at = :starts_at, closes_at = :closes_at
             WHERE id = :poll_id
         """, {
             "title": title,
-            "description": description, 
+            "description": description,
+            "starts_at": starts_at if starts_at else None,
             "closes_at": closes_at if closes_at else None,
             "poll_id": poll_id
         })
+        
+        # Update poll options
+        for i, option_text in enumerate(poll_options):
+            option_text = option_text.strip()
+            if not option_text:
+                continue
+                
+            option_id = option_ids[i] if i < len(option_ids) and option_ids[i] else None
+            
+            if option_id:
+                # Update existing option
+                db("""
+                    UPDATE poll_options 
+                    SET option_text = :option_text 
+                    WHERE id = :option_id AND poll_id = :poll_id
+                """, {
+                    "option_text": option_text,
+                    "option_id": option_id,
+                    "poll_id": poll_id
+                })
+            else:
+                # Create new option
+                db("""
+                    INSERT INTO poll_options (poll_id, option_text, option_data)
+                    VALUES (:poll_id, :option_text, :option_data)
+                """, {
+                    "poll_id": poll_id,
+                    "option_text": option_text,
+                    "option_data": "{}"
+                })
         
         logger.info(
             "Poll updated successfully",
