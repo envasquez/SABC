@@ -8,7 +8,7 @@ from typing import Optional
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from .dependencies import (
+from routes.dependencies import (
     db,
     find_lake_by_id,
     find_ramp_name_by_id,

@@ -1,9 +1,9 @@
 """Tournament-related routes."""
 
-from fastapi import APIRouter
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse, RedirectResponse
 
-from .dependencies import *
+from routes.dependencies import admin, db, templates, u
 
 router = APIRouter()
 
@@ -75,7 +75,18 @@ async def tournament_results(request: Request, tournament_id: int):
 
     # Get team results if this is a team tournament
     team_results = db(
-        "SELECT ROW_NUMBER() OVER (ORDER BY tr.total_weight DESC) as place, a1.name || ' / ' || a2.name as team_name, (SELECT SUM(num_fish) FROM results r WHERE r.angler_id IN (tr.angler1_id, tr.angler2_id) AND r.tournament_id = tr.tournament_id) as num_fish, tr.total_weight FROM team_results tr JOIN anglers a1 ON tr.angler1_id = a1.id JOIN anglers a2 ON tr.angler2_id = a2.id WHERE tr.tournament_id = :tournament_id ORDER BY tr.total_weight DESC",
+        """SELECT
+            ROW_NUMBER() OVER (ORDER BY tr.total_weight DESC) as place,
+            a1.name || ' / ' || a2.name as team_name,
+            (SELECT SUM(num_fish) FROM results r WHERE r.angler_id IN (tr.angler1_id, tr.angler2_id) AND r.tournament_id = tr.tournament_id) as num_fish,
+            tr.total_weight,
+            a1.member as member1,
+            a2.member as member2
+        FROM team_results tr
+        JOIN anglers a1 ON tr.angler1_id = a1.id
+        JOIN anglers a2 ON tr.angler2_id = a2.id
+        WHERE tr.tournament_id = :tournament_id
+        ORDER BY tr.total_weight DESC""",
         {"tournament_id": tournament_id},
     )
 
@@ -98,7 +109,8 @@ async def tournament_results(request: Request, tournament_id: int):
                 WHEN r.buy_in = 1 AND a.member = 1 THEN :last_place_points - 4
                 WHEN a.member = 1 THEN :last_place_points - 2
                 ELSE 0
-            END as points
+            END as points,
+            a.member
         FROM results r JOIN anglers a ON r.angler_id = a.id
         WHERE r.tournament_id = :tournament_id AND NOT r.disqualified AND r.buy_in = 0
         ORDER BY CASE WHEN r.num_fish > 0 THEN 0 ELSE 1 END, (r.total_weight - r.dead_fish_penalty) DESC, r.big_bass_weight DESC, a.name
@@ -116,7 +128,7 @@ async def tournament_results(request: Request, tournament_id: int):
         {"tournament_id": tournament_id},
     )[0][0]
     buy_in_results = db(
-        "SELECT a.name, :buy_in_place as place_finish, CASE WHEN a.member = 0 THEN 0 WHEN a.member = 1 THEN :last_place_points - 4 ELSE 0 END as points FROM results r JOIN anglers a ON r.angler_id = a.id WHERE r.tournament_id = :tournament_id AND r.buy_in = 1 AND NOT r.disqualified ORDER BY a.name",
+        "SELECT a.name, :buy_in_place as place_finish, CASE WHEN a.member = 0 THEN 0 WHEN a.member = 1 THEN :last_place_points - 4 ELSE 0 END as points, a.member FROM results r JOIN anglers a ON r.angler_id = a.id WHERE r.tournament_id = :tournament_id AND r.buy_in = 1 AND NOT r.disqualified ORDER BY a.name",
         {
             "tournament_id": tournament_id,
             "buy_in_place": buy_in_place,

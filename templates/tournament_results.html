@@ -107,7 +107,18 @@
                     {% for result in team_results %}
                     <tr {% if loop.index <= 3 %}class="table-success"{% endif %}>
                         <td>{{ result[0] }}</td>
-                        <td>{{ result[1] }}</td>
+                        <td>
+                            {% set names = result[1].split(' / ') %}
+                            {{ names[0] }}
+                            {% if result[4] == 0 %}
+                                <span class="badge bg-secondary ms-1">Guest</span>
+                            {% endif %}
+                            /
+                            {{ names[1] }}
+                            {% if result[5] == 0 %}
+                                <span class="badge bg-secondary ms-1">Guest</span>
+                            {% endif %}
+                        </td>
                         <td>{{ result[2] }}</td>
                         <td>{{ "%.2f"|format(result[3]) }}lbs</td>
                     </tr>
@@ -143,7 +154,7 @@
                         <td>{{ result[0] }}</td>
                         <td>
                             {{ result[1] }}
-                            {% if result|length > 6 and result[6] == 0 %}
+                            {% if result[6] == 0 %}
                                 <span class="badge bg-secondary ms-2">Guest</span>
                             {% endif %}
                         </td>
@@ -199,7 +210,7 @@
                         <td>{{ result[1] }}</td>
                         <td>
                             {{ result[0] }}
-                            {% if result|length > 3 and result[3] == 0 %}
+                            {% if result[3] == 0 %}
                                 <span class="badge bg-secondary ms-2">Guest</span>
                             {% endif %}
                         </td>

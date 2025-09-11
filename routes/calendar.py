@@ -5,9 +5,9 @@ import json
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 
-from .dependencies import *
+from routes.dependencies import db, find_lake_by_id, find_lake_data_by_db_name, templates, u
 
 router = APIRouter()
 
@@ -19,12 +19,10 @@ def build_calendar_data_with_polls(calendar_events, tournament_events, year=2025
 
     for event in calendar_events:
         date_obj = datetime.strptime(event[0], "%Y-%m-%d")
-        day, month, event_type, event_key = (
-            date_obj.day,
-            date_obj.month,
-            event[2],
-            f"{date_obj.month}-{day}",
-        )
+        day = date_obj.day
+        month = date_obj.month
+        event_type = event[2]
+        event_key = f"{date_obj.month}-{day}"
         if month not in all_events:
             all_events[month] = {}
         if day not in all_events[month]:

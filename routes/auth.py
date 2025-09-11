@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
 
-from .dependencies import bcrypt, db, templates, u
+from routes.dependencies import bcrypt, db, templates, u
 
 router = APIRouter()
 

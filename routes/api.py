@@ -5,7 +5,7 @@ from datetime import datetime
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from .dependencies import *
+from routes.dependencies import db, load_lakes_data
 
 router = APIRouter()
 
@@ -16,7 +16,7 @@ async def health_check():
     try:
         # Test database connection
         result = db("SELECT COUNT(*) as count FROM anglers")
-        angler_count = result[0]["count"] if result else 0
+        angler_count = result[0][0] if result else 0
 
         return {
             "status": "healthy",

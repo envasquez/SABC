@@ -3,8 +3,6 @@
 from fastapi import APIRouter
 from fastapi.responses import Response
 
-from .dependencies import *
-
 router = APIRouter()
 
 

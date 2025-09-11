@@ -34,7 +34,29 @@ from core.lakes import (
 )
 from core.validators import get_federal_holidays, validate_event_data
 from logging_config import get_logger, log_audit_event, log_security_event
-from routes import (
+
+# Initialize logger for this module
+logger = get_logger(__name__)
+
+app = FastAPI(redirect_slashes=False)
+app.add_middleware(
+    SessionMiddleware, secret_key=os.environ.get("SECRET_KEY", "dev-key-change-in-production")
+)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Configure templates BEFORE importing routes
+templates = Jinja2Templates(directory="templates")
+templates.env.filters["from_json"] = from_json_filter
+templates.env.filters["date_format"] = date_format_filter
+templates.env.filters["time_format"] = time_format_filter
+templates.env.filters["date_format_dd_mm_yyyy"] = lambda d: date_format_filter(d, "dd-mm-yyyy")
+templates.env.filters["month_number"] = month_number_filter
+
+# Configure template filters globally and set in dependencies
+deps.templates = templates
+
+# Now import routes AFTER templates are configured
+from routes import (  # noqa: E402
     admin_core,
     admin_events,
     admin_events_crud,
@@ -49,25 +71,6 @@ from routes import (
     static,
     tournaments,
 )
-
-# Initialize logger for this module
-logger = get_logger(__name__)
-
-app = FastAPI(redirect_slashes=False)
-app.add_middleware(
-    SessionMiddleware, secret_key=os.environ.get("SECRET_KEY", "dev-key-change-in-production")
-)
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-templates = Jinja2Templates(directory="templates")
-templates.env.filters["from_json"] = from_json_filter
-templates.env.filters["date_format"] = date_format_filter
-templates.env.filters["time_format"] = time_format_filter
-templates.env.filters["date_format_dd_mm_yyyy"] = lambda d: date_format_filter(d, "dd-mm-yyyy")
-templates.env.filters["month_number"] = month_number_filter
-
-# Configure template filters globally and set in dependencies
-deps.templates = templates
 
 app.include_router(auth.router)
 app.include_router(admin_core.router)
