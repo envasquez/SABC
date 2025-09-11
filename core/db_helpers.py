@@ -121,3 +121,87 @@ def get_poll_options_with_votes(poll_id, include_details=False):
         options.append(option_dict)
 
     return options
+
+
+def get_lakes_list():
+    """Get list of all lakes from database."""
+    lakes = db("SELECT id, display_name, 'Central Texas' as location FROM lakes ORDER BY display_name")
+    return [(lake[0], lake[1], lake[2]) for lake in lakes]
+
+
+def get_ramps_for_lake(lake_id):
+    """Get all ramps for a specific lake."""
+    ramps = db("SELECT id, name, lake_id FROM ramps WHERE lake_id = :lake_id ORDER BY name", {"lake_id": lake_id})
+    return [(str(ramp[0]), ramp[1], ramp[2]) for ramp in ramps]
+
+
+def get_all_ramps():
+    """Get all ramps from database."""
+    ramps = db("SELECT id, name, lake_id FROM ramps ORDER BY name")
+    return [(ramp[0], ramp[1], ramp[2]) for ramp in ramps]
+
+
+def find_lake_by_id(lake_id, return_format="full"):
+    """Find lake by ID from database."""
+    lake = db("SELECT id, display_name, yaml_key FROM lakes WHERE id = :id", {"id": lake_id})
+    if not lake:
+        return None if return_format == "name" else (None, None)
+    
+    if return_format == "name":
+        return lake[0][1]
+    
+    # Return (yaml_key, {info dict}) for compatibility
+    lake_info = {"display_name": lake[0][1]}
+    return lake[0][2], lake_info
+
+
+def find_ramp_name_by_id(ramp_id):
+    """Find ramp name by ID from database."""
+    ramp = db("SELECT name FROM ramps WHERE id = :id", {"id": ramp_id})
+    return ramp[0][0] if ramp else None
+
+
+def validate_lake_ramp_combo(lake_id, ramp_id):
+    """Validate that ramp belongs to lake."""
+    ramp = db("SELECT id FROM ramps WHERE id = :ramp_id AND lake_id = :lake_id", 
+             {"ramp_id": ramp_id, "lake_id": lake_id})
+    return bool(ramp)
+
+
+def find_lake_data_by_db_name(db_lake_name):
+    """Find lake data by database lake name."""
+    if not db_lake_name:
+        return None, None, None
+    
+    # Direct match by display name or yaml_key
+    lake = db("""
+        SELECT yaml_key, display_name FROM lakes 
+        WHERE LOWER(display_name) = LOWER(:name) OR LOWER(yaml_key) = LOWER(:name)
+    """, {"name": db_lake_name.strip()})
+    
+    if lake:
+        yaml_key, display_name = lake[0]
+        lake_info = {"display_name": display_name}
+        return yaml_key, lake_info, display_name
+    
+    # Fuzzy match
+    lake = db("""
+        SELECT yaml_key, display_name FROM lakes 
+        WHERE LOWER(display_name) LIKE '%' || LOWER(:name) || '%' 
+           OR LOWER(yaml_key) LIKE '%' || LOWER(:name) || '%'
+        LIMIT 1
+    """, {"name": db_lake_name.strip()})
+    
+    if lake:
+        yaml_key, display_name = lake[0]
+        lake_info = {"display_name": display_name}
+        return yaml_key, lake_info, display_name
+    
+    return None, None, None
+
+
+def load_lakes_data():
+    """Legacy function - replaced by database queries."""
+    # This function is kept for compatibility but should not be used
+    # All lake data should now come from the database
+    return {}

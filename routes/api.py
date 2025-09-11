@@ -36,7 +36,7 @@ async def health_check():
 
 @router.get("/api/lakes")
 async def api_get_lakes():
-    """Get all lakes from lakes.yaml for dropdowns."""
+    """Get all lakes from database for dropdowns."""
     lakes_data = load_lakes_data()
     lakes = []
     for lake_key, lake_info in lakes_data.items():

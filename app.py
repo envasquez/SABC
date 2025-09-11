@@ -23,7 +23,7 @@ from core.filters import (
     month_number_filter,
     time_format_filter,
 )
-from core.lakes import (
+from core.db_helpers import (
     find_lake_by_id,
     find_lake_data_by_db_name,
     find_ramp_name_by_id,

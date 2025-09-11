@@ -10,7 +10,7 @@ from core.auth_helpers import admin, u
 from core.database import db
 from core.database_engine import engine
 from core.filters import time_format_filter
-from core.lakes import (
+from core.db_helpers import (
     find_lake_by_id,
     find_lake_data_by_db_name,
     find_ramp_name_by_id,
