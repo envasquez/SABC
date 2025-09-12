@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core.db_helpers import get_tournament_stats
+from core.helpers.queries import get_tournament_stats
 from routes.dependencies import admin, db, templates, u
 
 router = APIRouter()

@@ -320,7 +320,7 @@ async def home_paginated(request: Request, page: int = 1):
             "event_date": upcoming[0][3],
         }
 
-    member_count = db("SELECT COUNT(*) FROM anglers WHERE member = 1 AND active = 1")[0][0]
+    member_count = db("SELECT COUNT(*) FROM anglers WHERE member = 1")[0][0]
     latest_news = db(
         "SELECT n.id, n.title, n.content, n.created_at, n.priority, COALESCE(e.name, a.name) as author_name FROM news n LEFT JOIN anglers a ON n.author_id = a.id LEFT JOIN anglers e ON n.last_edited_by = e.id WHERE n.published = 1 ORDER BY n.priority DESC, n.created_at DESC LIMIT 5"
     )

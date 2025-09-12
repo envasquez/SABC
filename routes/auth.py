@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
 
-from core.logging_config import SecurityEvent, get_logger, log_security_event
+from core.helpers.logging_config import SecurityEvent, get_logger, log_security_event
+from core.helpers.phone_utils import validate_phone_number
 from routes.dependencies import bcrypt, db, templates, u
 
 router = APIRouter()
@@ -33,7 +34,7 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
 
     try:
         res = db(
-            "SELECT id, password_hash FROM anglers WHERE email=:email AND active=1",
+            "SELECT id, password_hash FROM anglers WHERE email=:email",
             {"email": email},
         )
         if res and res[0][1]:  # Check if password_hash exists
@@ -111,7 +112,7 @@ async def register(
 
         password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
         db(
-            "INSERT INTO anglers (name, email, password_hash, member, is_admin, active) VALUES (:name, :email, :password_hash, 1, 0, 1)",
+            "INSERT INTO anglers (name, email, password_hash, member, is_admin) VALUES (:name, :email, :password_hash, 1, 0)",
             {"name": name, "email": email, "password_hash": password_hash},
         )
 
@@ -160,6 +161,313 @@ async def register(
         )
 
     return RedirectResponse("/login", status_code=302)
+
+
+@router.get("/profile")
+async def profile_page(request: Request):
+    """Display user's own profile page."""
+    if not (user := u(request)):
+        return RedirectResponse("/login")
+
+    # Get user data with additional fields for profile
+    user_data = db(
+        "SELECT id, name, email, member, is_admin, phone, year_joined, created_at FROM anglers WHERE id = :id",
+        {"id": user["id"]},
+    )
+
+    if not user_data:
+        return RedirectResponse("/login")
+
+    user_profile = {
+        "id": user_data[0][0],
+        "name": user_data[0][1],
+        "email": user_data[0][2],
+        "member": bool(user_data[0][3]),
+        "is_admin": bool(user_data[0][4]),
+        "phone": user_data[0][5],
+        "year_joined": user_data[0][6],
+        "created_at": user_data[0][7],
+    }
+
+    # Get current year for stats
+    current_year = 2025
+
+    # Get user statistics for the profile display
+    # Tournament count
+    tournaments_count = db(
+        """
+        SELECT COUNT(DISTINCT t.id)
+        FROM results r
+        JOIN tournaments t ON r.tournament_id = t.id
+        JOIN events e ON t.event_id = e.id
+        WHERE r.angler_id = :user_id AND NOT r.disqualified
+    """,
+        {"user_id": user["id"]},
+    )[0][0]
+
+    # Best weight
+    best_weight = db(
+        """
+        SELECT COALESCE(MAX(r.total_weight - COALESCE(r.dead_fish_penalty, 0)), 0)
+        FROM results r
+        JOIN tournaments t ON r.tournament_id = t.id
+        WHERE r.angler_id = :user_id AND NOT r.disqualified
+    """,
+        {"user_id": user["id"]},
+    )[0][0]
+
+    # Biggest bass
+    big_bass = db(
+        """
+        SELECT COALESCE(MAX(r.big_bass_weight), 0)
+        FROM results r
+        JOIN tournaments t ON r.tournament_id = t.id
+        WHERE r.angler_id = :user_id AND NOT r.disqualified
+    """,
+        {"user_id": user["id"]},
+    )[0][0]
+
+    # Team finish counts for current year
+    current_finishes = db(
+        """
+        SELECT
+            SUM(CASE WHEN place = 1 THEN 1 ELSE 0 END) as first,
+            SUM(CASE WHEN place = 2 THEN 1 ELSE 0 END) as second,
+            SUM(CASE WHEN place = 3 THEN 1 ELSE 0 END) as third
+        FROM (
+            SELECT ROW_NUMBER() OVER (ORDER BY tr.total_weight DESC) as place
+            FROM team_results tr
+            JOIN tournaments t ON tr.tournament_id = t.id
+            JOIN events e ON t.event_id = e.id
+            WHERE (tr.angler1_id = :user_id OR tr.angler2_id = :user_id)
+            AND e.year = :current_year
+        )
+    """,
+        {"user_id": user["id"], "current_year": current_year},
+    )
+
+    current_first, current_second, current_third = (
+        current_finishes[0] if current_finishes else (0, 0, 0)
+    )
+
+    # All-time team finish counts (since 2022)
+    all_time_finishes = db(
+        """
+        SELECT
+            SUM(CASE WHEN place = 1 THEN 1 ELSE 0 END) as first,
+            SUM(CASE WHEN place = 2 THEN 1 ELSE 0 END) as second,
+            SUM(CASE WHEN place = 3 THEN 1 ELSE 0 END) as third
+        FROM (
+            SELECT ROW_NUMBER() OVER (ORDER BY tr.total_weight DESC) as place
+            FROM team_results tr
+            JOIN tournaments t ON tr.tournament_id = t.id
+            JOIN events e ON t.event_id = e.id
+            WHERE (tr.angler1_id = :user_id OR tr.angler2_id = :user_id)
+            AND e.year >= 2022
+        )
+    """,
+        {"user_id": user["id"]},
+    )
+
+    all_time_first, all_time_second, all_time_third = (
+        all_time_finishes[0] if all_time_finishes else (0, 0, 0)
+    )
+
+    # Current AOY position
+    aoy_position = None
+    try:
+        aoy_standings = db(
+            """
+            WITH tournament_standings AS (
+                SELECT
+                    r.angler_id,
+                    r.tournament_id,
+                    r.total_weight - COALESCE(r.dead_fish_penalty, 0) as adjusted_weight,
+                    r.num_fish,
+                    r.disqualified,
+                    r.buy_in,
+                    DENSE_RANK() OVER (
+                        PARTITION BY r.tournament_id
+                        ORDER BY
+                            CASE WHEN r.disqualified = 1 THEN 0 ELSE r.total_weight - COALESCE(r.dead_fish_penalty, 0) END DESC
+                    ) as place_finish,
+                    COUNT(*) OVER (PARTITION BY r.tournament_id) as total_participants
+                FROM results r
+                JOIN tournaments t ON r.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                WHERE e.year = :current_year
+            ),
+            points_calc AS (
+                SELECT
+                    angler_id,
+                    tournament_id,
+                    adjusted_weight,
+                    num_fish,
+                    place_finish,
+                    CASE
+                        WHEN disqualified = 1 THEN 0
+                        ELSE 101 - place_finish
+                    END as points
+                FROM tournament_standings
+            ),
+            aoy_standings AS (
+                SELECT
+                    a.id,
+                    a.name,
+                    SUM(CASE WHEN a.member = 1 THEN pc.points ELSE 0 END) as total_points,
+                    SUM(pc.adjusted_weight) as total_weight,
+                    ROW_NUMBER() OVER (ORDER BY SUM(CASE WHEN a.member = 1 THEN pc.points ELSE 0 END) DESC, SUM(pc.adjusted_weight) DESC) as position
+                FROM anglers a
+                JOIN points_calc pc ON a.id = pc.angler_id
+                WHERE a.member = 1
+                GROUP BY a.id, a.name
+            )
+            SELECT position
+            FROM aoy_standings
+            WHERE id = :user_id
+        """,
+            {"current_year": current_year, "user_id": user["id"]},
+        )
+        if aoy_standings:
+            aoy_position = aoy_standings[0][0]
+    except Exception:
+        # If there's an error getting AOY position, just set it to None
+        pass
+
+    stats = {
+        "tournaments": tournaments_count,
+        "best_weight": best_weight,
+        "big_bass": big_bass,
+        "current_first": current_first or 0,
+        "current_second": current_second or 0,
+        "current_third": current_third or 0,
+        "all_time_first": all_time_first or 0,
+        "all_time_second": all_time_second or 0,
+        "all_time_third": all_time_third or 0,
+        "aoy_position": aoy_position,
+    }
+
+    return templates.TemplateResponse(
+        "profile.html",
+        {
+            "request": request,
+            "user": user_profile,
+            "stats": stats,
+            "current_year": current_year,
+            "success": request.query_params.get("success"),
+            "error": request.query_params.get("error"),
+        },
+    )
+
+
+@router.post("/profile/update")
+async def update_profile(
+    request: Request,
+    email: str = Form(...),
+    phone: str = Form(""),
+    year_joined: int = Form(None),
+):
+    """Update user's own profile."""
+    if not (user := u(request)):
+        return RedirectResponse("/login")
+
+    try:
+        email = email.lower().strip()
+
+        # Validate and format phone number
+        is_valid, formatted_phone, error_msg = validate_phone_number(phone)
+        if not is_valid:
+            return RedirectResponse(f"/profile?error={error_msg}")
+        phone = formatted_phone
+
+        # Validate email isn't already taken by another user
+        existing_email = db(
+            "SELECT id FROM anglers WHERE email = :email AND id != :user_id",
+            {"email": email, "user_id": user["id"]},
+        )
+        if existing_email:
+            return RedirectResponse("/profile?error=Email is already in use by another user")
+
+        # Update the user's profile
+        db(
+            """
+            UPDATE anglers
+            SET email = :email, phone = :phone, year_joined = :year_joined
+            WHERE id = :user_id
+        """,
+            {
+                "email": email,
+                "phone": phone,
+                "year_joined": year_joined,
+                "user_id": user["id"],
+            },
+        )
+
+        logger.info(
+            "User profile updated",
+            extra={
+                "user_id": user["id"],
+                "updated_fields": {
+                    "email": email,
+                    "phone": phone,
+                    "year_joined": year_joined,
+                },
+            },
+        )
+
+        return RedirectResponse("/profile?success=Profile updated successfully", status_code=302)
+
+    except Exception as e:
+        logger.error(
+            "Profile update error",
+            extra={"user_id": user["id"], "error": str(e)},
+            exc_info=True,
+        )
+        return RedirectResponse("/profile?error=Failed to update profile")
+
+
+@router.post("/profile/delete")
+async def delete_profile(request: Request, confirm: str = Form(...)):
+    """Delete user's own account."""
+    if not (user := u(request)):
+        return RedirectResponse("/login")
+
+    if confirm != "DELETE":
+        return RedirectResponse("/profile?error=Confirmation text must be exactly 'DELETE'")
+
+    try:
+        user_id = user["id"]
+        user_email = user.get("email", "unknown")
+
+        # Log account deletion
+        logger.warning(
+            "User account self-deletion",
+            extra={"user_id": user_id, "user_email": user_email},
+        )
+
+        log_security_event(
+            SecurityEvent.AUTH_ACCOUNT_DELETED,
+            user_id=user_id,
+            user_email=user_email,
+            ip_address=request.client.host if request.client else "unknown",
+            details={"method": "self_delete"},
+        )
+
+        # Delete the user account
+        db("DELETE FROM anglers WHERE id = :user_id", {"user_id": user_id})
+
+        # Clear session
+        request.session.clear()
+
+        return RedirectResponse("/?success=Account deleted successfully", status_code=302)
+
+    except Exception as e:
+        logger.error(
+            "Account deletion error",
+            extra={"user_id": user["id"], "error": str(e)},
+            exc_info=True,
+        )
+        return RedirectResponse("/profile?error=Failed to delete account")
 
 
 @router.post("/logout")

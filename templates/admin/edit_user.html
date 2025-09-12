@@ -15,7 +15,7 @@
                 <input type="email" class="form-control" id="email" name="email" value="{{ edit_user[2] or '' }}" placeholder="Leave empty or use first.last@sabc.com">
                 <div class="form-text">If left empty for guests, a default email will be generated (first.last@sabc.com)</div>
             </div>
-            {% for field, idx, label in [('member', 3, 'Club Member'), ('is_admin', 4, 'Administrator'), ('active', 5, 'Active User')] %}
+            {% for field, idx, label in [('member', 3, 'Club Member'), ('is_admin', 4, 'Administrator')] %}
             <div class="mb-3 form-check">
                 <input type="checkbox" class="form-check-input" id="{{ field }}" name="{{ field }}" {% if edit_user[idx] %}checked{% endif %}>
                 <label class="form-check-label" for="{{ field }}">{{ label }}</label>

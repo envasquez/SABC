@@ -6,9 +6,9 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core.db_helpers import get_poll_options_with_votes
-from core.logging_config import get_logger
-from core.response_helpers import error_redirect
+from core.helpers.logging_config import get_logger
+from core.helpers.queries import get_poll_options_with_votes
+from core.helpers.response import error_redirect
 from routes.dependencies import admin, db, find_lake_by_id, get_all_ramps, get_lakes_list, templates
 
 router = APIRouter()

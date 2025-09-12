@@ -298,14 +298,22 @@
                         <p class="small mb-1">{{ news_item[2] | safe }}</p>
                         <small class="text-muted">
                             {% set display_date = news_item[4] if news_item[8] else news_item[3] %}
-                            {% set display_author = news_item[6] %}
+                            {% set original_author = news_item[7] %}
+                            {% set editor = news_item[8] %}
                             <span>{{ display_date[:10] if display_date else '' }}</span>
-                            {% if display_author %}
-                                {% set name_parts = display_author.split() %}
-                                {% if name_parts|length >= 2 %}
-                                    - posted by: {{ name_parts[0][0] }}.{{ name_parts[-1] }}
+                            {% if editor %}
+                                {% set editor_parts = editor.split() %}
+                                {% if editor_parts|length >= 2 %}
+                                    - updated by: {{ editor_parts[0][0] }}.{{ editor_parts[-1] }}
                                 {% else %}
-                                    - posted by: {{ display_author }}
+                                    - updated by: {{ editor }}
+                                {% endif %}
+                            {% elif original_author %}
+                                {% set author_parts = original_author.split() %}
+                                {% if author_parts|length >= 2 %}
+                                    - posted by: {{ author_parts[0][0] }}.{{ author_parts[-1] }}
+                                {% else %}
+                                    - posted by: {{ original_author }}
                                 {% endif %}
                             {% endif %}
                         </small>

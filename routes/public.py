@@ -8,7 +8,7 @@ from typing import Optional
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core.db_helpers import (
+from core.helpers.queries import (
     get_poll_options_with_votes,
     get_tournament_stats,
 )
@@ -33,9 +33,9 @@ async def roster(request: Request):
     if not (user := u(request)):
         return RedirectResponse("/login")
 
-    # Get all active members and tournament participants with last tournament date for guests
+    # Get all members and guests, with last tournament date for guests
     members = db("""
-        SELECT DISTINCT a.name, a.email, a.member, a.is_admin, a.active, a.created_at, a.phone,
+        SELECT DISTINCT a.name, a.email, a.member, a.is_admin, a.created_at, a.phone,
                CASE
                    WHEN a.member = 0 THEN (
                        SELECT e.date
@@ -49,13 +49,6 @@ async def roster(request: Request):
                    ELSE NULL
                END as last_tournament_date
         FROM anglers a
-        WHERE a.active = 1
-           OR EXISTS (
-               SELECT 1 FROM results r WHERE r.angler_id = a.id
-           )
-           OR EXISTS (
-               SELECT 1 FROM team_results tr WHERE tr.angler1_id = a.id OR tr.angler2_id = a.id
-           )
         ORDER BY a.member DESC, a.name
     """)
 
@@ -115,7 +108,7 @@ async def polls(request: Request):
     )
 
     # Convert to list of dicts for easier template access
-    member_count = db("SELECT COUNT(*) FROM anglers WHERE member = 1 AND active = 1")[0][0]
+    member_count = db("SELECT COUNT(*) FROM anglers WHERE member = 1")[0][0]
 
     polls = []
     for poll_data in polls_data:

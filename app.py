@@ -14,16 +14,16 @@ from sqlalchemy import text
 from starlette.middleware.sessions import SessionMiddleware
 
 import routes.dependencies as deps
-from core.auth_helpers import admin, u
+from core.helpers.auth import admin, u
 from core.database import db
-from core.logging_config import configure_logging, get_logger
+from core.helpers.logging_config import configure_logging, get_logger
 from core.filters import (
     date_format_filter,
     from_json_filter,
     month_number_filter,
     time_format_filter,
 )
-from core.db_helpers import (
+from core.helpers.queries import (
     find_lake_by_id,
     find_lake_data_by_db_name,
     find_ramp_name_by_id,

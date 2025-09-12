@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core.response_helpers import error_redirect
+from core.helpers.response import error_redirect
 from routes.dependencies import admin, db, templates, u
 
 router = APIRouter()
@@ -213,14 +213,9 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
         )
 
     elif page == "users":
-        tab = request.query_params.get("tab", "active")
         ctx["users"] = db(
-            "SELECT id, name, email, member, is_admin, active FROM anglers WHERE "
-            + ("active = 0" if tab == "inactive" else "active = 1")
-            + " ORDER BY "
-            + ("name" if tab == "inactive" else "is_admin DESC, member DESC, name")
+            "SELECT id, name, email, member, is_admin FROM anglers ORDER BY is_admin DESC, member DESC, name"
         )
-        ctx["current_tab"] = tab
 
     elif page == "tournaments":
         # Get all tournaments with event and result data

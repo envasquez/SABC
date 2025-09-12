@@ -5,7 +5,7 @@ from functools import wraps
 from fastapi import Request
 from fastapi.responses import RedirectResponse
 
-from core.auth_helpers import u
+from core.helpers.auth import u
 
 
 def require_admin(func):

@@ -40,7 +40,7 @@ def main():
         password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
         db(
             """UPDATE anglers
-              SET password_hash = :password_hash, is_admin = 1, member = 1, active = 1
+              SET password_hash = :password_hash, is_admin = 1, member = 1
               WHERE email = :email""",
             {"password_hash": password_hash, "email": email},
         )
@@ -62,8 +62,8 @@ def main():
         # Create new admin user
         password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
         db(
-            """INSERT INTO anglers (name, email, password_hash, member, is_admin, active)
-              VALUES (:name, :email, :password_hash, 1, 1, 1)""",
+            """INSERT INTO anglers (name, email, password_hash, member, is_admin)
+              VALUES (:name, :email, :password_hash, 1, 1)""",
             {"name": name, "email": email, "password_hash": password_hash},
         )
 

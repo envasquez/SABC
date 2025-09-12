@@ -3,8 +3,8 @@
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core.logging_config import SecurityEvent, get_logger, log_security_event
-from core.response_helpers import error_redirect
+from core.helpers.logging_config import SecurityEvent, get_logger, log_security_event
+from core.helpers.response import error_redirect
 from routes.dependencies import db, templates, u
 
 router = APIRouter()
@@ -18,7 +18,7 @@ async def edit_user_page(request: Request, user_id: int):
         return RedirectResponse("/login")
 
     edit_user = db(
-        "SELECT id, name, email, member, is_admin, active FROM anglers WHERE id = :id",
+        "SELECT id, name, email, member, is_admin FROM anglers WHERE id = :id",
         {"id": user_id},
     )
 
@@ -38,7 +38,6 @@ async def update_user(
     email: str = Form(""),
     member: bool = Form(False),
     is_admin: bool = Form(False),
-    active: bool = Form(False),
 ):
     """Update user information."""
     if not (user := u(request)) or not user.get("is_admin"):
@@ -46,7 +45,7 @@ async def update_user(
 
     try:
         before = db(
-            "SELECT name, email, member, is_admin, active FROM anglers WHERE id = :id",
+            "SELECT name, email, member, is_admin FROM anglers WHERE id = :id",
             {"id": user_id},
         )
 
@@ -105,7 +104,6 @@ async def update_user(
             "email": final_email,
             "member": 1 if member else 0,
             "is_admin": 1 if is_admin else 0,
-            "active": 1 if active else 0,
         }
 
         # Log the user update attempt
@@ -115,21 +113,21 @@ async def update_user(
                 "admin_user_id": user.get("id"),
                 "target_user_id": user_id,
                 "changes": update_params,
-                "before": dict(zip(["name", "email", "member", "is_admin", "active"], before[0])),
+                "before": dict(zip(["name", "email", "member", "is_admin"], before[0])),
             },
         )
 
         db(
             """
             UPDATE anglers SET name = :name, email = :email, member = :member,
-                             is_admin = :is_admin, active = :active
+                             is_admin = :is_admin
             WHERE id = :id
         """,
             update_params,
         )
 
         after = db(
-            "SELECT name, email, member, is_admin, active FROM anglers WHERE id = :id",
+            "SELECT name, email, member, is_admin FROM anglers WHERE id = :id",
             {"id": user_id},
         )
 
@@ -143,10 +141,8 @@ async def update_user(
                 details={
                     "target_user_id": user_id,
                     "changes": update_params,
-                    "before": dict(
-                        zip(["name", "email", "member", "is_admin", "active"], before[0])
-                    ),
-                    "after": dict(zip(["name", "email", "member", "is_admin", "active"], after[0])),
+                    "before": dict(zip(["name", "email", "member", "is_admin"], before[0])),
+                    "after": dict(zip(["name", "email", "member", "is_admin"], after[0])),
                 },
             )
             logger.info(
@@ -154,7 +150,7 @@ async def update_user(
                 extra={
                     "admin_user_id": user.get("id"),
                     "target_user_id": user_id,
-                    "after": dict(zip(["name", "email", "member", "is_admin", "active"], after[0])),
+                    "after": dict(zip(["name", "email", "member", "is_admin"], after[0])),
                 },
             )
 
@@ -208,7 +204,7 @@ async def verify_user(request: Request, user_id: int):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     result = db(
-        "SELECT id, name, email, member, is_admin, active FROM anglers WHERE id = :id",
+        "SELECT id, name, email, member, is_admin FROM anglers WHERE id = :id",
         {"id": user_id},
     )
 
@@ -221,7 +217,6 @@ async def verify_user(request: Request, user_id: int):
                 "email": d[2],
                 "member": bool(d[3]),
                 "is_admin": bool(d[4]),
-                "active": bool(d[5]),
             }
         )
 
@@ -229,16 +224,16 @@ async def verify_user(request: Request, user_id: int):
 
 
 @router.delete("/admin/users/{user_id}")
-async def deactivate_user(request: Request, user_id: int):
-    """Deactivate a user (soft delete)."""
+async def delete_user(request: Request, user_id: int):
+    """Delete a user."""
     if not (user := u(request)) or not user.get("is_admin"):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
     if user.get("id") == user_id:
-        return JSONResponse({"error": "Cannot deactivate yourself"}, status_code=400)
+        return JSONResponse({"error": "Cannot delete yourself"}, status_code=400)
 
     try:
-        db("UPDATE anglers SET active = 0 WHERE id = :id", {"id": user_id})
+        db("DELETE FROM anglers WHERE id = :id", {"id": user_id})
         return JSONResponse({"success": True})
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)

@@ -3,10 +3,10 @@
 <div class="mb-4"><h1><i class="bi bi-person-circle me-2"></i>Member Profile</h1></div>
 {% if error %}<div class="alert alert-danger">{{error}}</div>{% endif %}
 {% if success %}<div class="alert alert-success">{{success}}</div>{% endif %}
-{% if request.args.get('welcome') == 'true' and not user.member %}
+{% if request.query_params.get('welcome') == 'true' and not user.member %}
 <div class="alert alert-info">
 <h5><i class="bi bi-info-circle me-2"></i>Welcome to South Austin Bass Club!</h5>
-<p class="mb-2">Your account has been created as an <strong>inactive member</strong>. To become an active member:</p>
+<p class="mb-2">Your account has been created as a <strong>guest</strong>. To become a member:</p>
 <ol class="mb-2">
 <li>Pay the $25 annual membership fee</li>
 <li>Contact an admin to verify your payment</li>
@@ -26,23 +26,30 @@
 <div class="card-body">
 <!-- View Mode -->
 <div id="viewMode">
+<div class="row">
+<div class="col-md-8">
 <table class="table table-borderless">
-<tr><th style="width:30%">Name</th><td>{{user.name}}</td></tr>
+<tr><th style="width:40%">Name</th><td>{{user.name}}</td></tr>
 <tr><th>Email</th><td>{{user.email or 'Not provided'}}</td></tr>
 <tr><th>Phone</th><td>{{user.phone or 'Not provided'}}</td></tr>
 <tr><th>Year Joined</th><td>{{user.year_joined or 'Not specified'}}</td></tr>
 <tr><th>Status</th><td>
-{% if user.member %}<span class="badge bg-success">Active Member</span>{% else %}<span class="badge bg-warning">Inactive Member</span>{% endif %}
+{% if user.member %}<span class="badge bg-success">Member</span>{% else %}<span class="badge bg-secondary">Guest</span>{% endif %}
 {% if user.is_admin %}<span class="badge bg-danger">Admin</span>{% endif %}
 </td></tr>
 </table>
+</div>
+<div class="col-md-4 text-center">
+<img src="/static/sabc_logo.png" alt="SABC Logo" class="img-fluid rounded" style="max-width: 150px;">
+</div>
+</div>
 </div>
 
 <!-- Edit Mode -->
 <div id="editMode" style="display:none">
 <form method="POST" action="/profile/update">
 <div class="mb-3"><label class="form-label">Email</label><input type="email" class="form-control" name="email" value="{{user.email or ''}}" required></div>
-<div class="mb-3"><label class="form-label">Phone</label><input type="tel" class="form-control" name="phone" value="{{user.phone or ''}}" placeholder="(555) 123-4567"></div>
+<div class="mb-3"><label class="form-label">Phone</label><input type="tel" class="form-control" name="phone" id="phoneInput" value="{{user.phone or ''}}" placeholder="(555) 123-4567" maxlength="14"></div>
 <div class="mb-3"><label class="form-label">Year Joined</label><input type="number" class="form-control" name="year_joined" value="{{user.year_joined or 2024}}" min="1981" max="2030"></div>
 <div class="d-flex gap-2">
 <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Save</button>
@@ -166,5 +173,46 @@ document.getElementById('deleteConfirm').addEventListener('input', function(e) {
 const btn = document.getElementById('deleteSubmitBtn');
 btn.disabled = e.target.value !== 'DELETE';
 });
+
+// Phone number formatting
+const phoneInput = document.getElementById('phoneInput');
+if (phoneInput) {
+    phoneInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, ''); // Remove all non-digits
+        
+        if (value.length === 0) {
+            e.target.value = '';
+            return;
+        }
+        
+        // Remove leading 1 if present
+        if (value.length === 11 && value[0] === '1') {
+            value = value.substring(1);
+        }
+        
+        // Format the number as (XXX) XXX-XXXX
+        if (value.length <= 3) {
+            e.target.value = '(' + value;
+        } else if (value.length <= 6) {
+            e.target.value = '(' + value.substring(0, 3) + ') ' + value.substring(3);
+        } else if (value.length <= 10) {
+            e.target.value = '(' + value.substring(0, 3) + ') ' + value.substring(3, 6) + '-' + value.substring(6);
+        } else {
+            // Don't allow more than 10 digits
+            e.target.value = '(' + value.substring(0, 3) + ') ' + value.substring(3, 6) + '-' + value.substring(6, 10);
+        }
+    });
+    
+    // Also format on blur to ensure consistency
+    phoneInput.addEventListener('blur', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        
+        if (value.length === 10) {
+            e.target.value = '(' + value.substring(0, 3) + ') ' + value.substring(3, 6) + '-' + value.substring(6);
+        } else if (value.length === 0) {
+            e.target.value = '';
+        }
+    });
+}
 </script>
 {% endblock %}

@@ -1,6 +1,6 @@
 from sqlalchemy import text
 
-from core.database_engine import engine
+from core.db_schema import engine
 
 
 def db(q, p=None):
