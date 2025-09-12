@@ -86,8 +86,12 @@ from routes.admin import (
 from routes.admin import (
     users as admin_users,
 )
+from routes.admin import (
+    lakes as admin_lakes,
+)
 
 app.include_router(auth.router)
+app.include_router(admin_lakes.router)
 app.include_router(admin_core.router)
 app.include_router(admin_events.router)
 app.include_router(admin_events_crud.router)

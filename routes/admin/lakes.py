@@ -1,0 +1,115 @@
+"""Admin lakes routes - lakes management."""
+
+from fastapi import APIRouter, Form, Request
+from fastapi.responses import JSONResponse, RedirectResponse
+
+from core.helpers.response import error_redirect
+from routes.dependencies import db, templates, u
+
+router = APIRouter()
+
+
+@router.get("/admin/lakes")
+async def admin_lakes(request: Request):
+    """Admin page for managing lakes."""
+    if not (user := u(request)) or not user.get("is_admin"):
+        return RedirectResponse("/login")
+
+    lakes = db("""
+        SELECT id, yaml_key, display_name, google_maps_iframe, created_at, updated_at
+        FROM lakes
+        ORDER BY display_name
+    """)
+
+
+    return templates.TemplateResponse(
+        "admin/lakes.html", {"request": request, "user": user, "lakes": lakes}
+    )
+
+
+@router.post("/admin/lakes/create")
+async def create_lake(
+    request: Request,
+    name: str = Form(...),
+    display_name: str = Form(...),
+    google_maps_embed: str = Form(""),
+):
+    """Create a new lake."""
+    if not (user := u(request)) or not user.get("is_admin"):
+        return RedirectResponse("/login")
+
+    try:
+        db(
+            """
+            INSERT INTO lakes (yaml_key, display_name, google_maps_iframe)
+            VALUES (:yaml_key, :display_name, :google_maps_iframe)
+        """,
+            {
+                "yaml_key": name.strip().lower().replace(" ", "_"),
+                "display_name": display_name.strip(),
+                "google_maps_iframe": google_maps_embed.strip(),
+            },
+        )
+        return RedirectResponse("/admin/lakes?success=Lake created successfully", status_code=302)
+    except Exception as e:
+        return error_redirect("/admin/lakes", str(e))
+
+
+@router.post("/admin/lakes/{lake_id}/update")
+async def update_lake(
+    request: Request,
+    lake_id: int,
+    name: str = Form(...),
+    display_name: str = Form(...),
+    google_maps_embed: str = Form(""),
+):
+    """Update an existing lake."""
+    if not (user := u(request)) or not user.get("is_admin"):
+        return RedirectResponse("/login")
+
+    try:
+        db(
+            """
+            UPDATE lakes SET yaml_key = :yaml_key, display_name = :display_name,
+                google_maps_iframe = :google_maps_iframe, updated_at = CURRENT_TIMESTAMP
+            WHERE id = :id
+        """,
+            {
+                "id": lake_id,
+                "yaml_key": name.strip().lower().replace(" ", "_"),
+                "display_name": display_name.strip(),
+                "google_maps_iframe": google_maps_embed.strip(),
+            },
+        )
+        return RedirectResponse("/admin/lakes?success=Lake updated successfully", status_code=302)
+    except Exception as e:
+        return error_redirect("/admin/lakes", str(e))
+
+
+@router.delete("/admin/lakes/{lake_id}")
+async def delete_lake(request: Request, lake_id: int):
+    """Delete a lake."""
+    if not (user := u(request)) or not user.get("is_admin"):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        # Check if lake is used in any tournaments or ramps
+        usage_count = db(
+            """
+            SELECT 
+                (SELECT COUNT(*) FROM tournaments WHERE lake_id = :id) +
+                (SELECT COUNT(*) FROM ramps WHERE lake_id = :id) as total
+        """,
+            {"id": lake_id},
+        )[0][0]
+
+        if usage_count > 0:
+            return JSONResponse(
+                {"error": "Cannot delete lake that is referenced by tournaments or ramps"},
+                status_code=400,
+            )
+
+        db("DELETE FROM lakes WHERE id = :id", {"id": lake_id})
+        return JSONResponse({"success": True})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
