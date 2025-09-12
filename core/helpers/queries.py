@@ -1,0 +1,220 @@
+"""Database query helper functions to consolidate repeated patterns."""
+
+from core.database import db
+
+
+def get_tournament_stats(tournament_id, fish_limit):
+    """Get comprehensive tournament statistics."""
+    stats = db(
+        """
+        SELECT
+            COUNT(DISTINCT r.angler_id) as total_anglers,
+            SUM(r.num_fish) as total_fish,
+            SUM(r.total_weight - r.dead_fish_penalty) as total_weight,
+            COUNT(CASE WHEN r.num_fish = :fish_limit THEN 1 END) as limits,
+            COUNT(CASE WHEN r.num_fish = 0 THEN 1 END) as zeros,
+            COUNT(CASE WHEN r.buy_in = 1 THEN 1 END) as buy_ins,
+            MAX(r.big_bass_weight) as big_bass,
+            MAX(r.total_weight - r.dead_fish_penalty) as heavy_stringer
+        FROM results r
+        WHERE r.tournament_id = :tournament_id AND NOT r.disqualified
+    """,
+        {"tournament_id": tournament_id, "fish_limit": fish_limit},
+    )
+    return stats[0] if stats else [0] * 8
+
+
+def get_individual_results(tournament_id, last_place_points):
+    """Get individual tournament results with SABC scoring."""
+    return db(
+        """
+        SELECT
+            ROW_NUMBER() OVER (
+                ORDER BY
+                    CASE WHEN r.num_fish > 0 THEN 0 ELSE 1 END,
+                    (r.total_weight - r.dead_fish_penalty) DESC,
+                    r.big_bass_weight DESC,
+                    r.buy_in,
+                    a.name
+            ) as place,
+            a.name,
+            r.num_fish,
+            r.total_weight - r.dead_fish_penalty as final_weight,
+            r.big_bass_weight,
+            CASE
+                WHEN a.member = 0 THEN 0
+                WHEN r.num_fish > 0 AND a.member = 1 THEN
+                    100 - ROW_NUMBER() OVER (
+                        PARTITION BY CASE WHEN r.num_fish > 0 AND a.member = 1 THEN 1 ELSE 0 END
+                        ORDER BY (r.total_weight - r.dead_fish_penalty) DESC, r.big_bass_weight DESC
+                    ) + 1
+                WHEN r.buy_in = 1 AND a.member = 1 THEN :last_place_points - 4
+                ELSE :last_place_points - 2
+            END as points,
+            r.dead_fish_penalty,
+            r.buy_in,
+            r.disqualified,
+            a.member
+        FROM results r
+        JOIN anglers a ON r.angler_id = a.id
+        WHERE r.tournament_id = :tournament_id
+        ORDER BY place
+    """,
+        {"tournament_id": tournament_id, "last_place_points": last_place_points},
+    )
+
+
+def get_tournaments_with_results():
+    """Get tournaments list with event and result data."""
+    return db("""
+        SELECT t.id, t.name, e.date, e.description,
+               COUNT(DISTINCT r.angler_id) as participant_count,
+               t.complete
+        FROM tournaments t
+        JOIN events e ON t.event_id = e.id
+        LEFT JOIN results r ON t.id = r.tournament_id
+        GROUP BY t.id, t.name, e.date, e.description, t.complete
+        ORDER BY e.date DESC
+    """)
+
+
+def get_poll_options_with_votes(poll_id, include_details=False):
+    """Get poll options with vote counts and optional voter details."""
+    options_data = db(
+        """
+        SELECT po.id, po.option_text, po.option_data, COUNT(pv.id) as vote_count
+        FROM poll_options po
+        LEFT JOIN poll_votes pv ON po.id = pv.option_id
+        WHERE po.poll_id = :poll_id
+        GROUP BY po.id, po.option_text, po.option_data
+        ORDER BY po.id
+    """,
+        {"poll_id": poll_id},
+    )
+
+    options = []
+    for option_data in options_data:
+        option_dict = {
+            "id": option_data[0],
+            "text": option_data[1],
+            "data": option_data[2],
+            "vote_count": option_data[3],
+        }
+
+        if include_details:
+            vote_details = db(
+                """
+                SELECT pv.id, a.name, pv.voted_at
+                FROM poll_votes pv
+                JOIN anglers a ON pv.angler_id = a.id
+                WHERE pv.option_id = :option_id
+                ORDER BY pv.voted_at
+            """,
+                {"option_id": option_data[0]},
+            )
+
+            option_dict["votes"] = [
+                {"vote_id": vote[0], "voter_name": vote[1], "voted_at": vote[2]}
+                for vote in vote_details
+            ]
+
+        options.append(option_dict)
+
+    return options
+
+
+def get_lakes_list():
+    """Get list of all lakes from database."""
+    lakes = db(
+        "SELECT id, display_name, 'Central Texas' as location FROM lakes ORDER BY display_name"
+    )
+    return [(lake[0], lake[1], lake[2]) for lake in lakes]
+
+
+def get_ramps_for_lake(lake_id):
+    """Get all ramps for a specific lake."""
+    ramps = db(
+        "SELECT id, name, lake_id FROM ramps WHERE lake_id = :lake_id ORDER BY name",
+        {"lake_id": lake_id},
+    )
+    return [(str(ramp[0]), ramp[1], ramp[2]) for ramp in ramps]
+
+
+def get_all_ramps():
+    """Get all ramps from database."""
+    ramps = db("SELECT id, name, lake_id FROM ramps ORDER BY name")
+    return [(ramp[0], ramp[1], ramp[2]) for ramp in ramps]
+
+
+def find_lake_by_id(lake_id, return_format="full"):
+    """Find lake by ID from database."""
+    lake = db("SELECT id, display_name, yaml_key FROM lakes WHERE id = :id", {"id": lake_id})
+    if not lake:
+        return None if return_format == "name" else (None, None)
+
+    if return_format == "name":
+        return lake[0][1]
+
+    # Return (yaml_key, {info dict}) for compatibility
+    lake_info = {"display_name": lake[0][1]}
+    return lake[0][2], lake_info
+
+
+def find_ramp_name_by_id(ramp_id):
+    """Find ramp name by ID from database."""
+    ramp = db("SELECT name FROM ramps WHERE id = :id", {"id": ramp_id})
+    return ramp[0][0] if ramp else None
+
+
+def validate_lake_ramp_combo(lake_id, ramp_id):
+    """Validate that ramp belongs to lake."""
+    ramp = db(
+        "SELECT id FROM ramps WHERE id = :ramp_id AND lake_id = :lake_id",
+        {"ramp_id": ramp_id, "lake_id": lake_id},
+    )
+    return bool(ramp)
+
+
+def find_lake_data_by_db_name(db_lake_name):
+    """Find lake data by database lake name."""
+    if not db_lake_name:
+        return None, None, None
+
+    # Direct match by display name or yaml_key
+    lake = db(
+        """
+        SELECT yaml_key, display_name FROM lakes
+        WHERE LOWER(display_name) = LOWER(:name) OR LOWER(yaml_key) = LOWER(:name)
+    """,
+        {"name": db_lake_name.strip()},
+    )
+
+    if lake:
+        yaml_key, display_name = lake[0]
+        lake_info = {"display_name": display_name}
+        return yaml_key, lake_info, display_name
+
+    # Fuzzy match
+    lake = db(
+        """
+        SELECT yaml_key, display_name FROM lakes
+        WHERE LOWER(display_name) LIKE '%' || LOWER(:name) || '%'
+           OR LOWER(yaml_key) LIKE '%' || LOWER(:name) || '%'
+        LIMIT 1
+    """,
+        {"name": db_lake_name.strip()},
+    )
+
+    if lake:
+        yaml_key, display_name = lake[0]
+        lake_info = {"display_name": display_name}
+        return yaml_key, lake_info, display_name
+
+    return None, None, None
+
+
+def load_lakes_data():
+    """Legacy function - replaced by database queries."""
+    # This function is kept for compatibility but should not be used
+    # All lake data should now come from the database
+    return {}
