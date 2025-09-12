@@ -21,7 +21,6 @@ async def admin_lakes(request: Request):
         ORDER BY display_name
     """)
 
-
     return templates.TemplateResponse(
         "admin/lakes.html", {"request": request, "user": user, "lakes": lakes}
     )
@@ -96,7 +95,7 @@ async def delete_lake(request: Request, lake_id: int):
         # Check if lake is used in any tournaments or ramps
         usage_count = db(
             """
-            SELECT 
+            SELECT
                 (SELECT COUNT(*) FROM tournaments WHERE lake_id = :id) +
                 (SELECT COUNT(*) FROM ramps WHERE lake_id = :id) as total
         """,
