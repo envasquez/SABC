@@ -38,9 +38,9 @@ def validate_event_data(
                 errors.append("Entry fee cannot be negative")
             elif entry_fee > 200:
                 warnings.append(f"Entry fee ${entry_fee} is unusually high for SABC tournament")
-    elif event_type == "federal_holiday":
+    elif event_type == "holiday":
         if start_time or weigh_in_time or entry_fee:
-            warnings.append("Federal holidays don't typically need tournament details")
+            warnings.append("Holidays don't typically need tournament details")
     return {"errors": errors, "warnings": warnings}
 
 

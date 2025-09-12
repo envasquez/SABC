@@ -26,7 +26,7 @@ TABLE_DEFINITIONS = [
         year INTEGER NOT NULL,
         name TEXT NOT NULL,
         description TEXT,
-        event_type TEXT DEFAULT 'sabc_tournament' CHECK (event_type IN ('sabc_tournament', 'federal_holiday', 'other_tournament', 'club_event')),
+        event_type TEXT DEFAULT 'sabc_tournament' CHECK (event_type IN ('sabc_tournament', 'holiday', 'other_tournament', 'club_event')),
         start_time TIME,
         weigh_in_time TIME,
         lake_name TEXT,

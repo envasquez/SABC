@@ -15,7 +15,7 @@ from routes.dependencies import (
 router = APIRouter()
 
 
-@router.get("/admin/federal-holidays/{year}")
+@router.get("/admin/holidays/{year}")
 async def get_federal_holidays_api(request: Request, year: int):
     """API endpoint to get federal holidays for a year."""
     if isinstance(admin(request), RedirectResponse):
@@ -124,7 +124,7 @@ async def bulk_create_holidays(request: Request):
             db(
                 """
                 INSERT INTO events (date, year, name, event_type, description, holiday_name)
-                VALUES (?, ?, ?, 'federal_holiday', ?, ?)
+                VALUES (?, ?, ?, 'holiday', ?, ?)
             """,
                 (
                     holiday_date,

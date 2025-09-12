@@ -31,7 +31,6 @@ async def create_event(
     lake_name: str = Form(default=""),
     ramp_name: str = Form(default=""),
     entry_fee: float = Form(default=25.00),
-    holiday_name: str = Form(default=""),
 ):
     """Create a new event and optionally auto-create poll for SABC tournaments."""
     if isinstance(user := admin(request), RedirectResponse):
@@ -67,7 +66,7 @@ async def create_event(
             "lake_name": lake_name if lake_name else None,
             "ramp_name": ramp_name if ramp_name else None,
             "entry_fee": entry_fee if event_type == "sabc_tournament" else None,
-            "holiday_name": holiday_name if event_type == "federal_holiday" else None,
+            "holiday_name": name if event_type == "holiday" else None,
         }
 
         event_id = db(

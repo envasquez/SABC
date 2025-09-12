@@ -33,7 +33,7 @@
                         <label for="event_type" class="form-label">Event Type <span class="text-danger">*</span></label>
                         <select class="form-select" id="event_type" name="event_type" required>
                             <option value="sabc_tournament">SABC Tournament</option>
-                            <option value="federal_holiday">Federal Holiday</option>
+                            <option value="holiday">Holiday</option>
                             <option value="other_tournament">Other Tournament</option>
                             <option value="club_event">Club Event</option>
                         </select>
@@ -79,18 +79,6 @@
                 
                 <!-- Holiday-specific fields -->
                 <div id="holiday-fields" class="row g-3 mt-2" style="display: none;">
-                    <div class="col-md-6">
-                        <label for="holiday_name" class="form-label">Holiday Name</label>
-                        <input type="text" class="form-control" id="holiday_name" name="holiday_name" placeholder="e.g., Independence Day">
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mt-4">
-                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="populateHolidayFromDate()">
-                                <i class="bi bi-magic me-1"></i>Auto-fill from date
-                            </button>
-                            <br><small class="form-text text-muted">Automatically populate holiday name based on selected date</small>
-                        </div>
-                    </div>
                 </div>
                 
                 <!-- General event options -->
@@ -123,8 +111,8 @@
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link text-light" id="holidays-tab" data-bs-toggle="tab" data-bs-target="#holidays-events" type="button" role="tab" aria-controls="holidays-events" aria-selected="false">
-                        <i class="bi bi-calendar-heart me-2"></i>Federal Holidays
-                        <span class="badge bg-info ms-2" id="holidays-count">{{ events|selectattr('event_type', 'equalto', 'federal_holiday')|list|length }}</span>
+                        <i class="bi bi-calendar-heart me-2"></i>Holidays
+                        <span class="badge bg-info ms-2" id="holidays-count">{{ events|selectattr('event_type', 'equalto', 'holiday')|list|length }}</span>
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -200,7 +188,7 @@
                 <!-- Federal Holidays Tab -->
                 <div class="tab-pane fade" id="holidays-events" role="tabpanel" aria-labelledby="holidays-tab">
                     <div class="d-flex justify-content-between align-items-center p-3 bg-secondary text-white border-bottom">
-                        <h6 class="mb-0"><i class="bi bi-calendar-heart me-2 text-info"></i>Federal Holiday Calendar</h6>
+                        <h6 class="mb-0"><i class="bi bi-calendar-heart me-2 text-info"></i>Holiday Calendar</h6>
                     </div>
                     
                     <!-- Search and Filter for Holidays -->
@@ -228,7 +216,7 @@
                         </div>
                     </div>
                     
-                    {% set sabc_events = events|selectattr('event_type', 'equalto', 'federal_holiday')|list %}
+                    {% set sabc_events = events|selectattr('event_type', 'equalto', 'holiday')|list %}
                     {% include 'admin/events_table.html' with context %}
                 </div>
 
@@ -301,7 +289,7 @@
                                 <select class="form-select form-select-sm" id="past-type-filter" onchange="filterEvents('past')">
                                     <option value="">All Types</option>
                                     <option value="sabc_tournament">SABC</option>
-                                    <option value="federal_holiday">Holidays</option>
+                                    <option value="holiday">Holidays</option>
                                     <option value="other_tournament">Other Tournaments</option>
                                     <option value="club_event">Club Events</option>
                                 </select>
@@ -349,7 +337,7 @@
                         <label for="edit_event_type" class="form-label">Event Type</label>
                         <select class="form-select" id="edit_event_type" name="event_type" required>
                             <option value="sabc_tournament">SABC Tournament</option>
-                            <option value="federal_holiday">Federal Holiday</option>
+                            <option value="holiday">Holiday</option>
                             <option value="other_tournament">Other Tournament</option>
                             <option value="club_event">Club Event</option>
                         </select>
@@ -406,10 +394,6 @@
                     
                     <!-- Holiday-specific fields -->
                     <div id="edit-holiday-fields" style="display: none;">
-                        <div class="mb-3">
-                            <label for="edit_holiday_name" class="form-label">Holiday Name</label>
-                            <input type="text" class="form-control" id="edit_holiday_name" name="holiday_name">
-                        </div>
                     </div>
                     
                 </div>
@@ -555,8 +539,6 @@ function editEvent(id, date, eventType, name, description, hasPoll, pollActive) 
                 }, 500);
             }
             
-            // Populate holiday fields
-            document.getElementById('edit_holiday_name').value = data.holiday_name || '';
             
             
             // Show/hide conditional fields
@@ -754,10 +736,9 @@ function updateFieldRequirements(eventType) {
     const startTime = document.getElementById('start_time');
     const weighInTime = document.getElementById('weigh_in_time');
     const entryFee = document.getElementById('entry_fee');
-    const holidayName = document.getElementById('holiday_name');
     
     // Clear all requirements first
-    [startTime, weighInTime, entryFee, holidayName].forEach(field => {
+    [startTime, weighInTime, entryFee].forEach(field => {
         field.required = false;
     });
     
@@ -766,53 +747,9 @@ function updateFieldRequirements(eventType) {
         startTime.required = true;
         weighInTime.required = true;
         entryFee.required = true;
-    } else if (eventType === 'federal_holiday') {
-        holidayName.required = true;
     }
 }
 
-// Auto-populate holiday name from date
-function populateHolidayFromDate() {
-    const dateInput = document.getElementById('date');
-    const holidayNameInput = document.getElementById('holiday_name');
-    
-    if (!dateInput.value) {
-        alert('Please select a date first');
-        return;
-    }
-    
-    const selectedDate = new Date(dateInput.value);
-    const year = selectedDate.getFullYear();
-    
-    // Check common federal holidays
-    const holidays = {
-        [`${year}-01-01`]: "New Year's Day",
-        [`${year}-07-04`]: "Independence Day",
-        [`${year}-11-11`]: "Veterans Day",
-        [`${year}-12-25`]: "Christmas Day"
-    };
-    
-    const dateStr = dateInput.value;
-    if (holidays[dateStr]) {
-        holidayNameInput.value = holidays[dateStr];
-    } else {
-        // For floating holidays, make a simple API call
-        fetch(`/admin/federal-holidays/${year}`)
-            .then(response => response.json())
-            .then(data => {
-                const holiday = data.holidays.find(h => h[0] === dateStr);
-                if (holiday) {
-                    holidayNameInput.value = holiday[1];
-                } else {
-                    alert('No federal holiday found for this date');
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching holidays:', error);
-                alert('Could not fetch holiday information');
-            });
-    }
-}
 
 // Real-time form validation
 function validateEventForm() {
