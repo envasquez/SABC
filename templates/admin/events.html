@@ -838,149 +838,187 @@ function confirmDeletePastEvent() {
     });
 }
 
-// Event type conditional fields for create form
-function toggleEventFields() {
-    const eventType = document.getElementById('event_type').value;
-    const sabcTournamentFields = document.getElementById('sabc-tournament-fields');
-    const otherTournamentFields = document.getElementById('other-tournament-fields');
-    const otherTournamentDescription = document.getElementById('other-tournament-description');
-    const clubEventFields = document.getElementById('club-event-fields');
-    const otherFields = document.getElementById('other-fields');
-    const sabcFields = document.getElementById('sabc-fields');
-    const holidayFields = document.getElementById('holiday-fields');
-
-    // Hide all conditional fields first
-    sabcTournamentFields.style.display = 'none';
-    otherTournamentFields.style.display = 'none';
-    otherTournamentDescription.style.display = 'none';
-    clubEventFields.style.display = 'none';
-    otherFields.style.display = 'none';
-    sabcFields.style.display = 'none';
-    holidayFields.style.display = 'none';
-
-    // Clear fields and manage name attributes to prevent conflicts
-    document.getElementById('start_time').value = '';
-    document.getElementById('weigh_in_time').value = '';
-    document.getElementById('other_start_time').value = '';
-    document.getElementById('other_weigh_in_time').value = '';
-
-    // Only clear and manage name attributes for non-active description fields
-    // DO NOT clear the main description field value as it may contain user input
-    if (document.getElementById('other_description')) {
-        document.getElementById('other_description').value = '';
-        document.getElementById('other_description').removeAttribute('name');
+// Configuration-driven event form management
+const EVENT_FORM_CONFIG = {
+    sabc_tournament: {
+        visibleSections: ['sabc-tournament-fields'],
+        editSections: ['edit-tournament-fields', 'edit-sabc-fields'],
+        clearFields: ['start_time', 'weigh_in_time'],
+        defaults: { start_time: '06:00', weigh_in_time: '15:00' },
+        requiredFields: ['start_time', 'weigh_in_time', 'lake_name', 'ramp_name'],
+        activeDescriptionField: 'description',
+        loadLakes: false
+    },
+    other_tournament: {
+        visibleSections: ['other-tournament-fields', 'other-tournament-description'],
+        editSections: ['edit-tournament-fields'],
+        clearFields: ['other_start_time', 'other_weigh_in_time'],
+        defaults: {},
+        requiredFields: [],
+        activeDescriptionField: 'other_description',
+        loadLakes: true
+    },
+    club_event: {
+        visibleSections: ['club-event-fields'],
+        editSections: ['edit-tournament-fields'],
+        clearFields: [],
+        defaults: {},
+        requiredFields: ['club_description'],
+        activeDescriptionField: 'club_description',
+        loadLakes: false
+    },
+    holiday: {
+        visibleSections: ['other-fields', 'holiday-fields'],
+        editSections: ['edit-holiday-fields'],
+        clearFields: [],
+        defaults: {},
+        requiredFields: [],
+        activeDescriptionField: 'description',
+        loadLakes: false,
+        hidePollContainer: true
     }
-    if (document.getElementById('club_description')) {
-        document.getElementById('club_description').value = '';
-        document.getElementById('club_description').removeAttribute('name');
-        document.getElementById('club_description').removeAttribute('required');
-    }
+};
 
-    // Show relevant fields based on event type and set active description field
-    if (eventType === 'sabc_tournament') {
-        sabcTournamentFields.style.display = 'flex';
-        // Set default times for SABC tournaments
-        document.getElementById('start_time').value = '06:00';
-        document.getElementById('weigh_in_time').value = '15:00';
-        // Main description field is already active with name="description"
-    } else if (eventType === 'other_tournament') {
-        otherTournamentFields.style.display = 'flex';
-        otherTournamentDescription.style.display = 'flex';
-        // Activate the other description field
-        if (document.getElementById('other_description')) {
-            document.getElementById('other_description').setAttribute('name', 'description');
-        }
-        // Load lakes for other tournament lake dropdown
-        loadLakesForOtherTournament();
-    } else if (eventType === 'club_event') {
-        clubEventFields.style.display = 'flex';
-        // Activate the club description field
-        if (document.getElementById('club_description')) {
-            document.getElementById('club_description').setAttribute('name', 'description');
-            document.getElementById('club_description').setAttribute('required', 'required');
-        }
-    } else if (eventType === 'holiday') {
-        otherFields.style.display = 'flex';
-        holidayFields.style.display = 'flex';
-        // Main description field is already active with name="description"
-    } else {
-        otherFields.style.display = 'flex';
-        // Main description field is already active with name="description"
-    }
-
-    // Update form validation
-    updateFieldRequirements(eventType);
+// Utility functions for DOM manipulation
+function hideAllSections(sectionIds) {
+    sectionIds.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.style.display = 'none';
+    });
 }
 
-// Event type conditional fields for edit modal
-function toggleEditEventFields() {
-    const eventType = document.getElementById('edit_event_type').value;
-    const tournamentFields = document.getElementById('edit-tournament-fields');
-    const sabcFields = document.getElementById('edit-sabc-fields');
-    const holidayFields = document.getElementById('edit-holiday-fields');
-    const pollClosesContainer = document.getElementById('edit_poll_closes_container');
-    
-    // Hide all conditional fields first
-    tournamentFields.style.display = 'none';
-    sabcFields.style.display = 'none';
-    holidayFields.style.display = 'none';
-    
-    // Show relevant fields based on event type
-    if (eventType === 'sabc_tournament') {
-        tournamentFields.style.display = 'block';
-        sabcFields.style.display = 'block';
-    } else if (eventType === 'other_tournament' || eventType === 'club_event') {
-        tournamentFields.style.display = 'block';
-    } else if (eventType === 'holiday') {
-        holidayFields.style.display = 'block';
-        // Hide poll field for holidays
-        if (pollClosesContainer) {
-            pollClosesContainer.style.display = 'none';
-        }
-    }
+function showSections(sectionIds, displayType = 'flex') {
+    sectionIds.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) element.style.display = displayType;
+    });
 }
 
-function updateFieldRequirements(eventType) {
-    const startTime = document.getElementById('start_time');
-    const weighInTime = document.getElementById('weigh_in_time');
-    const entryFee = document.getElementById('entry_fee');
-    const lakeName = document.getElementById('lake_name');
-    const rampName = document.getElementById('ramp_name');
-    const otherStartTime = document.getElementById('other_start_time');
-    const otherWeighInTime = document.getElementById('other_weigh_in_time');
-    const otherLakeName = document.getElementById('other_lake_name');
-    const clubDescription = document.getElementById('club_description');
+function clearFieldValues(fieldIds) {
+    fieldIds.forEach(id => {
+        const field = document.getElementById(id);
+        if (field) field.value = '';
+    });
+}
 
-    // Clear all requirements first
-    [startTime, weighInTime, entryFee, lakeName, rampName, otherStartTime, otherWeighInTime, otherLakeName, clubDescription].forEach(field => {
+function setFieldDefaults(fieldValueMap) {
+    Object.entries(fieldValueMap).forEach(([fieldId, value]) => {
+        const field = document.getElementById(fieldId);
+        if (field) field.value = value;
+    });
+}
+
+function clearAllRequirements() {
+    const allFields = ['start_time', 'weigh_in_time', 'entry_fee', 'lake_name', 'ramp_name',
+                      'other_start_time', 'other_weigh_in_time', 'other_lake_name', 'club_description'];
+    allFields.forEach(id => {
+        const field = document.getElementById(id);
         if (field) field.required = false;
     });
-
-    // Set requirements based on event type
-    if (eventType === 'sabc_tournament') {
-        startTime.required = true;
-        weighInTime.required = true;
-        lakeName.required = true;
-        rampName.required = true;
-        // Entry fee has default value, not strictly required
-    } else if (eventType === 'club_event') {
-        clubDescription.required = true;
-    }
-    // For other tournaments, only event date, type, and name are required (handled in HTML)
-    // Start/weigh-in times, lake, and ramp are all optional
 }
 
-// Load lakes for other tournament dropdown
+function setFieldRequirements(requiredIds) {
+    requiredIds.forEach(id => {
+        const field = document.getElementById(id);
+        if (field) field.required = true;
+    });
+}
+
+function manageDescriptionFields(activeFieldId) {
+    const allDescFields = ['other_description', 'club_description'];
+
+    // Clear and deactivate all description fields
+    allDescFields.forEach(id => {
+        const field = document.getElementById(id);
+        if (field) {
+            field.value = '';
+            field.removeAttribute('name');
+            field.removeAttribute('required');
+        }
+    });
+
+    // Activate the specified field if it's not the main description
+    if (activeFieldId !== 'description') {
+        const activeField = document.getElementById(activeFieldId);
+        if (activeField) {
+            activeField.setAttribute('name', 'description');
+            if (EVENT_FORM_CONFIG[getSelectedEventType()]?.requiredFields.includes(activeFieldId)) {
+                activeField.setAttribute('required', 'required');
+            }
+        }
+    }
+}
+
+function getSelectedEventType(isEdit = false) {
+    const selectId = isEdit ? 'edit_event_type' : 'event_type';
+    return document.getElementById(selectId)?.value || '';
+}
+
+// Unified event field toggling
+function toggleEventFields() {
+    const eventType = getSelectedEventType(false);
+    const config = EVENT_FORM_CONFIG[eventType];
+
+    if (!config) return;
+
+    // Hide all possible sections
+    const allSections = ['sabc-tournament-fields', 'other-tournament-fields', 'other-tournament-description',
+                        'club-event-fields', 'other-fields', 'sabc-fields', 'holiday-fields'];
+    hideAllSections(allSections);
+
+    // Clear specified fields
+    clearFieldValues(config.clearFields);
+
+    // Manage description fields
+    manageDescriptionFields(config.activeDescriptionField);
+
+    // Show relevant sections
+    showSections(config.visibleSections);
+
+    // Set defaults
+    setFieldDefaults(config.defaults);
+
+    // Update requirements
+    clearAllRequirements();
+    setFieldRequirements(config.requiredFields);
+
+    // Load lakes if needed
+    if (config.loadLakes) {
+        loadLakesForOtherTournament();
+    }
+}
+
+function toggleEditEventFields() {
+    const eventType = getSelectedEventType(true);
+    const config = EVENT_FORM_CONFIG[eventType];
+
+    if (!config) return;
+
+    // Hide all edit sections
+    const allEditSections = ['edit-tournament-fields', 'edit-sabc-fields', 'edit-holiday-fields'];
+    hideAllSections(allEditSections);
+
+    // Show relevant sections (edit forms use block display)
+    showSections(config.editSections, 'block');
+
+    // Handle special cases
+    if (config.hidePollContainer) {
+        const pollContainer = document.getElementById('edit_poll_closes_container');
+        if (pollContainer) pollContainer.style.display = 'none';
+    }
+}
+
+// Simplified lake loading (same functionality, cleaner code)
 function loadLakesForOtherTournament() {
-    const otherLakeSelect = document.getElementById('other_lake_name');
-    if (otherLakeSelect && lakesData.length > 0) {
-        otherLakeSelect.innerHTML = '<option value="">-- Select Lake --</option>';
+    const selectElement = document.getElementById('other_lake_name');
+    if (selectElement && lakesData.length > 0) {
+        selectElement.innerHTML = '<option value="">-- Select Lake --</option>';
         lakesData.forEach(lake => {
             const option = document.createElement('option');
             option.value = lake.name;
             option.textContent = lake.name;
             option.dataset.lakeKey = lake.key;
-            otherLakeSelect.appendChild(option);
+            selectElement.appendChild(option);
         });
     }
 }
@@ -1032,32 +1070,44 @@ function validateEventForm() {
     });
 }
 
-// Initialize event type handling
-document.addEventListener('DOMContentLoaded', function() {
-    // Load lakes on page load
-    loadLakes();
-    
-    // Set up create form event type change handler
-    document.getElementById('event_type').addEventListener('change', toggleEventFields);
-    
-    // Set up edit form event type change handler
-    document.getElementById('edit_event_type').addEventListener('change', toggleEditEventFields);
-    
-    // Set up lake change handler for dynamic ramp loading (create form)
-    document.getElementById('lake_name').addEventListener('change', function() {
-        loadRamps(this.value, 'ramp_name');
+// Optimized event listener setup
+function setupEventListeners() {
+    // Event type change handlers
+    const eventHandlers = [
+        { id: 'event_type', handler: toggleEventFields },
+        { id: 'edit_event_type', handler: toggleEditEventFields }
+    ];
+
+    // Lake change handlers with configuration
+    const lakeHandlers = [
+        { lakeId: 'lake_name', rampId: 'ramp_name' },
+        { lakeId: 'other_lake_name', rampId: 'other_ramp_name' },
+        { lakeId: 'edit_lake_name', rampId: 'edit_ramp_name' }
+    ];
+
+    // Set up event type handlers
+    eventHandlers.forEach(({ id, handler }) => {
+        const element = document.getElementById(id);
+        if (element) element.addEventListener('change', handler);
     });
 
-    // Set up lake change handler for other tournament lake dropdown
-    document.getElementById('other_lake_name').addEventListener('change', function() {
-        loadRamps(this.value, 'other_ramp_name');
+    // Set up lake change handlers
+    lakeHandlers.forEach(({ lakeId, rampId }) => {
+        const lakeElement = document.getElementById(lakeId);
+        if (lakeElement) {
+            lakeElement.addEventListener('change', function() {
+                loadRamps(this.value, rampId);
+            });
+        }
     });
-    
-    // Set up lake change handler for dynamic ramp loading (edit form)
-    document.getElementById('edit_lake_name').addEventListener('change', function() {
-        loadRamps(this.value, 'edit_ramp_name');
-    });
-    
+}
+
+// Initialize event handling
+document.addEventListener('DOMContentLoaded', function() {
+    // Load lakes and setup listeners
+    loadLakes();
+    setupEventListeners();
+
     // Initialize with default state
     toggleEventFields();
     
