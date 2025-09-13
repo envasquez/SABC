@@ -5,7 +5,7 @@ from core.database import db
 
 
 def validate_event_data(
-    date_str, name, event_type, start_time=None, weigh_in_time=None, entry_fee=None
+    date_str, name, event_type, start_time=None, weigh_in_time=None, entry_fee=None, lake_name=None
 ):
     errors = []
     warnings = []
@@ -41,6 +41,20 @@ def validate_event_data(
     elif event_type == "holiday":
         if start_time or weigh_in_time or entry_fee:
             warnings.append("Holidays don't typically need tournament details")
+    elif event_type == "other_tournament":
+        if not lake_name or len(lake_name.strip()) < 2:
+            errors.append("Lake name is required for other tournaments")
+        if start_time:
+            if not re.match(r"^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$", start_time):
+                errors.append("Invalid start time format. Use HH:MM (24-hour)")
+        if weigh_in_time:
+            if not re.match(r"^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$", weigh_in_time):
+                errors.append("Invalid weigh-in time format. Use HH:MM (24-hour)")
+        if start_time and weigh_in_time:
+            start = datetime.strptime(start_time, "%H:%M").time()
+            weigh_in = datetime.strptime(weigh_in_time, "%H:%M").time()
+            if weigh_in <= start:
+                errors.append("Weigh-in time must be after start time")
     return {"errors": errors, "warnings": warnings}
 
 

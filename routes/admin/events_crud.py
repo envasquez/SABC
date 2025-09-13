@@ -39,7 +39,7 @@ async def create_event(
     try:
         # Validate input data
         validation = validate_event_data(
-            date, name, event_type, start_time, weigh_in_time, entry_fee
+            date, name, event_type, start_time, weigh_in_time, entry_fee, lake_name
         )
 
         if validation["errors"]:
@@ -61,11 +61,15 @@ async def create_event(
             "name": name,
             "event_type": event_type,
             "description": description,
-            "start_time": start_time if event_type == "sabc_tournament" else None,
-            "weigh_in_time": weigh_in_time if event_type == "sabc_tournament" else None,
+            "start_time": start_time
+            if event_type in ["sabc_tournament", "other_tournament"]
+            else None,
+            "weigh_in_time": weigh_in_time
+            if event_type in ["sabc_tournament", "other_tournament"]
+            else None,
             "lake_name": lake_name if lake_name else None,
             "ramp_name": ramp_name if ramp_name else None,
-            "entry_fee": entry_fee if event_type == "sabc_tournament" else None,
+            "entry_fee": entry_fee if event_type == "sabc_tournament" else 0.00,
             "holiday_name": name if event_type == "holiday" else None,
         }
 
@@ -203,6 +207,7 @@ async def validate_event(request: Request):
             data.get("start_time", ""),
             data.get("weigh_in_time", ""),
             data.get("entry_fee", 0),
+            data.get("lake_name", ""),
         )
         return JSONResponse(validation)
     except Exception as e:

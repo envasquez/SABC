@@ -55,12 +55,8 @@ class JSONFormatter(logging.Formatter):
             "function": record.funcName,
             "line": record.lineno,
         }
-
-        # Add exception info if present
         if record.exc_info:
             log_entry["exception"] = self.formatException(record.exc_info)
-
-        # Add extra fields from record
         for key, value in record.__dict__.items():
             if key not in (
                 "name",
@@ -85,7 +81,6 @@ class JSONFormatter(logging.Formatter):
                 "stack_info",
             ):
                 log_entry[key] = value
-
         return json.dumps(log_entry, default=str, ensure_ascii=False)
 
 
@@ -109,20 +104,14 @@ class SABCLogger:
         if self._configured:
             return
 
-        # Remove existing handlers
         root_logger = logging.getLogger()
         for handler in root_logger.handlers[:]:
             root_logger.removeHandler(handler)
-
-        # Set log level
         numeric_level = getattr(logging, log_level.upper(), logging.INFO)
         root_logger.setLevel(numeric_level)
 
-        # Console handler
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(numeric_level)
-
-        # File handlers with rotation
         app_handler = logging.handlers.RotatingFileHandler(
             self.log_dir / "sabc.log", maxBytes=max_bytes, backupCount=backup_count
         )
@@ -138,7 +127,6 @@ class SABCLogger:
         )
         error_handler.setLevel(logging.ERROR)
 
-        # Set formatters
         formatter: logging.Formatter
         if json_format:
             formatter = JSONFormatter()
@@ -156,19 +144,16 @@ class SABCLogger:
         security_handler.setFormatter(formatter)
         error_handler.setFormatter(formatter)
 
-        # Add handlers to root logger
         root_logger.addHandler(console_handler)
         root_logger.addHandler(app_handler)
         root_logger.addHandler(error_handler)
 
-        # Security logger (separate namespace)
         security_logger = logging.getLogger("sabc.security")
         security_logger.addHandler(security_handler)
         security_logger.propagate = False  # Don't duplicate to root logger
 
         self._configured = True
 
-        # Log initialization
         logger = logging.getLogger(__name__)
         logger.info(
             "Logging system initialized",
@@ -211,11 +196,9 @@ class SABCLogger:
         security_logger.log(level, f"Security event: {event_type}", extra=extra)
 
 
-# Global logger instance
 sabc_logger = SABCLogger()
 
 
-# Convenience functions
 def get_logger(name: str) -> logging.Logger:
     """Get a configured logger instance."""
     return sabc_logger.get_logger(name)

@@ -47,17 +47,14 @@ def validate_phone_number(phone: Optional[str]) -> tuple[bool, Optional[str], Op
     if not phone:
         return True, None, None
 
-    # Remove all non-numeric characters
-    phone_digits = "".join(filter(str.isdigit, phone.strip()))
-
+    phone_digits = "".join(filter(str.isdigit, phone.strip()))  # Remove all non-numeric characters
     if not phone_digits:
-        return True, None, None  # Empty is valid (optional field)
+        return True, None, None
 
-    # Handle 11-digit numbers starting with 1
     if len(phone_digits) == 11 and phone_digits[0] == "1":
+        # Handle 11-digit numbers starting with 1
         phone_digits = phone_digits[1:]
 
-    # Check if we have exactly 10 digits
     if len(phone_digits) == 10:
         formatted = f"({phone_digits[:3]}) {phone_digits[3:6]}-{phone_digits[6:]}"
         return True, formatted, None

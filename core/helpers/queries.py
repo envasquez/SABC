@@ -100,7 +100,6 @@ def get_poll_options_with_votes(poll_id, include_details=False):
             "data": option_data[2],
             "vote_count": option_data[3],
         }
-
         if include_details:
             vote_details = db(
                 """
@@ -112,12 +111,10 @@ def get_poll_options_with_votes(poll_id, include_details=False):
             """,
                 {"option_id": option_data[0]},
             )
-
             option_dict["votes"] = [
                 {"vote_id": vote[0], "voter_name": vote[1], "voted_at": vote[2]}
                 for vote in vote_details
             ]
-
         options.append(option_dict)
 
     return options
@@ -155,7 +152,6 @@ def find_lake_by_id(lake_id, return_format="full"):
     if return_format == "name":
         return lake[0][1]
 
-    # Return (yaml_key, {info dict}) for compatibility
     lake_info = {"display_name": lake[0][1]}
     return lake[0][2], lake_info
 
@@ -180,7 +176,6 @@ def find_lake_data_by_db_name(db_lake_name):
     if not db_lake_name:
         return None, None, None
 
-    # Direct match by display name or yaml_key
     lake = db(
         """
         SELECT yaml_key, display_name FROM lakes
@@ -193,8 +188,6 @@ def find_lake_data_by_db_name(db_lake_name):
         yaml_key, display_name = lake[0]
         lake_info = {"display_name": display_name}
         return yaml_key, lake_info, display_name
-
-    # Fuzzy match
     lake = db(
         """
         SELECT yaml_key, display_name FROM lakes
@@ -204,17 +197,8 @@ def find_lake_data_by_db_name(db_lake_name):
     """,
         {"name": db_lake_name.strip()},
     )
-
     if lake:
         yaml_key, display_name = lake[0]
         lake_info = {"display_name": display_name}
         return yaml_key, lake_info, display_name
-
     return None, None, None
-
-
-def load_lakes_data():
-    """Legacy function - replaced by database queries."""
-    # This function is kept for compatibility but should not be used
-    # All lake data should now come from the database
-    return {}

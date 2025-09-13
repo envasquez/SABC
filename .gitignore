@@ -152,3 +152,4 @@ dev.py
 *.crt
 *.cer
 secrets/
+cookies.txt

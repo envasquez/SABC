@@ -17,7 +17,6 @@ from core.helpers.queries import (
     get_all_ramps,
     get_lakes_list,
     get_ramps_for_lake,
-    load_lakes_data,
     validate_lake_ramp_combo,
 )
 from core.validators import get_federal_holidays, validate_event_data
@@ -35,7 +34,6 @@ __all__ = [
     "get_all_ramps",
     "get_lakes_list",
     "get_ramps_for_lake",
-    "load_lakes_data",
     "validate_lake_ramp_combo",
     "get_federal_holidays",
     "validate_event_data",

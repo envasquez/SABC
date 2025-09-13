@@ -18,7 +18,6 @@ from routes.dependencies import (
     find_ramp_name_by_id,
     get_lakes_list,
     get_ramps_for_lake,
-    load_lakes_data,
     templates,
     time_format_filter,
     u,
@@ -1016,31 +1015,6 @@ async def health_check():
                 "timestamp": datetime.utcnow().isoformat(),
             },
         )
-
-
-@router.get("/api/lakes")
-async def api_get_lakes():
-    """Get all lakes from database for dropdowns."""
-    lakes_data = load_lakes_data()
-    lakes = []
-    for lake_key, lake_info in lakes_data.items():
-        lakes.append(
-            {
-                "key": lake_key,
-                "name": lake_info.get("display_name", lake_key.replace("_", " ").title()),
-            }
-        )
-    return JSONResponse(sorted(lakes, key=lambda x: x["name"]))
-
-
-@router.get("/api/lakes/{lake_key}/ramps")
-async def api_get_lake_ramps(lake_key: str):
-    """Get ramps for a specific lake."""
-    lakes_data = load_lakes_data()
-    if lake_key in lakes_data:
-        ramps = lakes_data[lake_key].get("ramps", [])
-        return JSONResponse({"ramps": ramps})
-    return JSONResponse({"ramps": []})
 
 
 # Catch-all route for static pages (must be last)

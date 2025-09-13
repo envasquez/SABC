@@ -6,7 +6,7 @@
 <div class="container">
     <div class="mb-4">
         <h1 class="display-5">
-            <i class="bi bi-calendar3 me-2"></i>Event Management
+            <i class="bi bi-calendar3 me-2"></i>Manage Events
         </h1>
         <p class="lead text-muted">Create and manage tournament events</p>
     </div>
@@ -24,6 +24,7 @@
             {% endif %}
             
             <form method="POST" action="/admin/events/create">
+                <!-- Row 1: Event Date, Event Type, Event Name -->
                 <div class="row g-3">
                     <div class="col-md-3">
                         <label for="date" class="form-label">Event Date <span class="text-danger">*</span></label>
@@ -38,27 +39,34 @@
                             <option value="club_event">Club Event</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label for="name" class="form-label">Event Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="name" name="name" 
+                    <div class="col-md-6">
+                        <label for="name" class="form-label">Event Name <span id="name-required" class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name"
                                placeholder="e.g., August Tournament" required>
                     </div>
-                    <div class="col-md-3">
-                        <label for="description" class="form-label">Description</label>
-                        <input type="text" class="form-control" id="description" name="description" 
-                               placeholder="e.g., Lake Travis - Main Basin">
-                    </div>
                 </div>
-                
-                <!-- Tournament-specific fields -->
+
+                <!-- Row 2: SABC Tournament-specific fields -->
                 <div id="tournament-fields" class="row g-3 mt-2" style="display: none;">
                     <div class="col-md-2">
-                        <label for="start_time" class="form-label">Start Time</label>
-                        <input type="time" class="form-control" id="start_time" name="start_time" value="06:00">
+                        <label for="start_time" class="form-label">Start Time <span id="start-required" class="text-danger">*</span></label>
+                        <input type="time" class="form-control" id="start_time" name="start_time">
                     </div>
                     <div class="col-md-2">
-                        <label for="weigh_in_time" class="form-label">Weigh-in Time</label>
-                        <input type="time" class="form-control" id="weigh_in_time" name="weigh_in_time" value="15:00">
+                        <label for="weigh_in_time" class="form-label">Weigh-in Time <span id="weigh-required" class="text-danger">*</span></label>
+                        <input type="time" class="form-control" id="weigh_in_time" name="weigh_in_time">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="lake_name" class="form-label">Lake <span id="lake-required" class="text-danger">*</span></label>
+                        <select class="form-select" id="lake_name" name="lake_name">
+                            <option value="">-- Select Lake --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="ramp_name" class="form-label">Ramp <span class="text-muted">(Optional)</span></label>
+                        <select class="form-select" id="ramp_name" name="ramp_name" disabled>
+                            <option value="">-- Select Ramp --</option>
+                        </select>
                     </div>
                     <div class="col-md-2">
                         <label for="entry_fee" class="form-label">Entry Fee</label>
@@ -67,14 +75,23 @@
                             <input type="number" class="form-control" id="entry_fee" name="entry_fee" value="25.00" step="0.01" min="0">
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <label for="lake_name" class="form-label">Lake</label>
-                        <input type="text" class="form-control" id="lake_name" name="lake_name" placeholder="e.g., Lake Travis">
+                    <div class="col-md-2">
+                        <label for="fish_limit" class="form-label">Fish Limit</label>
+                        <input type="number" class="form-control" id="fish_limit" name="fish_limit" value="5" min="1" max="10">
                     </div>
-                    <div class="col-md-3">
-                        <label for="ramp_name" class="form-label">Ramp</label>
-                        <input type="text" class="form-control" id="ramp_name" name="ramp_name" placeholder="e.g., Mansfield Dam">
+                </div>
+
+                <!-- Other event types fields -->
+                <div id="other-fields" class="row g-3 mt-2" style="display: none;">
+                    <div class="col-md-12">
+                        <label for="description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="description" name="description"
+                               placeholder="e.g., Location details or notes">
                     </div>
+                </div>
+
+                <!-- SABC Tournament-only fields (hidden now, merged above) -->
+                <div id="sabc-fields" class="row g-3 mt-2" style="display: none;">
                 </div>
                 
                 <!-- Holiday-specific fields -->
@@ -89,9 +106,6 @@
                     <div class="col-12">
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-plus-circle me-1"></i>Add Event
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary ms-2" onclick="validateEventForm()">
-                            <i class="bi bi-check-circle me-1"></i>Validate
                         </button>
                     </div>
                 </div>
@@ -370,6 +384,24 @@
                             </div>
                         </div>
                         <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="edit_lake_name" class="form-label">Lake</label>
+                                <select class="form-select" id="edit_lake_name" name="lake_name">
+                                    <option value="">-- Select Lake --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="edit_ramp_name" class="form-label">Ramp</label>
+                                <select class="form-select" id="edit_ramp_name" name="ramp_name" disabled>
+                                    <option value="">-- Select Ramp --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- SABC Tournament-only fields -->
+                    <div id="edit-sabc-fields" style="display: none;">
+                        <div class="row mb-3">
                             <div class="col-md-4">
                                 <label for="edit_entry_fee" class="form-label">Entry Fee</label>
                                 <div class="input-group">
@@ -378,16 +410,8 @@
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <label for="edit_lake_name" class="form-label">Lake</label>
-                                <select class="form-select" id="edit_lake_name" name="lake_name">
-                                    <option value="">-- Select Lake --</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="edit_ramp_name" class="form-label">Ramp</label>
-                                <select class="form-select" id="edit_ramp_name" name="ramp_name" disabled>
-                                    <option value="">-- Select Ramp --</option>
-                                </select>
+                                <label for="edit_fish_limit" class="form-label">Fish Limit</label>
+                                <input type="number" class="form-control" id="edit_fish_limit" name="fish_limit" min="1" max="10">
                             </div>
                         </div>
                     </div>
@@ -451,21 +475,39 @@ function loadLakes() {
         .then(response => response.json())
         .then(lakes => {
             lakesData = lakes;
-            const lakeSelect = document.getElementById('edit_lake_name');
-            lakeSelect.innerHTML = '<option value="">-- Select Lake --</option>';
-            lakes.forEach(lake => {
-                const option = document.createElement('option');
-                option.value = lake.name;
-                option.textContent = lake.name;
-                option.dataset.lakeKey = lake.key;
-                lakeSelect.appendChild(option);
-            });
+            // Populate create form lake select
+            const createLakeSelect = document.getElementById('lake_name');
+            if (createLakeSelect) {
+                createLakeSelect.innerHTML = '<option value="">-- Select Lake --</option>';
+                lakes.forEach(lake => {
+                    const option = document.createElement('option');
+                    option.value = lake.name;
+                    option.textContent = lake.name;
+                    option.dataset.lakeKey = lake.key;
+                    createLakeSelect.appendChild(option);
+                });
+            }
+            
+            // Populate edit form lake select
+            const editLakeSelect = document.getElementById('edit_lake_name');
+            if (editLakeSelect) {
+                editLakeSelect.innerHTML = '<option value="">-- Select Lake --</option>';
+                lakes.forEach(lake => {
+                    const option = document.createElement('option');
+                    option.value = lake.name;
+                    option.textContent = lake.name;
+                    option.dataset.lakeKey = lake.key;
+                    editLakeSelect.appendChild(option);
+                });
+            }
         });
 }
 
 // Load ramps when lake is selected
-function loadRamps(lakeName) {
-    const rampSelect = document.getElementById('edit_ramp_name');
+function loadRamps(lakeName, rampSelectId = 'edit_ramp_name') {
+    const rampSelect = document.getElementById(rampSelectId);
+    
+    if (!rampSelect) return;
     
     if (!lakeName) {
         rampSelect.innerHTML = '<option value="">-- Select Ramp --</option>';
@@ -527,6 +569,7 @@ function editEvent(id, date, eventType, name, description, hasPoll, pollActive) 
             document.getElementById('edit_start_time').value = data.start_time || '06:00';
             document.getElementById('edit_weigh_in_time').value = data.weigh_in_time || '15:00';
             document.getElementById('edit_entry_fee').value = data.entry_fee || 25.00;
+            document.getElementById('edit_fish_limit').value = data.fish_limit || 5;
             
             // Set lake and load ramps
             const lakeSelect = document.getElementById('edit_lake_name');
@@ -692,19 +735,53 @@ function confirmDeletePastEvent() {
 function toggleEventFields() {
     const eventType = document.getElementById('event_type').value;
     const tournamentFields = document.getElementById('tournament-fields');
+    const otherFields = document.getElementById('other-fields');
+    const sabcFields = document.getElementById('sabc-fields');
     const holidayFields = document.getElementById('holiday-fields');
-    
+    const startTime = document.getElementById('start_time');
+    const weighInTime = document.getElementById('weigh_in_time');
+    const lakeName = document.getElementById('lake_name');
+
     // Hide all conditional fields first
     tournamentFields.style.display = 'none';
+    otherFields.style.display = 'none';
+    sabcFields.style.display = 'none';
     holidayFields.style.display = 'none';
-    
+
+    // Clear fields
+    startTime.value = '';
+    weighInTime.value = '';
+    document.getElementById('description').value = '';
+
     // Show relevant fields based on event type
-    if (eventType === 'sabc_tournament' || eventType === 'other_tournament') {
+    if (eventType === 'sabc_tournament') {
         tournamentFields.style.display = 'flex';
-    } else if (eventType === 'federal_holiday') {
+        // Set default times for SABC tournaments
+        startTime.value = '06:00';
+        weighInTime.value = '15:00';
+        // Make SABC tournament fields required
+        startTime.required = true;
+        weighInTime.required = true;
+        lakeName.required = true;
+        document.getElementById('start-required').style.display = '';
+        document.getElementById('weigh-required').style.display = '';
+        document.getElementById('lake-required').style.display = '';
+    } else if (eventType === 'other_tournament' || eventType === 'club_event') {
+        tournamentFields.style.display = 'flex';
+        // Remove required for non-SABC tournaments
+        startTime.required = false;
+        weighInTime.required = false;
+        lakeName.required = false;
+        document.getElementById('start-required').style.display = 'none';
+        document.getElementById('weigh-required').style.display = 'none';
+        document.getElementById('lake-required').style.display = 'none';
+    } else if (eventType === 'holiday') {
+        otherFields.style.display = 'flex';
         holidayFields.style.display = 'flex';
+    } else {
+        otherFields.style.display = 'flex';
     }
-    
+
     // Update form validation
     updateFieldRequirements(eventType);
 }
@@ -713,17 +790,22 @@ function toggleEventFields() {
 function toggleEditEventFields() {
     const eventType = document.getElementById('edit_event_type').value;
     const tournamentFields = document.getElementById('edit-tournament-fields');
+    const sabcFields = document.getElementById('edit-sabc-fields');
     const holidayFields = document.getElementById('edit-holiday-fields');
     const pollClosesContainer = document.getElementById('edit_poll_closes_container');
     
     // Hide all conditional fields first
     tournamentFields.style.display = 'none';
+    sabcFields.style.display = 'none';
     holidayFields.style.display = 'none';
     
     // Show relevant fields based on event type
-    if (eventType === 'sabc_tournament' || eventType === 'other_tournament') {
+    if (eventType === 'sabc_tournament') {
         tournamentFields.style.display = 'block';
-    } else if (eventType === 'federal_holiday') {
+        sabcFields.style.display = 'block';
+    } else if (eventType === 'other_tournament' || eventType === 'club_event') {
+        tournamentFields.style.display = 'block';
+    } else if (eventType === 'holiday') {
         holidayFields.style.display = 'block';
         // Hide poll field for holidays
         if (pollClosesContainer) {
@@ -736,17 +818,19 @@ function updateFieldRequirements(eventType) {
     const startTime = document.getElementById('start_time');
     const weighInTime = document.getElementById('weigh_in_time');
     const entryFee = document.getElementById('entry_fee');
-    
+    const lakeName = document.getElementById('lake_name');
+
     // Clear all requirements first
-    [startTime, weighInTime, entryFee].forEach(field => {
-        field.required = false;
+    [startTime, weighInTime, entryFee, lakeName].forEach(field => {
+        if (field) field.required = false;
     });
-    
+
     // Set requirements based on event type
     if (eventType === 'sabc_tournament') {
         startTime.required = true;
         weighInTime.required = true;
-        entryFee.required = true;
+        lakeName.required = true;
+        // Entry fee has default value, not strictly required
     }
 }
 
@@ -808,9 +892,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set up edit form event type change handler
     document.getElementById('edit_event_type').addEventListener('change', toggleEditEventFields);
     
-    // Set up lake change handler for dynamic ramp loading
+    // Set up lake change handler for dynamic ramp loading (create form)
+    document.getElementById('lake_name').addEventListener('change', function() {
+        loadRamps(this.value, 'ramp_name');
+    });
+    
+    // Set up lake change handler for dynamic ramp loading (edit form)
     document.getElementById('edit_lake_name').addEventListener('change', function() {
-        loadRamps(this.value);
+        loadRamps(this.value, 'edit_ramp_name');
     });
     
     // Initialize with default state

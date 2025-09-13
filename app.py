@@ -30,12 +30,10 @@ from core.helpers.queries import (
     get_all_ramps,
     get_lakes_list,
     get_ramps_for_lake,
-    load_lakes_data,
     validate_lake_ramp_combo,
 )
 from core.validators import get_federal_holidays, validate_event_data
 
-# Initialize logging configuration
 configure_logging(log_level=os.environ.get("LOG_LEVEL", "INFO"))
 logger = get_logger(__name__)
 
@@ -45,18 +43,14 @@ app.add_middleware(
 )
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Configure templates BEFORE importing routes
 templates = Jinja2Templates(directory="templates")
 templates.env.filters["from_json"] = from_json_filter
 templates.env.filters["date_format"] = date_format_filter
 templates.env.filters["time_format"] = time_format_filter
 templates.env.filters["date_format_dd_mm_yyyy"] = lambda d: date_format_filter(d, "dd-mm-yyyy")
 templates.env.filters["month_number"] = month_number_filter
-
-# Configure template filters globally and set in dependencies
 deps.templates = templates
 
-# Now import routes AFTER templates are configured
 from routes import (  # noqa: E402
     api,
     auth,
@@ -104,6 +98,7 @@ app.include_router(calendar.router)
 app.include_router(static.router)
 app.include_router(tournaments.router)
 app.include_router(public.router)  # MUST be last due to catch-all route
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
