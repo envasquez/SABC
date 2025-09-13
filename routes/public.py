@@ -642,14 +642,14 @@ def build_calendar_data_with_polls(calendar_events, tournament_events, year=2025
 
                         # Apply markers based on event types (prioritize SABC tournaments)
                         has_sabc = any(e["type"] == "sabc_tournament" for e in events_for_day)
-                        has_meeting = False
+                        has_club_event = any(e["type"] == "club_event" for e in events_for_day)
                         has_holiday = any(e["type"] == "holiday" for e in events_for_day)
                         has_other = any(e["type"] == "other_tournament" for e in events_for_day)
 
                         if has_sabc:
                             day_str += "†"  # Blue marker for SABC tournaments
-                        elif has_meeting:
-                            day_str += "§"  # Green marker for SABC meetings
+                        elif has_club_event:
+                            day_str += "§"  # Green marker for club events
                         elif has_other:
                             day_str += "‡"  # Orange marker for other tournaments
                         elif has_holiday:

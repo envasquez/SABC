@@ -120,10 +120,13 @@ def build_calendar_data_with_events(calendar_events, tournament_events, year=202
                     if month_idx in all_events and day in all_events[month_idx]:
                         events_for_day = all_events[month_idx][day]
                         has_sabc = any(e["type"] == "sabc_tournament" for e in events_for_day)
+                        has_club_event = any(e["type"] == "club_event" for e in events_for_day)
                         has_holiday = any(e["type"] == "holiday" for e in events_for_day)
                         has_other = any(e["type"] == "other_tournament" for e in events_for_day)
                         if has_sabc:
                             day_str += "†"
+                        elif has_club_event:
+                            day_str += "§"
                         elif has_other:
                             day_str += "‡"
                         elif has_holiday:

@@ -31,6 +31,7 @@ async def create_event(
     lake_name: str = Form(default=""),
     ramp_name: str = Form(default=""),
     entry_fee: float = Form(default=25.00),
+    fish_limit: int = Form(default=5),
 ):
     """Create a new event and optionally auto-create poll for SABC tournaments."""
     if isinstance(user := admin(request), RedirectResponse):
@@ -70,6 +71,7 @@ async def create_event(
             "lake_name": lake_name if lake_name else None,
             "ramp_name": ramp_name if ramp_name else None,
             "entry_fee": entry_fee if event_type == "sabc_tournament" else 0.00,
+            "fish_limit": fish_limit if event_type == "sabc_tournament" else None,
             "holiday_name": name if event_type == "holiday" else None,
         }
 
@@ -77,10 +79,10 @@ async def create_event(
             """
             INSERT INTO events (date, year, name, event_type, description,
                               start_time, weigh_in_time, lake_name, ramp_name,
-                              entry_fee, holiday_name)
+                              entry_fee, fish_limit, holiday_name)
             VALUES (:date, :year, :name, :event_type, :description,
                    :start_time, :weigh_in_time, :lake_name, :ramp_name,
-                   :entry_fee, :holiday_name)
+                   :entry_fee, :fish_limit, :holiday_name)
         """,
             params,
         )
@@ -128,9 +130,117 @@ async def create_event(
         )
 
     except Exception as e:
-        return RedirectResponse(
-            f"/admin/events?error=Failed to create event: {str(e)}", status_code=302
+        error_msg = str(e)
+
+        # Handle common database constraint errors with user-friendly messages
+        if "UNIQUE constraint failed: events.date" in error_msg:
+            error_msg = f"An event already exists on {date}. Please choose a different date or edit the existing event."
+        elif "NOT NULL constraint failed" in error_msg:
+            error_msg = "Required field missing. Please fill in all required fields."
+        elif "FOREIGN KEY constraint failed" in error_msg:
+            error_msg = "Invalid lake or ramp selection. Please refresh the page and try again."
+        else:
+            # For other errors, show a generic message with details for debugging
+            error_msg = f"Failed to create event. Details: {error_msg}"
+
+        return RedirectResponse(f"/admin/events?error={error_msg}", status_code=302)
+
+
+@router.post("/admin/events/edit")
+async def edit_event(
+    request: Request,
+    event_id: int = Form(),
+    date: str = Form(),
+    name: str = Form(),
+    event_type: str = Form(),
+    description: str = Form(default=""),
+    start_time: str = Form(default=""),
+    weigh_in_time: str = Form(default=""),
+    lake_name: str = Form(default=""),
+    ramp_name: str = Form(default=""),
+    entry_fee: float = Form(default=25.00),
+    fish_limit: int = Form(default=5),
+    poll_closes_date: str = Form(default=""),
+):
+    """Edit an existing event."""
+    if isinstance(user := admin(request), RedirectResponse):
+        return user
+
+    try:
+        # Validate input data
+        validation = validate_event_data(
+            date, name, event_type, start_time, weigh_in_time, entry_fee, lake_name
         )
+
+        if validation["errors"]:
+            error_msg = "; ".join(validation["errors"])
+            return RedirectResponse(
+                f"/admin/events?error=Validation failed: {error_msg}", status_code=302
+            )
+
+        date_obj = datetime.strptime(date, "%Y-%m-%d")
+        year = date_obj.year
+
+        # Update the event
+        params = {
+            "event_id": event_id,
+            "date": date,
+            "year": year,
+            "name": name,
+            "event_type": event_type,
+            "description": description,
+            "start_time": start_time
+            if event_type in ["sabc_tournament", "other_tournament"]
+            else None,
+            "weigh_in_time": weigh_in_time
+            if event_type in ["sabc_tournament", "other_tournament"]
+            else None,
+            "lake_name": lake_name if lake_name else None,
+            "ramp_name": ramp_name if ramp_name else None,
+            "entry_fee": entry_fee if event_type == "sabc_tournament" else 0.00,
+            "fish_limit": fish_limit if event_type == "sabc_tournament" else None,
+            "holiday_name": name if event_type == "holiday" else None,
+        }
+
+        db(
+            """
+            UPDATE events
+            SET date = :date, year = :year, name = :name, event_type = :event_type,
+                description = :description, start_time = :start_time, weigh_in_time = :weigh_in_time,
+                lake_name = :lake_name, ramp_name = :ramp_name, entry_fee = :entry_fee,
+                fish_limit = :fish_limit, holiday_name = :holiday_name
+            WHERE id = :event_id
+        """,
+            params,
+        )
+
+        # Handle poll closes date update if provided
+        if poll_closes_date and event_type == "sabc_tournament":
+            try:
+                poll_closes_dt = datetime.fromisoformat(poll_closes_date)
+                db(
+                    "UPDATE polls SET closes_at = :closes_at WHERE event_id = :event_id",
+                    {"closes_at": poll_closes_dt.isoformat(), "event_id": event_id},
+                )
+            except ValueError:
+                pass  # Invalid datetime format, skip poll update
+
+        return RedirectResponse("/admin/events?success=Event updated successfully", status_code=302)
+
+    except Exception as e:
+        error_msg = str(e)
+
+        # Handle common database constraint errors with user-friendly messages
+        if "UNIQUE constraint failed: events.date" in error_msg:
+            error_msg = f"An event already exists on {date}. Please choose a different date."
+        elif "NOT NULL constraint failed" in error_msg:
+            error_msg = "Required field missing. Please fill in all required fields."
+        elif "FOREIGN KEY constraint failed" in error_msg:
+            error_msg = "Invalid lake or ramp selection. Please refresh the page and try again."
+        else:
+            error_msg = f"Failed to update event. Details: {error_msg}"
+
+        return RedirectResponse(f"/admin/events?error={error_msg}", status_code=302)
 
 
 @router.get("/admin/events/{event_id}/info")
@@ -146,7 +256,7 @@ async def get_event_info(request: Request, event_id: int):
                    e.start_time, e.weigh_in_time,
                    COALESCE(t.lake_name, e.lake_name) as lake_name,
                    COALESCE(t.ramp_name, e.ramp_name) as ramp_name,
-                   e.entry_fee, e.holiday_name,
+                   e.entry_fee, e.fish_limit, e.holiday_name,
                    p.closes_at, p.starts_at, p.id as poll_id, p.closed,
                    t.id as tournament_id
             FROM events e
@@ -177,12 +287,13 @@ async def get_event_info(request: Request, event_id: int):
                     "lake_name": lake_display_name,
                     "ramp_name": event[8] or "",
                     "entry_fee": event[9],
-                    "holiday_name": event[10] or "",
-                    "poll_closes_at": event[11],
-                    "poll_starts_at": event[12],
-                    "poll_id": event[13],
-                    "poll_closed": bool(event[14]) if event[14] is not None else None,
-                    "tournament_id": event[15],
+                    "fish_limit": event[10],
+                    "holiday_name": event[11] or "",
+                    "poll_closes_at": event[12],
+                    "poll_starts_at": event[13],
+                    "poll_id": event[14],
+                    "poll_closed": bool(event[15]) if event[15] is not None else None,
+                    "tournament_id": event[16],
                 }
             )
         else:

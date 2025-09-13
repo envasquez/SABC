@@ -24,13 +24,13 @@
             {% endif %}
             
             <form method="POST" action="/admin/events/create">
-                <!-- Row 1: Event Date, Event Type, Event Name -->
+                <!-- Row 1: Event Date, Event Type, Event Name, Description -->
                 <div class="row g-3">
                     <div class="col-md-3">
                         <label for="date" class="form-label">Event Date <span class="text-danger">*</span></label>
                         <input type="date" class="form-control" id="date" name="date" required>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label for="event_type" class="form-label">Event Type <span class="text-danger">*</span></label>
                         <select class="form-select" id="event_type" name="event_type" required>
                             <option value="sabc_tournament">SABC Tournament</option>
@@ -39,10 +39,15 @@
                             <option value="club_event">Club Event</option>
                         </select>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label for="name" class="form-label">Event Name <span id="name-required" class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="name" name="name"
                                placeholder="e.g., August Tournament" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="description" class="form-label">Description <span class="text-muted">(Optional)</span></label>
+                        <input type="text" class="form-control" id="description" name="description"
+                               placeholder="e.g., Location details or notes">
                     </div>
                 </div>
 
@@ -63,8 +68,8 @@
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label for="ramp_name" class="form-label">Ramp <span class="text-muted">(Optional)</span></label>
-                        <select class="form-select" id="ramp_name" name="ramp_name" disabled>
+                        <label for="ramp_name" class="form-label">Ramp <span class="text-danger">*</span></label>
+                        <select class="form-select" id="ramp_name" name="ramp_name" disabled required>
                             <option value="">-- Select Ramp --</option>
                         </select>
                     </div>
@@ -80,6 +85,7 @@
                         <input type="number" class="form-control" id="fish_limit" name="fish_limit" value="5" min="1" max="10">
                     </div>
                 </div>
+
 
                 <!-- Row 2: Other Tournament fields -->
                 <div id="other-tournament-fields" class="row g-3 mt-2" style="display: none;">
@@ -109,7 +115,7 @@
                 <div id="other-tournament-description" class="row g-3 mt-2" style="display: none;">
                     <div class="col-md-12">
                         <label for="other_description" class="form-label">Description <span class="text-muted">(Optional)</span></label>
-                        <textarea class="form-control" id="other_description" name="description" rows="2" placeholder="Additional details about the tournament or event..."></textarea>
+                        <textarea class="form-control" id="other_description" rows="2" placeholder="Additional details about the tournament or event..."></textarea>
                     </div>
                 </div>
 
@@ -117,17 +123,13 @@
                 <div id="club-event-fields" class="row g-3 mt-2" style="display: none;">
                     <div class="col-md-12">
                         <label for="club_description" class="form-label">Description <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="club_description" name="description" rows="3" placeholder="Describe the club event (meeting agenda, activities, location, etc.)" required></textarea>
+                        <textarea class="form-control" id="club_description" rows="3" placeholder="Describe the club event (meeting agenda, activities, location, etc.)"></textarea>
                     </div>
                 </div>
 
                 <!-- Other event types fields -->
                 <div id="other-fields" class="row g-3 mt-2" style="display: none;">
-                    <div class="col-md-12">
-                        <label for="description" class="form-label">Description</label>
-                        <input type="text" class="form-control" id="description" name="description"
-                               placeholder="e.g., Location details or notes">
-                    </div>
+                    <!-- No additional fields needed - description is in main row -->
                 </div>
 
                 <!-- SABC Tournament-only fields (hidden now, merged above) -->
@@ -470,6 +472,41 @@
     </div>
 </div>
 
+<!-- Delete Event Modal -->
+<div class="modal fade" id="deleteEventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Delete Event</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Warning:</strong> You are about to delete an event. This action cannot be undone.
+                </div>
+                <p>Event: <strong id="delete-current-event-name"></strong></p>
+                <p id="delete-current-dependencies-warning" class="text-warning" style="display: none;">
+                    <i class="bi bi-info-circle me-1"></i>This event has associated data that will also be removed:
+                    <ul class="mt-2">
+                        <li>Polls and poll votes (if any)</li>
+                        <li>Tournament setup (if not complete)</li>
+                    </ul>
+                </p>
+                <p class="mt-3">To confirm deletion, please type <code>DELETE</code> in the field below:</p>
+                <input type="text" class="form-control" id="delete-current-confirmation" placeholder="Type DELETE to confirm">
+                <input type="hidden" id="delete-current-event-id">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteCurrentEvent()">
+                    <i class="bi bi-trash me-1"></i>Delete Event
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Delete Past Event Modal -->
 <div class="modal fade" id="deletePastEventModal" tabindex="-1">
     <div class="modal-dialog">
@@ -683,30 +720,60 @@ function fetchPollClosesDate(eventId, inputElement) {
         });
 }
 
-function deleteEvent(id, hasDependencies) {
-    var message = hasDependencies 
-        ? 'This event has associated polls or tournaments. Deleting it will also remove these. Are you sure?' 
-        : 'Are you sure you want to delete this event?';
-    
-    if (confirm(message)) {
-        fetch(`/admin/events/${id}`, { 
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                location.reload();
-            } else if (response.status === 400) {
-                return response.json().then(data => {
-                    alert(data.error || 'Cannot delete event with dependencies.');
-                });
-            } else {
-                alert('Error deleting event');
-            }
-        });
+function deleteEvent(id, hasDependencies, eventName = 'Event') {
+    // Set the event name in the modal
+    document.getElementById('delete-current-event-name').textContent = eventName;
+    document.getElementById('delete-current-event-id').value = id;
+
+    // Show/hide dependencies warning
+    var warningElement = document.getElementById('delete-current-dependencies-warning');
+    if (hasDependencies) {
+        warningElement.style.display = 'block';
+    } else {
+        warningElement.style.display = 'none';
     }
+
+    // Clear the confirmation input
+    document.getElementById('delete-current-confirmation').value = '';
+
+    // Show the modal
+    var modal = new bootstrap.Modal(document.getElementById('deleteEventModal'));
+    modal.show();
+}
+
+function confirmDeleteCurrentEvent() {
+    var confirmText = document.getElementById('delete-current-confirmation').value;
+    var eventId = document.getElementById('delete-current-event-id').value;
+
+    if (confirmText.trim() !== 'DELETE') {
+        alert('Please type DELETE to confirm');
+        return;
+    }
+
+    // Close the modal
+    bootstrap.Modal.getInstance(document.getElementById('deleteEventModal')).hide();
+
+    // Delete the event
+    fetch(`/admin/events/${eventId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            location.reload();
+        } else if (response.status === 400) {
+            return response.json().then(data => {
+                alert(data.error || 'Cannot delete event with dependencies.');
+            });
+        } else {
+            alert('Error deleting event');
+        }
+    })
+    .catch(error => {
+        alert('Network error deleting event: ' + error.message);
+    });
 }
 
 function deletePastEvent(id, name, hasDependencies) {
@@ -791,39 +858,54 @@ function toggleEventFields() {
     sabcFields.style.display = 'none';
     holidayFields.style.display = 'none';
 
-    // Clear fields
+    // Clear fields and manage name attributes to prevent conflicts
     document.getElementById('start_time').value = '';
     document.getElementById('weigh_in_time').value = '';
     document.getElementById('other_start_time').value = '';
     document.getElementById('other_weigh_in_time').value = '';
-    if (document.getElementById('description')) {
-        document.getElementById('description').value = '';
-    }
+
+    // Only clear and manage name attributes for non-active description fields
+    // DO NOT clear the main description field value as it may contain user input
     if (document.getElementById('other_description')) {
         document.getElementById('other_description').value = '';
+        document.getElementById('other_description').removeAttribute('name');
     }
     if (document.getElementById('club_description')) {
         document.getElementById('club_description').value = '';
+        document.getElementById('club_description').removeAttribute('name');
+        document.getElementById('club_description').removeAttribute('required');
     }
 
-    // Show relevant fields based on event type
+    // Show relevant fields based on event type and set active description field
     if (eventType === 'sabc_tournament') {
         sabcTournamentFields.style.display = 'flex';
         // Set default times for SABC tournaments
         document.getElementById('start_time').value = '06:00';
         document.getElementById('weigh_in_time').value = '15:00';
+        // Main description field is already active with name="description"
     } else if (eventType === 'other_tournament') {
         otherTournamentFields.style.display = 'flex';
         otherTournamentDescription.style.display = 'flex';
+        // Activate the other description field
+        if (document.getElementById('other_description')) {
+            document.getElementById('other_description').setAttribute('name', 'description');
+        }
         // Load lakes for other tournament lake dropdown
         loadLakesForOtherTournament();
     } else if (eventType === 'club_event') {
         clubEventFields.style.display = 'flex';
+        // Activate the club description field
+        if (document.getElementById('club_description')) {
+            document.getElementById('club_description').setAttribute('name', 'description');
+            document.getElementById('club_description').setAttribute('required', 'required');
+        }
     } else if (eventType === 'holiday') {
         otherFields.style.display = 'flex';
         holidayFields.style.display = 'flex';
+        // Main description field is already active with name="description"
     } else {
         otherFields.style.display = 'flex';
+        // Main description field is already active with name="description"
     }
 
     // Update form validation
@@ -863,13 +945,14 @@ function updateFieldRequirements(eventType) {
     const weighInTime = document.getElementById('weigh_in_time');
     const entryFee = document.getElementById('entry_fee');
     const lakeName = document.getElementById('lake_name');
+    const rampName = document.getElementById('ramp_name');
     const otherStartTime = document.getElementById('other_start_time');
     const otherWeighInTime = document.getElementById('other_weigh_in_time');
     const otherLakeName = document.getElementById('other_lake_name');
     const clubDescription = document.getElementById('club_description');
 
     // Clear all requirements first
-    [startTime, weighInTime, entryFee, lakeName, otherStartTime, otherWeighInTime, otherLakeName, clubDescription].forEach(field => {
+    [startTime, weighInTime, entryFee, lakeName, rampName, otherStartTime, otherWeighInTime, otherLakeName, clubDescription].forEach(field => {
         if (field) field.required = false;
     });
 
@@ -878,6 +961,7 @@ function updateFieldRequirements(eventType) {
         startTime.required = true;
         weighInTime.required = true;
         lakeName.required = true;
+        rampName.required = true;
         // Entry fee has default value, not strictly required
     } else if (eventType === 'club_event') {
         clubDescription.required = true;

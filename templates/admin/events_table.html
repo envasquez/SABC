@@ -123,12 +123,13 @@
                                 data-lake-name="{{ event.lake_name or '' }}"
                                 data-ramp-name="{{ event.ramp_name or '' }}"
                                 data-entry-fee="{{ event.entry_fee or 25.00 }}"
+                                data-fish-limit="{{ event.fish_limit or 5 }}"
                                 data-holiday-name="{{ event.holiday_name or '' }}"
                                 data-has-poll="{{ event.has_poll|tojson }}"
                                 data-poll-active="{{ event.poll_active|tojson }}">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <button class="btn btn-danger" onclick="deleteEvent({{ event.id }}, {{ (event.has_poll or event.has_tournament)|tojson }})">
+                        <button class="btn btn-danger" onclick="deleteEvent({{ event.id }}, {{ (event.has_poll or event.has_tournament)|tojson }}, '{{ event.name|replace("'", "\\'") }}')">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>

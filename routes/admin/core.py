@@ -130,7 +130,9 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
                    END as day_name,
                    EXISTS(SELECT 1 FROM polls p WHERE p.event_id = e.id) as has_poll,
                    EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id) as has_tournament,
-                   EXISTS(SELECT 1 FROM polls p WHERE p.event_id = e.id AND datetime('now') BETWEEN p.starts_at AND p.closes_at) as poll_active
+                   EXISTS(SELECT 1 FROM polls p WHERE p.event_id = e.id AND datetime('now') BETWEEN p.starts_at AND p.closes_at) as poll_active,
+                   e.start_time, e.weigh_in_time, e.entry_fee, e.fish_limit, e.lake_name, e.ramp_name, e.holiday_name,
+                   EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id AND t.complete = 1) as tournament_complete
             FROM events e WHERE e.date >= date('now') ORDER BY e.date LIMIT :limit OFFSET :offset
         """,
             {"limit": per_page, "offset": upcoming_offset},
@@ -147,6 +149,14 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
                 "has_poll": bool(e[7]),
                 "has_tournament": bool(e[8]),
                 "poll_active": bool(e[9]),
+                "start_time": e[10],
+                "weigh_in_time": e[11],
+                "entry_fee": e[12],
+                "fish_limit": e[13],
+                "lake_name": e[14],
+                "ramp_name": e[15],
+                "holiday_name": e[16],
+                "tournament_complete": bool(e[17]),
             }
             for e in events
         ]

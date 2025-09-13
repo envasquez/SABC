@@ -83,9 +83,9 @@
                         <span class="badge bg-warning text-dark me-2">&nbsp;</span>Other Tournaments
                     </div>
                     {% endif %}
-                    {% if 'federal_holiday' in event_types_present %}
+                    {% if 'holiday' in event_types_present %}
                     <div class="col">
-                        <span class="badge bg-danger me-2">&nbsp;</span>Federal Holidays
+                        <span class="badge bg-danger me-2">&nbsp;</span>Holidays
                     </div>
                     {% endif %}
                     {% if 'club_event' in event_types_present %}
@@ -159,9 +159,9 @@
                         <span class="badge bg-warning text-dark me-2">&nbsp;</span>Other Tournaments
                     </div>
                     {% endif %}
-                    {% if 'federal_holiday' in event_types_present %}
+                    {% if 'holiday' in event_types_present %}
                     <div class="col">
-                        <span class="badge bg-danger me-2">&nbsp;</span>Federal Holidays
+                        <span class="badge bg-danger me-2">&nbsp;</span>Holidays
                     </div>
                     {% endif %}
                     {% if 'club_event' in event_types_present %}
@@ -241,6 +241,10 @@ function showEventDetails(element) {
                 eventTypeIcon = '<i class="bi bi-calendar-event me-2"></i>';
                 eventTypeName = 'Other Tournament';
                 eventTypeClass = 'bg-warning text-dark';
+            } else if (event.type === 'club_event') {
+                eventTypeIcon = '<i class="bi bi-people me-2"></i>';
+                eventTypeName = 'Club Event';
+                eventTypeClass = 'bg-success';
             } else if (event.type === 'generic_event') {
                 eventTypeIcon = '<i class="bi bi-calendar me-2"></i>';
                 eventTypeName = 'Event';
