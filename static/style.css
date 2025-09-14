@@ -81,8 +81,8 @@ a:hover {
 
 .nav-tabs .nav-link.active {
   color: var(--text) !important;
-  background: var(--bg2) !important;
-  border-color: var(--border) var(--border) var(--bg2) !important;
+  background: #4a5158 !important;
+  border-color: var(--border) var(--border) #4a5158 !important;
 }
 
 .alert {

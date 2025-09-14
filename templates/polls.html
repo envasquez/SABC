@@ -32,7 +32,16 @@
             <div class="card shadow-sm">
                 <div class="card-header {{ 'bg-success' if poll.status == 'closed' else ('bg-warning' if poll.status == 'active' else 'bg-secondary') }} text-white d-flex justify-content-between align-items-center">
                     <div>
-                        <h5 class="mb-0">{{ poll.title }}</h5>
+                        <h5 class="mb-0">
+                            {{ poll.title }}
+                            {% if poll.status == 'closed' %}
+                                <span class="badge bg-warning text-dark ms-2">CLOSED</span>
+                            {% elif poll.status == 'active' %}
+                                <span class="badge bg-light text-dark ms-2">ACTIVE</span>
+                            {% elif poll.status == 'upcoming' %}
+                                <span class="badge bg-info ms-2">UPCOMING</span>
+                            {% endif %}
+                        </h5>
                         <small>
                             {% if poll.status == 'upcoming' %}
                                 Poll Opens on {{ poll.starts_at[:10] }} at {{ poll.starts_at[11:16] }}

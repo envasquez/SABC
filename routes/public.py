@@ -86,6 +86,13 @@ async def polls(request: Request):
     if not (user := u(request)):
         return RedirectResponse("/login")
 
+    # Automatically process any closed polls to create tournaments
+    from routes.admin.events_crud import process_closed_polls
+    try:
+        process_closed_polls()
+    except Exception as e:
+        print(f"Error auto-processing closed polls: {e}")
+
     # Get polls with computed status fields and user's vote status
     polls_data = db(
         """
@@ -669,6 +676,13 @@ async def home_paginated(request: Request, page: int = 1):
     user = u(request)
     items_per_page = 4  # Show 4 tournament cards per page
     offset = (page - 1) * items_per_page
+
+    # Automatically process any closed polls to create tournaments
+    from routes.admin.events_crud import process_closed_polls
+    try:
+        process_closed_polls()
+    except Exception as e:
+        print(f"Error auto-processing closed polls: {e}")
 
     # Get all tournaments with event data for display
     # Tournament results are truncated, so we'll get the first few results
