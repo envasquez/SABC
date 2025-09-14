@@ -8,8 +8,15 @@
             <div class="text-muted mb-2">
                 {{ tournament[2] | date_format }}
             </div>
-            
-            <h1>{{ tournament[5] | upper if tournament[5] else "TOURNAMENT" }} - <small class="text-muted">RESULTS</small></h1>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <h1>{{ tournament[5] | upper if tournament[5] else "TOURNAMENT" }} - <small class="text-muted">RESULTS</small></h1>
+                {% if user and user.is_admin and not tournament[9] %}
+                <a href="/admin/tournaments/{{ tournament[0] }}/enter-results" class="btn btn-success">
+                    <i class="bi bi-plus-circle me-2"></i>Add Results
+                </a>
+                {% endif %}
+            </div>
         </div>
 
         <!-- Tournament Information Card -->

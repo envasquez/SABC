@@ -1,6 +1,7 @@
 """Admin tournaments routes - tournament management."""
 
-from fastapi import APIRouter, Request
+import json
+from fastapi import APIRouter, Request, Form
 from fastapi.responses import RedirectResponse
 
 from routes.dependencies import admin, db, templates
@@ -81,4 +82,134 @@ async def create_tournament(request: Request):
     except Exception as e:
         return RedirectResponse(
             f"/admin/events?error=Failed to create tournament: {str(e)}", status_code=302
+        )
+
+
+@router.get("/admin/tournaments/{tournament_id}/enter-results")
+async def enter_results_form(request: Request, tournament_id: int):
+    """Show results entry form for a tournament."""
+    if isinstance(user := admin(request), RedirectResponse):
+        return user
+
+    # Get tournament details
+    tournament_data = db("""
+        SELECT t.id, t.name, e.date, t.lake_name, t.ramp_name,
+               t.fish_limit, t.entry_fee, t.complete
+        FROM tournaments t
+        JOIN events e ON t.event_id = e.id
+        WHERE t.id = :tournament_id
+    """, {"tournament_id": tournament_id})
+
+    if not tournament_data:
+        return RedirectResponse("/admin/tournaments?error=Tournament not found", status_code=302)
+
+    tournament = {
+        "id": tournament_data[0][0],
+        "name": tournament_data[0][1],
+        "date": tournament_data[0][2],
+        "lake_name": tournament_data[0][3],
+        "ramp_name": tournament_data[0][4],
+        "fish_limit": tournament_data[0][5],
+        "entry_fee": tournament_data[0][6],
+        "complete": bool(tournament_data[0][7])
+    }
+
+    # Get all anglers for dropdown
+    anglers = db("SELECT id, name FROM anglers ORDER BY name")
+    anglers_json = json.dumps([{"id": a[0], "name": a[1]} for a in anglers])
+
+    return templates.TemplateResponse(
+        "admin/enter_results.html",
+        {
+            "request": request,
+            "user": user,
+            "tournament": tournament,
+            "anglers_json": anglers_json
+        }
+    )
+
+
+@router.post("/admin/tournaments/{tournament_id}/enter-results")
+async def save_results(request: Request, tournament_id: int):
+    """Save tournament results."""
+    if isinstance(user := admin(request), RedirectResponse):
+        return user
+
+    try:
+        form = await request.form()
+
+        # Parse team results from form data
+        teams = {}
+
+        # Group form data by team number
+        for key, value in form.items():
+            if '_' in key:
+                parts = key.split('_')
+                if len(parts) >= 3:
+                    angler = parts[0]  # angler1 or angler2
+                    field = parts[1]   # id, fish, weight, etc
+                    team_num = parts[2] # team number
+
+                    if team_num not in teams:
+                        teams[team_num] = {}
+                    if angler not in teams[team_num]:
+                        teams[team_num][angler] = {}
+
+                    teams[team_num][angler][field] = value
+
+        # Process each team
+        for team_num, team_data in teams.items():
+            if 'angler1' in team_data and 'angler2' in team_data:
+                angler1 = team_data['angler1']
+                angler2 = team_data['angler2']
+
+                # Skip if required fields are missing
+                if not angler1.get('id') or not angler2.get('id'):
+                    continue
+
+                # Insert individual results for both anglers
+                for angler_key, angler in [('angler1', angler1), ('angler2', angler2)]:
+                    db("""
+                        INSERT INTO results (
+                            tournament_id, angler_id, num_fish, total_weight,
+                            big_bass_weight, dead_fish_penalty, disqualified
+                        ) VALUES (
+                            :tournament_id, :angler_id, :num_fish, :total_weight,
+                            :big_bass_weight, :dead_fish_penalty, :disqualified
+                        )
+                    """, {
+                        "tournament_id": tournament_id,
+                        "angler_id": int(angler['id']),
+                        "num_fish": int(angler.get('fish', 0)),
+                        "total_weight": float(angler.get('weight', 0)),
+                        "big_bass_weight": float(angler.get('bass', 0)),
+                        "dead_fish_penalty": float(angler.get('penalty', 0)),
+                        "disqualified": bool(angler.get('disqualified', False))
+                    })
+
+                # Calculate team total weight
+                team_weight = (float(angler1.get('weight', 0)) - float(angler1.get('penalty', 0)) +
+                              float(angler2.get('weight', 0)) - float(angler2.get('penalty', 0)))
+
+                # Insert team result
+                db("""
+                    INSERT INTO team_results (tournament_id, angler1_id, angler2_id, total_weight)
+                    VALUES (:tournament_id, :angler1_id, :angler2_id, :total_weight)
+                """, {
+                    "tournament_id": tournament_id,
+                    "angler1_id": int(angler1['id']),
+                    "angler2_id": int(angler2['id']),
+                    "total_weight": team_weight
+                })
+
+        # Mark tournament as complete
+        db("UPDATE tournaments SET complete = 1 WHERE id = :tournament_id",
+           {"tournament_id": tournament_id})
+
+        return RedirectResponse(f"/tournaments/{tournament_id}?success=Results saved successfully", status_code=302)
+
+    except Exception as e:
+        return RedirectResponse(
+            f"/admin/tournaments/{tournament_id}/enter-results?error=Failed to save results: {str(e)}",
+            status_code=302
         )
