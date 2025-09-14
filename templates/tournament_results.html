@@ -133,7 +133,7 @@
                         <td>{{ "%.2f"|format(result[3]) }}lbs</td>
                         {% if user and user.is_admin %}
                         <td>
-                            <button class="btn btn-sm btn-outline-primary" onclick="editTeamResult({{ result[6] }}, '{{ result[1] }}', {{ result[2] }}, {{ result[3] }})">
+                            <button class="btn btn-sm btn-outline-primary" onclick="console.log('Button clicked!'); editTeamResult({{ result[6] }}, {{ result[1] | tojson }}, {{ result[2] }}, {{ result[3] }})">
                                 <i class="bi bi-pencil"></i>
                             </button>
                         </td>
@@ -190,7 +190,7 @@
                         </td>
                         {% if user and user.is_admin %}
                         <td>
-                            <button class="btn btn-sm btn-outline-primary" onclick="editIndividualResult({{ result[7] }}, '{{ result[1] }}', {{ result[2] }}, {{ result[8] }}, {{ result[4] if result[4] else 0 }}, {{ result[9] }}, {{ result[10] | lower }})">
+                            <button class="btn btn-sm btn-outline-primary" onclick="editIndividualResult({{ result[7] }}, {{ result[1] | tojson }}, {{ result[2] }}, {{ result[8] }}, {{ result[4] if result[4] else 0 }}, {{ result[9] }}, {{ 'true' if result[10] else 'false' }})">
                                 <i class="bi bi-pencil"></i>
                             </button>
                         </td>
@@ -352,32 +352,90 @@
 
 <script>
 function editIndividualResult(resultId, anglerName, numFish, totalWeight, bigBassWeight, deadFishPenalty, disqualified) {
-    document.getElementById('individual-result-id').value = resultId;
-    document.getElementById('individual-angler-name').value = anglerName;
-    document.getElementById('individual-num-fish').value = numFish;
-    document.getElementById('individual-total-weight').value = totalWeight.toFixed(2);
-    document.getElementById('individual-big-bass').value = bigBassWeight ? bigBassWeight.toFixed(2) : '0.00';
-    document.getElementById('individual-penalty').value = deadFishPenalty ? deadFishPenalty.toFixed(2) : '0.00';
-    document.getElementById('individual-disqualified').checked = disqualified;
+    console.log('editIndividualResult called with:', {resultId, anglerName, numFish, totalWeight, bigBassWeight, deadFishPenalty, disqualified});
 
-    // Set form action
-    document.getElementById('editIndividualForm').action = `/admin/results/${resultId}/edit`;
+    try {
+        document.getElementById('individual-result-id').value = resultId;
+        document.getElementById('individual-angler-name').value = anglerName;
+        document.getElementById('individual-num-fish').value = numFish;
+        document.getElementById('individual-total-weight').value = totalWeight.toFixed(2);
+        document.getElementById('individual-big-bass').value = bigBassWeight ? bigBassWeight.toFixed(2) : '0.00';
+        document.getElementById('individual-penalty').value = deadFishPenalty ? deadFishPenalty.toFixed(2) : '0.00';
+        document.getElementById('individual-disqualified').checked = disqualified === 'true' || disqualified === true;
 
-    // Show modal
-    new bootstrap.Modal(document.getElementById('editIndividualModal')).show();
+        // Set form action
+        document.getElementById('editIndividualForm').action = `/admin/results/${resultId}/edit`;
+
+        // Show modal
+        var modalElement = document.getElementById('editIndividualModal');
+        if (modalElement) {
+            var modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        } else {
+            console.error('Modal element not found!');
+        }
+    } catch (error) {
+        console.error('Error in editIndividualResult:', error);
+    }
 }
 
 function editTeamResult(teamResultId, teamName, numFish, totalWeight) {
-    document.getElementById('team-result-id').value = teamResultId;
-    document.getElementById('team-name').value = teamName;
-    document.getElementById('team-num-fish').value = numFish;
-    document.getElementById('team-total-weight').value = totalWeight.toFixed(2);
+    console.log('editTeamResult called with:', {teamResultId, teamName, numFish, totalWeight});
 
-    // Set form action
-    document.getElementById('editTeamForm').action = `/admin/team-results/${teamResultId}/edit`;
+    // Check if we have all required parameters
+    if (!teamResultId) {
+        console.error('Missing teamResultId:', teamResultId);
+        return;
+    }
 
-    // Show modal
-    new bootstrap.Modal(document.getElementById('editTeamModal')).show();
+    try {
+        // Check if all form elements exist
+        const resultIdEl = document.getElementById('team-result-id');
+        const teamNameEl = document.getElementById('team-name');
+        const numFishEl = document.getElementById('team-num-fish');
+        const totalWeightEl = document.getElementById('team-total-weight');
+
+        console.log('Form elements found:', {
+            resultIdEl: !!resultIdEl,
+            teamNameEl: !!teamNameEl,
+            numFishEl: !!numFishEl,
+            totalWeightEl: !!totalWeightEl
+        });
+
+        if (!resultIdEl || !teamNameEl || !numFishEl || !totalWeightEl) {
+            console.error('Some form elements not found!');
+            return;
+        }
+
+        resultIdEl.value = teamResultId;
+        teamNameEl.value = teamName;
+        numFishEl.value = numFish;
+        totalWeightEl.value = totalWeight.toFixed(2);
+
+        // Set form action
+        const formEl = document.getElementById('editTeamForm');
+        if (formEl) {
+            formEl.action = `/admin/team-results/${teamResultId}/edit`;
+            console.log('Set form action to:', formEl.action);
+        } else {
+            console.error('Form element not found!');
+        }
+
+        // Show modal
+        const modalElement = document.getElementById('editTeamModal');
+        console.log('Modal element found:', !!modalElement);
+
+        if (modalElement) {
+            console.log('Attempting to show modal...');
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+            console.log('Modal.show() called');
+        } else {
+            console.error('Team modal element not found!');
+        }
+    } catch (error) {
+        console.error('Error in editTeamResult:', error);
+    }
 }
 </script>
 
