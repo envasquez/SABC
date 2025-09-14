@@ -344,7 +344,8 @@ async def tournament_results(request: Request, tournament_id: int):
             (SELECT SUM(num_fish) FROM results r WHERE r.angler_id IN (tr.angler1_id, tr.angler2_id) AND r.tournament_id = tr.tournament_id) as num_fish,
             tr.total_weight,
             a1.member as member1,
-            a2.member as member2
+            a2.member as member2,
+            tr.id as team_result_id
         FROM team_results tr
         JOIN anglers a1 ON tr.angler1_id = a1.id
         JOIN anglers a2 ON tr.angler2_id = a2.id
@@ -382,7 +383,8 @@ async def tournament_results(request: Request, tournament_id: int):
         SELECT
             ROW_NUMBER() OVER (ORDER BY CASE WHEN r.num_fish > 0 THEN 0 ELSE 1 END, (r.total_weight - r.dead_fish_penalty) DESC, r.big_bass_weight DESC, r.buy_in, a.name) as place,
             a.name, r.num_fish, r.total_weight - r.dead_fish_penalty as final_weight, r.big_bass_weight,
-            CASE WHEN a.member = 0 THEN 0 WHEN r.num_fish > 0 AND a.member = 1 THEN 100 - ROW_NUMBER() OVER (PARTITION BY CASE WHEN r.num_fish > 0 AND a.member = 1 THEN 1 ELSE 0 END ORDER BY (r.total_weight - r.dead_fish_penalty) DESC, r.big_bass_weight DESC) + 1 WHEN r.buy_in = 1 AND a.member = 1 THEN :last_place_points - 4 WHEN a.member = 1 THEN :last_place_points - 2 ELSE 0 END as points, a.member
+            CASE WHEN a.member = 0 THEN 0 WHEN r.num_fish > 0 AND a.member = 1 THEN 100 - ROW_NUMBER() OVER (PARTITION BY CASE WHEN r.num_fish > 0 AND a.member = 1 THEN 1 ELSE 0 END ORDER BY (r.total_weight - r.dead_fish_penalty) DESC, r.big_bass_weight DESC) + 1 WHEN r.buy_in = 1 AND a.member = 1 THEN :last_place_points - 4 WHEN a.member = 1 THEN :last_place_points - 2 ELSE 0 END as points, a.member,
+            r.id as result_id, r.total_weight, r.dead_fish_penalty, r.disqualified
         FROM results r JOIN anglers a ON r.angler_id = a.id
         WHERE r.tournament_id = :tournament_id AND NOT r.disqualified AND r.buy_in = 0
         ORDER BY CASE WHEN r.num_fish > 0 THEN 0 ELSE 1 END, (r.total_weight - r.dead_fish_penalty) DESC, r.big_bass_weight DESC, a.name

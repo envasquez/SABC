@@ -159,16 +159,20 @@ async def save_results(request: Request, tournament_id: int):
 
         # Process each team
         for team_num, team_data in teams.items():
-            if 'angler1' in team_data and 'angler2' in team_data:
+            if 'angler1' in team_data:
                 angler1 = team_data['angler1']
-                angler2 = team_data['angler2']
+                angler2 = team_data.get('angler2', {})
 
-                # Skip if required fields are missing
-                if not angler1.get('id') or not angler2.get('id'):
+                # Skip if angler 1 is missing (required)
+                if not angler1.get('id'):
                     continue
 
-                # Insert individual results for both anglers
-                for angler_key, angler in [('angler1', angler1), ('angler2', angler2)]:
+                # Insert individual results for anglers
+                anglers_to_process = [('angler1', angler1)]
+                if angler2.get('id'):  # Only process angler2 if they have an ID
+                    anglers_to_process.append(('angler2', angler2))
+
+                for angler_key, angler in anglers_to_process:
                     db("""
                         INSERT INTO results (
                             tournament_id, angler_id, num_fish, total_weight,
@@ -187,20 +191,21 @@ async def save_results(request: Request, tournament_id: int):
                         "disqualified": bool(angler.get('disqualified', False))
                     })
 
-                # Calculate team total weight
-                team_weight = (float(angler1.get('weight', 0)) - float(angler1.get('penalty', 0)) +
-                              float(angler2.get('weight', 0)) - float(angler2.get('penalty', 0)))
+                # Calculate team total weight (only for teams with 2 anglers)
+                if angler2.get('id'):
+                    team_weight = (float(angler1.get('weight', 0)) - float(angler1.get('penalty', 0)) +
+                                  float(angler2.get('weight', 0)) - float(angler2.get('penalty', 0)))
 
-                # Insert team result
-                db("""
-                    INSERT INTO team_results (tournament_id, angler1_id, angler2_id, total_weight)
-                    VALUES (:tournament_id, :angler1_id, :angler2_id, :total_weight)
-                """, {
-                    "tournament_id": tournament_id,
-                    "angler1_id": int(angler1['id']),
-                    "angler2_id": int(angler2['id']),
-                    "total_weight": team_weight
-                })
+                    # Insert team result
+                    db("""
+                        INSERT INTO team_results (tournament_id, angler1_id, angler2_id, total_weight)
+                        VALUES (:tournament_id, :angler1_id, :angler2_id, :total_weight)
+                    """, {
+                        "tournament_id": tournament_id,
+                        "angler1_id": int(angler1['id']),
+                        "angler2_id": int(angler2['id']),
+                        "total_weight": team_weight
+                    })
 
         # Mark tournament as complete
         db("UPDATE tournaments SET complete = 1 WHERE id = :tournament_id",
@@ -213,3 +218,98 @@ async def save_results(request: Request, tournament_id: int):
             f"/admin/tournaments/{tournament_id}/enter-results?error=Failed to save results: {str(e)}",
             status_code=302
         )
+
+
+@router.post("/admin/results/{result_id}/edit")
+async def edit_individual_result(request: Request, result_id: int):
+    """Edit an individual tournament result."""
+    if isinstance(user := admin(request), RedirectResponse):
+        return user
+
+    try:
+        form = await request.form()
+
+        # Get the tournament_id for redirect
+        result_data = db("SELECT tournament_id FROM results WHERE id = :result_id", {"result_id": result_id})
+        if not result_data:
+            return RedirectResponse("/admin/tournaments?error=Result not found", status_code=302)
+
+        tournament_id = result_data[0][0]
+
+        # Update the individual result
+        db("""
+            UPDATE results SET
+                num_fish = :num_fish,
+                total_weight = :total_weight,
+                big_bass_weight = :big_bass_weight,
+                dead_fish_penalty = :dead_fish_penalty,
+                disqualified = :disqualified
+            WHERE id = :result_id
+        """, {
+            "result_id": result_id,
+            "num_fish": int(form.get("num_fish", 0)),
+            "total_weight": float(form.get("total_weight", 0)),
+            "big_bass_weight": float(form.get("big_bass_weight", 0)),
+            "dead_fish_penalty": float(form.get("dead_fish_penalty", 0)),
+            "disqualified": bool(form.get("disqualified"))
+        })
+
+        # Update any related team results
+        # Get team results that include this angler
+        team_results = db("""
+            SELECT tr.id, tr.angler1_id, tr.angler2_id
+            FROM team_results tr
+            JOIN results r ON (r.angler_id = tr.angler1_id OR r.angler_id = tr.angler2_id)
+            WHERE r.id = :result_id
+        """, {"result_id": result_id})
+
+        for team_result in team_results:
+            team_id, angler1_id, angler2_id = team_result
+
+            # Recalculate team total weight
+            angler1_result = db("SELECT total_weight, dead_fish_penalty FROM results WHERE angler_id = :angler_id AND tournament_id = :tournament_id",
+                              {"angler_id": angler1_id, "tournament_id": tournament_id})[0]
+            angler2_result = db("SELECT total_weight, dead_fish_penalty FROM results WHERE angler_id = :angler_id AND tournament_id = :tournament_id",
+                              {"angler_id": angler2_id, "tournament_id": tournament_id})[0]
+
+            total_weight = (angler1_result[0] - angler1_result[1]) + (angler2_result[0] - angler2_result[1])
+
+            db("UPDATE team_results SET total_weight = :total_weight WHERE id = :team_id",
+               {"total_weight": total_weight, "team_id": team_id})
+
+        return RedirectResponse(f"/tournaments/{tournament_id}?success=Result updated successfully", status_code=302)
+
+    except Exception as e:
+        return RedirectResponse(f"/tournaments/{tournament_id}?error=Failed to update result: {str(e)}", status_code=302)
+
+
+@router.post("/admin/team-results/{team_result_id}/edit")
+async def edit_team_result(request: Request, team_result_id: int):
+    """Edit a team tournament result."""
+    if isinstance(user := admin(request), RedirectResponse):
+        return user
+
+    try:
+        form = await request.form()
+
+        # Get the tournament_id for redirect
+        team_data = db("SELECT tournament_id FROM team_results WHERE id = :team_result_id", {"team_result_id": team_result_id})
+        if not team_data:
+            return RedirectResponse("/admin/tournaments?error=Team result not found", status_code=302)
+
+        tournament_id = team_data[0][0]
+
+        # Update the team result
+        db("""
+            UPDATE team_results SET
+                total_weight = :total_weight
+            WHERE id = :team_result_id
+        """, {
+            "team_result_id": team_result_id,
+            "total_weight": float(form.get("total_weight", 0))
+        })
+
+        return RedirectResponse(f"/tournaments/{tournament_id}?success=Team result updated successfully", status_code=302)
+
+    except Exception as e:
+        return RedirectResponse(f"/tournaments/{tournament_id}?error=Failed to update team result: {str(e)}", status_code=302)

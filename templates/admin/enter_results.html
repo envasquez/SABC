@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Enter Results - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/tournaments/{{ tournament.id }}">{{ tournament.name }}</a></li>
+                <li class="breadcrumb-item active">Enter Results</li>
+            </ol>
+        </nav>
+
+        <h1 class="display-6">
+            <i class="bi bi-pencil-square me-2"></i>Enter Tournament Results
+        </h1>
+        <p class="lead text-muted">{{ tournament.name }} - {{ tournament.date }}</p>
+    </div>
+
+    <!-- Tournament Info Summary -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3"><strong>Location:</strong> {{ tournament.lake_name }}</div>
+                <div class="col-md-3"><strong>Ramp:</strong> {{ tournament.ramp_name }}</div>
+                <div class="col-md-3"><strong>Fish Limit:</strong> {{ tournament.fish_limit }} per angler</div>
+                <div class="col-md-3"><strong>Entry Fee:</strong> ${{ tournament.entry_fee }}</div>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" action="/admin/tournaments/{{ tournament.id }}/enter-results" id="resultsForm">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-people me-2"></i>Tournament Participants
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <p class="text-muted">Enter results for each team. Both anglers' individual results will be recorded, and team totals will be calculated automatically.</p>
+                </div>
+
+                <div id="teams-container">
+                    <!-- Teams will be added dynamically -->
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-success" onclick="addTeam()">
+                            <i class="bi bi-plus-circle me-2"></i>Add Team
+                        </button>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <button type="button" class="btn btn-outline-secondary me-2" onclick="window.history.back()">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-2"></i>Save Results
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+let teamCount = 0;
+let anglers = {{ anglers_json | safe }};
+
+function addTeam() {
+    teamCount++;
+    const container = document.getElementById('teams-container');
+
+    const teamHtml = `
+        <div class="card mb-3 team-card" id="team-${teamCount}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Team ${teamCount}</h6>
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeTeam(${teamCount})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Angler 1 -->
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Angler 1</h6>
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <label class="form-label">Name</label>
+                                <select class="form-select angler1-select" name="angler1_id_${teamCount}" required onchange="updateAngler2Options(${teamCount})">
+                                    <option value="">Select Angler</option>
+                                    ${anglers.map(a => `<option value="${a.id}">${a.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label">Fish</label>
+                                <input type="number" class="form-control" name="angler1_fish_${teamCount}" min="0" max="5" value="0">
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label">Weight (lbs)</label>
+                                <input type="number" class="form-control" name="angler1_weight_${teamCount}" step="0.01" min="0" value="0.00">
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label">Big Bass (lbs)</label>
+                                <input type="number" class="form-control" name="angler1_big_bass_${teamCount}" step="0.01" min="0" value="0.00">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Dead Fish Penalty</label>
+                                <input type="number" class="form-control" name="angler1_dead_penalty_${teamCount}" step="0.25" min="0" value="0.00">
+                            </div>
+                            <div class="col-6">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" name="angler1_disqualified_${teamCount}" value="1">
+                                    <label class="form-check-label">Disqualified</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Angler 2 -->
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Angler 2</h6>
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <label class="form-label">Name <span class="text-muted">(Optional for solo)</span></label>
+                                <select class="form-select angler2-select" name="angler2_id_${teamCount}" id="angler2_select_${teamCount}">
+                                    <option value="">Select Angler (Optional)</option>
+                                    ${anglers.map(a => `<option value="${a.id}">${a.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label">Fish</label>
+                                <input type="number" class="form-control" name="angler2_fish_${teamCount}" min="0" max="5" value="0">
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label">Weight (lbs)</label>
+                                <input type="number" class="form-control" name="angler2_weight_${teamCount}" step="0.01" min="0" value="0.00">
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label">Big Bass (lbs)</label>
+                                <input type="number" class="form-control" name="angler2_big_bass_${teamCount}" step="0.01" min="0" value="0.00">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Dead Fish Penalty</label>
+                                <input type="number" class="form-control" name="angler2_dead_penalty_${teamCount}" step="0.25" min="0" value="0.00">
+                            </div>
+                            <div class="col-6">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" name="angler2_disqualified_${teamCount}" value="1">
+                                    <label class="form-check-label">Disqualified</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    container.insertAdjacentHTML('beforeend', teamHtml);
+}
+
+function removeTeam(teamNumber) {
+    const teamCard = document.getElementById(`team-${teamNumber}`);
+    if (teamCard) {
+        teamCard.remove();
+    }
+}
+
+function updateAngler2Options(teamNumber) {
+    const angler1Select = document.querySelector(`[name="angler1_id_${teamNumber}"]`);
+    const angler2Select = document.getElementById(`angler2_select_${teamNumber}`);
+
+    if (!angler1Select || !angler2Select) return;
+
+    const selectedAngler1 = angler1Select.value;
+    const currentAngler2 = angler2Select.value;
+
+    // Clear angler 2 options and rebuild
+    angler2Select.innerHTML = '<option value="">Select Angler (Optional)</option>';
+
+    // Add all anglers except the one selected in angler 1
+    anglers.forEach(angler => {
+        if (angler.id !== selectedAngler1) {
+            const option = document.createElement('option');
+            option.value = angler.id;
+            option.textContent = angler.name;
+            // Restore selection if it's still valid
+            if (angler.id == currentAngler2 && angler.id !== selectedAngler1) {
+                option.selected = true;
+            }
+            angler2Select.appendChild(option);
+        }
+    });
+}
+
+// Add first team on page load
+document.addEventListener('DOMContentLoaded', function() {
+    addTeam();
+});
+</script>
+{% endblock %}
