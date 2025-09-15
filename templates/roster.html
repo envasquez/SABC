@@ -242,7 +242,7 @@
     <div class="col-md-4">
         <div class="card bg-success text-white">
             <div class="card-body text-center">
-                <h3 class="card-title">{{ members|selectattr(4, 'equalto', 1)|list|length }}</h3>
+                <h3 class="card-title">{{ members|selectattr(2, 'equalto', 1)|list|length }}</h3>
                 <p class="card-text">Active Members</p>
             </div>
         </div>
@@ -250,7 +250,7 @@
     <div class="col-md-4">
         <div class="card bg-secondary text-white">
             <div class="card-body text-center">
-                <h3 class="card-title">{{ members|selectattr(4, 'equalto', 0)|list|length }}</h3>
+                <h3 class="card-title">{{ members|selectattr(2, 'equalto', 0)|list|length }}</h3>
                 <p class="card-text">Guests</p>
             </div>
         </div>

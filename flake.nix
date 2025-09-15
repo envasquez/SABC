@@ -28,16 +28,10 @@
 
           # Database
           sqlalchemy
-          aiosqlite  # async SQLite support
 
           # Development tools
           ruff
           mypy
-          types-pyyaml  # for yaml type hints
-
-          # Utilities
-          pydantic
-          pyyaml  # for config/data loading
         ]);
 
         devPackages = with pkgs; [
@@ -193,9 +187,9 @@ print('Database setup complete!')
             uvicorn
             jinja2
             sqlalchemy
-            aiosqlite
-            pydantic
-            pyyaml
+            python-multipart
+            itsdangerous
+            bcrypt
           ];
 
           # Skip tests for package build

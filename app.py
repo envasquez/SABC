@@ -1,38 +1,19 @@
-import json
-import logging
 import os
-from datetime import date, datetime, timedelta
-from typing import Optional
 
-import bcrypt
 import uvicorn
-from fastapi import FastAPI, Form, HTTPException, Query, Request
-from fastapi.responses import JSONResponse, RedirectResponse, Response
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import text
 from starlette.middleware.sessions import SessionMiddleware
 
 import routes.dependencies as deps
-from core.helpers.auth import admin, u
-from core.database import db
-from core.helpers.logging_config import configure_logging, get_logger
 from core.filters import (
     date_format_filter,
     from_json_filter,
     month_number_filter,
     time_format_filter,
 )
-from core.helpers.queries import (
-    find_lake_by_id,
-    find_lake_data_by_db_name,
-    find_ramp_name_by_id,
-    get_all_ramps,
-    get_lakes_list,
-    get_ramps_for_lake,
-    validate_lake_ramp_combo,
-)
-from core.validators import get_federal_holidays, validate_event_data
+from core.helpers.logging_config import configure_logging, get_logger
 
 configure_logging(log_level=os.environ.get("LOG_LEVEL", "INFO"))
 logger = get_logger(__name__)
@@ -66,6 +47,9 @@ from routes.admin import (
 from routes.admin import (
     events_crud as admin_events_crud,
 )
+from routes.admin import (
+    lakes as admin_lakes,
+)
 
 # admin_news removed - was duplicate of admin_core
 from routes.admin import (
@@ -76,9 +60,6 @@ from routes.admin import (
 )
 from routes.admin import (
     users as admin_users,
-)
-from routes.admin import (
-    lakes as admin_lakes,
 )
 
 app.include_router(auth.router)
