@@ -8,11 +8,11 @@ def get_tournament_stats(tournament_id, fish_limit):
     stats = db(
         """
         SELECT
-            COUNT(DISTINCT r.angler_id) as total_anglers,
+            COUNT(DISTINCT CASE WHEN r.buy_in = 0 THEN r.angler_id END) as total_anglers,
             SUM(r.num_fish) as total_fish,
             SUM(r.total_weight - r.dead_fish_penalty) as total_weight,
             COUNT(CASE WHEN r.num_fish = :fish_limit THEN 1 END) as limits,
-            COUNT(CASE WHEN r.num_fish = 0 THEN 1 END) as zeros,
+            COUNT(CASE WHEN r.num_fish = 0 AND r.buy_in = 0 THEN 1 END) as zeros,
             COUNT(CASE WHEN r.buy_in = 1 THEN 1 END) as buy_ins,
             MAX(r.big_bass_weight) as big_bass,
             MAX(r.total_weight - r.dead_fish_penalty) as heavy_stringer

@@ -56,39 +56,61 @@
                 <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Tournament Statistics</h5>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Anglers</th>
-                        <th>Total fish</th>
-                        <th>Total weight</th>
-                        <th>Limits</th>
-                        <th>Zeros</th>
-                        <th>Buy ins</th>
-                        <th>Big bass</th>
-                        <th>Heavy stringer</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>{{ tournament_stats[0] }}</td>
-                        <td>{{ tournament_stats[1] }}</td>
-                        <td>{{ "%.2f"|format(tournament_stats[2] or 0) }}lbs</td>
-                        <td>{{ tournament_stats[3] }}</td>
-                        <td>{{ tournament_stats[4] }}</td>
-                        <td>{{ tournament_stats[5] }}</td>
-                        <td>
-                            {% if tournament_stats[6] and tournament_stats[6] > 0 %}
-                                {{ "%.2f"|format(tournament_stats[6]) }}lbs
-                            {% else %}
-                                --
-                            {% endif %}
-                        </td>
-                        <td>{{ "%.2f"|format(tournament_stats[7] or 0) }}lbs</td>
-                    </tr>
-                </tbody>
-                    </table>
+                <div class="row text-center g-3">
+                    <div class="col-6 col-md-3">
+                        <div class="bg-secondary border rounded p-3">
+                            <div class="h3 text-white mb-1">{{ tournament_stats[0] }}</div>
+                            <small class="text-light">Anglers</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="bg-secondary border rounded p-3">
+                            <div class="h3 text-white mb-1">{{ tournament_stats[1] }}</div>
+                            <small class="text-light">Total Fish</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="bg-secondary border rounded p-3">
+                            <div class="h3 text-white mb-1">{{ "%.2f"|format(tournament_stats[2] or 0) }} <small>lbs</small></div>
+                            <small class="text-light">Total Weight</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="bg-secondary border rounded p-3">
+                            <div class="h3 text-white mb-1">{{ tournament_stats[3] }}</div>
+                            <small class="text-light">Limits</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="bg-secondary border rounded p-3">
+                            <div class="h3 text-white mb-1">{{ tournament_stats[4] }}</div>
+                            <small class="text-light">Zeros</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="bg-secondary border rounded p-3">
+                            <div class="h3 text-white mb-1">{{ tournament_stats[5] }}</div>
+                            <small class="text-light">Buy-ins</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="bg-secondary border rounded p-3">
+                            <div class="h3 text-white mb-1">
+                                {% if tournament_stats[6] and tournament_stats[6] > 0 %}
+                                    {{ "%.2f"|format(tournament_stats[6]) }} <small>lbs</small>
+                                {% else %}
+                                    --
+                                {% endif %}
+                            </div>
+                            <small class="text-light">Big Bass</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="bg-secondary border rounded p-3">
+                            <div class="h3 text-white mb-1">{{ "%.2f"|format(tournament_stats[7] or 0) }} <small>lbs</small></div>
+                            <small class="text-light">Heavy Stringer</small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -118,24 +140,36 @@
                     <tr {% if loop.index <= 3 %}class="table-success"{% endif %}>
                         <td>{{ result[0] }}</td>
                         <td>
-                            {% set names = result[1].split(' / ') %}
-                            {{ names[0] }}
-                            {% if result[4] == 0 %}
-                                <span class="badge bg-secondary ms-1">Guest</span>
-                            {% endif %}
-                            /
-                            {{ names[1] }}
-                            {% if result[5] == 0 %}
-                                <span class="badge bg-secondary ms-1">Guest</span>
+                            {% if ' / ' in result[1] %}
+                                {% set names = result[1].split(' / ') %}
+                                {{ names[0] }}
+                                {% if result[4] == 0 %}
+                                    <span class="badge bg-secondary ms-1">Guest</span>
+                                {% endif %}
+                                /
+                                {{ names[1] }}
+                                {% if result[5] == 0 %}
+                                    <span class="badge bg-secondary ms-1">Guest</span>
+                                {% endif %}
+                            {% else %}
+                                {{ result[1] }}
+                                {% if result[4] == 0 %}
+                                    <span class="badge bg-secondary ms-1">Guest</span>
+                                {% endif %}
                             {% endif %}
                         </td>
                         <td>{{ result[2] }}</td>
                         <td>{{ "%.2f"|format(result[3]) }}lbs</td>
                         {% if user and user.is_admin %}
                         <td>
-                            <button class="btn btn-sm btn-outline-primary" onclick="console.log('Button clicked!'); editTeamResult({{ result[6] }}, {{ result[1] | tojson }}, {{ result[2] }}, {{ result[3] }})">
-                                <i class="bi bi-pencil"></i>
-                            </button>
+                            <div class="btn-group" role="group">
+                                <a href="/admin/tournaments/{{ tournament[0] }}/enter-results?edit_team_result={{ result[6] }}" class="btn btn-sm btn-outline-primary" title="Edit team result">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteTeamResult({{ result[6] }}, '{{ result[1] }}')" title="Delete team result">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
                         </td>
                         {% endif %}
                     </tr>
@@ -190,9 +224,9 @@
                         </td>
                         {% if user and user.is_admin %}
                         <td>
-                            <button class="btn btn-sm btn-outline-primary" onclick="editIndividualResult({{ result[7] }}, {{ result[1] | tojson }}, {{ result[2] }}, {{ result[8] }}, {{ result[4] if result[4] else 0 }}, {{ result[9] }}, {{ 'true' if result[10] else 'false' }})">
+                            <a href="/admin/tournaments/{{ tournament[0] }}/enter-results?edit_result={{ result[7] }}" class="btn btn-sm btn-outline-primary" title="Edit individual result">
                                 <i class="bi bi-pencil"></i>
-                            </button>
+                            </a>
                         </td>
                         {% endif %}
                     </tr>
@@ -263,178 +297,28 @@
     </div>
 </div>
 
-<!-- Edit Individual Result Modal -->
-<div class="modal fade" id="editIndividualModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="editIndividualForm" method="POST">
-                <div class="modal-header">
-                    <h5 class="modal-title">Edit Individual Result</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="individual-result-id" name="result_id">
-                    <div class="mb-3">
-                        <label class="form-label">Angler Name</label>
-                        <input type="text" class="form-control" id="individual-angler-name" readonly>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label class="form-label">Number of Fish</label>
-                            <input type="number" class="form-control" id="individual-num-fish" name="num_fish" min="0" max="5" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Total Weight (lbs)</label>
-                            <input type="number" class="form-control" id="individual-total-weight" name="total_weight" step="0.01" min="0" required>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Big Bass Weight (lbs)</label>
-                            <input type="number" class="form-control" id="individual-big-bass" name="big_bass_weight" step="0.01" min="0">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Dead Fish Penalty (lbs)</label>
-                            <input type="number" class="form-control" id="individual-penalty" name="dead_fish_penalty" step="0.25" min="0">
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="individual-disqualified" name="disqualified" value="1">
-                            <label class="form-check-label">Disqualified</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Result</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Team Result Modal -->
-<div class="modal fade" id="editTeamModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="editTeamForm" method="POST">
-                <div class="modal-header">
-                    <h5 class="modal-title">Edit Team Result</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" id="team-result-id" name="team_result_id">
-                    <div class="mb-3">
-                        <label class="form-label">Team Name</label>
-                        <input type="text" class="form-control" id="team-name" readonly>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label class="form-label">Number of Fish</label>
-                            <input type="number" class="form-control" id="team-num-fish" name="num_fish" min="0" max="10" readonly>
-                            <small class="text-muted">Calculated from individual results</small>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Total Weight (lbs)</label>
-                            <input type="number" class="form-control" id="team-total-weight" name="total_weight" step="0.01" min="0" required>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Result</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <script>
-function editIndividualResult(resultId, anglerName, numFish, totalWeight, bigBassWeight, deadFishPenalty, disqualified) {
-    console.log('editIndividualResult called with:', {resultId, anglerName, numFish, totalWeight, bigBassWeight, deadFishPenalty, disqualified});
 
-    try {
-        document.getElementById('individual-result-id').value = resultId;
-        document.getElementById('individual-angler-name').value = anglerName;
-        document.getElementById('individual-num-fish').value = numFish;
-        document.getElementById('individual-total-weight').value = totalWeight.toFixed(2);
-        document.getElementById('individual-big-bass').value = bigBassWeight ? bigBassWeight.toFixed(2) : '0.00';
-        document.getElementById('individual-penalty').value = deadFishPenalty ? deadFishPenalty.toFixed(2) : '0.00';
-        document.getElementById('individual-disqualified').checked = disqualified === 'true' || disqualified === true;
-
-        // Set form action
-        document.getElementById('editIndividualForm').action = `/admin/results/${resultId}/edit`;
-
-        // Show modal
-        var modalElement = document.getElementById('editIndividualModal');
-        if (modalElement) {
-            var modal = new bootstrap.Modal(modalElement);
-            modal.show();
-        } else {
-            console.error('Modal element not found!');
-        }
-    } catch (error) {
-        console.error('Error in editIndividualResult:', error);
-    }
-}
-
-function editTeamResult(teamResultId, teamName, numFish, totalWeight) {
-    console.log('editTeamResult called with:', {teamResultId, teamName, numFish, totalWeight});
-
-    // Check if we have all required parameters
-    if (!teamResultId) {
-        console.error('Missing teamResultId:', teamResultId);
-        return;
-    }
-
-    try {
-        // Check if all form elements exist
-        const resultIdEl = document.getElementById('team-result-id');
-        const teamNameEl = document.getElementById('team-name');
-        const numFishEl = document.getElementById('team-num-fish');
-        const totalWeightEl = document.getElementById('team-total-weight');
-
-        console.log('Form elements found:', {
-            resultIdEl: !!resultIdEl,
-            teamNameEl: !!teamNameEl,
-            numFishEl: !!numFishEl,
-            totalWeightEl: !!totalWeightEl
+function deleteTeamResult(teamResultId, teamName) {
+    if (confirm(`Are you sure you want to delete the team result for ${teamName}?\n\nThis will also delete the individual results for both team members.\n\nThis action cannot be undone.`)) {
+        fetch(`/admin/team-results/${teamResultId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                // Reload the page to show updated results
+                window.location.reload();
+            } else {
+                alert('Error deleting team result. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting team result. Please try again.');
         });
-
-        if (!resultIdEl || !teamNameEl || !numFishEl || !totalWeightEl) {
-            console.error('Some form elements not found!');
-            return;
-        }
-
-        resultIdEl.value = teamResultId;
-        teamNameEl.value = teamName;
-        numFishEl.value = numFish;
-        totalWeightEl.value = totalWeight.toFixed(2);
-
-        // Set form action
-        const formEl = document.getElementById('editTeamForm');
-        if (formEl) {
-            formEl.action = `/admin/team-results/${teamResultId}/edit`;
-            console.log('Set form action to:', formEl.action);
-        } else {
-            console.error('Form element not found!');
-        }
-
-        // Show modal
-        const modalElement = document.getElementById('editTeamModal');
-        console.log('Modal element found:', !!modalElement);
-
-        if (modalElement) {
-            console.log('Attempting to show modal...');
-            const modal = new bootstrap.Modal(modalElement);
-            modal.show();
-            console.log('Modal.show() called');
-        } else {
-            console.error('Team modal element not found!');
-        }
-    } catch (error) {
-        console.error('Error in editTeamResult:', error);
     }
 }
 </script>

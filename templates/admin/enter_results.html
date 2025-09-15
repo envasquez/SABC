@@ -30,34 +30,37 @@
         </div>
     </div>
 
-    <form method="POST" action="/admin/tournaments/{{ tournament.id }}/enter-results" id="resultsForm">
+    <form method="POST" action="{% if edit_data %}/admin/{{ 'results/' + edit_data.result_id|string + '/edit' if edit_data.type == 'individual' else 'team-results/' + edit_data.team_result_id|string + '/edit' }}{% else %}/admin/tournaments/{{ tournament.id }}/enter-results{% endif %}" id="resultsForm">
         <div class="card">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">
-                    <i class="bi bi-people me-2"></i>Tournament Participants
+                    <i class="bi bi-people me-2"></i>{% if edit_data %}Edit {% if edit_data.type == 'individual' %}Individual{% else %}Team{% endif %} Result{% else %}Tournament Participants{% endif %}
                 </h5>
             </div>
             <div class="card-body">
+                {% if not edit_data %}
                 <div class="mb-3">
                     <p class="text-muted">Enter results for each team. Both anglers' individual results will be recorded, and team totals will be calculated automatically.</p>
                 </div>
+                {% endif %}
 
                 <div id="teams-container">
-                    <!-- Teams will be added dynamically -->
                 </div>
 
                 <div class="row mt-4">
                     <div class="col-md-6">
+                        {% if not edit_data %}
                         <button type="button" class="btn btn-success" onclick="addTeam()">
                             <i class="bi bi-plus-circle me-2"></i>Add Team
                         </button>
+                        {% endif %}
                     </div>
                     <div class="col-md-6 text-end">
-                        <button type="button" class="btn btn-outline-secondary me-2" onclick="window.history.back()">
+                        <a href="/tournaments/{{ tournament.id }}" class="btn btn-outline-secondary me-2">
                             Cancel
-                        </button>
+                        </a>
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-save me-2"></i>Save Results
+                            <i class="bi bi-save me-2"></i>{% if edit_data %}Update{% else %}Save{% endif %} Results
                         </button>
                     </div>
                 </div>
@@ -65,10 +68,11 @@
         </div>
     </form>
 </div>
-
 <script>
 let teamCount = 0;
 let anglers = {{ anglers_json | safe }};
+let existingAnglerIds = new Set({{ existing_angler_ids_json | safe }});
+let editData = {{ edit_data | tojson | safe if edit_data else 'null' }};
 
 function addTeam() {
     teamCount++;
@@ -86,12 +90,12 @@ function addTeam() {
                 <div class="row">
                     <!-- Angler 1 -->
                     <div class="col-md-6">
-                        <h6 class="text-primary">Angler 1</h6>
+                        <h6 class="text-primary">Boater</h6>
                         <div class="row g-2">
                             <div class="col-12">
                                 <label class="form-label">Name</label>
-                                <select class="form-select angler1-select" name="angler1_id_${teamCount}" required onchange="updateAngler2Options(${teamCount})">
-                                    <option value="">Select Angler</option>
+                                <select class="form-select angler1-select" name="angler1_id_${teamCount}" required onchange="onAnglerChange()">
+                                    <option value="">Select - Boater</option>
                                     ${anglers.map(a => `<option value="${a.id}">${a.name}</option>`).join('')}
                                 </select>
                             </div>
@@ -116,18 +120,22 @@ function addTeam() {
                                     <input class="form-check-input" type="checkbox" name="angler1_disqualified_${teamCount}" value="1">
                                     <label class="form-check-label">Disqualified</label>
                                 </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="angler1_buyIn_${teamCount}" value="1" onchange="handleBuyInChange(this, ${teamCount}, 'angler1')">
+                                    <label class="form-check-label">Buy-in</label>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Angler 2 -->
                     <div class="col-md-6">
-                        <h6 class="text-primary">Angler 2</h6>
+                        <h6 class="text-primary">Non-boater</h6>
                         <div class="row g-2">
                             <div class="col-12">
-                                <label class="form-label">Name <span class="text-muted">(Optional for solo)</span></label>
-                                <select class="form-select angler2-select" name="angler2_id_${teamCount}" id="angler2_select_${teamCount}">
-                                    <option value="">Select Angler (Optional)</option>
+                                <label class="form-label">Name <span class="text-muted">(optional)</span></label>
+                                <select class="form-select angler2-select" name="angler2_id_${teamCount}" id="angler2_select_${teamCount}" onchange="onAnglerChange()">
+                                    <option value="">Select Non-Boater</option>
                                     ${anglers.map(a => `<option value="${a.id}">${a.name}</option>`).join('')}
                                 </select>
                             </div>
@@ -152,6 +160,257 @@ function addTeam() {
                                     <input class="form-check-input" type="checkbox" name="angler2_disqualified_${teamCount}" value="1">
                                     <label class="form-check-label">Disqualified</label>
                                 </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="angler2_buyIn_${teamCount}" value="1" onchange="handleBuyInChange(this, ${teamCount}, 'angler2')">
+                                    <label class="form-check-label">Buy-in</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    container.insertAdjacentHTML('beforeend', teamHtml);
+
+    // Update all dropdowns to reflect newly selected anglers
+    updateAllAnglerDropdowns();
+}
+
+function removeTeam(teamNumber) {
+    const teamCard = document.getElementById(`team-${teamNumber}`);
+    if (teamCard) {
+        teamCard.remove();
+        // Update all dropdowns after removing a team
+        updateAllAnglerDropdowns();
+    }
+}
+
+// Get all currently selected anglers across all teams
+function getAllSelectedAnglers() {
+    const selectedAnglers = new Set();
+
+    // Get all angler selects on the page
+    document.querySelectorAll('select.angler1-select, select.angler2-select').forEach(select => {
+        if (select.value) {
+            selectedAnglers.add(select.value);
+        }
+    });
+
+    return selectedAnglers;
+}
+
+// Update all angler dropdowns to remove already-selected anglers
+function updateAllAnglerDropdowns() {
+    const selectedAnglers = getAllSelectedAnglers();
+
+    // Update each team's dropdowns
+    document.querySelectorAll('.team-card').forEach(teamCard => {
+        const teamId = teamCard.id.split('-')[1];
+        updateTeamAnglerOptions(teamId, selectedAnglers);
+    });
+}
+
+// Update a specific team's angler options
+function updateTeamAnglerOptions(teamNumber, selectedAnglers = null) {
+    const angler1Select = document.querySelector(`[name="angler1_id_${teamNumber}"]`);
+    const angler2Select = document.getElementById(`angler2_select_${teamNumber}`);
+
+    if (!angler1Select || !angler2Select) return;
+
+    // If selectedAnglers not provided, get them now
+    if (!selectedAnglers) {
+        selectedAnglers = getAllSelectedAnglers();
+    }
+
+    const currentAngler1 = angler1Select.value;
+    const currentAngler2 = angler2Select.value;
+
+    // Update Angler 1 dropdown
+    angler1Select.innerHTML = '<option value="">Select - Boater</option>';
+    anglers.forEach(angler => {
+        // Show angler if not selected elsewhere AND not already in tournament results, or if it's the current selection
+        if ((!selectedAnglers.has(angler.id.toString()) && !existingAnglerIds.has(angler.id.toString())) || angler.id == currentAngler1) {
+            const option = document.createElement('option');
+            option.value = angler.id;
+            option.textContent = angler.name;
+            if (angler.id == currentAngler1) {
+                option.selected = true;
+            }
+            angler1Select.appendChild(option);
+        }
+    });
+
+    // Update Angler 2 dropdown
+    angler2Select.innerHTML = '<option value="">Select Non-Boater</option>';
+    anglers.forEach(angler => {
+        // Show angler if not selected elsewhere AND not already in tournament results, or if it's the current selection
+        if ((!selectedAnglers.has(angler.id.toString()) && !existingAnglerIds.has(angler.id.toString())) || angler.id == currentAngler2) {
+            const option = document.createElement('option');
+            option.value = angler.id;
+            option.textContent = angler.name;
+            if (angler.id == currentAngler2) {
+                option.selected = true;
+            }
+            angler2Select.appendChild(option);
+        }
+    });
+}
+
+// Called when any angler dropdown changes
+function onAnglerChange() {
+    updateAllAnglerDropdowns();
+}
+
+// Legacy function name for compatibility
+function updateAngler2Options(teamNumber) {
+    onAnglerChange();
+}
+
+// Handle Buy-in checkbox changes - zero out results when Buy-in is checked
+function handleBuyInChange(checkbox, teamNumber, anglerType) {
+    const isChecked = checkbox.checked;
+
+    if (isChecked) {
+        // Zero out all results for this angler when Buy-in is selected
+        const fishInput = document.querySelector(`[name="${anglerType}_fish_${teamNumber}"]`);
+        const weightInput = document.querySelector(`[name="${anglerType}_weight_${teamNumber}"]`);
+        const bigBassInput = document.querySelector(`[name="${anglerType}_big_bass_${teamNumber}"]`);
+        const deadPenaltyInput = document.querySelector(`[name="${anglerType}_dead_penalty_${teamNumber}"]`);
+
+        if (fishInput) fishInput.value = '0';
+        if (weightInput) weightInput.value = '0.00';
+        if (bigBassInput) bigBassInput.value = '0.00';
+        if (deadPenaltyInput) deadPenaltyInput.value = '0.00';
+
+        // Disable the inputs to prevent editing
+        if (fishInput) fishInput.disabled = true;
+        if (weightInput) weightInput.disabled = true;
+        if (bigBassInput) bigBassInput.disabled = true;
+        if (deadPenaltyInput) deadPenaltyInput.disabled = true;
+    } else {
+        // Re-enable inputs when Buy-in is unchecked
+        const fishInput = document.querySelector(`[name="${anglerType}_fish_${teamNumber}"]`);
+        const weightInput = document.querySelector(`[name="${anglerType}_weight_${teamNumber}"]`);
+        const bigBassInput = document.querySelector(`[name="${anglerType}_big_bass_${teamNumber}"]`);
+        const deadPenaltyInput = document.querySelector(`[name="${anglerType}_dead_penalty_${teamNumber}"]`);
+
+        if (fishInput) fishInput.disabled = false;
+        if (weightInput) weightInput.disabled = false;
+        if (bigBassInput) bigBassInput.disabled = false;
+        if (deadPenaltyInput) deadPenaltyInput.disabled = false;
+    }
+}
+
+// Add first team on page load
+document.addEventListener('DOMContentLoaded', function() {
+    if (editData) {
+        if (editData.type === 'individual') {
+            addTeamForEdit(editData.angler_id, editData.angler_name, null, null,
+                         editData.num_fish, editData.total_weight, editData.big_bass_weight,
+                         editData.dead_fish_penalty, editData.disqualified, editData.buy_in,
+                         0, 0, 0, 0, false, false);
+        } else if (editData.type === 'team') {
+            let angler1_result = editData.angler1_result || [0, 0, 0, 0, false, false];
+            let angler2_result = editData.angler2_result || [0, 0, 0, 0, false, false];
+            addTeamForEdit(editData.angler1_id, editData.angler1_name, editData.angler2_id, editData.angler2_name,
+                         angler1_result[0], angler1_result[1], angler1_result[2], angler1_result[3], angler1_result[4], angler1_result[5],
+                         angler2_result[0], angler2_result[1], angler2_result[2], angler2_result[3], angler2_result[4], angler2_result[5]);
+        }
+    } else {
+        addTeam();
+    }
+    updateAllAnglerDropdowns();
+});
+
+function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
+                       angler1_fish, angler1_weight, angler1_big_bass, angler1_dead_penalty, angler1_disqualified, angler1_buy_in,
+                       angler2_fish, angler2_weight, angler2_big_bass, angler2_dead_penalty, angler2_disqualified, angler2_buy_in) {
+    teamCount++;
+    const container = document.getElementById('teams-container');
+
+    const teamHtml = `
+        <div class="card mb-3 team-card" id="team-${teamCount}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">Team ${teamCount}</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Boater</h6>
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <label class="form-label">Name</label>
+                                <select class="form-select angler1-select" name="angler1_id_${teamCount}" required onchange="onAnglerChange()">
+                                    <option value="">Select - Boater</option>
+                                    ${anglers.map(a => `<option value="${a.id}" ${a.id == angler1_id ? 'selected' : ''}>${a.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label">Fish</label>
+                                <input type="number" class="form-control" name="angler1_fish_${teamCount}" min="0" max="5" value="${angler1_fish}">
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label">Weight (lbs)</label>
+                                <input type="number" class="form-control" name="angler1_weight_${teamCount}" step="0.01" min="0" value="${angler1_weight}">
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label">Big Bass (lbs)</label>
+                                <input type="number" class="form-control" name="angler1_big_bass_${teamCount}" step="0.01" min="0" value="${angler1_big_bass}">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Dead Fish Penalty</label>
+                                <input type="number" class="form-control" name="angler1_dead_penalty_${teamCount}" step="0.25" min="0" value="${angler1_dead_penalty}">
+                            </div>
+                            <div class="col-6">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" name="angler1_disqualified_${teamCount}" value="1" ${angler1_disqualified ? 'checked' : ''}>
+                                    <label class="form-check-label">Disqualified</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="angler1_buyIn_${teamCount}" value="1" ${angler1_buy_in ? 'checked' : ''} onchange="handleBuyInChange(this, ${teamCount}, 'angler1')">
+                                    <label class="form-check-label">Buy-in</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Non-boater</h6>
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <label class="form-label">Name <span class="text-muted">(optional)</span></label>
+                                <select class="form-select angler2-select" name="angler2_id_${teamCount}" id="angler2_select_${teamCount}" onchange="onAnglerChange()">
+                                    <option value="">Select Non-Boater</option>
+                                    ${anglers.map(a => `<option value="${a.id}" ${a.id == angler2_id ? 'selected' : ''}>${a.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label">Fish</label>
+                                <input type="number" class="form-control" name="angler2_fish_${teamCount}" min="0" max="5" value="${angler2_fish}">
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label">Weight (lbs)</label>
+                                <input type="number" class="form-control" name="angler2_weight_${teamCount}" step="0.01" min="0" value="${angler2_weight}">
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label">Big Bass (lbs)</label>
+                                <input type="number" class="form-control" name="angler2_big_bass_${teamCount}" step="0.01" min="0" value="${angler2_big_bass}">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Dead Fish Penalty</label>
+                                <input type="number" class="form-control" name="angler2_dead_penalty_${teamCount}" step="0.25" min="0" value="${angler2_dead_penalty}">
+                            </div>
+                            <div class="col-6">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" name="angler2_disqualified_${teamCount}" value="1" ${angler2_disqualified ? 'checked' : ''}>
+                                    <label class="form-check-label">Disqualified</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="angler2_buyIn_${teamCount}" value="1" ${angler2_buy_in ? 'checked' : ''} onchange="handleBuyInChange(this, ${teamCount}, 'angler2')">
+                                    <label class="form-check-label">Buy-in</label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -162,44 +421,5 @@ function addTeam() {
 
     container.insertAdjacentHTML('beforeend', teamHtml);
 }
-
-function removeTeam(teamNumber) {
-    const teamCard = document.getElementById(`team-${teamNumber}`);
-    if (teamCard) {
-        teamCard.remove();
-    }
-}
-
-function updateAngler2Options(teamNumber) {
-    const angler1Select = document.querySelector(`[name="angler1_id_${teamNumber}"]`);
-    const angler2Select = document.getElementById(`angler2_select_${teamNumber}`);
-
-    if (!angler1Select || !angler2Select) return;
-
-    const selectedAngler1 = angler1Select.value;
-    const currentAngler2 = angler2Select.value;
-
-    // Clear angler 2 options and rebuild
-    angler2Select.innerHTML = '<option value="">Select Angler (Optional)</option>';
-
-    // Add all anglers except the one selected in angler 1
-    anglers.forEach(angler => {
-        if (angler.id !== selectedAngler1) {
-            const option = document.createElement('option');
-            option.value = angler.id;
-            option.textContent = angler.name;
-            // Restore selection if it's still valid
-            if (angler.id == currentAngler2 && angler.id !== selectedAngler1) {
-                option.selected = true;
-            }
-            angler2Select.appendChild(option);
-        }
-    });
-}
-
-// Add first team on page load
-document.addEventListener('DOMContentLoaded', function() {
-    addTeam();
-});
 </script>
 {% endblock %}

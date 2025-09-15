@@ -88,6 +88,7 @@ async def polls(request: Request):
 
     # Automatically process any closed polls to create tournaments
     from routes.admin.events_crud import process_closed_polls
+
     try:
         process_closed_polls()
     except Exception as e:
@@ -681,6 +682,7 @@ async def home_paginated(request: Request, page: int = 1):
 
     # Automatically process any closed polls to create tournaments
     from routes.admin.events_crud import process_closed_polls
+
     try:
         process_closed_polls()
     except Exception as e:
@@ -747,7 +749,7 @@ async def home_paginated(request: Request, page: int = 1):
                 tr.total_weight
             FROM team_results tr
             JOIN anglers a1 ON tr.angler1_id = a1.id
-            JOIN anglers a2 ON tr.angler2_id = a2.id
+            LEFT JOIN anglers a2 ON tr.angler2_id = a2.id
             WHERE tr.tournament_id = :tournament_id
             ORDER BY tr.total_weight DESC
             LIMIT 3

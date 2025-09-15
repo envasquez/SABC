@@ -394,7 +394,8 @@ def process_closed_polls():
             db("UPDATE polls SET closed = 1 WHERE id = :poll_id", {"poll_id": poll_id})
 
             # Find the winning option (most votes)
-            winning_option = db("""
+            winning_option = db(
+                """
                 SELECT po.id, po.option_text, po.option_data
                 FROM poll_options po
                 WHERE po.poll_id = :poll_id
@@ -409,7 +410,9 @@ def process_closed_polls():
                 )
                 ORDER BY po.id
                 LIMIT 1
-            """, {"poll_id": poll_id})
+            """,
+                {"poll_id": poll_id},
+            )
 
             if not winning_option:
                 print(f"No winning option found for poll {poll_id}")
@@ -418,30 +421,37 @@ def process_closed_polls():
             option_id, option_text, option_data_str = winning_option[0]
 
             # Update poll with winning option
-            db("UPDATE polls SET winning_option_id = :option_id WHERE id = :poll_id",
-               {"option_id": option_id, "poll_id": poll_id})
+            db(
+                "UPDATE polls SET winning_option_id = :option_id WHERE id = :poll_id",
+                {"option_id": option_id, "poll_id": poll_id},
+            )
 
-            if poll_type == 'tournament_location':
+            if poll_type == "tournament_location":
                 try:
                     option_data = json.loads(option_data_str) if option_data_str else {}
 
                     # Get event details
-                    event_details = db("""
+                    event_details = db(
+                        """
                         SELECT e.name, e.date, e.entry_fee, e.fish_limit, e.start_time, e.weigh_in_time
                         FROM events e WHERE e.id = :event_id
-                    """, {"event_id": event_id})
+                    """,
+                        {"event_id": event_id},
+                    )
 
                     if not event_details:
                         print(f"Event {event_id} not found")
                         continue
 
-                    event_name, event_date, entry_fee, fish_limit, start_time, weigh_in_time = event_details[0]
+                    event_name, event_date, entry_fee, fish_limit, start_time, weigh_in_time = (
+                        event_details[0]
+                    )
 
                     # Extract lake and ramp info from winning option
-                    lake_id = option_data.get('lake_id')
-                    ramp_id = option_data.get('ramp_id')
-                    tournament_start_time = option_data.get('start_time', start_time or '06:00')
-                    tournament_end_time = option_data.get('end_time', weigh_in_time or '15:00')
+                    lake_id = option_data.get("lake_id")
+                    ramp_id = option_data.get("ramp_id")
+                    tournament_start_time = option_data.get("start_time", start_time or "06:00")
+                    tournament_end_time = option_data.get("end_time", weigh_in_time or "15:00")
 
                     # Find lake name from option text or use lake_id
                     lake_name = ""
@@ -453,7 +463,8 @@ def process_closed_polls():
                         ramp_name = ramp_part
 
                     # Create the tournament
-                    tournament_id = db("""
+                    tournament_id = db(
+                        """
                         INSERT INTO tournaments (
                             event_id, poll_id, name, lake_id, ramp_id, lake_name, ramp_name,
                             entry_fee, fish_limit, start_time, end_time,
@@ -464,21 +475,25 @@ def process_closed_polls():
                             :entry_fee, :fish_limit, :start_time, :end_time,
                             0, 1, 0
                         )
-                    """, {
-                        "event_id": event_id,
-                        "poll_id": poll_id,
-                        "name": event_name,
-                        "lake_id": lake_id,
-                        "ramp_id": ramp_id,
-                        "lake_name": lake_name,
-                        "ramp_name": ramp_name,
-                        "entry_fee": entry_fee or 25.0,
-                        "fish_limit": fish_limit or 5,
-                        "start_time": tournament_start_time,
-                        "end_time": tournament_end_time
-                    })
+                    """,
+                        {
+                            "event_id": event_id,
+                            "poll_id": poll_id,
+                            "name": event_name,
+                            "lake_id": lake_id,
+                            "ramp_id": ramp_id,
+                            "lake_name": lake_name,
+                            "ramp_name": ramp_name,
+                            "entry_fee": entry_fee or 25.0,
+                            "fish_limit": fish_limit or 5,
+                            "start_time": tournament_start_time,
+                            "end_time": tournament_end_time,
+                        },
+                    )
 
-                    print(f"Created tournament {tournament_id} for event {event_id} from poll {poll_id}")
+                    print(
+                        f"Created tournament {tournament_id} for event {event_id} from poll {poll_id}"
+                    )
 
                 except (json.JSONDecodeError, KeyError) as e:
                     print(f"Error processing poll option data for poll {poll_id}: {e}")
@@ -489,5 +504,3 @@ def process_closed_polls():
     except Exception as e:
         print(f"Error processing closed polls: {e}")
         return 0
-
-

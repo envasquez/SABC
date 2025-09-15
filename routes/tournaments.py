@@ -74,22 +74,36 @@ async def tournament_results(request: Request, tournament_id: int):
     team_results = db(
         """SELECT
             ROW_NUMBER() OVER (ORDER BY tr.total_weight DESC) as place,
-            a1.name || ' / ' || a2.name as team_name,
-            (SELECT SUM(num_fish) FROM results r WHERE r.angler_id IN (tr.angler1_id, tr.angler2_id) AND r.tournament_id = tr.tournament_id) as num_fish,
+            CASE
+                WHEN tr.angler2_id IS NULL THEN a1.name || ' (solo)'
+                ELSE a1.name || ' / ' || a2.name
+            END as team_name,
+            (SELECT SUM(num_fish) FROM results r WHERE r.angler_id = tr.angler1_id
+             OR (tr.angler2_id IS NOT NULL AND r.angler_id = tr.angler2_id)
+             AND r.tournament_id = tr.tournament_id AND r.buy_in = 0) as num_fish,
             tr.total_weight,
             a1.member as member1,
-            a2.member as member2
+            CASE WHEN a2.id IS NULL THEN 1 ELSE a2.member END as member2,
+            tr.id as team_result_id
         FROM team_results tr
         JOIN anglers a1 ON tr.angler1_id = a1.id
-        JOIN anglers a2 ON tr.angler2_id = a2.id
+        LEFT JOIN anglers a2 ON tr.angler2_id = a2.id
         WHERE tr.tournament_id = :tournament_id
+        AND NOT EXISTS (
+            SELECT 1 FROM results r1 WHERE r1.angler_id = tr.angler1_id
+            AND r1.tournament_id = tr.tournament_id AND r1.buy_in = 1
+        )
+        AND (tr.angler2_id IS NULL OR NOT EXISTS (
+            SELECT 1 FROM results r2 WHERE r2.angler_id = tr.angler2_id
+            AND r2.tournament_id = tr.tournament_id AND r2.buy_in = 1
+        ))
         ORDER BY tr.total_weight DESC""",
         {"tournament_id": tournament_id},
     )
 
-    # Calculate last place with fish points for individual results
+    # Calculate last place with fish points for individual results (excluding buy-ins)
     members_with_fish = db(
-        "SELECT COUNT(*) FROM results r JOIN anglers a ON r.angler_id = a.id WHERE r.tournament_id = :tournament_id AND r.num_fish > 0 AND NOT r.disqualified AND a.member = 1",
+        "SELECT COUNT(*) FROM results r JOIN anglers a ON r.angler_id = a.id WHERE r.tournament_id = :tournament_id AND r.num_fish > 0 AND NOT r.disqualified AND a.member = 1 AND r.buy_in = 0",
         {"tournament_id": tournament_id},
     )[0][0]
     last_place_with_fish_points = 100 - members_with_fish + 1
@@ -107,7 +121,11 @@ async def tournament_results(request: Request, tournament_id: int):
                 WHEN a.member = 1 THEN :last_place_points - 2
                 ELSE 0
             END as points,
-            a.member
+            a.member,
+            r.id as result_id,
+            r.total_weight,
+            r.dead_fish_penalty,
+            r.disqualified
         FROM results r JOIN anglers a ON r.angler_id = a.id
         WHERE r.tournament_id = :tournament_id AND NOT r.disqualified AND r.buy_in = 0
         ORDER BY CASE WHEN r.num_fish > 0 THEN 0 ELSE 1 END, (r.total_weight - r.dead_fish_penalty) DESC, r.big_bass_weight DESC, a.name

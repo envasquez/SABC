@@ -142,12 +142,21 @@
                                         {% for result in tournament.top_results %}
                                         <td class="text-center">
                                             <div class="fw-semibold text-primary mb-1">
-                                                {% set name1_parts = result[1].split() %}
-                                                {% set name2_parts = result[2].split() %}
-                                                {% if name1_parts|length >= 2 and name2_parts|length >= 2 %}
-                                                    {{ name1_parts[0][0] }}.{{ name1_parts[-1] }} / {{ name2_parts[0][0] }}.{{ name2_parts[-1] }}
+                                                {% if result[2] %}
+                                                    {% set name1_parts = result[1].split() %}
+                                                    {% set name2_parts = result[2].split() %}
+                                                    {% if name1_parts|length >= 2 and name2_parts|length >= 2 %}
+                                                        {{ name1_parts[0][0] }}.{{ name1_parts[-1] }} / {{ name2_parts[0][0] }}.{{ name2_parts[-1] }}
+                                                    {% else %}
+                                                        {{ result[1] }} / {{ result[2] }}
+                                                    {% endif %}
                                                 {% else %}
-                                                    {{ result[1] }} / {{ result[2] }}
+                                                    {% set name1_parts = result[1].split() %}
+                                                    {% if name1_parts|length >= 2 %}
+                                                        {{ name1_parts[0][0] }}.{{ name1_parts[-1] }}
+                                                    {% else %}
+                                                        {{ result[1] }}
+                                                    {% endif %}
                                                 {% endif %}
                                             </div>
                                             <div class="text-muted">{{ "%.2f"|format(result[3]) }} lbs</div>
