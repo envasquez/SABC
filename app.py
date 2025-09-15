@@ -35,8 +35,11 @@ deps.templates = templates
 from routes import (
     api,
     auth,
-    public,
+    awards,
+    pages,
     static,
+    tournaments_public,
+    voting,
 )
 from routes.admin import (
     core as admin_core,
@@ -72,7 +75,12 @@ app.include_router(admin_tournaments.router)
 app.include_router(admin_users.router)
 app.include_router(api.router)
 app.include_router(static.router)
-app.include_router(public.router)  # MUST be last due to catch-all route
+
+# Public route modules (consolidated)
+app.include_router(voting.router)
+app.include_router(tournaments_public.router)
+app.include_router(awards.router)
+app.include_router(pages.router)  # MUST be last due to catch-all route
 
 
 if __name__ == "__main__":

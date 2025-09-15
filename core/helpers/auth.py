@@ -1,3 +1,4 @@
+from fastapi import HTTPException, Request
 from fastapi.responses import RedirectResponse
 
 from core.database import db
@@ -18,3 +19,29 @@ def u(r):
 
 def admin(r):
     return u(r) if (user := u(r)) and user["is_admin"] else RedirectResponse("/login")
+
+
+def require_auth(request: Request):
+    if not (user := u(request)):
+        raise HTTPException(status_code=303, headers={"Location": "/login"})
+    return user
+
+
+def require_admin(request: Request):
+    if not (user := u(request)):
+        raise HTTPException(status_code=303, headers={"Location": "/login"})
+    if not user.get("is_admin"):
+        raise HTTPException(status_code=403)
+    return user
+
+
+def require_member(request: Request):
+    if not (user := u(request)):
+        raise HTTPException(status_code=303, headers={"Location": "/login"})
+    if not user.get("member"):
+        raise HTTPException(status_code=403)
+    return user
+
+
+def get_user_optional(request: Request):
+    return u(request)
