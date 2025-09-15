@@ -7,7 +7,6 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 import routes.dependencies as deps
-from core.security_middleware import SecurityHeadersMiddleware
 from core.filters import (
     date_format_filter,
     from_json_filter,
@@ -15,6 +14,7 @@ from core.filters import (
     time_format_filter,
 )
 from core.helpers.logging_config import configure_logging, get_logger
+from core.security_middleware import SecurityHeadersMiddleware
 
 configure_logging(log_level=os.environ.get("LOG_LEVEL", "INFO"))
 logger = get_logger(__name__)
