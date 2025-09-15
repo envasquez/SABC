@@ -216,7 +216,7 @@ def calculate_and_update_tournament_points(tournament_id):
     - Disqualified: 0 points
     """
     # First, get the count of MEMBERS with fish for calculating last place with fish points
-    members_with_fish = db(
+    db(
         """
         SELECT COUNT(*)
         FROM results r
@@ -229,9 +229,6 @@ def calculate_and_update_tournament_points(tournament_id):
     """,
         {"tournament_id": tournament_id},
     )[0][0]
-
-    # Calculate base points for last place with fish
-    last_place_with_fish_points = 100 - members_with_fish + 1 if members_with_fish > 0 else 100
 
     # Reset all points to 0 first
     db(
@@ -266,6 +263,21 @@ def calculate_and_update_tournament_points(tournament_id):
             "UPDATE results SET points = :points WHERE id = :result_id",
             {"points": 101 - rank, "result_id": result_id},
         )
+
+    # Get the actual points of the last place finisher with fish for zero-fish calculations
+    last_place_result = db(
+        """
+        SELECT points FROM results r
+        JOIN anglers a ON r.angler_id = a.id
+        WHERE r.tournament_id = :tournament_id
+        AND r.num_fish > 0 AND NOT r.disqualified
+        AND r.buy_in = 0 AND a.member = 1
+        ORDER BY points ASC LIMIT 1
+    """,
+        {"tournament_id": tournament_id},
+    )
+
+    last_place_with_fish_points = last_place_result[0][0] if last_place_result else 100
 
     # Update points for members with zero fish (non-buy-ins)
     db(

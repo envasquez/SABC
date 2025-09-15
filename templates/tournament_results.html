@@ -140,7 +140,13 @@
                     <tr {% if loop.index <= 3 %}class="table-success"{% endif %}>
                         <td>{{ result[0] }}</td>
                         <td>
-                            {% if ' / ' in result[1] %}
+                            {% if result[7] == 1 %}
+                                {{ result[1] }}
+                                <span class="badge bg-primary ms-1">Solo</span>
+                                {% if result[4] == 0 %}
+                                    <span class="badge bg-secondary ms-1">Guest</span>
+                                {% endif %}
+                            {% elif ' / ' in result[1] %}
                                 {% set names = result[1].split(' / ') %}
                                 {{ names[0] }}
                                 {% if result[4] == 0 %}
@@ -166,7 +172,7 @@
                                 <a href="/admin/tournaments/{{ tournament[0] }}/enter-results?edit_team_result={{ result[6] }}" class="btn btn-sm btn-outline-primary" title="Edit team result">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteTeamResult({{ result[6] }}, '{{ result[1] }}')" title="Delete team result">
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteTeamResult({{ result[6] }}, '{{ result[1] }}', {{ result[7] }})" title="Delete team result">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>
@@ -299,8 +305,9 @@
 
 <script>
 
-function deleteTeamResult(teamResultId, teamName) {
-    if (confirm(`Are you sure you want to delete the team result for ${teamName}?\n\nThis will also delete the individual results for both team members.\n\nThis action cannot be undone.`)) {
+function deleteTeamResult(teamResultId, teamName, isSolo) {
+    const memberText = isSolo ? 'this angler' : 'both team members';
+    if (confirm(`Are you sure you want to delete the team result for ${teamName}?\n\nThis will also delete the individual results for ${memberText}.\n\nThis action cannot be undone.`)) {
         fetch(`/admin/team-results/${teamResultId}`, {
             method: 'DELETE',
             headers: {

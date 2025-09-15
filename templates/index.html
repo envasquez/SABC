@@ -142,7 +142,15 @@
                                         {% for result in tournament.top_results %}
                                         <td class="text-center">
                                             <div class="fw-semibold text-primary mb-1">
-                                                {% if result[2] %}
+                                                {% if result[4] == 1 %}
+                                                    {% set name1_parts = result[1].split() %}
+                                                    {% if name1_parts|length >= 2 %}
+                                                        {{ name1_parts[0][0] }}.{{ name1_parts[-1] }}
+                                                    {% else %}
+                                                        {{ result[1] }}
+                                                    {% endif %}
+                                                    <span class="badge bg-primary ms-1" style="font-size: 0.7em;">Solo</span>
+                                                {% elif result[2] %}
                                                     {% set name1_parts = result[1].split() %}
                                                     {% set name2_parts = result[2].split() %}
                                                     {% if name1_parts|length >= 2 and name2_parts|length >= 2 %}

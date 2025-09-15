@@ -340,16 +340,32 @@ async def tournament_results(request: Request, tournament_id: int):
         """
         SELECT
             ROW_NUMBER() OVER (ORDER BY tr.total_weight DESC) as place,
-            a1.name || ' / ' || a2.name as team_name,
+            CASE
+                WHEN tr.angler2_id IS NULL THEN a1.name
+                ELSE a1.name || ' / ' || a2.name
+            END as team_name,
             (SELECT SUM(num_fish) FROM results r WHERE r.angler_id IN (tr.angler1_id, tr.angler2_id) AND r.tournament_id = tr.tournament_id) as num_fish,
             tr.total_weight,
             a1.member as member1,
             a2.member as member2,
-            tr.id as team_result_id
+            tr.id as team_result_id,
+            CASE WHEN tr.angler2_id IS NULL THEN 1 ELSE 0 END as is_solo
         FROM team_results tr
         JOIN anglers a1 ON tr.angler1_id = a1.id
-        JOIN anglers a2 ON tr.angler2_id = a2.id
+        LEFT JOIN anglers a2 ON tr.angler2_id = a2.id
         WHERE tr.tournament_id = :tournament_id
+        AND NOT EXISTS (
+            SELECT 1 FROM results r1
+            WHERE r1.angler_id = tr.angler1_id
+            AND r1.tournament_id = tr.tournament_id
+            AND r1.buy_in = 1
+        )
+        AND (tr.angler2_id IS NULL OR NOT EXISTS (
+            SELECT 1 FROM results r2
+            WHERE r2.angler_id = tr.angler2_id
+            AND r2.tournament_id = tr.tournament_id
+            AND r2.buy_in = 1
+        ))
         ORDER BY tr.total_weight DESC
     """,
         {"tournament_id": tournament_id},
@@ -554,11 +570,24 @@ async def home_paginated(request: Request, page: int = 1):
                 ROW_NUMBER() OVER (ORDER BY tr.total_weight DESC) as place,
                 a1.name as angler1_name,
                 a2.name as angler2_name,
-                tr.total_weight
+                tr.total_weight,
+                CASE WHEN tr.angler2_id IS NULL THEN 1 ELSE 0 END as is_solo
             FROM team_results tr
             JOIN anglers a1 ON tr.angler1_id = a1.id
             LEFT JOIN anglers a2 ON tr.angler2_id = a2.id
             WHERE tr.tournament_id = :tournament_id
+            AND NOT EXISTS (
+                SELECT 1 FROM results r1
+                WHERE r1.angler_id = tr.angler1_id
+                AND r1.tournament_id = tr.tournament_id
+                AND r1.buy_in = 1
+            )
+            AND (tr.angler2_id IS NULL OR NOT EXISTS (
+                SELECT 1 FROM results r2
+                WHERE r2.angler_id = tr.angler2_id
+                AND r2.tournament_id = tr.tournament_id
+                AND r2.buy_in = 1
+            ))
             ORDER BY tr.total_weight DESC
             LIMIT 3
         """,
