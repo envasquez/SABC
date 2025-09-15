@@ -202,3 +202,114 @@ def find_lake_data_by_db_name(db_lake_name):
         lake_info = {"display_name": display_name}
         return yaml_key, lake_info, display_name
     return None, None, None
+
+
+def calculate_and_update_tournament_points(tournament_id):
+    """
+    Calculate and update points for all anglers in a tournament.
+
+    SABC Scoring Rules:
+    - Members with fish: 100 for 1st, 99 for 2nd, etc. (based on weight)
+    - Guests: Always 0 points regardless of performance
+    - Members with zero fish (no buy-in): 2 points less than last place member with fish
+    - Members with buy-in: 4 points less than last place member with fish
+    - Disqualified: 0 points
+    """
+    # First, get the count of MEMBERS with fish for calculating last place with fish points
+    members_with_fish = db(
+        """
+        SELECT COUNT(*)
+        FROM results r
+        JOIN anglers a ON r.angler_id = a.id
+        WHERE r.tournament_id = :tournament_id
+        AND r.num_fish > 0
+        AND NOT r.disqualified
+        AND r.buy_in = 0
+        AND a.member = 1
+    """,
+        {"tournament_id": tournament_id},
+    )[0][0]
+
+    # Calculate base points for last place with fish
+    last_place_with_fish_points = 100 - members_with_fish + 1 if members_with_fish > 0 else 100
+
+    # Reset all points to 0 first
+    db(
+        "UPDATE results SET points = 0 WHERE tournament_id = :tournament_id",
+        {"tournament_id": tournament_id},
+    )
+
+    # Update points for members with fish (non-buy-ins, non-disqualified)
+    # First get the ranked results using DENSE_RANK for proper tie handling
+    ranked_results = db(
+        """
+        SELECT
+            r.id,
+            DENSE_RANK() OVER (
+                ORDER BY (r.total_weight - r.dead_fish_penalty) DESC,
+                r.big_bass_weight DESC
+            ) as rank
+        FROM results r
+        JOIN anglers a ON r.angler_id = a.id
+        WHERE r.tournament_id = :tournament_id
+        AND r.num_fish > 0
+        AND NOT r.disqualified
+        AND r.buy_in = 0
+        AND a.member = 1
+    """,
+        {"tournament_id": tournament_id},
+    )
+
+    # Then update each result with its points
+    for result_id, rank in ranked_results:
+        db(
+            "UPDATE results SET points = :points WHERE id = :result_id",
+            {"points": 101 - rank, "result_id": result_id},
+        )
+
+    # Update points for members with zero fish (non-buy-ins)
+    db(
+        """
+        UPDATE results
+        SET points = :points
+        FROM anglers a
+        WHERE results.angler_id = a.id
+        AND results.tournament_id = :tournament_id
+        AND results.num_fish = 0
+        AND results.buy_in = 0
+        AND NOT results.disqualified
+        AND a.member = 1
+    """,
+        {"tournament_id": tournament_id, "points": last_place_with_fish_points - 2},
+    )
+
+    # Update points for members with buy-ins
+    db(
+        """
+        UPDATE results
+        SET points = :points
+        FROM anglers a
+        WHERE results.angler_id = a.id
+        AND results.tournament_id = :tournament_id
+        AND results.buy_in = 1
+        AND NOT results.disqualified
+        AND a.member = 1
+    """,
+        {"tournament_id": tournament_id, "points": last_place_with_fish_points - 4},
+    )
+
+    # Guests and disqualified always get 0 points (already set by the reset)
+    # but let's be explicit for clarity
+    db(
+        """
+        UPDATE results
+        SET points = 0
+        FROM anglers a
+        WHERE results.angler_id = a.id
+        AND results.tournament_id = :tournament_id
+        AND (a.member = 0 OR results.disqualified = 1)
+    """,
+        {"tournament_id": tournament_id},
+    )
+
+    return True

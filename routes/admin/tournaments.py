@@ -333,6 +333,11 @@ async def save_results(request: Request, tournament_id: int):
             {"tournament_id": tournament_id},
         )
 
+        # Calculate and update points for all anglers in the tournament
+        from core.helpers.queries import calculate_and_update_tournament_points
+
+        calculate_and_update_tournament_points(tournament_id)
+
         return RedirectResponse(
             f"/tournaments/{tournament_id}?success=Results saved successfully", status_code=302
         )
@@ -494,6 +499,11 @@ async def edit_individual_result(request: Request, result_id: int):
                 {"total_weight": total_weight, "team_id": team_id},
             )
 
+        # Recalculate points for the tournament after editing results
+        from core.helpers.queries import calculate_and_update_tournament_points
+
+        calculate_and_update_tournament_points(tournament_id)
+
         return RedirectResponse(
             f"/tournaments/{tournament_id}?success=Result updated successfully", status_code=302
         )
@@ -534,6 +544,11 @@ async def edit_team_result(request: Request, team_result_id: int):
         """,
             {"team_result_id": team_result_id, "total_weight": float(form.get("total_weight", 0))},
         )
+
+        # Recalculate points for the tournament after editing team results
+        from core.helpers.queries import calculate_and_update_tournament_points
+
+        calculate_and_update_tournament_points(tournament_id)
 
         return RedirectResponse(
             f"/tournaments/{tournament_id}?success=Team result updated successfully",

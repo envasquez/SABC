@@ -51,15 +51,13 @@ templates.env.filters["date_format_dd_mm_yyyy"] = lambda d: date_format_filter(d
 templates.env.filters["month_number"] = month_number_filter
 deps.templates = templates
 
-from routes import (  # noqa: E402
+from routes import (
     api,
     auth,
-    calendar,
     public,
     static,
-    tournaments,
 )
-from routes.admin import (  # noqa: E402
+from routes.admin import (
     core as admin_core,
 )
 from routes.admin import (
@@ -68,9 +66,8 @@ from routes.admin import (
 from routes.admin import (
     events_crud as admin_events_crud,
 )
-from routes.admin import (
-    news as admin_news,
-)
+
+# admin_news removed - was duplicate of admin_core
 from routes.admin import (
     polls as admin_polls,
 )
@@ -92,11 +89,8 @@ app.include_router(admin_events_crud.router)
 app.include_router(admin_polls.router)
 app.include_router(admin_tournaments.router)
 app.include_router(admin_users.router)
-app.include_router(admin_news.router)
 app.include_router(api.router)
-app.include_router(calendar.router)
 app.include_router(static.router)
-app.include_router(tournaments.router)
 app.include_router(public.router)  # MUST be last due to catch-all route
 
 

@@ -1,7 +1,5 @@
 """API routes for health checks and data access."""
 
-from datetime import datetime
-
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
@@ -10,28 +8,7 @@ from routes.dependencies import db, get_ramps_for_lake
 router = APIRouter()
 
 
-@router.get("/health")
-async def health_check():
-    """Health check endpoint for CI/CD and monitoring."""
-    try:
-        result = db("SELECT COUNT(*) as count FROM anglers")
-        angler_count = result[0][0] if result else 0
-        return {
-            "status": "healthy",
-            "database": "connected",
-            "angler_count": angler_count,
-            "timestamp": datetime.utcnow().isoformat(),
-        }
-    except Exception as e:
-        return JSONResponse(
-            status_code=503,
-            content={
-                "status": "unhealthy",
-                "database": "disconnected",
-                "error": str(e),
-                "timestamp": datetime.utcnow().isoformat(),
-            },
-        )
+# /health route moved to public.py to avoid duplication
 
 
 @router.get("/api/lakes")
