@@ -217,7 +217,6 @@ ORDER BY e.year DESC, total_points DESC
 
 
 def init_db():
-    """Initialize database with SABC schema."""
     logger.info("Initializing database...")
     with engine.connect() as c:
         # Handle migration BEFORE creating tables
@@ -254,7 +253,6 @@ def init_db():
 
 
 def create_views():
-    """Create SQL views for tournament calculations."""
     with engine.connect() as c:
         views = [TOURNAMENT_STANDINGS_VIEW, ANGLER_OF_YEAR_VIEW]
         for view in views:

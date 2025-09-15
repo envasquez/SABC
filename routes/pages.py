@@ -26,14 +26,17 @@ async def roster(request: Request, user=Depends(require_auth)):
 @router.get("/calendar")
 async def calendar_page(request: Request):
     user = get_user_optional(request)
-
     current_year = datetime.now().year
     next_year = current_year + 1
 
     def get_year_calendar_data(year):
         calendar_events = []
         tournament_events = db(
-            "SELECT e.id as event_id, e.date, e.name, e.event_type, e.description, p.id as poll_id, p.title as poll_title, p.starts_at, p.closes_at, p.closed, t.id as tournament_id, t.complete as tournament_complete FROM events e LEFT JOIN polls p ON e.id = p.event_id LEFT JOIN tournaments t ON e.id = t.event_id WHERE strftime('%Y', e.date) = :year ORDER BY e.date",
+            "SELECT e.id as event_id, e.date, e.name, e.event_type, e.description, "
+            "p.id as poll_id, p.title as poll_title, p.starts_at, p.closes_at, p.closed, "
+            "t.id as tournament_id, t.complete as tournament_complete FROM events e "
+            "LEFT JOIN polls p ON e.id = p.event_id LEFT JOIN tournaments t ON "
+            "e.id = t.event_id WHERE strftime('%Y', e.date) = :year ORDER BY e.date",
             {"year": str(year)},
         )
 
@@ -45,9 +48,7 @@ async def calendar_page(request: Request):
         current_year
     )
     next_calendar_data, next_event_details, next_event_types = get_year_calendar_data(next_year)
-
     all_event_types = current_event_types | next_event_types
-
     return render(
         "calendar.html",
         request,
@@ -64,18 +65,11 @@ async def calendar_page(request: Request):
 
 @router.get("/home-paginated")
 async def home_paginated(request: Request, page: int = 1):
+    from core.config import settings
+
     user = get_user_optional(request)
-    items_per_page = 4
+    items_per_page = settings.ITEMS_PER_PAGE
     offset = (page - 1) * items_per_page
-    from core.helpers.poll_processor import process_closed_polls
-
-    try:
-        process_closed_polls()
-    except Exception as e:
-        print(f"Error auto-processing closed polls: {e}")
-
-    # Get all tournaments with event data for display
-    # Tournament results are truncated, so we'll get the first few results
     tournaments = db(
         """
         SELECT t.id, e.date, e.name, e.description,
@@ -101,12 +95,8 @@ async def home_paginated(request: Request, page: int = 1):
     """,
         {"limit": items_per_page, "offset": offset},
     )
-
-    # Get total count for pagination
     total_tournaments = db("SELECT COUNT(*) FROM tournaments")[0][0]
     total_pages = (total_tournaments + items_per_page - 1) // items_per_page
-
-    # Get latest news items for sidebar
     latest_news = db("""
         SELECT n.id, n.title, n.content, n.created_at, n.updated_at, n.priority,
                COALESCE(e.name, a.name) as display_author_name,
@@ -119,13 +109,9 @@ async def home_paginated(request: Request, page: int = 1):
         ORDER BY n.priority DESC, n.created_at DESC
         LIMIT 5
     """)
-
-    # Enhance tournament data with top results
     tournaments_with_results = []
     for tournament in tournaments:
         tournament_id = tournament[0]
-
-        # Get top 3 team results for this tournament
         top_results = db(
             """
             SELECT
@@ -155,7 +141,6 @@ async def home_paginated(request: Request, page: int = 1):
         """,
             {"tournament_id": tournament_id},
         )
-
         tournament_dict = {
             "id": tournament[0],
             "date": tournament[1],
@@ -183,34 +168,23 @@ async def home_paginated(request: Request, page: int = 1):
             "top_results": top_results,
             "event_date": tournament[1],  # Same as date, for template compatibility
         }
-
         tournaments_with_results.append(tournament_dict)
 
-    # Calculate page range for pagination
-    # Show up to 7 page numbers at a time
     window_size = 7
     if total_pages <= window_size:
         # Show all pages if total is less than window size
         page_range = list(range(1, total_pages + 1))
     else:
-        # Calculate start and end of page range window
         half_window = window_size // 2
-
-        # Center the window around current page
         if page <= half_window:
-            # Near the beginning
             page_range = list(range(1, window_size + 1))
         elif page >= total_pages - half_window:
-            # Near the end
             page_range = list(range(total_pages - window_size + 1, total_pages + 1))
         else:
-            # In the middle
             page_range = list(range(page - half_window, page + half_window + 1))
 
-    # Calculate start and end indices for display
     start_index = offset + 1
     end_index = min(offset + items_per_page, total_tournaments)
-
     return templates.TemplateResponse(
         "index.html",
         {
@@ -234,12 +208,9 @@ async def home_paginated(request: Request, page: int = 1):
 
 @router.get("/health")
 async def health_check():
-    """Health check endpoint for CI/CD and monitoring."""
     try:
-        # Test database connection
         result = db("SELECT COUNT(*) as count FROM anglers")
         angler_count = result[0][0] if result else 0
-
         return {
             "status": "healthy",
             "database": "connected",
@@ -258,7 +229,6 @@ async def health_check():
         )
 
 
-# Catch-all route for static pages (must be last)
 @router.get("/{page:path}")
 async def page(request: Request, page: str = "", p: int = 1):
     user = get_user_optional(request)

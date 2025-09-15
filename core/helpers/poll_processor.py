@@ -1,12 +1,9 @@
-"""Poll processing utilities for tournament creation."""
-
 import json
 
 from core.database import db
 
 
 def process_closed_polls():
-    """Process closed polls and create tournaments from winning options."""
     try:
         # Find polls that are closed but haven't created tournaments yet
         closed_polls = db("""

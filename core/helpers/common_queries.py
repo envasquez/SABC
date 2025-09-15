@@ -1,12 +1,16 @@
+from datetime import datetime
+
 from routes.dependencies import db
 
 
 def get_officers():
-    return db("""
+    current_year = datetime.now().year
+    return db(
+        """
         SELECT o.position, a.name, a.email, a.phone
         FROM officer_positions o
         JOIN anglers a ON o.angler_id = a.id
-        WHERE o.year = 2025
+        WHERE o.year = :current_year
         ORDER BY
             CASE o.position
                 WHEN 'President' THEN 1
@@ -18,7 +22,9 @@ def get_officers():
                 WHEN 'Technology Director' THEN 7
                 ELSE 8
             END
-    """)
+    """,
+        {"current_year": current_year},
+    )
 
 
 def get_members_with_last_tournament():

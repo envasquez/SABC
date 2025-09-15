@@ -22,13 +22,15 @@ def admin(r):
 
 
 def require_auth(request: Request):
-    if not (user := u(request)):
+    user = u(request)
+    if not user:
         raise HTTPException(status_code=303, headers={"Location": "/login"})
     return user
 
 
 def require_admin(request: Request):
-    if not (user := u(request)):
+    user = u(request)
+    if not user:
         raise HTTPException(status_code=303, headers={"Location": "/login"})
     if not user.get("is_admin"):
         raise HTTPException(status_code=403)
@@ -36,7 +38,8 @@ def require_admin(request: Request):
 
 
 def require_member(request: Request):
-    if not (user := u(request)):
+    user = u(request)
+    if not user:
         raise HTTPException(status_code=303, headers={"Location": "/login"})
     if not user.get("member"):
         raise HTTPException(status_code=403)

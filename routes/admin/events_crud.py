@@ -1,5 +1,3 @@
-"""Admin events CRUD routes - create, read, update, delete individual events."""
-
 import json
 from datetime import datetime, timedelta
 
@@ -33,7 +31,6 @@ async def create_event(
     entry_fee: float = Form(default=25.00),
     fish_limit: int = Form(default=5),
 ):
-    """Create a new event and optionally auto-create poll for SABC tournaments."""
     if isinstance(user := admin(request), RedirectResponse):
         return user
 
@@ -87,7 +84,6 @@ async def create_event(
             params,
         )
 
-        # Auto-create poll for SABC tournaments
         if event_type == "sabc_tournament":
             poll_starts = (date_obj - timedelta(days=7)).isoformat()
             poll_closes = (date_obj - timedelta(days=5)).isoformat()
@@ -109,7 +105,6 @@ async def create_event(
                 },
             )
 
-            # Add all lakes as poll options
             all_lakes = get_lakes_list()
             for lake_id, lake_name, location in all_lakes:
                 option_data = {"lake_id": lake_id}
@@ -124,15 +119,12 @@ async def create_event(
                         "option_data": json.dumps(option_data),
                     },
                 )
-
         return RedirectResponse(
             f"/admin/events?success=Event created successfully{warning_msg}", status_code=302
         )
 
     except Exception as e:
         error_msg = str(e)
-
-        # Handle common database constraint errors with user-friendly messages
         if "UNIQUE constraint failed: events.date" in error_msg:
             error_msg = f"An event already exists on {date}. Please choose a different date or edit the existing event."
         elif "NOT NULL constraint failed" in error_msg:
@@ -142,7 +134,6 @@ async def create_event(
         else:
             # For other errors, show a generic message with details for debugging
             error_msg = f"Failed to create event. Details: {error_msg}"
-
         return RedirectResponse(f"/admin/events?error={error_msg}", status_code=302)
 
 
@@ -162,26 +153,20 @@ async def edit_event(
     fish_limit: int = Form(default=5),
     poll_closes_date: str = Form(default=""),
 ):
-    """Edit an existing event."""
     if isinstance(user := admin(request), RedirectResponse):
         return user
 
     try:
-        # Validate input data
         validation = validate_event_data(
             date, name, event_type, start_time, weigh_in_time, entry_fee, lake_name
         )
-
         if validation["errors"]:
             error_msg = "; ".join(validation["errors"])
             return RedirectResponse(
                 f"/admin/events?error=Validation failed: {error_msg}", status_code=302
             )
-
         date_obj = datetime.strptime(date, "%Y-%m-%d")
         year = date_obj.year
-
-        # Update the event
         params = {
             "event_id": event_id,
             "date": date,
@@ -201,7 +186,6 @@ async def edit_event(
             "fish_limit": fish_limit if event_type == "sabc_tournament" else None,
             "holiday_name": name if event_type == "holiday" else None,
         }
-
         db(
             """
             UPDATE events
@@ -213,8 +197,6 @@ async def edit_event(
         """,
             params,
         )
-
-        # Handle poll closes date update if provided
         if poll_closes_date and event_type == "sabc_tournament":
             try:
                 poll_closes_dt = datetime.fromisoformat(poll_closes_date)
@@ -224,13 +206,9 @@ async def edit_event(
                 )
             except ValueError:
                 pass  # Invalid datetime format, skip poll update
-
         return RedirectResponse("/admin/events?success=Event updated successfully", status_code=302)
-
     except Exception as e:
         error_msg = str(e)
-
-        # Handle common database constraint errors with user-friendly messages
         if "UNIQUE constraint failed: events.date" in error_msg:
             error_msg = f"An event already exists on {date}. Please choose a different date."
         elif "NOT NULL constraint failed" in error_msg:
@@ -239,16 +217,13 @@ async def edit_event(
             error_msg = "Invalid lake or ramp selection. Please refresh the page and try again."
         else:
             error_msg = f"Failed to update event. Details: {error_msg}"
-
         return RedirectResponse(f"/admin/events?error={error_msg}", status_code=302)
 
 
 @router.get("/admin/events/{event_id}/info")
 async def get_event_info(request: Request, event_id: int):
-    """Get complete event information (for edit modal)."""
     if isinstance(admin(request), RedirectResponse):
         return JSONResponse({"error": "Authentication required"}, status_code=401)
-
     try:
         event_info = db(
             """
@@ -274,7 +249,6 @@ async def get_event_info(request: Request, event_id: int):
                 yaml_key, lake_info, display_name = find_lake_data_by_db_name(lake_display_name)
                 if display_name:
                     lake_display_name = display_name
-
             return JSONResponse(
                 {
                     "id": event[0],
@@ -298,17 +272,14 @@ async def get_event_info(request: Request, event_id: int):
             )
         else:
             return JSONResponse({"error": "Event not found"}, status_code=404)
-
     except Exception as e:
         return JSONResponse({"error": f"Failed to get event info: {str(e)}"}, status_code=500)
 
 
 @router.post("/admin/events/validate")
 async def validate_event(request: Request):
-    """Validate event data without creating."""
     if isinstance(admin(request), RedirectResponse):
         return JSONResponse({"error": "Authentication required"}, status_code=401)
-
     try:
         data = await request.json()
         validation = validate_event_data(
@@ -327,12 +298,9 @@ async def validate_event(request: Request):
 
 @router.delete("/admin/events/{event_id}")
 async def delete_event(request: Request, event_id: int):
-    """Delete an event (only if no results exist)."""
     if isinstance(admin(request), RedirectResponse):
         return JSONResponse({"error": "Authentication required"}, status_code=401)
-
     try:
-        # Check if event has results
         has_results = db(
             """
             SELECT 1 FROM tournaments t WHERE t.event_id = :event_id
@@ -347,8 +315,6 @@ async def delete_event(request: Request, event_id: int):
             return JSONResponse(
                 {"error": "Cannot delete event with tournament results"}, status_code=400
             )
-
-        # Delete cascade: polls -> tournaments -> event
         with engine.begin() as conn:
             conn.execute(
                 text(
@@ -367,11 +333,6 @@ async def delete_event(request: Request, event_id: int):
             )
             conn.execute(text("DELETE FROM events WHERE id = :id"), {"id": event_id})
             conn.commit()
-
         return JSONResponse({"success": True}, status_code=200)
-
     except Exception as e:
         return JSONResponse({"error": f"Database error: {str(e)}"}, status_code=500)
-
-
-# process_closed_polls function moved to core/helpers/poll_processor.py to eliminate duplication

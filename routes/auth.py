@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
 
@@ -41,8 +43,6 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
             if bcrypt.checkpw(password.encode(), res[0][1].encode()):
                 user_id = res[0][0]
                 request.session["user_id"] = user_id
-
-                # Log successful login
                 log_security_event(
                     SecurityEvent.AUTH_LOGIN_SUCCESS,
                     user_id=user_id,
@@ -54,10 +54,7 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
                     "User login successful",
                     extra={"user_id": user_id, "user_email": email, "ip_address": ip_address},
                 )
-
                 return RedirectResponse("/", status_code=302)
-
-        # Log failed login attempt
         log_security_event(
             SecurityEvent.AUTH_LOGIN_FAILURE,
             user_email=email,
@@ -68,21 +65,18 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
             "Login attempt failed - invalid credentials",
             extra={"user_email": email, "ip_address": ip_address},
         )
-
     except Exception as e:
         logger.error(
             "Login error",
             extra={"user_email": email, "ip_address": ip_address, "error": str(e)},
             exc_info=True,
         )
-
         log_security_event(
             SecurityEvent.AUTH_LOGIN_FAILURE,
             user_email=email,
             ip_address=ip_address,
             details={"reason": "system_error", "error": str(e)},
         )
-
     return templates.TemplateResponse(
         "login.html", {"request": request, "error": "Invalid email or password"}
     )
@@ -95,7 +89,6 @@ async def register(
     email = email.lower().strip()
     name = name.strip()
     ip_address = request.client.host if request.client else "unknown"
-
     try:
         existing = db(
             "SELECT id FROM anglers WHERE email=:email",
@@ -115,7 +108,6 @@ async def register(
             "INSERT INTO anglers (name, email, password_hash, member, is_admin) VALUES (:name, :email, :password_hash, 1, 0)",
             {"name": name, "email": email, "password_hash": password_hash},
         )
-
         user = db(
             "SELECT id FROM anglers WHERE email=:email",
             {"email": email},
@@ -123,8 +115,6 @@ async def register(
         if user:
             user_id = user[0][0]
             request.session["user_id"] = user_id
-
-            # Log successful registration
             log_security_event(
                 SecurityEvent.AUTH_REGISTER,
                 user_id=user_id,
@@ -141,9 +131,7 @@ async def register(
                     "ip_address": ip_address,
                 },
             )
-
             return RedirectResponse("/", status_code=302)
-
     except Exception as e:
         logger.error(
             "Registration error",
@@ -155,26 +143,20 @@ async def register(
             },
             exc_info=True,
         )
-
         return templates.TemplateResponse(
             "login.html", {"request": request, "error": "Registration failed"}
         )
-
     return RedirectResponse("/login", status_code=302)
 
 
 @router.get("/profile")
 async def profile_page(request: Request):
-    """Display user's own profile page."""
     if not (user := u(request)):
         return RedirectResponse("/login")
-
-    # Get user data with additional fields for profile
     user_data = db(
         "SELECT id, name, email, member, is_admin, phone, year_joined, created_at FROM anglers WHERE id = :id",
         {"id": user["id"]},
     )
-
     if not user_data:
         return RedirectResponse("/login")
 
@@ -188,12 +170,7 @@ async def profile_page(request: Request):
         "year_joined": user_data[0][6],
         "created_at": user_data[0][7],
     }
-
-    # Get current year for stats
-    current_year = 2025
-
-    # Get user statistics for the profile display
-    # Tournament count
+    current_year = datetime.now().year
     tournaments_count = db(
         """
         SELECT COUNT(DISTINCT t.id)
@@ -204,8 +181,6 @@ async def profile_page(request: Request):
     """,
         {"user_id": user["id"]},
     )[0][0]
-
-    # Best weight
     best_weight = db(
         """
         SELECT COALESCE(MAX(r.total_weight - COALESCE(r.dead_fish_penalty, 0)), 0)
@@ -215,8 +190,6 @@ async def profile_page(request: Request):
     """,
         {"user_id": user["id"]},
     )[0][0]
-
-    # Biggest bass
     big_bass = db(
         """
         SELECT COALESCE(MAX(r.big_bass_weight), 0)
@@ -226,8 +199,6 @@ async def profile_page(request: Request):
     """,
         {"user_id": user["id"]},
     )[0][0]
-
-    # Team finish counts for current year
     current_finishes = db(
         """
         SELECT
@@ -245,12 +216,9 @@ async def profile_page(request: Request):
     """,
         {"user_id": user["id"], "current_year": current_year},
     )
-
     current_first, current_second, current_third = (
         current_finishes[0] if current_finishes else (0, 0, 0)
     )
-
-    # All-time team finish counts (since 2022)
     all_time_finishes = db(
         """
         SELECT
@@ -268,12 +236,9 @@ async def profile_page(request: Request):
     """,
         {"user_id": user["id"]},
     )
-
     all_time_first, all_time_second, all_time_third = (
         all_time_finishes[0] if all_time_finishes else (0, 0, 0)
     )
-
-    # Current AOY position
     aoy_position = None
     try:
         aoy_standings = db(
@@ -331,7 +296,6 @@ async def profile_page(request: Request):
         if aoy_standings:
             aoy_position = aoy_standings[0][0]
     except Exception:
-        # If there's an error getting AOY position, just set it to None
         pass
 
     stats = {
@@ -346,7 +310,6 @@ async def profile_page(request: Request):
         "all_time_third": all_time_third or 0,
         "aoy_position": aoy_position,
     }
-
     return templates.TemplateResponse(
         "profile.html",
         {
@@ -367,20 +330,15 @@ async def update_profile(
     phone: str = Form(""),
     year_joined: int = Form(None),
 ):
-    """Update user's own profile."""
     if not (user := u(request)):
         return RedirectResponse("/login")
 
     try:
         email = email.lower().strip()
-
-        # Validate and format phone number
         is_valid, formatted_phone, error_msg = validate_phone_number(phone)
         if not is_valid:
             return RedirectResponse(f"/profile?error={error_msg}")
         phone = formatted_phone
-
-        # Validate email isn't already taken by another user
         existing_email = db(
             "SELECT id FROM anglers WHERE email = :email AND id != :user_id",
             {"email": email, "user_id": user["id"]},
@@ -388,7 +346,6 @@ async def update_profile(
         if existing_email:
             return RedirectResponse("/profile?error=Email is already in use by another user")
 
-        # Update the user's profile
         db(
             """
             UPDATE anglers
@@ -402,7 +359,6 @@ async def update_profile(
                 "user_id": user["id"],
             },
         )
-
         logger.info(
             "User profile updated",
             extra={
@@ -414,9 +370,7 @@ async def update_profile(
                 },
             },
         )
-
         return RedirectResponse("/profile?success=Profile updated successfully", status_code=302)
-
     except Exception as e:
         logger.error(
             "Profile update error",
@@ -428,23 +382,18 @@ async def update_profile(
 
 @router.post("/profile/delete")
 async def delete_profile(request: Request, confirm: str = Form(...)):
-    """Delete user's own account."""
     if not (user := u(request)):
         return RedirectResponse("/login")
-
     if confirm != "DELETE":
         return RedirectResponse("/profile?error=Confirmation text must be exactly 'DELETE'")
 
     try:
         user_id = user["id"]
         user_email = user.get("email", "unknown")
-
-        # Log account deletion
         logger.warning(
             "User account self-deletion",
             extra={"user_id": user_id, "user_email": user_email},
         )
-
         log_security_event(
             SecurityEvent.AUTH_ACCOUNT_DELETED,
             user_id=user_id,
@@ -452,15 +401,9 @@ async def delete_profile(request: Request, confirm: str = Form(...)):
             ip_address=request.client.host if request.client else "unknown",
             details={"method": "self_delete"},
         )
-
-        # Delete the user account
         db("DELETE FROM anglers WHERE id = :user_id", {"user_id": user_id})
-
-        # Clear session
         request.session.clear()
-
         return RedirectResponse("/?success=Account deleted successfully", status_code=302)
-
     except Exception as e:
         logger.error(
             "Account deletion error",
@@ -474,13 +417,10 @@ async def delete_profile(request: Request, confirm: str = Form(...)):
 async def logout(request: Request):
     user_id = request.session.get("user_id")
     ip_address = request.client.host if request.client else "unknown"
-
     if user_id:
-        # Get user info for logging
         try:
             user_info = db("SELECT email FROM anglers WHERE id = :user_id", {"user_id": user_id})
             user_email = user_info[0][0] if user_info else None
-
             log_security_event(
                 SecurityEvent.AUTH_LOGOUT,
                 user_id=user_id,
@@ -496,6 +436,5 @@ async def logout(request: Request):
                 "Error logging logout event",
                 extra={"user_id": user_id, "ip_address": ip_address, "error": str(e)},
             )
-
     request.session.clear()
     return RedirectResponse("/", status_code=302)

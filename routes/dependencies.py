@@ -1,6 +1,3 @@
-"""Shared dependencies for all route modules."""
-
-# Re-export everything needed by route modules
 from typing import Optional
 
 import bcrypt

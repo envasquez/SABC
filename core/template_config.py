@@ -1,5 +1,3 @@
-"""Shared template configuration for FastAPI app and routers."""
-
 from fastapi.templating import Jinja2Templates
 
 from core.filters import (

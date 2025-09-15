@@ -1,11 +1,10 @@
-"""Shared calendar building utilities."""
-
 import calendar
 from datetime import datetime
 
 
-def build_calendar_data_with_polls(calendar_events, tournament_events, year=2025):
-    """Build calendar data structure with enhanced poll and tournament information."""
+def build_calendar_data_with_polls(calendar_events, tournament_events, year=None):
+    if year is None:
+        year = datetime.now().year
     # Set Sunday as the first day of the week to match US calendar convention
     calendar.setfirstweekday(calendar.SUNDAY)
 

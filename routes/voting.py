@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 
 from core.helpers.auth import require_auth
@@ -21,13 +21,10 @@ router = APIRouter()
 
 
 @router.get("/polls")
-async def polls(request: Request, user=Depends(require_auth)):
+async def polls(request: Request, background_tasks: BackgroundTasks, user=Depends(require_auth)):
     from core.helpers.poll_processor import process_closed_polls
 
-    try:
-        process_closed_polls()
-    except Exception as e:
-        print(f"Error auto-processing closed polls: {e}")
+    background_tasks.add_task(process_closed_polls)
 
     polls_data = db(
         "SELECT p.id, p.title, p.description, p.closes_at, p.closed, p.poll_type, p.starts_at, p.event_id, CASE WHEN datetime('now', 'localtime') < datetime(p.starts_at) THEN 'upcoming' WHEN datetime('now', 'localtime') BETWEEN datetime(p.starts_at) AND datetime(p.closes_at) AND p.closed = 0 THEN 'active' ELSE 'closed' END as status, EXISTS(SELECT 1 FROM poll_votes pv WHERE pv.poll_id = p.id AND pv.angler_id = :user_id) as user_has_voted FROM polls p ORDER BY p.closes_at DESC",

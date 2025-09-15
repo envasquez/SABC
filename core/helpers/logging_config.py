@@ -1,5 +1,3 @@
-"""Centralized logging configuration for SABC application."""
-
 import json
 import logging
 import logging.handlers
@@ -10,8 +8,6 @@ from typing import Any, Dict, Optional
 
 
 class SecurityEvent:
-    """Security event constants for structured logging."""
-
     AUTH_LOGIN_SUCCESS = "auth.login.success"
     AUTH_LOGIN_FAILURE = "auth.login.failure"
     AUTH_LOGOUT = "auth.logout"
@@ -42,10 +38,7 @@ class SecurityEvent:
 
 
 class JSONFormatter(logging.Formatter):
-    """JSON formatter for structured logging."""
-
     def format(self, record: logging.LogRecord) -> str:
-        """Format log record as JSON."""
         log_entry = {
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "level": record.levelname,
@@ -85,10 +78,7 @@ class JSONFormatter(logging.Formatter):
 
 
 class SABCLogger:
-    """Centralized logger configuration for SABC application."""
-
     def __init__(self, log_dir: str = "logs"):
-        """Initialize logging configuration."""
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(exist_ok=True)
         self._configured = False
@@ -100,7 +90,6 @@ class SABCLogger:
         max_bytes: int = 10 * 1024 * 1024,  # 10MB
         backup_count: int = 5,
     ) -> None:
-        """Configure application logging."""
         if self._configured:
             return
 
@@ -165,7 +154,6 @@ class SABCLogger:
         )
 
     def get_logger(self, name: str) -> logging.Logger:
-        """Get a configured logger instance."""
         if not self._configured:
             self.configure_logging()
         return logging.getLogger(f"sabc.{name}")
@@ -179,7 +167,6 @@ class SABCLogger:
         details: Optional[Dict[str, Any]] = None,
         level: int = logging.INFO,
     ) -> None:
-        """Log security events with structured data."""
         if not self._configured:
             self.configure_logging()
 
@@ -200,7 +187,6 @@ sabc_logger = SABCLogger()
 
 
 def get_logger(name: str) -> logging.Logger:
-    """Get a configured logger instance."""
     return sabc_logger.get_logger(name)
 
 
@@ -212,10 +198,8 @@ def log_security_event(
     details: Optional[Dict[str, Any]] = None,
     level: int = logging.INFO,
 ) -> None:
-    """Log security events."""
     sabc_logger.log_security_event(event_type, user_id, user_email, ip_address, details, level)
 
 
 def configure_logging(log_level: str = "INFO", json_format: bool = True) -> None:
-    """Configure application logging."""
     sabc_logger.configure_logging(log_level, json_format)

@@ -1,5 +1,3 @@
-"""Admin core routes - news management and dashboard."""
-
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
@@ -11,7 +9,6 @@ router = APIRouter()
 
 @router.get("/admin/news")
 async def admin_news(request: Request):
-    """Admin page for managing news announcements."""
     if not (user := u(request)) or not user.get("is_admin"):
         return RedirectResponse("/login")
 
@@ -33,7 +30,6 @@ async def admin_news(request: Request):
 async def create_news(
     request: Request, title: str = Form(...), content: str = Form(...), priority: int = Form(0)
 ):
-    """Create a new news announcement."""
     if not (user := u(request)) or not user.get("is_admin"):
         return RedirectResponse("/login")
 
@@ -64,7 +60,6 @@ async def update_news(
     content: str = Form(...),
     priority: int = Form(0),
 ):
-    """Update an existing news announcement."""
     if not (user := u(request)) or not user.get("is_admin"):
         return RedirectResponse("/login")
 
@@ -91,7 +86,6 @@ async def update_news(
 
 @router.delete("/admin/news/{news_id}")
 async def delete_news(request: Request, news_id: int):
-    """Delete a news announcement."""
     if not (user := u(request)) or not user.get("is_admin"):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -104,7 +98,6 @@ async def delete_news(request: Request, news_id: int):
 
 @router.get("/admin/{page}")
 async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_page: int = 1):
-    """Admin dashboard pages (events and users)."""
     if isinstance(user := admin(request), RedirectResponse):
         return user
 

@@ -7,6 +7,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 import routes.dependencies as deps
+from core.security_middleware import SecurityHeadersMiddleware
 from core.filters import (
     date_format_filter,
     from_json_filter,
@@ -19,6 +20,7 @@ configure_logging(log_level=os.environ.get("LOG_LEVEL", "INFO"))
 logger = get_logger(__name__)
 
 app = FastAPI(redirect_slashes=False)
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     SessionMiddleware, secret_key=os.environ.get("SECRET_KEY", "dev-key-change-in-production")
 )

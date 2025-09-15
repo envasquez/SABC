@@ -1,16 +1,10 @@
 #!/usr/bin/env python3
-"""
-Create federal holidays for 2025-2065 and insert into calendar_events table.
-Federal holidays as per U.S. federal law.
-"""
-
 import sqlite3
 from datetime import date, timedelta
 from typing import List, Tuple
 
 
 def get_nth_weekday(year: int, month: int, weekday: int, n: int) -> date:
-    """Get the nth occurrence of a weekday in a given month/year."""
     first_day = date(year, month, 1)
     # Find first occurrence of the weekday
     days_ahead = weekday - first_day.weekday()
@@ -21,7 +15,6 @@ def get_nth_weekday(year: int, month: int, weekday: int, n: int) -> date:
 
 
 def get_last_weekday(year: int, month: int, weekday: int) -> date:
-    """Get the last occurrence of a weekday in a given month/year."""
     # Start from the last day of the month and work backwards
     if month == 12:
         last_day = date(year + 1, 1, 1) - timedelta(days=1)
@@ -33,7 +26,6 @@ def get_last_weekday(year: int, month: int, weekday: int) -> date:
 
 
 def calculate_federal_holidays(year: int) -> List[Tuple[str, date, str]]:
-    """Calculate all federal holidays for a given year."""
     holidays = []
 
     # New Year's Day - January 1
@@ -133,7 +125,6 @@ def calculate_federal_holidays(year: int) -> List[Tuple[str, date, str]]:
 
 
 def main():
-    """Generate and insert federal holidays for 2025-2065."""
     conn = sqlite3.connect("sabc.db")
     cursor = conn.cursor()
 

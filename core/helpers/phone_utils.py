@@ -1,18 +1,7 @@
-"""Phone number formatting utilities."""
-
 from typing import Optional
 
 
 def format_phone_number(phone: Optional[str]) -> Optional[str]:
-    """
-    Format a phone number to (XXX) XXX-XXXX format.
-
-    Args:
-        phone: Raw phone number string
-
-    Returns:
-        Formatted phone number or None if invalid/empty
-    """
     if not phone:
         return None
 
@@ -35,15 +24,6 @@ def format_phone_number(phone: Optional[str]) -> Optional[str]:
 
 
 def validate_phone_number(phone: Optional[str]) -> tuple[bool, Optional[str], Optional[str]]:
-    """
-    Validate and format a phone number.
-
-    Args:
-        phone: Raw phone number string
-
-    Returns:
-        Tuple of (is_valid, formatted_phone, error_message)
-    """
     if not phone:
         return True, None, None
 

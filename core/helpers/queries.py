@@ -1,10 +1,7 @@
-"""Database query helper functions to consolidate repeated patterns."""
-
 from core.database import db
 
 
 def get_tournament_stats(tournament_id, fish_limit):
-    """Get comprehensive tournament statistics."""
     stats = db(
         """
         SELECT
@@ -25,7 +22,6 @@ def get_tournament_stats(tournament_id, fish_limit):
 
 
 def get_individual_results(tournament_id, last_place_points):
-    """Get individual tournament results with SABC scoring."""
     return db(
         """
         SELECT
@@ -65,7 +61,6 @@ def get_individual_results(tournament_id, last_place_points):
 
 
 def get_tournaments_with_results():
-    """Get tournaments list with event and result data."""
     return db("""
         SELECT t.id, t.name, e.date, e.description,
                COUNT(DISTINCT r.angler_id) as participant_count,
@@ -79,7 +74,6 @@ def get_tournaments_with_results():
 
 
 def get_poll_options_with_votes(poll_id, include_details=False):
-    """Get poll options with vote counts and optional voter details."""
     options_data = db(
         """
         SELECT po.id, po.option_text, po.option_data, COUNT(pv.id) as vote_count
@@ -121,7 +115,6 @@ def get_poll_options_with_votes(poll_id, include_details=False):
 
 
 def get_lakes_list():
-    """Get list of all lakes from database."""
     lakes = db(
         "SELECT id, display_name, 'Central Texas' as location FROM lakes ORDER BY display_name"
     )
@@ -129,7 +122,6 @@ def get_lakes_list():
 
 
 def get_ramps_for_lake(lake_id):
-    """Get all ramps for a specific lake."""
     ramps = db(
         "SELECT id, name, lake_id FROM ramps WHERE lake_id = :lake_id ORDER BY name",
         {"lake_id": lake_id},
@@ -138,13 +130,11 @@ def get_ramps_for_lake(lake_id):
 
 
 def get_all_ramps():
-    """Get all ramps from database."""
     ramps = db("SELECT id, name, lake_id FROM ramps ORDER BY name")
     return [(ramp[0], ramp[1], ramp[2]) for ramp in ramps]
 
 
 def find_lake_by_id(lake_id, return_format="full"):
-    """Find lake by ID from database."""
     lake = db("SELECT id, display_name, yaml_key FROM lakes WHERE id = :id", {"id": lake_id})
     if not lake:
         return None if return_format == "name" else (None, None)
@@ -157,13 +147,11 @@ def find_lake_by_id(lake_id, return_format="full"):
 
 
 def find_ramp_name_by_id(ramp_id):
-    """Find ramp name by ID from database."""
     ramp = db("SELECT name FROM ramps WHERE id = :id", {"id": ramp_id})
     return ramp[0][0] if ramp else None
 
 
 def validate_lake_ramp_combo(lake_id, ramp_id):
-    """Validate that ramp belongs to lake."""
     ramp = db(
         "SELECT id FROM ramps WHERE id = :ramp_id AND lake_id = :lake_id",
         {"ramp_id": ramp_id, "lake_id": lake_id},
@@ -172,7 +160,6 @@ def validate_lake_ramp_combo(lake_id, ramp_id):
 
 
 def find_lake_data_by_db_name(db_lake_name):
-    """Find lake data by database lake name."""
     if not db_lake_name:
         return None, None, None
 

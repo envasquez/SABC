@@ -1,5 +1,3 @@
-"""Admin users routes - user management."""
-
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
@@ -13,7 +11,6 @@ logger = get_logger("admin.users")
 
 @router.get("/admin/users/{user_id}/edit")
 async def edit_user_page(request: Request, user_id: int):
-    """Show user edit form."""
     if not (user := u(request)) or not user.get("is_admin"):
         return RedirectResponse("/login")
 
@@ -21,10 +18,8 @@ async def edit_user_page(request: Request, user_id: int):
         "SELECT id, name, email, member, is_admin FROM anglers WHERE id = :id",
         {"id": user_id},
     )
-
     if not edit_user:
         return error_redirect("/admin/users", "User not found")
-
     return templates.TemplateResponse(
         "admin/edit_user.html", {"request": request, "user": user, "edit_user": edit_user[0]}
     )
@@ -39,26 +34,21 @@ async def update_user(
     member: bool = Form(False),
     is_admin: bool = Form(False),
 ):
-    """Update user information."""
     if not (user := u(request)) or not user.get("is_admin"):
         return RedirectResponse("/login")
-
     try:
         before = db(
             "SELECT name, email, member, is_admin FROM anglers WHERE id = :id",
             {"id": user_id},
         )
-
         if not before:
             return error_redirect("/admin/users", f"User {user_id} not found")
 
         email_cleaned = email.strip() if email else ""
         final_email = None
-
         if email_cleaned:
             final_email = email_cleaned.lower()
         elif not member:
-            # Generate email for guests
             name_parts = name.strip().lower().split()
             if len(name_parts) >= 2:
                 first_clean = "".join(c for c in name_parts[0] if c.isalnum())
@@ -79,7 +69,6 @@ async def update_user(
                         },
                     )
                 else:
-                    # Try numbered versions
                     for counter in range(2, 100):
                         numbered_email = f"{first_clean}.{last_clean}{counter}@sabc.com"
                         if not db(
@@ -97,7 +86,6 @@ async def update_user(
                                 },
                             )
                             break
-
         update_params = {
             "id": user_id,
             "name": name.strip(),
@@ -105,8 +93,6 @@ async def update_user(
             "member": 1 if member else 0,
             "is_admin": 1 if is_admin else 0,
         }
-
-        # Log the user update attempt
         logger.info(
             "Admin user update initiated",
             extra={
@@ -116,7 +102,6 @@ async def update_user(
                 "before": dict(zip(["name", "email", "member", "is_admin"], before[0])),
             },
         )
-
         db(
             """
             UPDATE anglers SET name = :name, email = :email, member = :member,
@@ -125,14 +110,11 @@ async def update_user(
         """,
             update_params,
         )
-
         after = db(
             "SELECT name, email, member, is_admin FROM anglers WHERE id = :id",
             {"id": user_id},
         )
-
         if after and after[0] != before[0]:
-            # Log successful update
             log_security_event(
                 SecurityEvent.ADMIN_USER_UPDATE,
                 user_id=user.get("id"),
@@ -153,7 +135,6 @@ async def update_user(
                     "after": dict(zip(["name", "email", "member", "is_admin"], after[0])),
                 },
             )
-
             return RedirectResponse(
                 "/admin/users?success=User updated and verified", status_code=302
             )
@@ -169,7 +150,6 @@ async def update_user(
             return RedirectResponse(
                 "/admin/users?error=Update failed - no changes saved", status_code=302
             )
-
     except Exception as e:
         logger.error(
             "User update exception",
@@ -182,7 +162,6 @@ async def update_user(
             exc_info=True,
         )
         error_msg = str(e)
-
         if "UNIQUE constraint failed: anglers.email" in error_msg:
             existing = db(
                 "SELECT name FROM anglers WHERE email = :email AND id != :id",
@@ -193,13 +172,11 @@ async def update_user(
                 if existing
                 else f"Email '{update_params['email']}' is already in use"
             )
-
         return error_redirect("/admin/users", error_msg)
 
 
 @router.get("/admin/users/{user_id}/verify")
 async def verify_user(request: Request, user_id: int):
-    """Verify user information (AJAX endpoint)."""
     if not (user := u(request)) or not user.get("is_admin"):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
@@ -207,7 +184,6 @@ async def verify_user(request: Request, user_id: int):
         "SELECT id, name, email, member, is_admin FROM anglers WHERE id = :id",
         {"id": user_id},
     )
-
     if result:
         d = result[0]
         return JSONResponse(
@@ -219,19 +195,15 @@ async def verify_user(request: Request, user_id: int):
                 "is_admin": bool(d[4]),
             }
         )
-
     return JSONResponse({"error": "User not found"}, status_code=404)
 
 
 @router.delete("/admin/users/{user_id}")
 async def delete_user(request: Request, user_id: int):
-    """Delete a user."""
     if not (user := u(request)) or not user.get("is_admin"):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
-
     if user.get("id") == user_id:
         return JSONResponse({"error": "Cannot delete yourself"}, status_code=400)
-
     try:
         db("DELETE FROM anglers WHERE id = :id", {"id": user_id})
         return JSONResponse({"success": True})

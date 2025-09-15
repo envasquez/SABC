@@ -1,5 +1,3 @@
-"""Admin lakes routes - lakes management."""
-
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
@@ -11,16 +9,13 @@ router = APIRouter()
 
 @router.get("/admin/lakes")
 async def admin_lakes(request: Request):
-    """Admin page for managing lakes."""
     if not (user := u(request)) or not user.get("is_admin"):
         return RedirectResponse("/login")
-
     lakes = db("""
         SELECT id, yaml_key, display_name, google_maps_iframe, created_at, updated_at
         FROM lakes
         ORDER BY display_name
     """)
-
     return templates.TemplateResponse(
         "admin/lakes.html", {"request": request, "user": user, "lakes": lakes}
     )
@@ -33,10 +28,8 @@ async def create_lake(
     display_name: str = Form(...),
     google_maps_embed: str = Form(""),
 ):
-    """Create a new lake."""
     if not (user := u(request)) or not user.get("is_admin"):
         return RedirectResponse("/login")
-
     try:
         db(
             """
@@ -62,10 +55,8 @@ async def update_lake(
     display_name: str = Form(...),
     google_maps_embed: str = Form(""),
 ):
-    """Update an existing lake."""
     if not (user := u(request)) or not user.get("is_admin"):
         return RedirectResponse("/login")
-
     try:
         db(
             """
@@ -87,12 +78,9 @@ async def update_lake(
 
 @router.delete("/admin/lakes/{lake_id}")
 async def delete_lake(request: Request, lake_id: int):
-    """Delete a lake."""
     if not (user := u(request)) or not user.get("is_admin"):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
-
     try:
-        # Check if lake is used in any tournaments or ramps
         usage_count = db(
             """
             SELECT
@@ -101,13 +89,11 @@ async def delete_lake(request: Request, lake_id: int):
         """,
             {"id": lake_id},
         )[0][0]
-
         if usage_count > 0:
             return JSONResponse(
                 {"error": "Cannot delete lake that is referenced by tournaments or ramps"},
                 status_code=400,
             )
-
         db("DELETE FROM lakes WHERE id = :id", {"id": lake_id})
         return JSONResponse({"success": True})
     except Exception as e:
