@@ -3,352 +3,197 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
-South Austin Bass Club tournament management system - complete rewrite from Django to FastAPI for minimal complexity and maximum performance.
+South Austin Bass Club (SABC) tournament management system - modern FastAPI application with PostgreSQL backend, designed for minimal complexity and maximum performance.
 
-## Key Constraints & Philosophy
-- **MINIMAL COMPLEXITY** - Absolute minimum code to meet requirements
-- **DATABASE CALCULATIONS** - Push all math to SQL views, not Python
-- **MEMBERS ONLY VOTING** - Only `member=true` can vote (never anonymous)
-- **ADMIN-ONLY CRITICAL FUNCTIONS** - Results entry, poll creation, member management
+## Key Architecture Principles
+- **TYPE-SAFE CODEBASE** - Comprehensive type annotations throughout
+- **MINIMAL COMPLEXITY** - Simplest solution that meets requirements
+- **DATABASE-FIRST** - Business logic in SQL views and queries
+- **MEMBERS-ONLY VOTING** - Only verified members can participate in polls
+- **ADMIN-CONTROLLED** - Critical functions require admin privileges
 
-## CRITICAL: Reference Site Synchronization Requirements
-**MANDATORY VALIDATION**: All database changes MUST be validated against the authoritative reference site at <http://167.71.20.3>
+## Technology Stack
+- **Backend**: FastAPI 0.115+ with Python 3.11+
+- **Database**: PostgreSQL 17+ with SQLAlchemy Core
+- **Frontend**: Jinja2 templates with HTMX for interactivity
+- **Development**: Nix development environment
+- **Deployment**: Digital Ocean App Platform
 
-**CRITICAL**: The reference site is on PORT 80, NOT PORT 443. Always use <http://167.71.20.3> (port 80) when accessing the reference site.
+## CRITICAL DEVELOPMENT RULES
 
-### Validation Requirements:
-1. **All membership data** must exactly match reference site (names, emails, member/guest status)
-2. **Tournament results** must match reference tournaments by date and participants
-3. **AoY standings** must match reference site calculations within 1 point
-4. **NO placeholder names** - all names must be real people from reference site
-5. **NO Guest Angler entries** - convert to actual names or remove
+### 1. Type Safety Requirements
+**ALL Python code MUST have proper type annotations:**
 
-### Validation Workflow:
-```bash
-# Required before any database changes
-python validate_against_reference.py
-# Only proceed if validation passes
+```python
+# ✅ ALWAYS DO THIS
+from typing import Any, Dict, List, Optional, Union
 
-# After any changes, re-validate
-python validate_against_reference.py
-# Rollback changes if validation fails
+def process_data(items: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """Process data with proper type hints."""
+    if not items:
+        return None
+    return {"processed": len(items)}
+
+# ❌ NEVER DO THIS
+def process_data(items):
+    if not items:
+        return None
+    return {"processed": len(items)}
 ```
 
-**If validation fails, STOP and fix discrepancies before proceeding.**
-
-## CRITICAL RULES
-
-### NEVER USE WILDCARD IMPORTS
-**NEVER use wildcard imports like `from module import *`.** Always explicitly import what you need. This makes code clearer, avoids namespace pollution, and helps with debugging.
+### 2. Import Standards
+**NEVER use wildcard imports:**
 
 ```python
 # ❌ NEVER DO THIS
 from fastapi import *
-from fastapi.responses import *
+from typing import *
 
-# ✅ DO THIS INSTEAD
-from fastapi import FastAPI, Request, Form, Query, HTTPException
-from fastapi.responses import RedirectResponse, JSONResponse, Response
+# ✅ ALWAYS DO THIS
+from fastapi import FastAPI, Request, HTTPException
+from typing import Any, Dict, Optional
 ```
 
-### NEVER CONDITIONALLY IMPORT MODULES
-**NEVER EVER EVER EVER conditionally import things.** All dependencies that are needed for testing must be properly installed in the environment. Do not use try/except blocks around imports. If something needs to be tested, the environment must be set up properly to support it.
+### 3. Module Architecture
+**NEVER use conditional imports or exec() patterns:**
 
 ```python
-# ❌ NEVER DO THIS
+# ❌ ABSOLUTELY FORBIDDEN
 try:
-    from playwright.sync_api import sync_playwright
-    PLAYWRIGHT_AVAILABLE = True
+    from some_module import feature
+    HAS_FEATURE = True
 except ImportError:
-    PLAYWRIGHT_AVAILABLE = False
+    HAS_FEATURE = False
 
-# ✅ DO THIS INSTEAD
-from playwright.sync_api import sync_playwright
-```
+exec(open("routes.py").read())
 
-### NEVER EVER USE EXEC() PATTERN
-**NEVER EVER EVER FUCKING IMPLEMENT AN exec() FLOW!!!** The exec() pattern is absolutely forbidden and must never be used as an architectural solution. Always use proper FastAPI router modules with include_router().
-
-```python
-# ❌ NEVER EVER DO THIS
-exec(open("app_routes.py").read())
-
-# ✅ ALWAYS DO THIS INSTEAD
-from routes import auth, admin_core, public
+# ✅ PROPER FASTAPI ARCHITECTURE
+from routes import auth, admin, public
 app.include_router(auth.router)
-app.include_router(admin_core.router)
+app.include_router(admin.router)
 app.include_router(public.router)
 ```
 
-**Why exec() is forbidden:**
-- Makes code impossible to debug and maintain
-- Breaks IDE support and type checking
-- Creates complex dependency sharing issues
-- Violates all Python best practices
-- Is a code smell that indicates poor architecture
+## Development Workflow
 
-**Always use modular FastAPI routers instead.**
-
-## Code Organization and Linting
-
-**Current Architecture**: The application uses modular FastAPI routers in the routes/ directory. Template filters are configured in app.py and shared via routes/dependencies.py module.
-
-**Linting Configuration**: The pyproject.toml file supports the modular router architecture and all code quality checks pass.
-
-**Router Structure**: Each router module imports shared dependencies from routes/dependencies.py which includes templates, database connections, auth helpers, and all necessary imports.
-
-**Running format-code is SAFE**: The configuration works with the modular router approach and all code quality checks pass.
-
-## Development Commands
+### Required Environment Setup
 ```bash
-# Enter development environment (Nix required)
+# Enter Nix development shell
 nix develop
 
-# Core development commands (in Nix shell)
-start-app        # Run FastAPI development server
-setup-db         # Initialize database with schema
-reset-db         # Reset database (delete and recreate)
-
-# Testing commands (in Nix shell)
-run-tests        # Run complete test suite
-test-backend     # Run backend tests only
-test-frontend    # Run frontend tests only
-test-integration # Run integration tests
-test-quick       # Run quick test subset
-test-coverage    # Generate coverage report
-clean-tests      # Clean test artifacts
-
-# Code quality commands (in Nix shell)
-format-code      # Auto-format Python code with ruff
-check-code       # Run linting and type checking
-deploy-app       # Run all checks for deployment
-
-# Manual commands (if not using Nix)
-python database.py              # Initialize database
-python bootstrap_admin.py       # Create admin user
-python tests/run_tests.py       # Run test suite
-uvicorn app:app --reload --host 0.0.0.0 --port 8000
+# Available commands:
+start-app        # Start FastAPI server (localhost:8000)
+setup-db         # Initialize PostgreSQL database
+reset-db         # Reset database (destructive)
+check-code       # Run type checking and linting
+format-code      # Auto-format with ruff
+deploy-app       # Full deployment checks
 ```
 
-## MANDATORY: Code Quality Before Commits
+### Mandatory Code Quality Process
+**EVERY commit MUST pass these checks:**
 
-**CRITICAL**: Always run code quality checks before committing and pushing code to git.
-
-### Required Workflow for ALL Code Changes:
 ```bash
-# 1. Make your code changes
-# 2. ALWAYS run these commands before committing:
-nix develop -c format-code      # Auto-format all code
-nix develop -c check-code       # Run linting and type checking
+# 1. Format code
+nix develop -c format-code
 
-# 3. Only commit if both commands pass without errors
+# 2. Run all quality checks
+nix develop -c check-code
+
+# 3. Only commit if both pass
 git add .
-git commit -m "Your commit message"
-git push
+git commit -m "Your changes"
 ```
 
-### Code Quality Requirements:
-- ✅ **format-code MUST pass** - Ensures consistent code formatting
-- ✅ **check-code MUST pass** - Ensures no linting errors or type issues
-- ✅ **Application MUST still load** - Test with `python -c "import app"`
-- ❌ **Never commit with failing checks** - Fix issues before committing
-
-### If Code Quality Checks Fail:
-1. **Fix the issues** reported by the tools
-2. **Re-run the checks** until they pass
-3. **Test the application** to ensure it still works
-4. **Then commit and push**
-
-This ensures the repository maintains high code quality and prevents regressions.
-
-## File Structure
-```
-sabc/
-├── app.py              # Single FastAPI application
-├── database.py         # SQLAlchemy setup + views
-├── models.py           # Table definitions (if separate from database.py)
-├── routes/             # Route modules (if modularized)
-├── templates/          # Jinja2 templates with conditional admin controls
-│   ├── base.html       # Base template with navigation
-│   ├── index.html      # Home page
-│   └── login.html      # Authentication
-├── static/             # Single CSS file
-│   └── style.css       # All custom styles
-├── bootstrap_admin.py  # Admin user creation script
-├── test_basic.py       # Basic tests
-└── docs/               # Documentation
-```
-
-## Navigation Structure
-Main navigation links (available to all users):
-- **Home** (/)
-- **About** (/about) - Club information and history
-- **Bylaws** (/bylaws) - Club rules and regulations
-- **Calendar** (/calendar) - Tournament schedule and events
-- **Awards** (/awards) - Annual awards and standings
-
-Authenticated user links:
-- **Polls** (/polls) - Active voting for members
-- **Members** (/members) - Member roster and profiles
-
-Admin dropdown menu additions:
-- New Tournament creation
-- New Poll creation
-- Admin dashboard
+**If checks fail:**
+- Fix all issues before committing
+- Never bypass with git commit --no-verify
+- Re-run checks until clean
 
 ## Database Design Principles
-- **SQLite only** - Single file, zero config
-- **Minimal foreign keys** - Only where absolutely necessary
-- **JSON for flexibility** - Poll option_data, not separate tables
-- **SQL views for calculations** - Points, standings, awards all in database
 
-## Core Database Tables
+### PostgreSQL-First Approach
+- **Business logic in SQL** - Use views, functions, triggers
+- **Minimal ORM usage** - SQLAlchemy Core, not ORM
+- **Type-safe queries** - Proper parameter binding
+- **Performance-focused** - Optimized queries and indexes
+
+### Schema Organization
 ```sql
--- Essential tables only
-anglers (id, name, email, member, is_admin)
-events (id, date, year, description)
+-- Core entities
+anglers (id, name, email, member, is_admin, phone)
+events (id, date, name, event_type, year)
+tournaments (id, event_id, lake_id, ramp_id, complete)
+results (id, tournament_id, angler_id, total_weight, points)
+
+-- Voting system
+polls (id, event_id, title, poll_type, starts_at, closes_at)
+poll_options (id, poll_id, option_text, option_data)
+poll_votes (id, poll_id, option_id, angler_id)
+
+-- Location data
 lakes (id, name, location)
 ramps (id, lake_id, name, coordinates)
-polls (id, title, poll_type, starts_at, closes_at, winning_option_id)
-poll_options (id, poll_id, option_text, option_data JSON)
-poll_votes (id, poll_id, option_id, angler_id)
-tournaments (id, event_id, poll_id, lake_id, entry_fee, fish_limit, is_paper, complete)
-results (id, tournament_id, angler_id, num_fish, total_weight, big_bass_weight, dead_fish_penalty, disqualified, buy_in)
-team_results (id, tournament_id, angler1_id, angler2_id, total_weight)
 ```
 
-## SABC Bylaws Requirements
-- **Entry fee**: $25 ($16 pot, $4 big bass, $3 club, $2 charity)
-- **Scoring**: 100 points for 1st, 99 for 2nd, etc.
-- **Dead fish penalty**: 0.25 lbs per dead fish
-- **Fish limit**: 5 per person (3 in summer)
-- **Big bass minimum**: 5 lbs to qualify
-- **Team tournaments**: All tournaments are team format (since 2021)
-- **Voting schedule**: 5-7 days before monthly meeting
-- **Member dues**: $25/year renewable January
+## FastAPI Route Organization
 
-## UI/UX Rules
-- **Inline admin controls**: `{% if user.is_admin %}` around admin buttons
-- **HTMX modals**: Edit forms as overlays, not new pages
-- **Contextual editing**: Edit buttons next to content they modify
-- **Single interface**: Same pages for all users, admins see extra controls
+### Modular Router Structure
+```
+routes/
+├── __init__.py
+├── dependencies.py      # Shared dependencies
+├── auth.py             # Authentication routes
+├── pages.py            # Public pages
+├── voting.py           # Member voting
+├── tournaments_public.py # Tournament results
+├── awards.py           # Awards and standings
+└── admin/              # Admin-only routes
+    ├── core.py         # Dashboard
+    ├── events.py       # Event management
+    ├── polls.py        # Poll creation
+    ├── tournaments.py  # Tournament management
+    └── users.py        # User management
+```
 
-## Technology Stack
-- **FastAPI** - Web framework
-- **SQLite** - Database (single file)
-- **SQLAlchemy Core** - Database access (not ORM)
-- **Jinja2** - Templates with conditional rendering
-- **HTMX** - Inline editing without JavaScript complexity
-- **Nix** - Development environment
+### Route Type Annotations
+```python
+from typing import Union
+from fastapi import Request
+from fastapi.responses import RedirectResponse
+from fastapi.templating import TemplateResponse
+
+@router.get("/example")
+async def example_route(request: Request) -> Union[RedirectResponse, TemplateResponse]:
+    if not user := get_current_user(request):
+        return RedirectResponse("/login")
+    return templates.TemplateResponse("example.html", {"request": request, "user": user})
+```
 
 ## Authentication & Authorization
-- **Simple email/password** - No OAuth
-- **FastAPI sessions** - Cookie-based
-- **Admin bootstrap** - Command line script for first admin
-- **Password reset** - Basic email-based recovery
 
-## Poll System Logic
+### User Types
+- **Anonymous** - Read-only access to public content
+- **Members** - Can vote in polls, view member areas
+- **Admins** - Full access to management functions
+
+### Security Implementation
 ```python
-# Poll types with different option_data structures
-tournament_location: {"lake_id": 1, "ramp_id": 3, "start_time": "06:00", "end_time": "15:00"}
-yes_no: {} # Simple text options
-multiple_choice: {} # Simple text options
-officer_election: {} # Simple text options
+# Type-safe auth helpers
+from core.helpers.auth import require_admin, require_member
+
+@router.post("/admin/action")
+async def admin_action(request: Request) -> RedirectResponse:
+    user = require_admin(request)  # Raises HTTPException if not admin
+    # Admin logic here
+    return RedirectResponse("/admin")
 ```
 
-## Event Lifecycle
-1. **Admin creates event** (date only) → Auto-creates tournament location poll
-2. **Poll opens** → Members vote on lake/ramp/times
-3. **Poll closes** → Winning option displayed
-4. **Admin creates tournament** → Uses poll results
-5. **Tournament held** → Admin enters results
-6. **Tournament complete** → Display standings
+## Poll System Architecture
 
-## Display Logic
+### Poll Types & Data Structure
 ```python
-if event.date > today:
-    if poll.is_active():
-        show_voting_interface()
-    elif poll.is_closed():
-        show_poll_results()
-else:  # Past event
-    if tournament.complete:
-        show_tournament_results()
-```
-
-## Data Migration Strategy
-- **Export Django**: `python manage.py dumpdata users tournaments polls > data.json`
-- **Import to SQLite**: Python scripts to parse JSON and insert
-- **Password reset**: Users reset passwords (security best practice)
-- **Validate**: Compare record counts and key data points
-
-
-## Scoring Calculations (SQL Views)
-```sql
--- Points: 100 for 1st, 99 for 2nd, etc.
--- Zero fish: 2 points less than last place with fish
--- Buy-ins: 4 points less than last place with fish
--- Disqualified: 0 points
-```
-
-## Key Business Rules
-- **Members only vote**: `WHERE a.member = true`
-- **Big bass carryover**: If no 5+ lb fish, pot carries to next tournament
-- **Paper tournaments**: Fish measured vs weighed
-- **Buy-in deadline**: Friday after tournament (manual tracking)
-- **Dead fish penalty**: Subtracted from total weight
-
-## Error Handling Philosophy
-- **Fail gracefully** - Show user-friendly messages
-- **Log everything** - For debugging
-- **Validate early** - Check permissions and data before processing
-- **Manual admin fixes** - For complex disputes
-
-## Performance Requirements
-- **Load time**: < 200ms
-- **Single file backup**: SQLite database
-- **Memory usage**: < 50MB
-- **Lines of code**: < 1000 total
-
-## Testing Strategy
-- **Real data testing** - Use migrated Django data
-- **Admin workflow testing** - Poll creation → Tournament → Results
-- **Member voting testing** - Ensure only members can vote
-- **Edge case testing** - Ties, empty polls, cancellations
-
-## Deployment
-- **Digital Ocean droplet** - Keep current hosting
-- **Simple deployment**: `git pull && restart service`
-- **Daily backups**: Automated SQLite file backup
-- **SSL/Domain**: Use existing setup
-
-## Common Patterns
-
-### Admin-Only Route Protection
-```python
-@app.get("/admin/polls/create")
-async def create_poll(user: User = Depends(require_admin)):
-    # Admin-only functionality
-```
-
-### Conditional Template Rendering
-```html
-<!-- Tournament results table -->
-<tr>
-    <td>{{ angler.name }}</td>
-    <td>{{ result.total_weight }}</td>
-    {% if user.is_admin %}
-        <td>
-            <button hx-get="/results/{{ result.id }}/edit">Edit</button>
-            <button hx-delete="/results/{{ result.id }}">Delete</button>
-        </td>
-    {% endif %}
-</tr>
-```
-
-### Poll Option Data Structure
-```python
-# Tournament location poll
+# Tournament location polls - structured data
 option_data = {
     "lake_id": 1,
     "ramp_id": 3,
@@ -356,48 +201,124 @@ option_data = {
     "end_time": "15:00"
 }
 
-# Simple polls (yes/no, multiple choice)
-option_data = {}  # Just use option_text
+# Simple polls - no structured data
+option_data = {}  # Uses option_text only
+```
+
+### JSON Usage Guidelines
+**Minimize JSON usage - only where essential:**
+- ✅ Poll option_data for tournament locations
+- ✅ Template filters for rendering
+- ❌ General data storage (use proper columns)
+- ❌ Configuration (use environment variables)
+
+## UI/UX Patterns
+
+### Template-First Design
+- **Jinja2 templates** with server-side rendering
+- **HTMX integration** for dynamic interactions
+- **Conditional admin controls** via template logic
+- **Single responsive interface** for all devices
+
+### Admin Interface Pattern
+```html
+<!-- Inline admin controls -->
+<div class="content">
+    <h2>Tournament Results</h2>
+    {% if user.is_admin %}
+        <button hx-get="/admin/results/edit">Edit Results</button>
+    {% endif %}
+    <!-- Content here -->
+</div>
+```
+
+## Testing Strategy
+
+### Test Categories
+- **Unit tests** - Core business logic
+- **Integration tests** - Database operations
+- **Route tests** - HTTP endpoints
+- **Auth tests** - Permission checking
+
+### Running Tests
+```bash
+nix develop -c run-tests        # Full test suite
+nix develop -c test-backend     # Backend only
+nix develop -c test-frontend    # Frontend only
+nix develop -c test-coverage    # With coverage report
+```
+
+## Deployment Configuration
+
+### Environment Variables
+```bash
+# Required for production
+DATABASE_URL=postgresql://user:pass@host:5432/sabc
+SECRET_KEY=your-secret-key-here
+LOG_LEVEL=INFO
+
+# Optional
+DEBUG=false
+PORT=8000
+```
+
+### Digital Ocean App Platform
+- Uses `.do/app.yaml` for configuration (not in git)
+- Managed PostgreSQL database with auto-injected credentials
+- Automatic HTTPS and domain management
+- Health checks at `/health` endpoint
+
+## Performance Requirements
+- **Page load time**: < 200ms average
+- **Database queries**: Optimized with proper indexes
+- **Memory usage**: < 100MB per instance
+- **Code size**: Minimal, well-organized modules
+
+## Success Metrics
+✅ **Type Safety**: Zero MyPy errors across codebase
+✅ **Code Quality**: All Ruff checks passing
+✅ **Test Coverage**: >90% for critical paths
+✅ **Performance**: Sub-200ms response times
+✅ **Maintainability**: Clear, documented code structure
+
+## Common Patterns
+
+### Database Queries
+```python
+from core.database import db
+from typing import List, Dict, Any
+
+def get_tournament_results(tournament_id: int) -> List[Dict[str, Any]]:
+    return db("""
+        SELECT a.name, r.total_weight, r.points
+        FROM results r
+        JOIN anglers a ON r.angler_id = a.id
+        WHERE r.tournament_id = :tournament_id
+        ORDER BY r.points DESC
+    """, {"tournament_id": tournament_id})
+```
+
+### Error Handling
+```python
+from core.helpers.response import error_redirect
+
+try:
+    # Database operation
+    result = db("INSERT INTO ...", params)
+    return RedirectResponse("/success")
+except Exception as e:
+    logger.error(f"Operation failed: {e}")
+    return error_redirect("/form", "Operation failed. Please try again.")
 ```
 
 ## What NOT to Build
-- **Separate admin interface** - Everything inline
-- **Complex user roles** - Just member/admin
-- **Automated enforcement** - Manual admin processes
-- **Real-time features** - Keep it simple
-- **Mobile app** - Responsive web only
-- **Advanced reporting** - Basic views sufficient
+- ❌ **Separate admin interface** - Use inline controls
+- ❌ **Complex user roles** - Keep member/admin binary
+- ❌ **Real-time features** - Server-side rendering sufficient
+- ❌ **Mobile app** - Responsive web interface only
+- ❌ **Microservices** - Single FastAPI application
+- ❌ **Advanced caching** - Database performance sufficient
 
-## Poll Visualization System
-**Enhanced in December 2024** - Comprehensive overhaul of poll results display with professional data visualization.
+---
 
-### Generic Polls
-- **Vertical Bar Charts**: Replaced simple progress bars with gradient vertical bars
-- **Vote Counts Inside Bars**: White text displays vote counts within colored bars for better visibility
-- **Zero-Vote Filtering**: Options with no votes are automatically hidden from display
-- **Consistent Styling**: Professional color scheme with hover effects and smooth animations
-
-### Tournament Location Polls
-- **Interactive Lake/Ramp Charts**: Two-level visualization showing lakes and ramp breakdowns
-- **Smart Display Logic**: Auto-shows ramp breakdown when only one lake has votes
-- **Complete Data Validation**: Ensures all options have proper lake_id, ramp_id, start_time, end_time
-- **Consistent Vote Display**: Vote counts inside bars matching generic poll styling
-
-### UI/UX Improvements
-- **Unified Design Language**: Consistent styling across all poll types
-- **Removed Redundant Banners**: Eliminated duplicate participation statistics
-- **Description Formatting**: Honor line breaks in poll descriptions with `white-space: pre-line`
-- **Responsive Layout**: Aligned column widths between poll types for visual consistency
-
-### Development Tools
-- **Data Validation**: Complete lake/ramp/time combinations from YAML configuration
-- **Edge Case Testing**: Proper handling of single votes and various vote distributions
-
-## Success Criteria
-✅ Faster than Django (< 200ms load times)
-✅ Easier to maintain (< 1000 lines of code)
-✅ All bylaws requirements met
-✅ All admin functions inline
-✅ Members can vote, admins can manage
-✅ Historical data migrated successfully
-✅ Professional poll visualization system
+**Remember**: Simplicity, type safety, and maintainability are the top priorities. When in doubt, choose the simpler, more explicit solution.

@@ -1,40 +1,56 @@
 # South Austin Bass Club (SABC) Tournament Management System
 
-A modern, minimal tournament management system for the South Austin Bass Club, built with FastAPI for maximum performance and ease of maintenance.
+A modern, type-safe tournament management system built with FastAPI and PostgreSQL, designed for simplicity, performance, and maintainability.
 
 ## 🎣 Overview
 
-SABC Tournament Management System is a complete rewrite from Django to FastAPI, focusing on minimal complexity while providing all essential tournament management features:
+SABC Tournament Management System provides comprehensive tournament management for the South Austin Bass Club with a focus on minimal complexity and maximum performance:
 
-- **Tournament Scheduling & Results** - Manage monthly tournaments with automated scoring
-- **Member Voting System** - Democratic lake selection with tournament location polls
+- **Tournament Management** - Schedule events, enter results, automated scoring
+- **Democratic Voting** - Member polls for tournament locations and club decisions
 - **Awards & Standings** - Real-time Angler of the Year (AoY) calculations
-- **Member Management** - Roster, profiles, and authentication
-- **News & Updates** - Club announcements and information
+- **Member Management** - Secure authentication, roles, and profiles
+- **Club Information** - News, bylaws, calendar, and member roster
 
 ## ✨ Key Features
 
-### For Members
-- 🗳️ **Vote on tournament locations** - Democratic lake and ramp selection
-- 📊 **View live standings** - Real-time AoY points and rankings
-- 📅 **Tournament calendar** - Schedule and event information
-- 👤 **Member profiles** - Personal information and tournament history
-- 📰 **Club news** - Important announcements and updates
+### 🗳️ **Member Voting System**
+- Democratic lake and ramp selection for tournaments
+- Poll creation with multiple question types
+- Member-only voting with secure authentication
+- Automatic tournament creation from winning poll results
 
-### For Administrators
-- 🏆 **Tournament management** - Create events, enter results, manage scoring
-- 📊 **Poll creation** - Set up voting for locations and club decisions
-- 👥 **Member management** - Add/edit members, manage permissions
-- 📈 **Results entry** - Tournament results with automated point calculations
-- 🏅 **Awards tracking** - Big bass, tournament wins, season standings
+### 🏆 **Tournament Management**
+- Complete tournament lifecycle management
+- Automated point calculations and standings
+- Team tournament support (post-2021 format)
+- Big bass tracking with carryover functionality
+
+### 📊 **Real-time Standings**
+- Live Angler of the Year (AoY) points tracking
+- Historical tournament results and statistics
+- Awards tracking and season summaries
+- Performance analytics and trends
+
+### 👥 **Member Portal**
+- Secure member authentication and profiles
+- Role-based access (Member/Admin)
+- Member roster and contact information
+- Personal tournament history
+
+### 📰 **Club Information Hub**
+- Club news and announcements
+- Tournament calendar and schedules
+- Club bylaws and regulations
+- Historical information and archives
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- **Nix** (recommended) - For complete development environment
-- **Python 3.12+** - If not using Nix
-- **SQLite** - Database (no additional setup required)
+- **Nix** (recommended) - Complete development environment
+- **Python 3.11+** - If not using Nix
+- **PostgreSQL 17+** - Database system
 
 ### Development Setup
 
@@ -42,10 +58,10 @@ SABC Tournament Management System is a complete rewrite from Django to FastAPI, 
 
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd SABC
+git clone https://github.com/your-org/sabc-tournaments.git
+cd sabc-tournaments
 
-# Enter development environment
+# Enter development environment (includes PostgreSQL)
 nix develop
 
 # Initialize database
@@ -58,18 +74,22 @@ start-app
 #### Option 2: Manual Setup
 
 ```bash
-# Clone and enter directory
-git clone <repository-url>
-cd SABC
+# Clone repository
+git clone https://github.com/your-org/sabc-tournaments.git
+cd sabc-tournaments
 
-# Install dependencies
+# Install Python dependencies
 pip install -r requirements.txt
 
-# Initialize database
-python database.py
+# Set up PostgreSQL database
+createdb sabc
+export DATABASE_URL="postgresql://username:password@localhost:5432/sabc"
+
+# Initialize database schema
+python scripts/init_postgres.py
 
 # Create admin user
-python bootstrap_admin.py
+python scripts/bootstrap_admin_postgres.py
 
 # Start server
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
@@ -79,28 +99,36 @@ The application will be available at [http://localhost:8000](http://localhost:80
 
 ## 🛠️ Development Commands
 
-### Using Nix (Recommended)
+### Core Commands (Nix Environment)
 
 ```bash
 nix develop                    # Enter development environment
 
-# Core commands
-start-app                      # Start FastAPI development server
-setup-db                       # Initialize database with schema
-reset-db                       # Reset database (delete and recreate)
+# Database management
+setup-db                       # Initialize PostgreSQL database
+reset-db                       # Reset database (destructive)
 
-# Code quality
-format-code                    # Auto-format Python code with ruff
-check-code                     # Run linting and type checking
-deploy-app                     # Run all checks for deployment
+# Development server
+start-app                      # Start FastAPI server (localhost:8000)
+
+# Code quality (mandatory before commits)
+format-code                    # Auto-format with ruff
+check-code                     # Type checking + linting
+deploy-app                     # Full deployment validation
+
+# Testing
+run-tests                      # Complete test suite
+test-backend                   # Backend tests only
+test-frontend                  # Frontend tests only
+test-coverage                  # Coverage report
 ```
 
 ### Manual Commands
 
 ```bash
 # Database
-python database.py             # Initialize database
-python bootstrap_admin.py      # Create admin user
+python scripts/init_postgres.py
+python scripts/bootstrap_admin_postgres.py
 
 # Development
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
@@ -108,191 +136,250 @@ uvicorn app:app --reload --host 0.0.0.0 --port 8000
 # Code quality
 ruff format .                  # Format code
 ruff check .                   # Lint code
+mypy .                         # Type checking
 ```
 
 ## 🏗️ Architecture
 
 ### Technology Stack
-- **FastAPI** - Modern Python web framework
-- **SQLite** - Lightweight database (single file)
-- **SQLAlchemy Core** - Database access (not ORM for simplicity)
-- **Jinja2** - Template engine with conditional admin controls
-- **HTMX** - Dynamic UI without JavaScript complexity
-- **Nix** - Reproducible development environment
+
+- **Backend**: FastAPI 0.115+ with Python 3.11+
+- **Database**: PostgreSQL 17+ with SQLAlchemy Core
+- **Frontend**: Jinja2 templates + HTMX for interactivity
+- **Type Safety**: Comprehensive type annotations throughout
+- **Development**: Nix for reproducible environment
+- **Deployment**: Digital Ocean App Platform
 
 ### Design Principles
-- **Minimal Complexity** - Absolute minimum code to meet requirements
-- **Single Interface** - No separate admin pages, all controls inline
-- **Database Calculations** - Push all math to SQL views, not Python
-- **Members-Only Voting** - Only `member=true` users can vote
-- **Admin-Only Critical Functions** - Results entry, poll creation, member management
 
-### File Structure
+- **Type Safety First** - Complete type annotations with MyPy validation
+- **Minimal Complexity** - Simplest solution that meets requirements
+- **Database-Driven** - Business logic in SQL views and functions
+- **Single Interface** - Inline admin controls, no separate admin app
+- **Performance-Focused** - Sub-200ms response times
+
+### Project Structure
+
 ```
 sabc/
-├── app.py              # Single FastAPI application (~3500 lines)
-├── database.py         # SQLAlchemy setup + views
-├── bootstrap_admin.py  # Admin user creation script
-├── tests/              # Test suite
-│   ├── run_tests.py    # Test suite runner
-├── templates/          # Jinja2 templates
-│   ├── base.html       # Base template with navigation
-│   ├── index.html      # Home page
-│   └── *.html          # Feature templates
-├── static/             # CSS and assets
-│   └── style.css       # Single stylesheet
-├── tests/              # Test suite
-├── data/               # Lake/ramp configuration (YAML)
-├── flake.nix           # Nix development environment
-└── docs/               # Documentation
+├── app.py                     # FastAPI application entry point
+├── core/                      # Core business logic
+│   ├── database.py           # Database connection and queries
+│   ├── schemas.py            # Pydantic models for validation
+│   ├── deps.py               # Dependency injection
+│   ├── db_schema.py          # Database schema definitions
+│   ├── query_service.py      # Centralized query service
+│   └── helpers/              # Utility modules
+│       ├── auth.py           # Authentication helpers
+│       ├── poll_processor.py # Poll automation
+│       └── logging_config.py # Logging configuration
+├── routes/                   # FastAPI route modules
+│   ├── auth.py              # Authentication routes
+│   ├── pages.py             # Public pages
+│   ├── voting.py            # Member voting
+│   ├── tournaments_public.py # Tournament results
+│   ├── awards.py            # Awards and standings
+│   └── admin/               # Admin-only routes
+│       ├── core.py          # Admin dashboard
+│       ├── events.py        # Event management
+│       ├── polls.py         # Poll creation
+│       ├── tournaments.py   # Tournament management
+│       └── users.py         # User management
+├── templates/               # Jinja2 templates
+│   ├── base.html           # Base template
+│   ├── index.html          # Home page
+│   └── *.html              # Feature templates
+├── static/                 # CSS and assets
+│   └── style.css           # Single stylesheet
+├── scripts/                # Database and admin scripts
+├── flake.nix              # Nix development environment
+└── CLAUDE.md              # AI development guidelines
 ```
 
 ## 📊 Database Schema
 
-### Core Tables
-- **anglers** - Members, guests, and admins
-- **events** - Tournament dates and federal holidays  
-- **tournaments** - Tournament details linked to events
-- **results** - Individual tournament results
-- **team_results** - Team tournament results (post-2021)
-- **polls** - Voting system for locations and decisions
-- **poll_options** - Poll choices with JSON data
-- **poll_votes** - Member votes (members only)
-- **news** - Club announcements
+### Core Entities
+
+```sql
+-- User management
+anglers (id, name, email, member, is_admin, phone, year_joined)
+
+-- Tournament system
+events (id, date, name, event_type, year, description)
+tournaments (id, event_id, lake_id, ramp_id, complete, is_team)
+results (id, tournament_id, angler_id, total_weight, points)
+team_results (id, tournament_id, angler1_id, angler2_id, total_weight)
+
+-- Voting system
+polls (id, event_id, title, poll_type, starts_at, closes_at)
+poll_options (id, poll_id, option_text, option_data)
+poll_votes (id, poll_id, option_id, angler_id)
+
+-- Location data
+lakes (id, name, location)
+ramps (id, lake_id, name, coordinates)
+
+-- Content management
+news (id, title, content, published, priority, created_at)
+```
 
 ### Business Rules
+
 - **Entry Fee**: $25 ($16 pot, $4 big bass, $3 club, $2 charity)
-- **Scoring**: 100 points for 1st, 99 for 2nd, etc.
-- **Dead Fish Penalty**: 0.25 lbs per dead fish
-- **Fish Limit**: 5 per person (3 in summer months)
+- **Scoring**: 100 points for 1st place, 99 for 2nd, etc.
+- **Dead Fish Penalty**: 0.25 lbs deduction per dead fish
+- **Fish Limits**: 5 fish per person (3 in summer months)
 - **Big Bass Minimum**: 5 lbs to qualify for payout
 - **Team Format**: All tournaments since 2021
-- **Voting Period**: 5-7 days before monthly meeting
+- **Voting Window**: 5-7 days before monthly meeting
 
 ## 🗳️ Poll System
 
-The system supports multiple poll types:
+### Poll Types
 
-### Tournament Location Polls
+#### Tournament Location Polls
+Structured data for tournament parameters:
 ```json
 {
   "lake_id": 1,
-  "ramp_id": "lake_key_0", 
+  "ramp_id": 3,
   "start_time": "06:00",
   "end_time": "15:00"
 }
 ```
 
-### Generic Polls
-- **Yes/No questions** - Simple binary choices
-- **Multiple choice** - Various options
-- **Officer elections** - Candidate selection
+#### Generic Polls
+- **Yes/No Questions** - Binary choices
+- **Multiple Choice** - Various options
+- **Officer Elections** - Candidate selection
 
-## 🔍 Code Quality
+### Poll Workflow
+1. **Admin creates poll** with options and time window
+2. **Members vote** during active period
+3. **Poll closes** automatically at deadline
+4. **Winning option** determines tournament details
+5. **Tournament created** automatically from poll results
 
-### Linting and Formatting
-```bash
-# Auto-format code with ruff
-format-code                    # Using Nix environment
-ruff format .                  # Manual command
+## 🔒 Security & Authentication
 
-# Check code style and errors
-check-code                     # Using Nix environment
-ruff check .                   # Manual command
+### User Roles
 
-# Type checking
-mypy app.py --ignore-missing-imports
-```
+- **Anonymous** - Public content access only
+- **Members** - Voting rights, member areas, tournament participation
+- **Admins** - Full management access, critical operations
 
-### CI Pipeline
-The project uses GitHub Actions for continuous integration with:
-- **Code formatting checks** - Ensures consistent style
-- **Linting** - Catches errors and enforces best practices  
-- **Type checking** - Static analysis with MyPy
-- **Build verification** - Ensures deployable state
+### Security Features
+
+- **Session-based Authentication** - Secure cookie sessions
+- **Password Security** - bcrypt hashing with salts
+- **Role-based Authorization** - Granular permission control
+- **Input Validation** - Pydantic models for all inputs
+- **SQL Injection Protection** - Parameterized queries
+- **XSS Prevention** - Template escaping
+- **CSRF Protection** - Built-in FastAPI protection
 
 ## 🚀 Deployment
 
-### Production Deployment
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
+### Digital Ocean App Platform
 
-### Quick Deploy Checklist
-1. **Environment Variables**: Set production `SECRET_KEY`
-2. **Database**: Ensure `sabc.db` exists and is populated
-3. **SSL Certificate**: Configure HTTPS (recommended)
-4. **Process Manager**: Use systemd, supervisor, or Docker
-5. **Reverse Proxy**: Nginx or Apache configuration
-6. **Backups**: Automated SQLite file backups
+The application is designed for deployment on Digital Ocean's App Platform with:
+
+- **Managed PostgreSQL** - Automatic database provisioning
+- **Environment Variables** - Secure configuration management
+- **Auto-scaling** - Horizontal scaling based on traffic
+- **SSL/HTTPS** - Automatic certificate management
+- **Health Checks** - Application monitoring
 
 ### Environment Variables
+
 ```bash
-SECRET_KEY=your-production-secret-key
-DATABASE_URL=sqlite:///sabc.db  # Optional, defaults to sabc.db
+# Required
+DATABASE_URL=postgresql://user:pass@host:5432/sabc
+SECRET_KEY=your-secure-secret-key
+
+# Optional
+LOG_LEVEL=INFO
+DEBUG=false
+PORT=8000
 ```
 
-## 👥 User Roles
+### Deployment Checklist
 
-### Members
-- Vote in polls (lake selection, club decisions)
-- View tournament results and standings
-- Access member roster and profiles
-- Participate in tournaments
+- [ ] Environment variables configured
+- [ ] Database schema initialized
+- [ ] Admin user created
+- [ ] Health check endpoint responding
+- [ ] SSL certificate configured
+- [ ] Domain pointing to application
 
-### Guests  
-- View public information (calendar, news)
-- Cannot vote in polls
-- Limited access to member features
+## 🧪 Testing
 
-### Administrators
-- All member privileges plus:
-- Create and manage tournaments
-- Enter tournament results
-- Create polls and manage voting
-- Member management and permissions
-- News and content management
+### Test Categories
 
-## 📖 API Documentation
+- **Unit Tests** - Core business logic validation
+- **Integration Tests** - Database operations and workflows
+- **Route Tests** - HTTP endpoint functionality
+- **Authentication Tests** - Security and permission validation
+- **Poll System Tests** - Voting workflow validation
 
-Once the application is running, visit:
-- **Interactive API docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **OpenAPI specification**: [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json)
+### Running Tests
+
+```bash
+# Complete test suite
+nix develop -c run-tests
+
+# Specific test categories
+nix develop -c test-backend      # Backend only
+nix develop -c test-frontend     # Frontend only
+nix develop -c test-integration  # Integration tests
+nix develop -c test-coverage     # With coverage report
+```
+
+## 📈 Performance
+
+### Performance Targets
+
+- **Page Load Time**: < 200ms average
+- **Database Queries**: Optimized with proper indexing
+- **Memory Usage**: < 100MB per instance
+- **Response Time**: 95th percentile < 500ms
+
+### Optimization Strategies
+
+- **Database Views** - Pre-computed aggregations
+- **Query Optimization** - Efficient joins and indexes
+- **Template Caching** - Jinja2 template compilation
+- **Static Asset Optimization** - Minimal CSS/JS footprint
 
 ## 🤝 Contributing
 
-### Development Workflow
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines.
+
+### Quick Start for Contributors
+
 1. **Fork and clone** the repository
-2. **Enter development environment**: `nix develop`
-3. **Set up database**: `setup-db`
-4. **Make changes** and verify functionality
-5. **Format and check code**: `format-code` and `check-code`
-6. **Submit pull request**
+2. **Setup environment**: `nix develop`
+3. **Initialize database**: `setup-db`
+4. **Make changes** following code standards
+5. **Quality checks**: `format-code && check-code`
+6. **Test changes**: `run-tests`
+7. **Submit pull request**
 
-### Code Standards
-- **Minimal complexity** - Keep it simple
-- **Inline admin controls** - No separate admin interface
-- **Database calculations** - Use SQL views for math
-- **Code quality** - Follow linting and formatting standards
-- **Security first** - Never expose sensitive data
+### Code Quality Requirements
 
-### Before Submitting
-- [ ] Code formatted: `format-code`  
-- [ ] Linting clean: `check-code`
-- [ ] Type checking passes: `mypy app.py --ignore-missing-imports`
-- [ ] Documentation updated if needed
+- ✅ **Type Safety**: Zero MyPy errors
+- ✅ **Code Style**: Ruff formatting and linting
+- ✅ **Test Coverage**: >90% for critical paths
+- ✅ **Documentation**: Updated for changes
+- ✅ **Performance**: No regression in response times
 
-## 🔒 Security
+## 📖 API Documentation
 
-### Authentication & Authorization
-- **Session-based authentication** - Secure cookie sessions
-- **Password hashing** - bcrypt with proper salting
-- **Role-based access** - Member/admin permissions
-- **CSRF protection** - Built-in FastAPI protection
+Interactive API documentation available when running:
 
-### Data Protection
-- **SQL injection prevention** - Parameterized queries
-- **XSS prevention** - Template escaping
-- **Input validation** - Comprehensive data validation
-- **Secure headers** - Security middleware
+- **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+- **OpenAPI Spec**: [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json)
 
 ## 📄 License
 
@@ -302,8 +389,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 The South Austin Bass Club is a community-driven fishing club focused on competitive bass fishing tournaments, member education, and conservation efforts in the Austin, Texas area.
 
+### Club History
+
+Founded to promote bass fishing excellence and camaraderie among Austin-area anglers, SABC has been organizing monthly tournaments and fostering fishing education for years. The club emphasizes fair competition, conservation, and community building through shared fishing experiences.
+
 ---
 
-**🎣 Tight Lines!** 
+**🎣 Tight Lines!**
 
-For questions, issues, or contributions, please open an issue or contact the development team.
+For questions, issues, or contributions, please [open an issue](https://github.com/your-org/sabc-tournaments/issues) or contact the development team.
+
+*Built with ❤️ for the South Austin Bass Club community*
