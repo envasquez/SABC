@@ -26,11 +26,14 @@ app = FastAPI(
     default_response_class=JSONResponse,
 )
 
+
 # Configure custom JSON response class for FastAPI
 class CustomJSONResponse(JSONResponse):
     def render(self, content) -> bytes:
         import json
+
         return json.dumps(content, cls=CustomJSONEncoder, ensure_ascii=False).encode("utf-8")
+
 
 app.default_response_class = CustomJSONResponse
 
