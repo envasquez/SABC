@@ -1,9 +1,10 @@
 import json
+from typing import Any, Dict
 
 from core.database import db
 
 
-def process_closed_polls():
+def process_closed_polls() -> int:
     try:
         # Find polls that are closed but haven't created tournaments yet
         closed_polls = db("""
@@ -56,7 +57,9 @@ def process_closed_polls():
 
             if poll_type == "tournament_location":
                 try:
-                    option_data = json.loads(option_data_str) if option_data_str else {}
+                    option_data: Dict[str, Any] = (
+                        json.loads(option_data_str) if option_data_str else {}
+                    )
 
                     # Get event details
                     event_details = db(

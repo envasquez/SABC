@@ -3,7 +3,7 @@ Consolidated query service to reduce code duplication.
 Combines functionality from queries.py, common_queries.py, and other query modules.
 """
 
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import Connection, text
 
@@ -14,21 +14,25 @@ class QueryService:
     def __init__(self, conn: Connection):
         self.conn = conn
 
-    def execute(self, query: str, params: Optional[dict] = None) -> Any:
+    def execute(self, query: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Execute a raw query with parameters."""
         return self.conn.execute(text(query), params or {})
 
-    def fetch_all(self, query: str, params: Optional[dict] = None) -> list[dict]:
+    def fetch_all(
+        self, query: str, params: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
         """Execute query and return all results as list of dicts."""
         result = self.execute(query, params)
         return [dict(row._mapping) for row in result]
 
-    def fetch_one(self, query: str, params: Optional[dict] = None) -> Optional[dict]:
+    def fetch_one(
+        self, query: str, params: Optional[Dict[str, Any]] = None
+    ) -> Optional[Dict[str, Any]]:
         """Execute query and return first result as dict or None."""
         results = self.fetch_all(query, params)
         return results[0] if results else None
 
-    def fetch_value(self, query: str, params: Optional[dict] = None) -> Any:
+    def fetch_value(self, query: str, params: Optional[Dict[str, Any]] = None) -> Any:
         """Execute query and return single value from first row."""
         result = self.fetch_one(query, params)
         if result:
@@ -36,18 +40,18 @@ class QueryService:
         return None
 
     # User/Auth queries
-    def get_user_by_email(self, email: str) -> Optional[dict]:
+    def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
         """Get user by email address."""
         return self.fetch_one(
             "SELECT * FROM anglers WHERE LOWER(email) = LOWER(:email)", {"email": email}
         )
 
-    def get_user_by_id(self, user_id: int) -> Optional[dict]:
+    def get_user_by_id(self, user_id: int) -> Optional[Dict[str, Any]]:
         """Get user by ID."""
         return self.fetch_one("SELECT * FROM anglers WHERE id = :id", {"id": user_id})
 
     # Lake/Ramp queries
-    def get_lakes_list(self) -> list[dict]:
+    def get_lakes_list(self) -> List[Dict[str, Any]]:
         """Get all lakes ordered by display_name."""
         return self.fetch_all("SELECT * FROM lakes ORDER BY display_name")
 

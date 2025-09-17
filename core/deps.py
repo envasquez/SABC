@@ -5,7 +5,7 @@ Reduces code duplication across routes.
 
 import json
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any, AsyncGenerator, Dict, Optional, Union
 
 from fastapi import HTTPException, Request
 from fastapi.responses import RedirectResponse
@@ -19,7 +19,7 @@ from core.filters import time_format_filter
 class CustomJSONEncoder(json.JSONEncoder):
     """Handle Decimal serialization globally."""
 
-    def default(self, obj):
+    def default(self, obj: Any) -> Any:
         if isinstance(obj, Decimal):
             return float(obj)
         return super().default(obj)
@@ -34,13 +34,13 @@ def render(template_name: str, request: Request, **context) -> Any:
     return templates.TemplateResponse(template_name, {"request": request, **context})
 
 
-async def get_db():
+async def get_db() -> AsyncGenerator[Connection, None]:
     """Database connection dependency."""
     with engine.connect() as conn:
         yield conn
 
 
-async def get_current_user(request: Request) -> Optional[dict]:
+async def get_current_user(request: Request) -> Optional[Dict[str, Any]]:
     """Get current user from session, returns None if not authenticated."""
     from core.helpers.auth import u
 
@@ -50,7 +50,7 @@ async def get_current_user(request: Request) -> Optional[dict]:
     return user
 
 
-async def require_user(request: Request) -> dict:
+async def require_user(request: Request) -> Dict[str, Any]:
     """Require authenticated user, raises exception if not authenticated."""
     user = await get_current_user(request)
     if not user:
@@ -58,7 +58,7 @@ async def require_user(request: Request) -> dict:
     return user
 
 
-async def require_admin(request: Request) -> dict:
+async def require_admin(request: Request) -> Dict[str, Any]:
     """Require admin user, raises exception if not admin."""
     from core.helpers.auth import admin
 
@@ -68,21 +68,26 @@ async def require_admin(request: Request) -> dict:
     return user
 
 
-async def get_user_or_redirect(request: Request) -> Any:
+async def get_user_or_redirect(request: Request) -> Union[Dict[str, Any], RedirectResponse]:
     """Get user or return redirect response for template-based routes."""
     from core.helpers.auth import u
 
-    return u(request)
+    user = u(request)
+    if user is None:
+        return RedirectResponse("/login")
+    return user
 
 
-async def get_admin_or_redirect(request: Request) -> Any:
+async def get_admin_or_redirect(request: Request) -> Union[Dict[str, Any], RedirectResponse]:
     """Get admin or return redirect response for template-based routes."""
     from core.helpers.auth import admin
 
     return admin(request)
 
 
-def db_query(conn: Connection, query: str, params: Optional[dict] = None) -> list[dict]:
+def db_query(
+    conn: Connection, query: str, params: Optional[Dict[str, Any]] = None
+) -> list[Dict[str, Any]]:
     """Execute query and return results as list of dicts."""
     from sqlalchemy import text
 
@@ -90,7 +95,9 @@ def db_query(conn: Connection, query: str, params: Optional[dict] = None) -> lis
     return [dict(row._mapping) for row in result]
 
 
-def db_query_one(conn: Connection, query: str, params: Optional[dict] = None) -> Optional[dict]:
+def db_query_one(
+    conn: Connection, query: str, params: Optional[Dict[str, Any]] = None
+) -> Optional[Dict[str, Any]]:
     """Execute query and return first result as dict or None."""
     results = db_query(conn, query, params)
     return results[0] if results else None

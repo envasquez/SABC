@@ -1,3 +1,5 @@
+from typing import Any, Dict, List, Optional
+
 import bcrypt
 
 from core.database import db
@@ -8,7 +10,7 @@ from core.helpers.auth import admin, u
 from core.query_service import QueryService
 
 
-def find_lake_by_id(lake_id, field="name"):
+def find_lake_by_id(lake_id: int, field: str = "name") -> Optional[str]:
     with engine.connect() as conn:
         qs = QueryService(conn)
         lake = qs.get_lake_by_id(lake_id)
@@ -17,32 +19,32 @@ def find_lake_by_id(lake_id, field="name"):
         return lake.get(field, lake["name"]) if field != "name" else lake["name"]
 
 
-def find_lake_data_by_db_name(name):
+def find_lake_data_by_db_name(name: str) -> Optional[Dict[str, Any]]:
     with engine.connect() as conn:
         qs = QueryService(conn)
         return qs.fetch_one("SELECT * FROM lakes WHERE name = :name", {"name": name})
 
 
-def find_ramp_name_by_id(ramp_id):
+def find_ramp_name_by_id(ramp_id: int) -> Optional[str]:
     with engine.connect() as conn:
         qs = QueryService(conn)
         ramp = qs.get_ramp_by_id(ramp_id)
         return ramp["name"] if ramp else None
 
 
-def get_all_ramps():
+def get_all_ramps() -> List[Dict[str, Any]]:
     with engine.connect() as conn:
         qs = QueryService(conn)
         return qs.fetch_all("SELECT * FROM ramps ORDER BY name")
 
 
-def get_lakes_list():
+def get_lakes_list() -> List[Dict[str, Any]]:
     with engine.connect() as conn:
         qs = QueryService(conn)
         return qs.get_lakes_list()
 
 
-def get_ramps_for_lake(lake_id):
+def get_ramps_for_lake(lake_id: int) -> List[Dict[str, Any]]:
     with engine.connect() as conn:
         qs = QueryService(conn)
         return qs.get_ramps_for_lake(lake_id)

@@ -1,10 +1,12 @@
+from typing import Dict, Optional, Union
+
 from fastapi import HTTPException, Request
 from fastapi.responses import RedirectResponse
 
 from core.database import db
 
 
-def u(r):
+def u(r: Request) -> Optional[Dict[str, Union[int, str, bool, None]]]:
     if uid := r.session.get("user_id"):
         res = db(
             "SELECT id, name, email, member, is_admin, year_joined, phone FROM anglers WHERE id=:id",
@@ -15,20 +17,24 @@ def u(r):
             if res
             else None
         )
+    return None
 
 
-def admin(r):
-    return u(r) if (user := u(r)) and user["is_admin"] else RedirectResponse("/login")
+def admin(r: Request) -> Union[Dict[str, Union[int, str, bool, None]], RedirectResponse]:
+    user = u(r)
+    if user and user["is_admin"]:
+        return user
+    return RedirectResponse("/login")
 
 
-def require_auth(request: Request):
+def require_auth(request: Request) -> Dict[str, Union[int, str, bool, None]]:
     user = u(request)
     if not user:
         raise HTTPException(status_code=303, headers={"Location": "/login"})
     return user
 
 
-def require_admin(request: Request):
+def require_admin(request: Request) -> Dict[str, Union[int, str, bool, None]]:
     user = u(request)
     if not user:
         raise HTTPException(status_code=303, headers={"Location": "/login"})
@@ -37,7 +43,7 @@ def require_admin(request: Request):
     return user
 
 
-def require_member(request: Request):
+def require_member(request: Request) -> Dict[str, Union[int, str, bool, None]]:
     user = u(request)
     if not user:
         raise HTTPException(status_code=303, headers={"Location": "/login"})
@@ -46,5 +52,5 @@ def require_member(request: Request):
     return user
 
 
-def get_user_optional(request: Request):
+def get_user_optional(request: Request) -> Optional[Dict[str, Union[int, str, bool, None]]]:
     return u(request)

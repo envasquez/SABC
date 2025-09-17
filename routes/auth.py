@@ -1,7 +1,9 @@
 from datetime import datetime
+from typing import Union
 
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
+from fastapi.templating import TemplateResponse
 
 from core.helpers.logging_config import SecurityEvent, get_logger, log_security_event
 from core.helpers.phone_utils import validate_phone_number
@@ -12,7 +14,7 @@ logger = get_logger("auth")
 
 
 @router.get("/login")
-async def login_page(request: Request):
+async def login_page(request: Request) -> Union[RedirectResponse, TemplateResponse]:
     return (
         RedirectResponse("/")
         if u(request)
@@ -21,7 +23,7 @@ async def login_page(request: Request):
 
 
 @router.get("/register")
-async def register_page(request: Request):
+async def register_page(request: Request) -> Union[RedirectResponse, TemplateResponse]:
     return (
         RedirectResponse("/")
         if u(request)
@@ -30,7 +32,9 @@ async def register_page(request: Request):
 
 
 @router.post("/login")
-async def login(request: Request, email: str = Form(...), password: str = Form(...)):
+async def login(
+    request: Request, email: str = Form(...), password: str = Form(...)
+) -> Union[RedirectResponse, TemplateResponse]:
     email = email.lower().strip()
     ip_address = request.client.host if request.client else "unknown"
 

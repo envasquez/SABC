@@ -153,3 +153,6 @@ dev.py
 *.cer
 secrets/
 cookies.txt
+
+# Digital Ocean deployment config
+.do/

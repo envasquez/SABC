@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
@@ -101,7 +103,7 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
     if isinstance(user := admin(request), RedirectResponse):
         return user
 
-    ctx = {"request": request, "user": user}
+    ctx: Dict[str, Any] = {"request": request, "user": user}
 
     if page == "events":
         per_page = 20

@@ -246,9 +246,9 @@ async def get_event_info(request: Request, event_id: int):
             event = event_info[0]
             lake_display_name = event[7] or ""
             if lake_display_name:
-                yaml_key, lake_info, display_name = find_lake_data_by_db_name(lake_display_name)
-                if display_name:
-                    lake_display_name = display_name
+                lake_data = find_lake_data_by_db_name(lake_display_name)
+                if lake_data and lake_data.get("display_name"):
+                    lake_display_name = lake_data["display_name"]
             return JSONResponse(
                 {
                     "id": event[0],

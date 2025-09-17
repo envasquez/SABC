@@ -1,4 +1,5 @@
 import os
+from typing import Any
 
 import uvicorn
 from fastapi import FastAPI, Request
@@ -29,7 +30,7 @@ app = FastAPI(
 
 # Configure custom JSON response class for FastAPI
 class CustomJSONResponse(JSONResponse):
-    def render(self, content) -> bytes:
+    def render(self, content: Any) -> bytes:
         import json
 
         return json.dumps(content, cls=CustomJSONEncoder, ensure_ascii=False).encode("utf-8")
@@ -53,7 +54,9 @@ templates.env.filters["month_number"] = month_number_filter
 
 # Exception handlers
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
     return JSONResponse(
         status_code=422,
         content={"detail": exc.errors(), "body": exc.body},
@@ -61,7 +64,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 @app.exception_handler(ValueError)
-async def value_error_handler(request: Request, exc: ValueError):
+async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse:
     return JSONResponse(status_code=400, content={"error": str(exc)})
 
 
@@ -117,4 +120,4 @@ app.include_router(pages.router)  # MUST be last due to catch-all route
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)  # type: ignore[misc]
