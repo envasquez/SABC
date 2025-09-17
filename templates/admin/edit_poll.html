@@ -53,7 +53,7 @@
                             <i class="bi bi-play-circle me-1 text-success"></i>Poll Starts
                         </label>
                         <input type="datetime-local" class="form-control" id="starts_at" name="starts_at" 
-                               value="{{ poll[4][:16] if poll[4] else '' }}">
+                               value="{{ poll[4].strftime('%Y-%m-%dT%H:%M') if poll[4] else '' }}">
                         <div class="form-text">When members can start voting</div>
                     </div>
                 </div>
@@ -63,7 +63,7 @@
                             <i class="bi bi-stop-circle me-1 text-warning"></i>Poll Closes <span class="text-danger">*</span>
                         </label>
                         <input type="datetime-local" class="form-control" id="closes_at" name="closes_at" 
-                               value="{{ poll[2][:16] }}" required>
+                               value="{{ poll[2].strftime('%Y-%m-%dT%H:%M') }}" required>
                         <div class="form-text">When voting will end</div>
                     </div>
                 </div>

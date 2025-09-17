@@ -1,25 +1,52 @@
 import json
-from datetime import datetime
+from datetime import date, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 
+from core.db_schema import engine
+from core.deps import render
 from core.helpers.auth import get_user_optional, require_auth
-from core.helpers.common_queries import get_members_with_last_tournament, get_officers
-from core.helpers.template_helpers import render
+from core.query_service import QueryService
 from routes.dependencies import db, templates
 
 router = APIRouter()
 
 
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        return super().default(obj)
+
+
 @router.get("/roster")
 async def roster(request: Request, user=Depends(require_auth)):
+    with engine.connect() as conn:
+        qs = QueryService(conn)
+        members = qs.fetch_all("""
+            SELECT a.id, a.name, a.email, a.member, a.is_admin, a.password_hash,
+                   a.year_joined, a.phone, a.created_at, MAX(e.date) as last_tournament_date
+            FROM anglers a
+            LEFT JOIN results r ON a.id = r.angler_id
+            LEFT JOIN tournaments t ON r.tournament_id = t.id
+            LEFT JOIN events e ON t.event_id = e.id
+            WHERE a.member = TRUE AND a.name != 'Admin User'
+            GROUP BY a.id, a.name, a.email, a.member, a.is_admin, a.password_hash,
+                     a.year_joined, a.phone, a.created_at
+            ORDER BY a.name
+        """)
+        officers = qs.fetch_all("""
+            SELECT * FROM anglers
+            WHERE member = TRUE AND is_admin = TRUE AND name != 'Admin User'
+            ORDER BY name
+        """)
     return render(
         "roster.html",
         request,
         user=user,
-        members=get_members_with_last_tournament(),
-        officers=get_officers(),
+        members=members,
+        officers=officers,
     )
 
 
@@ -36,7 +63,7 @@ async def calendar_page(request: Request):
             "p.id as poll_id, p.title as poll_title, p.starts_at, p.closes_at, p.closed, "
             "t.id as tournament_id, t.complete as tournament_complete FROM events e "
             "LEFT JOIN polls p ON e.id = p.event_id LEFT JOIN tournaments t ON "
-            "e.id = t.event_id WHERE strftime('%Y', e.date) = :year ORDER BY e.date",
+            "e.id = t.event_id WHERE EXTRACT(YEAR FROM e.date) = :year ORDER BY e.date",
             {"year": str(year)},
         )
 
@@ -56,9 +83,9 @@ async def calendar_page(request: Request):
         current_year=current_year,
         next_year=next_year,
         current_calendar_data=current_calendar_data,
-        current_event_details_json=json.dumps(current_event_details),
+        current_event_details_json=json.dumps(current_event_details, cls=DateTimeEncoder),
         next_calendar_data=next_calendar_data,
-        next_event_details_json=json.dumps(next_event_details),
+        next_event_details_json=json.dumps(next_event_details, cls=DateTimeEncoder),
         event_types_present=all_event_types,
     )
 
@@ -86,6 +113,7 @@ async def home_paginated(request: Request, page: int = 1):
         LEFT JOIN lakes l ON t.lake_id = l.id
         LEFT JOIN ramps ra ON t.ramp_id = ra.id
         LEFT JOIN results r ON t.id = r.tournament_id AND NOT r.disqualified
+        LEFT JOIN anglers a ON r.angler_id = a.id AND a.name != 'Admin User'
         GROUP BY t.id, e.date, e.name, e.description,
                  l.display_name, l.yaml_key, ra.name, ra.google_maps_iframe, l.google_maps_iframe,
                  t.start_time, t.end_time, t.entry_fee, t.fish_limit, t.limit_type,
@@ -105,7 +133,7 @@ async def home_paginated(request: Request, page: int = 1):
         FROM news n
         LEFT JOIN anglers a ON n.author_id = a.id
         LEFT JOIN anglers e ON n.last_edited_by = e.id
-        WHERE n.published = 1 AND (n.expires_at IS NULL OR n.expires_at > datetime('now', 'localtime'))
+        WHERE n.published = TRUE AND (n.expires_at IS NULL OR n.expires_at > CURRENT_TIMESTAMP)
         ORDER BY n.priority DESC, n.created_at DESC
         LIMIT 5
     """)
@@ -124,17 +152,19 @@ async def home_paginated(request: Request, page: int = 1):
             JOIN anglers a1 ON tr.angler1_id = a1.id
             LEFT JOIN anglers a2 ON tr.angler2_id = a2.id
             WHERE tr.tournament_id = :tournament_id
+            AND a1.name != 'Admin User'
+            AND (tr.angler2_id IS NULL OR a2.name != 'Admin User')
             AND NOT EXISTS (
                 SELECT 1 FROM results r1
                 WHERE r1.angler_id = tr.angler1_id
                 AND r1.tournament_id = tr.tournament_id
-                AND r1.buy_in = 1
+                AND r1.buy_in = TRUE
             )
             AND (tr.angler2_id IS NULL OR NOT EXISTS (
                 SELECT 1 FROM results r2
                 WHERE r2.angler_id = tr.angler2_id
                 AND r2.tournament_id = tr.tournament_id
-                AND r2.buy_in = 1
+                AND r2.buy_in = TRUE
             ))
             ORDER BY tr.total_weight DESC
             LIMIT 3

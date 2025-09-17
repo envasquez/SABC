@@ -123,10 +123,10 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
                    END as day_name,
                    EXISTS(SELECT 1 FROM polls p WHERE p.event_id = e.id) as has_poll,
                    EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id) as has_tournament,
-                   EXISTS(SELECT 1 FROM polls p WHERE p.event_id = e.id AND datetime('now') BETWEEN p.starts_at AND p.closes_at) as poll_active,
+                   EXISTS(SELECT 1 FROM polls p WHERE p.event_id = e.id AND NOW() BETWEEN p.starts_at AND p.closes_at) as poll_active,
                    e.start_time, e.weigh_in_time, e.entry_fee, e.fish_limit, e.lake_name, e.ramp_name, e.holiday_name,
-                   EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id AND t.complete = 1) as tournament_complete
-            FROM events e WHERE e.date >= date('now') ORDER BY e.date LIMIT :limit OFFSET :offset
+                   EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id AND t.complete = true) as tournament_complete
+            FROM events e WHERE e.date >= CURRENT_DATE ORDER BY e.date LIMIT :limit OFFSET :offset
         """,
             {"limit": per_page, "offset": upcoming_offset},
         )
@@ -161,7 +161,7 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
                    e.lake_name, e.start_time, e.weigh_in_time, e.holiday_name,
                    EXISTS(SELECT 1 FROM polls p WHERE p.event_id = e.id) as has_poll,
                    EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id) as has_tournament,
-                   EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id AND t.complete = 1) as tournament_complete,
+                   EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id AND t.complete = true) as tournament_complete,
                    EXISTS(SELECT 1 FROM tournaments t JOIN results r ON t.id = r.tournament_id WHERE t.event_id = e.id) as has_results
             FROM events e
             WHERE e.date < date('now')

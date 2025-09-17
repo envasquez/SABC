@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 
-from core.helpers.template_helpers import render
+from core.deps import render
 from core.providers import get_tournament_data
 from routes.dependencies import templates
 

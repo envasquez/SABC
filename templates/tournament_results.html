@@ -203,9 +203,6 @@
                         <th>Total weight</th>
                         <th>Points</th>
                         <th>Big bass weight</th>
-                        {% if user and user.is_admin %}
-                        <th>Actions</th>
-                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -228,13 +225,6 @@
                                 0.00
                             {% endif %}
                         </td>
-                        {% if user and user.is_admin %}
-                        <td>
-                            <a href="/admin/tournaments/{{ tournament[0] }}/enter-results?edit_result={{ result[7] }}" class="btn btn-sm btn-outline-primary" title="Edit individual result">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                        </td>
-                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>

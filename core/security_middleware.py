@@ -20,9 +20,11 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # CSP header to prevent XSS
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "font-src 'self' https://cdn.jsdelivr.net; "
             "img-src 'self' data: https:; "
+            "frame-src https://www.google.com https://maps.google.com; "
             "connect-src 'self'"
         )
 

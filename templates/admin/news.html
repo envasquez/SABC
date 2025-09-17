@@ -124,7 +124,7 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <small>{{ item[3][:10] if item[3] else '' }}</small>
+                                        <small>{{ item[3].strftime('%Y-%m-%d') if item[3] else '' }}</small>
                                     </td>
                                     <td>
                                         <button class="btn btn-sm btn-warning edit-btn" 

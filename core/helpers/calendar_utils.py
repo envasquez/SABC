@@ -15,7 +15,8 @@ def build_calendar_data_with_polls(calendar_events, tournament_events, year=None
 
     # Add calendar events (event_date, title, event_type, description)
     for event in calendar_events:
-        date_obj = datetime.strptime(event[0], "%Y-%m-%d")
+        # PostgreSQL returns date objects
+        date_obj = datetime.combine(event[0], datetime.min.time())
         day = date_obj.day
         month = date_obj.month
         event_type = event[2]
@@ -44,7 +45,8 @@ def build_calendar_data_with_polls(calendar_events, tournament_events, year=None
     # Add tournament events with poll/tournament information
     # tournament_events columns: event_id, date, name, event_type, description, poll_id, poll_title, starts_at, closes_at, closed, tournament_id, tournament_complete
     for event in tournament_events:
-        date_obj = datetime.strptime(event[1], "%Y-%m-%d")  # event[1] is date
+        # PostgreSQL returns date objects
+        date_obj = datetime.combine(event[1], datetime.min.time())
         day = date_obj.day
         month = date_obj.month
         event_key = f"{month}-{day}"

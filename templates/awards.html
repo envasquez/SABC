@@ -82,11 +82,11 @@
                             {% for angler in aoy_standings %}
                             <tr class="{% if loop.index <= 6 %}table-secondary{% endif %}">
                                 <td class="fw-bold">{{ loop.index }}</td>
-                                <td>{{ angler[0] }}</td>
-                                <td class="fw-bold">{{ angler[1] }}</td>
-                                <td>{{ angler[2] }}</td>
-                                <td>{{ "%.2f"|format(angler[3]) }} lbs</td>
-                                <td>{{ angler[4] }}</td>
+                                <td>{{ angler['name'] }}</td>
+                                <td class="fw-bold">{{ angler['total_points'] }}</td>
+                                <td>{{ angler['total_fish'] }}</td>
+                                <td>{{ "%.2f"|format(angler['total_weight']) }} lbs</td>
+                                <td>{{ angler['tournaments_fished'] }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -114,12 +114,12 @@
                 {% if heavy_stringer %}
                 <div class="row align-items-center">
                     <div class="col-md-8">
-                        <h5 class="mb-1">{{ heavy_stringer[0] }}</h5>
-                        <p class="mb-0 text-muted">{{ heavy_stringer[3] or "Tournament" }}</p>
+                        <h5 class="mb-1">{{ heavy_stringer['name'] }}</h5>
+                        <p class="mb-0 text-muted">{{ heavy_stringer['tournament_name'] or "Tournament" }}</p>
                     </div>
                     <div class="col-md-4 text-end">
-                        <h3 class="mb-0 text-success">{{ "%.2f"|format(heavy_stringer[1]) }} lbs</h3>
-                        <small class="text-muted">{{ heavy_stringer[2] }} fish</small>
+                        <h3 class="mb-0 text-success">{{ "%.2f"|format(heavy_stringer['total_weight']) }} lbs</h3>
+                        <small class="text-muted">{{ heavy_stringer['num_fish'] }} fish</small>
                     </div>
                 </div>
                 {% else %}
@@ -143,11 +143,11 @@
                 {% if big_bass %}
                 <div class="row align-items-center">
                     <div class="col-md-8">
-                        <h5 class="mb-1">{{ big_bass[0] }}</h5>
-                        <p class="mb-0 text-muted">{{ big_bass[2] or "Tournament" }}</p>
+                        <h5 class="mb-1">{{ big_bass['name'] }}</h5>
+                        <p class="mb-0 text-muted">{{ big_bass['tournament_name'] or "Tournament" }}</p>
                     </div>
                     <div class="col-md-4 text-end">
-                        <h3 class="mb-0 text-info">{{ "%.2f"|format(big_bass[1]) }} lbs</h3>
+                        <h3 class="mb-0 text-info">{{ "%.2f"|format(big_bass['big_bass_weight']) }} lbs</h3>
                     </div>
                 </div>
                 {% else %}

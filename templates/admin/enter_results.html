@@ -53,6 +53,9 @@
                         <button type="button" class="btn btn-success" onclick="addTeam()">
                             <i class="bi bi-plus-circle me-2"></i>Add Team
                         </button>
+                        <button type="button" class="btn btn-outline-primary ms-2" onclick="showCreateGuestModal()">
+                            <i class="bi bi-person-plus me-2"></i>Create Guest
+                        </button>
                         {% endif %}
                     </div>
                     <div class="col-md-6 text-end">
@@ -67,6 +70,38 @@
             </div>
         </div>
     </form>
+
+    <!-- Create Guest Modal -->
+    <div class="modal fade" id="createGuestModal" tabindex="-1" aria-labelledby="createGuestModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createGuestModalLabel">Create Guest User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createGuestForm">
+                        <div class="mb-3">
+                            <label for="guestName" class="form-label">Guest Name</label>
+                            <input type="text" class="form-control" id="guestName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="guestEmail" class="form-label">Email (optional)</label>
+                            <input type="email" class="form-control" id="guestEmail">
+                        </div>
+                        <div class="mb-3">
+                            <label for="guestPhone" class="form-label">Phone (optional)</label>
+                            <input type="tel" class="form-control" id="guestPhone">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createGuest()">Create Guest</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 <script>
 let teamCount = 0;
@@ -420,6 +455,69 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
     `;
 
     container.insertAdjacentHTML('beforeend', teamHtml);
+}
+
+// Show the create guest modal
+function showCreateGuestModal() {
+    const modal = new bootstrap.Modal(document.getElementById('createGuestModal'));
+    modal.show();
+}
+
+// Create a new guest user
+function createGuest() {
+    const name = document.getElementById('guestName').value.trim();
+    const email = document.getElementById('guestEmail').value.trim();
+    const phone = document.getElementById('guestPhone').value.trim();
+
+    if (!name) {
+        alert('Guest name is required');
+        return;
+    }
+
+    // Prepare the data
+    const guestData = {
+        name: name,
+        email: email || null,
+        phone: phone || null,
+        member: false
+    };
+
+    // Send request to create guest
+    fetch('/admin/users', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(guestData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Add the new guest to the anglers array
+            anglers.push({
+                id: data.angler_id,
+                name: name
+            });
+
+            // Update all dropdowns
+            updateAllAnglerDropdowns();
+
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('createGuestModal'));
+            modal.hide();
+
+            // Clear the form
+            document.getElementById('createGuestForm').reset();
+
+            alert(`Guest "${name}" created successfully!`);
+        } else {
+            alert('Error creating guest: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error creating guest. Please try again.');
+    });
 }
 </script>
 {% endblock %}

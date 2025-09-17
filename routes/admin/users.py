@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
@@ -7,6 +9,106 @@ from routes.dependencies import db, templates, u
 
 router = APIRouter()
 logger = get_logger("admin.users")
+
+
+@router.post("/admin/users")
+async def create_user(request: Request):
+    """Create a new user (typically a guest)"""
+    if not (user := u(request)) or not user.get("is_admin"):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    try:
+        # Parse JSON body
+        body = await request.body()
+        data = json.loads(body)
+
+        name = data.get("name", "").strip()
+        email = data.get("email", "").strip() if data.get("email") else None
+        phone = data.get("phone", "").strip() if data.get("phone") else None
+        member = data.get("member", False)
+
+        if not name:
+            return JSONResponse({"success": False, "message": "Name is required"}, status_code=400)
+
+        # Generate email for guest users if not provided
+        final_email = None
+        if email:
+            final_email = email.lower()
+        elif not member:
+            # Auto-generate email for guest users
+            name_parts = name.lower().split()
+            if len(name_parts) >= 2:
+                first_clean = "".join(c for c in name_parts[0] if c.isalnum())
+                last_clean = "".join(c for c in name_parts[-1] if c.isalnum())
+                proposed_email = f"{first_clean}.{last_clean}@sabc.com"
+
+                # Check if email already exists
+                if not db("SELECT id FROM anglers WHERE email = :email", {"email": proposed_email}):
+                    final_email = proposed_email
+                else:
+                    # Try numbered versions
+                    for counter in range(2, 100):
+                        numbered_email = f"{first_clean}.{last_clean}{counter}@sabc.com"
+                        if not db(
+                            "SELECT id FROM anglers WHERE email = :email", {"email": numbered_email}
+                        ):
+                            final_email = numbered_email
+                            break
+
+        # Insert new user - handle PostgreSQL RETURNING clause manually
+        from sqlalchemy import text
+
+        from core.db_schema import engine
+
+        with engine.connect() as conn:
+            result = conn.execute(
+                text("""
+                INSERT INTO anglers (name, email, phone, member, is_admin, year_joined)
+                VALUES (:name, :email, :phone, :member, false, :year)
+                RETURNING id
+                """),
+                {
+                    "name": name,
+                    "email": final_email,
+                    "phone": phone,
+                    "member": member,
+                    "year": 2025,
+                },
+            )
+            conn.commit()
+            angler_id = result.fetchone()[0]
+
+        logger.info(
+            "New user created",
+            extra={
+                "admin_user_id": user.get("id"),
+                "new_user_id": angler_id,
+                "new_user_name": name,
+                "new_user_email": final_email,
+                "is_member": member,
+            },
+        )
+
+        return JSONResponse(
+            {
+                "success": True,
+                "angler_id": angler_id,
+                "message": f"{'Member' if member else 'Guest'} created successfully",
+            }
+        )
+
+    except json.JSONDecodeError:
+        return JSONResponse({"success": False, "message": "Invalid JSON data"}, status_code=400)
+    except Exception as e:
+        logger.error(
+            "User creation failed",
+            extra={
+                "admin_user_id": user.get("id") if "user" in locals() else None,
+                "error": str(e),
+            },
+            exc_info=True,
+        )
+        return JSONResponse({"success": False, "message": str(e)}, status_code=500)
 
 
 @router.get("/admin/users/{user_id}/edit")

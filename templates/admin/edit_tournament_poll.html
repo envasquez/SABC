@@ -51,12 +51,12 @@
                             <div class="col-md-6">
                                 <label for="starts_at" class="form-label">Poll Opens</label>
                                 <input type="datetime-local" class="form-control" id="starts_at" 
-                                       name="starts_at" value="{{ poll[4][:16] if poll[4] else '' }}" required>
+                                       name="starts_at" value="{{ poll[4].strftime('%Y-%m-%dT%H:%M') if poll[4] else '' }}" required>
                             </div>
                             <div class="col-md-6">
                                 <label for="closes_at" class="form-label">Poll Closes</label>
                                 <input type="datetime-local" class="form-control" id="closes_at" 
-                                       name="closes_at" value="{{ poll[2][:16] if poll[2] else '' }}" required>
+                                       name="closes_at" value="{{ poll[2].strftime('%Y-%m-%dT%H:%M') if poll[2] else '' }}" required>
                             </div>
                         </div>
                     </div>

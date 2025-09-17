@@ -317,7 +317,7 @@
                             {% set display_date = news_item[4] if news_item[8] else news_item[3] %}
                             {% set original_author = news_item[7] %}
                             {% set editor = news_item[8] %}
-                            <span>{{ display_date[:10] if display_date else '' }}</span>
+                            <span>{{ display_date.strftime('%Y-%m-%d') if display_date else '' }}</span>
                             {% if editor %}
                                 {% set editor_parts = editor.split() %}
                                 {% if editor_parts|length >= 2 %}

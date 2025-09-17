@@ -33,10 +33,10 @@
                             <tr>
                                 <td>
                                     <i class="bi bi-shield-fill-check text-warning me-1"></i>
-                                    {{ officer[0] }}
+                                    Officer
                                 </td>
-                                <td>{{ officer[1].split(' ')[0] }}</td>
-                                <td>{{ officer[1].split(' ')[-1] }}</td>
+                                <td>{{ officer['name'].split(' ')[0] }}</td>
+                                <td>{{ officer['name'].split(' ')[-1] }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -66,11 +66,11 @@
                         </thead>
                         <tbody>
                             {% for member in members %}
-                                {% if member[2] %}  <!-- member=1 (club members) -->
+                                {% if member['member'] %}  <!-- member=true (club members) -->
                                 <tr>
-                                    <td>{{ member[0].split(' ')[0] }}</td>
-                                    <td>{{ member[0].split(' ')[-1] }}</td>
-                                    <td>{{ member[1] }}</td>
+                                    <td>{{ member['name'].split(' ')[0] }}</td>
+                                    <td>{{ member['name'].split(' ')[-1] }}</td>
+                                    <td>{{ member['email'] }}</td>
                                 </tr>
                                 {% endif %}
                             {% endfor %}
@@ -90,14 +90,14 @@
                 </h4>
             </div>
             <div class="card-body">
-                {% set guests = members|selectattr(2, 'equalto', 0)|list %}
+                {% set guests = members|selectattr('member', 'equalto', false)|list %}
                 {% if guests|length > 0 %}
                     <!-- Group guests by year -->
                     {% set years_dict = {} %}
                     {% set no_date_guests = [] %}
                     {% for guest in guests %}
-                        {% if guest[7] %}
-                            {% set year = guest[7][:4] %}
+                        {% if guest['last_tournament_date'] %}
+                            {% set year = guest['last_tournament_date'][:4] %}
                             {% if year not in years_dict %}
                                 {% set _ = years_dict.update({year: []}) %}
                             {% endif %}
@@ -160,18 +160,18 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for guest in years_dict[year]|sort(attribute=7, reverse=true) %}
+                                        {% for guest in years_dict[year]|sort(attribute='last_tournament_date', reverse=true) %}
                                         <tr>
-                                            <td>{{ guest[0].split(' ')[0] }}</td>
-                                            <td>{{ guest[0].split(' ')[-1] }}</td>
+                                            <td>{{ guest['name'].split(' ')[0] }}</td>
+                                            <td>{{ guest['name'].split(' ')[-1] }}</td>
                                             <td>
-                                                {% if guest[1] %}
-                                                    {{ guest[1] }}
+                                                {% if guest['email'] %}
+                                                    {{ guest['email'] }}
                                                 {% else %}
                                                     —
                                                 {% endif %}
                                             </td>
-                                            <td>{{ guest[7] }}</td>
+                                            <td>{{ guest['last_tournament_date'] }}</td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
@@ -196,13 +196,13 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for guest in no_date_guests|sort(attribute=0) %}
+                                        {% for guest in no_date_guests|sort(attribute='name') %}
                                         <tr>
-                                            <td>{{ guest[0].split(' ')[0] }}</td>
-                                            <td>{{ guest[0].split(' ')[-1] }}</td>
+                                            <td>{{ guest['name'].split(' ')[0] }}</td>
+                                            <td>{{ guest['name'].split(' ')[-1] }}</td>
                                             <td>
-                                                {% if guest[1] %}
-                                                    {{ guest[1] }}
+                                                {% if guest['email'] %}
+                                                    {{ guest['email'] }}
                                                 {% else %}
                                                     —
                                                 {% endif %}
@@ -242,7 +242,7 @@
     <div class="col-md-4">
         <div class="card bg-success text-white">
             <div class="card-body text-center">
-                <h3 class="card-title">{{ members|selectattr(2, 'equalto', 1)|list|length }}</h3>
+                <h3 class="card-title">{{ members|selectattr('member', 'equalto', true)|list|length }}</h3>
                 <p class="card-text">Active Members</p>
             </div>
         </div>
@@ -250,7 +250,7 @@
     <div class="col-md-4">
         <div class="card bg-secondary text-white">
             <div class="card-body text-center">
-                <h3 class="card-title">{{ members|selectattr(2, 'equalto', 0)|list|length }}</h3>
+                <h3 class="card-title">{{ members|selectattr('member', 'equalto', false)|list|length }}</h3>
                 <p class="card-text">Guests</p>
             </div>
         </div>

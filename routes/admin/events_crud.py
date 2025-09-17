@@ -106,8 +106,8 @@ async def create_event(
             )
 
             all_lakes = get_lakes_list()
-            for lake_id, lake_name, location in all_lakes:
-                option_data = {"lake_id": lake_id}
+            for lake in all_lakes:
+                option_data = {"lake_id": lake["id"]}
                 db(
                     """
                     INSERT INTO poll_options (poll_id, option_text, option_data)
@@ -115,7 +115,7 @@ async def create_event(
                 """,
                     {
                         "poll_id": poll_id,
-                        "option_text": lake_name,
+                        "option_text": lake["display_name"],
                         "option_data": json.dumps(option_data),
                     },
                 )

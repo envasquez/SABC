@@ -16,7 +16,7 @@
 
         python = pkgs.python311;
 
-        # Minimal dependencies for FastAPI + SQLite
+        # Dependencies for FastAPI + PostgreSQL
         pythonEnv = python.withPackages (ps: with ps; [
           # Core web framework
           fastapi
@@ -26,8 +26,9 @@
           itsdangerous  # for session middleware
           bcrypt  # for password hashing
 
-          # Database
+          # Database - PostgreSQL only
           sqlalchemy
+          psycopg2  # PostgreSQL adapter
 
           # Development tools
           ruff
@@ -37,11 +38,8 @@
         devPackages = with pkgs; [
           # Development tools
           git
-          sqlite
           curl
-
-          # Optional: for database inspection
-          sqlite-interactive
+          postgresql  # PostgreSQL client tools
         ];
 
         # Development scripts
@@ -49,11 +47,9 @@
           echo "🎣 Starting SABC FastAPI Application"
           echo "=================================="
 
-          # Initialize database if it doesn't exist
-          if [ ! -f "sabc.db" ]; then
-            echo "Initializing SQLite database..."
-            python -c "from database import init_db; init_db()"
-          fi
+          # Check PostgreSQL connection
+          echo "Checking PostgreSQL connection..."
+          python -c "from core.db_schema import engine; engine.connect(); print('✓ PostgreSQL connected successfully')"
 
           # Start FastAPI application
           echo "Starting FastAPI on http://localhost:8000"
@@ -87,34 +83,29 @@
         '';
 
         setupDb = pkgs.writeShellScriptBin "setup-db" ''
-          echo "🗄️  Setting up SABC Database"
-          echo "==========================="
-
-          if [ -f "sabc.db" ]; then
-            echo "Database already exists. Use 'reset-db' to recreate."
-            exit 1
-          fi
+          echo "🗄️  Setting up SABC PostgreSQL Database"
+          echo "===================================="
 
           python -c "
-from database import init_db, create_views
-print('Creating database schema...')
-init_db()
-print('Creating database views...')
-create_views()
+from core.db_schema import create_all_tables
+print('Creating PostgreSQL database schema...')
+create_all_tables()
 print('Database setup complete!')
 "
         '';
 
         resetDb = pkgs.writeShellScriptBin "reset-db" ''
-          echo "🔄 Resetting SABC Database"
-          echo "========================="
+          echo "🔄 Resetting SABC PostgreSQL Database"
+          echo "==================================="
 
-          if [ -f "sabc.db" ]; then
-            rm sabc.db
-            echo "Removed existing database."
-          fi
-
-          setup-db
+          python -c "
+from core.db_schema import drop_all_tables, create_all_tables
+print('Dropping all tables...')
+drop_all_tables()
+print('Creating PostgreSQL database schema...')
+create_all_tables()
+print('Database reset complete!')
+"
         '';
 
         deployApp = pkgs.writeShellScriptBin "deploy-app" ''
@@ -148,7 +139,7 @@ print('Database setup complete!')
             echo "📦 Technology Stack:"
             echo "  • FastAPI ${python.pkgs.fastapi.version}"
             echo "  • Python ${python.version}"
-            echo "  • SQLite ${pkgs.sqlite.version}"
+            echo "  • PostgreSQL ${pkgs.postgresql.version}"
             echo "  • SQLAlchemy ${python.pkgs.sqlalchemy.version}"
             echo ""
             echo "🚀 Available commands:"
@@ -172,7 +163,7 @@ print('Database setup complete!')
           # Environment variables
           PYTHONPATH = ".";
           SABC_ENV = "development";
-          SABC_DATABASE_URL = "sqlite:///sabc.db";
+          DATABASE_URL = "postgresql://postgres:dev123@localhost:5432/sabc";
         };
 
         # Package the application for production
@@ -187,6 +178,7 @@ print('Database setup complete!')
             uvicorn
             jinja2
             sqlalchemy
+            psycopg2
             python-multipart
             itsdangerous
             bcrypt

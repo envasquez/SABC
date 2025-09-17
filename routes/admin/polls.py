@@ -4,9 +4,10 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from core.db_schema import engine
 from core.helpers.logging_config import get_logger
-from core.helpers.queries import get_poll_options_with_votes
 from core.helpers.response import error_redirect
+from core.query_service import QueryService
 from routes.dependencies import admin, db, find_lake_by_id, get_all_ramps, get_lakes_list, templates
 
 router = APIRouter()
@@ -164,7 +165,7 @@ async def create_poll(request: Request):
                             )
             else:
                 all_lakes = get_lakes_list()
-                for lake_id, lake_name, location in all_lakes:
+                for lake in all_lakes:
                     db(
                         """
                         INSERT INTO poll_options (poll_id, option_text, option_data)
@@ -172,8 +173,8 @@ async def create_poll(request: Request):
                     """,
                         {
                             "poll_id": poll_id,
-                            "option_text": lake_name,
-                            "option_data": json.dumps({"lake_id": lake_id}),
+                            "option_text": lake["display_name"],
+                            "option_data": json.dumps({"lake_id": lake["id"]}),
                         },
                     )
         elif poll_type == "generic":
@@ -239,7 +240,9 @@ async def edit_poll_form(request: Request, poll_id: int):
 
         poll = poll_data[0]
         context = {"request": request, "user": user, "poll": poll}
-        context["poll_options"] = get_poll_options_with_votes(poll_id, include_details=True)
+        with engine.connect() as conn:
+            qs = QueryService(conn)
+            context["poll_options"] = qs.get_poll_options_with_votes(poll_id, include_details=True)
         if poll[3] == "tournament_location":  # poll_type
             lakes = get_lakes_list()
             context["lakes"] = lakes

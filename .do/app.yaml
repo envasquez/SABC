@@ -1,0 +1,42 @@
+name: sabc-tournaments
+region: nyc1
+
+services:
+- name: web
+  source_dir: /
+  github:
+    repo: your-username/sabc-tournaments
+    branch: main
+    deploy_on_push: true
+
+  run_command: uvicorn app:app --host 0.0.0.0 --port $PORT
+
+  environment_slug: python
+  instance_count: 1
+  instance_size_slug: basic-xxs
+
+  http_port: 8000
+
+  routes:
+  - path: /
+
+  health_check:
+    http_path: /health
+    initial_delay_seconds: 20
+    period_seconds: 10
+    timeout_seconds: 5
+
+  envs:
+  - key: SECRET_KEY
+    scope: RUN_TIME
+    type: SECRET
+  - key: LOG_LEVEL
+    value: INFO
+    scope: RUN_TIME
+
+databases:
+- name: sabc-db
+  engine: PG
+  version: "15"
+  production: false
+  size: basic

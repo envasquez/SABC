@@ -254,7 +254,7 @@ async def profile_page(request: Request):
                     DENSE_RANK() OVER (
                         PARTITION BY r.tournament_id
                         ORDER BY
-                            CASE WHEN r.disqualified = 1 THEN 0 ELSE r.total_weight - COALESCE(r.dead_fish_penalty, 0) END DESC
+                            CASE WHEN r.disqualified = true THEN 0 ELSE r.total_weight - COALESCE(r.dead_fish_penalty, 0) END DESC
                     ) as place_finish,
                     COUNT(*) OVER (PARTITION BY r.tournament_id) as total_participants
                 FROM results r
@@ -270,7 +270,7 @@ async def profile_page(request: Request):
                     num_fish,
                     place_finish,
                     CASE
-                        WHEN disqualified = 1 THEN 0
+                        WHEN disqualified = true THEN 0
                         ELSE 101 - place_finish
                     END as points
                 FROM tournament_standings
@@ -279,12 +279,12 @@ async def profile_page(request: Request):
                 SELECT
                     a.id,
                     a.name,
-                    SUM(CASE WHEN a.member = 1 THEN pc.points ELSE 0 END) as total_points,
+                    SUM(CASE WHEN a.member = true THEN pc.points ELSE 0 END) as total_points,
                     SUM(pc.adjusted_weight) as total_weight,
-                    ROW_NUMBER() OVER (ORDER BY SUM(CASE WHEN a.member = 1 THEN pc.points ELSE 0 END) DESC, SUM(pc.adjusted_weight) DESC) as position
+                    ROW_NUMBER() OVER (ORDER BY SUM(CASE WHEN a.member = true THEN pc.points ELSE 0 END) DESC, SUM(pc.adjusted_weight) DESC) as position
                 FROM anglers a
                 JOIN points_calc pc ON a.id = pc.angler_id
-                WHERE a.member = 1
+                WHERE a.member = true
                 GROUP BY a.id, a.name
             )
             SELECT position

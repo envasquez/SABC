@@ -4,9 +4,10 @@ from datetime import datetime
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 
+from core.db_schema import engine
+from core.deps import render
 from core.helpers.auth import require_auth
-from core.helpers.queries import get_poll_options_with_votes
-from core.helpers.template_helpers import render
+from core.query_service import QueryService
 from routes.dependencies import (
     db,
     find_lake_by_id,
@@ -20,6 +21,13 @@ from routes.dependencies import (
 router = APIRouter()
 
 
+def _get_poll_options(poll_id: int, is_admin: bool = False):
+    """Helper to get poll options with votes."""
+    with engine.connect() as conn:
+        qs = QueryService(conn)
+        return qs.get_poll_options_with_votes(poll_id, include_details=is_admin)
+
+
 @router.get("/polls")
 async def polls(request: Request, background_tasks: BackgroundTasks, user=Depends(require_auth)):
     from core.helpers.poll_processor import process_closed_polls
@@ -27,11 +35,11 @@ async def polls(request: Request, background_tasks: BackgroundTasks, user=Depend
     background_tasks.add_task(process_closed_polls)
 
     polls_data = db(
-        "SELECT p.id, p.title, p.description, p.closes_at, p.closed, p.poll_type, p.starts_at, p.event_id, CASE WHEN datetime('now', 'localtime') < datetime(p.starts_at) THEN 'upcoming' WHEN datetime('now', 'localtime') BETWEEN datetime(p.starts_at) AND datetime(p.closes_at) AND p.closed = 0 THEN 'active' ELSE 'closed' END as status, EXISTS(SELECT 1 FROM poll_votes pv WHERE pv.poll_id = p.id AND pv.angler_id = :user_id) as user_has_voted FROM polls p ORDER BY p.closes_at DESC",
+        "SELECT p.id, p.title, p.description, p.closes_at, p.closed, p.poll_type, p.starts_at, p.event_id, CASE WHEN CURRENT_TIMESTAMP < p.starts_at THEN 'upcoming' WHEN CURRENT_TIMESTAMP BETWEEN p.starts_at AND p.closes_at AND p.closed = FALSE THEN 'active' ELSE 'closed' END as status, EXISTS(SELECT 1 FROM poll_votes pv WHERE pv.poll_id = p.id AND pv.angler_id = :user_id) as user_has_voted FROM polls p ORDER BY p.closes_at DESC",
         {"user_id": user["id"]},
     )
 
-    member_count = db("SELECT COUNT(*) FROM anglers WHERE member = 1")[0][0]
+    member_count = db("SELECT COUNT(*) FROM anglers WHERE member = TRUE")[0][0]
 
     polls = []
     for poll_data in polls_data:
@@ -51,7 +59,7 @@ async def polls(request: Request, background_tasks: BackgroundTasks, user=Depend
                 "event_id": poll_data[7],
                 "status": poll_data[8],
                 "user_has_voted": bool(poll_data[9]),
-                "options": get_poll_options_with_votes(poll_data[0], user.get("is_admin")),
+                "options": _get_poll_options(poll_data[0], user.get("is_admin")),
                 "member_count": member_count,
                 "unique_voters": unique_voters,
                 "participation_percent": round(
@@ -62,11 +70,13 @@ async def polls(request: Request, background_tasks: BackgroundTasks, user=Depend
 
     lakes_data = [
         {
-            "id": lake_id,
-            "name": lake_name,
-            "ramps": [{"id": r[0], "name": r[1].title()} for r in get_ramps_for_lake(lake_id)],
+            "id": lake["id"],
+            "name": lake["display_name"],
+            "ramps": [
+                {"id": r["id"], "name": r["name"].title()} for r in get_ramps_for_lake(lake["id"])
+            ],
         }
-        for lake_id, lake_name, location in get_lakes_list()
+        for lake in get_lakes_list()
     ]
 
     return render("polls.html", request, user=user, polls=polls, lakes_data=lakes_data)
@@ -145,7 +155,7 @@ async def vote_in_poll(
                 return RedirectResponse("/polls?error=Invalid option selected", status_code=302)
 
         db(
-            "INSERT INTO poll_votes (poll_id, option_id, angler_id, voted_at) VALUES (:poll_id, :option_id, :angler_id, datetime('now'))",
+            "INSERT INTO poll_votes (poll_id, option_id, angler_id, voted_at) VALUES (:poll_id, :option_id, :angler_id, NOW())",
             {"poll_id": poll_id, "option_id": actual_option_id, "angler_id": user["id"]},
         )
         return RedirectResponse("/polls?success=Vote cast successfully", status_code=302)

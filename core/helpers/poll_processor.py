@@ -10,8 +10,8 @@ def process_closed_polls():
             SELECT p.id, p.event_id, p.poll_type, p.closes_at
             FROM polls p
             JOIN events e ON p.event_id = e.id
-            WHERE p.closed = 0
-            AND datetime('now') > datetime(p.closes_at)
+            WHERE p.closed = false
+            AND NOW() > p.closes_at
             AND p.poll_type = 'tournament_location'
             AND NOT EXISTS (SELECT 1 FROM tournaments t WHERE t.event_id = p.event_id)
             AND e.event_type = 'sabc_tournament'

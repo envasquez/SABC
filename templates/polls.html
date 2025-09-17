@@ -44,11 +44,11 @@
                         </h5>
                         <small>
                             {% if poll.status == 'upcoming' %}
-                                Poll Opens on {{ poll.starts_at[:10] }} at {{ poll.starts_at[11:16] }}
+                                Poll Opens on {{ poll.starts_at.strftime('%Y-%m-%d') }} at {{ poll.starts_at.strftime('%H:%M') }}
                             {% elif poll.status == 'active' %}
-                                Poll Closes on {{ poll.closes_at[:10] }} at {{ poll.closes_at[11:16] }}
+                                Poll Closes on {{ poll.closes_at.strftime('%Y-%m-%d') }} at {{ poll.closes_at.strftime('%H:%M') }}
                             {% else %}
-                                Poll Closed on {{ poll.closes_at[:10] }}
+                                Poll Closed on {{ poll.closes_at.strftime('%Y-%m-%d') }}
                             {% endif %}
                         </small>
                     </div>
@@ -227,7 +227,7 @@
                             <!-- Poll not yet open -->
                             <div class="alert alert-info">
                                 <i class="bi bi-clock me-2"></i>
-                                This poll will open for voting on {{ poll.starts_at[:10] }} at {{ poll.starts_at[11:16] }}.
+                                This poll will open for voting on {{ poll.starts_at.strftime('%Y-%m-%d') }} at {{ poll.starts_at.strftime('%H:%M') }}.
                             </div>
                         {% else %}
                         {% endif %}

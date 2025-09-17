@@ -62,7 +62,7 @@ async def bulk_delete_events(request: Request):
             )
             db("DELETE FROM polls WHERE event_id = :event_id", {"event_id": event_id})
             db(
-                "DELETE FROM tournaments WHERE event_id = :event_id AND complete = 0",
+                "DELETE FROM tournaments WHERE event_id = :event_id AND complete = false",
                 {"event_id": event_id},
             )
             db("DELETE FROM events WHERE id = :id", {"id": event_id})
