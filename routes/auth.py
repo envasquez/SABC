@@ -215,7 +215,7 @@ async def profile_page(request: Request):
             JOIN events e ON t.event_id = e.id
             WHERE (tr.angler1_id = :user_id OR tr.angler2_id = :user_id)
             AND e.year = :current_year
-        )
+        ) AS current_year_results
     """,
         {"user_id": user["id"], "current_year": current_year},
     )
@@ -235,7 +235,7 @@ async def profile_page(request: Request):
             JOIN events e ON t.event_id = e.id
             WHERE (tr.angler1_id = :user_id OR tr.angler2_id = :user_id)
             AND e.year >= 2022
-        )
+        ) AS all_time_results
     """,
         {"user_id": user["id"]},
     )
