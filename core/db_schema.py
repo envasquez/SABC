@@ -284,6 +284,18 @@ def drop_all_tables():
         c.commit()
 
 
+def init_db():
+    """Initialize the database with all tables."""
+    create_all_tables()
+
+
+def create_views():
+    """Create database views."""
+    with engine.connect() as c:
+        create_views_internal(c)
+        c.commit()
+
+
 def create_views_internal(connection):
     """Create database views (internal function)."""
     views = [get_tournament_standings_view(), get_angler_of_year_view()]

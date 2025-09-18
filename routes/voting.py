@@ -112,9 +112,7 @@ async def vote_in_poll(
             )
 
         if not (
-            datetime.fromisoformat(starts_at)
-            <= datetime.now()
-            <= datetime.fromisoformat(closes_at)
+            datetime.fromisoformat(starts_at) <= datetime.now() <= datetime.fromisoformat(closes_at)
         ):
             return RedirectResponse("/polls?error=Poll not accepting votes", status_code=302)
 
@@ -147,7 +145,7 @@ async def vote_in_poll(
             )
 
             if existing_option:
-                actual_option_id = existing_option[0][0]
+                actual_option_id = existing_option[0]["id"]
             else:
                 vote_data["lake_id"] = lake_id_int
                 db(
@@ -158,7 +156,8 @@ async def vote_in_poll(
                         "option_data": json.dumps(vote_data),
                     },
                 )
-                actual_option_id = db("SELECT last_insert_rowid()")[0][0]
+                res = db("SELECT lastval()")
+                actual_option_id = res[0][0] if res and len(res) > 0 else None
         else:
             actual_option_id = int(option_id)
             if not db(
