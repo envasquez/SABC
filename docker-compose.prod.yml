@@ -65,19 +65,30 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx-https.conf:/etc/nginx/nginx.conf:ro
       - ./static:/usr/share/nginx/html/static:ro
       - ./ssl:/etc/nginx/ssl:ro
       - nginx_cache:/var/cache/nginx
+      - certbot_webroot:/var/www/certbot:ro
     depends_on:
       - web
     networks:
       - sabc-network
 
+  certbot:
+    image: certbot/certbot
+    container_name: sabc-certbot
+    volumes:
+      - ./ssl:/etc/letsencrypt
+      - certbot_webroot:/var/www/certbot
+    command: echo "Certbot container for certificate renewal"
+
 volumes:
   postgres_data:
     driver: local
   nginx_cache:
+    driver: local
+  certbot_webroot:
     driver: local
 
 networks:
