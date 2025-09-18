@@ -19,6 +19,21 @@ services:
       - ./static:/app/static:ro
     networks:
       - sabc-network
+    command: >
+      sh -c "
+        echo 'Waiting for database...';
+        sleep 10;
+        echo 'Setting up database...';
+        python scripts/setup_database.py;
+        echo 'Loading lakes...';
+        python scripts/load_lakes.py;
+        echo 'Loading holidays...';
+        python scripts/load_holidays.py;
+        echo 'Creating admin user...';
+        python scripts/create_admin.py;
+        echo 'Starting server...';
+        uvicorn app:app --host 0.0.0.0 --port 8000
+      "
 
   postgres:
     image: postgres:17-alpine
