@@ -28,12 +28,12 @@ def create_admin_user():
 
     try:
         result = db(
-            """INSERT INTO anglers (name, email, password, member, is_admin, year_joined)
-               VALUES (:name, :email, :password, :member, :is_admin, :year_joined) RETURNING id""",
+            """INSERT INTO anglers (name, email, password_hash, member, is_admin, year_joined)
+               VALUES (:name, :email, :password_hash, :member, :is_admin, :year_joined) RETURNING id""",
             {
                 "name": "Admin User",
                 "email": "admin@sabc.com",
-                "password": password_hash,
+                "password_hash": password_hash,
                 "member": True,
                 "is_admin": True,
                 "year_joined": 2024,
