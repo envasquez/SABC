@@ -36,7 +36,7 @@ def create_admin_user():
                 "password": password_hash,
                 "member": True,
                 "is_admin": True,
-                "year_joined": 2024
+                "year_joined": 2024,
             },
         )
         admin_id = result[0][0]
