@@ -13,7 +13,7 @@ from sqlalchemy import Connection
 
 from core.db_schema import engine
 from core.filters import time_format_filter
-from core.helpers.auth import require_admin_async  # noqa: E402
+from core.helpers.auth import get_admin_or_redirect, require_admin_async  # noqa: E402
 
 
 class CustomJSONEncoder(json.JSONEncoder):

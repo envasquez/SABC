@@ -29,8 +29,15 @@ def create_admin_user():
     try:
         result = db(
             """INSERT INTO anglers (name, email, password, member, is_admin, year_joined)
-               VALUES (%s, %s, %s, %s, %s, %s) RETURNING id""",
-            ("Admin User", "admin@sabc.com", password_hash, True, True, 2024),
+               VALUES (:name, :email, :password, :member, :is_admin, :year_joined) RETURNING id""",
+            {
+                "name": "Admin User",
+                "email": "admin@sabc.com",
+                "password": password_hash,
+                "member": True,
+                "is_admin": True,
+                "year_joined": 2024
+            },
         )
         admin_id = result[0][0]
         print(f"Admin user created with ID: {admin_id}")
