@@ -27,8 +27,8 @@ Our primary objectives are:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/sabc-tournaments.git
-cd sabc-tournaments
+git clone https://github.com/envasquez/SABC.git
+cd SABC
 
 # Enter development environment
 nix develop
@@ -44,8 +44,8 @@ start-app
 
 ```bash
 # Clone and setup
-git clone https://github.com/your-org/sabc-tournaments.git
-cd sabc-tournaments
+git clone https://github.com/envasquez/SABC.git
+cd SABC
 
 # Install dependencies
 pip install -r requirements.txt

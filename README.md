@@ -58,8 +58,8 @@ SABC Tournament Management System provides comprehensive tournament management f
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/sabc-tournaments.git
-cd sabc-tournaments
+git clone https://github.com/envasquez/SABC.git
+cd SABC
 
 # Enter development environment (includes PostgreSQL)
 nix develop
@@ -75,8 +75,8 @@ start-app
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/sabc-tournaments.git
-cd sabc-tournaments
+git clone https://github.com/envasquez/SABC.git
+cd SABC
 
 # Install Python dependencies
 pip install -r requirements.txt
@@ -397,6 +397,6 @@ Founded to promote bass fishing excellence and camaraderie among Austin-area ang
 
 **🎣 Tight Lines!**
 
-For questions, issues, or contributions, please [open an issue](https://github.com/your-org/sabc-tournaments/issues) or contact the development team.
+For questions, issues, or contributions, please [open an issue](https://github.com/envasquez/SABC/issues) or contact the development team.
 
 *Built with ❤️ for the South Austin Bass Club community*
