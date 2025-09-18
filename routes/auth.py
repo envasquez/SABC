@@ -297,11 +297,7 @@ async def profile_page(request: Request):
             {"current_year": current_year, "user_id": user["id"]},
         )
         if aoy_standings:
-            aoy_position = (
-                aoy_standings[0]["position"]
-                if "position" in aoy_standings[0]
-                else aoy_standings[0][0]
-            )
+            aoy_position = aoy_standings[0][0]
     except Exception:
         pass
 
