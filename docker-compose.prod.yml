@@ -22,13 +22,13 @@ services:
     command: >
       sh -c "
         echo 'Waiting for database...';
-        sleep 10;
+        sleep 15;
         echo 'Setting up database...';
         python scripts/setup_database.py;
         echo 'Loading lakes...';
         python scripts/load_lakes.py;
         echo 'Loading holidays...';
-        python scripts/load_holidays.py;
+        python scripts/load_holidays.py 2024 2025;
         echo 'Creating admin user...';
         python scripts/create_admin.py;
         echo 'Starting server...';
