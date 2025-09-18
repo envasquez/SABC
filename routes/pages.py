@@ -241,7 +241,7 @@ async def home_paginated(request: Request, page: int = 1):
 async def health_check():
     try:
         result = db("SELECT COUNT(*) as count FROM anglers")
-        angler_count = result[0]["count"] if result and len(result) > 0 else 0
+        angler_count = result[0][0] if result and len(result) > 0 else 0
         return {
             "status": "healthy",
             "database": "connected",

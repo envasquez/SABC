@@ -25,7 +25,7 @@
     <!-- Current Year Tab -->
     <div class="tab-pane fade show active" id="current-year" role="tabpanel" aria-labelledby="current-year-tab">
         <div class="card shadow-sm">
-            <div class="card-header bg-scondary text-white text-center">
+            <div class="card-header bg-primary text-white text-center">
                 <h4 class="mb-0">{{ current_year }} Calendar</h4>
             </div>
             <div class="card-body">
@@ -34,11 +34,11 @@
                     {% set month_num = loop.index %}
                     <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
                         <div class="card h-100">
-                            <div class="card-header bg-light text-center py-1">
+                            <div class="card-header bg-secondary text-light text-center py-1">
                                 <small class="fw-bold">{{m[0]}}</small>
                             </div>
                             <div class="card-body p-1">
-                                <table class="table table-sm mb-0 small">
+                                <table class="table table-sm mb-0 small table-dark">
                                     <thead>
                                         <tr>
                                             {% for d in ['S','M','T','W','T','F','S'] %}
@@ -101,7 +101,7 @@
     <!-- Next Year Tab -->
     <div class="tab-pane fade" id="next-year" role="tabpanel" aria-labelledby="next-year-tab">
         <div class="card shadow-sm">
-            <div class="card-header bg-scondary text-white text-center">
+            <div class="card-header bg-primary text-white text-center">
                 <h4 class="mb-0">{{ next_year }} Calendar</h4>
             </div>
             <div class="card-body">
@@ -110,11 +110,11 @@
                     {% set month_num = loop.index %}
                     <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
                         <div class="card h-100">
-                            <div class="card-header bg-light text-center py-1">
+                            <div class="card-header bg-secondary text-light text-center py-1">
                                 <small class="fw-bold">{{m[0]}}</small>
                             </div>
                             <div class="card-body p-1">
-                                <table class="table table-sm mb-0 small">
+                                <table class="table table-sm mb-0 small table-dark">
                                     <thead>
                                         <tr>
                                             {% for d in ['S','M','T','W','T','F','S'] %}
