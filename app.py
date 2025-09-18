@@ -74,14 +74,11 @@ from routes import (
     awards,
     pages,
     static,
-    tournaments_public,
+    tournament_results,
     voting,
 )
 from routes.admin import (
     core as admin_core,
-)
-from routes.admin import (
-    events as admin_events,
 )
 from routes.admin import (
     events_crud as admin_events_crud,
@@ -104,7 +101,6 @@ from routes.admin import (
 app.include_router(auth.router)
 app.include_router(admin_lakes.router)
 app.include_router(admin_core.router)
-app.include_router(admin_events.router)
 app.include_router(admin_events_crud.router)
 app.include_router(admin_polls.router)
 app.include_router(admin_tournaments.router)
@@ -114,7 +110,7 @@ app.include_router(static.router)
 
 # Public route modules (consolidated)
 app.include_router(voting.router)
-app.include_router(tournaments_public.router)
+app.include_router(tournament_results.router)
 app.include_router(awards.router)
 app.include_router(pages.router)  # MUST be last due to catch-all route
 

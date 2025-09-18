@@ -303,7 +303,7 @@ def create_views_internal(connection):
         # PostgreSQL doesn't support CREATE VIEW IF NOT EXISTS
         view_name = view.split(" AS")[0].strip().split()[-1]  # Extract view name
         try:
-            connection.execute(text(f"DROP VIEW IF EXISTS {view_name}"))
+            connection.execute(text(f"DROP VIEW IF EXISTS {view_name} CASCADE"))
             connection.execute(text(f"CREATE VIEW {view}"))
         except Exception as e:
             logger.warning(f"Failed to create view {view_name}: {e}")

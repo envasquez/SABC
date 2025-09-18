@@ -11,10 +11,131 @@ from routes.dependencies import (
     engine,
     find_lake_data_by_db_name,
     get_lakes_list,
+    templates,
     validate_event_data,
 )
 
 router = APIRouter()
+
+
+@router.get("/admin/events")
+async def admin_events(request: Request, upcoming_page: int = 1, past_page: int = 1):
+    if isinstance(user := admin(request), RedirectResponse):
+        return user
+
+    per_page = 20
+    upcoming_offset = (upcoming_page - 1) * per_page
+    past_offset = (past_page - 1) * per_page
+
+    # Get counts and events with pagination
+    total_upcoming = db("SELECT COUNT(*) FROM events WHERE date >= CURRENT_DATE")[0][0]
+    total_past = db("SELECT COUNT(*) FROM events WHERE date < CURRENT_DATE")[0][0]
+
+    events = db(
+        """
+        SELECT e.id, e.date, e.name, e.description, e.event_type,
+               EXTRACT(DOW FROM e.date) as day_num,
+               CASE EXTRACT(DOW FROM e.date)
+                   WHEN 0 THEN 'Sunday' WHEN 1 THEN 'Monday' WHEN 2 THEN 'Tuesday'
+                   WHEN 3 THEN 'Wednesday' WHEN 4 THEN 'Thursday' WHEN 5 THEN 'Friday'
+                   WHEN 6 THEN 'Saturday'
+               END as day_name,
+               EXISTS(SELECT 1 FROM polls p WHERE p.event_id = e.id) as has_poll,
+               EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id) as has_tournament,
+               EXISTS(SELECT 1 FROM polls p WHERE p.event_id = e.id AND CURRENT_TIMESTAMP BETWEEN p.starts_at AND p.closes_at) as poll_active,
+               e.start_time, e.weigh_in_time, e.entry_fee, e.lake_name, e.ramp_name, e.holiday_name,
+               EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id AND t.complete = true) as tournament_complete
+        FROM events e WHERE e.date >= CURRENT_DATE ORDER BY e.date LIMIT :limit OFFSET :offset
+    """,
+        {"limit": per_page, "offset": upcoming_offset},
+    )
+
+    events_list = [
+        {
+            "id": e[0],
+            "date": e[1],
+            "name": e[2] or "",
+            "description": e[3] or "",
+            "event_type": e[4] or "sabc_tournament",
+            "day_name": e[6],
+            "has_poll": bool(e[7]),
+            "has_tournament": bool(e[8]),
+            "poll_active": bool(e[9]),
+            "start_time": e[10],
+            "weigh_in_time": e[11],
+            "entry_fee": e[12],
+            "lake_name": e[13],
+            "ramp_name": e[14],
+            "holiday_name": e[15],
+            "tournament_complete": bool(e[16]),
+        }
+        for e in events
+    ]
+
+    # Get past events for Past Events tab
+    past_events_raw = db(
+        """
+        SELECT e.id, e.date, e.name, e.description, e.event_type, e.entry_fee,
+               e.lake_name, e.start_time, e.weigh_in_time, e.holiday_name,
+               EXISTS(SELECT 1 FROM polls p WHERE p.event_id = e.id) as has_poll,
+               EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id) as has_tournament,
+               EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id AND t.complete = true) as tournament_complete,
+               EXISTS(SELECT 1 FROM tournaments t JOIN results r ON t.id = r.tournament_id WHERE t.event_id = e.id) as has_results
+        FROM events e
+        WHERE e.date < CURRENT_DATE
+        ORDER BY e.date DESC
+        LIMIT :limit OFFSET :offset
+    """,
+        {"limit": per_page, "offset": past_offset},
+    )
+
+    past_events = [
+        {
+            "id": e[0],
+            "date": e[1],
+            "name": e[2] or "",
+            "description": e[3] or "",
+            "event_type": e[4] or "sabc_tournament",
+            "entry_fee": e[5],
+            "lake_name": e[6],
+            "start_time": e[7],
+            "weigh_in_time": e[8],
+            "holiday_name": e[9],
+            "has_poll": bool(e[10]),
+            "has_tournament": bool(e[11]),
+            "tournament_complete": bool(e[12]),
+            "has_results": bool(e[13]),
+        }
+        for e in past_events_raw
+    ]
+
+    # Add pagination context
+    upcoming_total_pages = (total_upcoming + per_page - 1) // per_page
+    past_total_pages = (total_past + per_page - 1) // per_page
+
+    ctx = {
+        "request": request,
+        "user": user,
+        "events": events_list,
+        "past_events": past_events,
+        "upcoming_page": upcoming_page,
+        "upcoming_total_pages": upcoming_total_pages,
+        "upcoming_has_prev": upcoming_page > 1,
+        "upcoming_has_next": upcoming_page < upcoming_total_pages,
+        "upcoming_prev_page": upcoming_page - 1,
+        "upcoming_next_page": upcoming_page + 1,
+        "total_upcoming": total_upcoming,
+        "past_page": past_page,
+        "past_total_pages": past_total_pages,
+        "past_has_prev": past_page > 1,
+        "past_has_next": past_page < past_total_pages,
+        "past_prev_page": past_page - 1,
+        "past_next_page": past_page + 1,
+        "total_past": total_past,
+        "per_page": per_page,
+    }
+
+    return templates.TemplateResponse("admin/events.html", ctx)
 
 
 @router.post("/admin/events/create")

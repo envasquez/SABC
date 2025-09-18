@@ -92,8 +92,8 @@ class QueryService:
         """Get all currently active polls."""
         return self.fetch_all("""
             SELECT * FROM polls
-            WHERE starts_at <= datetime('now')
-            AND closes_at >= datetime('now')
+            WHERE starts_at <= CURRENT_TIMESTAMP
+            AND closes_at >= CURRENT_TIMESTAMP
             ORDER BY closes_at
         """)
 
@@ -160,7 +160,7 @@ class QueryService:
             FROM events e
             LEFT JOIN polls p ON e.id = p.event_id
             LEFT JOIN tournaments t ON e.id = t.event_id
-            WHERE e.date >= date('now')
+            WHERE e.date >= CURRENT_DATE
             ORDER BY e.date
         """)
 
@@ -174,7 +174,7 @@ class QueryService:
                    t.ramp_name
             FROM events e
             LEFT JOIN tournaments t ON e.id = t.event_id
-            WHERE e.date < date('now')
+            WHERE e.date < CURRENT_DATE
             ORDER BY e.date DESC
         """)
 
@@ -190,7 +190,7 @@ class QueryService:
     # Stats queries
     def get_angler_stats(self, angler_id: int, year: Optional[int] = None) -> dict:
         """Get statistics for an angler."""
-        year_filter = "AND STRFTIME('%Y', e.date) = :year" if year else ""
+        year_filter = "AND EXTRACT(YEAR FROM e.date) = :year" if year else ""
         params = {"angler_id": angler_id}
         if year:
             params["year"] = str(year)

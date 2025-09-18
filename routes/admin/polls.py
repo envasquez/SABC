@@ -23,7 +23,7 @@ async def create_poll_form(request: Request, event_id: int = Query(None)):
             available_events = db("""
                 SELECT e.id, e.date, e.name, e.event_type, e.description
                 FROM events e LEFT JOIN polls p ON e.id = p.event_id
-                WHERE p.id IS NULL AND e.date >= date('now') AND e.event_type = 'sabc_tournament'
+                WHERE p.id IS NULL AND e.date >= CURRENT_DATE AND e.event_type = 'sabc_tournament'
                 ORDER BY e.date ASC
             """)
             return templates.TemplateResponse(
@@ -48,7 +48,7 @@ async def create_poll_form(request: Request, event_id: int = Query(None)):
                 status_code=302,
             )
         events = db(
-            "SELECT id, date, name, event_type, description FROM events WHERE (date >= date('now') OR id = :event_id) AND event_type = 'sabc_tournament' ORDER BY date",
+            "SELECT id, date, name, event_type, description FROM events WHERE (date >= CURRENT_DATE OR id = :event_id) AND event_type = 'sabc_tournament' ORDER BY date",
             {"event_id": event_id},
         )
         lakes = get_lakes_list()
@@ -248,9 +248,9 @@ async def edit_poll_form(request: Request, poll_id: int):
             context["lakes"] = lakes
             selected_lakes = db(
                 """
-                SELECT DISTINCT JSON_EXTRACT(option_data, '$.lake_id') as lake_id
+                SELECT DISTINCT (option_data->>'lake_id')::int as lake_id
                 FROM poll_options WHERE poll_id = :poll_id
-                AND JSON_EXTRACT(option_data, '$.lake_id') IS NOT NULL
+                AND option_data->>'lake_id' IS NOT NULL
             """,
                 {"poll_id": poll_id},
             )

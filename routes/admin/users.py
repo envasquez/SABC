@@ -5,10 +5,24 @@ from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.helpers.logging_config import SecurityEvent, get_logger, log_security_event
 from core.helpers.response import error_redirect
-from routes.dependencies import db, templates, u
+from routes.dependencies import admin, db, templates, u
 
 router = APIRouter()
 logger = get_logger("admin.users")
+
+
+@router.get("/admin/users")
+async def admin_users(request: Request):
+    if isinstance(user := admin(request), RedirectResponse):
+        return user
+
+    users = db(
+        "SELECT id, name, email, member, is_admin FROM anglers ORDER BY is_admin DESC, member DESC, name"
+    )
+
+    return templates.TemplateResponse(
+        "admin/users.html", {"request": request, "user": user, "users": users}
+    )
 
 
 @router.post("/admin/users")

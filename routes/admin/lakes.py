@@ -12,7 +12,7 @@ async def admin_lakes(request: Request):
     if not (user := u(request)) or not user.get("is_admin"):
         return RedirectResponse("/login")
     lakes = db("""
-        SELECT id, yaml_key, display_name, google_maps_iframe, created_at, updated_at
+        SELECT id, yaml_key, display_name, google_maps_iframe
         FROM lakes
         ORDER BY display_name
     """)

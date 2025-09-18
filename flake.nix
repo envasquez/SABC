@@ -47,9 +47,28 @@
           echo "🎣 Starting SABC FastAPI Application"
           echo "=================================="
 
-          # Check PostgreSQL connection
-          echo "Checking PostgreSQL connection..."
-          python -c "from core.db_schema import engine; engine.connect(); print('✓ PostgreSQL connected successfully')"
+          # Start PostgreSQL container
+          echo "Starting PostgreSQL container..."
+          docker compose up -d postgres
+
+          # Wait for PostgreSQL to be ready
+          echo "Waiting for PostgreSQL to be ready..."
+          until docker compose exec postgres pg_isready -U postgres; do
+            echo "PostgreSQL is unavailable - sleeping"
+            sleep 1
+          done
+          echo "✓ PostgreSQL is ready!"
+
+          # Initialize database if needed
+          echo "Initializing database..."
+          python -c "
+from core.db_schema import create_all_tables
+try:
+    create_all_tables()
+    print('✓ Database initialized successfully')
+except Exception as e:
+    print(f'Note: {e}')
+"
 
           # Start FastAPI application
           echo "Starting FastAPI on http://localhost:8000"
