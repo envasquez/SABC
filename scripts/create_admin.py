@@ -5,7 +5,6 @@ Create admin user for SABC application.
 
 import os
 import sys
-from pathlib import Path
 
 import bcrypt
 
@@ -13,6 +12,7 @@ import bcrypt
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.database import db
+
 
 def create_admin_user():
     """Create the admin user if it doesn't exist."""
@@ -24,13 +24,13 @@ def create_admin_user():
         return
 
     # Create admin user
-    password_hash = bcrypt.hashpw("admin123".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    password_hash = bcrypt.hashpw("admin123".encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
     try:
         result = db(
             """INSERT INTO anglers (name, email, password, member, is_admin, year_joined)
                VALUES (%s, %s, %s, %s, %s, %s) RETURNING id""",
-            ("Admin User", "admin@sabc.com", password_hash, True, True, 2024)
+            ("Admin User", "admin@sabc.com", password_hash, True, True, 2024),
         )
         admin_id = result[0][0]
         print(f"Admin user created with ID: {admin_id}")
@@ -39,6 +39,7 @@ def create_admin_user():
     except Exception as e:
         print(f"Error creating admin user: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     create_admin_user()
