@@ -39,7 +39,7 @@ def create_admin_user():
                 "year_joined": 2024,
             },
         )
-        admin_id = result[0][0]
+        admin_id = result[0]["id"]
         print(f"Admin user created with ID: {admin_id}")
         print("Login: admin@sabc.com / admin123")
 
