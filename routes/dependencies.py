@@ -56,6 +56,20 @@ def validate_lake_ramp_combo(lake_id, ramp_id):
         return qs.validate_lake_ramp_combo(lake_id, ramp_id)
 
 
+def get_admin_anglers_list():
+    with engine.connect() as conn:
+        qs = QueryService(conn)
+        return qs.get_admin_anglers_list()
+
+
+def get_admin_events_data(upcoming_page: int = 1, past_page: int = 1, per_page: int = 20):
+    upcoming_offset = (upcoming_page - 1) * per_page
+    past_offset = (past_page - 1) * per_page
+    with engine.connect() as conn:
+        qs = QueryService(conn)
+        return qs.get_admin_events_data(per_page, upcoming_offset, per_page, past_offset)
+
+
 from core.validators import get_federal_holidays, validate_event_data  # noqa
 
 __all__ = [

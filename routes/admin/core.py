@@ -3,16 +3,19 @@ from typing import Any, Dict
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from core.helpers.auth import require_admin
 from core.helpers.response import error_redirect
-from routes.dependencies import admin, db, templates, u
+from routes.dependencies import db, get_admin_anglers_list, templates
 
 router = APIRouter()
 
 
 @router.get("/admin/news")
 async def admin_news(request: Request):
-    if not (user := u(request)) or not user.get("is_admin"):
-        return RedirectResponse("/login")
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
 
     news_items = db("""
         SELECT n.id, n.title, n.content, n.created_at, n.published, n.priority,
@@ -32,8 +35,10 @@ async def admin_news(request: Request):
 async def create_news(
     request: Request, title: str = Form(...), content: str = Form(...), priority: int = Form(0)
 ):
-    if not (user := u(request)) or not user.get("is_admin"):
-        return RedirectResponse("/login")
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
 
     try:
         db(
@@ -62,8 +67,10 @@ async def update_news(
     content: str = Form(...),
     priority: int = Form(0),
 ):
-    if not (user := u(request)) or not user.get("is_admin"):
-        return RedirectResponse("/login")
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
 
     try:
         db(
@@ -88,8 +95,10 @@ async def update_news(
 
 @router.delete("/admin/news/{news_id}")
 async def delete_news(request: Request, news_id: int):
-    if not (user := u(request)) or not user.get("is_admin"):
-        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
 
     try:
         db("DELETE FROM news WHERE id = :id", {"id": news_id})
@@ -100,7 +109,9 @@ async def delete_news(request: Request, news_id: int):
 
 @router.get("/admin/{page}")
 async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_page: int = 1):
-    if isinstance(user := admin(request), RedirectResponse):
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
         return user
 
     ctx: Dict[str, Any] = {"request": request, "user": user}
@@ -217,9 +228,7 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
         )
 
     elif page == "users":
-        ctx["users"] = db(
-            "SELECT id, name, email, member, is_admin FROM anglers ORDER BY is_admin DESC, member DESC, name"
-        )
+        ctx["users"] = get_admin_anglers_list()
 
     elif page == "tournaments":
         # Get all tournaments with event and result data

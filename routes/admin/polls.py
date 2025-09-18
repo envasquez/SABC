@@ -5,10 +5,11 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.db_schema import engine
+from core.helpers.auth import require_admin
 from core.helpers.logging_config import get_logger
 from core.helpers.response import error_redirect
 from core.query_service import QueryService
-from routes.dependencies import admin, db, find_lake_by_id, get_all_ramps, get_lakes_list, templates
+from routes.dependencies import db, find_lake_by_id, get_all_ramps, get_lakes_list, templates
 
 router = APIRouter()
 logger = get_logger("admin.polls")
@@ -16,8 +17,11 @@ logger = get_logger("admin.polls")
 
 @router.get("/admin/polls/create")
 async def create_poll_form(request: Request, event_id: int = Query(None)):
-    if isinstance(user := admin(request), RedirectResponse):
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
         return user
+
     try:
         if event_id is None:
             available_events = db("""
@@ -70,8 +74,11 @@ async def create_poll_form(request: Request, event_id: int = Query(None)):
 
 @router.get("/admin/polls/create/generic")
 async def create_generic_poll_form(request: Request):
-    if isinstance(user := admin(request), RedirectResponse):
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
         return user
+
     return templates.TemplateResponse(
         "admin/create_generic_poll.html", {"request": request, "user": user}
     )
@@ -79,8 +86,11 @@ async def create_generic_poll_form(request: Request):
 
 @router.post("/admin/polls/create")
 async def create_poll(request: Request):
-    if isinstance(user := admin(request), RedirectResponse):
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
         return user
+
     try:
         form = await request.form()
         event_id_raw = form.get("event_id")
@@ -228,8 +238,11 @@ async def create_poll(request: Request):
 
 @router.get("/admin/polls/{poll_id}/edit")
 async def edit_poll_form(request: Request, poll_id: int):
-    if isinstance(user := admin(request), RedirectResponse):
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
         return user
+
     try:
         poll_data = db(
             "SELECT p.id, p.title, p.closes_at, p.poll_type, p.starts_at, p.description FROM polls p WHERE p.id = :poll_id",
@@ -268,8 +281,11 @@ async def edit_poll_form(request: Request, poll_id: int):
 
 @router.post("/admin/polls/{poll_id}/edit")
 async def update_poll(request: Request, poll_id: int):
-    if isinstance(user := admin(request), RedirectResponse):
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
         return user
+
     try:
         form = await request.form()
         title = form.get("title", "").strip()
@@ -347,8 +363,11 @@ async def update_poll(request: Request, poll_id: int):
 
 @router.delete("/admin/polls/{poll_id}")
 async def delete_poll(request: Request, poll_id: int):
-    if isinstance(admin(request), RedirectResponse):
-        return JSONResponse({"error": "Authentication required"}, status_code=401)
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
+
     try:
         db("DELETE FROM poll_votes WHERE poll_id = :poll_id", {"poll_id": poll_id})
         db("DELETE FROM poll_options WHERE poll_id = :poll_id", {"poll_id": poll_id})
@@ -360,8 +379,11 @@ async def delete_poll(request: Request, poll_id: int):
 
 @router.delete("/admin/votes/{vote_id}")
 async def delete_vote(request: Request, vote_id: int):
-    if isinstance(admin(request), RedirectResponse):
-        return JSONResponse({"error": "Authentication required"}, status_code=401)
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
+
     try:
         vote_details = db(
             """

@@ -1,16 +1,20 @@
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from core.helpers.auth import require_admin
 from core.helpers.response import error_redirect
-from routes.dependencies import db, templates, u
+from routes.dependencies import db, templates
 
 router = APIRouter()
 
 
 @router.get("/admin/lakes")
 async def admin_lakes(request: Request):
-    if not (user := u(request)) or not user.get("is_admin"):
-        return RedirectResponse("/login")
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
+
     lakes = db("""
         SELECT id, yaml_key, display_name, google_maps_iframe
         FROM lakes
@@ -28,8 +32,11 @@ async def create_lake(
     display_name: str = Form(...),
     google_maps_embed: str = Form(""),
 ):
-    if not (user := u(request)) or not user.get("is_admin"):
-        return RedirectResponse("/login")
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
+
     try:
         db(
             """
@@ -55,8 +62,11 @@ async def update_lake(
     display_name: str = Form(...),
     google_maps_embed: str = Form(""),
 ):
-    if not (user := u(request)) or not user.get("is_admin"):
-        return RedirectResponse("/login")
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
+
     try:
         db(
             """
@@ -78,8 +88,11 @@ async def update_lake(
 
 @router.delete("/admin/lakes/{lake_id}")
 async def delete_lake(request: Request, lake_id: int):
-    if not (user := u(request)) or not user.get("is_admin"):
-        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
+
     try:
         usage_count = db(
             """

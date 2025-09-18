@@ -3,9 +3,10 @@ import json
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from core.helpers.auth import require_admin
 from core.helpers.logging_config import SecurityEvent, get_logger, log_security_event
 from core.helpers.response import error_redirect
-from routes.dependencies import admin, db, templates, u
+from routes.dependencies import db, get_admin_anglers_list, templates
 
 router = APIRouter()
 logger = get_logger("admin.users")
@@ -13,12 +14,12 @@ logger = get_logger("admin.users")
 
 @router.get("/admin/users")
 async def admin_users(request: Request):
-    if isinstance(user := admin(request), RedirectResponse):
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
         return user
 
-    users = db(
-        "SELECT id, name, email, member, is_admin FROM anglers ORDER BY is_admin DESC, member DESC, name"
-    )
+    users = get_admin_anglers_list()
 
     return templates.TemplateResponse(
         "admin/users.html", {"request": request, "user": user, "users": users}
@@ -28,8 +29,10 @@ async def admin_users(request: Request):
 @router.post("/admin/users")
 async def create_user(request: Request):
     """Create a new user (typically a guest)"""
-    if not (user := u(request)) or not user.get("is_admin"):
-        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
 
     try:
         # Parse JSON body
@@ -127,8 +130,10 @@ async def create_user(request: Request):
 
 @router.get("/admin/users/{user_id}/edit")
 async def edit_user_page(request: Request, user_id: int):
-    if not (user := u(request)) or not user.get("is_admin"):
-        return RedirectResponse("/login")
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
 
     edit_user = db(
         "SELECT id, name, email, member, is_admin FROM anglers WHERE id = :id",
@@ -150,8 +155,11 @@ async def update_user(
     member: bool = Form(False),
     is_admin: bool = Form(False),
 ):
-    if not (user := u(request)) or not user.get("is_admin"):
-        return RedirectResponse("/login")
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
+
     try:
         before = db(
             "SELECT name, email, member, is_admin FROM anglers WHERE id = :id",
@@ -293,8 +301,10 @@ async def update_user(
 
 @router.get("/admin/users/{user_id}/verify")
 async def verify_user(request: Request, user_id: int):
-    if not (user := u(request)) or not user.get("is_admin"):
-        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
 
     result = db(
         "SELECT id, name, email, member, is_admin FROM anglers WHERE id = :id",
@@ -316,8 +326,11 @@ async def verify_user(request: Request, user_id: int):
 
 @router.delete("/admin/users/{user_id}")
 async def delete_user(request: Request, user_id: int):
-    if not (user := u(request)) or not user.get("is_admin"):
-        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
+
     if user.get("id") == user_id:
         return JSONResponse({"error": "Cannot delete yourself"}, status_code=400)
     try:

@@ -14,6 +14,8 @@ class SecurityEvent:
     AUTH_REGISTER = "auth.register"
     AUTH_SESSION_EXPIRED = "auth.session.expired"
     AUTH_ACCOUNT_DELETED = "auth.account.deleted"
+    PASSWORD_RESET_REQUESTED = "auth.password_reset.requested"
+    PASSWORD_RESET_COMPLETED = "auth.password_reset.completed"
 
     ADMIN_USER_CREATE = "admin.user.create"
     ADMIN_USER_UPDATE = "admin.user.update"

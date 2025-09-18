@@ -84,10 +84,16 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
 
 @router.post("/register")
 async def register(
-    request: Request, name: str = Form(...), email: str = Form(...), password: str = Form(...)
+    request: Request,
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
 ):
     email = email.lower().strip()
-    name = name.strip()
+    first_name = first_name.strip()
+    last_name = last_name.strip()
+    name = f"{first_name} {last_name}".strip()
     ip_address = request.client.host if request.client else "unknown"
     try:
         existing = db(
@@ -332,6 +338,9 @@ async def update_profile(
     email: str = Form(...),
     phone: str = Form(""),
     year_joined: int = Form(None),
+    current_password: str = Form(""),
+    new_password: str = Form(""),
+    confirm_password: str = Form(""),
 ):
     if not (user := u(request)):
         return RedirectResponse("/login")
@@ -349,6 +358,52 @@ async def update_profile(
         if existing_email:
             return RedirectResponse("/profile?error=Email is already in use by another user")
 
+        # Handle password change if requested
+        password_changed = False
+        if current_password or new_password or confirm_password:
+            # All password fields must be provided
+            if not (current_password and new_password and confirm_password):
+                return RedirectResponse(
+                    "/profile?error=All password fields are required to change password"
+                )
+
+            # Validate new password length
+            if len(new_password) < 8:
+                return RedirectResponse(
+                    "/profile?error=New password must be at least 8 characters long"
+                )
+
+            # Confirm passwords match
+            if new_password != confirm_password:
+                return RedirectResponse("/profile?error=New passwords do not match")
+
+            # Get current password hash from database
+            current_user = db(
+                "SELECT password_hash FROM anglers WHERE id = :user_id", {"user_id": user["id"]}
+            )
+            if not current_user:
+                return RedirectResponse("/profile?error=User not found")
+
+            stored_password_hash = current_user[0][0]
+
+            # Verify current password
+            if not bcrypt.checkpw(
+                current_password.encode("utf-8"), stored_password_hash.encode("utf-8")
+            ):
+                return RedirectResponse("/profile?error=Current password is incorrect")
+
+            # Hash new password
+            new_password_hash = bcrypt.hashpw(
+                new_password.encode("utf-8"), bcrypt.gensalt()
+            ).decode("utf-8")
+
+            # Update password in database
+            db(
+                "UPDATE anglers SET password_hash = :password_hash WHERE id = :user_id",
+                {"password_hash": new_password_hash, "user_id": user["id"]},
+            )
+            password_changed = True
+
         db(
             """
             UPDATE anglers
@@ -362,18 +417,40 @@ async def update_profile(
                 "user_id": user["id"],
             },
         )
+        # Log the update
+        updated_fields = {
+            "email": email,
+            "phone": phone,
+            "year_joined": year_joined,
+        }
+        if password_changed:
+            updated_fields["password"] = "changed"
+
         logger.info(
             "User profile updated",
             extra={
                 "user_id": user["id"],
-                "updated_fields": {
-                    "email": email,
-                    "phone": phone,
-                    "year_joined": year_joined,
-                },
+                "updated_fields": updated_fields,
             },
         )
-        return RedirectResponse("/profile?success=Profile updated successfully", status_code=302)
+
+        # Log password change for security
+        if password_changed:
+            from core.helpers.logging_config import SecurityEvent, log_security_event
+
+            log_security_event(
+                SecurityEvent.PASSWORD_RESET_COMPLETED,
+                user_id=user["id"],
+                user_email=user["email"],
+                ip_address=request.client.host if request.client else "unknown",
+                details={"method": "profile_edit", "success": True},
+            )
+
+        # Success message
+        success_msg = "Profile updated successfully"
+        if password_changed:
+            success_msg += " and password changed"
+        return RedirectResponse(f"/profile?success={success_msg}", status_code=302)
     except Exception as e:
         logger.error(
             "Profile update error",

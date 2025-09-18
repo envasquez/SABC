@@ -73,6 +73,7 @@ from routes import (
     auth,
     awards,
     pages,
+    password_reset,
     static,
     tournament_results,
     voting,
@@ -99,6 +100,7 @@ from routes.admin import (
 )
 
 app.include_router(auth.router)
+app.include_router(password_reset.router)
 app.include_router(admin_lakes.router)
 app.include_router(admin_core.router)
 app.include_router(admin_events_crud.router)

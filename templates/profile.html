@@ -51,6 +51,25 @@
 <div class="mb-3"><label class="form-label">Email</label><input type="email" class="form-control" name="email" value="{{user.email or ''}}" required></div>
 <div class="mb-3"><label class="form-label">Phone</label><input type="tel" class="form-control" name="phone" id="phoneInput" value="{{user.phone or ''}}" placeholder="(555) 123-4567" maxlength="14"></div>
 <div class="mb-3"><label class="form-label">Year Joined</label><input type="number" class="form-control" name="year_joined" value="{{user.year_joined or 2024}}" min="1981" max="2030"></div>
+
+<!-- Password Change Section -->
+<hr class="my-4">
+<h6 class="text-primary"><i class="bi bi-key me-2"></i>Change Password</h6>
+<p class="text-muted small mb-3">Leave password fields blank to keep your current password.</p>
+<div class="mb-3">
+    <label class="form-label">Current Password</label>
+    <input type="password" class="form-control" name="current_password" placeholder="Enter your current password">
+    <div class="form-text">Required to change your password</div>
+</div>
+<div class="mb-3">
+    <label class="form-label">New Password</label>
+    <input type="password" class="form-control" name="new_password" placeholder="Enter new password (8+ characters)" minlength="8">
+</div>
+<div class="mb-3">
+    <label class="form-label">Confirm New Password</label>
+    <input type="password" class="form-control" name="confirm_password" placeholder="Confirm new password">
+</div>
+
 <div class="d-flex gap-2">
 <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Save</button>
 <button type="button" class="btn btn-secondary" onclick="cancelEdit()"><i class="bi bi-x-lg me-1"></i>Cancel</button>

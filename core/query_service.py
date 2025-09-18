@@ -178,6 +178,65 @@ class QueryService:
             ORDER BY e.date DESC
         """)
 
+    def get_admin_events_data(
+        self,
+        upcoming_limit: int = 20,
+        upcoming_offset: int = 0,
+        past_limit: int = 20,
+        past_offset: int = 0,
+    ) -> dict:
+        """Get comprehensive events data for admin interface."""
+        # Count events
+        total_upcoming = self.fetch_value("SELECT COUNT(*) FROM events WHERE date >= CURRENT_DATE")
+        total_past = self.fetch_value("SELECT COUNT(*) FROM events WHERE date < CURRENT_DATE")
+
+        # Upcoming events
+        upcoming_events = self.fetch_all(
+            """
+            SELECT e.id, e.date, e.name, e.description, e.event_type,
+                   EXTRACT(DOW FROM e.date) as day_num,
+                   CASE EXTRACT(DOW FROM e.date)
+                       WHEN 0 THEN 'Sunday' WHEN 1 THEN 'Monday' WHEN 2 THEN 'Tuesday'
+                       WHEN 3 THEN 'Wednesday' WHEN 4 THEN 'Thursday' WHEN 5 THEN 'Friday'
+                       WHEN 6 THEN 'Saturday'
+                   END as day_name,
+                   EXISTS(SELECT 1 FROM polls p WHERE p.event_id = e.id) as has_poll,
+                   EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id) as has_tournament,
+                   EXISTS(SELECT 1 FROM polls p WHERE p.event_id = e.id AND CURRENT_TIMESTAMP BETWEEN p.starts_at AND p.closes_at) as poll_active,
+                   e.start_time, e.weigh_in_time, e.entry_fee, e.lake_name, e.ramp_name, e.holiday_name,
+                   EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id AND t.complete = true) as tournament_complete
+            FROM events e
+            WHERE e.date >= CURRENT_DATE
+            ORDER BY e.date
+            LIMIT :limit OFFSET :offset
+        """,
+            {"limit": upcoming_limit, "offset": upcoming_offset},
+        )
+
+        # Past events
+        past_events = self.fetch_all(
+            """
+            SELECT e.id, e.date, e.name, e.description, e.event_type, e.entry_fee,
+                   e.lake_name, e.start_time, e.weigh_in_time, e.holiday_name,
+                   EXISTS(SELECT 1 FROM polls p WHERE p.event_id = e.id) as has_poll,
+                   EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id) as has_tournament,
+                   EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id AND t.complete = true) as tournament_complete,
+                   EXISTS(SELECT 1 FROM tournaments t JOIN results r ON t.id = r.tournament_id WHERE t.event_id = e.id) as has_results
+            FROM events e
+            WHERE e.date < CURRENT_DATE
+            ORDER BY e.date DESC
+            LIMIT :limit OFFSET :offset
+        """,
+            {"limit": past_limit, "offset": past_offset},
+        )
+
+        return {
+            "total_upcoming": total_upcoming,
+            "total_past": total_past,
+            "upcoming_events": upcoming_events,
+            "past_events": past_events,
+        }
+
     # Member queries
     def get_all_members(self) -> list[dict]:
         """Get all members (not guests)."""
@@ -186,6 +245,12 @@ class QueryService:
     def get_all_anglers(self) -> list[dict]:
         """Get all anglers including guests."""
         return self.fetch_all("SELECT * FROM anglers ORDER BY name")
+
+    def get_admin_anglers_list(self) -> list[dict]:
+        """Get anglers list for admin interface."""
+        return self.fetch_all(
+            "SELECT id, name, email, member, is_admin FROM anglers ORDER BY is_admin DESC, member DESC, name"
+        )
 
     # Stats queries
     def get_angler_stats(self, angler_id: int, year: Optional[int] = None) -> dict:

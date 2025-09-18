@@ -5,8 +5,8 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import text
 
+from core.helpers.auth import require_admin
 from routes.dependencies import (
-    admin,
     db,
     engine,
     find_lake_data_by_db_name,
@@ -20,7 +20,9 @@ router = APIRouter()
 
 @router.get("/admin/events")
 async def admin_events(request: Request, upcoming_page: int = 1, past_page: int = 1):
-    if isinstance(user := admin(request), RedirectResponse):
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
         return user
 
     per_page = 20
@@ -152,7 +154,9 @@ async def create_event(
     entry_fee: float = Form(default=25.00),
     fish_limit: int = Form(default=5),
 ):
-    if isinstance(user := admin(request), RedirectResponse):
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
         return user
 
     try:
@@ -274,7 +278,9 @@ async def edit_event(
     fish_limit: int = Form(default=5),
     poll_closes_date: str = Form(default=""),
 ):
-    if isinstance(user := admin(request), RedirectResponse):
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
         return user
 
     try:
@@ -343,8 +349,11 @@ async def edit_event(
 
 @router.get("/admin/events/{event_id}/info")
 async def get_event_info(request: Request, event_id: int):
-    if isinstance(admin(request), RedirectResponse):
-        return JSONResponse({"error": "Authentication required"}, status_code=401)
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
+
     try:
         event_info = db(
             """
@@ -399,8 +408,11 @@ async def get_event_info(request: Request, event_id: int):
 
 @router.post("/admin/events/validate")
 async def validate_event(request: Request):
-    if isinstance(admin(request), RedirectResponse):
-        return JSONResponse({"error": "Authentication required"}, status_code=401)
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
+
     try:
         data = await request.json()
         validation = validate_event_data(
@@ -419,8 +431,11 @@ async def validate_event(request: Request):
 
 @router.delete("/admin/events/{event_id}")
 async def delete_event(request: Request, event_id: int):
-    if isinstance(admin(request), RedirectResponse):
-        return JSONResponse({"error": "Authentication required"}, status_code=401)
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
+
     try:
         has_results = db(
             """

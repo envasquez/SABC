@@ -5,15 +5,15 @@ Reduces code duplication across routes.
 
 import json
 from decimal import Decimal
-from typing import Any, AsyncGenerator, Dict, Optional, Union
+from typing import Any, AsyncGenerator, Dict, Optional
 
-from fastapi import HTTPException, Request
-from fastapi.responses import RedirectResponse
+from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import Connection
 
 from core.db_schema import engine
 from core.filters import time_format_filter
+from core.helpers.auth import require_admin_async  # noqa: E402
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -40,49 +40,8 @@ async def get_db() -> AsyncGenerator[Connection, None]:
         yield conn
 
 
-async def get_current_user(request: Request) -> Optional[Dict[str, Any]]:
-    """Get current user from session, returns None if not authenticated."""
-    from core.helpers.auth import u
-
-    user = u(request)
-    if isinstance(user, RedirectResponse):
-        return None
-    return user
-
-
-async def require_user(request: Request) -> Dict[str, Any]:
-    """Require authenticated user, raises exception if not authenticated."""
-    user = await get_current_user(request)
-    if not user:
-        raise HTTPException(status_code=401, detail="Authentication required")
-    return user
-
-
-async def require_admin(request: Request) -> Dict[str, Any]:
-    """Require admin user, raises exception if not admin."""
-    from core.helpers.auth import admin
-
-    user = admin(request)
-    if isinstance(user, RedirectResponse):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return user
-
-
-async def get_user_or_redirect(request: Request) -> Union[Dict[str, Any], RedirectResponse]:
-    """Get user or return redirect response for template-based routes."""
-    from core.helpers.auth import u
-
-    user = u(request)
-    if user is None:
-        return RedirectResponse("/login")
-    return user
-
-
-async def get_admin_or_redirect(request: Request) -> Union[Dict[str, Any], RedirectResponse]:
-    """Get admin or return redirect response for template-based routes."""
-    from core.helpers.auth import admin
-
-    return admin(request)
+# Alias for consistency in deps module - re-exported for backward compatibility
+require_admin = require_admin_async
 
 
 def db_query(

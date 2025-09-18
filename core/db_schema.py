@@ -162,6 +162,15 @@ def get_table_definitions():
             google_maps_iframe TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )""",
+        """password_reset_tokens(
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES anglers(id) ON DELETE CASCADE,
+            token VARCHAR(255) NOT NULL UNIQUE,
+            expires_at TIMESTAMP NOT NULL,
+            used BOOLEAN DEFAULT FALSE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            used_at TIMESTAMP NULL
+        )""",
     ]
 
 
@@ -268,6 +277,7 @@ def drop_all_tables():
 
         # Drop all tables (CASCADE will handle dependencies)
         tables = [
+            "password_reset_tokens",
             "poll_votes",
             "poll_options",
             "polls",
