@@ -39,9 +39,9 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
             "SELECT id, password_hash FROM anglers WHERE email=:email",
             {"email": email},
         )
-        if res and res[0][1]:  # Check if password_hash exists
-            if bcrypt.checkpw(password.encode(), res[0][1].encode()):
-                user_id = res[0][0]
+        if res and len(res) > 0 and res[0]["password_hash"]:  # Check if password_hash exists
+            if bcrypt.checkpw(password.encode(), res[0]["password_hash"].encode()):
+                user_id = res[0]["id"]
                 request.session["user_id"] = user_id
                 log_security_event(
                     SecurityEvent.AUTH_LOGIN_SUCCESS,
@@ -113,7 +113,7 @@ async def register(
             {"email": email},
         )
         if user:
-            user_id = user[0][0]
+            user_id = user[0]["id"]
             request.session["user_id"] = user_id
             log_security_event(
                 SecurityEvent.AUTH_REGISTER,
@@ -161,17 +161,17 @@ async def profile_page(request: Request):
         return RedirectResponse("/login")
 
     user_profile = {
-        "id": user_data[0][0],
-        "name": user_data[0][1],
-        "email": user_data[0][2],
-        "member": bool(user_data[0][3]),
-        "is_admin": bool(user_data[0][4]),
-        "phone": user_data[0][5],
-        "year_joined": user_data[0][6],
-        "created_at": user_data[0][7],
+        "id": user_data[0]["id"],
+        "name": user_data[0]["name"],
+        "email": user_data[0]["email"],
+        "member": bool(user_data[0]["member"]),
+        "is_admin": bool(user_data[0]["is_admin"]),
+        "phone": user_data[0]["phone"],
+        "year_joined": user_data[0]["year_joined"],
+        "created_at": user_data[0]["created_at"],
     }
     current_year = datetime.now().year
-    tournaments_count = db(
+    res = db(
         """
         SELECT COUNT(DISTINCT t.id)
         FROM results r
@@ -180,8 +180,9 @@ async def profile_page(request: Request):
         WHERE r.angler_id = :user_id AND NOT r.disqualified
     """,
         {"user_id": user["id"]},
-    )[0][0]
-    best_weight = db(
+    )
+    tournaments_count = res[0][0] if res and len(res) > 0 else 0
+    res = db(
         """
         SELECT COALESCE(MAX(r.total_weight - COALESCE(r.dead_fish_penalty, 0)), 0)
         FROM results r
@@ -189,8 +190,9 @@ async def profile_page(request: Request):
         WHERE r.angler_id = :user_id AND NOT r.disqualified
     """,
         {"user_id": user["id"]},
-    )[0][0]
-    big_bass = db(
+    )
+    best_weight = res[0][0] if res and len(res) > 0 else 0
+    res = db(
         """
         SELECT COALESCE(MAX(r.big_bass_weight), 0)
         FROM results r
@@ -198,7 +200,8 @@ async def profile_page(request: Request):
         WHERE r.angler_id = :user_id AND NOT r.disqualified
     """,
         {"user_id": user["id"]},
-    )[0][0]
+    )
+    big_bass = res[0][0] if res and len(res) > 0 else 0
     current_finishes = db(
         """
         SELECT
@@ -420,7 +423,7 @@ async def logout(request: Request):
     if user_id:
         try:
             user_info = db("SELECT email FROM anglers WHERE id = :user_id", {"user_id": user_id})
-            user_email = user_info[0][0] if user_info else None
+            user_email = user_info[0]["email"] if user_info and len(user_info) > 0 else None
             log_security_event(
                 SecurityEvent.AUTH_LOGOUT,
                 user_id=user_id,

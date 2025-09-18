@@ -123,7 +123,8 @@ async def home_paginated(request: Request, page: int = 1):
     """,
         {"limit": items_per_page, "offset": offset},
     )
-    total_tournaments = db("SELECT COUNT(*) FROM tournaments")[0][0]
+    res = db("SELECT COUNT(*) FROM tournaments")
+    total_tournaments = res[0][0] if res and len(res) > 0 else 0
     total_pages = (total_tournaments + items_per_page - 1) // items_per_page
     latest_news = db("""
         SELECT n.id, n.title, n.content, n.created_at, n.updated_at, n.priority,
@@ -240,7 +241,7 @@ async def home_paginated(request: Request, page: int = 1):
 async def health_check():
     try:
         result = db("SELECT COUNT(*) as count FROM anglers")
-        angler_count = result[0][0] if result else 0
+        angler_count = result[0]["count"] if result and len(result) > 0 else 0
         return {
             "status": "healthy",
             "database": "connected",
