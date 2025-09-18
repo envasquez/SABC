@@ -10,24 +10,24 @@
     <tbody>
         {% for u in users %}
         <tr>
-            <td class="text-white">{{ u[1] }}</td>
-            <td>{{ u[2] or '-' }}</td>
+            <td class="text-white">{{ u.name }}</td>
+            <td>{{ u.email or '-' }}</td>
             <td>
-                {% if u[3] %}
+                {% if u.member %}
                     <span class="badge bg-success">Member</span>
                 {% else %}
                     <span class="badge bg-secondary">Guest</span>
                 {% endif %}
-                {% if u[4] %}<span class="badge bg-danger ms-1">Admin</span>{% endif %}
+                {% if u.is_admin %}<span class="badge bg-danger ms-1">Admin</span>{% endif %}
             </td>
             <td>
                 <div class="btn-group btn-group-sm">
-                    <button class="btn btn-warning" onclick="location='/admin/users/{{ u[0] }}/edit'"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-danger" 
-                            {% if u[0] == user.id %}
+                    <button class="btn btn-warning" onclick="location='/admin/users/{{ u.id }}/edit'"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-danger"
+                            {% if u.id == user.id %}
                                 disabled
                             {% else %}
-                                onclick="deleteUser({{ u[0] }}, '{{ u[1]|e }}')"
+                                onclick="deleteUser({{ u.id }}, '{{ u.name|e }}')"
                             {% endif %}
                     ><i class="bi bi-trash"></i></button>
                 </div>

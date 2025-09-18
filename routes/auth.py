@@ -349,14 +349,16 @@ async def update_profile(
         email = email.lower().strip()
         is_valid, formatted_phone, error_msg = validate_phone_number(phone)
         if not is_valid:
-            return RedirectResponse(f"/profile?error={error_msg}")
+            return RedirectResponse(f"/profile?error={error_msg}", status_code=302)
         phone = formatted_phone
         existing_email = db(
             "SELECT id FROM anglers WHERE email = :email AND id != :user_id",
             {"email": email, "user_id": user["id"]},
         )
         if existing_email:
-            return RedirectResponse("/profile?error=Email is already in use by another user")
+            return RedirectResponse(
+                "/profile?error=Email is already in use by another user", status_code=302
+            )
 
         # Handle password change if requested
         password_changed = False
@@ -375,14 +377,16 @@ async def update_profile(
 
             # Confirm passwords match
             if new_password != confirm_password:
-                return RedirectResponse("/profile?error=New passwords do not match")
+                return RedirectResponse(
+                    "/profile?error=New passwords do not match", status_code=302
+                )
 
             # Get current password hash from database
             current_user = db(
                 "SELECT password_hash FROM anglers WHERE id = :user_id", {"user_id": user["id"]}
             )
             if not current_user:
-                return RedirectResponse("/profile?error=User not found")
+                return RedirectResponse("/profile?error=User not found", status_code=302)
 
             stored_password_hash = current_user[0][0]
 
@@ -390,7 +394,9 @@ async def update_profile(
             if not bcrypt.checkpw(
                 current_password.encode("utf-8"), stored_password_hash.encode("utf-8")
             ):
-                return RedirectResponse("/profile?error=Current password is incorrect")
+                return RedirectResponse(
+                    "/profile?error=Current password is incorrect", status_code=302
+                )
 
             # Hash new password
             new_password_hash = bcrypt.hashpw(
@@ -457,7 +463,7 @@ async def update_profile(
             extra={"user_id": user["id"], "error": str(e)},
             exc_info=True,
         )
-        return RedirectResponse("/profile?error=Failed to update profile")
+        return RedirectResponse("/profile?error=Failed to update profile", status_code=302)
 
 
 @router.post("/profile/delete")
@@ -465,7 +471,9 @@ async def delete_profile(request: Request, confirm: str = Form(...)):
     if not (user := u(request)):
         return RedirectResponse("/login")
     if confirm != "DELETE":
-        return RedirectResponse("/profile?error=Confirmation text must be exactly 'DELETE'")
+        return RedirectResponse(
+            "/profile?error=Confirmation text must be exactly 'DELETE'", status_code=302
+        )
 
     try:
         user_id = user["id"]
@@ -490,7 +498,7 @@ async def delete_profile(request: Request, confirm: str = Form(...)):
             extra={"user_id": user["id"], "error": str(e)},
             exc_info=True,
         )
-        return RedirectResponse("/profile?error=Failed to delete account")
+        return RedirectResponse("/profile?error=Failed to delete account", status_code=302)
 
 
 @router.post("/logout")
