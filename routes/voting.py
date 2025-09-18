@@ -101,10 +101,10 @@ async def vote_in_poll(
             return RedirectResponse("/polls?error=Poll not found", status_code=302)
 
         poll_row = poll_check[0]
-        already_voted = poll_row["already_voted"] if "already_voted" in poll_row else poll_row[4]
-        is_closed = poll_row["closed"] if "closed" in poll_row else poll_row[1]
-        starts_at = poll_row["starts_at"] if "starts_at" in poll_row else poll_row[2]
-        closes_at = poll_row["closes_at"] if "closes_at" in poll_row else poll_row[3]
+        already_voted = poll_row[4]
+        is_closed = poll_row[1]
+        starts_at = poll_row[2]
+        closes_at = poll_row[3]
 
         if already_voted or is_closed:
             return RedirectResponse(
@@ -117,7 +117,7 @@ async def vote_in_poll(
             return RedirectResponse("/polls?error=Poll not accepting votes", status_code=302)
 
         res = db("SELECT poll_type FROM polls WHERE id = :poll_id", {"poll_id": poll_id})
-        poll_type = res[0]["poll_type"] if res and len(res) > 0 else None
+        poll_type = res[0][0] if res and len(res) > 0 else None
 
         if not poll_type:
             return RedirectResponse("/polls?error=Invalid poll", status_code=302)
@@ -145,7 +145,7 @@ async def vote_in_poll(
             )
 
             if existing_option:
-                actual_option_id = existing_option[0]["id"]
+                actual_option_id = existing_option[0][0]
             else:
                 vote_data["lake_id"] = lake_id_int
                 db(
