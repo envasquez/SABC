@@ -30,6 +30,10 @@
           sqlalchemy
           psycopg2  # PostgreSQL adapter
 
+          # Web scraping for data ingestion
+          requests  # HTTP client for API/web requests
+          beautifulsoup4  # HTML parsing for tournament data import
+
           # Development tools
           ruff
           mypy
@@ -201,6 +205,8 @@ print('Database reset complete!')
             python-multipart
             itsdangerous
             bcrypt
+            requests
+            beautifulsoup4
           ];
 
           # Skip tests for package build

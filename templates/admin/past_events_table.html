@@ -35,17 +35,17 @@
                 <td>
                     <strong>{{ event.name }}</strong>
                     {% if event.event_type == 'sabc_tournament' and event.entry_fee %}
-                    <br><small class="text-muted">${{ "%.2f"|format(event.entry_fee) }}</small>
+                    <br><small class="text-secondary">${{ "%.2f"|format(event.entry_fee) }}</small>
                     {% endif %}
                 </td>
                 <td>
                     {{ event.description }}
                     {% if event.event_type == 'sabc_tournament' %}
                         {% if event.lake_name %}
-                        <br><small class="text-muted"><i class="bi bi-geo-alt"></i> {{ event.lake_name }}</small>
+                        <br><small class="text-secondary"><i class="bi bi-geo-alt"></i> {{ event.lake_name }}</small>
                         {% endif %}
                         {% if event.start_time %}
-                        <br><small class="text-muted"><i class="bi bi-clock"></i> {{ event.start_time }} - {{ event.weigh_in_time or '15:00' }}</small>
+                        <br><small class="text-secondary"><i class="bi bi-clock"></i> {{ event.start_time }} - {{ event.weigh_in_time or '15:00' }}</small>
                         {% endif %}
                     {% elif event.event_type == 'holiday' %}
                         <br><small class="text-info">{{ event.holiday_name }}</small>
@@ -90,7 +90,7 @@
             {% endfor %}
             {% else %}
             <tr>
-                <td colspan="7" class="text-center text-muted py-4">
+                <td colspan="7" class="text-center text-secondary py-4">
                     No past events found on this page.
                 </td>
             </tr>
@@ -145,7 +145,7 @@
             {% endif %}
         </ul>
         <div class="text-center mt-2">
-            <small class="text-muted">
+            <small class="text-secondary">
                 Showing page {{ past_page }} of {{ past_total_pages }} 
                 ({{ total_past }} past events)
             </small>

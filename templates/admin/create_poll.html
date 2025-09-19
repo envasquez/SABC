@@ -7,8 +7,8 @@
     <h1 class="display-5">
         <i class="bi bi-plus-circle me-2"></i>Create Poll
     </h1>
-    <p class="lead text-muted">Create a new poll for {% if selected_event[2] %}{{ selected_event[2] }}{% else %}tournament event{% endif %}</p>
-    <small class="text-muted">
+    <p class="lead text-secondary">Create a new poll for {% if selected_event[2] %}{{ selected_event[2] }}{% else %}tournament event{% endif %}</p>
+    <small class="text-secondary">
         <i class="bi bi-calendar3 me-1"></i>{{ selected_event[1] | date_format }}
         {% if selected_event[3] == 'sabc_tournament' %}
             <span class="badge bg-primary ms-2">SABC Tournament</span>
@@ -115,7 +115,7 @@
                                     <label class="form-check-label" for="lake_{{ lake[0] }}">
                                         <strong>{{ lake[1] }}</strong>
                                         {% if lake[2] %}
-                                        <br><small class="text-muted">{{ lake[2] }}</small>
+                                        <br><small class="text-secondary">{{ lake[2] }}</small>
                                         {% endif %}
                                     </label>
                                 </div>

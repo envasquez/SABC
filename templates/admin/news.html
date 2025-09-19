@@ -43,7 +43,7 @@
                         <div class="mb-3">
                             <label for="content" class="form-label">Content</label>
                             <textarea class="form-control" id="content" name="content" rows="4" required maxlength="1000"></textarea>
-                            <small class="text-muted">Maximum 1000 characters</small>
+                            <small class="text-secondary">Maximum 1000 characters</small>
                         </div>
                         
                         <div class="mb-3">
@@ -53,7 +53,7 @@
                                 <option value="1">High</option>
                                 <option value="2">Urgent</option>
                             </select>
-                            <small class="text-muted">Higher priority items appear first</small>
+                            <small class="text-secondary">Higher priority items appear first</small>
                         </div>
                         
                         
@@ -104,7 +104,7 @@
                                                 <small>{{ item[7] }}</small>
                                             {% endif %}
                                         {% else %}
-                                            <small class="text-muted">-</small>
+                                            <small class="text-secondary">-</small>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -147,8 +147,8 @@
                     </div>
                     {% else %}
                     <div class="text-center py-4">
-                        <i class="bi bi-newspaper display-4 text-muted"></i>
-                        <p class="text-muted mt-2">No news items yet. Create your first announcement!</p>
+                        <i class="bi bi-newspaper display-4 text-secondary"></i>
+                        <p class="text-secondary mt-2">No news items yet. Create your first announcement!</p>
                     </div>
                     {% endif %}
                 </div>

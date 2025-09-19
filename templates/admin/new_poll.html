@@ -6,7 +6,7 @@
     <h1 class="display-5">
         <i class="bi bi-plus-circle me-2"></i>Create New Poll
     </h1>
-    <p class="lead text-muted">Select an event to create a poll for</p>
+    <p class="lead text-secondary">Select an event to create a poll for</p>
 </div>
 
 <div class="card shadow-sm">
@@ -21,7 +21,7 @@
                                         <h6 class="card-title">
                                             <i class="bi bi-card-checklist me-2 text-info"></i>Generic Poll
                                         </h6>
-                                        <p class="card-text text-muted mb-0">
+                                        <p class="card-text text-secondary mb-0">
                                             Create a poll not tied to specific events (officer elections, policy decisions, etc.)
                                         </p>
                                     </div>
@@ -63,7 +63,7 @@
                                             {% endif %}
                                         </h6>
                                         {% if event[4] %}
-                                        <p class="mb-1 text-muted">{{ event[4][:100] }}{% if event[4]|length > 100 %}...{% endif %}</p>
+                                        <p class="mb-1 text-secondary">{{ event[4][:100] }}{% if event[4]|length > 100 %}...{% endif %}</p>
                                         {% endif %}
                                         <small class="badge bg-secondary">
                                             {% if event[3] == 'sabc_tournament' %}
@@ -78,8 +78,8 @@
                                         </small>
                                     </div>
                                     <div class="text-end">
-                                        <small class="text-muted d-block">{{ event[1] }}</small>
-                                        <i class="bi bi-chevron-right text-muted"></i>
+                                        <small class="text-secondary d-block">{{ event[1] }}</small>
+                                        <i class="bi bi-chevron-right text-secondary"></i>
                                     </div>
                                 </div>
                             </a>
@@ -87,9 +87,9 @@
                         </div>
                     {% else %}
                         <div class="text-center py-5">
-                            <i class="bi bi-calendar-x display-4 text-muted mb-3"></i>
-                            <h5 class="text-muted">No Upcoming Events Available</h5>
-                            <p class="text-muted">All upcoming events already have polls, or there are no future events scheduled.</p>
+                            <i class="bi bi-calendar-x display-4 text-secondary mb-3"></i>
+                            <h5 class="text-secondary">No Upcoming Events Available</h5>
+                            <p class="text-secondary">All upcoming events already have polls, or there are no future events scheduled.</p>
                             <div class="mt-4">
                                 <a href="/admin/events" class="btn btn-primary">
                                     <i class="bi bi-calendar-plus me-2"></i>Create New Event

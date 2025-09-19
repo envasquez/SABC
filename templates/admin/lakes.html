@@ -43,13 +43,13 @@
                         <div class="mb-3">
                             <label for="name" class="form-label">Database Name</label>
                             <input type="text" class="form-control" id="name" name="name" required maxlength="50" placeholder="travis">
-                            <small class="text-muted">Lowercase, no spaces (e.g., "travis", "lake_austin")</small>
+                            <small class="text-secondary">Lowercase, no spaces (e.g., "travis", "lake_austin")</small>
                         </div>
                         
                         <div class="mb-3">
                             <label for="google_maps_embed" class="form-label">Google Maps Embed Code</label>
                             <textarea class="form-control" id="google_maps_embed" name="google_maps_embed" rows="3" placeholder="<iframe src='...' ...></iframe>"></textarea>
-                            <small class="text-muted">Full iframe embed code from Google Maps (optional)</small>
+                            <small class="text-secondary">Full iframe embed code from Google Maps (optional)</small>
                         </div>
                         
                         <button type="submit" class="btn btn-primary w-100">
@@ -82,7 +82,7 @@
                                 {% for lake in lakes %}
                                 <tr>
                                     <td>
-                                        <span class="text-muted">{{ loop.index }}</span>
+                                        <span class="text-secondary">{{ loop.index }}</span>
                                     </td>
                                     <td>
                                         <strong>{{ lake[2] }}</strong>
@@ -111,8 +111,8 @@
                     </div>
                     {% else %}
                     <div class="text-center py-4">
-                        <i class="bi bi-water display-4 text-muted"></i>
-                        <p class="text-muted mt-2">No lakes yet. Add your first lake!</p>
+                        <i class="bi bi-water display-4 text-secondary"></i>
+                        <p class="text-secondary mt-2">No lakes yet. Add your first lake!</p>
                     </div>
                     {% endif %}
                 </div>
@@ -139,13 +139,13 @@
                     <div class="mb-3">
                         <label for="edit_name" class="form-label">Database Name</label>
                         <input type="text" class="form-control" id="edit_name" name="name" required>
-                        <small class="text-muted">Lowercase, no spaces</small>
+                        <small class="text-secondary">Lowercase, no spaces</small>
                     </div>
                     
                     <div class="mb-3">
                         <label for="edit_google_maps_embed" class="form-label">Google Maps Embed Code</label>
                         <textarea class="form-control" id="edit_google_maps_embed" name="google_maps_embed" rows="3"></textarea>
-                        <small class="text-muted">Full iframe embed code from Google Maps (optional)</small>
+                        <small class="text-secondary">Full iframe embed code from Google Maps (optional)</small>
                     </div>
                 </div>
                 <div class="modal-footer">

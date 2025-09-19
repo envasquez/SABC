@@ -94,9 +94,9 @@
                 </div>
                 {% else %}
                 <div class="text-center py-4">
-                    <i class="bi bi-trophy text-muted display-1"></i>
-                    <h5 class="text-muted">No qualifiers yet</h5>
-                    <p class="text-muted">Anglers must fish at least 6 tournaments to qualify for Angler of the Year</p>
+                    <i class="bi bi-trophy text-secondary display-1"></i>
+                    <h5 class="text-secondary">No qualifiers yet</h5>
+                    <p class="text-secondary">Anglers must fish at least 6 tournaments to qualify for Angler of the Year</p>
                 </div>
                 {% endif %}
             </div>
@@ -115,17 +115,17 @@
                 <div class="row align-items-center">
                     <div class="col-md-8">
                         <h5 class="mb-1">{{ heavy_stringer['name'] }}</h5>
-                        <p class="mb-0 text-muted">{{ heavy_stringer['tournament_name'] or "Tournament" }}</p>
+                        <p class="mb-0 text-secondary">{{ heavy_stringer['tournament_name'] or "Tournament" }}</p>
                     </div>
                     <div class="col-md-4 text-end">
                         <h3 class="mb-0 text-success">{{ "%.2f"|format(heavy_stringer['total_weight']) }} lbs</h3>
-                        <small class="text-muted">{{ heavy_stringer['num_fish'] }} fish</small>
+                        <small class="text-secondary">{{ heavy_stringer['num_fish'] }} fish</small>
                     </div>
                 </div>
                 {% else %}
                 <div class="text-center py-4">
-                    <i class="bi bi-award text-muted display-1"></i>
-                    <h5 class="text-muted">No heavy stringer recorded</h5>
+                    <i class="bi bi-award text-secondary display-1"></i>
+                    <h5 class="text-secondary">No heavy stringer recorded</h5>
                 </div>
                 {% endif %}
             </div>
@@ -144,7 +144,7 @@
                 <div class="row align-items-center">
                     <div class="col-md-8">
                         <h5 class="mb-1">{{ big_bass['name'] }}</h5>
-                        <p class="mb-0 text-muted">{{ big_bass['tournament_name'] or "Tournament" }}</p>
+                        <p class="mb-0 text-secondary">{{ big_bass['tournament_name'] or "Tournament" }}</p>
                     </div>
                     <div class="col-md-4 text-end">
                         <h3 class="mb-0 text-info">{{ "%.2f"|format(big_bass['big_bass_weight']) }} lbs</h3>
@@ -152,9 +152,9 @@
                 </div>
                 {% else %}
                 <div class="text-center py-4">
-                    <i class="bi bi-award text-muted display-1"></i>
-                    <h5 class="text-muted">No qualifying big bass</h5>
-                    <p class="text-muted">Bass must weigh at least 5.0 lbs to qualify</p>
+                    <i class="bi bi-award text-secondary display-1"></i>
+                    <h5 class="text-secondary">No qualifying big bass</h5>
+                    <p class="text-secondary">Bass must weigh at least 5.0 lbs to qualify</p>
                 </div>
                 {% endif %}
             </div>

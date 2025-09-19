@@ -26,7 +26,7 @@
             <tr>
                 <td>
                     <strong>{{ event.date }}</strong>
-                    <br><small class="text-muted">{{ event.day_name }}</small>
+                    <br><small class="text-secondary">{{ event.day_name }}</small>
                 </td>
                 <td><strong>{{ event.name }}</strong></td>
                 <td>{{ event.description }}</td>
@@ -34,17 +34,17 @@
                 {% if event.event_type == 'sabc_tournament' %}
                 <td>
                     {% if event.start_time %}
-                    <small class="text-muted">Start:</small> {{ event.start_time }}<br>
+                    <small class="text-secondary">Start:</small> {{ event.start_time }}<br>
                     {% endif %}
                     {% if event.weigh_in_time %}
-                    <small class="text-muted">Weigh:</small> {{ event.weigh_in_time }}
+                    <small class="text-secondary">Weigh:</small> {{ event.weigh_in_time }}
                     {% endif %}
                 </td>
                 <td>
                     {% if event.entry_fee %}
                     ${{ "%.2f"|format(event.entry_fee) }}
                     {% else %}
-                    <span class="text-muted">-</span>
+                    <span class="text-secondary">-</span>
                     {% endif %}
                 </td>
                 <td>
@@ -89,7 +89,7 @@
                     </span>
                 </td>
                 <td>
-                    <small class="text-muted">Holiday</small>
+                    <small class="text-secondary">Holiday</small>
                     {% if event.description %}
                     <br>{{ event.description }}
                     {% endif %}
@@ -139,7 +139,7 @@
             
             {% if not sabc_events %}
             <tr>
-                <td colspan="8" class="text-center text-muted py-4">
+                <td colspan="8" class="text-center text-secondary py-4">
                     {% if request.url.path == '/admin/events' %}
                         No events of this type found. Use the form above to create some!
                     {% else %}

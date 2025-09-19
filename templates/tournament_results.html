@@ -5,12 +5,12 @@
 <div class="row">
     <div class="col-12">
         <div class="mb-4">
-            <div class="text-muted mb-2">
+            <div class="text-secondary mb-2">
                 {{ tournament[2] | date_format }}
             </div>
 
             <div class="d-flex justify-content-between align-items-center">
-                <h1>{{ tournament[5] | upper if tournament[5] else "TOURNAMENT" }} - <small class="text-muted">RESULTS</small></h1>
+                <h1>{{ tournament[5] | upper if tournament[5] else "TOURNAMENT" }} - <small class="text-secondary">RESULTS</small></h1>
                 {% if user and user.is_admin %}
                 <a href="/admin/tournaments/{{ tournament[0] }}/enter-results" class="btn btn-success">
                     <i class="bi bi-plus-circle me-2"></i>{{ "Add More Results" if team_results or individual_results else "Add Results" }}
@@ -240,7 +240,7 @@
             </div>
             <div class="card-body">
                 <h6>Tournament Results Not Available</h6>
-                <p class="mb-0 text-muted">Results for this tournament have not been entered yet or this tournament has not been completed.</p>
+                <p class="mb-0 text-secondary">Results for this tournament have not been entered yet or this tournament has not been completed.</p>
             </div>
         </div>
         {% endif %}

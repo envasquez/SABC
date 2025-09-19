@@ -3,7 +3,7 @@
 {% block content %}
 <div class="mb-4">
     <h1 class="display-5"><i class="bi bi-calendar3 me-2"></i>Club Calendar</h1>
-    <p class="lead text-muted">Tournament Schedule & Holidays</p>
+    <p class="lead text-secondary">Tournament Schedule & Holidays</p>
 </div>
 
 <!-- Year Tabs -->
@@ -257,7 +257,7 @@ function showEventDetails(element) {
             modalContent += '</div>';
             modalContent += '<h6 class="mb-2">' + event.title + '</h6>';
             if (event.description) {
-                modalContent += '<p class="text-muted mb-0">' + event.description + '</p>';
+                modalContent += '<p class="text-secondary mb-0">' + event.description + '</p>';
             }
             
             // Add poll and tournament links if available
