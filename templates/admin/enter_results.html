@@ -49,14 +49,12 @@
 
                 <div class="row mt-4">
                     <div class="col-md-6">
-                        {% if not edit_data %}
                         <button type="button" class="btn btn-success" onclick="addTeam()">
                             <i class="bi bi-plus-circle me-2"></i>Add Team
                         </button>
                         <button type="button" class="btn btn-outline-primary ms-2" onclick="showCreateGuestModal()">
                             <i class="bi bi-person-plus me-2"></i>Create Guest
                         </button>
-                        {% endif %}
                     </div>
                     <div class="col-md-6 text-end">
                         <a href="/tournaments/{{ tournament.id }}" class="btn btn-outline-secondary me-2">

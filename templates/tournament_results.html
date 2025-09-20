@@ -281,6 +281,40 @@
         </div>
         {% endif %}
 
+        <!-- Disqualified Results Card -->
+        {% if disqualified_results %}
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-x-circle me-2"></i>Disqualifications</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in disqualified_results %}
+                    <tr>
+                        <td>
+                            {{ result[0] }}
+                            {% if result[1] == 0 %}
+                                <span class="badge bg-secondary ms-2">Guest</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="badge bg-dark">DQ</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Navigation -->
         <div class="mt-4">
             <a href="/" class="btn btn-primary">

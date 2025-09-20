@@ -68,12 +68,20 @@ async def enter_results_page(
     results_by_angler = {r["angler_id"]: r for r in results}
     teams_set = {(tr["angler1_id"], tr["angler2_id"]) for tr in team_results}
 
+    # Create JSON data for JavaScript
+    import json
+    anglers_json = json.dumps([{"id": a["id"], "name": a["name"]} for a in anglers])
+    existing_angler_ids = list(results_by_angler.keys())
+    existing_angler_ids_json = json.dumps(existing_angler_ids)
+
     return render(
         "admin/enter_results.html",
         request,
         user=user,
         tournament=tournament,
         anglers=anglers,
+        anglers_json=anglers_json,
+        existing_angler_ids_json=existing_angler_ids_json,
         results_by_angler=results_by_angler,
         team_results=team_results,
         teams_set=teams_set,
@@ -200,6 +208,144 @@ async def save_team_result(
         )
 
     return RedirectResponse(f"/admin/tournaments/{tournament_id}/enter-results", status_code=303)
+
+
+@router.post("/admin/tournaments/{tournament_id}/enter-results")
+async def save_multiple_results(
+    tournament_id: int,
+    request: Request,
+    user=Depends(get_admin_or_redirect),
+    conn: Connection = Depends(get_db),
+):
+    if isinstance(user, RedirectResponse):
+        return user
+
+    form = await request.form()
+    qs = QueryService(conn)
+
+    # Process all teams from the form
+    team_num = 1
+    saved_count = 0
+
+    while f"angler1_id_{team_num}" in form:
+        angler1_id = form.get(f"angler1_id_{team_num}")
+        angler2_id = form.get(f"angler2_id_{team_num}")
+
+        if angler1_id:
+            angler1_id = int(angler1_id)
+            # Process angler1 results
+            angler1_fish = int(form.get(f"angler1_fish_{team_num}", 0))
+            angler1_weight = Decimal(form.get(f"angler1_weight_{team_num}", "0"))
+            angler1_big_bass = Decimal(form.get(f"angler1_big_bass_{team_num}", "0"))
+            angler1_dead_penalty = Decimal(form.get(f"angler1_dead_penalty_{team_num}", "0"))
+            angler1_disqualified = form.get(f"angler1_disqualified_{team_num}") == "1"
+            angler1_buy_in = form.get(f"angler1_buyIn_{team_num}") == "1"
+
+            # Save angler1 result
+            existing = qs.fetch_one(
+                "SELECT id FROM results WHERE tournament_id = :tid AND angler_id = :aid",
+                {"tid": tournament_id, "aid": angler1_id},
+            )
+
+            if existing:
+                qs.execute(
+                    """UPDATE results SET num_fish = :fish, total_weight = :weight,
+                       big_bass_weight = :bass, dead_fish_penalty = :penalty,
+                       disqualified = :dq, buy_in = :buy
+                       WHERE id = :id""",
+                    {
+                        "fish": angler1_fish, "weight": angler1_weight,
+                        "bass": angler1_big_bass, "penalty": angler1_dead_penalty,
+                        "dq": angler1_disqualified, "buy": angler1_buy_in,
+                        "id": existing["id"]
+                    },
+                )
+            else:
+                qs.execute(
+                    """INSERT INTO results (tournament_id, angler_id, num_fish, total_weight,
+                       big_bass_weight, dead_fish_penalty, disqualified, buy_in, points)
+                       VALUES (:tid, :aid, :fish, :weight, :bass, :penalty, :dq, :buy, 0)""",
+                    {
+                        "tid": tournament_id, "aid": angler1_id,
+                        "fish": angler1_fish, "weight": angler1_weight,
+                        "bass": angler1_big_bass, "penalty": angler1_dead_penalty,
+                        "dq": angler1_disqualified, "buy": angler1_buy_in
+                    },
+                )
+            saved_count += 1
+
+        if angler2_id:
+            angler2_id = int(angler2_id)
+            # Process angler2 results
+            angler2_fish = int(form.get(f"angler2_fish_{team_num}", 0))
+            angler2_weight = Decimal(form.get(f"angler2_weight_{team_num}", "0"))
+            angler2_big_bass = Decimal(form.get(f"angler2_big_bass_{team_num}", "0"))
+            angler2_dead_penalty = Decimal(form.get(f"angler2_dead_penalty_{team_num}", "0"))
+            angler2_disqualified = form.get(f"angler2_disqualified_{team_num}") == "1"
+            angler2_buy_in = form.get(f"angler2_buyIn_{team_num}") == "1"
+
+            # Save angler2 result
+            existing = qs.fetch_one(
+                "SELECT id FROM results WHERE tournament_id = :tid AND angler_id = :aid",
+                {"tid": tournament_id, "aid": angler2_id},
+            )
+
+            if existing:
+                qs.execute(
+                    """UPDATE results SET num_fish = :fish, total_weight = :weight,
+                       big_bass_weight = :bass, dead_fish_penalty = :penalty,
+                       disqualified = :dq, buy_in = :buy
+                       WHERE id = :id""",
+                    {
+                        "fish": angler2_fish, "weight": angler2_weight,
+                        "bass": angler2_big_bass, "penalty": angler2_dead_penalty,
+                        "dq": angler2_disqualified, "buy": angler2_buy_in,
+                        "id": existing["id"]
+                    },
+                )
+            else:
+                qs.execute(
+                    """INSERT INTO results (tournament_id, angler_id, num_fish, total_weight,
+                       big_bass_weight, dead_fish_penalty, disqualified, buy_in, points)
+                       VALUES (:tid, :aid, :fish, :weight, :bass, :penalty, :dq, :buy, 0)""",
+                    {
+                        "tid": tournament_id, "aid": angler2_id,
+                        "fish": angler2_fish, "weight": angler2_weight,
+                        "bass": angler2_big_bass, "penalty": angler2_dead_penalty,
+                        "dq": angler2_disqualified, "buy": angler2_buy_in
+                    },
+                )
+            saved_count += 1
+
+        # Save team result if both anglers exist
+        if angler1_id and angler2_id:
+            # Ensure consistent ordering
+            if angler1_id > angler2_id:
+                angler1_id, angler2_id = angler2_id, angler1_id
+
+            team_weight = angler1_weight + angler2_weight - angler1_dead_penalty - angler2_dead_penalty
+
+            existing_team = qs.fetch_one(
+                """SELECT id FROM team_results WHERE tournament_id = :tid
+                   AND angler1_id = :a1 AND angler2_id = :a2""",
+                {"tid": tournament_id, "a1": angler1_id, "a2": angler2_id},
+            )
+
+            if existing_team:
+                qs.execute(
+                    "UPDATE team_results SET total_weight = :weight WHERE id = :id",
+                    {"weight": team_weight, "id": existing_team["id"]},
+                )
+            else:
+                qs.execute(
+                    """INSERT INTO team_results (tournament_id, angler1_id, angler2_id, total_weight)
+                       VALUES (:tid, :a1, :a2, :weight)""",
+                    {"tid": tournament_id, "a1": angler1_id, "a2": angler2_id, "weight": team_weight},
+                )
+
+        team_num += 1
+
+    return RedirectResponse(f"/tournaments/{tournament_id}", status_code=303)
 
 
 @router.delete("/admin/tournaments/{tournament_id}/results/{result_id}")

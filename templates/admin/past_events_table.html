@@ -72,19 +72,28 @@
                     {% endif %}
                 </td>
                 <td class="text-end">
-                    {% if event.has_results %}
-                    <button class="btn btn-secondary btn-sm" disabled 
-                            title="Cannot delete: Tournament has results">
-                        <i class="bi bi-lock"></i>
-                    </button>
-                    {% else %}
-                    <button class="btn btn-danger btn-sm delete-past-event" 
-                            data-event-id="{{ event.id }}" 
-                            data-event-name="{{ event.name }}" 
-                            data-has-deps="{{ (event.has_poll or (event.has_tournament and not event.has_results))|tojson }}">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                    {% endif %}
+                    <div class="btn-group btn-group-sm" role="group">
+                        <!-- Edit button for admin users on past events -->
+                        <button class="btn btn-outline-primary btn-sm edit-event-btn"
+                                data-event-id="{{ event.id }}"
+                                title="Edit event">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+
+                        {% if event.has_results %}
+                        <button class="btn btn-secondary btn-sm" disabled
+                                title="Cannot delete: Tournament has results">
+                            <i class="bi bi-lock"></i>
+                        </button>
+                        {% else %}
+                        <button class="btn btn-danger btn-sm delete-past-event"
+                                data-event-id="{{ event.id }}"
+                                data-event-name="{{ event.name }}"
+                                data-has-deps="{{ (event.has_poll or (event.has_tournament and not event.has_results))|tojson }}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        {% endif %}
+                    </div>
                 </td>
             </tr>
             {% endfor %}

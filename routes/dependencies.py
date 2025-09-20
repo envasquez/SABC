@@ -22,7 +22,7 @@ def find_lake_by_id(lake_id: int, field: str = "name") -> Optional[str]:
 def find_lake_data_by_db_name(name: str) -> Optional[Dict[str, Any]]:
     with engine.connect() as conn:
         qs = QueryService(conn)
-        return qs.fetch_one("SELECT * FROM lakes WHERE name = :name", {"name": name})
+        return qs.fetch_one("SELECT * FROM lakes WHERE display_name = :name", {"name": name})
 
 
 def find_ramp_name_by_id(ramp_id: int) -> Optional[str]:

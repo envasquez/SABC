@@ -16,7 +16,12 @@ def date_format_filter(date_str: Any, format_type: str = "display") -> str:
     if not date_str:
         return ""
     try:
-        date_obj = datetime.strptime(str(date_str), "%Y-%m-%d")
+        # Handle datetime.date objects directly
+        if hasattr(date_str, 'strftime'):
+            date_obj = date_str
+        else:
+            date_obj = datetime.strptime(str(date_str), "%Y-%m-%d")
+
         if format_type == "dd-mm-yyyy":
             return date_obj.strftime("%d-%m-%Y")
         return date_obj.strftime("%b. %d, %Y")

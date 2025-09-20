@@ -197,19 +197,47 @@ async def create_event(
             "holiday_name": name if event_type == "holiday" else None,
         }
 
+        # Remove fish_limit from params since it's not in events table
+        event_params = {k: v for k, v in params.items() if k != 'fish_limit'}
+
         event_id = db(
             """
             INSERT INTO events (date, year, name, event_type, description,
                               start_time, weigh_in_time, lake_name, ramp_name,
-                              entry_fee, fish_limit, holiday_name)
+                              entry_fee, holiday_name)
             VALUES (:date, :year, :name, :event_type, :description,
                    :start_time, :weigh_in_time, :lake_name, :ramp_name,
-                   :entry_fee, :fish_limit, :holiday_name)
+                   :entry_fee, :holiday_name)
+            RETURNING id
         """,
-            params,
+            event_params,
         )
 
+        # Get the actual event_id from the returned result
+        if event_id:
+            event_id = event_id[0][0] if isinstance(event_id, list) else event_id
+
         if event_type == "sabc_tournament":
+            # Create tournament record with fish_limit
+            db(
+                """
+                INSERT INTO tournaments (event_id, name, lake_name, ramp_name,
+                                        start_time, end_time, fish_limit, entry_fee)
+                VALUES (:event_id, :name, :lake_name, :ramp_name,
+                       :start_time, :end_time, :fish_limit, :entry_fee)
+            """,
+                {
+                    "event_id": event_id,
+                    "name": name,
+                    "lake_name": lake_name if lake_name else None,
+                    "ramp_name": ramp_name if ramp_name else None,
+                    "start_time": start_time,
+                    "end_time": weigh_in_time,
+                    "fish_limit": fish_limit,
+                    "entry_fee": entry_fee,
+                },
+            )
+
             poll_starts = (date_obj - timedelta(days=7)).isoformat()
             poll_closes = (date_obj - timedelta(days=5)).isoformat()
 
@@ -313,17 +341,42 @@ async def edit_event(
             "fish_limit": fish_limit if event_type == "sabc_tournament" else None,
             "holiday_name": name if event_type == "holiday" else None,
         }
+        # Remove fish_limit from params since it's not in events table
+        event_params = {k: v for k, v in params.items() if k != 'fish_limit'}
+
         db(
             """
             UPDATE events
             SET date = :date, year = :year, name = :name, event_type = :event_type,
                 description = :description, start_time = :start_time, weigh_in_time = :weigh_in_time,
                 lake_name = :lake_name, ramp_name = :ramp_name, entry_fee = :entry_fee,
-                fish_limit = :fish_limit, holiday_name = :holiday_name
+                holiday_name = :holiday_name
             WHERE id = :event_id
         """,
-            params,
+            event_params,
         )
+
+        # Update tournament record if it exists
+        if event_type == "sabc_tournament":
+            db(
+                """
+                UPDATE tournaments
+                SET name = :name, lake_name = :lake_name, ramp_name = :ramp_name,
+                    start_time = :start_time, end_time = :end_time,
+                    fish_limit = :fish_limit, entry_fee = :entry_fee
+                WHERE event_id = :event_id
+            """,
+                {
+                    "event_id": event_id,
+                    "name": name,
+                    "lake_name": lake_name if lake_name else None,
+                    "ramp_name": ramp_name if ramp_name else None,
+                    "start_time": start_time,
+                    "end_time": weigh_in_time,
+                    "fish_limit": fish_limit,
+                    "entry_fee": entry_fee,
+                },
+            )
         if poll_closes_date and event_type == "sabc_tournament":
             try:
                 poll_closes_dt = datetime.fromisoformat(poll_closes_date)
@@ -361,7 +414,7 @@ async def get_event_info(request: Request, event_id: int):
                    e.start_time, e.weigh_in_time,
                    COALESCE(t.lake_name, e.lake_name) as lake_name,
                    COALESCE(t.ramp_name, e.ramp_name) as ramp_name,
-                   e.entry_fee, e.fish_limit, e.holiday_name,
+                   e.entry_fee, t.fish_limit, e.holiday_name,
                    p.closes_at, p.starts_at, p.id as poll_id, p.closed,
                    t.id as tournament_id
             FROM events e
@@ -382,7 +435,7 @@ async def get_event_info(request: Request, event_id: int):
             return JSONResponse(
                 {
                     "id": event[0],
-                    "date": event[1],
+                    "date": str(event[1]) if event[1] else "",
                     "name": event[2],
                     "description": event[3] or "",
                     "event_type": event[4],
@@ -393,8 +446,8 @@ async def get_event_info(request: Request, event_id: int):
                     "entry_fee": event[9],
                     "fish_limit": event[10],
                     "holiday_name": event[11] or "",
-                    "poll_closes_at": event[12],
-                    "poll_starts_at": event[13],
+                    "poll_closes_at": str(event[12]) if event[12] else "",
+                    "poll_starts_at": str(event[13]) if event[13] else "",
                     "poll_id": event[14],
                     "poll_closed": bool(event[15]) if event[15] is not None else None,
                     "tournament_id": event[16],
