@@ -99,8 +99,7 @@ def get_table_definitions():
             dead_fish_penalty DECIMAL DEFAULT 0.0,
             disqualified BOOLEAN DEFAULT false,
             buy_in BOOLEAN DEFAULT false,
-            place_finish INTEGER,
-            points INTEGER DEFAULT 0
+            place_finish INTEGER
         )""",
         """team_results(
             id SERIAL PRIMARY KEY,

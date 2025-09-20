@@ -272,8 +272,8 @@ async def save_multiple_results(
             else:
                 qs.execute(
                     """INSERT INTO results (tournament_id, angler_id, num_fish, total_weight,
-                       big_bass_weight, dead_fish_penalty, disqualified, buy_in, points)
-                       VALUES (:tid, :aid, :fish, :weight, :bass, :penalty, :dq, :buy, 0)""",
+                       big_bass_weight, dead_fish_penalty, disqualified, buy_in)
+                       VALUES (:tid, :aid, :fish, :weight, :bass, :penalty, :dq, :buy)""",
                     {
                         "tid": tournament_id,
                         "aid": angler1_id,
@@ -321,8 +321,8 @@ async def save_multiple_results(
             else:
                 qs.execute(
                     """INSERT INTO results (tournament_id, angler_id, num_fish, total_weight,
-                       big_bass_weight, dead_fish_penalty, disqualified, buy_in, points)
-                       VALUES (:tid, :aid, :fish, :weight, :bass, :penalty, :dq, :buy, 0)""",
+                       big_bass_weight, dead_fish_penalty, disqualified, buy_in)
+                       VALUES (:tid, :aid, :fish, :weight, :bass, :penalty, :dq, :buy)""",
                     {
                         "tid": tournament_id,
                         "aid": angler2_id,

@@ -67,7 +67,6 @@ class TournamentResult:
         num_fish: int = 0,
         big_bass_weight: float = 0.0,
         place_finish: Optional[int] = None,
-        points: int = 0,
         disqualified: bool = False,
         buy_in: bool = False,
         dead_fish_penalty: float = 0.0,
@@ -77,7 +76,6 @@ class TournamentResult:
         self.num_fish = num_fish
         self.big_bass_weight = big_bass_weight
         self.place_finish = place_finish
-        self.points = points
         self.disqualified = disqualified
         self.buy_in = buy_in
         self.dead_fish_penalty = dead_fish_penalty
@@ -366,7 +364,6 @@ class TournamentScraper:
                             # Find data in remaining columns
                             num_fish = 0
                             total_weight = 0.0
-                            points = 0
                             big_bass = 0.0
 
                             for i, cell in enumerate(cells[3:], 3):
@@ -383,16 +380,11 @@ class TournamentScraper:
                                             total_weight = float(cell_text)
                                         except ValueError:
                                             pass
-                                    elif "points" in header and cell_text.isdigit():
-                                        points = int(cell_text)
                                     elif "bass" in header:
                                         try:
                                             big_bass = float(cell_text)
                                         except ValueError:
                                             pass
-
-                            # Points will be calculated after import
-                            points = 0
 
                             result = TournamentResult(
                                 angler_name=angler_name,
@@ -400,7 +392,6 @@ class TournamentScraper:
                                 num_fish=num_fish,
                                 big_bass_weight=big_bass,
                                 place_finish=place,
-                                points=points,
                             )
                             results.append(result)
 
@@ -526,7 +517,6 @@ class TournamentScraper:
                     num_fish=0,  # No fish recorded
                     big_bass_weight=0.0,
                     place_finish=None,  # Will be calculated after import
-                    points=0,  # Will be calculated after import
                     disqualified=False,
                     buy_in=True,  # This is a buy-in angler
                     dead_fish_penalty=0.0,
@@ -983,7 +973,6 @@ class DatabaseImporter:
             "disqualified": result.disqualified,
             "buy_in": result.buy_in,
             "place_finish": None,  # Will be calculated after all results are imported
-            "points": 0,  # Will be calculated after all results are imported
         }
 
         if self.dry_run:
@@ -1010,8 +999,7 @@ class DatabaseImporter:
                         dead_fish_penalty = :dead_fish_penalty,
                         disqualified = :disqualified,
                         buy_in = :buy_in,
-                        place_finish = :place_finish,
-                        points = :points
+                        place_finish = :place_finish
                     WHERE tournament_id = :tournament_id AND angler_id = :angler_id
                 """),
                 result_data,
@@ -1021,9 +1009,9 @@ class DatabaseImporter:
             conn.execute(
                 text("""
                     INSERT INTO results (tournament_id, angler_id, num_fish, total_weight, big_bass_weight,
-                                       dead_fish_penalty, disqualified, buy_in, place_finish, points)
+                                       dead_fish_penalty, disqualified, buy_in, place_finish)
                     VALUES (:tournament_id, :angler_id, :num_fish, :total_weight, :big_bass_weight,
-                           :dead_fish_penalty, :disqualified, :buy_in, :place_finish, :points)
+                           :dead_fish_penalty, :disqualified, :buy_in, :place_finish)
                 """),
                 result_data,
             )
