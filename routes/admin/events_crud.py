@@ -9,7 +9,6 @@ from core.helpers.auth import require_admin
 from routes.dependencies import (
     db,
     engine,
-    find_lake_data_by_db_name,
     get_lakes_list,
     templates,
     validate_event_data,
@@ -19,7 +18,14 @@ router = APIRouter()
 
 
 @router.get("/admin/events")
-async def admin_events(request: Request, upcoming_page: int = 1, past_page: int = 1):
+async def admin_events(
+    request: Request,
+    upcoming_page: int = 1,
+    past_page: int = 1,
+    success: str = None,
+    error: str = None,
+    warnings: str = None
+):
     user = require_admin(request)
 
     if isinstance(user, RedirectResponse):
@@ -135,6 +141,9 @@ async def admin_events(request: Request, upcoming_page: int = 1, past_page: int 
         "past_next_page": past_page + 1,
         "total_past": total_past,
         "per_page": per_page,
+        "success": success,
+        "error": error,
+        "warnings": warnings,
     }
 
     return templates.TemplateResponse("admin/events.html", ctx)
@@ -306,6 +315,7 @@ async def edit_event(
     fish_limit: int = Form(default=5),
     poll_closes_date: str = Form(default=""),
 ):
+    print(f"DEBUG: edit_event POST route called with event_id={event_id}")
     user = require_admin(request)
 
     if isinstance(user, RedirectResponse):
@@ -344,39 +354,52 @@ async def edit_event(
         # Remove fish_limit from params since it's not in events table
         event_params = {k: v for k, v in params.items() if k != 'fish_limit'}
 
-        db(
-            """
-            UPDATE events
-            SET date = :date, year = :year, name = :name, event_type = :event_type,
-                description = :description, start_time = :start_time, weigh_in_time = :weigh_in_time,
-                lake_name = :lake_name, ramp_name = :ramp_name, entry_fee = :entry_fee,
-                holiday_name = :holiday_name
-            WHERE id = :event_id
-        """,
-            event_params,
-        )
+        # Update events table and check if any rows were affected
+        with engine.connect() as conn:
+            event_result = conn.execute(
+                text("""
+                UPDATE events
+                SET date = :date, year = :year, name = :name, event_type = :event_type,
+                    description = :description, start_time = :start_time, weigh_in_time = :weigh_in_time,
+                    lake_name = :lake_name, ramp_name = :ramp_name, entry_fee = :entry_fee,
+                    holiday_name = :holiday_name
+                WHERE id = :event_id
+            """),
+                event_params,
+            )
+            conn.commit()
+
+            if event_result.rowcount == 0:
+                return RedirectResponse(f"/admin/events?error=Event with ID {event_id} not found", status_code=302)
 
         # Update tournament record if it exists
         if event_type == "sabc_tournament":
-            db(
-                """
-                UPDATE tournaments
-                SET name = :name, lake_name = :lake_name, ramp_name = :ramp_name,
-                    start_time = :start_time, end_time = :end_time,
-                    fish_limit = :fish_limit, entry_fee = :entry_fee
-                WHERE event_id = :event_id
-            """,
-                {
-                    "event_id": event_id,
-                    "name": name,
-                    "lake_name": lake_name if lake_name else None,
-                    "ramp_name": ramp_name if ramp_name else None,
-                    "start_time": start_time,
-                    "end_time": weigh_in_time,
-                    "fish_limit": fish_limit,
-                    "entry_fee": entry_fee,
-                },
-            )
+            tournament_params = {
+                "event_id": event_id,
+                "name": name,
+                "lake_name": lake_name if lake_name else None,
+                "ramp_name": ramp_name if ramp_name else None,
+                "start_time": start_time,
+                "end_time": weigh_in_time,
+                "fish_limit": fish_limit,
+                "entry_fee": entry_fee,
+            }
+            print(f"DEBUG: Updating tournament for event {event_id} with params: {tournament_params}")
+            with engine.connect() as conn:
+                tournament_result = conn.execute(
+                    text("""
+                    UPDATE tournaments
+                    SET name = :name, lake_name = :lake_name, ramp_name = :ramp_name,
+                        start_time = :start_time, end_time = :end_time,
+                        fish_limit = :fish_limit, entry_fee = :entry_fee
+                    WHERE event_id = :event_id
+                """),
+                    tournament_params,
+                )
+                conn.commit()
+
+                if tournament_result.rowcount == 0:
+                    return RedirectResponse(f"/admin/events?error=Tournament record for event ID {event_id} not found", status_code=302)
         if poll_closes_date and event_type == "sabc_tournament":
             try:
                 poll_closes_dt = datetime.fromisoformat(poll_closes_date)
@@ -428,10 +451,6 @@ async def get_event_info(request: Request, event_id: int):
         if event_info:
             event = event_info[0]
             lake_display_name = event[7] or ""
-            if lake_display_name:
-                lake_data = find_lake_data_by_db_name(lake_display_name)
-                if lake_data and lake_data.get("display_name"):
-                    lake_display_name = lake_data["display_name"]
             return JSONResponse(
                 {
                     "id": event[0],
@@ -439,15 +458,15 @@ async def get_event_info(request: Request, event_id: int):
                     "name": event[2],
                     "description": event[3] or "",
                     "event_type": event[4],
-                    "start_time": str(event[5]) if event[5] else "",
-                    "weigh_in_time": str(event[6]) if event[6] else "",
+                    "start_time": event[5].strftime("%H:%M") if event[5] is not None else "",
+                    "weigh_in_time": event[6].strftime("%H:%M") if event[6] is not None else "",
                     "lake_name": lake_display_name,
                     "ramp_name": event[8] or "",
                     "entry_fee": float(event[9]) if event[9] is not None else None,
                     "fish_limit": event[10],
                     "holiday_name": event[11] or "",
-                    "poll_closes_at": str(event[12]) if event[12] else "",
-                    "poll_starts_at": str(event[13]) if event[13] else "",
+                    "poll_closes_at": event[12].isoformat() if event[12] is not None else "",
+                    "poll_starts_at": event[13].isoformat() if event[13] is not None else "",
                     "poll_id": event[14],
                     "poll_closed": bool(event[15]) if event[15] is not None else None,
                     "tournament_id": event[16],
@@ -456,6 +475,9 @@ async def get_event_info(request: Request, event_id: int):
         else:
             return JSONResponse({"error": "Event not found"}, status_code=404)
     except Exception as e:
+        print(f"DEBUG: get_event_info error: {str(e)}")
+        import traceback
+        print(f"DEBUG: Full traceback: {traceback.format_exc()}")
         return JSONResponse({"error": f"Failed to get event info: {str(e)}"}, status_code=500)
 
 

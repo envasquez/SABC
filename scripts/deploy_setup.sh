@@ -65,7 +65,7 @@ echo ""
 
 # Step 1: Initialize database schema
 echo "Step 1: Initializing database schema..."
-python scripts/init_postgres.py
+python scripts/setup_db.py
 if [ $? -eq 0 ]; then
     echo "✅ Database schema initialized successfully"
 else
@@ -102,7 +102,7 @@ if [ "$SKIP_ADMIN" = true ]; then
 else
     echo "Step 4: Creating admin user..."
     echo "You'll be prompted to enter admin credentials"
-    python scripts/bootstrap_admin_postgres.py
+    python scripts/setup_admin.py
     if [ $? -eq 0 ]; then
         echo "✅ Admin user created successfully"
     else

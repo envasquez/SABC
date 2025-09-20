@@ -50,8 +50,8 @@ sleep 15
 
 echo ""
 echo -e "${YELLOW}🗃️  Initializing database...${NC}"
-docker compose -f docker-compose.prod.yml --env-file .env.local-test exec -T web python scripts/init_postgres.py || echo "Database already initialized"
-docker compose -f docker-compose.prod.yml --env-file .env.local-test exec -T web python scripts/bootstrap_admin_postgres.py || echo "Admin already exists"
+docker compose -f docker-compose.prod.yml --env-file .env.local-test exec -T web python scripts/setup_db.py || echo "Database already initialized"
+docker compose -f docker-compose.prod.yml --env-file .env.local-test exec -T web python scripts/setup_admin.py --non-interactive || echo "Admin already exists"
 
 echo ""
 echo -e "${YELLOW}🏥 Running health checks...${NC}"

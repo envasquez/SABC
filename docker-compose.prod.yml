@@ -24,13 +24,13 @@ services:
         echo 'Waiting for database...';
         sleep 15;
         echo 'Setting up database...';
-        python scripts/setup_database.py;
+        python scripts/setup_db.py;
         echo 'Loading lakes...';
         python scripts/load_lakes.py;
         echo 'Loading holidays...';
         python scripts/load_holidays.py 2024 2025;
         echo 'Creating admin user...';
-        python scripts/create_admin.py;
+        python scripts/setup_admin.py --non-interactive;
         echo 'Starting server...';
         uvicorn app:app --host 0.0.0.0 --port 8000
       "

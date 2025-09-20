@@ -55,8 +55,8 @@ createdb sabc
 export DATABASE_URL="postgresql://username:password@localhost:5432/sabc"
 
 # Initialize database
-python scripts/init_postgres.py
-python scripts/bootstrap_admin_postgres.py
+python scripts/setup_db.py
+python scripts/setup_admin.py
 
 # Start server
 uvicorn app:app --reload --host 0.0.0.0 --port 8000

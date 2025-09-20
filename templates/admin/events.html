@@ -19,8 +19,23 @@
             </h5>
         </div>
         <div class="card-body">
+            {% if success %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>{{ success }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endif %}
             {% if error %}
-            <div class="alert alert-danger">{{ error }}</div>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endif %}
+            {% if warnings %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ warnings }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
             {% endif %}
             
             <form method="POST" action="/admin/events/create">
@@ -583,26 +598,31 @@ function loadLakes() {
 // Load ramps when lake is selected
 function loadRamps(lakeName, rampSelectId = 'edit_ramp_name') {
     const rampSelect = document.getElementById(rampSelectId);
-    
+
     if (!rampSelect) return;
-    
+
     if (!lakeName) {
         rampSelect.innerHTML = '<option value="">-- Select Ramp --</option>';
         rampSelect.disabled = true;
         return;
     }
-    
+
     // Find the lake key from lakesData
     const lake = lakesData.find(l => l.name === lakeName);
     if (!lake) {
+        console.warn(`Lake not found in lakesData: "${lakeName}"`);
+        console.log('Available lakes:', lakesData.map(l => l.name));
         rampSelect.innerHTML = '<option value="">-- Select Ramp --</option>';
         rampSelect.disabled = true;
         return;
     }
-    
+
+    console.log(`Loading ramps for lake: ${lakeName} (key: ${lake.key})`);
+
     fetch(`/api/lakes/${lake.key}/ramps`)
         .then(response => response.json())
         .then(data => {
+            console.log(`Loaded ${data.ramps?.length || 0} ramps for ${lakeName}`);
             rampSelect.innerHTML = '<option value="">-- Select Ramp --</option>';
             if (data.ramps && data.ramps.length > 0) {
                 data.ramps.forEach(ramp => {
@@ -617,63 +637,82 @@ function loadRamps(lakeName, rampSelectId = 'edit_ramp_name') {
             } else {
                 rampSelect.disabled = true;
             }
+        })
+        .catch(error => {
+            console.error(`Error loading ramps for ${lakeName}:`, error);
+            rampSelect.innerHTML = '<option value="">-- Error loading ramps --</option>';
+            rampSelect.disabled = true;
         });
 }
 
 function editEvent(id, date, eventType, name, description, hasPoll, pollActive) {
+    // Ensure lakes are loaded before proceeding
+    const ensureLakesLoadedAndEdit = () => {
+        // Fetch complete event data
+        fetch(`/admin/events/${id}/info`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('DEBUG: Event data loaded:', data);
+                if (data.error) {
+                    alert('Error loading event data: ' + data.error);
+                    return;
+                }
+
+                // Populate basic fields
+                document.getElementById('edit_event_id').value = data.id;
+                document.getElementById('edit_date').value = data.date;
+                document.getElementById('edit_event_type').value = data.event_type;
+                document.getElementById('edit_name').value = data.name;
+                document.getElementById('edit_description').value = data.description;
+
+                // Populate tournament fields
+                document.getElementById('edit_start_time').value = data.start_time || '06:00';
+                document.getElementById('edit_weigh_in_time').value = data.weigh_in_time || '15:00';
+                document.getElementById('edit_entry_fee').value = data.entry_fee || 25.00;
+                document.getElementById('edit_fish_limit').value = data.fish_limit || 5;
+
+                // Set lake and load ramps
+                const lakeSelect = document.getElementById('edit_lake_name');
+                lakeSelect.value = data.lake_name || '';
+                if (data.lake_name) {
+                    console.log('DEBUG: Loading ramps for lake:', data.lake_name);
+                    loadRamps(data.lake_name);
+                    // Set ramp value after ramps are loaded
+                    setTimeout(() => {
+                        document.getElementById('edit_ramp_name').value = data.ramp_name || '';
+                    }, 1000); // Increased timeout to ensure ramps are loaded
+                }
+
+                // Show/hide conditional fields
+                toggleEditEventFields();
+
+                // Handle poll fields (existing logic)
+                setupPollFields(data.event_type, hasPoll, data.poll_closes_at);
+
+                // Show the modal
+                new bootstrap.Modal(document.getElementById('editEventModal')).show();
+
+                // Add form submit listener for debugging
+                document.getElementById('editEventForm').addEventListener('submit', function(e) {
+                    console.log('DEBUG: Form is being submitted');
+                    console.log('DEBUG: Form data:', new FormData(this));
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching event data:', error);
+                alert('Failed to load event data');
+            });
+    };
+
     // Load lakes if not already loaded
     if (lakesData.length === 0) {
+        console.log('DEBUG: Loading lakes data first...');
         loadLakes();
+        // Wait for lakes to load before proceeding
+        setTimeout(ensureLakesLoadedAndEdit, 500);
+    } else {
+        ensureLakesLoadedAndEdit();
     }
-    
-    // Fetch complete event data
-    fetch(`/admin/events/${id}/info`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                alert('Error loading event data: ' + data.error);
-                return;
-            }
-            
-            // Populate basic fields
-            document.getElementById('edit_event_id').value = data.id;
-            document.getElementById('edit_date').value = data.date;
-            document.getElementById('edit_event_type').value = data.event_type;
-            document.getElementById('edit_name').value = data.name;
-            document.getElementById('edit_description').value = data.description;
-            
-            // Populate tournament fields
-            document.getElementById('edit_start_time').value = data.start_time || '06:00';
-            document.getElementById('edit_weigh_in_time').value = data.weigh_in_time || '15:00';
-            document.getElementById('edit_entry_fee').value = data.entry_fee || 25.00;
-            document.getElementById('edit_fish_limit').value = data.fish_limit || 5;
-            
-            // Set lake and load ramps
-            const lakeSelect = document.getElementById('edit_lake_name');
-            lakeSelect.value = data.lake_name || '';
-            if (data.lake_name) {
-                loadRamps(data.lake_name);
-                // Set ramp value after ramps are loaded
-                setTimeout(() => {
-                    document.getElementById('edit_ramp_name').value = data.ramp_name || '';
-                }, 500);
-            }
-            
-            
-            
-            // Show/hide conditional fields
-            toggleEditEventFields();
-            
-            // Handle poll fields (existing logic)
-            setupPollFields(data.event_type, hasPoll, data.poll_closes_at);
-            
-            // Show the modal
-            new bootstrap.Modal(document.getElementById('editEventModal')).show();
-        })
-        .catch(error => {
-            console.error('Error fetching event data:', error);
-            alert('Failed to load event data');
-        });
 }
 
 function setupPollFields(eventType, hasPoll, pollClosesAt) {

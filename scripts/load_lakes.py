@@ -4,7 +4,6 @@ Load lakes and ramps data from YAML file into the database.
 This script populates the lakes and ramps tables from scripts/lakes.yaml.
 """
 
-import logging
 import os
 import sys
 from pathlib import Path
@@ -12,13 +11,10 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import yaml  # type: ignore
 
-# Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+from common import setup_logging, ensure_database_url
 from core.database import db
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = setup_logging()
 
 
 def load_yaml_data(filepath: str) -> Dict[str, Any]:

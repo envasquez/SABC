@@ -86,10 +86,10 @@ createdb sabc
 export DATABASE_URL="postgresql://username:password@localhost:5432/sabc"
 
 # Initialize database schema
-python scripts/init_postgres.py
+python scripts/setup_db.py
 
 # Create admin user
-python scripts/bootstrap_admin_postgres.py
+python scripts/setup_admin.py
 
 # Start server
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
@@ -127,8 +127,8 @@ test-coverage                  # Coverage report
 
 ```bash
 # Database
-python scripts/init_postgres.py
-python scripts/bootstrap_admin_postgres.py
+python scripts/setup_db.py
+python scripts/setup_admin.py
 
 # Development
 uvicorn app:app --reload --host 0.0.0.0 --port 8000

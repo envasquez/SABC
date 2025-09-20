@@ -4,19 +4,14 @@ Load federal holidays into the database for specified years.
 This script populates the events table with holiday entries.
 """
 
-import logging
-import os
 import sys
 from datetime import datetime
 
-# Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+from common import setup_logging, ensure_database_url
 from core.database import db
 from core.validators import get_federal_holidays
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = setup_logging()
 
 
 def load_holidays_for_year(year: int, dry_run: bool = False) -> int:

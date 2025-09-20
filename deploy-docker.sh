@@ -81,8 +81,8 @@ ssh $REMOTE_USER@$REMOTE_HOST << 'ENDSSH'
 
     # Initialize database
     echo "🗃️  Initializing database..."
-    docker compose -f docker compose.prod.yml --env-file .env.production exec -T web python scripts/init_postgres.py
-    docker compose -f docker compose.prod.yml --env-file .env.production exec -T web python scripts/bootstrap_admin_postgres.py || echo "Admin already exists"
+    docker compose -f docker compose.prod.yml --env-file .env.production exec -T web python scripts/setup_db.py
+    docker compose -f docker compose.prod.yml --env-file .env.production exec -T web python scripts/setup_admin.py --non-interactive || echo "Admin already exists"
 
     # Check health
     echo "🏥 Checking application health..."
