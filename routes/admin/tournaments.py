@@ -70,6 +70,7 @@ async def enter_results_page(
 
     # Create JSON data for JavaScript
     import json
+
     anglers_json = json.dumps([{"id": a["id"], "name": a["name"]} for a in anglers])
     existing_angler_ids = list(results_by_angler.keys())
     existing_angler_ids_json = json.dumps(existing_angler_ids)
@@ -231,8 +232,13 @@ async def save_multiple_results(
         angler1_id = form.get(f"angler1_id_{team_num}")
         angler2_id = form.get(f"angler2_id_{team_num}")
 
+        # Convert to int if present
         if angler1_id:
             angler1_id = int(angler1_id)
+        if angler2_id:
+            angler2_id = int(angler2_id)
+
+        if angler1_id:
             # Process angler1 results
             angler1_fish = int(form.get(f"angler1_fish_{team_num}", 0))
             angler1_weight = Decimal(form.get(f"angler1_weight_{team_num}", "0"))
@@ -254,10 +260,13 @@ async def save_multiple_results(
                        disqualified = :dq, buy_in = :buy
                        WHERE id = :id""",
                     {
-                        "fish": angler1_fish, "weight": angler1_weight,
-                        "bass": angler1_big_bass, "penalty": angler1_dead_penalty,
-                        "dq": angler1_disqualified, "buy": angler1_buy_in,
-                        "id": existing["id"]
+                        "fish": angler1_fish,
+                        "weight": angler1_weight,
+                        "bass": angler1_big_bass,
+                        "penalty": angler1_dead_penalty,
+                        "dq": angler1_disqualified,
+                        "buy": angler1_buy_in,
+                        "id": existing["id"],
                     },
                 )
             else:
@@ -266,16 +275,19 @@ async def save_multiple_results(
                        big_bass_weight, dead_fish_penalty, disqualified, buy_in, points)
                        VALUES (:tid, :aid, :fish, :weight, :bass, :penalty, :dq, :buy, 0)""",
                     {
-                        "tid": tournament_id, "aid": angler1_id,
-                        "fish": angler1_fish, "weight": angler1_weight,
-                        "bass": angler1_big_bass, "penalty": angler1_dead_penalty,
-                        "dq": angler1_disqualified, "buy": angler1_buy_in
+                        "tid": tournament_id,
+                        "aid": angler1_id,
+                        "fish": angler1_fish,
+                        "weight": angler1_weight,
+                        "bass": angler1_big_bass,
+                        "penalty": angler1_dead_penalty,
+                        "dq": angler1_disqualified,
+                        "buy": angler1_buy_in,
                     },
                 )
             saved_count += 1
 
         if angler2_id:
-            angler2_id = int(angler2_id)
             # Process angler2 results
             angler2_fish = int(form.get(f"angler2_fish_{team_num}", 0))
             angler2_weight = Decimal(form.get(f"angler2_weight_{team_num}", "0"))
@@ -297,10 +309,13 @@ async def save_multiple_results(
                        disqualified = :dq, buy_in = :buy
                        WHERE id = :id""",
                     {
-                        "fish": angler2_fish, "weight": angler2_weight,
-                        "bass": angler2_big_bass, "penalty": angler2_dead_penalty,
-                        "dq": angler2_disqualified, "buy": angler2_buy_in,
-                        "id": existing["id"]
+                        "fish": angler2_fish,
+                        "weight": angler2_weight,
+                        "bass": angler2_big_bass,
+                        "penalty": angler2_dead_penalty,
+                        "dq": angler2_disqualified,
+                        "buy": angler2_buy_in,
+                        "id": existing["id"],
                     },
                 )
             else:
@@ -309,21 +324,27 @@ async def save_multiple_results(
                        big_bass_weight, dead_fish_penalty, disqualified, buy_in, points)
                        VALUES (:tid, :aid, :fish, :weight, :bass, :penalty, :dq, :buy, 0)""",
                     {
-                        "tid": tournament_id, "aid": angler2_id,
-                        "fish": angler2_fish, "weight": angler2_weight,
-                        "bass": angler2_big_bass, "penalty": angler2_dead_penalty,
-                        "dq": angler2_disqualified, "buy": angler2_buy_in
+                        "tid": tournament_id,
+                        "aid": angler2_id,
+                        "fish": angler2_fish,
+                        "weight": angler2_weight,
+                        "bass": angler2_big_bass,
+                        "penalty": angler2_dead_penalty,
+                        "dq": angler2_disqualified,
+                        "buy": angler2_buy_in,
                     },
                 )
             saved_count += 1
 
         # Save team result if both anglers exist
         if angler1_id and angler2_id:
-            # Ensure consistent ordering
-            if angler1_id > angler2_id:
+            # Ensure consistent ordering (both are int at this point)
+            if int(angler1_id) > int(angler2_id):
                 angler1_id, angler2_id = angler2_id, angler1_id
 
-            team_weight = angler1_weight + angler2_weight - angler1_dead_penalty - angler2_dead_penalty
+            team_weight = (
+                angler1_weight + angler2_weight - angler1_dead_penalty - angler2_dead_penalty
+            )
 
             existing_team = qs.fetch_one(
                 """SELECT id FROM team_results WHERE tournament_id = :tid
@@ -340,7 +361,12 @@ async def save_multiple_results(
                 qs.execute(
                     """INSERT INTO team_results (tournament_id, angler1_id, angler2_id, total_weight)
                        VALUES (:tid, :a1, :a2, :weight)""",
-                    {"tid": tournament_id, "a1": angler1_id, "a2": angler2_id, "weight": team_weight},
+                    {
+                        "tid": tournament_id,
+                        "a1": angler1_id,
+                        "a2": angler2_id,
+                        "weight": team_weight,
+                    },
                 )
 
         team_num += 1

@@ -24,7 +24,7 @@ async def admin_events(
     past_page: int = 1,
     success: str = None,
     error: str = None,
-    warnings: str = None
+    warnings: str = None,
 ):
     user = require_admin(request)
 
@@ -37,7 +37,9 @@ async def admin_events(
 
     # Get counts and events with pagination
     total_upcoming = db("SELECT COUNT(*) FROM events WHERE date >= CURRENT_DATE")[0][0]
-    total_past = db("SELECT COUNT(*) FROM events WHERE date < CURRENT_DATE AND event_type != 'holiday'")[0][0]
+    total_past = db(
+        "SELECT COUNT(*) FROM events WHERE date < CURRENT_DATE AND event_type != 'holiday'"
+    )[0][0]
 
     events = db(
         """
@@ -207,7 +209,7 @@ async def create_event(
         }
 
         # Remove fish_limit from params since it's not in events table
-        event_params = {k: v for k, v in params.items() if k != 'fish_limit'}
+        event_params = {k: v for k, v in params.items() if k != "fish_limit"}
 
         event_id = db(
             """
@@ -352,7 +354,7 @@ async def edit_event(
             "holiday_name": name if event_type == "holiday" else None,
         }
         # Remove fish_limit from params since it's not in events table
-        event_params = {k: v for k, v in params.items() if k != 'fish_limit'}
+        event_params = {k: v for k, v in params.items() if k != "fish_limit"}
 
         # Update events table and check if any rows were affected
         with engine.connect() as conn:
@@ -370,7 +372,9 @@ async def edit_event(
             conn.commit()
 
             if event_result.rowcount == 0:
-                return RedirectResponse(f"/admin/events?error=Event with ID {event_id} not found", status_code=302)
+                return RedirectResponse(
+                    f"/admin/events?error=Event with ID {event_id} not found", status_code=302
+                )
 
         # Update tournament record if it exists
         if event_type == "sabc_tournament":
@@ -384,7 +388,9 @@ async def edit_event(
                 "fish_limit": fish_limit,
                 "entry_fee": entry_fee,
             }
-            print(f"DEBUG: Updating tournament for event {event_id} with params: {tournament_params}")
+            print(
+                f"DEBUG: Updating tournament for event {event_id} with params: {tournament_params}"
+            )
             with engine.connect() as conn:
                 tournament_result = conn.execute(
                     text("""
@@ -399,7 +405,10 @@ async def edit_event(
                 conn.commit()
 
                 if tournament_result.rowcount == 0:
-                    return RedirectResponse(f"/admin/events?error=Tournament record for event ID {event_id} not found", status_code=302)
+                    return RedirectResponse(
+                        f"/admin/events?error=Tournament record for event ID {event_id} not found",
+                        status_code=302,
+                    )
         if poll_closes_date and event_type == "sabc_tournament":
             try:
                 poll_closes_dt = datetime.fromisoformat(poll_closes_date)
@@ -477,6 +486,7 @@ async def get_event_info(request: Request, event_id: int):
     except Exception as e:
         print(f"DEBUG: get_event_info error: {str(e)}")
         import traceback
+
         print(f"DEBUG: Full traceback: {traceback.format_exc()}")
         return JSONResponse({"error": f"Failed to get event info: {str(e)}"}, status_code=500)
 

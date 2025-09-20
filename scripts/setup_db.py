@@ -7,8 +7,9 @@ Consolidates init_postgres.py and setup_database.py functionality.
 import argparse
 import sys
 
-from common import setup_logging, ensure_database_url
-from core.db_schema import create_views, init_db, create_all_tables
+from common import ensure_database_url, setup_logging
+
+from core.db_schema import create_all_tables, create_views, init_db
 
 
 def setup_database(method: str = "full") -> int:
@@ -57,8 +58,12 @@ def setup_database(method: str = "full") -> int:
 def main() -> int:
     """Main function with CLI argument parsing."""
     parser = argparse.ArgumentParser(description="Setup SABC database")
-    parser.add_argument("--method", choices=["full", "tables"], default="full",
-                       help="Setup method: 'full' (default) or 'tables'")
+    parser.add_argument(
+        "--method",
+        choices=["full", "tables"],
+        default="full",
+        help="Setup method: 'full' (default) or 'tables'",
+    )
 
     args = parser.parse_args()
     return setup_database(args.method)

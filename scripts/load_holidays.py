@@ -4,10 +4,12 @@ Load federal holidays into the database for specified years.
 This script populates the events table with holiday entries.
 """
 
+import os
 import sys
 from datetime import datetime
 
-from common import setup_logging, ensure_database_url
+from common import setup_logging
+
 from core.database import db
 from core.validators import get_federal_holidays
 

@@ -10,8 +10,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import yaml  # type: ignore
+from common import setup_logging
 
-from common import setup_logging, ensure_database_url
 from core.database import db
 
 logger = setup_logging()

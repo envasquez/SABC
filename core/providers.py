@@ -1,10 +1,62 @@
 from datetime import datetime
+from typing import Any, Dict, List
 
 from fastapi import Depends
 
 from core.db_schema import engine
 from core.helpers.auth import get_user_optional
 from core.query_service import QueryService
+
+
+def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Calculate tournament points for a list of results using SABC scoring system."""
+    # Filter out buy-ins and disqualified anglers for regular place calculation
+    regular_results = [
+        r for r in results if not r.get("buy_in", False) and not r.get("disqualified", False)
+    ]
+
+    # Separate results into fish vs no-fish for proper SABC scoring
+    fish_results = [r for r in regular_results if float(r.get("total_weight", 0)) > 0]
+    zero_results = [r for r in regular_results if float(r.get("total_weight", 0)) == 0]
+
+    # Sort fish results by weight (descending)
+    fish_results.sort(key=lambda x: float(x.get("total_weight", 0)), reverse=True)
+
+    # Calculate places and points for participants with fish
+    current_place = 1
+    for i, result in enumerate(fish_results):
+        weight = float(result.get("total_weight", 0))
+
+        # If this weight is different from previous, update place
+        if i > 0:
+            prev_weight = float(fish_results[i - 1].get("total_weight", 0))
+            if weight != prev_weight:
+                current_place = i + 1
+
+        # Calculate points using SABC system: 101 - place
+        points = max(101 - current_place, 0)
+        result["calculated_points"] = points
+        result["calculated_place"] = current_place
+
+    # Calculate points for zero-fish participants per bylaws
+    # They get 2 points less than last place participant that weighed in fish
+    if fish_results:
+        last_fish_points = min([r["calculated_points"] for r in fish_results])
+        zero_points = last_fish_points - 2
+        zero_place = len(fish_results) + 1
+    else:
+        zero_points = 99  # If no one caught fish, zeros get 99 points
+        zero_place = 1
+
+    # Add points to zero-fish results
+    for result in zero_results:
+        result["calculated_points"] = zero_points
+        result["calculated_place"] = zero_place
+
+    # Combine all results
+    all_results = fish_results + zero_results
+
+    return all_results
 
 
 async def get_tournament_data(tournament_id: int, user=Depends(get_user_optional)):
@@ -26,17 +78,17 @@ async def get_tournament_data(tournament_id: int, user=Depends(get_user_optional
 
             # Convert tournament dict to tuple for template compatibility
             tournament_tuple = (
-                tournament["id"],                # 0
-                tournament["event_id"],          # 1
-                tournament["date"],              # 2
-                tournament["name"],              # 3
-                tournament["description"],       # 4
-                tournament["lake_name"],         # 5
-                tournament["ramp_name"],         # 6
-                tournament["entry_fee"],         # 7
-                tournament["fish_limit"],        # 8
-                tournament["complete"],          # 9
-                tournament["event_type"]         # 10
+                tournament["id"],  # 0
+                tournament["event_id"],  # 1
+                tournament["date"],  # 2
+                tournament["name"],  # 3
+                tournament["description"],  # 4
+                tournament["lake_name"],  # 5
+                tournament["ramp_name"],  # 6
+                tournament["entry_fee"],  # 7
+                tournament["fish_limit"],  # 8
+                tournament["complete"],  # 9
+                tournament["event_type"],  # 10
             )
 
             # Get tournament statistics in the format expected by template
@@ -56,15 +108,19 @@ async def get_tournament_data(tournament_id: int, user=Depends(get_user_optional
 
             # Convert to tuple format for template
             stats = (
-                stats_query["total_anglers"] or 0,
-                stats_query["total_fish"] or 0,
-                float(stats_query["total_weight"] or 0),
-                stats_query["limits"] or 0,
-                stats_query["zeros"] or 0,
-                stats_query["buy_ins"] or 0,
-                float(stats_query["biggest_bass"] or 0),
-                float(stats_query["heavy_stringer"] or 0)
-            ) if stats_query else (0, 0, 0.0, 0, 0, 0, 0.0, 0.0)
+                (
+                    stats_query["total_anglers"] or 0,
+                    stats_query["total_fish"] or 0,
+                    float(stats_query["total_weight"] or 0),
+                    stats_query["limits"] or 0,
+                    stats_query["zeros"] or 0,
+                    stats_query["buy_ins"] or 0,
+                    float(stats_query["biggest_bass"] or 0),
+                    float(stats_query["heavy_stringer"] or 0),
+                )
+                if stats_query
+                else (0, 0, 0.0, 0, 0, 0, 0.0, 0.0)
+            )
 
             # Get team results and convert to tuple format for template
             team_results_raw = qs.get_team_results(tournament_id)
@@ -72,14 +128,14 @@ async def get_tournament_data(tournament_id: int, user=Depends(get_user_optional
             for result in team_results_raw:
                 # Convert to tuple format expected by template
                 team_tuple = (
-                    result.get("place_finish", 0),           # 0: place
-                    f"{result.get('angler1_name', '')} / {result.get('angler2_name', '')}", # 1: team name
+                    result.get("place_finish", 0),  # 0: place
+                    f"{result.get('angler1_name', '')} / {result.get('angler2_name', '')}",  # 1: team name
                     0,  # 2: fish count (not used for teams typically)
-                    float(result.get("total_weight", 0)),    # 3: weight
+                    float(result.get("total_weight", 0)),  # 3: weight
                     0,  # 4: member status angler 1 (simplified)
                     0,  # 5: member status angler 2 (simplified)
-                    result.get("id", 0),                     # 6: team result id
-                    2   # 7: team size indicator
+                    result.get("id", 0),  # 6: team result id
+                    2,  # 7: team size indicator
                 )
                 team_results.append(team_tuple)
 
@@ -88,7 +144,11 @@ async def get_tournament_data(tournament_id: int, user=Depends(get_user_optional
             individual_results = []
 
             # Filter out buy-ins and disqualified anglers for regular place calculation
-            regular_results = [r for r in individual_results_raw if not r.get("buy_in", False) and not r.get("disqualified", False)]
+            regular_results = [
+                r
+                for r in individual_results_raw
+                if not r.get("buy_in", False) and not r.get("disqualified", False)
+            ]
 
             # Separate results into fish vs no-fish for proper SABC scoring
             fish_results = [r for r in regular_results if float(r.get("total_weight", 0)) > 0]
@@ -101,7 +161,7 @@ async def get_tournament_data(tournament_id: int, user=Depends(get_user_optional
 
                 # If this weight is different from previous, update place
                 if i > 0:
-                    prev_weight = float(fish_results[i-1].get("total_weight", 0))
+                    prev_weight = float(fish_results[i - 1].get("total_weight", 0))
                     if weight != prev_weight:
                         current_place = i + 1
 
@@ -109,22 +169,26 @@ async def get_tournament_data(tournament_id: int, user=Depends(get_user_optional
                 points = max(101 - current_place, 0)
 
                 result_tuple = (
-                    current_place,                      # 0: place
-                    result.get("angler_name", ""),      # 1: name
-                    result.get("num_fish", 0),          # 2: fish count
-                    weight,                             # 3: weight
-                    float(result.get("big_bass_weight", 0)), # 4: big bass
-                    points,                             # 5: points
-                    result.get("member", 1),            # 6: member status
-                    result.get("id", 0)                 # 7: result id
+                    current_place,  # 0: place
+                    result.get("angler_name", ""),  # 1: name
+                    result.get("num_fish", 0),  # 2: fish count
+                    weight,  # 3: weight
+                    float(result.get("big_bass_weight", 0)),  # 4: big bass
+                    points,  # 5: points
+                    result.get("member", 1),  # 6: member status
+                    result.get("id", 0),  # 7: result id
                 )
                 individual_results.append(result_tuple)
 
             # Calculate points for zero-fish participants per bylaws
             # They get 2 points less than last place participant that weighed in fish
             if fish_results:
-                last_fish_points = min([t[5] for t in individual_results])  # Lowest points from fish results
-                zero_points = last_fish_points - 2  # Don't use max() here, let it be negative if needed
+                last_fish_points = min(
+                    [t[5] for t in individual_results]
+                )  # Lowest points from fish results
+                zero_points = (
+                    last_fish_points - 2
+                )  # Don't use max() here, let it be negative if needed
                 zero_place = len(fish_results) + 1  # Zeros get the next place after last fish place
             else:
                 zero_points = 99  # If no one caught fish, zeros get 99 points
@@ -133,14 +197,14 @@ async def get_tournament_data(tournament_id: int, user=Depends(get_user_optional
             # Add zero-fish results
             for result in zero_results:
                 result_tuple = (
-                    zero_place,                         # 0: place
-                    result.get("angler_name", ""),      # 1: name
-                    result.get("num_fish", 0),          # 2: fish count
-                    0.0,                                # 3: weight
-                    float(result.get("big_bass_weight", 0)), # 4: big bass
-                    zero_points,                        # 5: points
-                    result.get("member", 1),            # 6: member status
-                    result.get("id", 0)                 # 7: result id
+                    zero_place,  # 0: place
+                    result.get("angler_name", ""),  # 1: name
+                    result.get("num_fish", 0),  # 2: fish count
+                    0.0,  # 3: weight
+                    float(result.get("big_bass_weight", 0)),  # 4: big bass
+                    zero_points,  # 5: points
+                    result.get("member", 1),  # 6: member status
+                    result.get("id", 0),  # 7: result id
                 )
                 individual_results.append(result_tuple)
 
@@ -148,7 +212,9 @@ async def get_tournament_data(tournament_id: int, user=Depends(get_user_optional
             # Buy-ins get 4 points less than last place participant that weighed in fish
             if fish_results:
                 # Find the points of the last place participant with fish (lowest points from fish only)
-                last_fish_points = min([t[5] for t in individual_results if t[3] > 0])  # Only fish results
+                last_fish_points = min(
+                    [t[5] for t in individual_results if t[3] > 0]
+                )  # Only fish results
                 buy_in_points = last_fish_points - 4  # 94 - 4 = 90
                 buy_in_place = zero_place + 1  # One place after the zeros (9th place)
             else:
@@ -171,12 +237,14 @@ async def get_tournament_data(tournament_id: int, user=Depends(get_user_optional
             # Convert to format expected by template (tuple format)
             buy_in_results = []
             for result in buy_in_results_raw:
-                buy_in_results.append((
-                    result["name"],         # 0: name
-                    buy_in_place,          # 1: place_finish
-                    buy_in_points,         # 2: points
-                    result["member"]       # 3: member
-                ))
+                buy_in_results.append(
+                    (
+                        result["name"],  # 0: name
+                        buy_in_place,  # 1: place_finish
+                        buy_in_points,  # 2: points
+                        result["member"],  # 3: member
+                    )
+                )
 
             # Get disqualified results
             disqualified_results_raw = qs.fetch_all(
@@ -190,10 +258,12 @@ async def get_tournament_data(tournament_id: int, user=Depends(get_user_optional
             # Convert disqualified results to tuple format
             disqualified_results = []
             for result in disqualified_results_raw:
-                disqualified_results.append((
-                    result["name"],         # 0: name
-                    result["member"]        # 1: member status
-                ))
+                disqualified_results.append(
+                    (
+                        result["name"],  # 0: name
+                        result["member"],  # 1: member status
+                    )
+                )
 
             return {
                 "user": user,
@@ -252,22 +322,69 @@ async def get_awards_data(year: int = None, user=Depends(get_user_optional)):
             "avg_weight": 0.0,
         }
 
-        # Get AoY standings
-        aoy_standings = qs.fetch_all(
-            """SELECT a.name,
-               SUM(r.points) as total_points,
-               SUM(r.num_fish) as total_fish,
-               SUM(r.total_weight) as total_weight,
-               COUNT(r.tournament_id) as tournaments_fished
+        # Get all tournament results for the year to calculate points dynamically
+        all_tournament_results = qs.fetch_all(
+            """SELECT t.id as tournament_id, a.id as angler_id, a.name as angler_name,
+               r.total_weight, r.num_fish, r.buy_in, r.disqualified
                FROM results r
                JOIN anglers a ON r.angler_id = a.id
                JOIN tournaments t ON r.tournament_id = t.id
                JOIN events e ON t.event_id = e.id
                WHERE e.year = :year AND a.member = TRUE AND a.name != 'Admin User'
-               GROUP BY a.id, a.name
-               ORDER BY total_points DESC""",
+               ORDER BY t.id, r.total_weight DESC""",
             {"year": year},
         )
+
+        # Group results by tournament and calculate points for each tournament
+        tournaments_points = {}
+        angler_totals = {}
+
+        # Group by tournament
+        current_tournament_id = None
+        current_tournament_results = []
+
+        for result in all_tournament_results:
+            if current_tournament_id != result["tournament_id"]:
+                # Process previous tournament if exists
+                if current_tournament_results:
+                    calculated_results = calculate_tournament_points(current_tournament_results)
+                    tournaments_points[current_tournament_id] = calculated_results
+
+                # Start new tournament
+                current_tournament_id = result["tournament_id"]
+                current_tournament_results = []
+
+            current_tournament_results.append(dict(result))
+
+        # Process final tournament
+        if current_tournament_results:
+            calculated_results = calculate_tournament_points(current_tournament_results)
+            tournaments_points[current_tournament_id] = calculated_results
+
+        # Aggregate points by angler
+        for tournament_results in tournaments_points.values():
+            for result in tournament_results:
+                angler_id = result["angler_id"]
+                angler_name = result["angler_name"]
+                points = result.get("calculated_points", 0)
+
+                if angler_id not in angler_totals:
+                    angler_totals[angler_id] = {
+                        "name": angler_name,
+                        "total_points": 0,
+                        "total_fish": 0,
+                        "total_weight": 0.0,
+                        "tournaments_fished": 0,
+                    }
+
+                angler_totals[angler_id]["total_points"] += points
+                angler_totals[angler_id]["total_fish"] += result.get("num_fish", 0)
+                angler_totals[angler_id]["total_weight"] += float(result.get("total_weight", 0))
+                angler_totals[angler_id]["tournaments_fished"] += 1
+
+        # Convert to list and sort by points
+        aoy_standings = list(angler_totals.values())
+        aoy_standings.sort(key=lambda x: x["total_points"], reverse=True)
 
         # Get heavy stringer
         heavy_stringer = qs.fetch_all(

@@ -48,7 +48,11 @@ async def polls(request: Request, background_tasks: BackgroundTasks, user=Depend
             "SELECT COUNT(DISTINCT angler_id) FROM poll_votes WHERE poll_id = :poll_id",
             {"poll_id": poll_data[0]},
         )
-        unique_voters = unique_voters_result[0][0] if unique_voters_result and len(unique_voters_result) > 0 else 0
+        unique_voters = (
+            unique_voters_result[0][0]
+            if unique_voters_result and len(unique_voters_result) > 0
+            else 0
+        )
         polls.append(
             {
                 "id": poll_data[0],

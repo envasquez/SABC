@@ -10,8 +10,8 @@ import sys
 from typing import Optional
 
 import bcrypt
+from common import ensure_database_url, setup_logging
 
-from common import setup_logging, ensure_database_url, check_admin_exists
 from core.database import db
 
 
@@ -19,7 +19,7 @@ def create_admin_user(
     email: Optional[str] = None,
     name: Optional[str] = None,
     password: Optional[str] = None,
-    interactive: bool = True
+    interactive: bool = True,
 ) -> int:
     """
     Create admin user with optional interactive mode.
@@ -77,7 +77,7 @@ def create_admin_user(
                    VALUES (:name, :email, :password_hash, true, true, 2024) RETURNING id""",
                 {"name": name, "email": email, "password_hash": password_hash},
             )
-            admin_id = result[0]["id"]
+            admin_id = result[0][0]
             logger.info(f"Created new admin user {email} with ID: {admin_id}")
 
         if not interactive:
@@ -97,8 +97,9 @@ def main() -> int:
     parser.add_argument("--email", help="Admin email")
     parser.add_argument("--name", help="Admin name")
     parser.add_argument("--password", help="Admin password")
-    parser.add_argument("--non-interactive", action="store_true",
-                       help="Use defaults without prompts")
+    parser.add_argument(
+        "--non-interactive", action="store_true", help="Use defaults without prompts"
+    )
 
     args = parser.parse_args()
 
@@ -106,7 +107,7 @@ def main() -> int:
         email=args.email,
         name=args.name,
         password=args.password,
-        interactive=not args.non_interactive
+        interactive=not args.non_interactive,
     )
 
 
