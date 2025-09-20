@@ -33,11 +33,11 @@ async def api_get_lake_ramps(lake_key: str):
     lake_id = lake_data[0][0]
     ramps_list = get_ramps_for_lake(lake_id)
     ramps = []
-    for ramp_id, ramp_name, lake_id in ramps_list:
+    for ramp in ramps_list:
         ramps.append(
             {
-                "id": ramp_id,
-                "name": ramp_name,
+                "id": ramp["id"],
+                "name": ramp["name"],
             }
         )
     return JSONResponse({"ramps": ramps})
