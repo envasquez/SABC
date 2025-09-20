@@ -15,10 +15,10 @@ import logging
 import re
 import sys
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
-import requests
-from bs4 import BeautifulSoup
+import requests  # type: ignore
+from bs4 import BeautifulSoup  # type: ignore
 from sqlalchemy import text
 
 from core.db_schema import engine
@@ -91,7 +91,9 @@ class TournamentScraper:
                         tournament = self._scrape_tournament_page(tournament_id, text, year)
                         if tournament:
                             tournaments.append(tournament)
-                            logger.info(f"Found tournament: {tournament.name} on {tournament.date.date()}")
+                            logger.info(
+                                f"Found tournament: {tournament.name} on {tournament.date.date()}"
+                            )
 
             except requests.RequestException as e:
                 logger.warning(f"Could not fetch page {page}: {e}")
@@ -101,7 +103,9 @@ class TournamentScraper:
         logger.info(f"Found {len(tournaments)} tournaments for {year}")
         return tournaments
 
-    def _scrape_tournament_page(self, tournament_id: int, title: str, year: int) -> Optional[Tournament]:
+    def _scrape_tournament_page(
+        self, tournament_id: int, title: str, year: int
+    ) -> Optional[Tournament]:
         try:
             url = f"{self.base_url}/tournament/{tournament_id}/"
             logger.debug(f"Scraping tournament page: {url}")
@@ -124,6 +128,7 @@ class TournamentScraper:
                     except ValueError:
                         # If date parsing fails, use a unique fallback based on tournament_id
                         import calendar
+
                         month_name = title.split()[0].lower()
                         month_num = 1
                         for i, name in enumerate(calendar.month_name[1:], 1):
@@ -134,6 +139,7 @@ class TournamentScraper:
             else:
                 # Use month from title and tournament_id as day
                 import calendar
+
                 month_name = title.split()[0].lower()
                 month_num = 1
                 for i, name in enumerate(calendar.month_name[1:], 1):
@@ -143,7 +149,11 @@ class TournamentScraper:
                 tournament_date = datetime(year, month_num, min(tournament_id, 28))
 
             # Extract tournament name and lake
-            tournament_name = re.match(r"([^o]+)(?:\s+on\s+)?", title).group(1).strip() if re.match(r"([^o]+)(?:\s+on\s+)?", title) else title
+            tournament_name = (
+                re.match(r"([^o]+)(?:\s+on\s+)?", title).group(1).strip()
+                if re.match(r"([^o]+)(?:\s+on\s+)?", title)
+                else title
+            )
 
             lake_name = "Unknown Lake"
             for h2 in soup.find_all("h2"):
@@ -185,7 +195,9 @@ class TournamentScraper:
 
                     try:
                         # Extract place
-                        place_text = cells[header_indices.get("place finish", 0)].get_text(strip=True)
+                        place_text = cells[header_indices.get("place finish", 0)].get_text(
+                            strip=True
+                        )
                         place = int(place_text) if place_text.isdigit() else None
 
                         # Extract name
@@ -278,9 +290,13 @@ class DatabaseImporter:
         if self.dry_run:
             logger.info("DRY RUN: Tournament import preview:")
             for tournament in tournaments:
-                print(f"Tournament: {tournament.name} ({tournament.date.date()}) at {tournament.lake_name}")
+                print(
+                    f"Tournament: {tournament.name} ({tournament.date.date()}) at {tournament.lake_name}"
+                )
                 for result in tournament.results:
-                    print(f"  {result.angler_name}: {result.total_weight}lbs, BB: {result.big_bass_weight}lbs")
+                    print(
+                        f"  {result.angler_name}: {result.total_weight}lbs, BB: {result.big_bass_weight}lbs"
+                    )
             return
 
         with engine.connect() as conn:
@@ -376,7 +392,9 @@ class DatabaseImporter:
         )
         return result.scalar()
 
-    def _create_result(self, conn, tournament_id: int, angler_id: int, result: TournamentResult) -> None:
+    def _create_result(
+        self, conn, tournament_id: int, angler_id: int, result: TournamentResult
+    ) -> None:
         """Create result record."""
         result_data = {
             "tournament_id": tournament_id,
@@ -401,7 +419,9 @@ class DatabaseImporter:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Import tournament results from reference site")
     parser.add_argument("year", type=int, help="Year to import tournaments for (e.g., 2023, 2024)")
-    parser.add_argument("--dry-run", action="store_true", help="Preview import without writing to database")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Preview import without writing to database"
+    )
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
 
     args = parser.parse_args()
@@ -452,6 +472,7 @@ def main() -> None:
         logger.error(f"Import failed: {e}")
         if args.verbose:
             import traceback
+
             traceback.print_exc()
         sys.exit(1)
 
