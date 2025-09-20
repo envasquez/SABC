@@ -44,11 +44,11 @@ async def polls(request: Request, background_tasks: BackgroundTasks, user=Depend
 
     polls = []
     for poll_data in polls_data:
-        unique_voters = db(
+        unique_voters_result = db(
             "SELECT COUNT(DISTINCT angler_id) FROM poll_votes WHERE poll_id = :poll_id",
             {"poll_id": poll_data[0]},
         )
-        unique_voters = res[0][0] if res and len(res) > 0 else 0
+        unique_voters = unique_voters_result[0][0] if unique_voters_result and len(unique_voters_result) > 0 else 0
         polls.append(
             {
                 "id": poll_data[0],

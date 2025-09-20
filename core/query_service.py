@@ -188,7 +188,7 @@ class QueryService:
         """Get comprehensive events data for admin interface."""
         # Count events
         total_upcoming = self.fetch_value("SELECT COUNT(*) FROM events WHERE date >= CURRENT_DATE")
-        total_past = self.fetch_value("SELECT COUNT(*) FROM events WHERE date < CURRENT_DATE")
+        total_past = self.fetch_value("SELECT COUNT(*) FROM events WHERE date < CURRENT_DATE AND event_type != 'holiday'")
 
         # Upcoming events
         upcoming_events = self.fetch_all(
@@ -223,7 +223,7 @@ class QueryService:
                    EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id AND t.complete = true) as tournament_complete,
                    EXISTS(SELECT 1 FROM tournaments t JOIN results r ON t.id = r.tournament_id WHERE t.event_id = e.id) as has_results
             FROM events e
-            WHERE e.date < CURRENT_DATE
+            WHERE e.date < CURRENT_DATE AND e.event_type != 'holiday'
             ORDER BY e.date DESC
             LIMIT :limit OFFSET :offset
         """,

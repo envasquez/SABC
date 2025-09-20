@@ -31,7 +31,7 @@ async def admin_events(request: Request, upcoming_page: int = 1, past_page: int 
 
     # Get counts and events with pagination
     total_upcoming = db("SELECT COUNT(*) FROM events WHERE date >= CURRENT_DATE")[0][0]
-    total_past = db("SELECT COUNT(*) FROM events WHERE date < CURRENT_DATE")[0][0]
+    total_past = db("SELECT COUNT(*) FROM events WHERE date < CURRENT_DATE AND event_type != 'holiday'")[0][0]
 
     events = db(
         """
@@ -84,7 +84,7 @@ async def admin_events(request: Request, upcoming_page: int = 1, past_page: int 
                EXISTS(SELECT 1 FROM tournaments t WHERE t.event_id = e.id AND t.complete = true) as tournament_complete,
                EXISTS(SELECT 1 FROM tournaments t JOIN results r ON t.id = r.tournament_id WHERE t.event_id = e.id) as has_results
         FROM events e
-        WHERE e.date < CURRENT_DATE
+        WHERE e.date < CURRENT_DATE AND e.event_type != 'holiday'
         ORDER BY e.date DESC
         LIMIT :limit OFFSET :offset
     """,
@@ -439,11 +439,11 @@ async def get_event_info(request: Request, event_id: int):
                     "name": event[2],
                     "description": event[3] or "",
                     "event_type": event[4],
-                    "start_time": event[5],
-                    "weigh_in_time": event[6],
+                    "start_time": str(event[5]) if event[5] else "",
+                    "weigh_in_time": str(event[6]) if event[6] else "",
                     "lake_name": lake_display_name,
                     "ramp_name": event[8] or "",
-                    "entry_fee": event[9],
+                    "entry_fee": float(event[9]) if event[9] is not None else None,
                     "fish_limit": event[10],
                     "holiday_name": event[11] or "",
                     "poll_closes_at": str(event[12]) if event[12] else "",
