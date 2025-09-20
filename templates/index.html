@@ -109,7 +109,17 @@
                 {% if tournament.google_maps_iframe %}
                 <div class="mb-3">
                     <div class="rounded overflow-hidden position-relative w-100" style="height: 180px;">
-                        <div class="w-100 h-100">
+                        <style>
+                            .map-container-{{ loop.index }} iframe {
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                width: 100% !important;
+                                height: 100% !important;
+                                border: 0;
+                            }
+                        </style>
+                        <div class="w-100 h-100 map-container-{{ loop.index }}">
                             {{ tournament.google_maps_iframe|safe }}
                         </div>
                     </div>
