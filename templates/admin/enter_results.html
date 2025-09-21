@@ -521,35 +521,29 @@ function createGuest() {
 
 // Initialize page - check if we're editing a team result
 if (editTeamResultData) {
-    // Add a team with the existing data
-    addTeam();
+    // Use the existing addTeamForEdit function with default individual results
+    addTeamForEdit(
+        editTeamResultData.angler1_id, editTeamResultData.angler1_name,
+        editTeamResultData.angler2_id, editTeamResultData.angler2_name,
+        0, 0, 0, 0, false, false,  // angler1 defaults
+        0, 0, 0, 0, false, false   // angler2 defaults
+    );
 
-    // Get the team element that was just created
-    const teamElement = document.querySelector(`#team-${teamCount}`);
-    if (teamElement) {
-        // Set angler selections
-        const angler1Select = teamElement.querySelector(`#angler1_id_${teamCount}`);
-        const angler2Select = teamElement.querySelector(`#angler2_id_${teamCount}`);
-
-        if (angler1Select) angler1Select.value = editTeamResultData.angler1_id;
-        if (angler2Select) angler2Select.value = editTeamResultData.angler2_id;
-
-        // Set team weight
-        const teamWeightInput = teamElement.querySelector(`input[name="team_weight_${teamCount}"]`);
-        if (teamWeightInput) teamWeightInput.value = editTeamResultData.total_weight;
-
-        // Update the form action to edit instead of create
-        const form = document.getElementById('resultsForm');
-        if (form) {
-            form.action = `/admin/tournaments/{{ tournament.id }}/team-results`;
-            // Add hidden field for team result ID
-            const hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'team_result_id';
-            hiddenInput.value = editTeamResultData.id;
-            form.appendChild(hiddenInput);
-        }
+    // Update the form action to edit instead of create
+    const form = document.getElementById('resultsForm');
+    if (form) {
+        form.action = `/admin/tournaments/{{ tournament.id }}/team-results`;
+        // Add hidden field for team result ID
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'team_result_id';
+        hiddenInput.value = editTeamResultData.id;
+        form.appendChild(hiddenInput);
     }
+
+    // Hide the "Add Team" button since we're editing one specific team
+    const addTeamBtn = document.querySelector('button[onclick="addTeam()"]');
+    if (addTeamBtn) addTeamBtn.style.display = 'none';
 }
 </script>
 {% endblock %}
