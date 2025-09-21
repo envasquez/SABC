@@ -87,3 +87,23 @@ a:hover {
   border-bottom: 2px solid var(--border) !important;
 }
 
+/* Fix Bootstrap Darkly text colors to be lighter */
+.text-primary {
+  color: #6ea8fe !important;
+}
+.text-success {
+  color: #75b798 !important;
+}
+.text-warning {
+  color: #f0ad4e !important;
+}
+.text-danger {
+  color: #ee5f5b !important;
+}
+.text-info {
+  color: #5bc0de !important;
+}
+.text-secondary {
+  color: #adb5bd !important;
+}
+
