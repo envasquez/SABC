@@ -53,8 +53,25 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
         result["calculated_points"] = zero_points
         result["calculated_place"] = zero_place
 
+    # Handle buy-ins - they get 4 points less than last place with fish
+    buy_in_results = [
+        r for r in results if r.get("buy_in", False) and not r.get("disqualified", False)
+    ]
+
+    if fish_results:
+        last_fish_points = min([r["calculated_points"] for r in fish_results])
+        buy_in_points = last_fish_points - 4  # Per SABC bylaws
+        buy_in_place = len(fish_results) + len(zero_results) + 1
+    else:
+        buy_in_points = 95  # If no one caught fish
+        buy_in_place = 1
+
+    for result in buy_in_results:
+        result["calculated_points"] = buy_in_points
+        result["calculated_place"] = buy_in_place
+
     # Combine all results
-    all_results = fish_results + zero_results
+    all_results = fish_results + zero_results + buy_in_results
 
     return all_results
 
@@ -340,7 +357,7 @@ async def get_awards_data(year: int = None, user=Depends(get_user_optional)):
                JOIN anglers a ON r.angler_id = a.id
                JOIN tournaments t ON r.tournament_id = t.id
                JOIN events e ON t.event_id = e.id
-               WHERE e.year = :year AND a.member = TRUE AND a.name != 'Admin User'
+               WHERE e.year = :year AND a.name != 'Admin User'
                ORDER BY t.id, r.total_weight DESC""",
             {"year": year},
         )

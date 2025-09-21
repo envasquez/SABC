@@ -84,6 +84,7 @@ async def enter_results_page(
         if edit_team_result_data:
             edit_team_result_data = dict(edit_team_result_data)
             from decimal import Decimal
+
             for key, value in edit_team_result_data.items():
                 if isinstance(value, Decimal):
                     edit_team_result_data[key] = float(value)
