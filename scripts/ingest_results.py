@@ -68,6 +68,7 @@ class Tournament:
         self.lake_name = lake_name
         self.results: List[TournamentResult] = []
         self.team_results: List[TeamResult] = []
+        self.buy_in_results: List[TournamentResult] = []
         # Additional tournament metadata
         self.ramp_name: Optional[str] = None
         self.start_time: Optional[str] = None
@@ -202,6 +203,9 @@ class TournamentScraper:
 
             # Scrape team results
             tournament.team_results = self._scrape_team_results(soup)
+
+            # Scrape buy-in results
+            tournament.buy_in_results = self._scrape_buy_in_results(soup)
 
             return tournament
 
@@ -339,7 +343,13 @@ class TournamentScraper:
                     try:
                         # Extract team place
                         place = None
-                        for place_key in ["team place", "place", "team finish", "finish"]:
+                        for place_key in [
+                            "place finish",
+                            "team place",
+                            "place",
+                            "team finish",
+                            "finish",
+                        ]:
                             if place_key in header_indices:
                                 place_text = cells[header_indices[place_key]].get_text(strip=True)
                                 if place_text.isdigit():
@@ -437,6 +447,107 @@ class TournamentScraper:
 
         logger.info(f"Found {len(team_results)} team results")
         return team_results
+
+    def _scrape_buy_in_results(self, soup: BeautifulSoup) -> List[TournamentResult]:
+        """Scrape buy-in results from tournament page."""
+        buy_in_results: List[TournamentResult] = []
+
+        # Look for "Buy-ins" heading
+        buy_in_section = None
+        for h2 in soup.find_all("h2"):
+            if "buy-in" in h2.get_text(strip=True).lower():
+                buy_in_section = h2
+                break
+
+        if not buy_in_section:
+            logger.debug("No buy-in section found")
+            return buy_in_results
+
+        # Find the table after the buy-in heading
+        current = buy_in_section
+        while current:
+            current = current.find_next_sibling()
+            if current and current.name == "table":
+                break
+            if current and current.find("table"):
+                current = current.find("table")
+                break
+
+        if not current:
+            logger.debug("No buy-in table found after heading")
+            return buy_in_results
+
+        # Parse the buy-in table (similar structure to individual results)
+        headers = [th.get_text(strip=True).lower() for th in current.find_all("th")]
+        logger.debug(f"Found buy-in table with headers: {headers}")
+
+        # Check if this looks like a buy-in results table
+        if "first name" not in headers and "last name" not in headers:
+            logger.debug("Buy-in table doesn't have expected name columns")
+            return buy_in_results
+
+        header_indices = {header: i for i, header in enumerate(headers)}
+
+        for row in current.find_all("tr")[1:]:  # Skip header row
+            cells = row.find_all("td")
+            if len(cells) < 2:
+                continue
+
+            try:
+                # Extract place
+                place_text = cells[header_indices.get("place finish", 0)].get_text(strip=True)
+                place = int(place_text) if place_text.isdigit() else None
+
+                # Extract name
+                first_name = cells[header_indices.get("first name", 1)].get_text(strip=True)
+                last_name = cells[header_indices.get("last name", 2)].get_text(strip=True)
+
+                if not first_name and not last_name:
+                    continue
+
+                angler_name = f"{first_name} {last_name}".strip()
+
+                # Buy-ins typically don't have weight/fish data, but check anyway
+                total_weight = 0.0
+                num_fish = 0
+
+                # Look for weight columns (if present)
+                for key in ["total weight", "total wt", "weight", "wt"]:
+                    if key in header_indices and "bass" not in key:
+                        cell_text = cells[header_indices[key]].get_text(strip=True)
+                        try:
+                            total_weight = float(cell_text)
+                            break
+                        except (ValueError, IndexError):
+                            pass
+
+                # Look for fish count (if present)
+                for key in ["num fish", "fish"]:
+                    if key in header_indices:
+                        cell_text = cells[header_indices[key]].get_text(strip=True)
+                        try:
+                            num_fish = int(cell_text)
+                            break
+                        except (ValueError, IndexError):
+                            pass
+
+                result = TournamentResult(
+                    angler_name=angler_name,
+                    total_weight=total_weight,
+                    big_bass_weight=0.0,  # Buy-ins don't typically have big bass
+                    dead_fish_penalty=0.0,
+                    place_finish=place,
+                    num_fish=num_fish,
+                )
+                buy_in_results.append(result)
+                logger.debug(f"Found buy-in: {angler_name}")
+
+            except Exception as e:
+                logger.debug(f"Failed to parse buy-in result row: {e}")
+                continue
+
+        logger.info(f"Found {len(buy_in_results)} buy-in results")
+        return buy_in_results
 
     def _extract_tournament_metadata(self, soup: BeautifulSoup, tournament: Tournament) -> None:
         """Extract additional tournament metadata from the page."""
@@ -640,11 +751,19 @@ class DatabaseImporter:
                     print(f"    ... and {len(tournament.results) - 3} more")
                 print(f"  Team Results ({len(tournament.team_results)}):")
                 for team_result in tournament.team_results[:3]:  # Show first 3
+                    place_str = f"{team_result.place_finish}. " if team_result.place_finish else ""
                     print(
-                        f"    {team_result.angler1_name} & {team_result.angler2_name}: {team_result.total_weight}lbs"
+                        f"    {place_str}{team_result.angler1_name} & {team_result.angler2_name}: {team_result.total_weight}lbs"
                     )
                 if len(tournament.team_results) > 3:
                     print(f"    ... and {len(tournament.team_results) - 3} more")
+                print(f"  Buy-in Results ({len(tournament.buy_in_results)}):")
+                for buy_in_result in tournament.buy_in_results[:3]:  # Show first 3
+                    print(
+                        f"    {buy_in_result.angler_name}: {buy_in_result.num_fish} fish, {buy_in_result.total_weight}lbs"
+                    )
+                if len(tournament.buy_in_results) > 3:
+                    print(f"    ... and {len(tournament.buy_in_results) - 3} more")
                 print()
             return
 
@@ -739,6 +858,11 @@ class DatabaseImporter:
             angler1_id = self._ensure_angler_exists(conn, team_result.angler1_name)
             angler2_id = self._ensure_angler_exists(conn, team_result.angler2_name)
             self._create_team_result(conn, tournament_id, angler1_id, angler2_id, team_result)
+
+        # Import buy-in results
+        for buy_in_result in tournament.buy_in_results:
+            angler_id = self._ensure_angler_exists(conn, buy_in_result.angler_name)
+            self._create_buy_in_result(conn, tournament_id, angler_id, buy_in_result)
 
         conn.commit()
 
@@ -895,6 +1019,31 @@ class DatabaseImporter:
                 VALUES (:tournament_id, :angler1_id, :angler2_id, :total_weight, :place_finish)
             """),
             team_data,
+        )
+
+    def _create_buy_in_result(
+        self, conn, tournament_id: int, angler_id: int, result: TournamentResult
+    ) -> None:
+        """Create buy-in result record."""
+        result_data = {
+            "tournament_id": tournament_id,
+            "angler_id": angler_id,
+            "num_fish": result.num_fish,
+            "total_weight": result.total_weight,
+            "big_bass_weight": result.big_bass_weight,
+            "dead_fish_penalty": result.dead_fish_penalty,
+            "place_finish": result.place_finish,
+            "buy_in": True,  # This is the key difference - mark as buy-in
+        }
+
+        conn.execute(
+            text("""
+                INSERT INTO results (tournament_id, angler_id, num_fish, total_weight, big_bass_weight,
+                                   dead_fish_penalty, place_finish, buy_in)
+                VALUES (:tournament_id, :angler_id, :num_fish, :total_weight, :big_bass_weight,
+                       :dead_fish_penalty, :place_finish, :buy_in)
+            """),
+            result_data,
         )
 
 
