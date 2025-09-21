@@ -22,30 +22,33 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
     # Sort fish results by weight (descending)
     fish_results.sort(key=lambda x: float(x.get("total_weight", 0)), reverse=True)
 
-    # Calculate places and points for participants with fish
+    # Calculate places and points for participants with fish using Django system
+    # Django starts at 100 points and decrements by 1 for each unique place
     current_place = 1
+    current_points = 100  # Django max_points
+
     for i, result in enumerate(fish_results):
         weight = float(result.get("total_weight", 0))
 
-        # If this weight is different from previous, update place
+        # Handle ties and place advancement like Django
         if i > 0:
             prev_weight = float(fish_results[i - 1].get("total_weight", 0))
             if weight != prev_weight:
+                # Weight is different, advance place and decrement points
                 current_place = i + 1
+                current_points = 100 - current_place + 1
 
-        # Calculate points using SABC system: 101 - place
-        points = max(101 - current_place, 0)
-        result["calculated_points"] = points
+        result["calculated_points"] = current_points
         result["calculated_place"] = current_place
 
-    # Calculate points for zero-fish participants per bylaws
-    # They get 2 points less than last place participant that weighed in fish
+    # Calculate points for zero-fish participants (last place - 2)
     if fish_results:
+        # Get the lowest points from fish results
         last_fish_points = min([r["calculated_points"] for r in fish_results])
-        zero_points = last_fish_points - 2
+        zero_points = last_fish_points - 2  # Django zeroes_points_offset
         zero_place = len(fish_results) + 1
     else:
-        zero_points = 99  # If no one caught fish, zeros get 99 points
+        zero_points = 98  # If no one caught fish, 100 - 2
         zero_place = 1
 
     # Add points to zero-fish results
@@ -53,14 +56,18 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
         result["calculated_points"] = zero_points
         result["calculated_place"] = zero_place
 
-    # Handle buy-ins - they get 3 points more than last place with fish
+    # Handle buy-ins - they get last place points - 4 (Django buy_ins_points_offset)
     buy_in_results = [
         r for r in results if r.get("buy_in", False) and not r.get("disqualified", False)
     ]
 
-    if fish_results:
-        last_fish_points = min([r["calculated_points"] for r in fish_results])
-        buy_in_points = last_fish_points + 3  # Updated to match reference site
+    if fish_results or zero_results:
+        # Get the lowest points from all participants
+        if zero_results:
+            last_place_points = zero_points
+        else:
+            last_place_points = min([r["calculated_points"] for r in fish_results])
+        buy_in_points = last_place_points - 4  # Django buy_ins_points_offset
         buy_in_place = len(fish_results) + len(zero_results) + 1
     else:
         buy_in_points = 95  # If no one caught fish
