@@ -68,6 +68,19 @@ async def enter_results_page(
     results_by_angler = {r["angler_id"]: r for r in results}
     teams_set = {(tr["angler1_id"], tr["angler2_id"]) for tr in team_results}
 
+    # Handle team result editing
+    edit_team_result_id = request.query_params.get("edit_team_result")
+    edit_team_result_data = None
+    if edit_team_result_id:
+        edit_team_result_data = qs.fetch_one(
+            """SELECT tr.*, a1.name as angler1_name, a2.name as angler2_name
+               FROM team_results tr
+               JOIN anglers a1 ON tr.angler1_id = a1.id
+               JOIN anglers a2 ON tr.angler2_id = a2.id
+               WHERE tr.id = :id""",
+            {"id": int(edit_team_result_id)},
+        )
+
     # Create JSON data for JavaScript
     import json
 
@@ -87,7 +100,8 @@ async def enter_results_page(
         team_results=team_results,
         teams_set=teams_set,
         edit_result_id=request.query_params.get("edit_result_id"),
-        edit_team_result=request.query_params.get("edit_team_result"),
+        edit_team_result=edit_team_result_id,
+        edit_team_result_data=edit_team_result_data,
     )
 
 
@@ -179,6 +193,7 @@ async def save_team_result(
     angler1_id = int(form.get("angler1_id"))
     angler2_id = int(form.get("angler2_id"))
     total_weight = Decimal(form.get("total_weight", "0"))
+    team_result_id = form.get("team_result_id")  # For editing existing team
 
     if angler1_id == angler2_id:
         return JSONResponse({"error": "Team members must be different"}, status_code=400)
@@ -187,26 +202,35 @@ async def save_team_result(
     if angler1_id > angler2_id:
         angler1_id, angler2_id = angler2_id, angler1_id
 
-    # Check for existing team result
-    existing = qs.fetch_one(
-        """SELECT id FROM team_results
-           WHERE tournament_id = :tid AND angler1_id = :a1 AND angler2_id = :a2""",
-        {"tid": tournament_id, "a1": angler1_id, "a2": angler2_id},
-    )
-
-    if existing:
-        # Update existing
+    if team_result_id:
+        # Update existing team result by ID
         qs.execute(
-            "UPDATE team_results SET total_weight = :weight WHERE id = :id",
-            {"weight": total_weight, "id": existing["id"]},
+            """UPDATE team_results
+               SET angler1_id = :a1, angler2_id = :a2, total_weight = :weight
+               WHERE id = :id""",
+            {"a1": angler1_id, "a2": angler2_id, "weight": total_weight, "id": int(team_result_id)},
         )
     else:
-        # Insert new
-        qs.execute(
-            """INSERT INTO team_results (tournament_id, angler1_id, angler2_id, total_weight)
-               VALUES (:tid, :a1, :a2, :weight)""",
-            {"tid": tournament_id, "a1": angler1_id, "a2": angler2_id, "weight": total_weight},
+        # Check for existing team result
+        existing = qs.fetch_one(
+            """SELECT id FROM team_results
+               WHERE tournament_id = :tid AND angler1_id = :a1 AND angler2_id = :a2""",
+            {"tid": tournament_id, "a1": angler1_id, "a2": angler2_id},
         )
+
+        if existing:
+            # Update existing
+            qs.execute(
+                "UPDATE team_results SET total_weight = :weight WHERE id = :id",
+                {"weight": total_weight, "id": existing["id"]},
+            )
+        else:
+            # Insert new
+            qs.execute(
+                """INSERT INTO team_results (tournament_id, angler1_id, angler2_id, total_weight)
+                   VALUES (:tid, :a1, :a2, :weight)""",
+                {"tid": tournament_id, "a1": angler1_id, "a2": angler2_id, "weight": total_weight},
+            )
 
     return RedirectResponse(f"/admin/tournaments/{tournament_id}/enter-results", status_code=303)
 

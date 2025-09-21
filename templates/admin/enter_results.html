@@ -106,6 +106,7 @@ let teamCount = 0;
 let anglers = {{ anglers_json | safe }};
 let existingAnglerIds = new Set({{ existing_angler_ids_json | safe }});
 let editData = {{ edit_data | tojson | safe if edit_data else 'null' }};
+let editTeamResultData = {{ edit_team_result_data | tojson | safe if edit_team_result_data else 'null' }};
 
 function addTeam() {
     teamCount++;
@@ -516,6 +517,39 @@ function createGuest() {
         console.error('Error:', error);
         alert('Error creating guest. Please try again.');
     });
+}
+
+// Initialize page - check if we're editing a team result
+if (editTeamResultData) {
+    // Add a team with the existing data
+    addTeam();
+
+    // Get the team element that was just created
+    const teamElement = document.querySelector(`#team-${teamCount}`);
+    if (teamElement) {
+        // Set angler selections
+        const angler1Select = teamElement.querySelector(`#angler1_id_${teamCount}`);
+        const angler2Select = teamElement.querySelector(`#angler2_id_${teamCount}`);
+
+        if (angler1Select) angler1Select.value = editTeamResultData.angler1_id;
+        if (angler2Select) angler2Select.value = editTeamResultData.angler2_id;
+
+        // Set team weight
+        const teamWeightInput = teamElement.querySelector(`input[name="team_weight_${teamCount}"]`);
+        if (teamWeightInput) teamWeightInput.value = editTeamResultData.total_weight;
+
+        // Update the form action to edit instead of create
+        const form = document.getElementById('resultsForm');
+        if (form) {
+            form.action = `/admin/tournaments/{{ tournament.id }}/team-results`;
+            // Add hidden field for team result ID
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'team_result_id';
+            hiddenInput.value = editTeamResultData.id;
+            form.appendChild(hiddenInput);
+        }
+    }
 }
 </script>
 {% endblock %}

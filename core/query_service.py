@@ -136,10 +136,13 @@ class QueryService:
             """
             SELECT tr.*,
                    a1.name as angler1_name, a1.member as angler1_member,
-                   a2.name as angler2_name, a2.member as angler2_member
+                   a2.name as angler2_name, a2.member as angler2_member,
+                   COALESCE(r1.num_fish, 0) + COALESCE(r2.num_fish, 0) as total_fish
             FROM team_results tr
             JOIN anglers a1 ON tr.angler1_id = a1.id
             JOIN anglers a2 ON tr.angler2_id = a2.id
+            LEFT JOIN results r1 ON tr.angler1_id = r1.angler_id AND tr.tournament_id = r1.tournament_id
+            LEFT JOIN results r2 ON tr.angler2_id = r2.angler_id AND tr.tournament_id = r2.tournament_id
             WHERE tr.tournament_id = :tournament_id
             AND a1.name != 'Admin User' AND a2.name != 'Admin User'
             ORDER BY tr.total_weight DESC
