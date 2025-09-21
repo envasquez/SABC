@@ -352,7 +352,32 @@ document.addEventListener('DOMContentLoaded', function() {
                          angler1_result[0], angler1_result[1], angler1_result[2], angler1_result[3], angler1_result[4], angler1_result[5],
                          angler2_result[0], angler2_result[1], angler2_result[2], angler2_result[3], angler2_result[4], angler2_result[5]);
         }
+    } else if (editTeamResultData) {
+        // Edit team result mode - show one pre-loaded team
+        addTeamForEdit(
+            editTeamResultData.angler1_id, editTeamResultData.angler1_name,
+            editTeamResultData.angler2_id, editTeamResultData.angler2_name,
+            0, 0, 0, 0, false, false,  // angler1 defaults
+            0, 0, 0, 0, false, false   // angler2 defaults
+        );
+
+        // Update the form action to edit instead of create
+        const form = document.getElementById('resultsForm');
+        if (form) {
+            form.action = `/admin/tournaments/{{ tournament.id }}/team-results`;
+            // Add hidden field for team result ID
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'team_result_id';
+            hiddenInput.value = editTeamResultData.id;
+            form.appendChild(hiddenInput);
+        }
+
+        // Hide the "Add Team" button since we're editing one specific team
+        const addTeamBtn = document.querySelector('button[onclick="addTeam()"]');
+        if (addTeamBtn) addTeamBtn.style.display = 'none';
     } else {
+        // Default mode - add empty team
         addTeam();
     }
     updateAllAnglerDropdowns();
@@ -519,31 +544,5 @@ function createGuest() {
     });
 }
 
-// Initialize page - check if we're editing a team result
-if (editTeamResultData) {
-    // Use the existing addTeamForEdit function with default individual results
-    addTeamForEdit(
-        editTeamResultData.angler1_id, editTeamResultData.angler1_name,
-        editTeamResultData.angler2_id, editTeamResultData.angler2_name,
-        0, 0, 0, 0, false, false,  // angler1 defaults
-        0, 0, 0, 0, false, false   // angler2 defaults
-    );
-
-    // Update the form action to edit instead of create
-    const form = document.getElementById('resultsForm');
-    if (form) {
-        form.action = `/admin/tournaments/{{ tournament.id }}/team-results`;
-        // Add hidden field for team result ID
-        const hiddenInput = document.createElement('input');
-        hiddenInput.type = 'hidden';
-        hiddenInput.name = 'team_result_id';
-        hiddenInput.value = editTeamResultData.id;
-        form.appendChild(hiddenInput);
-    }
-
-    // Hide the "Add Team" button since we're editing one specific team
-    const addTeamBtn = document.querySelector('button[onclick="addTeam()"]');
-    if (addTeamBtn) addTeamBtn.style.display = 'none';
-}
 </script>
 {% endblock %}
