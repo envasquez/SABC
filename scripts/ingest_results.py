@@ -37,12 +37,14 @@ class TournamentResult:
         big_bass_weight: float = 0.0,
         dead_fish_penalty: float = 0.0,
         place_finish: Optional[int] = None,
+        num_fish: int = 0,
     ):
         self.angler_name = angler_name
         self.total_weight = total_weight
         self.big_bass_weight = big_bass_weight
         self.dead_fish_penalty = dead_fish_penalty
         self.place_finish = place_finish
+        self.num_fish = num_fish
 
 
 class TeamResult:
@@ -243,6 +245,17 @@ class TournamentScraper:
                         total_weight = 0.0
                         big_bass = 0.0
                         penalty = 0.0
+                        num_fish = 0
+
+                        # Look for fish count columns
+                        for key in ["num fish", "fish", "number of fish", "# fish"]:
+                            if key in header_indices:
+                                cell_text = cells[header_indices[key]].get_text(strip=True)
+                                try:
+                                    num_fish = int(cell_text)
+                                    break
+                                except ValueError:
+                                    pass
 
                         # Look for weight columns
                         for key in ["total weight", "total wt", "weight", "wt"]:
@@ -280,6 +293,7 @@ class TournamentScraper:
                             big_bass_weight=big_bass,
                             dead_fish_penalty=penalty,
                             place_finish=place,
+                            num_fish=num_fish,
                         )
                         results.append(result)
 
@@ -620,7 +634,7 @@ class DatabaseImporter:
                 print(f"  Individual Results ({len(tournament.results)}):")
                 for result in tournament.results[:3]:  # Show first 3
                     print(
-                        f"    {result.angler_name}: {result.total_weight}lbs, BB: {result.big_bass_weight}lbs"
+                        f"    {result.angler_name}: {result.num_fish} fish, {result.total_weight}lbs, BB: {result.big_bass_weight}lbs"
                     )
                 if len(tournament.results) > 3:
                     print(f"    ... and {len(tournament.results) - 3} more")
@@ -762,6 +776,7 @@ class DatabaseImporter:
         result_data = {
             "tournament_id": tournament_id,
             "angler_id": angler_id,
+            "num_fish": result.num_fish,
             "total_weight": result.total_weight,
             "big_bass_weight": result.big_bass_weight,
             "dead_fish_penalty": result.dead_fish_penalty,
@@ -770,9 +785,9 @@ class DatabaseImporter:
 
         conn.execute(
             text("""
-                INSERT INTO results (tournament_id, angler_id, total_weight, big_bass_weight,
+                INSERT INTO results (tournament_id, angler_id, num_fish, total_weight, big_bass_weight,
                                    dead_fish_penalty, place_finish)
-                VALUES (:tournament_id, :angler_id, :total_weight, :big_bass_weight,
+                VALUES (:tournament_id, :angler_id, :num_fish, :total_weight, :big_bass_weight,
                        :dead_fish_penalty, :place_finish)
             """),
             result_data,

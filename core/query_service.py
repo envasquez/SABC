@@ -121,7 +121,7 @@ class QueryService:
         """Get results for a tournament."""
         return self.fetch_all(
             """
-            SELECT r.*, a.name as angler_name
+            SELECT r.*, a.name as angler_name, a.member
             FROM results r
             JOIN anglers a ON r.angler_id = a.id
             WHERE r.tournament_id = :tournament_id AND a.name != 'Admin User'
@@ -135,8 +135,8 @@ class QueryService:
         return self.fetch_all(
             """
             SELECT tr.*,
-                   a1.name as angler1_name,
-                   a2.name as angler2_name
+                   a1.name as angler1_name, a1.member as angler1_member,
+                   a2.name as angler2_name, a2.member as angler2_member
             FROM team_results tr
             JOIN anglers a1 ON tr.angler1_id = a1.id
             JOIN anglers a2 ON tr.angler2_id = a2.id

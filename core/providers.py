@@ -132,8 +132,8 @@ async def get_tournament_data(tournament_id: int, user=Depends(get_user_optional
                     f"{result.get('angler1_name', '')} / {result.get('angler2_name', '')}",  # 1: team name
                     0,  # 2: fish count (not used for teams typically)
                     float(result.get("total_weight", 0)),  # 3: weight
-                    0,  # 4: member status angler 1 (simplified)
-                    0,  # 5: member status angler 2 (simplified)
+                    1 if result.get("angler1_member", True) else 0,  # 4: member status angler 1
+                    1 if result.get("angler2_member", True) else 0,  # 5: member status angler 2
                     result.get("id", 0),  # 6: team result id
                     2,  # 7: team size indicator
                 )
