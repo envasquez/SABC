@@ -80,10 +80,13 @@ async def enter_results_page(
                WHERE tr.id = :id""",
             {"id": int(edit_team_result_id)},
         )
-        # Convert Decimal to float for JSON serialization
-        if edit_team_result_data and edit_team_result_data.get("total_weight"):
+        # Convert all Decimal fields to float for JSON serialization
+        if edit_team_result_data:
             edit_team_result_data = dict(edit_team_result_data)
-            edit_team_result_data["total_weight"] = float(edit_team_result_data["total_weight"])
+            from decimal import Decimal
+            for key, value in edit_team_result_data.items():
+                if isinstance(value, Decimal):
+                    edit_team_result_data[key] = float(value)
 
     # Create JSON data for JavaScript
     import json
