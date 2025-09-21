@@ -991,12 +991,26 @@ class DatabaseImporter:
         if ramp_key in ramp_cache:
             return ramp_cache[ramp_key]
 
-        # Try fuzzy matching
+        # Try fuzzy matching for common variations
         for db_key, db_id in ramp_cache.items():
             if "@" not in db_key:  # Skip composite keys for this check
-                if ramp_key in db_key or db_key in ramp_key:
+                db_name = db_key.lower().strip()
+
+                # Check for exact substring matches
+                if ramp_key in db_name or db_name in ramp_key:
                     logger.debug(f"Fuzzy matched ramp '{ramp_name}' to '{db_key}' (ID: {db_id})")
                     return db_id
+
+                # Check for common spelling variations
+                # Handle "burnet" vs "burnett" county variations
+                if "burnet" in ramp_key and "burnett" in db_name:
+                    if "county park" in ramp_key and "county park" in db_name:
+                        logger.debug(f"Spelling variant matched ramp '{ramp_name}' to '{db_key}' (ID: {db_id})")
+                        return db_id
+                elif "burnett" in ramp_key and "burnet" in db_name:
+                    if "county park" in ramp_key and "county park" in db_name:
+                        logger.debug(f"Spelling variant matched ramp '{ramp_name}' to '{db_key}' (ID: {db_id})")
+                        return db_id
 
         logger.warning(f"Could not find ramp ID for: {ramp_name} at {lake_name}")
         return None
