@@ -454,3 +454,35 @@ async def complete_tournament(
     qs = QueryService(conn)
     qs.execute("UPDATE tournaments SET complete = 1 WHERE id = :id", {"id": tournament_id})
     return RedirectResponse("/admin/tournaments", status_code=303)
+
+
+@router.post("/admin/tournaments/{tournament_id}/toggle-complete")
+async def toggle_tournament_complete(
+    tournament_id: int,
+    user=Depends(get_admin_or_redirect),
+    conn: Connection = Depends(get_db),
+):
+    if isinstance(user, RedirectResponse):
+        return JSONResponse({"error": "Unauthorized"}, status_code=403)
+
+    qs = QueryService(conn)
+    # Get current completion status
+    current = qs.fetch_one("SELECT complete FROM tournaments WHERE id = :id", {"id": tournament_id})
+
+    if not current:
+        return JSONResponse({"error": "Tournament not found"}, status_code=404)
+
+    # Toggle the completion status
+    new_status = not current["complete"]
+    qs.execute(
+        "UPDATE tournaments SET complete = :status WHERE id = :id",
+        {"status": new_status, "id": tournament_id},
+    )
+
+    return JSONResponse(
+        {
+            "success": True,
+            "new_status": new_status,
+            "message": f"Tournament marked as {'complete' if new_status else 'upcoming'}",
+        }
+    )

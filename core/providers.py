@@ -53,14 +53,14 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
         result["calculated_points"] = zero_points
         result["calculated_place"] = zero_place
 
-    # Handle buy-ins - they get 4 points less than last place with fish
+    # Handle buy-ins - they get 3 points more than last place with fish
     buy_in_results = [
         r for r in results if r.get("buy_in", False) and not r.get("disqualified", False)
     ]
 
     if fish_results:
         last_fish_points = min([r["calculated_points"] for r in fish_results])
-        buy_in_points = last_fish_points - 4  # Per SABC bylaws
+        buy_in_points = last_fish_points + 3  # Updated to match reference site
         buy_in_place = len(fish_results) + len(zero_results) + 1
     else:
         buy_in_points = 95  # If no one caught fish

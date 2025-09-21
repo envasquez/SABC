@@ -50,6 +50,15 @@
                                 <i class="fas fa-plus"></i> Results
                             </button>
                             {% endif %}
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    onclick="toggleComplete({{ tournament.id }}, {{ tournament.complete|lower }})"
+                                    title="Toggle completion status">
+                                {% if tournament.complete %}
+                                    <i class="fas fa-undo"></i> Mark Upcoming
+                                {% else %}
+                                    <i class="fas fa-check"></i> Mark Complete
+                                {% endif %}
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -70,6 +79,35 @@
 function enterResults(tournamentId) {
     // This would open a modal or navigate to results entry
     window.location.href = `/tournaments/${tournamentId}`;
+}
+
+function toggleComplete(tournamentId, currentStatus) {
+    const action = currentStatus ? 'upcoming' : 'complete';
+    const confirmMessage = `Are you sure you want to mark this tournament as ${action}?`;
+
+    if (confirm(confirmMessage)) {
+        fetch(`/admin/tournaments/${tournamentId}/toggle-complete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                alert(data.message);
+                // Reload the page to reflect changes
+                window.location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating tournament status');
+        });
+    }
 }
 </script>
 {% endblock %}
