@@ -6,13 +6,18 @@ Consolidates bootstrap_admin_postgres.py and create_admin.py functionality.
 
 import argparse
 import getpass
+import logging
+import os
 import sys
 from typing import Optional
 
 import bcrypt
-from common import ensure_database_url, setup_logging
 
 from core.database import db
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def create_admin_user(
@@ -33,8 +38,10 @@ def create_admin_user(
     Returns:
         0 on success, 1 on failure
     """
-    logger = setup_logging()
-    ensure_database_url()
+    # Ensure DATABASE_URL is set
+    if not os.environ.get("DATABASE_URL"):
+        logger.error("DATABASE_URL environment variable not set")
+        return 1
 
     # Use defaults for non-interactive mode
     if not interactive:
