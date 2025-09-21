@@ -15,7 +15,7 @@ import logging
 import re
 import sys
 from datetime import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import requests  # type: ignore
 from bs4 import BeautifulSoup  # type: ignore
@@ -45,12 +45,36 @@ class TournamentResult:
         self.place_finish = place_finish
 
 
+class TeamResult:
+    def __init__(
+        self,
+        angler1_name: str,
+        angler2_name: str,
+        total_weight: float,
+        place_finish: Optional[int] = None,
+    ):
+        self.angler1_name = angler1_name
+        self.angler2_name = angler2_name
+        self.total_weight = total_weight
+        self.place_finish = place_finish
+
+
 class Tournament:
     def __init__(self, name: str, date: datetime, lake_name: str):
         self.name = name
         self.date = date
         self.lake_name = lake_name
         self.results: List[TournamentResult] = []
+        self.team_results: List[TeamResult] = []
+        # Additional tournament metadata
+        self.ramp_name: Optional[str] = None
+        self.start_time: Optional[str] = None
+        self.weigh_in_time: Optional[str] = None
+        self.google_maps_iframe: Optional[str] = None
+        self.description: Optional[str] = None
+        self.entry_fee: float = 25.00
+        self.fish_limit: int = 5
+        self.is_team: bool = True
 
 
 class TournamentScraper:
@@ -168,8 +192,14 @@ class TournamentScraper:
                 lake_name=lake_name,
             )
 
+            # Extract additional tournament metadata
+            self._extract_tournament_metadata(soup, tournament)
+
             # Scrape individual results
             tournament.results = self._scrape_individual_results(soup)
+
+            # Scrape team results
+            tournament.team_results = self._scrape_team_results(soup)
 
             return tournament
 
@@ -261,10 +291,249 @@ class TournamentScraper:
 
         return results
 
+    def _scrape_team_results(self, soup: BeautifulSoup) -> List[TeamResult]:
+        """Scrape team results from tournament page."""
+        team_results: List[TeamResult] = []
+
+        # Find the team results table
+        for table in soup.find_all("table", class_="table"):
+            headers = [th.get_text(strip=True).lower() for th in table.find_all("th")]
+
+            # Check if this is the team results table
+            # Look for team-specific headers like "team place", "partner", or multiple angler columns
+            is_team_table = (
+                "team place" in headers
+                or "team" in " ".join(headers)
+                or ("angler 1" in headers and "angler 2" in headers)
+                or ("partner" in headers)
+            )
+
+            if is_team_table:
+                logger.debug(f"Found team results table with headers: {headers}")
+                header_indices = {header: i for i, header in enumerate(headers)}
+
+                for row_idx, row in enumerate(table.find_all("tr")[1:]):  # Skip header row
+                    cells = row.find_all("td")
+                    if len(cells) < 3:
+                        continue
+
+                    # Debug: Log first few rows
+                    if row_idx < 3:
+                        cell_texts = [cell.get_text(strip=True) for cell in cells]
+                        logger.debug(f"Team table row {row_idx}: {cell_texts}")
+
+                    try:
+                        # Extract team place
+                        place = None
+                        for place_key in ["team place", "place", "team finish", "finish"]:
+                            if place_key in header_indices:
+                                place_text = cells[header_indices[place_key]].get_text(strip=True)
+                                if place_text.isdigit():
+                                    place = int(place_text)
+                                    break
+
+                        # Extract angler names
+                        angler1_name = ""
+                        angler2_name = ""
+
+                        # Method 1: Separate angler columns
+                        if "angler 1" in header_indices and "angler 2" in header_indices:
+                            angler1_name = cells[header_indices["angler 1"]].get_text(strip=True)
+                            angler2_name = cells[header_indices["angler 2"]].get_text(strip=True)
+                        # Method 2: Combined name column with separator
+                        elif "team" in header_indices or "team name" in header_indices:
+                            team_key = "team name" if "team name" in header_indices else "team"
+                            team_text = cells[header_indices[team_key]].get_text(strip=True)
+                            logger.debug(f"Processing team text: '{team_text}'")
+                            # Try various separators
+                            for sep in [" / ", " & ", " and ", " - ", "/", "&", " + "]:
+                                if sep in team_text:
+                                    parts = team_text.split(sep, 1)
+                                    angler1_name = parts[0].strip()
+                                    angler2_name = parts[1].strip() if len(parts) > 1 else ""
+                                    logger.debug(
+                                        f"Split team '{team_text}' with '{sep}' into: '{angler1_name}' and '{angler2_name}'"
+                                    )
+                                    break
+                            else:
+                                # If no separator found, try looking for common patterns
+                                # Like "FirstName LastName SecondFirstName SecondLastName"
+                                parts = team_text.split()
+                                if len(parts) >= 4:
+                                    # Assume first two words are first angler, last two are second
+                                    angler1_name = f"{parts[0]} {parts[1]}"
+                                    angler2_name = f"{parts[-2]} {parts[-1]}"
+                                    logger.debug(
+                                        f"Split team '{team_text}' by word count into: '{angler1_name}' and '{angler2_name}'"
+                                    )
+                        # Method 3: First/Last name pairs
+                        elif "first name" in header_indices and "last name" in header_indices:
+                            # This might be individual results, not team - skip
+                            continue
+                        # Method 4: Partner column approach
+                        elif "partner" in header_indices:
+                            # Look for angler name in another column
+                            for name_key in ["angler", "name", "first name"]:
+                                if name_key in header_indices:
+                                    angler1_name = cells[header_indices[name_key]].get_text(
+                                        strip=True
+                                    )
+                                    break
+                            angler2_name = cells[header_indices["partner"]].get_text(strip=True)
+
+                        # Skip if we don't have both anglers
+                        if not angler1_name or not angler2_name:
+                            continue
+
+                        # Extract team weight
+                        total_weight = 0.0
+                        for weight_key in [
+                            "total weight",
+                            "team weight",
+                            "weight",
+                            "total",
+                            "team total",
+                        ]:
+                            if weight_key in header_indices:
+                                weight_text = cells[header_indices[weight_key]].get_text(strip=True)
+                                try:
+                                    total_weight = float(weight_text)
+                                    break
+                                except ValueError:
+                                    pass
+
+                        team_result = TeamResult(
+                            angler1_name=angler1_name,
+                            angler2_name=angler2_name,
+                            total_weight=total_weight,
+                            place_finish=place,
+                        )
+                        team_results.append(team_result)
+                        logger.debug(
+                            f"Found team: {angler1_name} & {angler2_name} - {total_weight}lbs"
+                        )
+
+                    except Exception as e:
+                        logger.debug(f"Failed to parse team result row: {e}")
+                        continue
+
+                # If we found team results in this table, break
+                if team_results:
+                    break
+
+        logger.info(f"Found {len(team_results)} team results")
+        return team_results
+
+    def _extract_tournament_metadata(self, soup: BeautifulSoup, tournament: Tournament) -> None:
+        """Extract additional tournament metadata from the page."""
+
+        # Extract Google Maps iframe
+        iframe = soup.find("iframe", src=re.compile(r"google\.com/maps"))
+        if iframe:
+            tournament.google_maps_iframe = iframe.get("src", "")
+            logger.debug(f"Found Google Maps iframe: {tournament.google_maps_iframe[:100]}...")
+
+        # Extract timing information from the tournament details table
+        for table in soup.find_all("table", class_="table"):
+            rows = table.find_all("tr")
+            for row in rows:
+                cells = row.find_all("td")
+                if len(cells) >= 6:  # Table with Date, Start time, Weigh-in format
+                    cell_texts = [cell.get_text(strip=True) for cell in cells]
+
+                    # Look for start time and weigh-in time
+                    for i, cell_text in enumerate(cell_texts):
+                        if "start time" in cell_text.lower() and i + 1 < len(cell_texts):
+                            start_time_text = cell_texts[i + 1]
+                            tournament.start_time = self._parse_time(start_time_text)
+                            logger.debug(
+                                f"Found start time: {start_time_text} -> {tournament.start_time}"
+                            )
+
+                        elif "weigh-in" in cell_text.lower() and i + 1 < len(cell_texts):
+                            weigh_in_text = cell_texts[i + 1]
+                            tournament.weigh_in_time = self._parse_time(weigh_in_text)
+                            logger.debug(
+                                f"Found weigh-in time: {weigh_in_text} -> {tournament.weigh_in_time}"
+                            )
+
+        # Try to extract ramp name from Google Maps iframe URL or page content
+        if tournament.google_maps_iframe:
+            tournament.ramp_name = self._extract_ramp_name_from_iframe(
+                tournament.google_maps_iframe
+            )
+
+        # Set defaults based on tournament characteristics
+        tournament.is_team = len(tournament.team_results) > 0 or "team" in tournament.name.lower()
+
+        logger.debug(
+            f"Tournament metadata: ramp={tournament.ramp_name}, start={tournament.start_time}, weigh_in={tournament.weigh_in_time}"
+        )
+
+    def _parse_time(self, time_text: str) -> Optional[str]:
+        """Parse time text into HH:MM format."""
+        if not time_text:
+            return None
+
+        # Clean up common time formats
+        time_text = time_text.lower().strip()
+
+        # Handle formats like "6 a.m.", "3 p.m.", "6:00 AM", etc.
+        time_patterns = [
+            r"(\d{1,2}):(\d{2})\s*([ap])\.?m\.?",  # 6:00 a.m.
+            r"(\d{1,2})\s*([ap])\.?m\.?",  # 6 a.m.
+        ]
+
+        for pattern in time_patterns:
+            match = re.search(pattern, time_text)
+            if match:
+                if len(match.groups()) == 3:  # Has minutes
+                    hour, minute, ampm = match.groups()
+                    hour = int(hour)
+                    minute = int(minute)
+                else:  # No minutes
+                    hour = int(match.group(1))
+                    minute = 0
+                    ampm = match.group(2)
+
+                # Convert to 24-hour format
+                if ampm == "p" and hour != 12:
+                    hour += 12
+                elif ampm == "a" and hour == 12:
+                    hour = 0
+
+                return f"{hour:02d}:{minute:02d}"
+
+        return None
+
+    def _extract_ramp_name_from_iframe(self, iframe_url: str) -> Optional[str]:
+        """Extract ramp name from Google Maps iframe URL."""
+        try:
+            # Try to decode the ramp name from the iframe URL
+            # Google Maps URLs often contain the place name
+            if "!1s" in iframe_url:
+                # Format: !1s0x865b34da5ad510af%3A0xc87465991d57c4da!2sLoop%20360%20Boat%20Ramp
+                parts = iframe_url.split("!2s")
+                if len(parts) > 1:
+                    ramp_part = parts[1].split("!")[0]
+                    # URL decode
+                    import urllib.parse
+
+                    ramp_name = urllib.parse.unquote(ramp_part)
+                    logger.debug(f"Extracted ramp name from iframe: {ramp_name}")
+                    return ramp_name
+
+        except Exception as e:
+            logger.debug(f"Failed to extract ramp name from iframe: {e}")
+
+        return None
+
 
 class DatabaseImporter:
     def __init__(self, dry_run: bool = False):
         self.dry_run = dry_run
+        self._lake_cache: Optional[Dict[str, int]] = None
+        self._ramp_cache: Optional[Dict[str, int]] = None
 
     def clear_existing_data(self, year: Optional[int] = None) -> None:
         """Clear existing tournament data for a specific year or all data."""
@@ -341,10 +610,28 @@ class DatabaseImporter:
                 print(
                     f"Tournament: {tournament.name} ({tournament.date.date()}) at {tournament.lake_name}"
                 )
-                for result in tournament.results:
+                print("  Metadata:")
+                print(f"    Ramp: {tournament.ramp_name or 'Unknown'}")
+                print(f"    Start time: {tournament.start_time or 'Unknown'}")
+                print(f"    Weigh-in time: {tournament.weigh_in_time or 'Unknown'}")
+                print(f"    Entry fee: ${tournament.entry_fee}")
+                print(f"    Is team tournament: {tournament.is_team}")
+                print(f"    Google Maps: {'Yes' if tournament.google_maps_iframe else 'No'}")
+                print(f"  Individual Results ({len(tournament.results)}):")
+                for result in tournament.results[:3]:  # Show first 3
                     print(
-                        f"  {result.angler_name}: {result.total_weight}lbs, BB: {result.big_bass_weight}lbs"
+                        f"    {result.angler_name}: {result.total_weight}lbs, BB: {result.big_bass_weight}lbs"
                     )
+                if len(tournament.results) > 3:
+                    print(f"    ... and {len(tournament.results) - 3} more")
+                print(f"  Team Results ({len(tournament.team_results)}):")
+                for team_result in tournament.team_results[:3]:  # Show first 3
+                    print(
+                        f"    {team_result.angler1_name} & {team_result.angler2_name}: {team_result.total_weight}lbs"
+                    )
+                if len(tournament.team_results) > 3:
+                    print(f"    ... and {len(tournament.team_results) - 3} more")
+                print()
             return
 
         with engine.connect() as conn:
@@ -376,40 +663,68 @@ class DatabaseImporter:
             "name": tournament.name,
             "event_type": "sabc_tournament",
             "lake_name": tournament.lake_name,
+            "ramp_name": tournament.ramp_name,
+            "start_time": tournament.start_time,
+            "weigh_in_time": tournament.weigh_in_time,
+            "entry_fee": tournament.entry_fee,
         }
 
         result = conn.execute(
             text("""
-                INSERT INTO events (date, year, name, event_type, lake_name)
-                VALUES (:date, :year, :name, :event_type, :lake_name)
+                INSERT INTO events (date, year, name, event_type, lake_name, ramp_name, start_time, weigh_in_time, entry_fee)
+                VALUES (:date, :year, :name, :event_type, :lake_name, :ramp_name, :start_time, :weigh_in_time, :entry_fee)
                 RETURNING id
             """),
             event_data,
         )
         event_id = result.scalar()
 
+        # Look up lake and ramp IDs
+        lake_id = self._find_lake_id(conn, tournament.lake_name)
+        ramp_id = (
+            self._find_ramp_id(conn, tournament.ramp_name, tournament.lake_name)
+            if tournament.ramp_name
+            else None
+        )
+
         # Create tournament
         tournament_data = {
             "event_id": event_id,
             "name": tournament.name,
+            "lake_id": lake_id,
+            "ramp_id": ramp_id,
             "lake_name": tournament.lake_name,
+            "ramp_name": tournament.ramp_name,
+            "start_time": tournament.start_time,
+            "end_time": tournament.weigh_in_time,  # Use weigh-in as end time
+            "fish_limit": tournament.fish_limit,
+            "entry_fee": tournament.entry_fee,
+            "is_team": tournament.is_team,
             "complete": True,
         }
 
         result = conn.execute(
             text("""
-                INSERT INTO tournaments (event_id, name, lake_name, complete)
-                VALUES (:event_id, :name, :lake_name, :complete)
+                INSERT INTO tournaments (event_id, name, lake_id, ramp_id, lake_name, ramp_name,
+                                       start_time, end_time, fish_limit, entry_fee, is_team, complete)
+                VALUES (:event_id, :name, :lake_id, :ramp_id, :lake_name, :ramp_name,
+                       :start_time, :end_time, :fish_limit, :entry_fee, :is_team, :complete)
                 RETURNING id
             """),
             tournament_data,
         )
         tournament_id = result.scalar()
 
-        # Import results
+        # Import individual results
         for result_data in tournament.results:
             angler_id = self._ensure_angler_exists(conn, result_data.angler_name)
             self._create_result(conn, tournament_id, angler_id, result_data)
+
+        # Import team results
+        for team_result in tournament.team_results:
+            angler1_id = self._ensure_angler_exists(conn, team_result.angler1_name)
+            angler2_id = self._ensure_angler_exists(conn, team_result.angler2_name)
+            self._create_team_result(conn, tournament_id, angler1_id, angler2_id, team_result)
 
         conn.commit()
 
@@ -461,6 +776,110 @@ class DatabaseImporter:
                        :dead_fish_penalty, :place_finish)
             """),
             result_data,
+        )
+
+    def _get_lake_cache(self, conn) -> Dict[str, int]:
+        """Get cached lake name to ID mapping."""
+        if self._lake_cache is None:
+            self._lake_cache = {}
+            lakes = conn.execute(text("SELECT id, yaml_key, display_name FROM lakes")).fetchall()
+            for lake in lakes:
+                lake_id, yaml_key, display_name = lake
+                # Add both yaml_key and display_name as lookup keys
+                self._lake_cache[yaml_key.lower()] = lake_id
+                self._lake_cache[display_name.lower()] = lake_id
+        return self._lake_cache
+
+    def _get_ramp_cache(self, conn) -> Dict[str, int]:
+        """Get cached ramp name to ID mapping."""
+        if self._ramp_cache is None:
+            self._ramp_cache = {}
+            ramps = conn.execute(
+                text(
+                    "SELECT r.id, r.name, l.display_name FROM ramps r JOIN lakes l ON r.lake_id = l.id"
+                )
+            ).fetchall()
+            for ramp in ramps:
+                ramp_id, ramp_name, lake_name = ramp
+                # Create composite key with lake name for uniqueness
+                key = f"{ramp_name.lower()}@{lake_name.lower()}"
+                self._ramp_cache[key] = ramp_id
+                # Also add just the ramp name for fallback
+                self._ramp_cache[ramp_name.lower()] = ramp_id
+        return self._ramp_cache
+
+    def _find_lake_id(self, conn, lake_name: str) -> Optional[int]:
+        """Find lake ID by name with fuzzy matching."""
+        if not lake_name:
+            return None
+
+        lake_cache = self._get_lake_cache(conn)
+        lake_key = lake_name.lower().strip()
+
+        # Direct match first
+        if lake_key in lake_cache:
+            return lake_cache[lake_key]
+
+        # Try without common prefixes/suffixes
+        cleaned_name = lake_key.replace("lake ", "").replace(" lake", "").strip()
+        if cleaned_name in lake_cache:
+            return lake_cache[cleaned_name]
+
+        # Try fuzzy matching for common variations
+        for db_name, db_id in lake_cache.items():
+            if cleaned_name in db_name or db_name in cleaned_name:
+                logger.debug(f"Fuzzy matched lake '{lake_name}' to '{db_name}' (ID: {db_id})")
+                return db_id
+
+        logger.warning(f"Could not find lake ID for: {lake_name}")
+        return None
+
+    def _find_ramp_id(self, conn, ramp_name: str, lake_name: str) -> Optional[int]:
+        """Find ramp ID by name and lake with fuzzy matching."""
+        if not ramp_name:
+            return None
+
+        ramp_cache = self._get_ramp_cache(conn)
+
+        # Try with lake context first
+        if lake_name:
+            composite_key = f"{ramp_name.lower()}@{lake_name.lower()}"
+            if composite_key in ramp_cache:
+                return ramp_cache[composite_key]
+
+        # Try just ramp name
+        ramp_key = ramp_name.lower().strip()
+        if ramp_key in ramp_cache:
+            return ramp_cache[ramp_key]
+
+        # Try fuzzy matching
+        for db_key, db_id in ramp_cache.items():
+            if "@" not in db_key:  # Skip composite keys for this check
+                if ramp_key in db_key or db_key in ramp_key:
+                    logger.debug(f"Fuzzy matched ramp '{ramp_name}' to '{db_key}' (ID: {db_id})")
+                    return db_id
+
+        logger.warning(f"Could not find ramp ID for: {ramp_name} at {lake_name}")
+        return None
+
+    def _create_team_result(
+        self, conn, tournament_id: int, angler1_id: int, angler2_id: int, team_result: TeamResult
+    ) -> None:
+        """Create team result record."""
+        team_data = {
+            "tournament_id": tournament_id,
+            "angler1_id": angler1_id,
+            "angler2_id": angler2_id,
+            "total_weight": team_result.total_weight,
+            "place_finish": team_result.place_finish,
+        }
+
+        conn.execute(
+            text("""
+                INSERT INTO team_results (tournament_id, angler1_id, angler2_id, total_weight, place_finish)
+                VALUES (:tournament_id, :angler1_id, :angler2_id, :total_weight, :place_finish)
+            """),
+            team_data,
         )
 
 
