@@ -7,7 +7,7 @@ This script scrapes tournament data from http://167.71.20.3 and imports essentia
 - Tournament info (name, date, lake)
 - Results (weight, big bass, penalties)
 
-Clears all existing tournament/angler data before importing.
+Clears existing tournament data for the specified year before importing.
 """
 
 import argparse
@@ -266,24 +266,72 @@ class DatabaseImporter:
     def __init__(self, dry_run: bool = False):
         self.dry_run = dry_run
 
-    def clear_existing_data(self) -> None:
-        """Clear all existing tournament and angler data."""
+    def clear_existing_data(self, year: Optional[int] = None) -> None:
+        """Clear existing tournament data for a specific year or all data."""
         if self.dry_run:
-            logger.info("DRY RUN: Would clear existing tournament and angler data")
+            if year:
+                logger.info(f"DRY RUN: Would clear existing tournament data for year {year}")
+            else:
+                logger.info("DRY RUN: Would clear ALL existing tournament and angler data")
             return
 
-        logger.info("Clearing existing tournament and angler data...")
+        if year:
+            logger.info(f"Clearing existing tournament data for year {year}...")
 
-        with engine.connect() as conn:
-            # Clear in proper order due to foreign keys
-            conn.execute(text("DELETE FROM results"))
-            conn.execute(text("DELETE FROM team_results"))
-            conn.execute(text("DELETE FROM tournaments"))
-            conn.execute(text("DELETE FROM events"))
-            conn.execute(text("DELETE FROM anglers"))
-            conn.commit()
+            with engine.connect() as conn:
+                # Get event IDs for the specified year
+                event_ids = conn.execute(
+                    text("SELECT id FROM events WHERE year = :year"), {"year": year}
+                ).fetchall()
 
-        logger.info("Existing data cleared")
+                if event_ids:
+                    event_id_list = [e[0] for e in event_ids]
+
+                    # Get tournament IDs for these events
+                    tournament_ids = conn.execute(
+                        text("SELECT id FROM tournaments WHERE event_id = ANY(:event_ids)"),
+                        {"event_ids": event_id_list},
+                    ).fetchall()
+
+                    if tournament_ids:
+                        tournament_id_list = [t[0] for t in tournament_ids]
+
+                        # Delete results for these tournaments
+                        conn.execute(
+                            text("DELETE FROM results WHERE tournament_id = ANY(:tournament_ids)"),
+                            {"tournament_ids": tournament_id_list},
+                        )
+                        conn.execute(
+                            text(
+                                "DELETE FROM team_results WHERE tournament_id = ANY(:tournament_ids)"
+                            ),
+                            {"tournament_ids": tournament_id_list},
+                        )
+
+                    # Delete tournaments and events for this year
+                    conn.execute(
+                        text("DELETE FROM tournaments WHERE event_id = ANY(:event_ids)"),
+                        {"event_ids": event_id_list},
+                    )
+                    conn.execute(text("DELETE FROM events WHERE year = :year"), {"year": year})
+
+                    conn.commit()
+                    logger.info(f"Cleared {len(event_ids)} events and related data for year {year}")
+                else:
+                    logger.info(f"No events found for year {year}")
+        else:
+            logger.info("Clearing ALL existing tournament and angler data...")
+
+            with engine.connect() as conn:
+                # Clear in proper order due to foreign keys
+                conn.execute(text("DELETE FROM results"))
+                conn.execute(text("DELETE FROM team_results"))
+                conn.execute(text("DELETE FROM tournaments"))
+                conn.execute(text("DELETE FROM events"))
+                conn.execute(text("DELETE FROM anglers"))
+                conn.commit()
+
+            logger.info("All existing data cleared")
 
     def import_tournaments(self, tournaments: List[Tournament]) -> None:
         """Import tournaments and all related data."""
@@ -423,6 +471,11 @@ def main() -> None:
         "--dry-run", action="store_true", help="Preview import without writing to database"
     )
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
+    parser.add_argument(
+        "--clear-all",
+        action="store_true",
+        help="Clear ALL existing data before import (default: only clear specified year)",
+    )
 
     args = parser.parse_args()
 
@@ -443,7 +496,10 @@ def main() -> None:
 
         # Clear existing data (unless dry run)
         if not args.dry_run:
-            importer.clear_existing_data()
+            if args.clear_all:
+                importer.clear_existing_data()  # Clear all data
+            else:
+                importer.clear_existing_data(year=args.year)  # Clear only this year's data
 
         # Scrape tournaments
         tournaments = scraper.get_tournaments_for_year(args.year)
