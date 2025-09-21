@@ -1005,11 +1005,15 @@ class DatabaseImporter:
                 # Handle "burnet" vs "burnett" county variations
                 if "burnet" in ramp_key and "burnett" in db_name:
                     if "county park" in ramp_key and "county park" in db_name:
-                        logger.debug(f"Spelling variant matched ramp '{ramp_name}' to '{db_key}' (ID: {db_id})")
+                        logger.debug(
+                            f"Spelling variant matched ramp '{ramp_name}' to '{db_key}' (ID: {db_id})"
+                        )
                         return db_id
                 elif "burnett" in ramp_key and "burnet" in db_name:
                     if "county park" in ramp_key and "county park" in db_name:
-                        logger.debug(f"Spelling variant matched ramp '{ramp_name}' to '{db_key}' (ID: {db_id})")
+                        logger.debug(
+                            f"Spelling variant matched ramp '{ramp_name}' to '{db_key}' (ID: {db_id})"
+                        )
                         return db_id
 
         logger.warning(f"Could not find ramp ID for: {ramp_name} at {lake_name}")
