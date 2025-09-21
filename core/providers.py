@@ -132,8 +132,8 @@ async def get_tournament_data(tournament_id: int, user=Depends(get_user_optional
                     f"{result.get('angler1_name', '')} / {result.get('angler2_name', '')}",  # 1: team name
                     0,  # 2: fish count (not used for teams typically)
                     float(result.get("total_weight", 0)),  # 3: weight
-                    1 if result.get("angler1_member", True) else 0,  # 4: member status angler 1
-                    1 if result.get("angler2_member", True) else 0,  # 5: member status angler 2
+                    1 if result.get("angler1_member") in (True, 1, "t", "true", "True") else 0,  # 4: member status angler 1
+                    1 if result.get("angler2_member") in (True, 1, "t", "true", "True") else 0,  # 5: member status angler 2
                     result.get("id", 0),  # 6: team result id
                     2,  # 7: team size indicator
                 )
@@ -175,7 +175,7 @@ async def get_tournament_data(tournament_id: int, user=Depends(get_user_optional
                     weight,  # 3: weight
                     float(result.get("big_bass_weight", 0)),  # 4: big bass
                     points,  # 5: points
-                    result.get("member", 1),  # 6: member status
+                    1 if result.get("member") in (True, 1, "t", "true", "True") else 0,  # 6: member status
                     result.get("id", 0),  # 7: result id
                 )
                 individual_results.append(result_tuple)
@@ -203,7 +203,7 @@ async def get_tournament_data(tournament_id: int, user=Depends(get_user_optional
                     0.0,  # 3: weight
                     float(result.get("big_bass_weight", 0)),  # 4: big bass
                     zero_points,  # 5: points
-                    result.get("member", 1),  # 6: member status
+                    1 if result.get("member") in (True, 1, "t", "true", "True") else 0,  # 6: member status
                     result.get("id", 0),  # 7: result id
                 )
                 individual_results.append(result_tuple)
@@ -242,7 +242,7 @@ async def get_tournament_data(tournament_id: int, user=Depends(get_user_optional
                         result["name"],  # 0: name
                         buy_in_place,  # 1: place_finish
                         buy_in_points,  # 2: points
-                        result["member"],  # 3: member
+                        1 if result["member"] in (True, 1, "t", "true", "True") else 0,  # 3: member
                     )
                 )
 
@@ -261,7 +261,7 @@ async def get_tournament_data(tournament_id: int, user=Depends(get_user_optional
                 disqualified_results.append(
                     (
                         result["name"],  # 0: name
-                        result["member"],  # 1: member status
+                        1 if result["member"] in (True, 1, "t", "true", "True") else 0,  # 1: member status
                     )
                 )
 
