@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
@@ -84,6 +86,126 @@ async def update_lake(
         return RedirectResponse("/admin/lakes?success=Lake updated successfully", status_code=302)
     except Exception as e:
         return error_redirect("/admin/lakes", str(e))
+
+
+@router.get("/admin/lakes/{lake_id}/edit")
+async def edit_lake_page(request: Request, lake_id: int):
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
+
+    lake = db(
+        "SELECT id, yaml_key, display_name, google_maps_iframe FROM lakes WHERE id = :id",
+        {"id": lake_id},
+    )
+    if not lake:
+        return error_redirect("/admin/lakes", "Lake not found")
+
+    ramps = db(
+        "SELECT id, name, google_maps_iframe FROM ramps WHERE lake_id = :lake_id ORDER BY name",
+        {"lake_id": lake_id},
+    )
+
+    return templates.TemplateResponse(
+        "admin/edit_lake.html",
+        {
+            "request": request,
+            "user": user,
+            "lake": lake[0],
+            "ramps": ramps,
+        },
+    )
+
+
+@router.post("/admin/lakes/{lake_id}/ramps")
+async def create_ramp(
+    request: Request,
+    lake_id: int,
+    name: str = Form(...),
+    google_maps_iframe: str = Form(""),
+):
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
+
+    try:
+        db(
+            """
+            INSERT INTO ramps (lake_id, name, google_maps_iframe)
+            VALUES (:lake_id, :name, :google_maps_iframe)
+        """,
+            {
+                "lake_id": lake_id,
+                "name": name.strip(),
+                "google_maps_iframe": google_maps_iframe.strip(),
+            },
+        )
+        return RedirectResponse(
+            f"/admin/lakes/{lake_id}/edit?success=Ramp added successfully", status_code=302
+        )
+    except Exception as e:
+        return error_redirect(f"/admin/lakes/{lake_id}/edit", str(e))
+
+
+@router.post("/admin/ramps/{ramp_id}/update")
+async def update_ramp(
+    request: Request,
+    ramp_id: int,
+    name: str = Form(...),
+    google_maps_iframe: str = Form(""),
+):
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
+
+    try:
+        lake_id_result = db("SELECT lake_id FROM ramps WHERE id = :id", {"id": ramp_id})
+        if not lake_id_result:
+            return error_redirect("/admin/lakes", "Ramp not found")
+
+        lake_id = lake_id_result[0][0]
+
+        db(
+            """
+            UPDATE ramps SET name = :name, google_maps_iframe = :google_maps_iframe
+            WHERE id = :id
+        """,
+            {
+                "id": ramp_id,
+                "name": name.strip(),
+                "google_maps_iframe": google_maps_iframe.strip(),
+            },
+        )
+        return RedirectResponse(
+            f"/admin/lakes/{lake_id}/edit?success=Ramp updated successfully", status_code=302
+        )
+    except Exception as e:
+        return error_redirect(f"/admin/lakes/{lake_id}/edit", str(e))
+
+
+@router.delete("/admin/ramps/{ramp_id}")
+async def delete_ramp(request: Request, ramp_id: int):
+    user = require_admin(request)
+
+    if isinstance(user, RedirectResponse):
+        return user
+
+    try:
+        # Check if ramp is used in any tournaments
+        usage_count = db(
+            "SELECT COUNT(*) FROM tournaments WHERE ramp_id = :id", {"id": ramp_id}
+        )[0][0]
+        if usage_count > 0:
+            return JSONResponse(
+                {"error": "Cannot delete ramp that is referenced by tournaments"}, status_code=400
+            )
+        db("DELETE FROM ramps WHERE id = :id", {"id": ramp_id})
+        return JSONResponse({"success": True})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 @router.delete("/admin/lakes/{lake_id}")

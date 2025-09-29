@@ -34,6 +34,11 @@
           requests  # HTTP client for API/web requests
           beautifulsoup4  # HTML parsing for tournament data import
 
+          # Testing
+          pytest
+          pytest-cov
+          httpx  # Required by FastAPI TestClient
+
           # Development tools
           ruff
           mypy
@@ -142,6 +147,35 @@ print('Database reset complete!')
           echo "Run: 'uvicorn app:app --host 0.0.0.0 --port 80' in production"
         '';
 
+        runTests = pkgs.writeShellScriptBin "run-tests" ''
+          echo "🧪 Running SABC Test Suite"
+          echo "=========================="
+          echo ""
+
+          # Set test database URL
+          export DATABASE_URL="postgresql://postgres:dev123@localhost:5432/sabc_test"
+
+          # Check if test database exists, create if not
+          echo "📦 Checking test database..."
+          psql -h localhost -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'sabc_test'" | grep -q 1 || \
+              psql -h localhost -U postgres -c "CREATE DATABASE sabc_test"
+
+          echo "✅ Test database ready"
+          echo ""
+
+          # Run pytest with any arguments passed
+          if [ "$1" == "--coverage" ]; then
+              echo "📊 Running tests with coverage..."
+              pytest tests/ --cov=core --cov=routes --cov-report=html --cov-report=term
+          else
+              echo "🧪 Running tests..."
+              pytest tests/ "$@"
+          fi
+
+          echo ""
+          echo "✅ Tests complete!"
+        '';
+
       in {
         devShells.default = pkgs.mkShell {
           name = "sabc-fastapi";
@@ -153,6 +187,7 @@ print('Database reset complete!')
             setupDb
             resetDb
             deployApp
+            runTests
           ];
 
           shellHook = ''
@@ -173,6 +208,7 @@ print('Database reset complete!')
             echo "🔧 Development commands:"
             echo "  check-code       - Run linting and type checking"
             echo "  format-code      - Auto-format Python code with ruff"
+            echo "  run-tests        - Run test suite (--coverage for coverage report)"
             echo "  deploy-app       - Run all checks for deployment"
             echo ""
             echo "💡 Quick start:"

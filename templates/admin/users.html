@@ -4,14 +4,56 @@
 <div class="mb-4">
     <h1 class="display-5"><i class="bi bi-people me-2"></i>Manage Anglers</h1>
     <p class="lead text-secondary">User administration</p>
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-person-check fs-1 me-3"></i>
+                        <div>
+                            <h5 class="card-title mb-0" style="color: white;">Members</h5>
+                            <h3 class="mb-0" style="color: white; font-weight: bold;">{{ member_count }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-person fs-1 me-3"></i>
+                        <div>
+                            <h5 class="card-title mb-0" style="color: white;">Guests</h5>
+                            <h3 class="mb-0" style="color: white; font-weight: bold;">{{ guest_count }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-people-fill fs-1 me-3"></i>
+                        <div>
+                            <h5 class="card-title mb-0" style="color: white;">Total</h5>
+                            <h3 class="mb-0" style="color: white; font-weight: bold;">{{ total_count }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 <table class="table table-dark table-striped">
-    <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+    <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Officer</th><th>Actions</th></tr></thead>
     <tbody>
         {% for u in users %}
         <tr>
             <td class="text-white">{{ u.name }}</td>
             <td>{{ u.email or '-' }}</td>
+            <td>{{ u.phone or '-' }}</td>
             <td>
                 {% if u.member %}
                     <span class="badge bg-success">Member</span>
@@ -19,6 +61,15 @@
                     <span class="badge bg-secondary">Guest</span>
                 {% endif %}
                 {% if u.is_admin %}<span class="badge bg-danger ms-1">Admin</span>{% endif %}
+            </td>
+            <td>
+                {% if u.officer_positions %}
+                    {% for position in u.officer_positions.split(', ') %}
+                        <span class="badge bg-info text-dark mb-1"><i class="bi bi-star-fill me-1"></i>{{ position }}</span>
+                    {% endfor %}
+                {% else %}
+                    <span class="text-muted">-</span>
+                {% endif %}
             </td>
             <td>
                 <div class="btn-group btn-group-sm">

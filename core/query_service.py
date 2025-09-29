@@ -130,6 +130,48 @@ class QueryService:
             {"tournament_id": tournament_id},
         )
 
+    def upsert_result(
+        self,
+        tournament_id: int,
+        angler_id: int,
+        num_fish: int,
+        total_weight: float,
+        big_bass_weight: float = 0.0,
+        dead_fish_penalty: float = 0.0,
+        disqualified: bool = False,
+        buy_in: bool = False,
+    ) -> None:
+        """Insert or update a tournament result using PostgreSQL UPSERT."""
+        self.execute(
+            """
+            INSERT INTO results (
+                tournament_id, angler_id, num_fish, total_weight,
+                big_bass_weight, dead_fish_penalty, disqualified, buy_in
+            )
+            VALUES (
+                :tid, :aid, :fish, :weight, :bass, :penalty, :dq, :buy
+            )
+            ON CONFLICT (tournament_id, angler_id)
+            DO UPDATE SET
+                num_fish = EXCLUDED.num_fish,
+                total_weight = EXCLUDED.total_weight,
+                big_bass_weight = EXCLUDED.big_bass_weight,
+                dead_fish_penalty = EXCLUDED.dead_fish_penalty,
+                disqualified = EXCLUDED.disqualified,
+                buy_in = EXCLUDED.buy_in
+        """,
+            {
+                "tid": tournament_id,
+                "aid": angler_id,
+                "fish": num_fish,
+                "weight": total_weight,
+                "bass": big_bass_weight,
+                "penalty": dead_fish_penalty,
+                "dq": disqualified,
+                "buy": buy_in,
+            },
+        )
+
     def get_team_results(self, tournament_id: int) -> list[dict]:
         """Get team results for a tournament."""
         return self.fetch_all(
@@ -252,9 +294,20 @@ class QueryService:
         return self.fetch_all("SELECT * FROM anglers ORDER BY name")
 
     def get_admin_anglers_list(self) -> list[dict]:
-        """Get anglers list for admin interface."""
+        """Get anglers list for admin interface with current officer positions."""
+        from datetime import datetime
+
+        current_year = datetime.now().year
         return self.fetch_all(
-            "SELECT id, name, email, member, is_admin FROM anglers ORDER BY is_admin DESC, member DESC, name"
+            """
+            SELECT a.id, a.name, a.email, a.phone, a.member, a.is_admin,
+                   STRING_AGG(op.position, ', ' ORDER BY op.position) as officer_positions
+            FROM anglers a
+            LEFT JOIN officer_positions op ON a.id = op.angler_id AND op.year = :year
+            GROUP BY a.id, a.name, a.email, a.phone, a.member, a.is_admin
+            ORDER BY a.is_admin DESC, a.member DESC, a.name
+            """,
+            {"year": current_year},
         )
 
     # Stats queries

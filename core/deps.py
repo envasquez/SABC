@@ -5,15 +5,16 @@ Reduces code duplication across routes.
 
 import json
 from decimal import Decimal
-from typing import Any, AsyncGenerator, Dict, Optional
+from typing import Any, AsyncGenerator, Dict, Optional, Union
 
 from fastapi import Request
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import Connection
 
 from core.db_schema import engine
 from core.filters import time_format_filter
-from core.helpers.auth import get_admin_or_redirect, require_admin_async  # noqa: E402, F401
+from core.helpers.auth import admin, require_admin_async  # noqa: E402, F401
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -40,23 +41,10 @@ async def get_db() -> AsyncGenerator[Connection, None]:
         yield conn
 
 
+async def get_admin_or_redirect(request: Request) -> Union[Dict[str, Any], RedirectResponse]:
+    """Get admin user or return redirect response for template-based routes."""
+    return admin(request)
+
+
 # Alias for consistency in deps module - re-exported for backward compatibility
 require_admin = require_admin_async
-
-
-def db_query(
-    conn: Connection, query: str, params: Optional[Dict[str, Any]] = None
-) -> list[Dict[str, Any]]:
-    """Execute query and return results as list of dicts."""
-    from sqlalchemy import text
-
-    result = conn.execute(text(query), params or {})
-    return [dict(row._mapping) for row in result]
-
-
-def db_query_one(
-    conn: Connection, query: str, params: Optional[Dict[str, Any]] = None
-) -> Optional[Dict[str, Any]]:
-    """Execute query and return first result as dict or None."""
-    results = db_query(conn, query, params)
-    return results[0] if results else None

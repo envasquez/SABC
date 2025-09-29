@@ -442,20 +442,6 @@ async def delete_team_result(
     return JSONResponse({"success": True})
 
 
-@router.post("/admin/tournaments/{tournament_id}/complete")
-async def complete_tournament(
-    tournament_id: int,
-    user=Depends(get_admin_or_redirect),
-    conn: Connection = Depends(get_db),
-):
-    if isinstance(user, RedirectResponse):
-        return JSONResponse({"error": "Unauthorized"}, status_code=403)
-
-    qs = QueryService(conn)
-    qs.execute("UPDATE tournaments SET complete = 1 WHERE id = :id", {"id": tournament_id})
-    return RedirectResponse("/admin/tournaments", status_code=303)
-
-
 @router.post("/admin/tournaments/{tournament_id}/toggle-complete")
 async def toggle_tournament_complete(
     tournament_id: int,

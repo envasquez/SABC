@@ -230,7 +230,12 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
         )
 
     elif page == "users":
-        ctx["users"] = get_admin_anglers_list()
+        users = get_admin_anglers_list()
+        ctx["users"] = users
+        # Calculate member/guest counts
+        ctx["member_count"] = sum(1 for u in users if u.get("member"))
+        ctx["guest_count"] = sum(1 for u in users if not u.get("member"))
+        ctx["total_count"] = len(users)
 
     elif page == "tournaments":
         # Get all tournaments with event and result data

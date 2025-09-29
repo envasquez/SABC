@@ -21,5 +21,14 @@ python-multipart==0.0.18
 pyyaml==6.0.2
 types-pyyaml==6.0.12.20250915  # Type stubs for mypy
 
+# Testing
+pytest==8.3.4
+pytest-cov==6.0.0
+httpx==0.28.1  # Required by FastAPI TestClient
+
+# Development tools
+ruff==0.8.4
+mypy==1.14.0
+
 # Production server (optional - for deployment)
 gunicorn==23.0.0

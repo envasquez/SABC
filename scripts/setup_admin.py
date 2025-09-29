@@ -84,7 +84,7 @@ def create_admin_user(
                    VALUES (:name, :email, :password_hash, true, true, 2024) RETURNING id""",
                 {"name": name, "email": email, "password_hash": password_hash},
             )
-            admin_id = result[0][0]
+            admin_id = result[0][0] if result else None  # Access by index, not key
             logger.info(f"Created new admin user {email} with ID: {admin_id}")
 
         if not interactive:

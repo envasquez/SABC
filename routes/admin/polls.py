@@ -72,18 +72,6 @@ async def create_poll_form(request: Request, event_id: int = Query(None)):
         )
 
 
-@router.get("/admin/polls/create/generic")
-async def create_generic_poll_form(request: Request):
-    user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
-    return templates.TemplateResponse(
-        "admin/create_generic_poll.html", {"request": request, "user": user}
-    )
-
-
 @router.post("/admin/polls/create")
 async def create_poll(request: Request):
     user = require_admin(request)

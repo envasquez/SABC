@@ -15,12 +15,41 @@
                 <input type="email" class="form-control" id="email" name="email" value="{{ edit_user[2] or '' }}" placeholder="Leave empty or use first.last@sabc.com">
                 <div class="form-text">If left empty for guests, a default email will be generated (first.last@sabc.com)</div>
             </div>
-            {% for field, idx, label in [('member', 3, 'Club Member'), ('is_admin', 4, 'Administrator')] %}
+            <div class="mb-3">
+                <label for="phone" class="form-label">Phone Number <small class="text-secondary">(optional)</small></label>
+                <input type="tel" class="form-control" id="phone" name="phone" value="{{ edit_user[3] or '' }}" placeholder="+1234567890">
+                <div class="form-text">Include country code (e.g., +1 for US)</div>
+            </div>
+            {% for field, idx, label in [('member', 4, 'Club Member'), ('is_admin', 5, 'Administrator')] %}
             <div class="mb-3 form-check">
                 <input type="checkbox" class="form-check-input" id="{{ field }}" name="{{ field }}" {% if edit_user[idx] %}checked{% endif %}>
                 <label class="form-check-label" for="{{ field }}">{{ label }}</label>
             </div>
             {% endfor %}
+
+            <div class="mb-3">
+                <label class="form-label">Officer Positions <small class="text-secondary">(optional - select all that apply)</small></label>
+                <div class="form-text mb-2">Officer positions are tracked per year. Changes will apply to the current year ({{ current_year }}).</div>
+                {% set positions = [
+                    'President',
+                    'Vice-President',
+                    'Secretary',
+                    'Treasurer',
+                    'Media Director',
+                    'Tournament Director',
+                    'Assistant Tournament Director',
+                    'Technology Director'
+                ] %}
+                {% for position in positions %}
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="officer_positions" value="{{ position }}" id="position_{{ loop.index }}" {% if position in current_officer_positions %}checked{% endif %}>
+                    <label class="form-check-label" for="position_{{ loop.index }}">
+                        {{ position }}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+
             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                 <a href="/admin/users" class="btn btn-secondary">Cancel</a>
                 <button type="submit" class="btn btn-warning"><i class="bi bi-save me-1"></i>Save Changes</button>

@@ -21,8 +21,21 @@ async def admin_users(request: Request):
 
     users = get_admin_anglers_list()
 
+    # Calculate member/guest counts
+    member_count = sum(1 for u in users if u.get("member"))
+    guest_count = sum(1 for u in users if not u.get("member"))
+    total_count = len(users)
+
     return templates.TemplateResponse(
-        "admin/users.html", {"request": request, "user": user, "users": users}
+        "admin/users.html",
+        {
+            "request": request,
+            "user": user,
+            "users": users,
+            "member_count": member_count,
+            "guest_count": guest_count,
+            "total_count": total_count,
+        },
     )
 
 
@@ -130,19 +143,37 @@ async def create_user(request: Request):
 
 @router.get("/admin/users/{user_id}/edit")
 async def edit_user_page(request: Request, user_id: int):
+    from datetime import datetime
+
     user = require_admin(request)
 
     if isinstance(user, RedirectResponse):
         return user
 
     edit_user = db(
-        "SELECT id, name, email, member, is_admin FROM anglers WHERE id = :id",
+        "SELECT id, name, email, phone, member, is_admin FROM anglers WHERE id = :id",
         {"id": user_id},
     )
     if not edit_user:
         return error_redirect("/admin/users", "User not found")
+
+    # Get current year and officer positions if exist
+    current_year = datetime.now().year
+    officer_positions_result = db(
+        "SELECT position FROM officer_positions WHERE angler_id = :id AND year = :year ORDER BY position",
+        {"id": user_id, "year": current_year},
+    )
+    current_officer_positions = [row[0] for row in officer_positions_result] if officer_positions_result else []
+
     return templates.TemplateResponse(
-        "admin/edit_user.html", {"request": request, "user": user, "edit_user": edit_user[0]}
+        "admin/edit_user.html",
+        {
+            "request": request,
+            "user": user,
+            "edit_user": edit_user[0],
+            "current_officer_positions": current_officer_positions,
+            "current_year": current_year,
+        },
     )
 
 
@@ -152,9 +183,13 @@ async def update_user(
     user_id: int,
     name: str = Form(...),
     email: str = Form(""),
+    phone: str = Form(""),
     member: bool = Form(False),
     is_admin: bool = Form(False),
+    officer_positions: list[str] = Form([]),
 ):
+    from datetime import datetime
+
     user = require_admin(request)
 
     if isinstance(user, RedirectResponse):
@@ -162,7 +197,7 @@ async def update_user(
 
     try:
         before = db(
-            "SELECT name, email, member, is_admin FROM anglers WHERE id = :id",
+            "SELECT name, email, phone, member, is_admin FROM anglers WHERE id = :id",
             {"id": user_id},
         )
         if not before:
@@ -210,12 +245,16 @@ async def update_user(
                                 },
                             )
                             break
+        # Clean phone number
+        phone_cleaned = phone.strip() if phone else None
+
         update_params = {
             "id": user_id,
             "name": name.strip(),
             "email": final_email,
-            "member": 1 if member else 0,
-            "is_admin": 1 if is_admin else 0,
+            "phone": phone_cleaned,
+            "member": member,  # Keep as boolean
+            "is_admin": is_admin,  # Keep as boolean
         }
         logger.info(
             "Admin user update initiated",
@@ -223,19 +262,40 @@ async def update_user(
                 "admin_user_id": user.get("id"),
                 "target_user_id": user_id,
                 "changes": update_params,
-                "before": dict(zip(["name", "email", "member", "is_admin"], before[0])),
+                "before": dict(zip(["name", "email", "phone", "member", "is_admin"], before[0])),
             },
         )
         db(
             """
-            UPDATE anglers SET name = :name, email = :email, member = :member,
+            UPDATE anglers SET name = :name, email = :email, phone = :phone, member = :member,
                              is_admin = :is_admin
             WHERE id = :id
         """,
             update_params,
         )
+
+        # Handle officer positions - delete all existing and insert new ones
+        current_year = datetime.now().year
+
+        # First, remove all existing officer positions for this user and year
+        db(
+            "DELETE FROM officer_positions WHERE angler_id = :id AND year = :year",
+            {"id": user_id, "year": current_year},
+        )
+
+        # Then insert all selected positions
+        if officer_positions:
+            for position in officer_positions:
+                position_cleaned = position.strip()
+                if position_cleaned:
+                    db(
+                        """INSERT INTO officer_positions (angler_id, position, year, elected_date)
+                           VALUES (:id, :position, :year, CURRENT_DATE)""",
+                        {"id": user_id, "position": position_cleaned, "year": current_year},
+                    )
+
         after = db(
-            "SELECT name, email, member, is_admin FROM anglers WHERE id = :id",
+            "SELECT name, email, phone, member, is_admin FROM anglers WHERE id = :id",
             {"id": user_id},
         )
         if after and after[0] != before[0]:
@@ -247,8 +307,10 @@ async def update_user(
                 details={
                     "target_user_id": user_id,
                     "changes": update_params,
-                    "before": dict(zip(["name", "email", "member", "is_admin"], before[0])),
-                    "after": dict(zip(["name", "email", "member", "is_admin"], after[0])),
+                    "before": dict(
+                        zip(["name", "email", "phone", "member", "is_admin"], before[0])
+                    ),
+                    "after": dict(zip(["name", "email", "phone", "member", "is_admin"], after[0])),
                 },
             )
             logger.info(
@@ -256,7 +318,7 @@ async def update_user(
                 extra={
                     "admin_user_id": user.get("id"),
                     "target_user_id": user_id,
-                    "after": dict(zip(["name", "email", "member", "is_admin"], after[0])),
+                    "after": dict(zip(["name", "email", "phone", "member", "is_admin"], after[0])),
                 },
             )
             return RedirectResponse(
@@ -297,31 +359,6 @@ async def update_user(
                 else f"Email '{update_params['email']}' is already in use"
             )
         return error_redirect("/admin/users", error_msg)
-
-
-@router.get("/admin/users/{user_id}/verify")
-async def verify_user(request: Request, user_id: int):
-    user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
-    result = db(
-        "SELECT id, name, email, member, is_admin FROM anglers WHERE id = :id",
-        {"id": user_id},
-    )
-    if result:
-        d = result[0]
-        return JSONResponse(
-            {
-                "id": d[0],
-                "name": d[1],
-                "email": d[2],
-                "member": bool(d[3]),
-                "is_admin": bool(d[4]),
-            }
-        )
-    return JSONResponse({"error": "User not found"}, status_code=404)
 
 
 @router.delete("/admin/users/{user_id}")

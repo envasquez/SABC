@@ -99,7 +99,8 @@ def get_table_definitions():
             dead_fish_penalty DECIMAL DEFAULT 0.0,
             disqualified BOOLEAN DEFAULT false,
             buy_in BOOLEAN DEFAULT false,
-            place_finish INTEGER
+            place_finish INTEGER,
+            UNIQUE(tournament_id, angler_id)
         )""",
         """team_results(
             id SERIAL PRIMARY KEY,
@@ -173,83 +174,6 @@ def get_table_definitions():
     ]
 
 
-# PostgreSQL view definitions
-def get_tournament_standings_view():
-    return """
-tournament_standings AS
-SELECT
-    t.id as tournament_id,
-    a.name as angler_name,
-    a.id as angler_id,
-    r.num_fish,
-    (r.total_weight - r.dead_fish_penalty) as final_weight,
-    r.big_bass_weight,
-    r.disqualified,
-    r.buy_in,
-    RANK() OVER (
-        PARTITION BY t.id
-        ORDER BY
-            CASE WHEN r.disqualified = TRUE THEN 0
-                 WHEN r.buy_in = TRUE THEN 0
-                 ELSE (r.total_weight - r.dead_fish_penalty)
-            END DESC
-    ) as place,
-    CASE
-        WHEN r.disqualified = TRUE THEN 0
-        WHEN r.buy_in = TRUE THEN GREATEST(0, (
-            SELECT 101 - COUNT(*)
-            FROM results r2
-            WHERE r2.tournament_id = t.id
-            AND (r2.total_weight - r2.dead_fish_penalty) > 0
-            AND r2.disqualified = FALSE
-            AND r2.buy_in = FALSE
-        ) - 4)
-        WHEN (r.total_weight - r.dead_fish_penalty) = 0 THEN GREATEST(0, (
-            SELECT 101 - COUNT(*)
-            FROM results r2
-            WHERE r2.tournament_id = t.id
-            AND (r2.total_weight - r2.dead_fish_penalty) > 0
-            AND r2.disqualified = FALSE
-            AND r2.buy_in = FALSE
-        ) - 2)
-        ELSE 101 - RANK() OVER (
-            PARTITION BY t.id
-            ORDER BY (r.total_weight - r.dead_fish_penalty) DESC
-        )
-    END as points
-FROM tournaments t
-JOIN results r ON t.id = r.tournament_id
-JOIN anglers a ON r.angler_id = a.id
-WHERE t.complete = TRUE AND a.member = TRUE
-"""
-
-
-def get_angler_of_year_view():
-    return """
-angler_of_year AS
-SELECT
-    e.year,
-    a.name,
-    a.id as angler_id,
-    SUM(ts.points) as total_points,
-    COUNT(DISTINCT t.id) as tournaments_fished,
-    SUM(ts.final_weight) as total_weight,
-    MAX(r.big_bass_weight) as biggest_bass,
-    RANK() OVER (
-        PARTITION BY e.year
-        ORDER BY SUM(ts.points) DESC
-    ) as yearly_rank
-FROM tournaments t
-JOIN events e ON t.event_id = e.id
-JOIN tournament_standings ts ON t.id = ts.tournament_id
-JOIN results r ON t.id = r.tournament_id AND ts.angler_id = r.angler_id
-JOIN anglers a ON r.angler_id = a.id
-WHERE t.complete = TRUE AND a.member = TRUE
-GROUP BY e.year, a.id, a.name
-ORDER BY e.year DESC, total_points DESC
-"""
-
-
 def create_all_tables():
     """Create all PostgreSQL tables."""
     logger.info("Creating PostgreSQL database tables...")
@@ -261,19 +185,11 @@ def create_all_tables():
             c.execute(text(f"CREATE TABLE IF NOT EXISTS {table_def}"))
         c.commit()
 
-        # Create views
-        create_views_internal(c)
-        c.commit()
-
 
 def drop_all_tables():
-    """Drop all tables and views."""
-    logger.info("Dropping all PostgreSQL tables and views...")
+    """Drop all tables."""
+    logger.info("Dropping all PostgreSQL tables...")
     with engine.connect() as c:
-        # Drop views first
-        c.execute(text("DROP VIEW IF EXISTS tournament_standings CASCADE"))
-        c.execute(text("DROP VIEW IF EXISTS angler_of_year CASCADE"))
-
         # Drop all tables (CASCADE will handle dependencies)
         tables = [
             "password_reset_tokens",
@@ -296,26 +212,6 @@ def drop_all_tables():
 def init_db():
     """Initialize the database with all tables."""
     create_all_tables()
-
-
-def create_views():
-    """Create database views."""
-    with engine.connect() as c:
-        create_views_internal(c)
-        c.commit()
-
-
-def create_views_internal(connection):
-    """Create database views (internal function)."""
-    views = [get_tournament_standings_view(), get_angler_of_year_view()]
-    for view in views:
-        # PostgreSQL doesn't support CREATE VIEW IF NOT EXISTS
-        view_name = view.split(" AS")[0].strip().split()[-1]  # Extract view name
-        try:
-            connection.execute(text(f"DROP VIEW IF EXISTS {view_name} CASCADE"))
-            connection.execute(text(f"CREATE VIEW {view}"))
-        except Exception as e:
-            logger.warning(f"Failed to create view {view_name}: {e}")
 
 
 if __name__ == "__main__":

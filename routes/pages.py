@@ -22,31 +22,32 @@ class DateTimeEncoder(json.JSONEncoder):
 
 @router.get("/roster")
 async def roster(request: Request, user=Depends(require_auth)):
+    current_year = datetime.now().year
     with engine.connect() as conn:
         qs = QueryService(conn)
         members = qs.fetch_all("""
             SELECT a.id, a.name, a.email, a.member, a.is_admin, a.password_hash,
-                   a.year_joined, a.phone, a.created_at, MAX(e.date) as last_tournament_date
+                   a.year_joined, a.phone, a.created_at,
+                   STRING_AGG(op.position, ', ' ORDER BY op.position) as officer_positions,
+                   MAX(e.date) as last_tournament_date
             FROM anglers a
+            LEFT JOIN officer_positions op ON a.id = op.angler_id AND op.year = :year
             LEFT JOIN results r ON a.id = r.angler_id
             LEFT JOIN tournaments t ON r.tournament_id = t.id
             LEFT JOIN events e ON t.event_id = e.id
-            WHERE a.member = TRUE AND a.name != 'Admin User'
+            WHERE a.name != 'Admin User'
             GROUP BY a.id, a.name, a.email, a.member, a.is_admin, a.password_hash,
                      a.year_joined, a.phone, a.created_at
-            ORDER BY a.name
-        """)
-        officers = qs.fetch_all("""
-            SELECT * FROM anglers
-            WHERE member = TRUE AND is_admin = TRUE AND name != 'Admin User'
-            ORDER BY name
-        """)
+            ORDER BY
+                a.member DESC,
+                CASE WHEN STRING_AGG(op.position, ', ' ORDER BY op.position) IS NOT NULL THEN 0 ELSE 1 END,
+                a.name
+        """, {"year": current_year})
     return render(
         "roster.html",
         request,
         user=user,
         members=members,
-        officers=officers,
     )
 
 
@@ -90,7 +91,6 @@ async def calendar_page(request: Request):
     )
 
 
-@router.get("/home-paginated")
 async def home_paginated(request: Request, page: int = 1):
     from core.config import settings
 
