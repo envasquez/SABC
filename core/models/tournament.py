@@ -13,6 +13,7 @@ class TournamentBase(BaseModel):
     ramp_name: Optional[str] = None
     fish_limit: int = 5
     complete: bool = False
+    entry_fee: Optional[int] = None
 
 
 class Tournament(TournamentBase):
