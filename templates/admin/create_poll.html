@@ -55,13 +55,11 @@
                     <i class="bi bi-geo-alt me-2"></i>Team Tournament Poll
                 </button>
             </li>
-            {% if selected_event and selected_event[3] != 'sabc_tournament' and selected_event[3] != 'other_tournament' %}
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="generic-tab" data-bs-toggle="tab" data-bs-target="#generic-poll" type="button" role="tab" aria-controls="generic-poll" aria-selected="false">
                     <i class="bi bi-card-checklist me-2"></i>Generic Poll
                 </button>
             </li>
-            {% endif %}
         </ul>
 
         <div class="tab-content" id="pollTypeTabContent">
@@ -147,7 +145,6 @@
                 </form>
             </div>
 
-            {% if selected_event and selected_event[3] != 'sabc_tournament' and selected_event[3] != 'other_tournament' %}
             <!-- Generic Poll Tab -->
             <div class="tab-pane fade" id="generic-poll" role="tabpanel" aria-labelledby="generic-tab">
                 <form method="POST" action="/admin/polls/create" id="generic-form">
@@ -223,7 +220,6 @@
                     </div>
                 </form>
             </div>
-            {% endif %}
         </div>
     </div>
 </div>
