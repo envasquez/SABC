@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from 'macros.html' import alert %}
 
 {% block title %}Edit Poll - South Austin Bass Club{% endblock %}
 
@@ -154,87 +155,16 @@
 </div>
 
 {% block extra_js %}
+<script src="/static/admin.js"></script>
+<script src="/static/poll-management.js"></script>
 <script>
-// Poll option management
-function addOption() {
-    const container = document.getElementById('poll-options-container');
-    const optionCount = container.children.length + 1;
-    
-    const optionRow = document.createElement('div');
-    optionRow.className = 'poll-option-row mb-2';
-    optionRow.innerHTML = `
-        <div class="input-group">
-            <input type="text" class="form-control" name="poll_options[]" placeholder="Option ${optionCount}" required>
-            <input type="hidden" name="option_ids[]" value="">
-            <button class="btn btn-outline-danger" type="button" onclick="removeOption(this)">
-                <i class="bi bi-x"></i>
-            </button>
-        </div>
-    `;
-    
-    container.appendChild(optionRow);
-    updateRemoveButtons();
-}
+// Override addOption to include hidden option_ids field for edit mode
+window.addOptionEdit = function() {
+    addOption('poll-options-container', true);
+};
 
-function removeOption(button) {
-    const row = button.closest('.poll-option-row');
-    
-    // Check if this option has votes
-    const votesBadge = row.querySelector('.input-group-text');
-    if (votesBadge) {
-        if (!confirm('This option has votes. Are you sure you want to remove it? All votes for this option will be deleted.')) {
-            return;
-        }
-    }
-    
-    row.remove();
-    updateRemoveButtons();
-    updatePlaceholders();
-}
-
-function updateRemoveButtons() {
-    const container = document.getElementById('poll-options-container');
-    const removeButtons = container.querySelectorAll('button[onclick*="removeOption"]');
-    
-    // Disable remove buttons if only 2 options remain
-    removeButtons.forEach(button => {
-        button.disabled = container.children.length <= 2;
-    });
-}
-
-function updatePlaceholders() {
-    const container = document.getElementById('poll-options-container');
-    const inputs = container.querySelectorAll('input[name="poll_options[]"]');
-    
-    inputs.forEach((input, index) => {
-        if (!input.value) {
-            input.placeholder = `Option ${index + 1}`;
-        }
-    });
-}
-
-// Vote management
-async function deleteVote(voteId) {
-    try {
-        const response = await fetch(`/admin/votes/${voteId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            alert('Vote deleted successfully: ' + result.message);
-            location.reload();
-        } else {
-            alert('Error: ' + result.error);
-        }
-    } catch (error) {
-        alert('Error deleting vote: ' + error.message);
-    }
-}
+// Use addOptionEdit for this page
+window.addOption = window.addOptionEdit;
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {

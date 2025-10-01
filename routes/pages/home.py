@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Request
 
-from core.deps import render
+from core.deps import templates
 from core.helpers.auth import get_user_optional
-from routes.dependencies import db, templates
+from routes.dependencies import db
 from routes.pages.home_queries import get_top_results_query, get_tournaments_query
 
 router = APIRouter()
@@ -112,5 +112,5 @@ async def page(request: Request, p: int = 1):
 async def static_page(request: Request, page: str):
     user = get_user_optional(request)
     if page in ["about", "bylaws"]:
-        return render(f"{page}.html", request, user=user)
+        return templates.TemplateResponse(f"{page}.html", {"request": request, "user": user})
     raise HTTPException(status_code=404, detail="Page not found")

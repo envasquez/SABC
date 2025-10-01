@@ -9,11 +9,9 @@ router = APIRouter()
 @router.get("/admin/users")
 async def admin_users(request: Request, user: AdminUser):
     users = get_admin_anglers_list()
-
     member_count = sum(1 for u in users if u.get("member"))
     guest_count = sum(1 for u in users if not u.get("member"))
     total_count = len(users)
-
     return templates.TemplateResponse(
         "admin/users.html",
         {

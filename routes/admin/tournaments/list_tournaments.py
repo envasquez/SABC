@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import Connection
 
-from core.deps import get_admin_or_redirect, get_db, render
+from core.deps import get_admin_or_redirect, get_db, templates
 from core.query_service import QueryService
 
 router = APIRouter()
@@ -28,4 +28,6 @@ async def admin_tournaments_list(
     for t in tournaments:
         t["total_participants"] = t["result_count"] + t["team_result_count"]
 
-    return render("admin/tournaments.html", request, user=user, tournaments=tournaments)
+    return templates.TemplateResponse(
+        "admin/tournaments.html", {"request": request, "user": user, "tournaments": tournaments}
+    )

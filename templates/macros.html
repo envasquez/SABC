@@ -103,3 +103,46 @@
     {{ badge('Guest', 'secondary', 'person') }}
 {% endif %}
 {% endmacro %}
+
+{# Stat card macro #}
+{% macro stat_card(icon, title, value, color='primary') %}
+<div class="card bg-{{ color }} text-white">
+    <div class="card-body">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-{{ icon }} fs-1 me-3"></i>
+            <div>
+                <h5 class="card-title mb-0" style="color: white;">{{ title }}</h5>
+                <h3 class="mb-0" style="color: white; font-weight: bold;">{{ value }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# Delete confirmation modal macro #}
+{% macro delete_modal(modal_id, title, item_name_id, confirm_button_id, confirm_input_id='deleteConfirmInput') %}
+<div class="modal fade" id="{{ modal_id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>{{ title }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {{ alert('danger', '⚠️ Warning: This action cannot be undone.', False) }}
+                <p>You are about to permanently delete:</p>
+                <p><strong id="{{ item_name_id }}"></strong></p>
+                {{ caller() }}
+                <p class="mt-3"><strong>Type "DELETE" to confirm:</strong></p>
+                <input type="text" class="form-control" id="{{ confirm_input_id }}" placeholder="Type DELETE to confirm" autocomplete="off">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="{{ confirm_button_id }}" disabled>
+                    <i class="bi bi-trash me-1"></i>{{ title }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}

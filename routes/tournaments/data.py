@@ -1,8 +1,8 @@
 from typing import Any, List, Tuple
 
+from core.helpers.tournament_points import calculate_tournament_points
 from core.models import TournamentStats, TournamentWithEvent
 from core.query_service import QueryService
-from core.services.tournament_points import calculate_tournament_points
 from routes.tournaments.formatters import (
     format_buy_in_results,
     format_disqualified_results,

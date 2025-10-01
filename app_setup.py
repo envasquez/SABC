@@ -1,5 +1,3 @@
-"""FastAPI application setup and initialization."""
-
 import os
 from typing import Any
 
@@ -22,7 +20,6 @@ from core.security_middleware import SecurityHeadersMiddleware
 
 
 def create_app() -> FastAPI:
-    """Create and configure the FastAPI application."""
     configure_logging(log_level=os.environ.get("LOG_LEVEL", "INFO"))
 
     app = FastAPI(

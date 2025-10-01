@@ -1,5 +1,3 @@
-"""Logging for user update operations."""
-
 from typing import Tuple
 
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
@@ -8,7 +6,6 @@ logger = get_logger("admin.users.update")
 
 
 def log_update_initiated(admin_user: dict, user_id: int, update_params: dict, before: Tuple):
-    """Log when an admin initiates a user update."""
     logger.info(
         "Admin user update initiated",
         extra={
@@ -23,7 +20,6 @@ def log_update_initiated(admin_user: dict, user_id: int, update_params: dict, be
 def log_update_completed(
     request, admin_user: dict, user_id: int, update_params: dict, before: Tuple, after: Tuple
 ):
-    """Log successful user update with security event."""
     log_security_event(
         SecurityEvent.ADMIN_USER_UPDATE,
         user_id=admin_user.get("id"),
@@ -47,7 +43,6 @@ def log_update_completed(
 
 
 def log_update_failed(admin_user: dict, user_id: int, update_params: dict):
-    """Log when an update fails to save."""
     logger.warning(
         "User update failed - no changes detected",
         extra={
@@ -59,7 +54,6 @@ def log_update_failed(admin_user: dict, user_id: int, update_params: dict):
 
 
 def log_update_exception(admin_user: dict, user_id: int, error: Exception, update_params: dict):
-    """Log exception during user update."""
     logger.error(
         "User update exception",
         extra={

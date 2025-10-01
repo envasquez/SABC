@@ -21,7 +21,6 @@ async def login_page(request: Request):
 async def login(request: Request, email: str = Form(...), password: str = Form(...)):
     email = email.lower().strip()
     ip_address = request.client.host if request.client else "unknown"
-
     try:
         res = db(
             "SELECT id, password_hash FROM anglers WHERE email=:email",
@@ -66,7 +65,6 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
             ip_address=ip_address,
             details={"reason": "system_error", "error": str(e)},
         )
-
     return templates.TemplateResponse(
         "login.html", {"request": request, "error": "Invalid email or password"}
     )
@@ -84,6 +82,5 @@ async def logout(request: Request):
             ip_address=ip_address,
         )
         logger.info("User logout", extra={"user_id": user_id, "ip_address": ip_address})
-
     request.session.clear()
     return RedirectResponse("/", status_code=302)

@@ -1,5 +1,3 @@
-"""Data fetching functions for admin dashboard."""
-
 from typing import Any, Dict, List
 
 from routes.admin.core.event_queries import get_past_events_data, get_upcoming_events_data
@@ -7,9 +5,7 @@ from routes.dependencies import db, get_admin_anglers_list
 
 
 def get_users_data() -> Dict[str, Any]:
-    """Get user statistics and list."""
     users = get_admin_anglers_list()
-
     return {
         "users": users,
         "member_count": sum(1 for u in users if u.get("member")),
@@ -19,7 +15,6 @@ def get_users_data() -> Dict[str, Any]:
 
 
 def get_tournaments_data() -> List[Dict[str, Any]]:
-    """Get tournaments list with statistics."""
     tournaments_raw = db(
         """SELECT t.id, t.event_id, e.date, e.name, t.lake_name, t.ramp_name,
            t.entry_fee, t.complete, t.fish_limit,
@@ -32,7 +27,6 @@ def get_tournaments_data() -> List[Dict[str, Any]]:
            GROUP BY t.id
            ORDER BY e.date DESC"""
     )
-
     return [
         {
             "id": t[0],

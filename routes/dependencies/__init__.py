@@ -11,7 +11,6 @@ from routes.dependencies.event_helpers import get_admin_events_data, validate_ev
 from routes.dependencies.holidays import get_federal_holidays
 from routes.dependencies.lake_helpers import (
     find_lake_by_id,
-    find_lake_data_by_db_name,
     find_ramp_name_by_id,
     get_all_ramps,
     get_lakes_list,
@@ -27,7 +26,6 @@ __all__ = [
     "engine",
     "bcrypt",
     "find_lake_by_id",
-    "find_lake_data_by_db_name",
     "find_ramp_name_by_id",
     "get_all_ramps",
     "get_lakes_list",

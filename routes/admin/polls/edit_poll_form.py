@@ -14,10 +14,6 @@ router = APIRouter()
 async def edit_poll_form(request: Request, poll_id: int):
     """Display poll editing form with current data."""
     user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
     try:
         # Fetch poll data
         poll_data = db(

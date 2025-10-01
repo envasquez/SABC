@@ -1,6 +1,6 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
 
-from core.deps import render
+from core.deps import templates
 from core.helpers.auth import require_auth
 from routes.dependencies import db, get_lakes_list, get_ramps_for_lake
 from routes.voting.helpers import get_poll_options, process_closed_polls
@@ -11,12 +11,10 @@ router = APIRouter()
 @router.get("/polls")
 async def polls(request: Request, background_tasks: BackgroundTasks, user=Depends(require_auth)):
     background_tasks.add_task(process_closed_polls)
-
     polls_data = db(
         "SELECT p.id, p.title, p.description, p.closes_at, p.closed, p.poll_type, p.starts_at, p.event_id, CASE WHEN CURRENT_TIMESTAMP < p.starts_at THEN 'upcoming' WHEN CURRENT_TIMESTAMP BETWEEN p.starts_at AND p.closes_at AND p.closed = FALSE THEN 'active' ELSE 'closed' END as status, EXISTS(SELECT 1 FROM poll_votes pv WHERE pv.poll_id = p.id AND pv.angler_id = :user_id) as user_has_voted FROM polls p ORDER BY p.closes_at DESC",
         {"user_id": user["id"]},
     )
-
     res = db("SELECT COUNT(*) FROM anglers WHERE member = TRUE")
     member_count = res[0][0] if res and len(res) > 0 else 0
 
@@ -62,5 +60,6 @@ async def polls(request: Request, background_tasks: BackgroundTasks, user=Depend
         }
         for lake in get_lakes_list()
     ]
-
-    return render("polls.html", request, user=user, polls=polls, lakes_data=lakes_data)
+    return templates.TemplateResponse(
+        "polls.html", {"request": request, "user": user, "polls": polls, "lakes_data": lakes_data}
+    )

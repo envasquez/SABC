@@ -1,6 +1,3 @@
-"""SQL queries for user profile page."""
-
-
 def tournaments_count_query() -> str:
     return """SELECT COUNT(DISTINCT t.id) FROM results r
         JOIN tournaments t ON r.tournament_id = t.id JOIN events e ON t.event_id = e.id

@@ -1,16 +1,13 @@
 {% extends "base.html" %}
+{% from 'macros.html' import alert %}
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-4">
         <div class="card">
             <div class="card-body">
                 <h3>Login</h3>
-                {% if error %}
-                <div class="alert alert-danger">{{error}}</div>
-                {% endif %}
-                {% if success %}
-                <div class="alert alert-success">{{success}}</div>
-                {% endif %}
+                {{ alert('danger', error) }}
+                {{ alert('success', success) }}
                 <form method="post" action="/login">
                     <div class="mb-3">
                         <label>Email</label>

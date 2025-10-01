@@ -385,6 +385,7 @@
     {% endif %}
 </div>
 
+<script src="/static/admin.js"></script>
 <script>
 // Lake and ramp data (populated by template)
 const lakesAndRamps = {
@@ -531,29 +532,6 @@ function updateVotePreview() {
     } else {
         preview.classList.add('d-none');
         optionIdInput.value = '';
-    }
-}
-
-async function deleteVote(voteId) {
-    try {
-        const response = await fetch(`/admin/votes/${voteId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            // Show success message and reload page
-            alert('Vote deleted successfully: ' + result.message);
-            location.reload();
-        } else {
-            alert('Error: ' + result.error);
-        }
-    } catch (error) {
-        alert('Error deleting vote: ' + error.message);
     }
 }
 

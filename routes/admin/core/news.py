@@ -11,10 +11,6 @@ router = APIRouter()
 @router.get("/admin/news")
 async def admin_news(request: Request):
     user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
     news_items = db(
         """SELECT n.id, n.title, n.content, n.created_at, n.published, n.priority, n.updated_at, a.name as author_name
            FROM news n
@@ -32,10 +28,6 @@ async def create_news(
     request: Request, title: str = Form(...), content: str = Form(...), priority: int = Form(0)
 ):
     user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
     try:
         db(
             """INSERT INTO news (title, content, author_id, published, priority)
@@ -62,10 +54,6 @@ async def update_news(
     priority: int = Form(0),
 ):
     user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
     try:
         db(
             """UPDATE news SET title = :title, content = :content, published = :published,
@@ -87,11 +75,7 @@ async def update_news(
 
 @router.delete("/admin/news/{news_id}")
 async def delete_news(request: Request, news_id: int):
-    user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
+    _user = require_admin(request)
     try:
         db("DELETE FROM news WHERE id = :id", {"id": news_id})
         return JSONResponse({"success": True})

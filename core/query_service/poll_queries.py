@@ -1,15 +1,10 @@
-"""Poll related queries."""
-
 from typing import Optional
 
 from core.query_service.base import QueryServiceBase
 
 
 class PollQueries(QueryServiceBase):
-    """Poll query methods."""
-
     def get_poll_by_id(self, poll_id: int) -> Optional[dict]:
-        """Get poll with options."""
         poll = self.fetch_one("SELECT * FROM polls WHERE id = :id", {"id": poll_id})
         if poll:
             poll["options"] = self.fetch_all(
@@ -19,7 +14,6 @@ class PollQueries(QueryServiceBase):
         return poll
 
     def get_active_polls(self) -> list[dict]:
-        """Get all currently active polls."""
         return self.fetch_all("""
             SELECT * FROM polls
             WHERE starts_at <= CURRENT_TIMESTAMP
@@ -28,7 +22,6 @@ class PollQueries(QueryServiceBase):
         """)
 
     def get_user_vote(self, poll_id: int, user_id: int) -> Optional[dict]:
-        """Check if user has voted in a poll."""
         return self.fetch_one(
             "SELECT * FROM poll_votes WHERE poll_id = :poll_id AND angler_id = :user_id",
             {"poll_id": poll_id, "user_id": user_id},
@@ -37,7 +30,6 @@ class PollQueries(QueryServiceBase):
     def get_poll_options_with_votes(
         self, poll_id: int, include_details: bool = False
     ) -> list[dict]:
-        """Get poll options with vote counts."""
         options = self.fetch_all(
             """
             SELECT po.*, COUNT(pv.id) as vote_count
@@ -49,9 +41,7 @@ class PollQueries(QueryServiceBase):
         """,
             {"poll_id": poll_id},
         )
-
         if include_details:
-            # Add voter names for admin view
             for option in options:
                 voters = self.fetch_all(
                     """
@@ -63,5 +53,4 @@ class PollQueries(QueryServiceBase):
                     {"option_id": option["id"]},
                 )
                 option["voters"] = [v["name"] for v in voters]
-
         return options

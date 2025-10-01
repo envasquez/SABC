@@ -1,7 +1,7 @@
 import json
 
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse
 
 from core.db_schema import engine
 from core.helpers.auth import require_admin
@@ -15,10 +15,6 @@ logger = get_logger("admin.users.create")
 @router.post("/admin/users")
 async def create_user(request: Request):
     user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
     try:
         body = await request.body()
         data = json.loads(body)

@@ -1,5 +1,3 @@
-"""Poll creation handler."""
-
 from fastapi import Request
 from fastapi.responses import RedirectResponse
 
@@ -18,23 +16,12 @@ from routes.admin.polls.create_poll.options import (
 )
 from routes.dependencies import db
 
+
 logger = get_logger("admin.polls.create")
 
 
 async def create_poll(request: Request) -> RedirectResponse:
-    """Handle poll creation form submission.
-
-    Args:
-        request: The FastAPI request object
-
-    Returns:
-        Redirect response to the poll edit page or error page
-    """
     user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
     try:
         form = await request.form()
         event_id_raw = form.get("event_id")

@@ -32,30 +32,19 @@ async def create_event(
     fish_limit: int = Form(default=5),
     aoy_points: str = Form(default="true"),
 ):
-    """Create a new event with associated tournament and poll if applicable."""
     user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
     try:
-        # Validate event data
         validation = validate_event_data(
             date, name, event_type, start_time, weigh_in_time, entry_fee, lake_name
         )
-
         if validation["errors"]:
             error_msg = "; ".join(validation["errors"])
             return RedirectResponse(
                 f"/admin/events?error=Validation failed: {error_msg}", status_code=302
             )
-
-        # Prepare warning message if any
         warning_msg = ""
         if validation["warnings"]:
             warning_msg = f"&warnings={'; '.join(validation['warnings'])}"
-
-        # Prepare parameters
         date_obj = datetime.strptime(date, "%Y-%m-%d")
         event_params, tournament_params = prepare_create_event_params(
             date,
@@ -70,19 +59,13 @@ async def create_event(
             fish_limit,
             aoy_points,
         )
-
-        # Create event record
         event_id = create_event_record(event_params)
-
-        # Create tournament and poll for SABC tournaments
         if event_type == "sabc_tournament":
             create_tournament_record(event_id, tournament_params)
             poll_id = create_tournament_poll(event_id, name, description, date_obj, user["id"])
             create_poll_options(poll_id)
-
         return RedirectResponse(
             f"/admin/events?success=Event created successfully{warning_msg}", status_code=302
         )
-
     except Exception as e:
         return handle_create_error(e, date)

@@ -86,12 +86,10 @@ async def process_password_reset(
             ip_address=request.client.host if request.client else "unknown",
             details={"success": True},
         )
-
         return RedirectResponse(
             "/login?success=Your password has been successfully reset. You can now log in with your new password.",
             status_code=302,
         )
-
     except Exception as e:
         logger.error(f"Error processing password reset: {e}", exc_info=True)
         return error_redirect(f"/reset-password?token={token}", ERROR_RESET_FAILED)

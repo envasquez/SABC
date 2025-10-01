@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse
 
 from core.helpers.auth import require_admin
 from routes.dependencies import db
@@ -9,11 +9,7 @@ router = APIRouter()
 
 @router.delete("/admin/ramps/{ramp_id}")
 async def delete_ramp(request: Request, ramp_id: int):
-    user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
+    _user = require_admin(request)
     try:
         usage_count = db("SELECT COUNT(*) FROM tournaments WHERE ramp_id = :id", {"id": ramp_id})[
             0
@@ -30,11 +26,7 @@ async def delete_ramp(request: Request, ramp_id: int):
 
 @router.delete("/admin/lakes/{lake_id}")
 async def delete_lake(request: Request, lake_id: int):
-    user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
+    _user = require_admin(request)
     try:
         usage_count = db(
             "SELECT COUNT(*) FROM tournaments t JOIN ramps r ON t.ramp_id = r.id WHERE r.lake_id = :id",

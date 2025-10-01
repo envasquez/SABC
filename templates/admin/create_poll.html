@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from 'macros.html' import alert %}
 
 {% block title %}Create Poll - South Austin Bass Club{% endblock %}
 
@@ -26,27 +27,9 @@
 
 <div class="card shadow-sm">
     <div class="card-body">
-        <!-- Error and Success Messages -->
-        {% if request.query_params.get('error') %}
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle me-2"></i>{{ request.query_params.get('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        {% endif %}
-
-        {% if request.query_params.get('success') %}
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle me-2"></i>{{ request.query_params.get('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        {% endif %}
-
-        {% if error %}
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        {% endif %}
+        {{ alert('danger', request.query_params.get('error')) }}
+        {{ alert('success', request.query_params.get('success')) }}
+        {{ alert('danger', error) }}
 
         <!-- Poll Type Tabs -->
         <ul class="nav nav-tabs mb-4" id="pollTypeTabs" role="tablist">
@@ -225,126 +208,18 @@
 </div>
 
 {% block extra_js %}
+<script src="/static/admin.js"></script>
+<script src="/static/poll-management.js"></script>
 <script>
-// Generic poll option management
-function addOption() {
-    const container = document.getElementById('poll-options-container');
-    const optionCount = container.children.length + 1;
-
-    const optionRow = document.createElement('div');
-    optionRow.className = 'poll-option-row mb-2';
-    optionRow.innerHTML = `
-        <div class="input-group">
-            <input type="text" class="form-control" name="poll_options[]" placeholder="Option ${optionCount}" required>
-            <button class="btn btn-outline-danger" type="button" onclick="removeOption(this)">
-                <i class="bi bi-x"></i>
-            </button>
-        </div>
-    `;
-
-    container.appendChild(optionRow);
-    updateRemoveButtons();
-}
-
-function removeOption(button) {
-    const row = button.closest('.poll-option-row');
-    row.remove();
-    updateRemoveButtons();
-    updatePlaceholders();
-}
-
-function updateRemoveButtons() {
-    const container = document.getElementById('poll-options-container');
-    const removeButtons = container.querySelectorAll('button[onclick*="removeOption"]');
-
-    // Disable remove buttons if only 2 options remain
-    removeButtons.forEach(button => {
-        button.disabled = container.children.length <= 2;
-    });
-}
-
-function updatePlaceholders() {
-    const container = document.getElementById('poll-options-container');
-    const inputs = container.querySelectorAll('input[name="poll_options[]"]');
-
-    inputs.forEach((input, index) => {
-        if (!input.value) {
-            input.placeholder = `Option ${index + 1}`;
-        }
-    });
-}
-
-// Lake selection management
-function selectAll() {
-    document.querySelectorAll('input[name="lake_ids"]').forEach(checkbox => {
-        checkbox.checked = true;
-    });
-}
-
-function selectNone() {
-    document.querySelectorAll('input[name="lake_ids"]').forEach(checkbox => {
-        checkbox.checked = false;
-    });
-}
-
-// Set intelligent defaults based on tournament date
+// Set intelligent poll timing on page load
 document.addEventListener('DOMContentLoaded', function() {
-    const eventDate = new Date('{{ selected_event[1] }}');
-    const today = new Date();
-
-    // Calculate optimal poll timing
-    const daysBetween = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24));
-
-    let pollStart, pollClose;
-
-    if (daysBetween > 14) {
-        // For events more than 2 weeks out, start poll 10 days before event
-        pollStart = new Date(eventDate);
-        pollStart.setDate(pollStart.getDate() - 10);
-        pollClose = new Date(eventDate);
-        pollClose.setDate(pollClose.getDate() - 7);
-    } else if (daysBetween > 7) {
-        // For events 1-2 weeks out, start poll 7 days before event
-        pollStart = new Date(eventDate);
-        pollStart.setDate(pollStart.getDate() - 7);
-        pollClose = new Date(eventDate);
-        pollClose.setDate(pollClose.getDate() - 5);
-    } else {
-        // For events less than a week out, start poll today
-        pollStart = new Date(today);
-        pollStart.setDate(pollStart.getDate() + 1); // Tomorrow
-        pollClose = new Date(eventDate);
-        pollClose.setDate(pollClose.getDate() - 2); // 2 days before event
-    }
-
-    // Format for datetime-local input (YYYY-MM-DDTHH:MM)
-    function formatDateTimeLocal(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
-    }
-
-    // Set optimal times (poll starts at 6am for visibility, closes at 6pm for decisions)
-    pollStart.setHours(6, 0, 0, 0);
-    pollClose.setHours(18, 0, 0, 0);
-
-    const formattedStart = formatDateTimeLocal(pollStart);
-    const formattedClose = formatDateTimeLocal(pollClose);
+    const eventDate = '{{ selected_event[1] }}';
 
     // Set dates for tournament poll
-    const tourStartsAt = document.getElementById('starts_at');
-    const tourClosesAt = document.getElementById('closes_at');
-    if (tourStartsAt) tourStartsAt.value = formattedStart;
-    if (tourClosesAt) tourClosesAt.value = formattedClose;
+    setOptimalPollTiming(eventDate, 'starts_at', 'closes_at');
 
     // Set dates for generic poll
-    const genStartsAt = document.getElementById('generic_starts_at');
-    const genClosesAt = document.getElementById('generic_closes_at');
-    if (genStartsAt) genStartsAt.value = formattedStart;
-    if (genClosesAt) genClosesAt.value = formattedClose;
+    setOptimalPollTiming(eventDate, 'generic_starts_at', 'generic_closes_at');
 
     // Initialize remove button states
     updateRemoveButtons();

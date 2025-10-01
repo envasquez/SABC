@@ -1,15 +1,11 @@
-"""Event query functions for admin dashboard."""
-
 from typing import Any, Dict, List
 
 from routes.dependencies import db
 
 
 def get_upcoming_events_data(page: int, per_page: int) -> tuple[List[Dict[str, Any]], int]:
-    """Get upcoming events with pagination."""
     offset = (page - 1) * per_page
     total = db("SELECT COUNT(*) FROM events WHERE date >= CURRENT_DATE")[0][0]
-
     events_raw = db(
         """SELECT e.id, e.date, e.name, e.description, e.event_type, e.year,
            EXTRACT(DOW FROM e.date) as day_num,
@@ -25,7 +21,6 @@ def get_upcoming_events_data(page: int, per_page: int) -> tuple[List[Dict[str, A
            LIMIT :limit OFFSET :offset""",
         {"limit": per_page, "offset": offset},
     )
-
     events = [
         {
             "id": e[0],
@@ -47,17 +42,14 @@ def get_upcoming_events_data(page: int, per_page: int) -> tuple[List[Dict[str, A
         }
         for e in events_raw
     ]
-
     return events, total
 
 
 def get_past_events_data(page: int, per_page: int) -> tuple[List[Dict[str, Any]], int]:
-    """Get past events with pagination."""
     offset = (page - 1) * per_page
     total = db("SELECT COUNT(*) FROM events WHERE date < CURRENT_DATE AND event_type != 'holiday'")[
         0
     ][0]
-
     past_events_raw = db(
         """SELECT e.id, e.date, e.name, e.description, e.event_type,
            e.entry_fee, e.lake_name, e.start_time, e.weigh_in_time, e.holiday_name,
@@ -72,7 +64,6 @@ def get_past_events_data(page: int, per_page: int) -> tuple[List[Dict[str, Any]]
            LIMIT :limit OFFSET :offset""",
         {"limit": per_page, "offset": offset},
     )
-
     past_events = [
         {
             "id": e[0],
@@ -92,5 +83,4 @@ def get_past_events_data(page: int, per_page: int) -> tuple[List[Dict[str, Any]]
         }
         for e in past_events_raw
     ]
-
     return past_events, total

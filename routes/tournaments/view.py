@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request
 
 from core.db_schema import engine
-from core.deps import render
+from core.deps import templates
 from core.helpers.auth import OptionalUser
 from core.query_service import QueryService
 from routes.tournaments.data import fetch_tournament_data
@@ -11,16 +11,11 @@ router = APIRouter()
 
 @router.get("/tournaments/{tournament_id}")
 async def tournament_results(request: Request, tournament_id: int, user: OptionalUser):
-    """Display tournament results page with complete statistics."""
     try:
         with engine.connect() as conn:
             qs = QueryService(conn)
-
-            # Auto-complete past tournaments
             qs.auto_complete_past_tournaments()
             conn.commit()
-
-            # Fetch all tournament data
             (
                 tournament,
                 stats,
@@ -30,8 +25,6 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
                 buy_in_results,
                 disqualified_results,
             ) = fetch_tournament_data(qs, tournament_id)
-
-            # Convert to tuple format for template
             tournament_tuple = (
                 tournament.id,
                 tournament.event_id,
@@ -45,7 +38,6 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
                 tournament.complete,
                 tournament.event_type,
             )
-
             stats_tuple = (
                 stats.total_anglers,
                 stats.total_fish,
@@ -56,20 +48,20 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
                 float(stats.biggest_bass),
                 float(stats.heavy_stringer),
             )
-
-            return render(
+            return templates.TemplateResponse(
                 "tournament_results.html",
-                request,
-                user=user,
-                tournament=tournament_tuple,
-                tournament_stats=stats_tuple,
-                team_results=team_results,
-                individual_results=individual_results,
-                buy_in_place=buy_in_place,
-                buy_in_results=buy_in_results,
-                disqualified_results=disqualified_results,
+                {
+                    "request": request,
+                    "user": user,
+                    "tournament": tournament_tuple,
+                    "tournament_stats": stats_tuple,
+                    "team_results": team_results,
+                    "individual_results": individual_results,
+                    "buy_in_place": buy_in_place,
+                    "buy_in_results": buy_in_results,
+                    "disqualified_results": disqualified_results,
+                },
             )
-
     except ValueError:
         raise HTTPException(status_code=404, detail="Tournament not found")
     except Exception:

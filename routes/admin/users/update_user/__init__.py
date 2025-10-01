@@ -1,5 +1,3 @@
-"""User update module."""
-
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
 
@@ -23,7 +21,6 @@ async def post_update_user(
     is_admin: bool = Form(False),
     officer_positions: list[str] = Form([]),
 ) -> RedirectResponse:
-    """POST route for user update."""
     return await update_user(
         request, user_id, name, email, phone, member, is_admin, officer_positions
     )

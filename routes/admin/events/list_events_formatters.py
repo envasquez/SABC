@@ -1,10 +1,7 @@
-"""Event list formatters for admin events page."""
-
 from typing import List
 
 
 def format_upcoming_events(events: List[tuple]) -> List[dict]:
-    """Format upcoming events for template."""
     return [
         {
             "id": e[0],
@@ -29,7 +26,6 @@ def format_upcoming_events(events: List[tuple]) -> List[dict]:
 
 
 def format_past_events(events: List[tuple]) -> List[dict]:
-    """Format past events for template."""
     return [
         {
             "id": e[0],

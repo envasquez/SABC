@@ -29,7 +29,6 @@ async def api_get_lake_ramps(lake_key: str):
     lake_data = db("SELECT id FROM lakes WHERE yaml_key = :key", {"key": lake_key})
     if not lake_data:
         return JSONResponse({"ramps": []})
-
     lake_id = lake_data[0][0]
     ramps_list = get_ramps_for_lake(lake_id)
     ramps = []

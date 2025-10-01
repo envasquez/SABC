@@ -18,8 +18,6 @@ def create_handlers(
     logging.handlers.RotatingFileHandler,
     logging.handlers.RotatingFileHandler,
 ]:
-    """Create all logging handlers with proper configuration."""
-
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(log_level)
 
@@ -43,7 +41,6 @@ def create_handlers(
         backupCount=backup_count,
     )
     error_handler.setLevel(logging.ERROR)
-
     return console_handler, app_handler, security_handler, error_handler
 
 
@@ -54,10 +51,8 @@ def configure_handler_formatters(
     error_handler: logging.handlers.RotatingFileHandler,
     json_format: bool,
 ) -> None:
-    """Configure formatters for all handlers."""
     console_formatter = get_console_formatter(json_format)
     file_formatter = get_file_formatter(json_format)
-
     console_handler.setFormatter(console_formatter)
     app_handler.setFormatter(file_formatter)
     security_handler.setFormatter(file_formatter)

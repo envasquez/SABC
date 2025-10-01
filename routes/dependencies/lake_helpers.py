@@ -16,13 +16,6 @@ def find_lake_by_id(lake_id: int, field: str = "name") -> Optional[str]:
         return lake.get(field, lake["name"]) if field != "name" else lake["name"]
 
 
-def find_lake_data_by_db_name(name: str) -> Optional[Dict[str, Any]]:
-    """Find lake data by display name."""
-    with engine.connect() as conn:
-        qs = QueryService(conn)
-        return qs.fetch_one("SELECT * FROM lakes WHERE display_name = :name", {"name": name})
-
-
 def get_lakes_list() -> List[Dict[str, Any]]:
     """Get list of all lakes."""
     with engine.connect() as conn:

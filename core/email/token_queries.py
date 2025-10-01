@@ -11,7 +11,6 @@ from .config import logger
 
 
 def check_rate_limit(user_id: int, since: datetime) -> Optional[int]:
-    """Check how many tokens were created for user since given time."""
     try:
         with engine.connect() as conn:
             result = conn.execute(
@@ -26,7 +25,6 @@ def check_rate_limit(user_id: int, since: datetime) -> Optional[int]:
 
 
 def insert_token(user_id: int, token: str, expires_at: datetime) -> bool:
-    """Insert new password reset token into database."""
     try:
         with engine.connect() as conn:
             conn.execute(
@@ -42,7 +40,6 @@ def insert_token(user_id: int, token: str, expires_at: datetime) -> bool:
 
 
 def fetch_token_data(token: str) -> Optional[tuple]:
-    """Fetch token data from database."""
     try:
         with engine.connect() as conn:
             result = conn.execute(
@@ -59,7 +56,6 @@ def fetch_token_data(token: str) -> Optional[tuple]:
 
 
 def mark_token_used(token: str) -> int:
-    """Mark token as used in database."""
     try:
         with engine.connect() as conn:
             result = conn.execute(
@@ -76,7 +72,6 @@ def mark_token_used(token: str) -> int:
 
 
 def delete_expired_tokens() -> int:
-    """Delete expired and used tokens from database."""
     try:
         with engine.connect() as conn:
             result = conn.execute(

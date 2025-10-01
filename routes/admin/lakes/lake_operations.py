@@ -15,12 +15,7 @@ async def create_lake(
     display_name: str = Form(...),
     google_maps_embed: str = Form(""),
 ):
-    """Create a new lake record."""
-    user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
+    _user = require_admin(request)
     try:
         db(
             """INSERT INTO lakes (yaml_key, display_name, google_maps_iframe)
@@ -44,12 +39,7 @@ async def update_lake(
     display_name: str = Form(...),
     google_maps_embed: str = Form(""),
 ):
-    """Update an existing lake record."""
-    user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
+    _user = require_admin(request)
     try:
         db(
             """UPDATE lakes

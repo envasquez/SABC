@@ -15,12 +15,7 @@ async def create_ramp(
     name: str = Form(...),
     google_maps_iframe: str = Form(""),
 ):
-    """Create a new boat ramp for a lake."""
-    user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
+    _user = require_admin(request)
     try:
         db(
             """INSERT INTO ramps (lake_id, name, google_maps_iframe)
@@ -45,21 +40,13 @@ async def update_ramp(
     name: str = Form(...),
     google_maps_iframe: str = Form(""),
 ):
-    """Update an existing boat ramp."""
-    user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
+    _user = require_admin(request)
     try:
-        # Get the lake_id for redirect
         lake_id_result = db("SELECT lake_id FROM ramps WHERE id = :id", {"id": ramp_id})
         if not lake_id_result:
             return error_redirect("/admin/lakes", "Ramp not found")
 
         lake_id = lake_id_result[0][0]
-
-        # Update ramp
         db(
             """UPDATE ramps
                SET name = :name,

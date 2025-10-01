@@ -1,8 +1,4 @@
-"""Admin event query strings."""
-
-
 def get_upcoming_admin_query() -> str:
-    """Get SQL query for upcoming events in admin interface."""
     return """
         SELECT e.id, e.date, e.name, e.description, e.event_type,
                EXTRACT(DOW FROM e.date) as day_num,
@@ -27,7 +23,6 @@ def get_upcoming_admin_query() -> str:
 
 
 def get_past_admin_query() -> str:
-    """Get SQL query for past events in admin interface."""
     return """
         SELECT e.id, e.date, e.name, e.description, e.event_type, e.entry_fee,
                e.lake_name, e.start_time, e.weigh_in_time, e.holiday_name,

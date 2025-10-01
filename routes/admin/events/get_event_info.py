@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse
 
 from core.helpers.auth import require_admin
 from routes.dependencies import db
@@ -10,11 +10,7 @@ router = APIRouter()
 @router.get("/admin/events/{event_id}/info")
 async def get_event_info(request: Request, event_id: int):
     """Get event information as JSON for editing forms."""
-    user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
+    _user = require_admin(request)
     try:
         event_info = db(
             """SELECT e.id, e.date, e.name, e.description, e.event_type,

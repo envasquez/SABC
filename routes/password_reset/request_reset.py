@@ -30,14 +30,11 @@ async def request_password_reset(
         email = email.lower().strip()
         if not email:
             return error_redirect("/forgot-password", "Please enter your email address.")
-
         user = db(
             "SELECT id, name, email FROM anglers WHERE LOWER(email) = LOWER(:email)",
             {"email": email},
         )
-
         ip = request.client.host if request.client else "unknown"
-
         if user:
             user_data = user[0]
             user_id = user_data[0]
@@ -56,12 +53,10 @@ async def request_password_reset(
                 log_reset_rate_limited(user_id, user_email, ip)
         else:
             log_reset_user_not_found(email, ip)
-
         return RedirectResponse(
             "/forgot-password?success=If that email is in our system, we've sent you a password reset link. Please check your email (and spam folder).",
             status_code=302,
         )
-
     except Exception as e:
         logger.error(f"Error processing password reset request: {e}", exc_info=True)
         return error_redirect(

@@ -3,7 +3,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, Request
 
 from core.db_schema import engine
-from core.deps import render
+from core.deps import templates
 from core.helpers.auth import require_auth
 from core.query_service import QueryService
 
@@ -39,4 +39,6 @@ async def roster(request: Request, user=Depends(require_auth)):
                ORDER BY member DESC, CASE WHEN STRING_AGG(op.position, ', ' ORDER BY op.position) IS NOT NULL THEN 0 ELSE 1 END, a.name""",
             {"year": current_year},
         )
-    return render("roster.html", request, user=user, members=members)
+    return templates.TemplateResponse(
+        "roster.html", {"request": request, "user": user, "members": members}
+    )

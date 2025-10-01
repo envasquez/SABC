@@ -30,9 +30,6 @@ async def update_user(
 ) -> RedirectResponse:
     """Handle user update form submission."""
     user = require_admin(request)
-    if isinstance(user, RedirectResponse):
-        return user
-
     try:
         before = db(
             "SELECT name, email, phone, member, is_admin FROM anglers WHERE id = :id",

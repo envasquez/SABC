@@ -1,5 +1,3 @@
-"""Router registration for the FastAPI application."""
-
 from fastapi import FastAPI
 
 from routes import api, auth, pages, password_reset, static, tournaments, voting
@@ -12,7 +10,6 @@ from routes.admin import users as admin_users
 
 
 def register_routes(app: FastAPI) -> None:
-    """Register all application routes."""
     app.include_router(auth.router)
     app.include_router(password_reset.router)
     app.include_router(admin_lakes.router)

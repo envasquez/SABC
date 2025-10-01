@@ -31,15 +31,8 @@ async def edit_event(
     aoy_points: str = Form(default="true"),
     poll_closes_date: str = Form(default=""),
 ):
-    """Update an existing event and its associated data."""
-    print(f"DEBUG: edit_event POST route called with event_id={event_id}")
-    user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
+    _user = require_admin(request)
     try:
-        # Validate event data
         validation = validate_event_data(
             date, name, event_type, start_time, weigh_in_time, entry_fee, lake_name
         )
@@ -48,8 +41,6 @@ async def edit_event(
             return RedirectResponse(
                 f"/admin/events?error=Validation failed: {error_msg}", status_code=302
             )
-
-        # Prepare parameters for update
         event_params, tournament_params = prepare_event_params(
             event_id,
             date,
@@ -64,35 +55,25 @@ async def edit_event(
             fish_limit,
             aoy_points,
         )
-
-        # Update event record
         with engine.connect() as conn:
             rowcount = update_event_record(conn, event_params)
-
             if rowcount == 0:
                 return RedirectResponse(
                     f"/admin/events?error=Event with ID {event_id} not found", status_code=302
                 )
-
-        # Update tournament record if SABC tournament
         if event_type == "sabc_tournament":
             print(
                 f"DEBUG: Updating tournament for event {event_id} with params: {tournament_params}"
             )
             with engine.connect() as conn:
                 tournament_rowcount = update_tournament_record(conn, tournament_params)
-
                 if tournament_rowcount == 0:
                     return RedirectResponse(
                         f"/admin/events?error=Tournament record for event ID {event_id} not found",
                         status_code=302,
                     )
-
-        # Update poll closing date if provided
         if event_type == "sabc_tournament":
             update_poll_closing_date(event_id, poll_closes_date)
-
         return RedirectResponse("/admin/events?success=Event updated successfully", status_code=302)
-
     except Exception as e:
         return handle_update_error(e, date)

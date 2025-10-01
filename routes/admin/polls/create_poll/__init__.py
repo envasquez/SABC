@@ -1,5 +1,3 @@
-"""Poll creation module."""
-
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import RedirectResponse
 
@@ -11,13 +9,11 @@ router = APIRouter()
 
 @router.get("/admin/polls/create")
 async def get_create_poll_form(request: Request, event_id: int = Query(None)):
-    """GET route for poll creation form."""
     return await create_poll_form(request, event_id)
 
 
 @router.post("/admin/polls/create")
 async def post_create_poll(request: Request) -> RedirectResponse:
-    """POST route for poll creation."""
     return await create_poll(request)
 
 

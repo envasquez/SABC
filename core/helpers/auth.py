@@ -1,7 +1,6 @@
 from typing import Annotated, Any, Dict, Optional, Union
 
 from fastapi import Depends, HTTPException, Request
-from fastapi.responses import RedirectResponse
 
 from core.db_schema import engine
 from core.query_service import QueryService
@@ -15,18 +14,15 @@ def u(r: Request) -> Optional[Dict[str, Union[int, str, bool, None]]]:
     return None
 
 
-def admin(r: Request) -> Union[Dict[str, Union[int, str, bool, None]], RedirectResponse]:
+def admin(r: Request) -> Dict[str, Union[int, str, bool, None]]:
     user = u(r)
     if user and user["is_admin"]:
         return user
-    return RedirectResponse("/login")
+    raise HTTPException(status_code=302, headers={"Location": "/login"})
 
 
 async def require_admin_async(request: Request) -> Dict[str, Any]:
-    user = admin(request)
-    if isinstance(user, RedirectResponse):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return user
+    return admin(request)
 
 
 def require_auth(request: Request) -> Dict[str, Union[int, str, bool, None]]:
@@ -36,14 +32,12 @@ def require_auth(request: Request) -> Dict[str, Union[int, str, bool, None]]:
     return user
 
 
-def require_admin(
-    request: Request,
-) -> Union[Dict[str, Union[int, str, bool, None]], RedirectResponse]:
+def require_admin(request: Request) -> Dict[str, Union[int, str, bool, None]]:
     user = u(request)
     if not user:
-        return RedirectResponse("/login", status_code=302)
+        raise HTTPException(status_code=302, headers={"Location": "/login"})
     if not user.get("is_admin"):
-        return RedirectResponse("/", status_code=302)
+        raise HTTPException(status_code=302, headers={"Location": "/"})
     return user
 
 

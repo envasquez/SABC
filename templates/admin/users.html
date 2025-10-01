@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from 'macros.html' import alert, stat_card %}
 {% block title %}Manage Anglers - South Austin Bass Club{% endblock %}
 {% block content %}
 <div class="mb-4">
@@ -6,43 +7,13 @@
     <p class="lead text-secondary">User administration</p>
     <div class="row mb-3">
         <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-person-check fs-1 me-3"></i>
-                        <div>
-                            <h5 class="card-title mb-0" style="color: white;">Members</h5>
-                            <h3 class="mb-0" style="color: white; font-weight: bold;">{{ member_count }}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {{ stat_card('person-check', 'Members', member_count, 'success') }}
         </div>
         <div class="col-md-3">
-            <div class="card bg-secondary text-white">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-person fs-1 me-3"></i>
-                        <div>
-                            <h5 class="card-title mb-0" style="color: white;">Guests</h5>
-                            <h3 class="mb-0" style="color: white; font-weight: bold;">{{ guest_count }}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {{ stat_card('person', 'Guests', guest_count, 'secondary') }}
         </div>
         <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-people-fill fs-1 me-3"></i>
-                        <div>
-                            <h5 class="card-title mb-0" style="color: white;">Total</h5>
-                            <h3 class="mb-0" style="color: white; font-weight: bold;">{{ total_count }}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {{ stat_card('people-fill', 'Total', total_count, 'primary') }}
         </div>
     </div>
 </div>
@@ -87,7 +58,7 @@
         {% endfor %}
     </tbody>
 </table>
-{% if not users %}<div class="alert alert-info">No users found.</div>{% endif %}
+{{ alert('info', 'No users found.' if not users else None) }}
 
 <!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteUserModal" tabindex="-1">

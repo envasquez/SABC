@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from core.helpers.auth import require_admin
@@ -11,11 +11,7 @@ router = APIRouter()
 @router.delete("/admin/events/{event_id}")
 async def delete_event(request: Request, event_id: int):
     """Delete an event and its associated data."""
-    user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
+    _user = require_admin(request)
     try:
         # Check if event has results
         has_results = db(

@@ -1,18 +1,10 @@
-"""Tournament related queries."""
-
 from typing import Optional
 
 from core.query_service.base import QueryServiceBase
 
 
 class TournamentQueries(QueryServiceBase):
-    """Tournament query methods."""
-
     def auto_complete_past_tournaments(self) -> int:
-        """
-        Mark tournaments as complete if their date has passed.
-        Returns the number of tournaments updated.
-        """
         result = self.execute(
             """
             UPDATE tournaments t
@@ -26,7 +18,6 @@ class TournamentQueries(QueryServiceBase):
         return result.rowcount if result else 0
 
     def get_tournament_by_id(self, tournament_id: int) -> Optional[dict]:
-        """Get tournament details."""
         return self.fetch_one(
             """
             SELECT t.*, e.date, e.name
@@ -38,7 +29,6 @@ class TournamentQueries(QueryServiceBase):
         )
 
     def get_tournament_results(self, tournament_id: int) -> list[dict]:
-        """Get results for a tournament."""
         return self.fetch_all(
             """
             SELECT r.*, a.name as angler_name, a.member
@@ -61,7 +51,6 @@ class TournamentQueries(QueryServiceBase):
         disqualified: bool = False,
         buy_in: bool = False,
     ) -> None:
-        """Insert or update a tournament result using PostgreSQL UPSERT."""
         self.execute(
             """
             INSERT INTO results (
@@ -93,7 +82,6 @@ class TournamentQueries(QueryServiceBase):
         )
 
     def get_team_results(self, tournament_id: int) -> list[dict]:
-        """Get team results for a tournament."""
         query = """
             SELECT tr.*,
                    a1.name as angler1_name, a1.member as angler1_member,

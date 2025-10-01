@@ -22,23 +22,18 @@ async def vote_in_poll(
         return RedirectResponse("/polls?error=Only members can vote", status_code=302)
 
     try:
-        # Validate poll state
         error = validate_poll_state(poll_id, user["id"])
         if error:
             return RedirectResponse(f"/polls?error={error}", status_code=302)
-
         res = db("SELECT poll_type FROM polls WHERE id = :poll_id", {"poll_id": poll_id})
         poll_type = res[0][0] if res and len(res) > 0 else None
-
         if not poll_type:
             return RedirectResponse("/polls?error=Invalid poll", status_code=302)
-
         if poll_type == "tournament_location":
             vote_data = json.loads(option_id)
             option_text, error = validate_tournament_location_vote(vote_data)
             if error:
                 return RedirectResponse(f"/polls?error={error}", status_code=302)
-
             actual_option_id = get_or_create_option_id(poll_id, option_text, vote_data)
         else:
             actual_option_id = int(option_id)
@@ -47,12 +42,10 @@ async def vote_in_poll(
                 {"option_id": actual_option_id, "poll_id": poll_id},
             ):
                 return RedirectResponse("/polls?error=Invalid option selected", status_code=302)
-
         db(
             "INSERT INTO poll_votes (poll_id, option_id, angler_id, voted_at) VALUES (:poll_id, :option_id, :angler_id, NOW())",
             {"poll_id": poll_id, "option_id": actual_option_id, "angler_id": user["id"]},
         )
         return RedirectResponse("/polls?success=Vote cast successfully", status_code=302)
-
     except Exception as e:
         return RedirectResponse(f"/polls?error=Failed to cast vote: {str(e)}", status_code=302)

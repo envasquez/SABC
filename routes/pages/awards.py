@@ -3,11 +3,11 @@ from datetime import datetime
 from fastapi import APIRouter, Request
 
 from core.db_schema import engine
-from core.deps import render
+from core.deps import templates
 from core.helpers.auth import get_user_optional
+from core.helpers.tournament_points import calculate_tournament_points
 from core.query_service import QueryService
 from routes.pages.awards_helpers import (
-    calculate_tournament_points,
     get_big_bass_query,
     get_heavy_stringer_query,
     get_stats_query,
@@ -74,14 +74,16 @@ async def awards(request: Request, year: int = None):
         aoy_standings.sort(key=lambda x: x["total_points"], reverse=True)
         heavy_stringer = qs.fetch_all(get_heavy_stringer_query(), {"year": year})
         big_bass = qs.fetch_all(get_big_bass_query(), {"year": year})
-        return render(
+        return templates.TemplateResponse(
             "awards.html",
-            request,
-            user=user,
-            current_year=year,
-            available_years=years,
-            aoy_standings=aoy_standings,
-            heavy_stringer=heavy_stringer[0] if heavy_stringer else None,
-            big_bass=big_bass[0] if big_bass else None,
-            year_stats=stats,
+            {
+                "request": request,
+                "user": user,
+                "current_year": year,
+                "available_years": years,
+                "aoy_standings": aoy_standings,
+                "heavy_stringer": heavy_stringer[0] if heavy_stringer else None,
+                "big_bass": big_bass[0] if big_bass else None,
+                "year_stats": stats,
+            },
         )

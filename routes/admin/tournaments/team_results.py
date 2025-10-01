@@ -17,7 +17,6 @@ async def save_team_result(
     user=Depends(get_admin_or_redirect),
     conn: Connection = Depends(get_db),
 ):
-    """Save or update team tournament result."""
     if isinstance(user, RedirectResponse):
         return user
 
@@ -25,20 +24,15 @@ async def save_team_result(
     qs = QueryService(conn)
 
     try:
-        # Extract form data
         angler1_id = int(form.get("angler1_id"))
         angler2_id = int(form.get("angler2_id")) if form.get("angler2_id") else None
-
-        # Calculate total weight from individual results
         total_weight = Decimal("0")
-
         angler1_weight = qs.fetch_value(
             "SELECT total_weight FROM results WHERE tournament_id = :tid AND angler_id = :aid",
             {"tid": tournament_id, "aid": angler1_id},
         )
         if angler1_weight:
             total_weight += Decimal(str(angler1_weight))
-
         if angler2_id:
             angler2_weight = qs.fetch_value(
                 "SELECT total_weight FROM results WHERE tournament_id = :tid AND angler_id = :aid",
@@ -46,8 +40,6 @@ async def save_team_result(
             )
             if angler2_weight:
                 total_weight += Decimal(str(angler2_weight))
-
-        # Check if team result already exists for these anglers
         existing = qs.fetch_one(
             """SELECT id FROM team_results
                WHERE tournament_id = :tid
@@ -55,9 +47,7 @@ async def save_team_result(
                     OR (angler1_id = :a2 AND angler2_id = :a1))""",
             {"tid": tournament_id, "a1": angler1_id, "a2": angler2_id},
         )
-
         if existing:
-            # Update existing team result
             qs.execute(
                 """UPDATE team_results
                    SET total_weight = :total_weight
@@ -65,7 +55,6 @@ async def save_team_result(
                 {"total_weight": total_weight, "id": existing["id"]},
             )
         else:
-            # Insert new team result
             qs.execute(
                 """INSERT INTO team_results
                    (tournament_id, angler1_id, angler2_id, total_weight)
@@ -77,10 +66,7 @@ async def save_team_result(
                     "total_weight": total_weight,
                 },
             )
-
         conn.commit()
-
-        # Recalculate place_finish for all teams in this tournament
         qs.execute(
             """WITH ranked_teams AS (
                    SELECT id,
@@ -94,13 +80,9 @@ async def save_team_result(
                WHERE tr.id = rt.id""",
             {"tid": tournament_id},
         )
-
         conn.commit()
-
-        # Check if this is an AJAX request
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JSONResponse({"success": True, "message": "Team result saved successfully"})
-
         return RedirectResponse(
             f"/admin/tournaments/{tournament_id}/enter-results", status_code=303
         )

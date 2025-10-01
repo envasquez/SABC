@@ -1,7 +1,8 @@
 {% extends "base.html" %}
+{% from 'macros.html' import alert %}
 {% block content %}
 <div class="mb-4"><h1><i class="bi bi-person-circle me-2"></i>Member Profile</h1></div>
-{% if success %}<div class="alert alert-success">{{success}}</div>{% endif %}
+{{ alert('success', success) }}
 {% if request.query_params.get('welcome') == 'true' and not user.member %}
 <div class="alert alert-info">
 <h5><i class="bi bi-info-circle me-2"></i>Welcome to South Austin Bass Club!</h5>

@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Request
-from fastapi.responses import RedirectResponse
 
 from core.helpers.auth import require_admin
 from core.helpers.response import error_redirect
@@ -13,10 +12,6 @@ router = APIRouter()
 @router.get("/admin/users/{user_id}/edit")
 async def edit_user_page(request: Request, user_id: int):
     user = require_admin(request)
-
-    if isinstance(user, RedirectResponse):
-        return user
-
     edit_user = db(
         "SELECT id, name, email, phone, member, is_admin FROM anglers WHERE id = :id",
         {"id": user_id},

@@ -107,3 +107,29 @@ a:hover {
   color: #adb5bd !important;
 }
 
+/* Medal/Trophy colors for podium finishes */
+.medal-gold {
+  background-color: #fff8dc;
+  border: 1px solid #ffd700;
+}
+.color-gold {
+  color: #ffd700 !important;
+}
+.color-gold-dark {
+  color: #b8860b !important;
+}
+.medal-silver {
+  background-color: #f5f5f5;
+  border: 1px solid #c0c0c0;
+  background-image: linear-gradient(135deg, #e8e8e8 0%, #f5f5f5 50%, #e8e8e8 100%);
+}
+.color-silver {
+  color: #a8a8a8 !important;
+}
+.color-silver-dark {
+  color: #2c2c2c !important;
+}
+.color-bronze {
+  color: #cd7f32 !important;
+}
+

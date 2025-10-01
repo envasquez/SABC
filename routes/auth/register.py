@@ -30,7 +30,6 @@ async def register(
     last_name = last_name.strip()
     name = f"{first_name} {last_name}".strip()
     ip_address = request.client.host if request.client else "unknown"
-
     try:
         existing = db(
             "SELECT id FROM anglers WHERE email=:email",
@@ -75,7 +74,6 @@ async def register(
                 },
             )
             return RedirectResponse("/", status_code=302)
-
     except Exception as e:
         logger.error(
             "Registration error",
@@ -90,5 +88,4 @@ async def register(
         return templates.TemplateResponse(
             "login.html", {"request": request, "error": "Registration failed"}
         )
-
     return RedirectResponse("/login", status_code=302)

@@ -74,10 +74,6 @@ templates = Jinja2Templates(directory="templates")
 templates.env.filters["time_format"] = time_format_filter
 
 
-def render(template_name: str, request: Request, **context) -> Any:
-    return templates.TemplateResponse(template_name, {"request": request, **context})
-
-
 async def get_db() -> AsyncGenerator[Connection, None]:
     with engine.connect() as conn:
         yield conn

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from 'macros.html' import alert %}
 
 {% block title %}Edit Tournament Poll - South Austin Bass Club{% endblock %}
 
@@ -162,6 +163,7 @@
     </div>
 </div>
 
+<script src="/static/admin.js"></script>
 <script>
 function selectAllLakes() {
     document.querySelectorAll('.lake-checkbox').forEach(checkbox => {
@@ -175,27 +177,6 @@ function deselectAllLakes() {
     });
 }
 
-async function deleteVote(voteId) {
-    try {
-        const response = await fetch(`/admin/votes/${voteId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            alert('Vote deleted successfully: ' + result.message);
-            location.reload();
-        } else {
-            alert('Error: ' + result.error);
-        }
-    } catch (error) {
-        alert('Error deleting vote: ' + error.message);
-    }
-}
 </script>
 
 {% endblock %}

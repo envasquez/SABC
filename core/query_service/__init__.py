@@ -9,7 +9,6 @@ from core.query_service.event_queries import EventQueries
 from core.query_service.lake_queries import LakeQueries
 from core.query_service.member_queries import MemberQueries
 from core.query_service.poll_queries import PollQueries
-from core.query_service.stats_queries import StatsQueries
 from core.query_service.tournament_queries import TournamentQueries
 from core.query_service.user_queries import UserQueries
 
@@ -21,7 +20,6 @@ class QueryService(
     TournamentQueries,
     EventQueries,
     MemberQueries,
-    StatsQueries,
 ):
     """Centralized database query service combining all query categories."""
 

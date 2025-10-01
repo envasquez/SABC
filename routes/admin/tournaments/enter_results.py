@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import Connection
 
-from core.deps import get_admin_or_redirect, get_db, render
+from core.deps import get_admin_or_redirect, get_db, templates
 from core.query_service import QueryService
 
 router = APIRouter()
@@ -22,8 +22,6 @@ async def enter_results_page(
         return user
 
     qs = QueryService(conn)
-
-    # Auto-complete past tournaments
     qs.auto_complete_past_tournaments()
     conn.commit()
 
@@ -58,20 +56,22 @@ async def enter_results_page(
     existing_angler_ids = list(results_by_angler.keys())
     existing_angler_ids_json = json.dumps(existing_angler_ids)
 
-    return render(
+    return templates.TemplateResponse(
         "admin/enter_results.html",
-        request,
-        user=user,
-        tournament=tournament,
-        anglers=anglers,
-        anglers_json=anglers_json,
-        existing_angler_ids_json=existing_angler_ids_json,
-        results_by_angler=results_by_angler,
-        team_results=team_results,
-        teams_set=teams_set,
-        edit_result_id=request.query_params.get("edit_result_id"),
-        edit_team_result=edit_team_result_id,
-        edit_team_result_data=edit_team_result_data,
+        {
+            "request": request,
+            "user": user,
+            "tournament": tournament,
+            "anglers": anglers,
+            "anglers_json": anglers_json,
+            "existing_angler_ids_json": existing_angler_ids_json,
+            "results_by_angler": results_by_angler,
+            "team_results": team_results,
+            "teams_set": teams_set,
+            "edit_result_id": request.query_params.get("edit_result_id"),
+            "edit_team_result": edit_team_result_id,
+            "edit_team_result_data": edit_team_result_data,
+        },
     )
 
 
