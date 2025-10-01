@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-Setup admin user for SABC application.
-Consolidates bootstrap_admin_postgres.py and create_admin.py functionality.
-"""
-
 import argparse
 import getpass
 import logging
@@ -15,7 +9,6 @@ import bcrypt
 
 from core.database import db
 
-# Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -26,30 +19,15 @@ def create_admin_user(
     password: Optional[str] = None,
     interactive: bool = True,
 ) -> int:
-    """
-    Create admin user with optional interactive mode.
-
-    Args:
-        email: Admin email (prompts if None and interactive)
-        name: Admin name (prompts if None and interactive)
-        password: Admin password (prompts if None and interactive)
-        interactive: Whether to prompt for missing values
-
-    Returns:
-        0 on success, 1 on failure
-    """
-    # Ensure DATABASE_URL is set
     if not os.environ.get("DATABASE_URL"):
         logger.error("DATABASE_URL environment variable not set")
         return 1
 
-    # Use defaults for non-interactive mode
     if not interactive:
         email = email or "admin@sabc.com"
         name = name or "Admin User"
         password = password or "admin123"
 
-    # Interactive prompts
     if interactive:
         if not email:
             email = input("Admin email: ")
@@ -63,28 +41,23 @@ def create_admin_user(
                     break
                 print("Passwords do not match. Try again.")
 
-    # Hash password
     password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
     try:
-        # Check if user exists
         existing = db("SELECT id FROM anglers WHERE email = :email", {"email": email})
 
         if existing:
             db(
-                """UPDATE anglers
-                   SET password_hash = :password_hash, is_admin = true, member = true, name = :name
-                   WHERE email = :email""",
-                {"password_hash": password_hash, "email": email, "name": name},
+                "UPDATE anglers SET password = :password, name = :name, is_admin = TRUE WHERE email = :email",
+                {"password": password_hash, "email": email, "name": name},
             )
             logger.info(f"Updated existing user {email} as admin")
         else:
             result = db(
-                """INSERT INTO anglers (name, email, password_hash, member, is_admin, year_joined)
-                   VALUES (:name, :email, :password_hash, true, true, 2024) RETURNING id""",
-                {"name": name, "email": email, "password_hash": password_hash},
+                "INSERT INTO anglers (name, email, password, member, is_admin) VALUES (:name, :email, :password, TRUE, TRUE) RETURNING id",
+                {"name": name, "email": email, "password": password_hash},
             )
-            admin_id = result[0][0] if result else None  # Access by index, not key
+            admin_id = result[0][0] if result else None
             logger.info(f"Created new admin user {email} with ID: {admin_id}")
 
         if not interactive:
@@ -99,7 +72,6 @@ def create_admin_user(
 
 
 def main() -> int:
-    """Main function with CLI argument parsing."""
     parser = argparse.ArgumentParser(description="Create SABC admin user")
     parser.add_argument("--email", help="Admin email")
     parser.add_argument("--name", help="Admin name")

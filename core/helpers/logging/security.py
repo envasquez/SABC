@@ -1,0 +1,30 @@
+class SecurityEvent:
+    AUTH_LOGIN_SUCCESS = "auth.login.success"
+    AUTH_LOGIN_FAILURE = "auth.login.failure"
+    AUTH_LOGOUT = "auth.logout"
+    AUTH_REGISTER = "auth.register"
+    AUTH_SESSION_EXPIRED = "auth.session.expired"
+    AUTH_ACCOUNT_DELETED = "auth.account.deleted"
+    PASSWORD_RESET_REQUESTED = "auth.password_reset.requested"
+    PASSWORD_RESET_COMPLETED = "auth.password_reset.completed"
+
+    ADMIN_USER_CREATE = "admin.user.create"
+    ADMIN_USER_UPDATE = "admin.user.update"
+    ADMIN_USER_DELETE = "admin.user.delete"
+    ADMIN_POLL_CREATE = "admin.poll.create"
+    ADMIN_POLL_DELETE = "admin.poll.delete"
+    ADMIN_RESULT_ENTRY = "admin.result.entry"
+    ADMIN_RESULT_UPDATE = "admin.result.update"
+    ADMIN_RESULT_DELETE = "admin.result.delete"
+
+    POLL_VOTE_CAST = "poll.vote.cast"
+    POLL_VOTE_UPDATE = "poll.vote.update"
+    POLL_VOTE_DELETE = "poll.vote.delete"
+
+    DB_ERROR = "database.error"
+    DB_TIMEOUT = "database.timeout"
+    DB_CONNECTION_FAILED = "database.connection.failed"
+
+    ACCESS_DENIED = "security.access.denied"
+    SUSPICIOUS_ACTIVITY = "security.suspicious.activity"
+    RATE_LIMIT_EXCEEDED = "security.rate.limit.exceeded"

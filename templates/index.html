@@ -21,7 +21,7 @@
                         {% if tournament.ramp_name %}
                             <small class="text-white-50">
                                 {% if tournament.ramp_google_maps %}
-                                    <a href="#" class="text-white-50 text-decoration-none" 
+                                    <a href="#" class="text-white-50 text-decoration-none"
                                        data-bs-toggle="modal" data-bs-target="#rampModal{{ tournament.id }}">
                                         <i class="bi bi-geo-alt me-1"></i>{{ tournament.ramp_name|title }}
                                     </a>
@@ -31,7 +31,7 @@
                             </small>
                         {% endif %}
                     </div>
-                    <span class="badge {% if tournament.complete %}bg-warning text-dark{% else %}bg-light text-primary{% endif %}">
+                    <span class="badge bg-warning text-dark">
                         {% if tournament.complete %}Complete{% else %}Upcoming{% endif %}
                     </span>
                 </div>
@@ -39,19 +39,15 @@
 
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="text-secondary mb-0">{{ tournament.name }} - {{ tournament.event_date }}</h6>
+                    <h6 class="text-secondary mb-0">{{ tournament.name }} | {{ tournament.description[:200] }} - {{ tournament.date|date_format("mm-dd-yyyy") }}</h6>
                     <div>
-                        {% if tournament.complete %}
-                            <span class="badge bg-secondary me-2">{{ tournament.fish_limit }} fish/{{ tournament.limit_type }}</span>
+                        <span class="badge bg-secondary me-2">{{ tournament.fish_limit }} fish/{{ tournament.limit_type }}</span>
+                        {% if tournament.aoy_points %}
                             <span class="badge bg-info">AoY Points</span>
                         {% endif %}
                     </div>
                 </div>
-
-                {% if tournament.description %}
-                <p class="mb-3">{{ tournament.description[:200] }}{% if tournament.description|length > 200 %}...{% endif %}</p>
-                {% endif %}
-
+                <!-- <p class="mb-3">{% if tournament.description|length > 200 %}...{% endif %}</p> -->
                 <div class="row g-3 mb-3">
                     <div class="col-6 col-md-3">
                         <div class="text-center">
@@ -311,7 +307,7 @@
 
                 {% if latest_news %}
                     {% for news_item in latest_news %}
-                    <div class="mb-3 {% if not loop.last %}border-bottom pb-2{% endif %}">
+                    <div class="mb-3 border-bottom pb-2">
                         <div class="d-flex align-items-start justify-content-between mb-1">
                             <h6 class="small fw-bold mb-0">{{ news_item[1] | safe }}</h6>
                             {% if news_item[5] == 2 %}
@@ -347,25 +343,22 @@
                     </div>
                     {% endfor %}
                 {% else %}
-                    <div class="text-secondary">
+                    <div class="text-secondary border-bottom pb-2">
                         <p>No Current News</p>
                     </div>
                 {% endif %}
-            </div>
-        </div>
 
-        <!-- Club Info Card -->
-        <div class="card mt-4 bg-secondary">
-            <div class="card-header">
-                <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Club Info</h6>
-            </div>
-            <div class="card-body text-center">
-                <div class="mb-3">
-                    <img src="/static/sabc_logo.png" alt="South Austin Bass Club Logo" class="img-fluid" style="max-height: 250px;">
+                <!-- Club Info Section (always at bottom) -->
+                <div class="mt-3 pt-3">
+                    <div class="text-center">
+                        <div class="mb-3">
+                            <img src="/static/sabc_logo.png" alt="South Austin Bass Club Logo" class="img-fluid" style="max-height: 200px;">
+                        </div>
+                        <p class="mb-2"><strong>Founded:</strong> 1983</p>
+                        <p class="mb-2"><strong>Members:</strong> {{ member_count }} Active Anglers</p>
+                        <p class="mb-0"><strong>Waters:</strong> Central Texas Lakes</p>
+                    </div>
                 </div>
-                <p class="mb-2"><strong>Founded:</strong> 1983</p>
-                <p class="mb-2"><strong>Members:</strong> {{ member_count }}+ Active Anglers</p>
-                <p class="mb-0"><strong>Waters:</strong> Central Texas Lakes</p>
             </div>
         </div>
     </div>

@@ -3,6 +3,73 @@
 {% block title %}Enter Results - {{ tournament.name }}{% endblock %}
 
 {% block content %}
+<style>
+.autocomplete-wrapper {
+    position: relative;
+}
+
+.autocomplete-input {
+    width: 100%;
+}
+
+.autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #303030;
+    border: 1px solid #444;
+    border-radius: 0.25rem;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.autocomplete-item {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    border-bottom: 1px solid #444;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.active {
+    background: #375a7f;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-no-results {
+    padding: 0.5rem 0.75rem;
+    color: #888;
+    font-style: italic;
+}
+
+.angler-selected {
+    background-color: #1e3a4f !important;
+    border-color: #375a7f;
+}
+
+.clear-selection {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #888;
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 0 0.25rem;
+    z-index: 10;
+}
+
+.clear-selection:hover {
+    color: #fff;
+}
+</style>
+
 <div class="container">
     <div class="mb-4">
         <nav aria-label="breadcrumb">
@@ -16,6 +83,9 @@
             <i class="bi bi-pencil-square me-2"></i>Enter Tournament Results
         </h1>
         <p class="lead text-secondary">{{ tournament.name }} - {{ tournament.date }}</p>
+    {% if tournament.aoy_points %}
+            <span class="badge bg-info">AoY Points</span>
+        {% endif %}
     </div>
 
     <!-- Tournament Info Summary -->
@@ -108,6 +178,115 @@ let existingAnglerIds = new Set({{ existing_angler_ids_json | safe }});
 let editData = {{ edit_data | tojson | safe if edit_data else 'null' }};
 let editTeamResultData = {{ edit_team_result_data | tojson | safe if edit_team_result_data else 'null' }};
 
+// Autocomplete functionality
+function setupAutocomplete(input) {
+    const wrapper = input.closest('.autocomplete-wrapper');
+    const dropdown = wrapper.querySelector('.autocomplete-dropdown');
+    const hiddenInput = wrapper.querySelector('input[type="hidden"]');
+    const clearBtn = wrapper.querySelector('.clear-selection');
+    let selectedIndex = -1;
+
+    input.addEventListener('input', function() {
+        const query = this.value.toLowerCase().trim();
+
+        if (!query) {
+            dropdown.style.display = 'none';
+            hiddenInput.value = '';
+            clearBtn.style.display = 'none';
+            input.classList.remove('angler-selected');
+            return;
+        }
+
+        // Filter anglers
+        const matches = anglers.filter(a =>
+            a.name.toLowerCase().includes(query)
+        );
+
+        if (matches.length === 0) {
+            dropdown.innerHTML = '<div class="autocomplete-no-results">No anglers found</div>';
+            dropdown.style.display = 'block';
+            return;
+        }
+
+        // Show dropdown with matches
+        dropdown.innerHTML = matches.map((angler, idx) =>
+            `<div class="autocomplete-item" data-id="${angler.id}" data-name="${angler.name}" data-idx="${idx}">
+                ${angler.name}
+            </div>`
+        ).join('');
+        dropdown.style.display = 'block';
+        selectedIndex = -1;
+
+        // Add click handlers
+        dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+            item.addEventListener('click', function() {
+                selectAngler(this.dataset.id, this.dataset.name, input, hiddenInput, dropdown, clearBtn);
+            });
+        });
+    });
+
+    // Keyboard navigation
+    input.addEventListener('keydown', function(e) {
+        const items = dropdown.querySelectorAll('.autocomplete-item');
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+            updateSelection(items, selectedIndex);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            selectedIndex = Math.max(selectedIndex - 1, 0);
+            updateSelection(items, selectedIndex);
+        } else if (e.key === 'Enter' && selectedIndex >= 0) {
+            e.preventDefault();
+            const selected = items[selectedIndex];
+            if (selected) {
+                selectAngler(selected.dataset.id, selected.dataset.name, input, hiddenInput, dropdown, clearBtn);
+            }
+        } else if (e.key === 'Escape') {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!wrapper.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+}
+
+function updateSelection(items, index) {
+    items.forEach((item, idx) => {
+        item.classList.toggle('active', idx === index);
+    });
+    if (items[index]) {
+        items[index].scrollIntoView({ block: 'nearest' });
+    }
+}
+
+function selectAngler(id, name, input, hiddenInput, dropdown, clearBtn) {
+    input.value = name;
+    hiddenInput.value = id;
+    input.classList.add('angler-selected');
+    clearBtn.style.display = 'block';
+    dropdown.style.display = 'none';
+    onAnglerChange();
+}
+
+function clearAnglerSelection(teamId, anglerNum) {
+    const wrapper = document.querySelector(`[data-team="${teamId}"][data-angler="${anglerNum}"]`).closest('.autocomplete-wrapper');
+    const input = wrapper.querySelector('.autocomplete-input');
+    const hiddenInput = wrapper.querySelector('input[type="hidden"]');
+    const clearBtn = wrapper.querySelector('.clear-selection');
+
+    input.value = '';
+    hiddenInput.value = '';
+    input.classList.remove('angler-selected');
+    clearBtn.style.display = 'none';
+    onAnglerChange();
+}
+
 function addTeam() {
     teamCount++;
     const container = document.getElementById('teams-container');
@@ -128,10 +307,18 @@ function addTeam() {
                         <div class="row g-2">
                             <div class="col-12">
                                 <label class="form-label">Name</label>
-                                <select class="form-select angler1-select" name="angler1_id_${teamCount}" required onchange="onAnglerChange()">
-                                    <option value="">Select - Boater</option>
-                                    ${anglers.map(a => `<option value="${a.id}">${a.name}</option>`).join('')}
-                                </select>
+                                <div class="autocomplete-wrapper">
+                                    <input type="text"
+                                           class="form-control autocomplete-input angler1-input"
+                                           data-team="${teamCount}"
+                                           data-angler="1"
+                                           placeholder="Start typing angler name..."
+                                           autocomplete="off"
+                                           required>
+                                    <span class="clear-selection" style="display:none;" onclick="clearAnglerSelection(${teamCount}, 1)">×</span>
+                                    <div class="autocomplete-dropdown"></div>
+                                    <input type="hidden" name="angler1_id_${teamCount}" class="angler1-id">
+                                </div>
                             </div>
                             <div class="col-4">
                                 <label class="form-label">Fish</label>
@@ -158,6 +345,10 @@ function addTeam() {
                                     <input class="form-check-input" type="checkbox" name="angler1_buyIn_${teamCount}" value="1" onchange="handleBuyInChange(this, ${teamCount}, 'angler1')">
                                     <label class="form-check-label">Buy-in</label>
                                 </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="angler1_was_member_${teamCount}" value="1" checked>
+                                    <label class="form-check-label">Member</label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -168,10 +359,17 @@ function addTeam() {
                         <div class="row g-2">
                             <div class="col-12">
                                 <label class="form-label">Name <span class="text-secondary">(optional)</span></label>
-                                <select class="form-select angler2-select" name="angler2_id_${teamCount}" id="angler2_select_${teamCount}" onchange="onAnglerChange()">
-                                    <option value="">Select Non-Boater</option>
-                                    ${anglers.map(a => `<option value="${a.id}">${a.name}</option>`).join('')}
-                                </select>
+                                <div class="autocomplete-wrapper">
+                                    <input type="text"
+                                           class="form-control autocomplete-input angler2-input"
+                                           data-team="${teamCount}"
+                                           data-angler="2"
+                                           placeholder="Start typing angler name..."
+                                           autocomplete="off">
+                                    <span class="clear-selection" style="display:none;" onclick="clearAnglerSelection(${teamCount}, 2)">×</span>
+                                    <div class="autocomplete-dropdown"></div>
+                                    <input type="hidden" name="angler2_id_${teamCount}" class="angler2-id">
+                                </div>
                             </div>
                             <div class="col-4">
                                 <label class="form-label">Fish</label>
@@ -198,6 +396,10 @@ function addTeam() {
                                     <input class="form-check-input" type="checkbox" name="angler2_buyIn_${teamCount}" value="1" onchange="handleBuyInChange(this, ${teamCount}, 'angler2')">
                                     <label class="form-check-label">Buy-in</label>
                                 </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="angler2_was_member_${teamCount}" value="1" checked>
+                                    <label class="form-check-label">Member</label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -207,6 +409,12 @@ function addTeam() {
     `;
 
     container.insertAdjacentHTML('beforeend', teamHtml);
+
+    // Setup autocomplete for the newly added team
+    const teamCard = document.getElementById(`team-${teamCount}`);
+    teamCard.querySelectorAll('.autocomplete-input').forEach(input => {
+        setupAutocomplete(input);
+    });
 
     // Update all dropdowns to reflect newly selected anglers
     updateAllAnglerDropdowns();
@@ -237,13 +445,7 @@ function getAllSelectedAnglers() {
 
 // Update all angler dropdowns to remove already-selected anglers
 function updateAllAnglerDropdowns() {
-    const selectedAnglers = getAllSelectedAnglers();
-
-    // Update each team's dropdowns
-    document.querySelectorAll('.team-card').forEach(teamCard => {
-        const teamId = teamCard.id.split('-')[1];
-        updateTeamAnglerOptions(teamId, selectedAnglers);
-    });
+    // No longer needed with autocomplete - kept for compatibility
 }
 
 // Update a specific team's angler options
@@ -343,22 +545,22 @@ document.addEventListener('DOMContentLoaded', function() {
         if (editData.type === 'individual') {
             addTeamForEdit(editData.angler_id, editData.angler_name, null, null,
                          editData.num_fish, editData.total_weight, editData.big_bass_weight,
-                         editData.dead_fish_penalty, editData.disqualified, editData.buy_in,
-                         0, 0, 0, 0, false, false);
+                         editData.dead_fish_penalty, editData.disqualified, editData.buy_in, editData.was_member,
+                         0, 0, 0, 0, false, false, true);
         } else if (editData.type === 'team') {
-            let angler1_result = editData.angler1_result || [0, 0, 0, 0, false, false];
-            let angler2_result = editData.angler2_result || [0, 0, 0, 0, false, false];
+            let angler1_result = editData.angler1_result || [0, 0, 0, 0, false, false, true];
+            let angler2_result = editData.angler2_result || [0, 0, 0, 0, false, false, true];
             addTeamForEdit(editData.angler1_id, editData.angler1_name, editData.angler2_id, editData.angler2_name,
-                         angler1_result[0], angler1_result[1], angler1_result[2], angler1_result[3], angler1_result[4], angler1_result[5],
-                         angler2_result[0], angler2_result[1], angler2_result[2], angler2_result[3], angler2_result[4], angler2_result[5]);
+                         angler1_result[0], angler1_result[1], angler1_result[2], angler1_result[3], angler1_result[4], angler1_result[5], angler1_result[6],
+                         angler2_result[0], angler2_result[1], angler2_result[2], angler2_result[3], angler2_result[4], angler2_result[5], angler2_result[6]);
         }
     } else if (editTeamResultData) {
         // Edit team result mode - show one pre-loaded team
         addTeamForEdit(
             editTeamResultData.angler1_id, editTeamResultData.angler1_name,
             editTeamResultData.angler2_id, editTeamResultData.angler2_name,
-            0, 0, 0, 0, false, false,  // angler1 defaults
-            0, 0, 0, 0, false, false   // angler2 defaults
+            0, 0, 0, 0, false, false, true,  // angler1 defaults
+            0, 0, 0, 0, false, false, true   // angler2 defaults
         );
 
         // Update the form action to edit instead of create
@@ -384,8 +586,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
-                       angler1_fish, angler1_weight, angler1_big_bass, angler1_dead_penalty, angler1_disqualified, angler1_buy_in,
-                       angler2_fish, angler2_weight, angler2_big_bass, angler2_dead_penalty, angler2_disqualified, angler2_buy_in) {
+                       angler1_fish, angler1_weight, angler1_big_bass, angler1_dead_penalty, angler1_disqualified, angler1_buy_in, angler1_was_member,
+                       angler2_fish, angler2_weight, angler2_big_bass, angler2_dead_penalty, angler2_disqualified, angler2_buy_in, angler2_was_member) {
     teamCount++;
     const container = document.getElementById('teams-container');
 
@@ -401,10 +603,19 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
                         <div class="row g-2">
                             <div class="col-12">
                                 <label class="form-label">Name</label>
-                                <select class="form-select angler1-select" name="angler1_id_${teamCount}" required onchange="onAnglerChange()">
-                                    <option value="">Select - Boater</option>
-                                    ${anglers.map(a => `<option value="${a.id}" ${a.id == angler1_id ? 'selected' : ''}>${a.name}</option>`).join('')}
-                                </select>
+                                <div class="autocomplete-wrapper">
+                                    <input type="text"
+                                           class="form-control autocomplete-input angler1-input"
+                                           data-team="${teamCount}"
+                                           data-angler="1"
+                                           placeholder="Start typing angler name..."
+                                           autocomplete="off"
+                                           value="${angler1_name}"
+                                           required>
+                                    <span class="clear-selection" style="display:${angler1_id ? 'block' : 'none'};" onclick="clearAnglerSelection(${teamCount}, 1)">×</span>
+                                    <div class="autocomplete-dropdown"></div>
+                                    <input type="hidden" name="angler1_id_${teamCount}" class="angler1-id" value="${angler1_id}">
+                                </div>
                             </div>
                             <div class="col-4">
                                 <label class="form-label">Fish</label>
@@ -431,6 +642,10 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
                                     <input class="form-check-input" type="checkbox" name="angler1_buyIn_${teamCount}" value="1" ${angler1_buy_in ? 'checked' : ''} onchange="handleBuyInChange(this, ${teamCount}, 'angler1')">
                                     <label class="form-check-label">Buy-in</label>
                                 </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="angler1_was_member_${teamCount}" value="1" ${angler1_was_member !== false ? 'checked' : ''}>
+                                    <label class="form-check-label">Member</label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -440,10 +655,18 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
                         <div class="row g-2">
                             <div class="col-12">
                                 <label class="form-label">Name <span class="text-secondary">(optional)</span></label>
-                                <select class="form-select angler2-select" name="angler2_id_${teamCount}" id="angler2_select_${teamCount}" onchange="onAnglerChange()">
-                                    <option value="">Select Non-Boater</option>
-                                    ${anglers.map(a => `<option value="${a.id}" ${a.id == angler2_id ? 'selected' : ''}>${a.name}</option>`).join('')}
-                                </select>
+                                <div class="autocomplete-wrapper">
+                                    <input type="text"
+                                           class="form-control autocomplete-input angler2-input"
+                                           data-team="${teamCount}"
+                                           data-angler="2"
+                                           placeholder="Start typing angler name..."
+                                           autocomplete="off"
+                                           value="${angler2_name || ''}">
+                                    <span class="clear-selection" style="display:${angler2_id ? 'block' : 'none'};" onclick="clearAnglerSelection(${teamCount}, 2)">×</span>
+                                    <div class="autocomplete-dropdown"></div>
+                                    <input type="hidden" name="angler2_id_${teamCount}" class="angler2-id" value="${angler2_id || ''}">
+                                </div>
                             </div>
                             <div class="col-4">
                                 <label class="form-label">Fish</label>
@@ -470,6 +693,10 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
                                     <input class="form-check-input" type="checkbox" name="angler2_buyIn_${teamCount}" value="1" ${angler2_buy_in ? 'checked' : ''} onchange="handleBuyInChange(this, ${teamCount}, 'angler2')">
                                     <label class="form-check-label">Buy-in</label>
                                 </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="angler2_was_member_${teamCount}" value="1" ${angler2_was_member !== false ? 'checked' : ''}>
+                                    <label class="form-check-label">Member</label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -479,6 +706,16 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
     `;
 
     container.insertAdjacentHTML('beforeend', teamHtml);
+
+    // Setup autocomplete for the newly added team
+    const teamCard = document.getElementById(`team-${teamCount}`);
+    teamCard.querySelectorAll('.autocomplete-input').forEach(input => {
+        setupAutocomplete(input);
+        // If there's a pre-selected value, mark it as selected
+        if (input.value) {
+            input.classList.add('angler-selected');
+        }
+    });
 }
 
 // Show the create guest modal
@@ -544,5 +781,111 @@ function createGuest() {
     });
 }
 
+
+// Handle form submission to save individual results
+document.getElementById('resultsForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+
+    const tournamentId = {{ tournament.id }};
+    const teams = document.querySelectorAll('.team-card');
+
+    try {
+        for (const team of teams) {
+            const teamId = team.id.replace('team-', '');
+
+            // Save angler1 (boater) result
+            const angler1Id = formData.get(`angler1_id_${teamId}`);
+            console.log(`Team ${teamId}: angler1_id =`, angler1Id);
+            if (angler1Id) {
+                const angler1Data = new FormData();
+                angler1Data.append('angler_id', angler1Id);
+                angler1Data.append('num_fish', formData.get(`angler1_fish_${teamId}`) || 0);
+                angler1Data.append('total_weight', formData.get(`angler1_weight_${teamId}`) || 0);
+                angler1Data.append('big_bass_weight', formData.get(`angler1_big_bass_${teamId}`) || 0);
+                angler1Data.append('dead_fish', formData.get(`angler1_dead_penalty_${teamId}`) || 0);
+                angler1Data.append('disqualified', formData.get(`angler1_disqualified_${teamId}`) ? 'on' : '');
+                angler1Data.append('buy_in', formData.get(`angler1_buyIn_${teamId}`) ? 'on' : '');
+                angler1Data.append('was_member', formData.get(`angler1_was_member_${teamId}`) ? 'on' : '');
+
+                const response1 = await fetch(`/admin/tournaments/${tournamentId}/results`, {
+                    method: 'POST',
+                    body: angler1Data,
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response1.ok) {
+                    const errorText = await response1.text();
+                    console.error('Angler 1 save failed:', response1.status, errorText);
+                    throw new Error(`Failed to save angler 1 result: ${response1.status}`);
+                }
+            }
+
+            // Save angler2 (co-angler) result if exists
+            const angler2Id = formData.get(`angler2_id_${teamId}`);
+            console.log(`Team ${teamId}: angler2_id =`, angler2Id);
+            if (angler2Id) {
+                const angler2Data = new FormData();
+                angler2Data.append('angler_id', angler2Id);
+                angler2Data.append('num_fish', formData.get(`angler2_fish_${teamId}`) || 0);
+                angler2Data.append('total_weight', formData.get(`angler2_weight_${teamId}`) || 0);
+                angler2Data.append('big_bass_weight', formData.get(`angler2_big_bass_${teamId}`) || 0);
+                angler2Data.append('dead_fish', formData.get(`angler2_dead_penalty_${teamId}`) || 0);
+                angler2Data.append('disqualified', formData.get(`angler2_disqualified_${teamId}`) ? 'on' : '');
+                angler2Data.append('buy_in', formData.get(`angler2_buyIn_${teamId}`) ? 'on' : '');
+                angler2Data.append('was_member', formData.get(`angler2_was_member_${teamId}`) ? 'on' : '');
+
+                const response2 = await fetch(`/admin/tournaments/${tournamentId}/results`, {
+                    method: 'POST',
+                    body: angler2Data,
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response2.ok) {
+                    const errorText = await response2.text();
+                    console.error('Angler 2 save failed:', response2.status, errorText);
+                    throw new Error(`Failed to save angler 2 result: ${response2.status}`);
+                }
+            }
+
+            // Save team result (works for solo or team)
+            if (angler1Id) {
+                const teamData = new FormData();
+                teamData.append('angler1_id', angler1Id);
+                if (angler2Id) {
+                    teamData.append('angler2_id', angler2Id);
+                }
+
+                const teamResponse = await fetch(`/admin/tournaments/${tournamentId}/team-results`, {
+                    method: 'POST',
+                    body: teamData,
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!teamResponse.ok) {
+                    const errorText = await teamResponse.text();
+                    console.error('Team result save failed:', teamResponse.status, errorText);
+                    throw new Error(`Failed to save team result: ${teamResponse.status}`);
+                }
+            }
+        }
+
+        // Success - redirect to tournament view
+        window.location.href = `/tournaments/${tournamentId}`;
+    } catch (error) {
+        console.error('Error saving results:', error);
+        alert('Error saving results. Please try again.');
+    }
+});
 </script>
 {% endblock %}

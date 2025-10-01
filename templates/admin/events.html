@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from 'macros.html' import alert, card %}
 
 {% block title %}Manage Events - South Austin Bass Club{% endblock %}
 
@@ -19,24 +20,9 @@
             </h5>
         </div>
         <div class="card-body">
-            {% if success %}
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>{{ success }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            {% endif %}
-            {% if error %}
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            {% endif %}
-            {% if warnings %}
-            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ warnings }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            {% endif %}
+            {{ alert('success', success) }}
+            {{ alert('danger', error) }}
+            {{ alert('warning', warnings) }}
             
             <form method="POST" action="/admin/events/create">
                 <!-- Row 1: Event Date, Event Type, Event Name, Description -->
@@ -78,7 +64,7 @@
                     </div>
                     <div class="col-md-2">
                         <label for="lake_name" class="form-label">Lake <span class="text-danger">*</span></label>
-                        <select class="form-select" id="lake_name" name="lake_name">
+                        <select class="form-select" id="lake_name" name="lake_name" required>
                             <option value="">-- Select Lake --</option>
                         </select>
                     </div>
@@ -98,6 +84,13 @@
                     <div class="col-md-2">
                         <label for="fish_limit" class="form-label">Fish Limit</label>
                         <input type="number" class="form-control" id="fish_limit" name="fish_limit" value="5" min="1" max="10">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="aoy_points" class="form-label">AoY Points</label>
+                        <select class="form-select" id="aoy_points" name="aoy_points">
+                            <option value="true" selected>Yes</option>
+                            <option value="false">No</option>
+                        </select>
                     </div>
                 </div>
 
@@ -539,6 +532,13 @@
                                 <label for="edit_fish_limit" class="form-label">Fish Limit</label>
                                 <input type="number" class="form-control" id="edit_fish_limit" name="fish_limit" min="1" max="10">
                             </div>
+                            <div class="col-md-4">
+                                <label for="edit_aoy_points" class="form-label">AoY Points</label>
+                                <select class="form-select" id="edit_aoy_points" name="aoy_points">
+                                    <option value="true">Yes</option>
+                                    <option value="false">No</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     
@@ -739,6 +739,7 @@ function editEvent(id, date, eventType, name, description, hasPoll, pollActive) 
                 document.getElementById('edit_weigh_in_time').value = data.weigh_in_time || '15:00';
                 document.getElementById('edit_entry_fee').value = data.entry_fee || 25.00;
                 document.getElementById('edit_fish_limit').value = data.fish_limit || 5;
+                document.getElementById('edit_aoy_points').value = data.aoy_points !== undefined ? String(data.aoy_points) : 'true';
 
                 // Set lake and load ramps
                 const lakeSelect = document.getElementById('edit_lake_name');
@@ -975,14 +976,29 @@ const EVENT_FORM_CONFIG = {
 function hideAllSections(sectionIds) {
     sectionIds.forEach(id => {
         const element = document.getElementById(id);
-        if (element) element.style.display = 'none';
+        if (element) {
+            element.style.display = 'none';
+            // Disable all form fields in hidden sections to prevent submission
+            const inputs = element.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => input.disabled = true);
+        }
     });
 }
 
 function showSections(sectionIds, displayType = 'flex') {
     sectionIds.forEach(id => {
         const element = document.getElementById(id);
-        if (element) element.style.display = displayType;
+        if (element) {
+            element.style.display = displayType;
+            // Enable all form fields in visible sections
+            const inputs = element.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                // Don't enable if it was originally meant to be disabled (like ramp before lake selection)
+                if (!input.classList.contains('keep-disabled')) {
+                    input.disabled = false;
+                }
+            });
+        }
     });
 }
 

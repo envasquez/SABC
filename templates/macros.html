@@ -1,0 +1,105 @@
+{# Reusable Jinja2 macros for SABC templates #}
+
+{# Alert message macro #}
+{% macro alert(type, message, dismissible=True) %}
+{% if message %}
+<div class="alert alert-{{ type }}{% if dismissible %} alert-dismissible fade show{% endif %}" role="alert">
+    {% if type == 'success' %}
+        <i class="bi bi-check-circle-fill me-2"></i>
+    {% elif type == 'danger' %}
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {% elif type == 'warning' %}
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {% elif type == 'info' %}
+        <i class="bi bi-info-circle-fill me-2"></i>
+    {% endif %}
+    {{ message }}
+    {% if dismissible %}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    {% endif %}
+</div>
+{% endif %}
+{% endmacro %}
+
+{# Form field macro #}
+{% macro form_field(label, name, type='text', required=False, value='', placeholder='', help_text='') %}
+<div class="mb-3">
+    <label for="{{ name }}" class="form-label">
+        {{ label }}
+        {% if required %}<span class="text-danger">*</span>{% endif %}
+    </label>
+    {% if type == 'textarea' %}
+        <textarea class="form-control" id="{{ name }}" name="{{ name }}"
+                  placeholder="{{ placeholder }}"
+                  {% if required %}required{% endif %}>{{ value }}</textarea>
+    {% elif type == 'select' %}
+        <select class="form-select" id="{{ name }}" name="{{ name }}"
+                {% if required %}required{% endif %}>
+            {{ caller() }}
+        </select>
+    {% else %}
+        <input type="{{ type }}" class="form-control" id="{{ name }}"
+               name="{{ name }}" value="{{ value }}"
+               placeholder="{{ placeholder }}"
+               {% if required %}required{% endif %}>
+    {% endif %}
+    {% if help_text %}
+        <div class="form-text">{{ help_text }}</div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# Card macro #}
+{% macro card(title='', header_class='bg-primary text-white', show_header=True) %}
+<div class="card shadow-sm mb-4">
+    {% if show_header and title %}
+    <div class="card-header {{ header_class }}">
+        <h5 class="mb-0">{{ title }}</h5>
+    </div>
+    {% endif %}
+    <div class="card-body">
+        {{ caller() }}
+    </div>
+</div>
+{% endmacro %}
+
+{# Modal macro #}
+{% macro modal(id, title, size='') %}
+<div class="modal fade" id="{{ id }}" tabindex="-1" aria-labelledby="{{ id }}-label" aria-hidden="true">
+    <div class="modal-dialog {% if size %}modal-{{ size }}{% endif %}">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="{{ id }}-label">{{ title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {{ caller() }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# Badge macro #}
+{% macro badge(text, color='primary', icon='') %}
+<span class="badge bg-{{ color }}">
+    {% if icon %}<i class="bi bi-{{ icon }} me-1"></i>{% endif %}
+    {{ text }}
+</span>
+{% endmacro %}
+
+{# Officer badge macro #}
+{% macro officer_badge(position) %}
+<span class="badge bg-info text-dark mb-1 me-1">
+    <i class="bi bi-star-fill me-1"></i>{{ position }}
+</span>
+{% endmacro %}
+
+{# Member badge macro #}
+{% macro member_badge(is_member) %}
+{% if is_member %}
+    {{ badge('Member', 'success', 'person-check-fill') }}
+{% else %}
+    {{ badge('Guest', 'secondary', 'person') }}
+{% endif %}
+{% endmacro %}

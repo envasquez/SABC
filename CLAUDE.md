@@ -113,9 +113,10 @@ git commit -m "Your changes"
 ## Database Design Principles
 
 ### PostgreSQL-First Approach
-- **Business logic in SQL** - Use views, functions, triggers
-- **Minimal ORM usage** - SQLAlchemy Core, not ORM
-- **Type-safe queries** - Proper parameter binding
+- **Business logic in SQL** - Use views, functions, triggers where complex
+- **SQLAlchemy ORM** - Use declarative models with relationships for cleaner code
+- **Pydantic validation** - Use Pydantic models for request/response validation
+- **Type-safe queries** - Proper parameter binding and type hints throughout
 - **Performance-focused** - Optimized queries and indexes
 
 ### Schema Organization

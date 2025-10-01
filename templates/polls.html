@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from 'macros.html' import alert, badge %}
 
 {% block title %}Polls - South Austin Bass Club{% endblock %}
 
@@ -11,19 +12,8 @@
 </div>
 
 <!-- Error and Success Messages -->
-{% if request.query_params.get('error') %}
-<div class="alert alert-danger alert-dismissible fade show" role="alert">
-    <i class="bi bi-exclamation-triangle me-2"></i>{{ request.query_params.get('error') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-{% endif %}
-
-{% if request.query_params.get('success') %}
-<div class="alert alert-success alert-dismissible fade show" role="alert">
-    <i class="bi bi-check-circle me-2"></i>{{ request.query_params.get('success') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-{% endif %}
+{{ alert('danger', request.query_params.get('error')) }}
+{{ alert('success', request.query_params.get('success')) }}
 
 <div class="row g-4">
     {% if polls %}
