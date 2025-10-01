@@ -99,6 +99,8 @@ class TournamentQueries(QueryServiceBase):
             WHERE tr.tournament_id = :tournament_id
             AND a1.name != 'Admin User'
             AND (a2.name != 'Admin User' OR a2.name IS NULL)
+            AND COALESCE(r1.buy_in, FALSE) = FALSE
+            AND COALESCE(r2.buy_in, FALSE) = FALSE
             ORDER BY tr.total_weight DESC
         """
         return self.fetch_all(query, {"tournament_id": tournament_id})
