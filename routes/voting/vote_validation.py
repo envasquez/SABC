@@ -35,6 +35,8 @@ def validate_poll_state(poll_id: int, user_id: int) -> Optional[str]:
     ):
         return "Poll not accepting votes"
 
+    return None
+
 
 def validate_tournament_location_vote(vote_data: dict) -> Tuple[Optional[str], Optional[str]]:
     required_fields = ["lake_id", "ramp_id", "start_time", "end_time"]

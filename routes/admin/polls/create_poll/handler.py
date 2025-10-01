@@ -16,7 +16,6 @@ from routes.admin.polls.create_poll.options import (
 )
 from routes.dependencies import db
 
-
 logger = get_logger("admin.polls.create")
 
 

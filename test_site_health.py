@@ -16,7 +16,7 @@ import time
 from typing import Dict, List, Set
 from urllib.parse import urljoin
 
-import requests
+import requests  # type: ignore
 from bs4 import BeautifulSoup
 
 
@@ -224,7 +224,7 @@ class SiteHealthChecker:
                             continue
 
                         # Make absolute URL
-                        absolute_url = urljoin(full_url, href)
+                        absolute_url = urljoin(full_url, str(href))
                         relative_url = absolute_url.replace(self.base_url, "")
 
                         if absolute_url not in self.visited and relative_url not in to_visit:
