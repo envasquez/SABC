@@ -59,14 +59,18 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
             )
             all_with_fish["calculated_place"] = range(1, len(all_with_fish) + 1)
             # Map places back to non_members_with_fish using merge
+            place_mapping = all_with_fish[["angler_id", "calculated_place"]].copy()
             non_members_with_fish = non_members_with_fish.merge(
-                all_with_fish[["angler_id", "calculated_place"]],
+                place_mapping,
                 on="angler_id",
                 how="left",
-                suffixes=("", "_new")
+                suffixes=("_old", "")
             )
-            non_members_with_fish["calculated_place"] = non_members_with_fish["calculated_place_new"].astype(int)
-            non_members_with_fish = non_members_with_fish.drop(columns=["calculated_place_new"])
+            # Remove old calculated_place column if it exists
+            if "calculated_place_old" in non_members_with_fish.columns:
+                non_members_with_fish = non_members_with_fish.drop(columns=["calculated_place_old"])
+            # Ensure calculated_place is int
+            non_members_with_fish["calculated_place"] = non_members_with_fish["calculated_place"].astype(int)
             non_members_with_fish["calculated_points"] = 0
 
         if len(non_members_zeros) > 0:
