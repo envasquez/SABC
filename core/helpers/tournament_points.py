@@ -23,10 +23,11 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
         fish["calculated_place"] = range(1, len(fish) + 1)
         fish["calculated_points"] = 101 - fish["calculated_place"]
         last_fish_points = fish["calculated_points"].min()
-        zeros["calculated_place"] = len(fish) + 1
+        # Member zeros get sequential places after fish
+        zeros["calculated_place"] = range(len(fish) + 1, len(fish) + len(zeros) + 1)
         zeros["calculated_points"] = last_fish_points - 2
     else:
-        zeros["calculated_place"] = 1
+        zeros["calculated_place"] = range(1, len(zeros) + 1)
         zeros["calculated_points"] = 98
 
     buy_ins = members[members["buy_in"] & ~members["disqualified"]].copy()
@@ -74,11 +75,19 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
             non_members_with_fish["calculated_points"] = 0
 
         if len(non_members_zeros) > 0:
-            # Non-member zeros come after all fish (members + non-members) and member zeros
-            base_place = len(fish) + len(non_members_with_fish) + len(zeros)
-            if len(buy_ins) > 0 and len(zeros) > 0:
-                base_place = max(base_place, buy_ins["calculated_place"].max())
-            non_members_zeros["calculated_place"] = base_place + 1
+            # Non-member zeros come after all member placements (fish + zeros + buy_ins)
+            # Calculate the highest place among members
+            max_member_place = 0
+            if len(fish) > 0:
+                max_member_place = max(max_member_place, fish["calculated_place"].max())
+            if len(zeros) > 0:
+                max_member_place = max(max_member_place, zeros["calculated_place"].max())
+            if len(buy_ins) > 0:
+                max_member_place = max(max_member_place, buy_ins["calculated_place"].max())
+            # Non-member zeros get sequential places after all members
+            non_members_zeros["calculated_place"] = range(
+                max_member_place + 1, max_member_place + len(non_members_zeros) + 1
+            )
             non_members_zeros["calculated_points"] = 0
 
         non_members = (

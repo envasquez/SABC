@@ -33,14 +33,14 @@ def format_individual_results(calculated_results: List[dict]) -> List[Tuple[Any,
     ]
     return [
         (
-            r["calculated_place"],
+            int(r["calculated_place"]),
             r["angler_name"],
-            r["num_fish"],
+            int(r["num_fish"]),
             float(r["total_weight"]),
             float(r.get("big_bass_weight", 0)),
-            r["calculated_points"],
+            int(r["calculated_points"]),
             bool(r.get("was_member", True)),
-            r.get("id", 0),
+            int(r.get("id", 0)),
         )
         for r in regular_results
     ]
