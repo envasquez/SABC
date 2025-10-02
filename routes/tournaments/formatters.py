@@ -63,4 +63,4 @@ def format_buy_in_results(calculated_results: List[dict]) -> Tuple[int, List[Tup
 
 
 def format_disqualified_results(disqualified_raw: List[dict]) -> List[Tuple[str, bool]]:
-    return [(r["name"], bool(r.get("was_member", True))) for r in disqualified_raw]
+    return [(r.get("name", "Unknown"), bool(r.get("was_member", True))) for r in disqualified_raw]
