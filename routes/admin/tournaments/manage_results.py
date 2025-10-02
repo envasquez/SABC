@@ -37,10 +37,35 @@ async def delete_team_result(
         return JSONResponse({"error": "Unauthorized"}, status_code=403)
 
     qs = QueryService(conn)
+
+    # First get the angler IDs from the team result
+    team_result = qs.fetch_one(
+        "SELECT angler1_id, angler2_id FROM team_results WHERE id = :id AND tournament_id = :tid",
+        {"id": team_result_id, "tid": tournament_id},
+    )
+
+    if not team_result:
+        return JSONResponse({"error": "Team result not found"}, status_code=404)
+
+    # Delete individual results for both anglers
+    qs.execute(
+        "DELETE FROM results WHERE tournament_id = :tid AND angler_id IN (:angler1, :angler2)",
+        {
+            "tid": tournament_id,
+            "angler1": team_result["angler1_id"],
+            "angler2": team_result["angler2_id"],
+        },
+    )
+
+    # Delete the team result
     qs.execute(
         "DELETE FROM team_results WHERE id = :id AND tournament_id = :tid",
         {"id": team_result_id, "tid": tournament_id},
     )
+
+    # Commit the transaction
+    conn.commit()
+
     return JSONResponse({"success": True})
 
 
