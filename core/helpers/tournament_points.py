@@ -59,6 +59,7 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
 
     # Assign points - walk through and handle members vs guests
     current_member_points = 100
+    last_member_with_fish_points = None
 
     for i in range(len(regular_results)):
         is_member = regular_results.loc[i, "was_member"]
@@ -68,11 +69,15 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
             if has_fish:
                 # Member with fish gets current points, decrement by 1
                 regular_results.loc[i, "calculated_points"] = current_member_points
+                last_member_with_fish_points = current_member_points
                 current_member_points -= 1
             else:
-                # Member zero gets current points - 2
-                regular_results.loc[i, "calculated_points"] = current_member_points - 2
-                current_member_points -= 2
+                # Member zero: last_fish_points - 2 (per bylaws)
+                if last_member_with_fish_points is not None:
+                    regular_results.loc[i, "calculated_points"] = last_member_with_fish_points - 2
+                else:
+                    # No members with fish yet (edge case)
+                    regular_results.loc[i, "calculated_points"] = 98
         else:
             # Guest gets 0 points, doesn't affect member points progression
             regular_results.loc[i, "calculated_points"] = 0
@@ -84,15 +89,15 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
             last_regular_place = regular_results["calculated_place"].max()
             buy_ins["calculated_place"] = last_regular_place + 1
 
-            # Buy-in points: member_zero_points - 2
-            # Find last member's points from regular results
-            last_member_points = regular_results[regular_results["was_member"]][
-                "calculated_points"
-            ].min()
-            buy_ins["calculated_points"] = last_member_points - 2
+            # Buy-in points: last_fish_points - 4 (per bylaws)
+            if last_member_with_fish_points is not None:
+                buy_ins["calculated_points"] = last_member_with_fish_points - 4
+            else:
+                # No members with fish (edge case)
+                buy_ins["calculated_points"] = 96
         else:
             buy_ins["calculated_place"] = 1
-            buy_ins["calculated_points"] = 95
+            buy_ins["calculated_points"] = 96
 
     # Combine all results
     if len(buy_ins) > 0:
