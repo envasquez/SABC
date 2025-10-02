@@ -4,108 +4,103 @@ import pandas as pd
 
 
 def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Calculate tournament places and points with proper weight-based ranking.
+
+    Ranking rules (for place_finish):
+    1. Total weight (descending - heaviest first)
+    2. Big bass weight (tiebreaker - bigger wins)
+    3. Pandas stable sort (if still tied)
+
+    Points rules:
+    - Members with fish: Sequential points (100, 99, 98...) with gaps when guests appear
+    - Guests: Always 0 points, but placed by weight
+    - Member after guest: Gets previous_member_points - 1
+    - Member zeros: Get previous_member_points - 2
+    - Buy-ins: Separate, placed after all regular results
+    """
     if not results:
         return []
 
     df = pd.DataFrame(results)
     df["total_weight"] = df["total_weight"].astype(float)
+    df["big_bass_weight"] = df["big_bass_weight"].astype(float)
 
-    # Only members get points - filter by was_member field
-    members = df[df["was_member"]].copy()
-    non_members = df[~df["was_member"]].copy()
+    # Separate buy-ins and disqualified from regular results
+    regular_results = df[~df["buy_in"] & ~df["disqualified"]].copy()
+    buy_ins = df[df["buy_in"] & ~df["disqualified"]].copy()
 
-    regular = members[~members["buy_in"] & ~members["disqualified"]].copy()
+    # Sort regular results by weight (DESC) then big_bass (DESC)
+    regular_results = regular_results.sort_values(
+        ["total_weight", "big_bass_weight"], ascending=[False, False]
+    ).reset_index(drop=True)
 
-    fish = regular[regular["total_weight"] > 0].sort_values("total_weight", ascending=False).copy()
-    zeros = regular[regular["total_weight"] == 0].copy()
-
-    if len(fish) > 0:
-        fish["calculated_place"] = range(1, len(fish) + 1)
-        fish["calculated_points"] = 101 - fish["calculated_place"]
-        last_fish_points = fish["calculated_points"].min()
-        # All member zeros get the same place (tied)
-        zeros["calculated_place"] = len(fish) + 1
-        zeros["calculated_points"] = last_fish_points - 2
-    else:
-        # If no fish, all zeros tie for first place
-        zeros["calculated_place"] = 1
-        zeros["calculated_points"] = 98
-
-    buy_ins = members[members["buy_in"] & ~members["disqualified"]].copy()
-    if len(buy_ins) > 0:
-        if len(fish) > 0:
-            buy_in_points = fish["calculated_points"].min() - 4
-            if len(zeros) > 0:
-                # Dense ranking: buy-ins get next sequential place after zeros' place
-                buy_ins["calculated_place"] = zeros["calculated_place"].iloc[0] + 1
-            else:
-                buy_ins["calculated_place"] = len(fish) + 1
+    # Assign places with ties
+    current_place = 1
+    for i in range(len(regular_results)):
+        if i == 0:
+            regular_results.loc[i, "calculated_place"] = current_place
         else:
-            buy_in_points = 95
-            # If no fish, buy-ins come after zeros
-            if len(zeros) > 0:
-                buy_ins["calculated_place"] = zeros["calculated_place"].iloc[0] + 1
+            # Check if tied with previous (same weight and big bass)
+            prev_weight = regular_results.loc[i-1, "total_weight"]
+            prev_bass = regular_results.loc[i-1, "big_bass_weight"]
+            curr_weight = regular_results.loc[i, "total_weight"]
+            curr_bass = regular_results.loc[i, "big_bass_weight"]
+
+            if prev_weight == curr_weight and prev_bass == curr_bass:
+                # Tied - same place as previous
+                regular_results.loc[i, "calculated_place"] = regular_results.loc[i-1, "calculated_place"]
             else:
-                buy_ins["calculated_place"] = 1
-        buy_ins["calculated_points"] = buy_in_points
+                # Not tied - next place (dense ranking)
+                current_place = i + 1
+                regular_results.loc[i, "calculated_place"] = current_place
 
-    # Non-members get actual place based on weight but 0 points
-    if len(non_members) > 0:
-        non_members_regular = non_members[
-            ~non_members["buy_in"] & ~non_members["disqualified"]
-        ].copy()
-        non_members_with_fish = non_members_regular[non_members_regular["total_weight"] > 0].copy()
-        non_members_zeros = non_members_regular[non_members_regular["total_weight"] == 0].copy()
+    # Assign points - walk through and handle members vs guests
+    current_member_points = 100
+    last_member_had_fish = True
 
-        # Calculate place for non-members based on where they fall in the overall standings
-        # Non-members with fish get placed after last member with fish or after last member zero
-        if len(non_members_with_fish) > 0:
-            # Combine all results to determine proper placement
-            all_with_fish = pd.concat([fish, non_members_with_fish], ignore_index=True).sort_values(
-                "total_weight", ascending=False
-            )
-            all_with_fish["calculated_place"] = range(1, len(all_with_fish) + 1)
-            # Map places back to non_members_with_fish using merge
-            place_mapping = all_with_fish[["angler_id", "calculated_place"]].copy()
-            non_members_with_fish = non_members_with_fish.merge(
-                place_mapping, on="angler_id", how="left", suffixes=("_old", "")
-            )
-            # Remove old calculated_place column if it exists
-            if "calculated_place_old" in non_members_with_fish.columns:
-                non_members_with_fish = non_members_with_fish.drop(columns=["calculated_place_old"])
-            # Ensure calculated_place is int
-            non_members_with_fish["calculated_place"] = non_members_with_fish[
-                "calculated_place"
-            ].astype(int)
-            non_members_with_fish["calculated_points"] = 0
+    for i in range(len(regular_results)):
+        is_member = regular_results.loc[i, "was_member"]
+        has_fish = regular_results.loc[i, "total_weight"] > 0
 
-        if len(non_members_zeros) > 0:
-            # Non-member zeros come after all member placements (fish + zeros + buy_ins)
-            # Calculate the highest place among members
-            max_member_place = 0
-            if len(fish) > 0:
-                max_member_place = max(max_member_place, fish["calculated_place"].max())
-            if len(zeros) > 0:
-                max_member_place = max(max_member_place, zeros["calculated_place"].max())
-            if len(buy_ins) > 0:
-                max_member_place = max(max_member_place, buy_ins["calculated_place"].max())
-            # Non-member zeros get sequential places after all members
-            non_members_zeros["calculated_place"] = range(
-                max_member_place + 1, max_member_place + len(non_members_zeros) + 1
-            )
-            non_members_zeros["calculated_points"] = 0
+        if is_member:
+            if has_fish:
+                # Member with fish gets current points, decrement by 1
+                regular_results.loc[i, "calculated_points"] = current_member_points
+                current_member_points -= 1
+                last_member_had_fish = True
+            else:
+                # Member zero gets current points - 2
+                regular_results.loc[i, "calculated_points"] = current_member_points - 2
+                current_member_points -= 2
+                last_member_had_fish = False
+        else:
+            # Guest gets 0 points, doesn't affect member points progression
+            regular_results.loc[i, "calculated_points"] = 0
 
-        non_members = (
-            pd.concat([non_members_with_fish, non_members_zeros], ignore_index=True)
-            if len(non_members_with_fish) > 0 and len(non_members_zeros) > 0
-            else non_members_with_fish
-            if len(non_members_with_fish) > 0
-            else non_members_zeros
-        )
+    # Handle buy-ins separately
+    if len(buy_ins) > 0:
+        # Buy-ins come after all regular results
+        if len(regular_results) > 0:
+            last_regular_place = regular_results["calculated_place"].max()
+            buy_ins["calculated_place"] = last_regular_place + 1
 
-    result_df = (
-        pd.concat([fish, zeros, buy_ins, non_members], ignore_index=True)
-        if len(buy_ins) > 0 or len(non_members) > 0
-        else pd.concat([fish, zeros], ignore_index=True)
-    )
+            # Buy-in points: member_zero_points - 2
+            # Find last member's points from regular results
+            last_member_points = regular_results[regular_results["was_member"]]["calculated_points"].min()
+            buy_ins["calculated_points"] = last_member_points - 2
+        else:
+            buy_ins["calculated_place"] = 1
+            buy_ins["calculated_points"] = 95
+
+    # Combine all results
+    if len(buy_ins) > 0:
+        result_df = pd.concat([regular_results, buy_ins], ignore_index=True)
+    else:
+        result_df = regular_results
+
+    # Ensure place is int
+    result_df["calculated_place"] = result_df["calculated_place"].astype(int)
+    result_df["calculated_points"] = result_df["calculated_points"].astype(int)
+
     return result_df.to_dict("records")
