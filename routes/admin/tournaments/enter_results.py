@@ -67,7 +67,7 @@ async def enter_results_page(
     existing_angler_ids = list(results_by_angler.keys())
     existing_angler_ids_json = json.dumps(existing_angler_ids)
 
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         "admin/enter_results.html",
         {
             "request": request,
@@ -84,6 +84,11 @@ async def enter_results_page(
             "edit_team_result_data": edit_team_result_data,
         },
     )
+    # Prevent browser caching so edit parameters are always fresh
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 @router.post("/admin/tournaments/{tournament_id}/enter-results")
