@@ -36,15 +36,15 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
         if len(fish) > 0:
             buy_in_points = fish["calculated_points"].min() - 4
             if len(zeros) > 0:
-                # Buy-ins come after all zeros (not just first zero)
-                buy_ins["calculated_place"] = len(fish) + len(zeros) + 1
+                # Dense ranking: buy-ins get next sequential place after zeros' place
+                buy_ins["calculated_place"] = zeros["calculated_place"].iloc[0] + 1
             else:
                 buy_ins["calculated_place"] = len(fish) + 1
         else:
             buy_in_points = 95
-            # If no fish, buy-ins come after all zeros
+            # If no fish, buy-ins come after zeros
             if len(zeros) > 0:
-                buy_ins["calculated_place"] = len(zeros) + 1
+                buy_ins["calculated_place"] = zeros["calculated_place"].iloc[0] + 1
             else:
                 buy_ins["calculated_place"] = 1
         buy_ins["calculated_points"] = buy_in_points
