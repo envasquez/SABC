@@ -83,10 +83,11 @@ class TournamentQueries(QueryServiceBase):
 
     def get_team_results(self, tournament_id: int) -> list[dict]:
         query = """
-            SELECT tr.*,
+            SELECT tr.id, tr.tournament_id, tr.angler1_id, tr.angler2_id, tr.place_finish,
                    a1.name as angler1_name, a1.member as angler1_member,
                    a2.name as angler2_name, a2.member as angler2_member,
                    COALESCE(r1.num_fish, 0) + COALESCE(r2.num_fish, 0) as total_fish,
+                   COALESCE(r1.total_weight, 0) + COALESCE(r2.total_weight, 0) as total_weight,
                    COALESCE(r1.was_member, TRUE) as angler1_was_member,
                    COALESCE(r2.was_member, TRUE) as angler2_was_member
             FROM team_results tr
@@ -101,6 +102,6 @@ class TournamentQueries(QueryServiceBase):
             AND (a2.name != 'Admin User' OR a2.name IS NULL)
             AND COALESCE(r1.buy_in, FALSE) = FALSE
             AND COALESCE(r2.buy_in, FALSE) = FALSE
-            ORDER BY tr.total_weight DESC
+            ORDER BY COALESCE(r1.total_weight, 0) + COALESCE(r2.total_weight, 0) DESC
         """
         return self.fetch_all(query, {"tournament_id": tournament_id})
