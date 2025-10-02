@@ -48,13 +48,13 @@ def format_individual_results(calculated_results: List[dict]) -> List[Tuple[Any,
 
 def format_buy_in_results(calculated_results: List[dict]) -> Tuple[int, List[Tuple[Any, ...]]]:
     buy_ins = [r for r in calculated_results if r.get("buy_in")]
-    buy_in_place = buy_ins[0]["calculated_place"] if buy_ins else 0
+    buy_in_place = int(buy_ins[0]["calculated_place"]) if buy_ins else 0
 
     buy_in_results = [
         (
             r["angler_name"],
             buy_in_place,
-            buy_ins[0]["calculated_points"] if buy_ins else 0,
+            int(buy_ins[0]["calculated_points"]) if buy_ins else 0,
             bool(r.get("was_member", True)),
         )
         for r in buy_ins
