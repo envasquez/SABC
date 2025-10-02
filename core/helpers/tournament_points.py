@@ -42,9 +42,35 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
             buy_ins["calculated_place"] = 1
         buy_ins["calculated_points"] = buy_in_points
 
-    # Non-members get place but 0 points
-    non_members["calculated_place"] = 0
-    non_members["calculated_points"] = 0
+    # Non-members get actual place based on weight but 0 points
+    if len(non_members) > 0:
+        non_members_regular = non_members[~non_members["buy_in"] & ~non_members["disqualified"]].copy()
+        non_members_with_fish = non_members_regular[non_members_regular["total_weight"] > 0].copy()
+        non_members_zeros = non_members_regular[non_members_regular["total_weight"] == 0].copy()
+
+        # Calculate place for non-members based on where they fall in the overall standings
+        # Non-members with fish get placed after last member with fish or after last member zero
+        if len(non_members_with_fish) > 0:
+            # Combine all results to determine proper placement
+            all_with_fish = pd.concat([fish, non_members_with_fish], ignore_index=True).sort_values("total_weight", ascending=False)
+            all_with_fish["calculated_place"] = range(1, len(all_with_fish) + 1)
+            # Extract just the non-member places
+            non_member_ids = non_members_with_fish.index
+            for idx in non_member_ids:
+                angler_id = non_members_with_fish.loc[idx, "angler_id"]
+                place = all_with_fish[all_with_fish["angler_id"] == angler_id]["calculated_place"].iloc[0]
+                non_members_with_fish.loc[idx, "calculated_place"] = place
+            non_members_with_fish["calculated_points"] = 0
+
+        if len(non_members_zeros) > 0:
+            # Non-member zeros come after all fish (members + non-members) and member zeros
+            base_place = len(fish) + len(non_members_with_fish) + len(zeros)
+            if len(buy_ins) > 0 and len(zeros) > 0:
+                base_place = max(base_place, buy_ins["calculated_place"].max())
+            non_members_zeros["calculated_place"] = base_place + 1
+            non_members_zeros["calculated_points"] = 0
+
+        non_members = pd.concat([non_members_with_fish, non_members_zeros], ignore_index=True) if len(non_members_with_fish) > 0 and len(non_members_zeros) > 0 else non_members_with_fish if len(non_members_with_fish) > 0 else non_members_zeros
 
     result_df = (
         pd.concat([fish, zeros, buy_ins, non_members], ignore_index=True)
