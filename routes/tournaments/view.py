@@ -51,6 +51,8 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
                 float(stats.biggest_bass),
                 float(stats.heavy_stringer),
             )
+            next_tournament_id = qs.get_next_tournament_id(tournament_id)
+            prev_tournament_id = qs.get_previous_tournament_id(tournament_id)
             return templates.TemplateResponse(
                 "tournament_results.html",
                 {
@@ -63,6 +65,8 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
                     "buy_in_place": buy_in_place,
                     "buy_in_results": buy_in_results,
                     "disqualified_results": disqualified_results,
+                    "next_tournament_id": next_tournament_id,
+                    "prev_tournament_id": prev_tournament_id,
                 },
             )
     except ValueError as e:

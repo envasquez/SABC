@@ -105,3 +105,31 @@ class TournamentQueries(QueryServiceBase):
             ORDER BY COALESCE(r1.total_weight, 0) + COALESCE(r2.total_weight, 0) DESC
         """
         return self.fetch_all(query, {"tournament_id": tournament_id})
+
+    def get_next_tournament_id(self, tournament_id: int) -> Optional[int]:
+        result = self.fetch_one(
+            """
+            SELECT t.id
+            FROM tournaments t
+            JOIN events e ON t.event_id = e.id
+            WHERE t.id > :tournament_id
+            ORDER BY e.date ASC, t.id ASC
+            LIMIT 1
+        """,
+            {"tournament_id": tournament_id},
+        )
+        return result["id"] if result else None
+
+    def get_previous_tournament_id(self, tournament_id: int) -> Optional[int]:
+        result = self.fetch_one(
+            """
+            SELECT t.id
+            FROM tournaments t
+            JOIN events e ON t.event_id = e.id
+            WHERE t.id < :tournament_id
+            ORDER BY e.date DESC, t.id DESC
+            LIMIT 1
+        """,
+            {"tournament_id": tournament_id},
+        )
+        return result["id"] if result else None

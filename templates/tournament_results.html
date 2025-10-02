@@ -318,11 +318,18 @@
         <!-- Navigation -->
         <div class="mt-4">
             <a href="/" class="btn btn-primary">
-                <i class="bi bi-arrow-left me-2"></i>Back to Home
+                <i class="bi bi-arrow-left me-2"></i>Back
             </a>
-            <a href="/calendar" class="btn btn-secondary ms-2">
-                <i class="bi bi-calendar me-2"></i>View Calendar
+            {% if prev_tournament_id %}
+            <a href="/tournaments/{{ prev_tournament_id }}" class="btn btn-secondary ms-2">
+                <i class="bi bi-chevron-left me-2"></i>Previous Result
             </a>
+            {% endif %}
+            {% if next_tournament_id %}
+            <a href="/tournaments/{{ next_tournament_id }}" class="btn btn-secondary ms-2">
+                <i class="bi bi-chevron-right me-2"></i>Next Result
+            </a>
+            {% endif %}
         </div>
     </div>
 </div>
