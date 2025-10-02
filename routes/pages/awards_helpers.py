@@ -10,7 +10,8 @@ def get_stats_query() -> str:
 
 
 def get_tournament_results_query() -> str:
-    return """SELECT t.id as tournament_id, a.id as angler_id, a.name as angler_name, r.total_weight, r.num_fish, r.buy_in, r.disqualified
+    return """SELECT t.id as tournament_id, a.id as angler_id, a.name as angler_name, r.total_weight, r.num_fish,
+       r.big_bass_weight, r.buy_in, r.disqualified, r.was_member
        FROM results r JOIN anglers a ON r.angler_id = a.id JOIN tournaments t ON r.tournament_id = t.id
        JOIN events e ON t.event_id = e.id WHERE e.year = :year AND a.name != 'Admin User' ORDER BY t.id, r.total_weight DESC"""
 
