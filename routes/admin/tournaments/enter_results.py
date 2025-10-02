@@ -49,7 +49,7 @@ async def enter_results_page(
                r2.disqualified as angler2_disqualified, r2.buy_in as angler2_buy_in, r2.was_member as angler2_was_member
                FROM team_results tr
                JOIN anglers a1 ON tr.angler1_id = a1.id
-               JOIN anglers a2 ON tr.angler2_id = a2.id
+               LEFT JOIN anglers a2 ON tr.angler2_id = a2.id
                LEFT JOIN results r1 ON tr.angler1_id = r1.angler_id AND tr.tournament_id = r1.tournament_id
                LEFT JOIN results r2 ON tr.angler2_id = r2.angler_id AND tr.tournament_id = r2.tournament_id
                WHERE tr.id = :id""",
