@@ -559,8 +559,20 @@ document.addEventListener('DOMContentLoaded', function() {
         addTeamForEdit(
             editTeamResultData.angler1_id, editTeamResultData.angler1_name,
             editTeamResultData.angler2_id, editTeamResultData.angler2_name,
-            0, 0, 0, 0, false, false, true,  // angler1 defaults
-            0, 0, 0, 0, false, false, true   // angler2 defaults
+            editTeamResultData.angler1_fish || 0,
+            editTeamResultData.angler1_weight || 0,
+            editTeamResultData.angler1_big_bass || 0,
+            editTeamResultData.angler1_dead_penalty || 0,
+            editTeamResultData.angler1_disqualified || false,
+            editTeamResultData.angler1_buy_in || false,
+            editTeamResultData.angler1_was_member !== false,
+            editTeamResultData.angler2_fish || 0,
+            editTeamResultData.angler2_weight || 0,
+            editTeamResultData.angler2_big_bass || 0,
+            editTeamResultData.angler2_dead_penalty || 0,
+            editTeamResultData.angler2_disqualified || false,
+            editTeamResultData.angler2_buy_in || false,
+            editTeamResultData.angler2_was_member !== false
         );
 
         // Update the form action to edit instead of create

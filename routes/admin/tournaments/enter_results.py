@@ -40,8 +40,19 @@ async def enter_results_page(
     edit_team_result_data = None
     if edit_team_result_id:
         edit_team_result_data = qs.fetch_one(
-            """SELECT tr.*, a1.name as angler1_name, a2.name as angler2_name FROM team_results tr
-               JOIN anglers a1 ON tr.angler1_id = a1.id JOIN anglers a2 ON tr.angler2_id = a2.id WHERE tr.id = :id""",
+            """SELECT tr.*, a1.name as angler1_name, a2.name as angler2_name,
+               r1.num_fish as angler1_fish, r1.total_weight as angler1_weight,
+               r1.big_bass_weight as angler1_big_bass, r1.dead_fish_penalty as angler1_dead_penalty,
+               r1.disqualified as angler1_disqualified, r1.buy_in as angler1_buy_in, r1.was_member as angler1_was_member,
+               r2.num_fish as angler2_fish, r2.total_weight as angler2_weight,
+               r2.big_bass_weight as angler2_big_bass, r2.dead_fish_penalty as angler2_dead_penalty,
+               r2.disqualified as angler2_disqualified, r2.buy_in as angler2_buy_in, r2.was_member as angler2_was_member
+               FROM team_results tr
+               JOIN anglers a1 ON tr.angler1_id = a1.id
+               JOIN anglers a2 ON tr.angler2_id = a2.id
+               LEFT JOIN results r1 ON tr.angler1_id = r1.angler_id AND tr.tournament_id = r1.tournament_id
+               LEFT JOIN results r2 ON tr.angler2_id = r2.angler_id AND tr.tournament_id = r2.tournament_id
+               WHERE tr.id = :id""",
             {"id": int(edit_team_result_id)},
         )
         if edit_team_result_data:
