@@ -14,13 +14,13 @@ def format_team_results(team_results_raw: List[dict]) -> List[Tuple[Any, ...]]:
             team_name = f"{angler1_name} / {angler2_name}"
         formatted.append(
             (
-                r.get("place_finish", 0),
+                int(r.get("place_finish", 0)),
                 team_name,
-                r.get("total_fish", 0),
+                int(r.get("total_fish", 0)),
                 float(r.get("total_weight", 0)),
                 bool(r.get("angler1_was_member", True)),
                 bool(r.get("angler2_was_member", True)),
-                r.get("id", 0),
+                int(r.get("id", 0)),
                 team_size,
             )
         )
