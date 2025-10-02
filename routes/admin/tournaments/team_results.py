@@ -40,13 +40,32 @@ async def save_team_result(
             )
             if angler2_weight:
                 total_weight += Decimal(str(angler2_weight))
-        existing = qs.fetch_one(
-            """SELECT id FROM team_results
-               WHERE tournament_id = :tid
-               AND ((angler1_id = :a1 AND angler2_id = :a2)
-                    OR (angler1_id = :a2 AND angler2_id = :a1))""",
-            {"tid": tournament_id, "a1": angler1_id, "a2": angler2_id},
-        )
+        # Check if team_result_id was provided (edit mode)
+        team_result_id = form.get("team_result_id")
+        if team_result_id:
+            existing = qs.fetch_one(
+                "SELECT id FROM team_results WHERE id = :id",
+                {"id": int(team_result_id)},
+            )
+        else:
+            # Check for existing team by angler combination
+            if angler2_id is None:
+                # Solo angler - check for NULL angler2_id
+                existing = qs.fetch_one(
+                    """SELECT id FROM team_results
+                       WHERE tournament_id = :tid
+                       AND angler1_id = :a1 AND angler2_id IS NULL""",
+                    {"tid": tournament_id, "a1": angler1_id},
+                )
+            else:
+                # Team - check both angler combinations
+                existing = qs.fetch_one(
+                    """SELECT id FROM team_results
+                       WHERE tournament_id = :tid
+                       AND ((angler1_id = :a1 AND angler2_id = :a2)
+                            OR (angler1_id = :a2 AND angler2_id = :a1))""",
+                    {"tid": tournament_id, "a1": angler1_id, "a2": angler2_id},
+                )
         if existing:
             qs.execute(
                 """UPDATE team_results
