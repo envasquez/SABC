@@ -42,14 +42,16 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
             regular_results.loc[i, "calculated_place"] = current_place
         else:
             # Check if tied with previous (same weight and big bass)
-            prev_weight = regular_results.loc[i-1, "total_weight"]
-            prev_bass = regular_results.loc[i-1, "big_bass_weight"]
+            prev_weight = regular_results.loc[i - 1, "total_weight"]
+            prev_bass = regular_results.loc[i - 1, "big_bass_weight"]
             curr_weight = regular_results.loc[i, "total_weight"]
             curr_bass = regular_results.loc[i, "big_bass_weight"]
 
             if prev_weight == curr_weight and prev_bass == curr_bass:
                 # Tied - same place as previous
-                regular_results.loc[i, "calculated_place"] = regular_results.loc[i-1, "calculated_place"]
+                regular_results.loc[i, "calculated_place"] = regular_results.loc[
+                    i - 1, "calculated_place"
+                ]
             else:
                 # Not tied - next place (dense ranking)
                 current_place = i + 1
@@ -57,7 +59,6 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
 
     # Assign points - walk through and handle members vs guests
     current_member_points = 100
-    last_member_had_fish = True
 
     for i in range(len(regular_results)):
         is_member = regular_results.loc[i, "was_member"]
@@ -68,12 +69,10 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
                 # Member with fish gets current points, decrement by 1
                 regular_results.loc[i, "calculated_points"] = current_member_points
                 current_member_points -= 1
-                last_member_had_fish = True
             else:
                 # Member zero gets current points - 2
                 regular_results.loc[i, "calculated_points"] = current_member_points - 2
                 current_member_points -= 2
-                last_member_had_fish = False
         else:
             # Guest gets 0 points, doesn't affect member points progression
             regular_results.loc[i, "calculated_points"] = 0
@@ -87,7 +86,9 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
 
             # Buy-in points: member_zero_points - 2
             # Find last member's points from regular results
-            last_member_points = regular_results[regular_results["was_member"]]["calculated_points"].min()
+            last_member_points = regular_results[regular_results["was_member"]][
+                "calculated_points"
+            ].min()
             buy_ins["calculated_points"] = last_member_points - 2
         else:
             buy_ins["calculated_place"] = 1
