@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, HTTPException, Request
 
 from core.db_schema import engine
@@ -7,6 +9,7 @@ from core.query_service import QueryService
 from routes.tournaments.data import fetch_tournament_data
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get("/tournaments/{tournament_id}")
@@ -62,7 +65,9 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
                     "disqualified_results": disqualified_results,
                 },
             )
-    except ValueError:
+    except ValueError as e:
+        logger.error(f"ValueError for tournament {tournament_id}: {e}")
         raise HTTPException(status_code=404, detail="Tournament not found")
-    except Exception:
+    except Exception as e:
+        logger.error(f"Exception for tournament {tournament_id}: {e}", exc_info=True)
         raise HTTPException(status_code=404, detail="Tournament not found")
