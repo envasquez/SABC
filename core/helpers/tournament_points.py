@@ -23,11 +23,12 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
         fish["calculated_place"] = range(1, len(fish) + 1)
         fish["calculated_points"] = 101 - fish["calculated_place"]
         last_fish_points = fish["calculated_points"].min()
-        # Member zeros get sequential places after fish
-        zeros["calculated_place"] = range(len(fish) + 1, len(fish) + len(zeros) + 1)
+        # All member zeros get the same place (tied)
+        zeros["calculated_place"] = len(fish) + 1
         zeros["calculated_points"] = last_fish_points - 2
     else:
-        zeros["calculated_place"] = range(1, len(zeros) + 1)
+        # If no fish, all zeros tie for first place
+        zeros["calculated_place"] = 1
         zeros["calculated_points"] = 98
 
     buy_ins = members[members["buy_in"] & ~members["disqualified"]].copy()
@@ -35,12 +36,17 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
         if len(fish) > 0:
             buy_in_points = fish["calculated_points"].min() - 4
             if len(zeros) > 0:
-                buy_ins["calculated_place"] = zeros["calculated_place"].iloc[0] + 1
+                # Buy-ins come after all zeros (not just first zero)
+                buy_ins["calculated_place"] = len(fish) + len(zeros) + 1
             else:
                 buy_ins["calculated_place"] = len(fish) + 1
         else:
             buy_in_points = 95
-            buy_ins["calculated_place"] = 1
+            # If no fish, buy-ins come after all zeros
+            if len(zeros) > 0:
+                buy_ins["calculated_place"] = len(zeros) + 1
+            else:
+                buy_ins["calculated_place"] = 1
         buy_ins["calculated_points"] = buy_in_points
 
     # Non-members get actual place based on weight but 0 points
