@@ -27,16 +27,21 @@ async def roster(request: Request, user=Depends(require_auth)):
                    a.member
                ) as member,
                a.is_admin, a.password_hash, a.year_joined, a.phone, a.created_at,
-               STRING_AGG(op.position, ', ' ORDER BY op.position) as officer_positions,
-               MAX(e.date) as last_tournament_date
+               (SELECT STRING_AGG(DISTINCT position, ', ' ORDER BY position)
+                FROM officer_positions
+                WHERE angler_id = a.id AND year = :year) as officer_positions,
+               (SELECT MAX(e.date)
+                FROM results r
+                JOIN tournaments t ON r.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                WHERE r.angler_id = a.id) as last_tournament_date
                FROM anglers a
-               LEFT JOIN officer_positions op ON a.id = op.angler_id AND op.year = :year
-               LEFT JOIN results r ON a.id = r.angler_id
-               LEFT JOIN tournaments t ON r.tournament_id = t.id
-               LEFT JOIN events e ON t.event_id = e.id
                WHERE a.name != 'Admin User' AND a.email != 'admin@sabc.com'
-               GROUP BY a.id, a.name, a.email, a.is_admin, a.password_hash, a.year_joined, a.phone, a.created_at
-               ORDER BY member DESC, CASE WHEN STRING_AGG(op.position, ', ' ORDER BY op.position) IS NOT NULL THEN 0 ELSE 1 END, a.name""",
+               ORDER BY member DESC,
+                        CASE WHEN (SELECT STRING_AGG(DISTINCT position, ', ' ORDER BY position)
+                                   FROM officer_positions
+                                   WHERE angler_id = a.id AND year = :year) IS NOT NULL THEN 0 ELSE 1 END,
+                        a.name""",
             {"year": current_year},
         )
     return templates.TemplateResponse(

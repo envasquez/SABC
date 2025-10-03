@@ -395,7 +395,7 @@
                             <div class="col-md-2">
                                 <select class="form-select form-select-sm" id="past-year-filter" onchange="filterEvents('past')">
                                     <option value="">All Years</option>
-                                    {% for year in range(2020, 2025) %}
+                                    {% for year in past_years %}
                                     <option value="{{ year }}">{{ year }}</option>
                                     {% endfor %}
                                 </select>
@@ -429,7 +429,7 @@
                             <thead><tr><th>Date</th><th>Event</th><th>Type</th><th>Lake</th><th>Actions</th></tr></thead>
                             <tbody>
                                 {% for event in past_events %}
-                                <tr>
+                                <tr data-event-type="{{ event.event_type }}" data-year="{{ event.date.year }}" data-has-results="{{ 'yes' if event.has_results else 'no' }}">
                                     <td>{{ event.date }}</td>
                                     <td>{{ event.name }}</td>
                                     <td>{{ event.event_type }}</td>
@@ -1294,10 +1294,13 @@ function filterEvents(tabType) {
         }
         
         // Year filter
-        if (yearFilter && !rowText.includes(yearFilter)) {
-            visible = false;
+        if (yearFilter) {
+            const rowYear = row.dataset.year;
+            if (rowYear && rowYear !== yearFilter) {
+                visible = false;
+            }
         }
-        
+
         // Status filter for tournaments
         if (statusFilter) {
             if (statusFilter === 'complete' && !rowText.includes('complete')) {
@@ -1310,7 +1313,7 @@ function filterEvents(tabType) {
                 visible = false;
             }
         }
-        
+
         // Lake filter (basic text matching)
         if (lakeFilter) {
             const lakeName = lakeFilter.charAt(0).toUpperCase() + lakeFilter.slice(1);
@@ -1318,25 +1321,21 @@ function filterEvents(tabType) {
                 visible = false;
             }
         }
-        
+
         // Type filter
         if (typeFilter) {
-            if (typeFilter === 'sabc_tournament' && !row.innerHTML.includes('bi-trophy')) {
-                visible = false;
-            } else if (typeFilter === 'federal_holiday' && !row.innerHTML.includes('bi-calendar-heart')) {
-                visible = false;
-            } else if (typeFilter === 'other_tournament' && !row.innerHTML.includes('bi-calendar')) {
-                visible = false;
-            } else if (typeFilter === 'club_event' && !row.innerHTML.includes('bi-calendar-event')) {
+            const rowType = row.dataset.eventType;
+            if (rowType && rowType !== typeFilter) {
                 visible = false;
             }
         }
-        
+
         // Results filter for past events
         if (resultsFilter) {
-            if (resultsFilter === 'has-results' && !rowText.includes('yes')) {
+            const hasResults = row.dataset.hasResults;
+            if (resultsFilter === 'has-results' && hasResults !== 'yes') {
                 visible = false;
-            } else if (resultsFilter === 'no-results' && rowText.includes('yes')) {
+            } else if (resultsFilter === 'no-results' && hasResults === 'yes') {
                 visible = false;
             }
         }

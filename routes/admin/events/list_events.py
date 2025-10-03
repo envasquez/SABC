@@ -25,15 +25,44 @@ async def admin_events(
         "SELECT COUNT(*) FROM events WHERE date < CURRENT_DATE AND event_type != 'holiday'"
     )[0][0]
     events_raw = db(
+        """SELECT e.id, e.date, e.name, e.description, e.event_type, e.year,
+           EXTRACT(DOW FROM e.date) as day_num,
+           EXISTS(SELECT 1 FROM polls WHERE event_id = e.id) as has_poll,
+           EXISTS(SELECT 1 FROM tournaments WHERE event_id = e.id) as has_tournament,
+           EXISTS(SELECT 1 FROM polls WHERE event_id = e.id AND closed = FALSE) as poll_active,
+           e.start_time, e.weigh_in_time, e.entry_fee, e.lake_name, e.ramp_name, e.holiday_name,
+           COALESCE(t.complete, FALSE) as tournament_complete
+           FROM events e
+           LEFT JOIN tournaments t ON e.id = t.event_id
+           WHERE e.date >= CURRENT_DATE
+           ORDER BY e.date
+           LIMIT :limit OFFSET :offset""",
         {"limit": per_page, "offset": upcoming_offset},
     )
     events_list = format_upcoming_events(events_raw)
     past_events_raw = db(
+        """SELECT e.id, e.date, e.name, e.description, e.event_type,
+           e.entry_fee, e.lake_name, e.start_time, e.weigh_in_time, e.holiday_name,
+           EXISTS(SELECT 1 FROM polls WHERE event_id = e.id) as has_poll,
+           EXISTS(SELECT 1 FROM tournaments WHERE event_id = e.id) as has_tournament,
+           COALESCE(t.complete, FALSE) as tournament_complete,
+           EXISTS(SELECT 1 FROM results WHERE tournament_id = t.id) as has_results
+           FROM events e
+           LEFT JOIN tournaments t ON e.id = t.event_id
+           WHERE e.date < CURRENT_DATE AND e.event_type != 'holiday'
+           ORDER BY e.date DESC
+           LIMIT :limit OFFSET :offset""",
         {"limit": per_page, "offset": past_offset},
     )
     past_events = format_past_events(past_events_raw)
     upcoming_total_pages = (total_upcoming + per_page - 1) // per_page
     past_total_pages = (total_past + per_page - 1) // per_page
+    past_event_years = db(
+        "SELECT DISTINCT EXTRACT(YEAR FROM date)::int as year FROM events WHERE date < CURRENT_DATE AND event_type != 'holiday' ORDER BY year DESC"
+    )
+    past_years = [row[0] for row in past_event_years]
+    print(f"DEBUG: past_event_years = {past_event_years}")
+    print(f"DEBUG: past_years = {past_years}")
     return templates.TemplateResponse(
         "admin/events.html",
         {
@@ -41,6 +70,7 @@ async def admin_events(
             "user": user,
             "events": events_list,
             "past_events": past_events,
+            "past_years": past_years,
             "upcoming_page": upcoming_page,
             "upcoming_total_pages": upcoming_total_pages,
             "upcoming_has_prev": upcoming_page > 1,
