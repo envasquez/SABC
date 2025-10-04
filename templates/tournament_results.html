@@ -331,6 +331,20 @@
             </a>
             {% endif %}
         </div>
+
+        <!-- Year Navigation -->
+        {% if year_links %}
+        <div class="mt-3">
+            <small class="text-light d-block mb-2"><i class="bi bi-calendar3 me-1"></i>Jump to year:</small>
+            <div class="btn-group" role="group">
+                {% for year_link in year_links %}
+                <a href="/?p={{ year_link.page_number }}" class="btn btn-sm btn-info">
+                    {{ year_link.year }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 

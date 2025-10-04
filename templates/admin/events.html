@@ -394,7 +394,7 @@
                             </div>
                             <div class="col-md-2">
                                 <select class="form-select form-select-sm" id="past-year-filter" onchange="filterEvents('past')">
-                                    <option value="">All Years</option>
+                                    <option value="">All Years ({{ past_years|length }} years)</option>
                                     {% for year in past_years %}
                                     <option value="{{ year }}">{{ year }}</option>
                                     {% endfor %}

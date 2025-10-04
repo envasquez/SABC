@@ -53,6 +53,7 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
             )
             next_tournament_id = qs.get_next_tournament_id(tournament_id)
             prev_tournament_id = qs.get_previous_tournament_id(tournament_id)
+            year_links = qs.get_tournament_years_with_first_id(4)
             return templates.TemplateResponse(
                 "tournament_results.html",
                 {
@@ -67,6 +68,7 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
                     "disqualified_results": disqualified_results,
                     "next_tournament_id": next_tournament_id,
                     "prev_tournament_id": prev_tournament_id,
+                    "year_links": year_links,
                 },
             )
     except ValueError as e:

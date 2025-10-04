@@ -57,12 +57,11 @@ async def admin_events(
     past_events = format_past_events(past_events_raw)
     upcoming_total_pages = (total_upcoming + per_page - 1) // per_page
     past_total_pages = (total_past + per_page - 1) // per_page
-    past_event_years = db(
+    # Get past event years
+    past_years_raw = db(
         "SELECT DISTINCT EXTRACT(YEAR FROM date)::int as year FROM events WHERE date < CURRENT_DATE AND event_type != 'holiday' ORDER BY year DESC"
     )
-    past_years = [row[0] for row in past_event_years]
-    print(f"DEBUG: past_event_years = {past_event_years}")
-    print(f"DEBUG: past_years = {past_years}")
+    past_years = [int(row[0]) for row in past_years_raw] if past_years_raw else []
     return templates.TemplateResponse(
         "admin/events.html",
         {

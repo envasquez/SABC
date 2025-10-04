@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException, Request
 
+from core.db_schema import engine
 from core.deps import templates
 from core.helpers.auth import get_user_optional
+from core.query_service import QueryService
 from routes.dependencies import db
 from routes.pages.home_queries import get_top_results_query, get_tournaments_query
 
@@ -83,6 +85,11 @@ async def home_paginated(request: Request, page: int = 1):
 
         page_range = range(start_page, end_page + 1)
 
+    # Get year navigation links
+    with engine.connect() as conn:
+        qs = QueryService(conn)
+        year_links = qs.get_tournament_years_with_first_id(items_per_page)
+
     return templates.TemplateResponse(
         "index.html",
         {
@@ -99,6 +106,7 @@ async def home_paginated(request: Request, page: int = 1):
             "total_tournaments": total_tournaments,
             "latest_news": latest_news,
             "member_count": member_count,
+            "year_links": year_links,
         },
     )
 

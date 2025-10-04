@@ -133,3 +133,24 @@ class TournamentQueries(QueryServiceBase):
             {"tournament_id": tournament_id},
         )
         return result["id"] if result else None
+
+    def get_tournament_years_with_first_id(self, items_per_page: int = 4) -> list[dict]:
+        return self.fetch_all(
+            """
+            WITH ranked_tournaments AS (
+                SELECT EXTRACT(YEAR FROM e.date)::int AS year,
+                       t.id,
+                       ROW_NUMBER() OVER (ORDER BY e.date DESC, t.id DESC) as overall_row,
+                       ROW_NUMBER() OVER (PARTITION BY EXTRACT(YEAR FROM e.date) ORDER BY e.date ASC, t.id ASC) as year_row
+                FROM tournaments t
+                JOIN events e ON t.event_id = e.id
+            )
+            SELECT year,
+                   id as first_tournament_id,
+                   CEIL(overall_row::float / :items_per_page)::int as page_number
+            FROM ranked_tournaments
+            WHERE year_row = 1
+            ORDER BY year DESC
+        """,
+            {"items_per_page": items_per_page},
+        )
