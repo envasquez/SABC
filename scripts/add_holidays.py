@@ -22,7 +22,7 @@ def add_federal_holidays(start_year: int, end_year: int) -> None:
             # Check if holiday already exists
             existing = db(
                 "SELECT id FROM events WHERE date = :date AND event_type = 'holiday'",
-                {"date": holiday_date}
+                {"date": holiday_date},
             )
 
             if existing:
@@ -39,13 +39,13 @@ def add_federal_holidays(start_year: int, end_year: int) -> None:
                     "year": year,
                     "name": holiday_name,
                     "description": f"Federal Holiday: {holiday_name}",
-                    "holiday_name": holiday_name
-                }
+                    "holiday_name": holiday_name,
+                },
             )
             print(f"  ✅ Added: {holiday_date} - {holiday_name}")
             added_count += 1
 
-    print(f"\n📊 Summary:")
+    print("\n📊 Summary:")
     print(f"   Added: {added_count} holidays")
     print(f"   Skipped: {skipped_count} holidays (already existed)")
     print(f"   Total processed: {added_count + skipped_count} holidays")

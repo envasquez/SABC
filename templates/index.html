@@ -6,307 +6,449 @@
     <div class="col-lg-8">
         <h1 class="h2 mb-4">Events 🎣</h1>
 
-        {% for tournament in all_tournaments %}
-        <div class="card mb-4">
-            <div class="card-header {% if tournament.complete %}bg-success{% else %}bg-primary{% endif %} text-white">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="mb-0">
-                            {% if tournament.lake_display_name %}
-                                {{ tournament.lake_display_name|upper }}
-                            {% else %}
-                                Location TBD
-                            {% endif %}
-                        </h5>
-                        {% if tournament.ramp_name %}
-                            <small class="text-white-50">
-                                {% if tournament.ramp_google_maps %}
-                                    <a href="#" class="text-white-50 text-decoration-none"
-                                       data-bs-toggle="modal" data-bs-target="#rampModal{{ tournament.id }}">
-                                        <i class="bi bi-geo-alt me-1"></i>{{ tournament.ramp_name|title }}
-                                    </a>
-                                {% else %}
-                                    {{ tournament.ramp_name|title }}
+        {% set completed_tournaments = all_tournaments | selectattr('complete', 'equalto', True) | list %}
+        {% set upcoming_tournaments = all_tournaments | selectattr('complete', 'equalto', False) | list %}
+
+        <!-- Bootstrap Tabs -->
+        <ul class="nav nav-tabs mb-4" id="tournamentTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed-pane" type="button" role="tab" aria-controls="completed-pane" aria-selected="true">
+                    <i class="bi bi-trophy me-1"></i>Completed Tournaments
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming-pane" type="button" role="tab" aria-controls="upcoming-pane" aria-selected="false">
+                    <i class="bi bi-calendar-plus me-1"></i>Upcoming Tournaments
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="tournamentTabsContent">
+            <!-- Completed Tournaments Tab -->
+            <div class="tab-pane fade show active" id="completed-pane" role="tabpanel" aria-labelledby="completed-tab">
+                {% for tournament in completed_tournaments %}
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">
+                                    {% if tournament.lake_display_name %}
+                                        {{ tournament.lake_display_name|upper }}
+                                    {% else %}
+                                        Location TBD
+                                    {% endif %}
+                                </h5>
+                                {% if tournament.ramp_name %}
+                                    <small class="text-white-50">
+                                        {% if tournament.ramp_google_maps %}
+                                            <a href="#" class="text-white-50 text-decoration-none"
+                                               data-bs-toggle="modal" data-bs-target="#rampModal{{ tournament.id }}">
+                                                <i class="bi bi-geo-alt me-1"></i>{{ tournament.ramp_name|title }}
+                                            </a>
+                                        {% else %}
+                                            {{ tournament.ramp_name|title }}
+                                        {% endif %}
+                                    </small>
                                 {% endif %}
-                            </small>
-                        {% endif %}
+                            </div>
+                            <span class="badge bg-warning text-dark">
+                                Complete
+                            </span>
+                        </div>
                     </div>
-                    <span class="badge bg-warning text-dark">
-                        {% if tournament.complete %}Complete{% else %}Upcoming{% endif %}
-                    </span>
-                </div>
-            </div>
 
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="text-secondary mb-0">{{ tournament.name }} | {{ tournament.description[:200] }} - {{ tournament.date|date_format("mm-dd-yyyy") }}</h6>
-                    <div>
-                        <span class="badge bg-secondary me-2">{{ tournament.fish_limit }} fish/{{ tournament.limit_type }}</span>
-                        {% if tournament.aoy_points %}
-                            <span class="badge bg-info">AoY Points</span>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="row g-3 mb-3">
-                    <div class="col-6 col-md-3">
-                        <div class="text-center">
-                            {% if tournament.start_time %}
-                                <i class="bi bi-sunrise text-warning mb-1 fs-4"></i>
-                                <div class="small text-secondary">Start</div>
-                                <div class="fw-semibold">{{ tournament.start_time | time_format }}</div>
-                            {% else %}
-                                <i class="bi bi-sunrise text-secondary mb-1 fs-4"></i>
-                                <div class="small text-secondary">Start</div>
-                                <div class="fw-semibold text-secondary">
-                                    TBD <i class="bi bi-question-circle-fill ms-1"></i>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="text-secondary mb-0">{{ tournament.name }} | {{ tournament.description[:200] }} - {{ tournament.date|date_format("mm-dd-yyyy") }}</h6>
+                            <div>
+                                <span class="badge bg-secondary me-2">{{ tournament.fish_limit }} fish/{{ tournament.limit_type }}</span>
+                                {% if tournament.aoy_points %}
+                                    <span class="badge bg-info">AoY Points</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-6 col-md-3">
+                                <div class="text-center">
+                                    {% if tournament.start_time %}
+                                        <i class="bi bi-sunrise text-warning mb-1 fs-4"></i>
+                                        <div class="small text-secondary">Start</div>
+                                        <div class="fw-semibold">{{ tournament.start_time | time_format }}</div>
+                                    {% else %}
+                                        <i class="bi bi-sunrise text-secondary mb-1 fs-4"></i>
+                                        <div class="small text-secondary">Start</div>
+                                        <div class="fw-semibold text-secondary">
+                                            TBD <i class="bi bi-question-circle-fill ms-1"></i>
+                                        </div>
+                                    {% endif %}
                                 </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="text-center">
-                            {% if tournament.end_time %}
-                                <i class="bi bi-clipboard-data text-primary mb-1 fs-4"></i>
-                                <div class="small text-secondary">Weigh-in</div>
-                                <div class="fw-semibold">{{ tournament.end_time | time_format }}</div>
-                            {% else %}
-                                <i class="bi bi-clipboard-data text-secondary mb-1 fs-4"></i>
-                                <div class="small text-secondary">Weigh-in</div>
-                                <div class="fw-semibold text-secondary">
-                                    TBD <i class="bi bi-question-circle-fill ms-1"></i>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="text-center">
+                                    {% if tournament.end_time %}
+                                        <i class="bi bi-clipboard-data text-primary mb-1 fs-4"></i>
+                                        <div class="small text-secondary">Weigh-in</div>
+                                        <div class="fw-semibold">{{ tournament.end_time | time_format }}</div>
+                                    {% else %}
+                                        <i class="bi bi-clipboard-data text-secondary mb-1 fs-4"></i>
+                                        <div class="small text-secondary">Weigh-in</div>
+                                        <div class="fw-semibold text-secondary">
+                                            TBD <i class="bi bi-question-circle-fill ms-1"></i>
+                                        </div>
+                                    {% endif %}
                                 </div>
-                            {% endif %}
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="text-center">
+                                    <i class="bi bi-cash-coin text-success mb-1 fs-4"></i>
+                                    <div class="small text-secondary">Entry Fee</div>
+                                    <div class="fw-semibold">${{ "%.0f"|format(tournament.entry_fee) }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="text-center">
+                                    {% if tournament.is_team %}
+                                        <i class="bi bi-people-fill text-info mb-1 fs-4"></i>
+                                        <div class="small text-secondary">Type</div>
+                                        <div class="fw-semibold">Team</div>
+                                    {% else %}
+                                        <i class="bi bi-person-fill text-secondary mb-1 fs-4"></i>
+                                        <div class="small text-secondary">Type</div>
+                                        <div class="fw-semibold">Individual</div>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="text-center">
-                            <i class="bi bi-cash-coin text-success mb-1 fs-4"></i>
-                            <div class="small text-secondary">Entry Fee</div>
-                            <div class="fw-semibold">${{ "%.0f"|format(tournament.entry_fee) }}</div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="text-center">
-                            {% if tournament.is_team %}
-                                <i class="bi bi-people-fill text-info mb-1 fs-4"></i>
-                                <div class="small text-secondary">Type</div>
-                                <div class="fw-semibold">Team</div>
-                            {% else %}
-                                <i class="bi bi-person-fill text-secondary mb-1 fs-4"></i>
-                                <div class="small text-secondary">Type</div>
-                                <div class="fw-semibold">Individual</div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Google Maps Section -->
-                {% if tournament.google_maps_iframe %}
-                <div class="mb-3">
-                    <div class="rounded overflow-hidden position-relative w-100" style="height: 180px;">
-                        <style>
-                            .map-container-{{ loop.index }} iframe {
-                                position: absolute;
-                                top: 0;
-                                left: 0;
-                                width: 100% !important;
-                                height: 100% !important;
-                                border: 0;
-                            }
-                        </style>
-                        <div class="w-100 h-100 map-container-{{ loop.index }}">
-                            {{ tournament.google_maps_iframe|safe }}
+                        <!-- Google Maps Section -->
+                        {% if tournament.google_maps_iframe %}
+                        <div class="mb-3">
+                            <div class="rounded overflow-hidden position-relative w-100" style="height: 180px;">
+                                <style>
+                                    .map-container-completed-{{ loop.index }} iframe {
+                                        position: absolute;
+                                        top: 0;
+                                        left: 0;
+                                        width: 100% !important;
+                                        height: 100% !important;
+                                        border: 0;
+                                    }
+                                </style>
+                                <div class="w-100 h-100 map-container-completed-{{ loop.index }}">
+                                    {{ tournament.google_maps_iframe|safe }}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Tournament Results Table (below maps) -->
-                {% if tournament.complete and tournament.top_results %}
-                <div class="mb-3">
-                    <div class="bg-light rounded p-3 border">
-                        <h6 class="mb-3 text-dark"><i class="bi bi-trophy-fill text-warning"></i> Top 3 Results</h6>
-                        <div class="table-responsive">
-                            <table class="table table-sm mb-0">
-                                <thead>
-                                    <tr>
-                                        {% for result in tournament.top_results %}
-                                        <th class="text-center">
-                                            {% if result[0] == 1 %}
-                                            <span class="badge bg-warning text-dark">1st Place</span>
-                                            {% elif result[0] == 2 %}
-                                            <span class="badge bg-secondary">2nd Place</span>
-                                            {% elif result[0] == 3 %}
-                                            <span class="badge bg-info">3rd Place</span>
-                                            {% endif %}
-                                        </th>
-                                        {% endfor %}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        {% for result in tournament.top_results %}
-                                        <td class="text-center">
-                                            <div class="fw-semibold text-primary mb-1">
-                                                {% if result[4] == 1 %}
-                                                    {% set name1_parts = result[1].split() %}
-                                                    {% if name1_parts|length >= 2 %}
-                                                        {{ name1_parts[0][0] }}.{{ name1_parts[-1] }}
-                                                    {% else %}
-                                                        {{ result[1] }}
+                        <!-- Tournament Results Table (below maps) -->
+                        {% if tournament.top_results %}
+                        <div class="mb-3">
+                            <div class="bg-light rounded p-3 border">
+                                <h6 class="mb-3 text-dark"><i class="bi bi-trophy-fill text-warning"></i> Top 3 Results</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0">
+                                        <thead>
+                                            <tr>
+                                                {% for result in tournament.top_results %}
+                                                <th class="text-center">
+                                                    {% if result[0] == 1 %}
+                                                    <span class="badge bg-warning text-dark">1st Place</span>
+                                                    {% elif result[0] == 2 %}
+                                                    <span class="badge bg-secondary">2nd Place</span>
+                                                    {% elif result[0] == 3 %}
+                                                    <span class="badge bg-info">3rd Place</span>
                                                     {% endif %}
-                                                    <span class="badge bg-primary ms-1" style="font-size: 0.7em;">Solo</span>
-                                                {% elif result[2] %}
-                                                    {% set name1_parts = result[1].split() %}
-                                                    {% set name2_parts = result[2].split() %}
-                                                    {% if name1_parts|length >= 2 and name2_parts|length >= 2 %}
-                                                        {{ name1_parts[0][0] }}.{{ name1_parts[-1] }} / {{ name2_parts[0][0] }}.{{ name2_parts[-1] }}
-                                                    {% else %}
-                                                        {{ result[1] }} / {{ result[2] }}
-                                                    {% endif %}
-                                                {% else %}
-                                                    {% set name1_parts = result[1].split() %}
-                                                    {% if name1_parts|length >= 2 %}
-                                                        {{ name1_parts[0][0] }}.{{ name1_parts[-1] }}
-                                                    {% else %}
-                                                        {{ result[1] }}
-                                                    {% endif %}
-                                                {% endif %}
-                                            </div>
-                                            <div class="text-secondary">{{ "%.2f"|format(result[3]) }} lbs</div>
-                                        </td>
-                                        {% endfor %}
-                                    </tr>
-                                </tbody>
-                            </table>
+                                                </th>
+                                                {% endfor %}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                {% for result in tournament.top_results %}
+                                                <td class="text-center">
+                                                    <div class="fw-semibold text-primary mb-1">
+                                                        {% if result[4] == 1 %}
+                                                            {% set name1_parts = result[1].split() %}
+                                                            {% if name1_parts|length >= 2 %}
+                                                                {{ name1_parts[0][0] }}.{{ name1_parts[-1] }}
+                                                            {% else %}
+                                                                {{ result[1] }}
+                                                            {% endif %}
+                                                            <span class="badge bg-primary ms-1" style="font-size: 0.7em;">Solo</span>
+                                                        {% elif result[2] %}
+                                                            {% set name1_parts = result[1].split() %}
+                                                            {% set name2_parts = result[2].split() %}
+                                                            {% if name1_parts|length >= 2 and name2_parts|length >= 2 %}
+                                                                {{ name1_parts[0][0] }}.{{ name1_parts[-1] }} / {{ name2_parts[0][0] }}.{{ name2_parts[-1] }}
+                                                            {% else %}
+                                                                {{ result[1] }} / {{ result[2] }}
+                                                            {% endif %}
+                                                        {% else %}
+                                                            {% set name1_parts = result[1].split() %}
+                                                            {% if name1_parts|length >= 2 %}
+                                                                {{ name1_parts[0][0] }}.{{ name1_parts[-1] }}
+                                                            {% else %}
+                                                                {{ result[1] }}
+                                                            {% endif %}
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="text-secondary">{{ "%.2f"|format(result[3]) }} lbs</div>
+                                                </td>
+                                                {% endfor %}
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                {% endif %}
-                {% elif tournament.poll_id and not tournament.complete %}
-                <!-- Show poll results for upcoming tournaments -->
-                <div class="mb-3">
-                    <div class="bg-light border rounded p-3 position-relative" style="height: 200px;">
-                        <div class="text-center mb-2">
-                            <small class="text-secondary"><i class="bi bi-bar-chart-fill"></i> Current Poll Results</small>
-                        </div>
-                        <canvas id="poll-chart-{{ tournament.id }}"></canvas>
-                    </div>
-                </div>
-                {% else %}
-                <div class="mb-3">
-                    <div class="bg-light border rounded d-flex align-items-center justify-content-center" style="height: 200px;">
-                        <div class="text-center text-secondary">
-                            <i class="bi bi-geo-alt fs-1"></i>
-                            <div>{% if tournament.complete %}Tournament Completed{% else %}Location TBD{% endif %}</div>
-                            {% if not tournament.complete %}
-                            <small class="d-block mt-2">No active poll</small>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-
-                <!-- Tournament Stats for completed tournaments -->
-                {% if tournament.complete and tournament.tournament_stats %}
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <div class="bg-light rounded p-2 text-center">
-                            <div class="small text-secondary fw-medium">Participants</div>
-                            <div class="fw-bold text-primary">{{ tournament.tournament_stats.participants }}</div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="bg-light rounded p-2 text-center">
-                            <div class="small text-secondary fw-medium">Winning Weight</div>
-                            <div class="fw-bold text-success">{{ "%.2f"|format(tournament.tournament_stats.winning_weight) }} lbs</div>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-
-                <div class="d-flex justify-content-end">
-                    <a href="/tournaments/{{ tournament.id }}" class="btn btn-primary">
-                        {% if tournament.complete %}
-                            <i class="bi bi-eye me-1"></i>View Results
+                        {% endif %}
                         {% else %}
-                            <i class="bi bi-info-circle me-1"></i>View Details
+                        <div class="mb-3">
+                            <div class="bg-light border rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <div class="text-center text-secondary">
+                                    <i class="bi bi-geo-alt fs-1"></i>
+                                    <div>Tournament Completed</div>
+                                </div>
+                            </div>
+                        </div>
                         {% endif %}
-                    </a>
+
+                        <!-- Tournament Stats for completed tournaments -->
+                        {% if tournament.tournament_stats %}
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="bg-light rounded p-2 text-center">
+                                    <div class="small text-secondary fw-medium">Participants</div>
+                                    <div class="fw-bold text-primary">{{ tournament.tournament_stats.participants }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="bg-light rounded p-2 text-center">
+                                    <div class="small text-secondary fw-medium">Winning Weight</div>
+                                    <div class="fw-bold text-success">{{ "%.2f"|format(tournament.tournament_stats.winning_weight) }} lbs</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-end">
+                            <a href="/tournaments/{{ tournament.id }}" class="btn btn-primary">
+                                <i class="bi bi-eye me-1"></i>View Results
+                            </a>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        {% endfor %}
-
-        {% if not all_tournaments %}
-        <div class="text-center py-5">
-            <i class="bi bi-calendar-x display-1 text-secondary mb-3"></i>
-            <h4 class="text-secondary">No tournaments scheduled</h4>
-            <p class="text-secondary">Check back soon for upcoming tournament announcements.</p>
-        </div>
-        {% endif %}
-
-        <!-- Pagination -->
-        {% if total_pages > 1 %}
-        <nav aria-label="Tournament pagination" class="mt-4">
-            <ul class="pagination justify-content-center custom-pagination">
-                {% if current_page > 1 %}
-                    <li class="page-item">
-                        <a class="page-link" href="/?p=1" aria-label="First">
-                            <span aria-hidden="true">&laquo;&laquo;</span>
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="/?p={{ current_page - 1 }}" aria-label="Previous">
-                            <span aria-hidden="true">&laquo;</span>
-                        </a>
-                    </li>
-                {% endif %}
-
-                {% for page_num in page_range %}
-                    {% if page_num == current_page %}
-                        <li class="page-item active" aria-current="page">
-                            <span class="page-link">{{ page_num }}</span>
-                        </li>
-                    {% else %}
-                        <li class="page-item">
-                            <a class="page-link" href="/?p={{ page_num }}">{{ page_num }}</a>
-                        </li>
-                    {% endif %}
                 {% endfor %}
 
-                {% if current_page < total_pages %}
-                    <li class="page-item">
-                        <a class="page-link" href="/?p={{ current_page + 1 }}" aria-label="Next">
-                            <span aria-hidden="true">&raquo;</span>
-                        </a>
-                    </li>
-                    <li class="page-item">
-                        <a class="page-link" href="/?p={{ total_pages }}" aria-label="Last">
-                            <span aria-hidden="true">&raquo;&raquo;</span>
-                        </a>
-                    </li>
+                {% if not completed_tournaments %}
+                <div class="text-center py-5">
+                    <i class="bi bi-calendar-x display-1 text-secondary mb-3"></i>
+                    <h4 class="text-secondary">No completed tournaments</h4>
+                    <p class="text-secondary">Completed tournaments will appear here.</p>
+                </div>
                 {% endif %}
-            </ul>
-        </nav>
 
-        <div class="text-center text-secondary small mb-4">
-            Showing {{ start_index }}–{{ end_index }} of {{ total_tournaments }} tournaments
-        </div>
-        {% endif %}
+                <!-- Pagination (only for completed tournaments) -->
+                {% if total_pages > 1 %}
+                <nav aria-label="Tournament pagination" class="mt-4">
+                    <ul class="pagination justify-content-center custom-pagination">
+                        {% if current_page > 1 %}
+                            <li class="page-item">
+                                <a class="page-link" href="/?p=1" aria-label="First">
+                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="/?p={{ current_page - 1 }}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
 
-        <!-- Year Navigation -->
-        {% if year_links %}
-        <div class="text-center mt-4 mb-4">
-            <small class="text-light d-block mb-2"><i class="bi bi-calendar3 me-1"></i>Jump to year:</small>
-            <div class="btn-group" role="group">
-                {% for year_link in year_links %}
-                <a href="/?p={{ year_link.page_number }}" class="btn btn-sm btn-info">
-                    {{ year_link.year }}
-                </a>
+                        {% for page_num in page_range %}
+                            {% if page_num == current_page %}
+                                <li class="page-item active" aria-current="page">
+                                    <span class="page-link">{{ page_num }}</span>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="/?p={{ page_num }}">{{ page_num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if current_page < total_pages %}
+                            <li class="page-item">
+                                <a class="page-link" href="/?p={{ current_page + 1 }}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="/?p={{ total_pages }}" aria-label="Last">
+                                    <span aria-hidden="true">&raquo;&raquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+
+                <div class="text-center text-secondary small mb-4">
+                    Showing {{ start_index }}–{{ end_index }} of {{ total_tournaments }} tournaments
+                </div>
+                {% endif %}
+
+                <!-- Year Navigation (only for completed tournaments) -->
+                {% if year_links %}
+                <div class="text-center mt-4 mb-4">
+                    <small class="text-light d-block mb-2"><i class="bi bi-calendar3 me-1"></i>Jump to year:</small>
+                    <div class="btn-group" role="group">
+                        {% for year_link in year_links %}
+                        <a href="/?p={{ year_link.page_number }}" class="btn btn-sm btn-info">
+                            {{ year_link.year }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Upcoming Tournaments Tab -->
+            <div class="tab-pane fade" id="upcoming-pane" role="tabpanel" aria-labelledby="upcoming-tab">
+                {% for tournament in upcoming_tournaments %}
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">
+                                    {% if tournament.lake_display_name %}
+                                        {{ tournament.lake_display_name|upper }}
+                                    {% else %}
+                                        Location TBD
+                                    {% endif %}
+                                </h5>
+                                {% if tournament.ramp_name %}
+                                    <small class="text-white-50">
+                                        {% if tournament.ramp_google_maps %}
+                                            <a href="#" class="text-white-50 text-decoration-none"
+                                               data-bs-toggle="modal" data-bs-target="#rampModal{{ tournament.id }}">
+                                                <i class="bi bi-geo-alt me-1"></i>{{ tournament.ramp_name|title }}
+                                            </a>
+                                        {% else %}
+                                            {{ tournament.ramp_name|title }}
+                                        {% endif %}
+                                    </small>
+                                {% endif %}
+                            </div>
+                            <span class="badge bg-warning text-dark">
+                                Upcoming
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="text-secondary mb-0">{{ tournament.name }} | {{ tournament.description[:200] }} - {{ tournament.date|date_format("mm-dd-yyyy") }}</h6>
+                            <div>
+                                <span class="badge bg-secondary me-2">{{ tournament.fish_limit }} fish/{{ tournament.limit_type }}</span>
+                                {% if tournament.aoy_points %}
+                                    <span class="badge bg-info">AoY Points</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-6 col-md-3">
+                                <div class="text-center">
+                                    {% if tournament.start_time %}
+                                        <i class="bi bi-sunrise text-warning mb-1 fs-4"></i>
+                                        <div class="small text-secondary">Start</div>
+                                        <div class="fw-semibold">{{ tournament.start_time | time_format }}</div>
+                                    {% else %}
+                                        <i class="bi bi-sunrise text-secondary mb-1 fs-4"></i>
+                                        <div class="small text-secondary">Start</div>
+                                        <div class="fw-semibold text-secondary">
+                                            TBD <i class="bi bi-question-circle-fill ms-1"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="text-center">
+                                    {% if tournament.end_time %}
+                                        <i class="bi bi-clipboard-data text-primary mb-1 fs-4"></i>
+                                        <div class="small text-secondary">Weigh-in</div>
+                                        <div class="fw-semibold">{{ tournament.end_time | time_format }}</div>
+                                    {% else %}
+                                        <i class="bi bi-clipboard-data text-secondary mb-1 fs-4"></i>
+                                        <div class="small text-secondary">Weigh-in</div>
+                                        <div class="fw-semibold text-secondary">
+                                            TBD <i class="bi bi-question-circle-fill ms-1"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="text-center">
+                                    <i class="bi bi-cash-coin text-success mb-1 fs-4"></i>
+                                    <div class="small text-secondary">Entry Fee</div>
+                                    <div class="fw-semibold">${{ "%.0f"|format(tournament.entry_fee) }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="text-center">
+                                    {% if tournament.is_team %}
+                                        <i class="bi bi-people-fill text-info mb-1 fs-4"></i>
+                                        <div class="small text-secondary">Type</div>
+                                        <div class="fw-semibold">Team</div>
+                                    {% else %}
+                                        <i class="bi bi-person-fill text-secondary mb-1 fs-4"></i>
+                                        <div class="small text-secondary">Type</div>
+                                        <div class="fw-semibold">Individual</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Poll Charts for upcoming tournaments -->
+                        {% if tournament.poll_id %}
+                        <div class="mb-3">
+                            <div class="bg-light border rounded p-3 position-relative" style="height: 200px;">
+                                <div class="text-center mb-2">
+                                    <small class="text-secondary"><i class="bi bi-bar-chart-fill"></i> Current Poll Results</small>
+                                </div>
+                                <canvas id="poll-chart-{{ tournament.id }}"></canvas>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="mb-3">
+                            <div class="bg-light border rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <div class="text-center text-secondary">
+                                    <i class="bi bi-geo-alt fs-1"></i>
+                                    <div>Location TBD</div>
+                                    <small class="d-block mt-2">No active poll</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-end">
+                            <a href="/tournaments/{{ tournament.id }}" class="btn btn-primary">
+                                <i class="bi bi-info-circle me-1"></i>View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
                 {% endfor %}
+
+                {% if not upcoming_tournaments %}
+                <div class="text-center py-5">
+                    <i class="bi bi-calendar-x display-1 text-secondary mb-3"></i>
+                    <h4 class="text-secondary">No upcoming tournaments</h4>
+                    <p class="text-secondary">Check back soon for upcoming tournament announcements.</p>
+                </div>
+                {% endif %}
             </div>
         </div>
-        {% endif %}
     </div>
 
     <!-- Sidebar -->
