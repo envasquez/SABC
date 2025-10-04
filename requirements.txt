@@ -6,14 +6,9 @@ itsdangerous==2.2.0
 jinja2==3.1.6
 python-multipart==0.0.18
 pyyaml==6.0.2
-types-pyyaml==6.0.12.20250915  # Type stubs for mypy
 pandas==2.2.3
 pydantic==2.10.4
-email-validator==2.2.0  # Required for Pydantic EmailStr
-pytest==8.3.4
-pytest-cov==6.0.0
-httpx==0.28.1  # Required by FastAPI TestClient
-ruff==0.8.4
-mypy==1.14.0
+email-validator==2.2.0
+httpx==0.28.1
 gunicorn==23.0.0
 sqlalchemy==2.0.36
