@@ -69,18 +69,18 @@
                                         <span class="text-secondary">{{ loop.index }}</span>
                                     </td>
                                     <td>
-                                        <strong>{{ lake[2] }}</strong>
+                                        <strong>{{ lake.display_name }}</strong>
                                     </td>
                                     <td>
-                                        <code>{{ lake[1] }}</code>
+                                        <code>{{ lake.yaml_key }}</code>
                                     </td>
                                     <td>
-                                        <a href="/admin/lakes/{{ lake[0] }}/edit" class="btn btn-sm btn-warning">
+                                        <a href="/admin/lakes/{{ lake.id }}/edit" class="btn btn-sm btn-warning">
                                             <i class="bi bi-pencil"></i> Edit
                                         </a>
                                         <button class="btn btn-sm btn-danger delete-btn"
-                                                data-id="{{ lake[0] }}"
-                                                data-display-name="{{ lake[2] }}">
+                                                data-id="{{ lake.id }}"
+                                                data-display-name="{{ lake.display_name }}">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </td>
