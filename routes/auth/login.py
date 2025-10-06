@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse, Response
 
