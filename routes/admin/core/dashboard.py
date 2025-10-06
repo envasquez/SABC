@@ -87,14 +87,15 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
             ]
 
             # Get years for Past Tournaments tab filter
+            year_col = func.extract("year", Event.date).cast(Integer)
             past_tournament_years_query = (
-                session.query(func.extract("year", Event.date).cast(Integer).label("year"))
+                session.query(year_col.label("year"))
                 .filter(
                     Event.date < cast(func.current_date(), Date),
                     Event.event_type == "sabc_tournament",
                 )
                 .distinct()
-                .order_by(func.extract("year", Event.date).desc())
+                .order_by(year_col.desc())
                 .all()
             )
             past_tournament_years = [int(row[0]) for row in past_tournament_years_query]
