@@ -23,7 +23,7 @@
             {{ alert('success', success) }}
             {{ alert('danger', error) }}
             {{ alert('warning', warnings) }}
-            
+
             <form method="POST" action="/admin/events/create">
                 <!-- Row 1: Event Date, Event Type, Event Name, Description -->
                 <div class="row g-3">
@@ -37,7 +37,7 @@
                             <option value="sabc_tournament">SABC Tournament</option>
                             <option value="holiday">Holiday</option>
                             <option value="other_tournament">Other Tournament</option>
-                            <option value="club_event">Club Event</option>
+                            <!-- <option value="club_event">Club Event</option> -->
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -128,12 +128,12 @@
                 </div>
 
                 <!-- Row 2: Club Event fields -->
-                <div id="club-event-fields" class="row g-3 mt-2" style="display: none;">
+                <!-- <div id="club-event-fields" class="row g-3 mt-2" style="display: none;">
                     <div class="col-md-12">
                         <label for="club_description" class="form-label">Description <span class="text-danger">*</span></label>
                         <textarea class="form-control" id="club_description" rows="3" placeholder="Describe the club event (meeting agenda, activities, location, etc.)"></textarea>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Other event types fields -->
                 <div id="other-fields" class="row g-3 mt-2" style="display: none;">
@@ -143,15 +143,15 @@
                 <!-- SABC Tournament-only fields (hidden now, merged above) -->
                 <div id="sabc-fields" class="row g-3 mt-2" style="display: none;">
                 </div>
-                
+
                 <!-- Holiday-specific fields -->
                 <div id="holiday-fields" class="row g-3 mt-2" style="display: none;">
                 </div>
-                
+
                 <!-- General event options -->
                 <div class="row g-3 mt-2">
                 </div>
-                
+
                 <div class="row mt-3">
                     <div class="col-12">
                         <button type="submit" class="btn btn-primary">
@@ -174,6 +174,12 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <button class="nav-link text-light" id="past-tournaments-tab" data-bs-toggle="tab" data-bs-target="#past-tournaments-events" type="button" role="tab" aria-controls="past-tournaments-events" aria-selected="false">
+                        <i class="bi bi-trophy-fill me-2"></i>Past Tournaments
+                        <span class="badge bg-secondary ms-2" id="past-tournaments-count">{{ past_tournaments|length if past_tournaments else 0 }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
                     <button class="nav-link text-light" id="holidays-tab" data-bs-toggle="tab" data-bs-target="#holidays-events" type="button" role="tab" aria-controls="holidays-events" aria-selected="false">
                         <i class="bi bi-calendar-heart me-2"></i>Holidays
                         <span class="badge bg-info ms-2" id="holidays-count">{{ events|selectattr('event_type', 'equalto', 'holiday')|list|length }}</span>
@@ -185,23 +191,17 @@
                         <span class="badge bg-warning ms-2" id="other-count">{{ events|selectattr('event_type', 'in', ['other_tournament', 'club_event'])|list|length }}</span>
                     </button>
                 </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link text-light" id="past-tab" data-bs-toggle="tab" data-bs-target="#past-events-tab" type="button" role="tab" aria-controls="past-events-tab" aria-selected="false">
-                        <i class="bi bi-calendar-x me-2"></i>Past Events
-                        <span class="badge bg-secondary ms-2" id="past-count">{{ total_past }}</span>
-                    </button>
-                </li>
             </ul>
         </div>
         <div class="card-body p-0">
             <div class="tab-content" id="eventTabsContent">
-                
+
                 <!-- SABC Tournaments Tab -->
                 <div class="tab-pane fade show active" id="sabc-events" role="tabpanel" aria-labelledby="sabc-tab">
                     <div class="d-flex justify-content-between align-items-center p-3 bg-secondary text-white border-bottom">
                         <h6 class="mb-0"><i class="bi bi-trophy me-2 text-primary"></i>SABC Tournament Management</h6>
                     </div>
-                    
+
                     <!-- Search and Filter for SABC -->
                     <div class="p-3 border-bottom bg-dark">
                         <div class="row g-2">
@@ -244,16 +244,91 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     {% set sabc_events = events|selectattr('event_type', 'equalto', 'sabc_tournament')|list %}
                     <div class="table-responsive">
                         <table class="table table-hover table-dark">
                             <thead><tr><th>Date</th><th>Event</th><th>Lake</th><th>Actions</th></tr></thead>
                             <tbody>
                                 {% for event in sabc_events %}
-                                <tr>
+                                <tr data-year="{{ event.date.year }}">
                                     <td>{{ event.date }}</td>
                                     <td>{{ event.name }}</td>
+                                    <td>{{ event.lake_name or '-' }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-warning" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteEvent({{ event.id }})"><i class="bi bi-trash"></i></button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Past Tournaments Tab -->
+                <div class="tab-pane fade" id="past-tournaments-events" role="tabpanel" aria-labelledby="past-tournaments-tab">
+                    <div class="d-flex justify-content-between align-items-center p-3 bg-secondary text-white border-bottom">
+                        <h6 class="mb-0"><i class="bi bi-trophy-fill me-2"></i>Past Tournaments</h6>
+                    </div>
+
+                    <!-- Search and Filter for Past Tournaments -->
+                    <div class="p-3 border-bottom bg-dark">
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text" class="form-control" id="past-tournaments-search" placeholder="Search past tournaments..." onkeyup="filterEvents('past-tournaments')">
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select form-select-sm" id="past-tournaments-year-filter" onchange="filterEvents('past-tournaments')">
+                                    <option value="">All Years ({{ past_tournament_years|length if past_tournament_years else 0 }} years)</option>
+                                    {% for year in past_tournament_years %}
+                                    <option value="{{ year }}">{{ year }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select form-select-sm" id="past-tournaments-type-filter" onchange="filterEvents('past-tournaments')">
+                                    <option value="">All Types</option>
+                                    <option value="sabc_tournament">SABC</option>
+                                    <option value="other_tournament">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select form-select-sm" id="past-tournaments-lake-filter" onchange="filterEvents('past-tournaments')">
+                                    <option value="">All Lakes</option>
+                                    <option value="travis">Lake Travis</option>
+                                    <option value="austin">Lake Austin</option>
+                                    <option value="bastrop">Lake Bastrop</option>
+                                    <option value="buchanan">Lake Buchanan</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select form-select-sm" id="past-tournaments-results-filter" onchange="filterEvents('past-tournaments')">
+                                    <option value="">All Results</option>
+                                    <option value="has-results">Has Results</option>
+                                    <option value="no-results">No Results</option>
+                                </select>
+                            </div>
+                            <div class="col-md-1">
+                                <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters('past-tournaments')">
+                                    <i class="bi bi-x-circle me-1"></i>Clear
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover table-dark">
+                            <thead><tr><th>Date</th><th>Event</th><th>Type</th><th>Lake</th><th>Actions</th></tr></thead>
+                            <tbody>
+                                {% for event in past_tournaments %}
+                                <tr data-event-type="{{ event.event_type }}" data-year="{{ event.date.year }}" data-has-results="{{ 'yes' if event.has_results else 'no' }}" data-lake="{{ event.lake_name|lower if event.lake_name else '' }}">
+                                    <td>{{ event.date }}</td>
+                                    <td>{{ event.name }}</td>
+                                    <td>{{ event.event_type }}</td>
                                     <td>{{ event.lake_name or '-' }}</td>
                                     <td>
                                         <button class="btn btn-sm btn-warning" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
@@ -271,7 +346,7 @@
                     <div class="d-flex justify-content-between align-items-center p-3 bg-secondary text-white border-bottom">
                         <h6 class="mb-0"><i class="bi bi-calendar-heart me-2 text-info"></i>Holiday Calendar</h6>
                     </div>
-                    
+
                     <!-- Search and Filter for Holidays -->
                     <div class="p-3 border-bottom bg-dark">
                         <div class="row g-2">
@@ -284,7 +359,7 @@
                             <div class="col-md-3">
                                 <select class="form-select form-select-sm" id="holidays-year-filter" onchange="filterEvents('holidays')">
                                     <option value="">All Years</option>
-                                    {% for year in range(2025, 2066) %}
+                                    {% for year in range(2025, 2030) %}
                                     <option value="{{ year }}" {% if year == 2025 %}selected{% endif %}>{{ year }}</option>
                                     {% endfor %}
                                 </select>
@@ -296,7 +371,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     {% set sabc_events = events|selectattr('event_type', 'equalto', 'holiday')|list %}
                     <div class="table-responsive">
                         <table class="table table-hover table-dark">
@@ -323,7 +398,7 @@
                     <div class="d-flex justify-content-between align-items-center p-3 bg-secondary text-white border-bottom">
                         <h6 class="mb-0"><i class="bi bi-calendar-plus me-2 text-warning"></i>Other Events & Tournaments</h6>
                     </div>
-                    
+
                     <!-- Search and Filter for Other Events -->
                     <div class="p-3 border-bottom bg-dark">
                         <div class="row g-2">
@@ -345,7 +420,7 @@
                                 <select class="form-select form-select-sm" id="other-type-filter" onchange="filterEvents('other')">
                                     <option value="">All Types</option>
                                     <option value="other_tournament">Other Tournaments</option>
-                                    <option value="club_event">Club Events</option>
+                                    <!-- <option value="club_event">Club Events</option> -->
                                 </select>
                             </div>
                             <div class="col-md-3">
@@ -355,7 +430,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     {% set sabc_events = events|selectattr('event_type', 'in', ['other_tournament', 'club_event'])|list %}
                     <div class="table-responsive">
                         <table class="table table-hover table-dark">
@@ -377,73 +452,6 @@
                     </div>
                 </div>
 
-                <!-- Past Events Tab -->
-                <div class="tab-pane fade" id="past-events-tab" role="tabpanel" aria-labelledby="past-tab">
-                    <div class="d-flex justify-content-between align-items-center p-3 bg-secondary text-white border-bottom">
-                        <h6 class="mb-0"><i class="bi bi-calendar-x me-2"></i>Past Events Archive</h6>
-                    </div>
-                    
-                    <!-- Search and Filter for Past Events -->
-                    <div class="p-3 border-bottom bg-dark">
-                        <div class="row g-2">
-                            <div class="col-md-3">
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                    <input type="text" class="form-control" id="past-search" placeholder="Search past events..." onkeyup="filterEvents('past')">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <select class="form-select form-select-sm" id="past-year-filter" onchange="filterEvents('past')">
-                                    <option value="">All Years ({{ past_years|length }} years)</option>
-                                    {% for year in past_years %}
-                                    <option value="{{ year }}">{{ year }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <select class="form-select form-select-sm" id="past-type-filter" onchange="filterEvents('past')">
-                                    <option value="">All Types</option>
-                                    <option value="sabc_tournament">SABC</option>
-                                    <option value="holiday">Holidays</option>
-                                    <option value="other_tournament">Other Tournaments</option>
-                                    <option value="club_event">Club Events</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <select class="form-select form-select-sm" id="past-results-filter" onchange="filterEvents('past')">
-                                    <option value="">All Results</option>
-                                    <option value="has-results">Has Results</option>
-                                    <option value="no-results">No Results</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters('past')">
-                                    <i class="bi bi-x-circle me-1"></i>Clear
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-hover table-dark">
-                            <thead><tr><th>Date</th><th>Event</th><th>Type</th><th>Lake</th><th>Actions</th></tr></thead>
-                            <tbody>
-                                {% for event in past_events %}
-                                <tr data-event-type="{{ event.event_type }}" data-year="{{ event.date.year }}" data-has-results="{{ 'yes' if event.has_results else 'no' }}">
-                                    <td>{{ event.date }}</td>
-                                    <td>{{ event.name }}</td>
-                                    <td>{{ event.event_type }}</td>
-                                    <td>{{ event.lake_name or '-' }}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-warning" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteEvent({{ event.id }})"><i class="bi bi-trash"></i></button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
 
             </div>
         </div>
@@ -472,12 +480,12 @@
                             <option value="sabc_tournament">SABC Tournament</option>
                             <option value="holiday">Holiday</option>
                             <option value="other_tournament">Other Tournament</option>
-                            <option value="club_event">Club Event</option>
+                            <!-- <option value="club_event">Club Event</option> -->
                         </select>
                     </div>
                     <div class="mb-3" id="edit_poll_closes_container" style="display: none;">
                         <label for="edit_poll_closes_date" class="form-label">Poll Closes Date & Time</label>
-                        <input type="datetime-local" class="form-control" id="edit_poll_closes_date" name="poll_closes_date" 
+                        <input type="datetime-local" class="form-control" id="edit_poll_closes_date" name="poll_closes_date"
                                title="Date and time when tournament location poll closes">
                         <div class="form-text">Only shown for SABC tournaments with existing polls</div>
                     </div>
@@ -489,7 +497,7 @@
                         <label for="edit_description" class="form-label">Description</label>
                         <input type="text" class="form-control" id="edit_description" name="description">
                     </div>
-                    
+
                     <!-- Tournament-specific fields -->
                     <div id="edit-tournament-fields" style="display: none;">
                         <div class="row mb-3">
@@ -517,7 +525,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- SABC Tournament-only fields -->
                     <div id="edit-sabc-fields" style="display: none;">
                         <div class="row mb-3">
@@ -541,11 +549,11 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Holiday-specific fields -->
                     <div id="edit-holiday-fields" style="display: none;">
                     </div>
-                    
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -648,7 +656,7 @@ function loadLakes() {
                     createLakeSelect.appendChild(option);
                 });
             }
-            
+
             // Populate edit form lake select
             const editLakeSelect = document.getElementById('edit_lake_name');
             if (editLakeSelect) {
@@ -786,10 +794,10 @@ function editEvent(id, date, eventType, name, description, hasPoll, pollActive) 
 }
 
 function setupPollFields(eventType, hasPoll, pollClosesAt) {
-    
+
     var pollClosesContainer = document.getElementById('edit_poll_closes_container');
     var pollClosesInput = document.getElementById('edit_poll_closes_date');
-    
+
     if (eventType === 'sabc_tournament' && hasPoll) {
         pollClosesContainer.style.display = 'block';
         if (pollClosesAt) {
@@ -873,7 +881,7 @@ function deletePastEvent(id, name, hasDependencies) {
     // Set the event name in the modal
     document.getElementById('delete-event-name').textContent = name;
     document.getElementById('delete-event-id').value = id;
-    
+
     // Show/hide dependencies warning
     var warningElement = document.getElementById('delete-dependencies-warning');
     if (hasDependencies) {
@@ -881,10 +889,10 @@ function deletePastEvent(id, name, hasDependencies) {
     } else {
         warningElement.style.display = 'none';
     }
-    
+
     // Clear the confirmation input
     document.getElementById('delete-confirmation').value = '';
-    
+
     // Show the modal
     var modal = new bootstrap.Modal(document.getElementById('deletePastEventModal'));
     modal.show();
@@ -893,15 +901,15 @@ function deletePastEvent(id, name, hasDependencies) {
 function confirmDeletePastEvent() {
     var confirmText = document.getElementById('delete-confirmation').value;
     var eventId = document.getElementById('delete-event-id').value;
-    
+
     if (confirmText.trim() !== 'DELETE') {
         alert('Please type DELETE to confirm');
         return;
     }
-    
+
     // Close the modal
     bootstrap.Modal.getInstance(document.getElementById('deletePastEventModal')).hide();
-    
+
     // Delete the event
     fetch(`/admin/events/${eventId}`, {
         method: 'DELETE',
@@ -1142,7 +1150,7 @@ function validateEventForm() {
         weigh_in_time: document.getElementById('weigh_in_time').value,
         entry_fee: document.getElementById('entry_fee').value
     };
-    
+
     fetch('/admin/events/validate', {
         method: 'POST',
         headers: {
@@ -1153,7 +1161,7 @@ function validateEventForm() {
     .then(response => response.json())
     .then(data => {
         let message = 'Validation Results:\n\n';
-        
+
         if (data.valid) {
             message += '✅ All validations passed!\n';
         } else {
@@ -1162,14 +1170,14 @@ function validateEventForm() {
                 message += `  • ${error}\n`;
             });
         }
-        
+
         if (data.warnings.length > 0) {
             message += '\n⚠️  Warnings:\n';
             data.warnings.forEach(warning => {
                 message += `  • ${warning}\n`;
             });
         }
-        
+
         alert(message);
     })
     .catch(error => {
@@ -1218,13 +1226,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize with default state
     toggleEventFields();
-    
+
     // Auto-populate tournament name based on date
     document.getElementById('date').addEventListener('change', function() {
         const dateInput = this;
         const nameInput = document.getElementById('name');
         const eventType = document.getElementById('event_type').value;
-        
+
         if (eventType === 'sabc_tournament' && dateInput.value && !nameInput.value) {
             const date = new Date(dateInput.value);
             const month = date.toLocaleString('default', { month: 'long' });
@@ -1232,7 +1240,7 @@ document.addEventListener('DOMContentLoaded', function() {
             nameInput.value = `${month} ${year} Tournament`;
         }
     });
-    
+
     // Initialize edit event listeners (existing code)
     document.querySelectorAll('.edit-event-btn').forEach(function(button) {
         button.addEventListener('click', function() {
@@ -1243,18 +1251,18 @@ document.addEventListener('DOMContentLoaded', function() {
             var eventDescription = this.getAttribute('data-event-description');
             var hasPoll = this.getAttribute('data-has-poll') === 'true';
             var pollActive = this.getAttribute('data-poll-active') === 'true';
-            
+
             editEvent(eventId, eventDate, eventType, eventName, eventDescription, hasPoll, pollActive);
         });
     });
-    
+
     // Initialize past event delete listeners (existing code)
     document.querySelectorAll('.delete-past-event').forEach(function(button) {
         button.addEventListener('click', function() {
             var eventId = this.getAttribute('data-event-id');
             var eventName = this.getAttribute('data-event-name');
             var hasDeps = this.getAttribute('data-has-deps') === 'true';
-            
+
             deletePastEvent(eventId, eventName, hasDeps);
         });
     });
@@ -1268,31 +1276,33 @@ function filterEvents(tabType) {
     const lakeFilter = document.getElementById(`${tabType}-lake-filter`)?.value || '';
     const typeFilter = document.getElementById(`${tabType}-type-filter`)?.value || '';
     const resultsFilter = document.getElementById(`${tabType}-results-filter`)?.value || '';
-    
+
     let tableSelector;
     if (tabType === 'past') {
         tableSelector = '#past-events-tab table tbody tr';
+    } else if (tabType === 'past-tournaments') {
+        tableSelector = '#past-tournaments-events table tbody tr';
     } else {
         tableSelector = `#${tabType}-events table tbody tr`;
     }
-    
+
     const rows = document.querySelectorAll(tableSelector);
     let visibleCount = 0;
-    
+
     rows.forEach(row => {
         // Skip empty state rows
         if (row.cells.length <= 2 || row.textContent.includes('No events')) {
             return;
         }
-        
+
         let visible = true;
         const rowText = row.textContent.toLowerCase();
-        
+
         // Search term filter
         if (searchTerm && !rowText.includes(searchTerm)) {
             visible = false;
         }
-        
+
         // Year filter
         if (yearFilter) {
             const rowYear = row.dataset.year;
@@ -1314,10 +1324,10 @@ function filterEvents(tabType) {
             }
         }
 
-        // Lake filter (basic text matching)
+        // Lake filter (use data-lake attribute for better matching)
         if (lakeFilter) {
-            const lakeName = lakeFilter.charAt(0).toUpperCase() + lakeFilter.slice(1);
-            if (!rowText.includes(lakeName.toLowerCase())) {
+            const rowLake = row.dataset.lake || '';
+            if (!rowLake.includes(lakeFilter)) {
                 visible = false;
             }
         }
@@ -1339,11 +1349,11 @@ function filterEvents(tabType) {
                 visible = false;
             }
         }
-        
+
         row.style.display = visible ? '' : 'none';
         if (visible) visibleCount++;
     });
-    
+
     // Update empty state
     updateEmptyState(tabType, visibleCount);
 }
@@ -1351,55 +1361,64 @@ function filterEvents(tabType) {
 function clearFilters(tabType) {
     // Clear all filter inputs for this tab
     document.getElementById(`${tabType}-search`).value = '';
-    
+
     const yearFilter = document.getElementById(`${tabType}-year-filter`);
     if (yearFilter) yearFilter.value = '';
-    
+
     const statusFilter = document.getElementById(`${tabType}-status-filter`);
     if (statusFilter) statusFilter.value = '';
-    
+
     const lakeFilter = document.getElementById(`${tabType}-lake-filter`);
     if (lakeFilter) lakeFilter.value = '';
-    
+
     const typeFilter = document.getElementById(`${tabType}-type-filter`);
     if (typeFilter) typeFilter.value = '';
-    
+
     const resultsFilter = document.getElementById(`${tabType}-results-filter`);
     if (resultsFilter) resultsFilter.value = '';
-    
+
     // Show all rows
     let tableSelector;
     if (tabType === 'past') {
         tableSelector = '#past-events-tab table tbody tr';
+    } else if (tabType === 'past-tournaments') {
+        tableSelector = '#past-tournaments-events table tbody tr';
     } else {
         tableSelector = `#${tabType}-events table tbody tr`;
     }
-    
+
     const rows = document.querySelectorAll(tableSelector);
     let visibleCount = 0;
-    
+
     rows.forEach(row => {
         if (row.cells.length > 2 && !row.textContent.includes('No events')) {
             row.style.display = '';
             visibleCount++;
         }
     });
-    
+
     updateEmptyState(tabType, visibleCount);
 }
 
 function updateEmptyState(tabType, visibleCount) {
     // Update tab badges with filtered counts
-    const tabBadge = document.getElementById(`${tabType === 'sabc' ? 'sabc' : tabType === 'holidays' ? 'holidays' : tabType === 'other' ? 'other' : 'past'}-count`);
-    
+    let badgeId;
+    if (tabType === 'sabc') badgeId = 'sabc-count';
+    else if (tabType === 'holidays') badgeId = 'holidays-count';
+    else if (tabType === 'other') badgeId = 'other-count';
+    else if (tabType === 'past-tournaments') badgeId = 'past-tournaments-count';
+    else if (tabType === 'past') badgeId = 'past-count';
+
+    const tabBadge = document.getElementById(badgeId);
+
     if (tabBadge && visibleCount !== undefined) {
         // Store original count if not already stored
         if (!tabBadge.dataset.originalCount) {
             tabBadge.dataset.originalCount = tabBadge.textContent;
         }
-        
+
         // Show filtered count if different from original
-        if (document.getElementById(`${tabType}-search`).value || 
+        if (document.getElementById(`${tabType}-search`).value ||
             document.getElementById(`${tabType}-year-filter`)?.value ||
             document.getElementById(`${tabType}-status-filter`)?.value ||
             document.getElementById(`${tabType}-lake-filter`)?.value ||

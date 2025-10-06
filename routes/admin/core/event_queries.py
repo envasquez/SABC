@@ -47,9 +47,9 @@ def get_upcoming_events_data(page: int, per_page: int) -> tuple[List[Dict[str, A
 
 def get_past_events_data(page: int, per_page: int) -> tuple[List[Dict[str, Any]], int]:
     offset = (page - 1) * per_page
-    total = db("SELECT COUNT(*) FROM events WHERE date < CURRENT_DATE AND event_type != 'holiday'")[
-        0
-    ][0]
+    total = db(
+        "SELECT COUNT(*) FROM events WHERE date < CURRENT_DATE AND event_type = 'sabc_tournament'"
+    )[0][0]
     past_events_raw = db(
         """SELECT e.id, e.date, e.name, e.description, e.event_type,
            e.entry_fee, e.lake_name, e.start_time, e.weigh_in_time, e.holiday_name,
@@ -59,7 +59,7 @@ def get_past_events_data(page: int, per_page: int) -> tuple[List[Dict[str, Any]]
            EXISTS(SELECT 1 FROM results WHERE tournament_id = t.id) as has_results
            FROM events e
            LEFT JOIN tournaments t ON e.id = t.event_id
-           WHERE e.date < CURRENT_DATE AND e.event_type != 'holiday'
+           WHERE e.date < CURRENT_DATE AND e.event_type = 'sabc_tournament'
            ORDER BY e.date DESC
            LIMIT :limit OFFSET :offset""",
         {"limit": per_page, "offset": offset},
