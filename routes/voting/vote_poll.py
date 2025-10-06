@@ -30,13 +30,22 @@ async def vote_in_poll(
         if not poll_type:
             return RedirectResponse("/polls?error=Invalid poll", status_code=302)
         if poll_type == "tournament_location":
-            vote_data = json.loads(option_id)
+            try:
+                vote_data = json.loads(option_id)
+            except (json.JSONDecodeError, ValueError):
+                return RedirectResponse("/polls?error=Invalid vote data", status_code=302)
+
             option_text, error = validate_tournament_location_vote(vote_data)
-            if error:
-                return RedirectResponse(f"/polls?error={error}", status_code=302)
+            if error or not option_text:
+                return RedirectResponse(
+                    f"/polls?error={error or 'Invalid vote data'}", status_code=302
+                )
             actual_option_id = get_or_create_option_id(poll_id, option_text, vote_data)
         else:
-            actual_option_id = int(option_id)
+            try:
+                actual_option_id = int(option_id)
+            except ValueError:
+                return RedirectResponse("/polls?error=Invalid option selected", status_code=302)
             if not db(
                 "SELECT id FROM poll_options WHERE id = :option_id AND poll_id = :poll_id",
                 {"option_id": actual_option_id, "poll_id": poll_id},

@@ -52,7 +52,7 @@ async def delete_event(request: Request, event_id: int):
 
             # Delete event (tournaments cascade automatically)
             conn.execute(text("DELETE FROM events WHERE id = :id"), {"id": event_id})
-            conn.commit()
+            # Auto-commits on context exit - no explicit commit needed
 
         return JSONResponse({"success": True}, status_code=200)
 

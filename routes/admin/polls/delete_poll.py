@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
+from core.db_schema import engine
 from core.helpers.auth import require_admin
 from routes.dependencies import db
 
@@ -11,9 +13,21 @@ router = APIRouter()
 async def delete_poll(request: Request, poll_id: int):
     _user = require_admin(request)
     try:
-        db("DELETE FROM poll_votes WHERE poll_id = :poll_id", {"poll_id": poll_id})
-        db("DELETE FROM poll_options WHERE poll_id = :poll_id", {"poll_id": poll_id})
-        db("DELETE FROM polls WHERE id = :poll_id", {"poll_id": poll_id})
+        # Use transaction to ensure all-or-nothing deletion
+        with engine.begin() as conn:
+            conn.execute(
+                text("DELETE FROM poll_votes WHERE poll_id = :poll_id"),
+                {"poll_id": poll_id},
+            )
+            conn.execute(
+                text("DELETE FROM poll_options WHERE poll_id = :poll_id"),
+                {"poll_id": poll_id},
+            )
+            conn.execute(
+                text("DELETE FROM polls WHERE id = :poll_id"),
+                {"poll_id": poll_id},
+            )
+            # Auto-commits on context exit
         return JSONResponse({"success": True})
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
@@ -24,6 +38,14 @@ async def delete_vote(request: Request, vote_id: int):
     _user = require_admin(request)
     try:
         vote_details = db(
+            """
+            SELECT pv.id, a.name, po.option_text, p.title
+            FROM poll_votes pv
+            JOIN anglers a ON pv.angler_id = a.id
+            JOIN poll_options po ON pv.option_id = po.id
+            JOIN polls p ON pv.poll_id = p.poll_id
+            WHERE pv.id = :vote_id
+            """,
             {"vote_id": vote_id},
         )
         if not vote_details:

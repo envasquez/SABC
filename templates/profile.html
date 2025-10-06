@@ -105,7 +105,7 @@
 <button class="nav-link active" id="current-year-tab" data-bs-toggle="pill" data-bs-target="#current-year" type="button" role="tab" aria-controls="current-year" aria-selected="true">{{current_year}}</button>
 </li>
 <li class="nav-item" role="presentation">
-<button class="nav-link" id="all-time-tab" data-bs-toggle="pill" data-bs-target="#all-time" type="button" role="tab" aria-controls="all-time" aria-selected="false">Since 2022</button>
+<button class="nav-link" id="all-time-tab" data-bs-toggle="pill" data-bs-target="#all-time" type="button" role="tab" aria-controls="all-time" aria-selected="false">Since 2023</button>
 </li>
 </ul>
 
@@ -198,17 +198,17 @@ const phoneInput = document.getElementById('phoneInput');
 if (phoneInput) {
     phoneInput.addEventListener('input', function(e) {
         let value = e.target.value.replace(/\D/g, ''); // Remove all non-digits
-        
+
         if (value.length === 0) {
             e.target.value = '';
             return;
         }
-        
+
         // Remove leading 1 if present
         if (value.length === 11 && value[0] === '1') {
             value = value.substring(1);
         }
-        
+
         // Format the number as (XXX) XXX-XXXX
         if (value.length <= 3) {
             e.target.value = '(' + value;
@@ -221,11 +221,11 @@ if (phoneInput) {
             e.target.value = '(' + value.substring(0, 3) + ') ' + value.substring(3, 6) + '-' + value.substring(6, 10);
         }
     });
-    
+
     // Also format on blur to ensure consistency
     phoneInput.addEventListener('blur', function(e) {
         let value = e.target.value.replace(/\D/g, '');
-        
+
         if (value.length === 10) {
             e.target.value = '(' + value.substring(0, 3) + ') ' + value.substring(3, 6) + '-' + value.substring(6);
         } else if (value.length === 0) {

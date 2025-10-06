@@ -62,9 +62,11 @@ def get_or_create_option_id(poll_id: int, option_text: str, vote_data: dict) -> 
         return existing_option[0][0]
 
     vote_data["lake_id"] = int(vote_data["lake_id"])
-    db(
-        "INSERT INTO poll_options (poll_id, option_text, option_data) VALUES (:poll_id, :option_text, :option_data)",
+    # Use RETURNING clause instead of lastval() to avoid race conditions
+    res = db(
+        """INSERT INTO poll_options (poll_id, option_text, option_data)
+           VALUES (:poll_id, :option_text, :option_data)
+           RETURNING id""",
         {"poll_id": poll_id, "option_text": option_text, "option_data": json.dumps(vote_data)},
     )
-    res = db("SELECT lastval()")
     return res[0][0] if res and len(res) > 0 else None

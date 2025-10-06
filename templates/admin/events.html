@@ -283,7 +283,7 @@
                             </div>
                             <div class="col-md-2">
                                 <select class="form-select form-select-sm" id="past-tournaments-year-filter" onchange="filterEvents('past-tournaments')">
-                                    <option value="">All Years ({{ past_tournament_years|length if past_tournament_years else 0 }} years)</option>
+                                    <option value="">All Years</option>
                                     {% for year in past_tournament_years %}
                                     <option value="{{ year }}">{{ year }}</option>
                                     {% endfor %}

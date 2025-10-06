@@ -30,6 +30,14 @@ async def register(
     last_name = last_name.strip()
     name = f"{first_name} {last_name}".strip()
     ip_address = request.client.host if request.client else "unknown"
+
+    # Validate password strength
+    if len(password) < 8:
+        return templates.TemplateResponse(
+            "register.html",
+            {"request": request, "error": "Password must be at least 8 characters"},
+        )
+
     try:
         existing = db(
             "SELECT id FROM anglers WHERE email=:email",
@@ -56,6 +64,8 @@ async def register(
         )
         if user:
             user_id = user[0][0]
+            # Clear session to prevent session fixation attacks
+            request.session.clear()
             request.session["user_id"] = user_id
             log_security_event(
                 SecurityEvent.AUTH_REGISTER,

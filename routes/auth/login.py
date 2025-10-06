@@ -1,5 +1,6 @@
+
 from fastapi import APIRouter, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
 from routes.dependencies import bcrypt, db, templates, u
@@ -9,7 +10,7 @@ logger = get_logger("auth.login")
 
 
 @router.get("/login")
-async def login_page(request: Request):
+async def login_page(request: Request) -> Response:
     return (
         RedirectResponse("/")
         if u(request)
@@ -18,7 +19,7 @@ async def login_page(request: Request):
 
 
 @router.post("/login")
-async def login(request: Request, email: str = Form(...), password: str = Form(...)):
+async def login(request: Request, email: str = Form(...), password: str = Form(...)) -> Response:
     email = email.lower().strip()
     ip_address = request.client.host if request.client else "unknown"
     try:
@@ -29,6 +30,8 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
         if res and len(res) > 0 and res[0][1]:
             if bcrypt.checkpw(password.encode(), res[0][1].encode()):
                 user_id = res[0][0]
+                # Clear session to prevent session fixation attacks
+                request.session.clear()
                 request.session["user_id"] = user_id
                 log_security_event(
                     SecurityEvent.AUTH_LOGIN_SUCCESS,
@@ -71,7 +74,7 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
 
 
 @router.post("/logout")
-async def logout(request: Request):
+async def logout(request: Request) -> RedirectResponse:
     user_id = request.session.get("user_id")
     ip_address = request.client.host if request.client else "unknown"
 

@@ -2,6 +2,7 @@ import json
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 
 from core.db_schema import engine
 from core.helpers.auth import require_admin
@@ -35,12 +36,16 @@ async def create_user(request: Request):
 
         with engine.connect() as conn:
             result = conn.execute(
+                text("""
+                    INSERT INTO anglers (name, email, phone, member)
+                    VALUES (:name, :email, :phone, :member)
+                    RETURNING id
+                """),
                 {
                     "name": name,
                     "email": final_email,
                     "phone": phone,
                     "member": member,
-                    "year": 2025,
                 },
             )
             conn.commit()
