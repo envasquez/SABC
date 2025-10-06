@@ -27,10 +27,16 @@ def get_upcoming_events_data(page: int, per_page: int) -> tuple[List[Dict[str, A
                 Event.event_type,
                 Event.year,
                 func.extract("dow", Event.date).label("day_num"),
-                exists(select(1).where(Poll.event_id == Event.id)).label("has_poll"),
-                exists(select(1).where(Tournament.event_id == Event.id)).label("has_tournament"),
+                exists(select(1).where(Poll.event_id == Event.id).correlate_except(Poll)).label(
+                    "has_poll"
+                ),
                 exists(
-                    select(1).where((Poll.event_id == Event.id) & (Poll.closed.is_(False)))
+                    select(1).where(Tournament.event_id == Event.id).correlate_except(Tournament)
+                ).label("has_tournament"),
+                exists(
+                    select(1)
+                    .where((Poll.event_id == Event.id) & (Poll.closed.is_(False)))
+                    .correlate_except(Poll)
                 ).label("poll_active"),
                 Event.start_time,
                 Event.weigh_in_time,
@@ -101,10 +107,16 @@ def get_past_events_data(page: int, per_page: int) -> tuple[List[Dict[str, Any]]
                 Event.start_time,
                 Event.weigh_in_time,
                 Event.holiday_name,
-                exists(select(1).where(Poll.event_id == Event.id)).label("has_poll"),
-                exists(select(1).where(Tournament.event_id == Event.id)).label("has_tournament"),
+                exists(select(1).where(Poll.event_id == Event.id).correlate_except(Poll)).label(
+                    "has_poll"
+                ),
+                exists(
+                    select(1).where(Tournament.event_id == Event.id).correlate_except(Tournament)
+                ).label("has_tournament"),
                 func.coalesce(Tournament.complete, False).label("tournament_complete"),
-                exists(select(1).where(Result.tournament_id == Tournament.id)).label("has_results"),
+                exists(
+                    select(1).where(Result.tournament_id == Tournament.id).correlate_except(Result)
+                ).label("has_results"),
             )
             .outerjoin(Tournament, Event.id == Tournament.event_id)
             .filter(

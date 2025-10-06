@@ -26,7 +26,13 @@ def process_closed_polls() -> int:
                 .where(Poll.closed.is_(false()))
                 .where(Poll.closes_at < now)
                 .where(Poll.poll_type == "tournament_location")
-                .where(~exists(select(1).where(Tournament.event_id == Poll.event_id)))
+                .where(
+                    ~exists(
+                        select(1)
+                        .where(Tournament.event_id == Poll.event_id)
+                        .correlate_except(Tournament)
+                    )
+                )
                 .where(Event.event_type == "sabc_tournament")
             )
 
