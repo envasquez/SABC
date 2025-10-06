@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy import Date, cast, exists, func, select
+from sqlalchemy import Date, Integer, cast, exists, func, select
 
 from core.db_schema import Event, Poll, Result, Tournament, get_session
 from core.helpers.auth import require_admin
@@ -88,7 +88,7 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
 
             # Get years for Past Tournaments tab filter
             past_tournament_years_query = (
-                session.query(func.extract("year", Event.date).cast(int).label("year"))
+                session.query(func.extract("year", Event.date).cast(Integer).label("year"))
                 .filter(
                     Event.date < cast(func.current_date(), Date),
                     Event.event_type == "sabc_tournament",
