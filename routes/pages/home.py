@@ -2,6 +2,7 @@ from typing import Any, Dict, List
 
 from fastapi import APIRouter, HTTPException, Request
 from sqlalchemy import case, func
+from sqlalchemy.orm import aliased
 
 from core.db_schema import (
     Angler,
@@ -105,8 +106,8 @@ async def home_paginated(request: Request, page: int = 1):
             tournament_id = tournament[0]
 
             # Get top 3 team results for this tournament
-            Angler1 = Angler
-            Angler2 = Angler
+            Angler1 = aliased(Angler)
+            Angler2 = aliased(Angler)
             top_results_query = (
                 session.query(
                     TeamResult.place_finish,
@@ -161,7 +162,8 @@ async def home_paginated(request: Request, page: int = 1):
         )
 
         # Get latest news
-        Editor = Angler
+        Author = aliased(Angler)
+        Editor = aliased(Angler)
         latest_news = (
             session.query(
                 News.id,
@@ -170,11 +172,11 @@ async def home_paginated(request: Request, page: int = 1):
                 News.created_at,
                 News.updated_at,
                 News.priority,
-                func.coalesce(Editor.name, Angler.name).label("display_author_name"),
-                Angler.name.label("original_author_name"),
+                func.coalesce(Editor.name, Author.name).label("display_author_name"),
+                Author.name.label("original_author_name"),
                 Editor.name.label("editor_name"),
             )
-            .outerjoin(Angler, News.author_id == Angler.id)
+            .outerjoin(Author, News.author_id == Author.id)
             .outerjoin(Editor, News.last_edited_by == Editor.id)
             .filter(
                 News.published.is_(True),
