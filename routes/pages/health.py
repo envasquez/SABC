@@ -3,7 +3,7 @@ from datetime import datetime
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from routes.dependencies import db
+from core.db_schema import Angler, get_session
 
 router = APIRouter()
 
@@ -11,8 +11,8 @@ router = APIRouter()
 @router.get("/health")
 async def health_check():
     try:
-        result = db("SELECT COUNT(*) as count FROM anglers")
-        angler_count = result[0][0] if result and len(result) > 0 else 0
+        with get_session() as session:
+            angler_count = session.query(Angler).count()
         return {
             "status": "healthy",
             "database": "connected",

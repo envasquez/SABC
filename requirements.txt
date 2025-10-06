@@ -12,3 +12,5 @@ email-validator==2.2.0
 httpx==0.28.1
 gunicorn==23.0.0
 sqlalchemy==2.0.36
+starlette-csrf==3.0.0
+slowapi==0.1.9

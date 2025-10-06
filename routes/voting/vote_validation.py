@@ -1,9 +1,11 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Tuple
 
+from sqlalchemy import exists, select
+
+from core.db_schema import Poll, PollOption, PollVote, get_session
 from routes.dependencies import (
-    db,
     find_lake_by_id,
     find_ramp_name_by_id,
     time_format_filter,
@@ -12,30 +14,38 @@ from routes.dependencies import (
 
 
 def validate_poll_state(poll_id: int, user_id: int) -> Optional[str]:
-    poll_check = db(
-        """SELECT p.id, p.closed, p.starts_at, p.closes_at,
-           EXISTS(SELECT 1 FROM poll_votes pv WHERE pv.poll_id = p.id AND pv.angler_id = :user_id) as already_voted
-           FROM polls p WHERE p.id = :poll_id""",
-        {"poll_id": poll_id, "user_id": user_id},
-    )
+    with get_session() as session:
+        # Check if user already voted
+        already_voted = session.query(
+            exists(
+                select(1).where(PollVote.poll_id == poll_id).where(PollVote.angler_id == user_id)
+            )
+        ).scalar()
 
-    if not poll_check or len(poll_check) == 0:
-        return "Poll not found"
+        # Get poll details
+        poll = session.query(Poll).filter(Poll.id == poll_id).first()
 
-    poll_row = poll_check[0]
-    already_voted = poll_row[4]
-    is_closed = poll_row[1]
-    starts_at = poll_row[2]
-    closes_at = poll_row[3]
-    if already_voted or is_closed:
-        return "Poll not found, already voted, or closed"
+        if not poll:
+            return "Poll not found"
 
-    if not (
-        datetime.fromisoformat(starts_at) <= datetime.now() <= datetime.fromisoformat(closes_at)
-    ):
-        return "Poll not accepting votes"
+        if already_voted or poll.closed:
+            return "Poll not found, already voted, or closed"
 
-    return None
+        # Use timezone-aware datetime comparison to avoid timing attacks
+        now = datetime.now(timezone.utc)
+        poll_start = poll.starts_at
+        poll_end = poll.closes_at
+
+        # Make naive datetimes timezone-aware if needed
+        if poll_start.tzinfo is None:
+            poll_start = poll_start.replace(tzinfo=timezone.utc)
+        if poll_end.tzinfo is None:
+            poll_end = poll_end.replace(tzinfo=timezone.utc)
+
+        if not (poll_start <= now <= poll_end):
+            return "Poll not accepting votes"
+
+        return None
 
 
 def validate_tournament_location_vote(vote_data: dict) -> Tuple[Optional[str], Optional[str]]:
@@ -54,19 +64,25 @@ def validate_tournament_location_vote(vote_data: dict) -> Tuple[Optional[str], O
 
 
 def get_or_create_option_id(poll_id: int, option_text: str, vote_data: dict) -> Optional[int]:
-    existing_option = db(
-        "SELECT id FROM poll_options WHERE poll_id = :poll_id AND option_text = :option_text",
-        {"poll_id": poll_id, "option_text": option_text},
-    )
-    if existing_option:
-        return existing_option[0][0]
+    with get_session() as session:
+        # Check for existing option
+        existing_option = (
+            session.query(PollOption)
+            .filter(PollOption.poll_id == poll_id)
+            .filter(PollOption.option_text == option_text)
+            .first()
+        )
 
-    vote_data["lake_id"] = int(vote_data["lake_id"])
-    # Use RETURNING clause instead of lastval() to avoid race conditions
-    res = db(
-        """INSERT INTO poll_options (poll_id, option_text, option_data)
-           VALUES (:poll_id, :option_text, :option_data)
-           RETURNING id""",
-        {"poll_id": poll_id, "option_text": option_text, "option_data": json.dumps(vote_data)},
-    )
-    return res[0][0] if res and len(res) > 0 else None
+        if existing_option:
+            return existing_option.id
+
+        # Create new option
+        vote_data["lake_id"] = int(vote_data["lake_id"])
+        new_option = PollOption(
+            poll_id=poll_id,
+            option_text=option_text,
+            option_data=json.dumps(vote_data),
+        )
+        session.add(new_option)
+        session.flush()  # Flush to get the ID
+        return new_option.id

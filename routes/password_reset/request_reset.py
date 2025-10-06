@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
+from sqlalchemy import func
 
-from core.database import db
+from core.db_schema import Angler, get_session
 from core.email import create_password_reset_token, send_password_reset_email
 from core.helpers.logging import get_logger
 from core.helpers.response import error_redirect
@@ -30,29 +31,31 @@ async def request_password_reset(
         email = email.lower().strip()
         if not email:
             return error_redirect("/forgot-password", "Please enter your email address.")
-        user = db(
-            "SELECT id, name, email FROM anglers WHERE LOWER(email) = LOWER(:email)",
-            {"email": email},
-        )
+
         ip = request.client.host if request.client else "unknown"
-        if user:
-            user_data = user[0]
-            user_id = user_data[0]
-            name = user_data[1]
-            user_email = user_data[2]
 
-            token = create_password_reset_token(user_id, user_email)
+        with get_session() as session:
+            user = session.query(Angler).filter(func.lower(Angler.email) == email.lower()).first()
 
-            if token:
-                email_sent = send_password_reset_email(user_email, name, token)
-                if email_sent:
-                    log_reset_success(user_id, user_email, ip)
+            if user:
+                # Extract data while in session
+                user_id = user.id
+                name = user.name
+                user_email = user.email
+
+                token = create_password_reset_token(user_id, user_email)
+
+                if token:
+                    email_sent = send_password_reset_email(user_email, name, token)
+                    if email_sent:
+                        log_reset_success(user_id, user_email, ip)
+                    else:
+                        log_reset_email_failed(user_id, user_email, ip)
                 else:
-                    log_reset_email_failed(user_id, user_email, ip)
+                    log_reset_rate_limited(user_id, user_email, ip)
             else:
-                log_reset_rate_limited(user_id, user_email, ip)
-        else:
-            log_reset_user_not_found(email, ip)
+                log_reset_user_not_found(email, ip)
+
         return RedirectResponse(
             "/forgot-password?success=If that email is in our system, we've sent you a password reset link. Please check your email (and spam folder).",
             status_code=302,

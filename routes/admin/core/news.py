@@ -1,9 +1,12 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from core.db_schema import Angler, News, get_session
 from core.helpers.auth import require_admin
-from core.helpers.response import error_redirect
-from routes.dependencies import db, templates
+from core.helpers.response import error_redirect, sanitize_error_message
+from routes.dependencies import templates
 
 router = APIRouter()
 
@@ -11,12 +14,23 @@ router = APIRouter()
 @router.get("/admin/news")
 async def admin_news(request: Request):
     user = require_admin(request)
-    news_items = db(
-        """SELECT n.id, n.title, n.content, n.created_at, n.published, n.priority, n.updated_at, a.name as author_name
-           FROM news n
-           LEFT JOIN anglers a ON n.author_id = a.id
-           ORDER BY n.priority DESC, n.created_at DESC"""
-    )
+
+    with get_session() as session:
+        news_query = (
+            session.query(
+                News.id,
+                News.title,
+                News.content,
+                News.created_at,
+                News.published,
+                News.priority,
+                News.updated_at,
+                Angler.name.label("author_name"),
+            )
+            .outerjoin(Angler, News.author_id == Angler.id)
+            .order_by(News.priority.desc(), News.created_at.desc())
+        )
+        news_items = news_query.all()
 
     return templates.TemplateResponse(
         "admin/news.html", {"request": request, "user": user, "news_items": news_items}
@@ -29,17 +43,17 @@ async def create_news(
 ):
     user = require_admin(request)
     try:
-        db(
-            """INSERT INTO news (title, content, author_id, published, priority)
-               VALUES (:title, :content, :author_id, :published, :priority)""",
-            {
-                "title": title.strip(),
-                "content": content.strip(),
-                "author_id": user["id"],
-                "published": True,
-                "priority": priority,
-            },
-        )
+        with get_session() as session:
+            news_item = News(
+                title=title.strip(),
+                content=content.strip(),
+                author_id=user["id"],
+                published=True,
+                priority=priority,
+            )
+            session.add(news_item)
+            session.commit()
+
         return RedirectResponse("/admin/news?success=News created successfully", status_code=302)
     except Exception as e:
         return error_redirect("/admin/news", str(e))
@@ -55,19 +69,17 @@ async def update_news(
 ):
     user = require_admin(request)
     try:
-        db(
-            """UPDATE news SET title = :title, content = :content, published = :published,
-               priority = :priority, last_edited_by = :editor_id, updated_at = CURRENT_TIMESTAMP
-               WHERE id = :id""",
-            {
-                "id": news_id,
-                "title": title.strip(),
-                "content": content.strip(),
-                "published": True,
-                "priority": priority,
-                "editor_id": user["id"],
-            },
-        )
+        with get_session() as session:
+            news_item = session.query(News).filter(News.id == news_id).first()
+            if news_item:
+                news_item.title = title.strip()
+                news_item.content = content.strip()
+                news_item.published = True
+                news_item.priority = priority
+                news_item.last_edited_by = user["id"]
+                news_item.updated_at = datetime.utcnow()
+                session.commit()
+
         return RedirectResponse("/admin/news?success=News updated successfully", status_code=302)
     except Exception as e:
         return error_redirect("/admin/news", str(e))
@@ -77,7 +89,14 @@ async def update_news(
 async def delete_news(request: Request, news_id: int):
     _user = require_admin(request)
     try:
-        db("DELETE FROM news WHERE id = :id", {"id": news_id})
+        with get_session() as session:
+            news_item = session.query(News).filter(News.id == news_id).first()
+            if news_item:
+                session.delete(news_item)
+                session.commit()
+
         return JSONResponse({"success": True})
     except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
+        return JSONResponse(
+            {"error": sanitize_error_message(e, "Operation failed")}, status_code=500
+        )

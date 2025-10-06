@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
+from core.db_schema import Event, Poll, Tournament, get_session
 from core.helpers.auth import require_admin
-from routes.dependencies import db
 
 router = APIRouter()
 
@@ -12,45 +12,58 @@ async def get_event_info(request: Request, event_id: int):
     """Get event information as JSON for editing forms."""
     _user = require_admin(request)
     try:
-        event_info = db(
-            """SELECT e.id, e.date, e.name, e.description, e.event_type,
-               e.start_time, e.weigh_in_time, e.lake_name, e.ramp_name, e.entry_fee,
-               t.fish_limit, e.holiday_name, p.closes_at, p.starts_at, p.id, p.closed, t.id, t.aoy_points
-               FROM events e
-               LEFT JOIN tournaments t ON e.id = t.event_id
-               LEFT JOIN polls p ON e.id = p.event_id
-               WHERE e.id = :event_id""",
-            {"event_id": event_id},
-        )
-
-        if event_info:
-            event = event_info[0]
-            lake_display_name = event[7] or ""
-
-            return JSONResponse(
-                {
-                    "id": event[0],
-                    "date": str(event[1]) if event[1] else "",
-                    "name": event[2],
-                    "description": event[3] or "",
-                    "event_type": event[4],
-                    "start_time": event[5].strftime("%H:%M") if event[5] is not None else "",
-                    "weigh_in_time": event[6].strftime("%H:%M") if event[6] is not None else "",
-                    "lake_name": lake_display_name,
-                    "ramp_name": event[8] or "",
-                    "entry_fee": float(event[9]) if event[9] is not None else None,
-                    "fish_limit": event[10],
-                    "holiday_name": event[11] or "",
-                    "poll_closes_at": event[12].isoformat() if event[12] is not None else "",
-                    "poll_starts_at": event[13].isoformat() if event[13] is not None else "",
-                    "poll_id": event[14],
-                    "poll_closed": bool(event[15]) if event[15] is not None else None,
-                    "tournament_id": event[16],
-                    "aoy_points": bool(event[17]) if event[17] is not None else True,
-                }
+        with get_session() as session:
+            # Query event with left joins to tournament and poll
+            result = (
+                session.query(Event, Tournament, Poll)
+                .outerjoin(Tournament, Event.id == Tournament.event_id)
+                .outerjoin(Poll, Event.id == Poll.event_id)
+                .filter(Event.id == event_id)
+                .first()
             )
-        else:
-            return JSONResponse({"error": "Event not found"}, status_code=404)
+
+            if result:
+                event, tournament, poll = result
+                lake_display_name = event.lake_name or ""
+
+                return JSONResponse(
+                    {
+                        "id": event.id,
+                        "date": str(event.date) if event.date else "",
+                        "name": event.name,
+                        "description": event.description or "",
+                        "event_type": event.event_type,
+                        "start_time": event.start_time.strftime("%H:%M")
+                        if event.start_time is not None
+                        else "",
+                        "weigh_in_time": event.weigh_in_time.strftime("%H:%M")
+                        if event.weigh_in_time is not None
+                        else "",
+                        "lake_name": lake_display_name,
+                        "ramp_name": event.ramp_name or "",
+                        "entry_fee": float(event.entry_fee)
+                        if event.entry_fee is not None
+                        else None,
+                        "fish_limit": tournament.fish_limit if tournament else None,
+                        "holiday_name": event.holiday_name or "",
+                        "poll_closes_at": poll.closes_at.isoformat()
+                        if poll and poll.closes_at is not None
+                        else "",
+                        "poll_starts_at": poll.starts_at.isoformat()
+                        if poll and poll.starts_at is not None
+                        else "",
+                        "poll_id": poll.id if poll else None,
+                        "poll_closed": bool(poll.closed)
+                        if poll and poll.closed is not None
+                        else None,
+                        "tournament_id": tournament.id if tournament else None,
+                        "aoy_points": bool(tournament.aoy_points)
+                        if tournament and tournament.aoy_points is not None
+                        else True,
+                    }
+                )
+            else:
+                return JSONResponse({"error": "Event not found"}, status_code=404)
 
     except Exception as e:
         return JSONResponse({"error": f"Failed to get event info: {str(e)}"}, status_code=500)

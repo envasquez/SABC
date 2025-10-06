@@ -2,10 +2,9 @@
 
 import re
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
-from core.database import db
-from core.db_schema import engine
+from core.db_schema import Event, engine, get_session
 from core.query_service import QueryService
 
 
@@ -33,10 +32,10 @@ def validate_event_data(
     date_str: str,
     name: str,
     event_type: str,
-    start_time: str = None,
-    weigh_in_time: str = None,
-    entry_fee: float = None,
-    lake_name: str = None,
+    start_time: Optional[str] = None,
+    weigh_in_time: Optional[str] = None,
+    entry_fee: Optional[float] = None,
+    lake_name: Optional[str] = None,
 ) -> Dict[str, List[str]]:
     """Validate event data before creation/update.
 
@@ -56,9 +55,12 @@ def validate_event_data(
     date_obj = datetime.strptime(date_str, "%Y-%m-%d")
     if date_obj.date() < datetime.now().date():
         warnings.append(f"Creating event for past date: {date_str}")
-    existing = db("SELECT id, name FROM events WHERE date = :date", {"date": date_str})
-    if existing:
-        warnings.append(f"Date {date_str} already has event: {existing[0][1]}")
+
+    with get_session() as session:
+        existing = session.query(Event.id, Event.name).filter(Event.date == date_obj.date()).first()
+        if existing:
+            warnings.append(f"Date {date_str} already has event: {existing[1]}")
+
     if not name or len(name.strip()) < 3:
         errors.append("Event name must be at least 3 characters")
     if event_type == "sabc_tournament":

@@ -5,8 +5,12 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 from starlette.middleware.sessions import SessionMiddleware
 
+from core.csrf_middleware import CSRFMiddleware
 from core.deps import (
     CustomJSONEncoder,
     date_format_filter,
@@ -17,6 +21,11 @@ from core.deps import (
 )
 from core.helpers.logging import configure_logging
 from core.security_middleware import SecurityHeadersMiddleware
+
+
+def get_csrf_token(request: Request) -> str:
+    """Extract CSRF token from request cookies."""
+    return request.cookies.get("csrf_token", "")
 
 
 def create_app() -> FastAPI:
@@ -35,10 +44,33 @@ def create_app() -> FastAPI:
 
     app.default_response_class = CustomJSONResponse
 
+    # Rate limiting
+    limiter = Limiter(key_func=get_remote_address)
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
     app.add_middleware(SecurityHeadersMiddleware)
+
+    # Session middleware with secure configuration
     app.add_middleware(
-        SessionMiddleware, secret_key=os.environ.get("SECRET_KEY", "dev-key-change-in-production")
+        SessionMiddleware,
+        secret_key=os.environ.get("SECRET_KEY", "dev-key-change-in-production"),
+        session_cookie="sabc_session",
+        max_age=86400,  # 24 hours
+        same_site="lax",  # "lax" for better compatibility, "strict" for maximum security
+        https_only=os.environ.get("ENVIRONMENT", "development") == "production",
     )
+
+    # CSRF protection middleware
+    app.add_middleware(
+        CSRFMiddleware,
+        secret=os.environ.get("SECRET_KEY", "dev-key-change-in-production"),
+        cookie_name="csrf_token",
+        cookie_secure=os.environ.get("ENVIRONMENT", "development") == "production",
+        cookie_samesite="lax",
+        header_name="x-csrf-token",
+    )
+
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
     templates.env.filters["from_json"] = from_json_filter
@@ -46,6 +78,9 @@ def create_app() -> FastAPI:
     templates.env.filters["time_format"] = time_format_filter
     templates.env.filters["date_format_dd_mm_yyyy"] = lambda d: date_format_filter(d, "dd-mm-yyyy")
     templates.env.filters["month_number"] = month_number_filter
+
+    # Add CSRF token to global template context
+    templates.env.globals["get_csrf_token"] = get_csrf_token
 
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(

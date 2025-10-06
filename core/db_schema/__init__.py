@@ -1,4 +1,43 @@
 from core.db_schema.engine import engine
+from core.db_schema.models import (
+    Angler,
+    Base,
+    Event,
+    Lake,
+    News,
+    OfficerPosition,
+    PasswordResetToken,
+    Poll,
+    PollOption,
+    PollVote,
+    Ramp,
+    Result,
+    TeamResult,
+    Tournament,
+)
+from core.db_schema.session import SessionLocal, get_db_session, get_session
 from core.db_schema.tables import create_all_tables, drop_all_tables, init_db
 
-__all__ = ["engine", "create_all_tables", "drop_all_tables", "init_db"]
+__all__ = [
+    "engine",
+    "create_all_tables",
+    "drop_all_tables",
+    "init_db",
+    "Base",
+    "Angler",
+    "PasswordResetToken",
+    "Event",
+    "Poll",
+    "PollOption",
+    "PollVote",
+    "News",
+    "Lake",
+    "Ramp",
+    "Tournament",
+    "Result",
+    "TeamResult",
+    "OfficerPosition",
+    "SessionLocal",
+    "get_session",
+    "get_db_session",
+]

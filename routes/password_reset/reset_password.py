@@ -2,7 +2,7 @@ import bcrypt
 from fastapi import APIRouter, Form, Query, Request
 from fastapi.responses import RedirectResponse
 
-from core.database import db
+from core.db_schema import Angler, get_session
 from core.email import use_reset_token, verify_reset_token
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
 from core.helpers.response import error_redirect
@@ -64,10 +64,10 @@ async def process_password_reset(
 
         password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
-        db(
-            "UPDATE anglers SET password = :password WHERE id = :user_id",
-            {"password": password_hash, "user_id": token_data["user_id"]},
-        )
+        with get_session() as session:
+            angler = session.query(Angler).filter(Angler.id == token_data["user_id"]).first()
+            if angler:
+                angler.password_hash = password_hash
 
         use_reset_token(token)
 

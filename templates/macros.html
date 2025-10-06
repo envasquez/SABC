@@ -1,5 +1,10 @@
 {# Reusable Jinja2 macros for SABC templates #}
 
+{# CSRF token macro - use in all forms #}
+{% macro csrf_token(request) %}
+<input type="hidden" name="csrf_token" value="{{ get_csrf_token(request) }}">
+{% endmacro %}
+
 {# Alert message macro #}
 {% macro alert(type, message, dismissible=True) %}
 {% if message %}

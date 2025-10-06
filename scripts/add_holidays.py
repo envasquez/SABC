@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Add federal holidays to events table for years 2025-2030."""
 
-from routes.dependencies import db
+from core.db_schema import Event, get_session
 from routes.dependencies.holidays import get_federal_holidays
 
 
@@ -19,29 +19,30 @@ def add_federal_holidays(start_year: int, end_year: int) -> None:
         holidays = get_federal_holidays(year)
 
         for holiday_date, holiday_name in holidays:
-            # Check if holiday already exists
-            existing = db(
-                "SELECT id FROM events WHERE date = :date AND event_type = 'holiday'",
-                {"date": holiday_date},
-            )
+            with get_session() as session:
+                # Check if holiday already exists
+                existing = (
+                    session.query(Event)
+                    .filter(Event.date == holiday_date, Event.event_type == "holiday")
+                    .first()
+                )
 
-            if existing:
-                print(f"  ⏭️  Skipped: {holiday_date} - {holiday_name} (already exists)")
-                skipped_count += 1
-                continue
+                if existing:
+                    print(f"  ⏭️  Skipped: {holiday_date} - {holiday_name} (already exists)")
+                    skipped_count += 1
+                    continue
 
-            # Insert holiday event
-            db(
-                """INSERT INTO events (date, year, name, event_type, description, holiday_name)
-                   VALUES (:date, :year, :name, 'holiday', :description, :holiday_name)""",
-                {
-                    "date": holiday_date,
-                    "year": year,
-                    "name": holiday_name,
-                    "description": f"Federal Holiday: {holiday_name}",
-                    "holiday_name": holiday_name,
-                },
-            )
+                # Insert holiday event
+                new_event = Event(
+                    date=holiday_date,
+                    year=year,
+                    name=holiday_name,
+                    event_type="holiday",
+                    description=f"Federal Holiday: {holiday_name}",
+                    holiday_name=holiday_name,
+                )
+                session.add(new_event)
+
             print(f"  ✅ Added: {holiday_date} - {holiday_name}")
             added_count += 1
 

@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import Any, Dict
 
-from sqlalchemy import Connection, text
+from sqlalchemy.orm import Session
 
-from routes.dependencies import db
+from core.db_schema import Event, Poll, Tournament, get_session
 
 
 def prepare_event_params(
@@ -52,28 +52,57 @@ def prepare_event_params(
     return event_params, tournament_params
 
 
-def update_event_record(conn: Connection, event_params: Dict[str, Any]) -> int:
-    result = conn.execute(
-        text("""UPDATE events SET date = :date, year = :year, name = :name,
-                event_type = :event_type, description = :description, start_time = :start_time,
-                weigh_in_time = :weigh_in_time, lake_name = :lake_name, ramp_name = :ramp_name,
-                entry_fee = :entry_fee, holiday_name = :holiday_name WHERE id = :event_id"""),
-        event_params,
-    )
-    conn.commit()
-    return result.rowcount
+def update_event_record(session: Session, event_params: Dict[str, Any]) -> int:
+    event = session.query(Event).filter(Event.id == event_params["event_id"]).first()
+    if event:
+        event.date = datetime.strptime(event_params["date"], "%Y-%m-%d").date()
+        event.year = event_params["year"]
+        event.name = event_params["name"]
+        event.event_type = event_params["event_type"]
+        event.description = event_params["description"]
+        event.start_time = (
+            datetime.strptime(event_params["start_time"], "%H:%M").time()
+            if event_params["start_time"]
+            else None
+        )
+        event.weigh_in_time = (
+            datetime.strptime(event_params["weigh_in_time"], "%H:%M").time()
+            if event_params["weigh_in_time"]
+            else None
+        )
+        event.lake_name = event_params["lake_name"]
+        event.ramp_name = event_params["ramp_name"]
+        event.entry_fee = event_params["entry_fee"]
+        event.holiday_name = event_params["holiday_name"]
+        return 1
+    return 0
 
 
-def update_tournament_record(conn: Connection, tournament_params: Dict[str, Any]) -> int:
-    result = conn.execute(
-        text("""UPDATE tournaments SET name = :name, lake_name = :lake_name,
-                ramp_name = :ramp_name, start_time = :start_time, end_time = :end_time,
-                fish_limit = :fish_limit, entry_fee = :entry_fee, aoy_points = :aoy_points
-                WHERE event_id = :event_id"""),
-        tournament_params,
+def update_tournament_record(session: Session, tournament_params: Dict[str, Any]) -> int:
+    tournament = (
+        session.query(Tournament)
+        .filter(Tournament.event_id == tournament_params["event_id"])
+        .first()
     )
-    conn.commit()
-    return result.rowcount
+    if tournament:
+        tournament.name = tournament_params["name"]
+        tournament.lake_name = tournament_params["lake_name"]
+        tournament.ramp_name = tournament_params["ramp_name"]
+        tournament.start_time = (
+            datetime.strptime(tournament_params["start_time"], "%H:%M").time()
+            if tournament_params["start_time"]
+            else None
+        )
+        tournament.end_time = (
+            datetime.strptime(tournament_params["end_time"], "%H:%M").time()
+            if tournament_params["end_time"]
+            else None
+        )
+        tournament.fish_limit = tournament_params["fish_limit"]
+        tournament.entry_fee = tournament_params["entry_fee"]
+        tournament.aoy_points = tournament_params["aoy_points"]
+        return 1
+    return 0
 
 
 def update_poll_closing_date(event_id: int, poll_closes_date: str) -> None:
@@ -81,9 +110,9 @@ def update_poll_closing_date(event_id: int, poll_closes_date: str) -> None:
         return
     try:
         closes_dt = datetime.fromisoformat(poll_closes_date)
-        db(
-            "UPDATE polls SET closes_at = :closes_at WHERE event_id = :event_id",
-            {"closes_at": closes_dt.isoformat(), "event_id": event_id},
-        )
+        with get_session() as session:
+            poll = session.query(Poll).filter(Poll.event_id == event_id).first()
+            if poll:
+                poll.closes_at = closes_dt
     except ValueError:
         pass

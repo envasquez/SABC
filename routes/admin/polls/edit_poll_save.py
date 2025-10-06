@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 
+from core.db_schema import Poll, get_session
 from core.helpers.auth import require_admin
 from core.helpers.logging import get_logger
 from routes.admin.polls.poll_option_helpers import update_or_create_poll_option
-from routes.dependencies import db
 
 router = APIRouter()
 logger = get_logger("admin.polls.edit")
@@ -21,29 +21,26 @@ async def update_poll(request: Request, poll_id: int) -> RedirectResponse:
         closes_at = form.get("closes_at", "")
         poll_options = form.getlist("poll_options[]")
         option_ids = form.getlist("option_ids[]")
+
         if not title:
             return RedirectResponse(
                 f"/admin/polls/{poll_id}/edit?error=Title is required", status_code=302
             )
-        db(
-            """UPDATE polls
-               SET title = :title,
-                   description = :description,
-                   starts_at = :starts_at,
-                   closes_at = :closes_at
-               WHERE id = :poll_id""",
-            {
-                "title": title,
-                "description": description,
-                "starts_at": starts_at if starts_at else None,
-                "closes_at": closes_at if closes_at else None,
-                "poll_id": poll_id,
-            },
-        )
+
+        with get_session() as session:
+            poll = session.query(Poll).filter(Poll.id == poll_id).first()
+            if poll:
+                poll.title = title
+                poll.description = description
+                poll.starts_at = starts_at if starts_at else None
+                poll.closes_at = closes_at if closes_at else None
+
+        # Update poll options
         for i, option_text in enumerate(poll_options):
             option_text = option_text.strip()
             option_id = option_ids[i] if i < len(option_ids) and option_ids[i] else None
             update_or_create_poll_option(poll_id, option_text, option_id)
+
         logger.info(
             "Poll updated successfully",
             extra={

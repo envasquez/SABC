@@ -2,8 +2,10 @@
 
 from typing import Optional, Tuple
 
+from core.db_schema import Angler, get_session
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
-from routes.dependencies import bcrypt, db
+from core.helpers.password_validator import validate_password_strength
+from routes.dependencies import bcrypt
 
 logger = get_logger("auth.profile_update.password")
 
@@ -19,31 +21,31 @@ def handle_password_change(
     if not (current_password and new_password and confirm_password):
         return False, "All password fields are required to change password"
 
-    if len(new_password) < 8:
-        return False, "New password must be at least 8 characters long"
+    # Validate new password strength
+    is_valid, error_message = validate_password_strength(new_password)
+    if not is_valid:
+        return False, error_message
 
     if new_password != confirm_password:
         return False, "New passwords do not match"
 
-    current_user = db(
-        "SELECT password as password_hash FROM anglers WHERE id = :user_id", {"user_id": user["id"]}
-    )
-    if not current_user:
-        return False, "User not found"
+    with get_session() as session:
+        current_user = session.query(Angler).filter(Angler.id == user["id"]).first()
+        if not current_user or not current_user.password_hash:
+            return False, "User not found"
 
-    stored_password_hash = current_user[0][0]
+        stored_password_hash = current_user.password_hash
 
-    if not bcrypt.checkpw(current_password.encode("utf-8"), stored_password_hash.encode("utf-8")):
-        return False, "Current password is incorrect"
+        if not bcrypt.checkpw(
+            current_password.encode("utf-8"), stored_password_hash.encode("utf-8")
+        ):
+            return False, "Current password is incorrect"
 
-    new_password_hash = bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt()).decode(
-        "utf-8"
-    )
+        new_password_hash = bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt()).decode(
+            "utf-8"
+        )
 
-    db(
-        "UPDATE anglers SET password = :password WHERE id = :user_id",
-        {"password": new_password_hash, "user_id": user["id"]},
-    )
+        current_user.password_hash = new_password_hash
 
     log_security_event(
         SecurityEvent.PASSWORD_RESET_COMPLETED,

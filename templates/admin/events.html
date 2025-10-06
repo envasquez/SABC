@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert, card %}
+{% from 'macros.html' import csrf_token, alert, card %}
 
 {% block title %}Manage Events - South Austin Bass Club{% endblock %}
 
@@ -25,6 +25,7 @@
             {{ alert('warning', warnings) }}
 
             <form method="POST" action="/admin/events/create">
+                    {{ csrf_token(request) }}
                 <!-- Row 1: Event Date, Event Type, Event Name, Description -->
                 <div class="row g-3">
                     <div class="col-md-3">
@@ -458,6 +459,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="/admin/events/edit" id="editEventForm">
+                    {{ csrf_token(request) }}
                 <div class="modal-body">
                     <input type="hidden" id="edit_event_id" name="event_id">
                     <div class="mb-3">

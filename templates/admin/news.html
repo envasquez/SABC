@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert %}
+{% from 'macros.html' import csrf_token, alert %}
 
 {% block title %}Manage News - Admin{% endblock %}
 
@@ -25,6 +25,7 @@
                 </div>
                 <div class="card-body">
                     <form method="POST" action="/admin/news/create">
+                    {{ csrf_token(request) }}
                         <div class="mb-3">
                             <label for="title" class="form-label">Title</label>
                             <input type="text" class="form-control" id="title" name="title" required maxlength="200">
@@ -156,6 +157,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="editForm" method="POST">
+                    {{ csrf_token(request) }}
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="edit_title" class="form-label">Title</label>

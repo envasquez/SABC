@@ -1,6 +1,7 @@
 from typing import Optional
 
-ERROR_PASSWORD_TOO_SHORT = "Password must be at least 8 characters long."
+from core.helpers.password_validator import validate_password_strength
+
 ERROR_PASSWORDS_DONT_MATCH = "Passwords do not match. Please try again."
 ERROR_INVALID_TOKEN = (
     "This password reset link is invalid or has expired. Please request a new one."
@@ -9,8 +10,10 @@ ERROR_RESET_FAILED = "Sorry, something went wrong while resetting your password.
 
 
 def validate_password_reset(password: str, password_confirm: str) -> Optional[str]:
-    if not password or len(password) < 8:
-        return ERROR_PASSWORD_TOO_SHORT
+    # Validate password strength
+    is_valid, error_message = validate_password_strength(password)
+    if not is_valid:
+        return error_message
 
     if password != password_confirm:
         return ERROR_PASSWORDS_DONT_MATCH

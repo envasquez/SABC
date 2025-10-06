@@ -1,11 +1,23 @@
-from fastapi import APIRouter, HTTPException, Request
+from typing import Any, Dict, List
 
-from core.db_schema import engine
+from fastapi import APIRouter, HTTPException, Request
+from sqlalchemy import case, func
+
+from core.db_schema import (
+    Angler,
+    Event,
+    Lake,
+    News,
+    Ramp,
+    Result,
+    TeamResult,
+    Tournament,
+    engine,
+    get_session,
+)
 from core.deps import templates
 from core.helpers.auth import get_user_optional
 from core.query_service import QueryService
-from routes.dependencies import db
-from routes.pages.home_queries import get_top_results_query, get_tournaments_query
 
 router = APIRouter()
 
@@ -14,55 +26,166 @@ async def home_paginated(request: Request, page: int = 1):
     user = get_user_optional(request)
     items_per_page = 4
     offset = (page - 1) * items_per_page
-    tournaments = db(get_tournaments_query(), {"limit": items_per_page, "offset": offset})
-    res = db("SELECT COUNT(*) FROM tournaments t JOIN events e ON t.event_id = e.id")
-    total_tournaments = res[0][0] if res and len(res) > 0 else 0
+
+    with get_session() as session:
+        # Get total tournament count
+        total_tournaments = (
+            session.query(func.count(Tournament.id))
+            .join(Event, Tournament.event_id == Event.id)
+            .scalar()
+            or 0
+        )
+
+        # Get tournaments with aggregated data
+        tournaments_query = (
+            session.query(
+                Tournament.id,
+                Event.date,
+                Event.name,
+                Event.description,
+                Lake.display_name.label("lake_display_name"),
+                Lake.yaml_key.label("lake_name"),
+                Ramp.name.label("ramp_name"),
+                Ramp.google_maps_iframe.label("ramp_google_maps"),
+                Lake.google_maps_iframe.label("lake_google_maps"),
+                Tournament.start_time,
+                Tournament.end_time,
+                Tournament.entry_fee,
+                Tournament.fish_limit,
+                Tournament.limit_type,
+                Tournament.is_team,
+                Tournament.is_paper,
+                Tournament.complete,
+                Tournament.poll_id,
+                func.count(func.distinct(Result.angler_id)).label("total_anglers"),
+                func.sum(Result.num_fish).label("total_fish"),
+                func.sum(Result.total_weight - Result.dead_fish_penalty).label("total_weight"),
+                Tournament.aoy_points,
+            )
+            .join(Event, Tournament.event_id == Event.id)
+            .outerjoin(Lake, Tournament.lake_id == Lake.id)
+            .outerjoin(Ramp, Tournament.ramp_id == Ramp.id)
+            .outerjoin(
+                Result,
+                (Tournament.id == Result.tournament_id) & (Result.disqualified.is_(False)),
+            )
+            .outerjoin(
+                Angler,
+                (Result.angler_id == Angler.id) & (Angler.name != "Admin User"),
+            )
+            .group_by(
+                Tournament.id,
+                Event.date,
+                Event.name,
+                Event.description,
+                Lake.display_name,
+                Lake.yaml_key,
+                Ramp.name,
+                Ramp.google_maps_iframe,
+                Lake.google_maps_iframe,
+                Tournament.start_time,
+                Tournament.end_time,
+                Tournament.entry_fee,
+                Tournament.fish_limit,
+                Tournament.limit_type,
+                Tournament.is_team,
+                Tournament.is_paper,
+                Tournament.complete,
+                Tournament.poll_id,
+                Tournament.aoy_points,
+            )
+            .order_by(Event.date.desc())
+            .limit(items_per_page)
+            .offset(offset)
+            .all()
+        )
+
+        tournaments_with_results: List[Dict[str, Any]] = []
+        for tournament in tournaments_query:
+            tournament_id = tournament[0]
+
+            # Get top 3 team results for this tournament
+            Angler1 = Angler
+            Angler2 = Angler
+            top_results_query = (
+                session.query(
+                    TeamResult.place_finish,
+                    Angler1.name.label("angler1_name"),
+                    Angler2.name.label("angler2_name"),
+                    TeamResult.total_weight,
+                    case((TeamResult.angler2_id.is_(None), 1), else_=2).label("team_size"),
+                )
+                .join(Angler1, TeamResult.angler1_id == Angler1.id)
+                .outerjoin(Angler2, TeamResult.angler2_id == Angler2.id)
+                .filter(
+                    TeamResult.tournament_id == tournament_id,
+                    Angler1.name != "Admin User",
+                    (Angler2.name != "Admin User") | (Angler2.name.is_(None)),
+                )
+                .order_by(TeamResult.place_finish.asc())
+                .limit(3)
+                .all()
+            )
+
+            tournament_dict = {
+                "id": tournament[0],
+                "date": tournament[1],
+                "name": tournament[2],
+                "description": tournament[3],
+                "lake_display_name": tournament[4],
+                "lake_name": tournament[5],
+                "ramp_name": tournament[6],
+                "ramp_google_maps": tournament[7],
+                "lake_google_maps": tournament[8],
+                "google_maps_iframe": tournament[7] or tournament[8],
+                "start_time": tournament[9],
+                "end_time": tournament[10],
+                "entry_fee": tournament[11] or 25.0,
+                "fish_limit": tournament[12] or 5,
+                "limit_type": tournament[13] or "per_person",
+                "is_team": tournament[14],
+                "is_paper": tournament[15],
+                "complete": tournament[16],
+                "poll_id": tournament[17],
+                "total_anglers": tournament[18] or 0,
+                "total_fish": tournament[19] or 0,
+                "total_weight": tournament[20] or 0.0,
+                "aoy_points": tournament[21] if tournament[21] is not None else True,
+                "top_results": top_results_query,
+            }
+            tournaments_with_results.append(tournament_dict)
+
+        # Get member count
+        member_count = (
+            session.query(func.count(Angler.id)).filter(Angler.member.is_(True)).scalar() or 0
+        )
+
+        # Get latest news
+        Editor = Angler
+        latest_news = (
+            session.query(
+                News.id,
+                News.title,
+                News.content,
+                News.created_at,
+                News.updated_at,
+                News.priority,
+                func.coalesce(Editor.name, Angler.name).label("display_author_name"),
+                Angler.name.label("original_author_name"),
+                Editor.name.label("editor_name"),
+            )
+            .outerjoin(Angler, News.author_id == Angler.id)
+            .outerjoin(Editor, News.last_edited_by == Editor.id)
+            .filter(
+                News.published.is_(True),
+                (News.expires_at.is_(None)) | (News.expires_at > func.current_timestamp()),
+            )
+            .order_by(News.priority.desc(), News.created_at.desc())
+            .limit(5)
+            .all()
+        )
+
     total_pages = (total_tournaments + items_per_page - 1) // items_per_page
-    tournaments_with_results = []
-    for tournament in tournaments:
-        tournament_id = tournament[0]
-        top_results = db(get_top_results_query(), {"tournament_id": tournament_id})
-        tournament_dict = {
-            "id": tournament[0],
-            "date": tournament[1],
-            "name": tournament[2],
-            "description": tournament[3],
-            "lake_display_name": tournament[4],
-            "lake_name": tournament[5],
-            "ramp_name": tournament[6],
-            "ramp_google_maps": tournament[7],
-            "lake_google_maps": tournament[8],
-            "google_maps_iframe": tournament[7] or tournament[8],
-            "start_time": tournament[9],
-            "end_time": tournament[10],
-            "entry_fee": tournament[11] or 25.0,
-            "fish_limit": tournament[12] or 5,
-            "limit_type": tournament[13] or "per_person",
-            "is_team": tournament[14],
-            "is_paper": tournament[15],
-            "complete": tournament[16],
-            "poll_id": tournament[17],
-            "total_anglers": tournament[18] or 0,
-            "total_fish": tournament[19] or 0,
-            "total_weight": tournament[20] or 0.0,
-            "aoy_points": tournament[21] if len(tournament) > 21 else True,
-            "top_results": top_results,
-        }
-        tournaments_with_results.append(tournament_dict)
-    res = db("SELECT COUNT(*) FROM anglers WHERE member = TRUE")
-    member_count = res[0][0] if res and len(res) > 0 else 0
-    latest_news = db("""
-        SELECT n.id, n.title, n.content, n.created_at, n.updated_at, n.priority,
-               COALESCE(e.name, a.name) as display_author_name,
-               a.name as original_author_name,
-               e.name as editor_name
-        FROM news n
-        LEFT JOIN anglers a ON n.author_id = a.id
-        LEFT JOIN anglers e ON n.last_edited_by = e.id
-        WHERE n.published = TRUE AND (n.expires_at IS NULL OR n.expires_at > CURRENT_TIMESTAMP)
-        ORDER BY n.priority DESC, n.created_at DESC
-        LIMIT 5
-    """)
     start_index = offset + 1
     end_index = min(offset + items_per_page, total_tournaments)
 

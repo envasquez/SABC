@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Request
 
@@ -20,7 +21,7 @@ router = APIRouter()
 
 @router.get("/awards")
 @router.get("/awards/{year}")
-async def awards(request: Request, year: int = None):
+async def awards(request: Request, year: Optional[int] = None):
     user = get_user_optional(request)
     if year is None:
         year = datetime.now().year
@@ -41,8 +42,10 @@ async def awards(request: Request, year: int = None):
             "avg_weight": 0.0,
         }
         all_tournament_results = qs.fetch_all(get_tournament_results_query(), {"year": year})
-        tournaments_points, angler_totals = {}, {}
-        current_tournament_id, current_tournament_results = None, []
+        tournaments_points: Dict[int, List[Dict[str, Any]]] = {}
+        angler_totals: Dict[int, Dict[str, Any]] = {}
+        current_tournament_id: Optional[int] = None
+        current_tournament_results: List[Dict[str, Any]] = []
         for result in all_tournament_results:
             if current_tournament_id != result["tournament_id"]:
                 if current_tournament_results:

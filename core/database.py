@@ -1,22 +1,36 @@
-from typing import Any, Dict, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Tuple, TypeGuard, Union
 
-from sqlalchemy import Row, TextClause, text
-from sqlalchemy.engine import Result
+from sqlalchemy import TextClause, text
 
 from core.db_schema import engine
 
 
 def db(
     q: Union[str, TextClause], p: Optional[Dict[str, Any]] = None
-) -> Union[Sequence[Row[Any]], int, None]:
+) -> Union[List[Tuple[Any, ...]], int]:
+    """Execute a database query and return results or row count.
+
+    Args:
+        q: SQL query string or TextClause
+        p: Optional parameters dictionary
+
+    Returns:
+        For SELECT queries: List of tuples (rows)
+        For INSERT/UPDATE/DELETE: Row count (int)
+    """
     with engine.connect() as c:
-        query = q
-        if isinstance(q, str):
-            query = text(q)
-        r: Result[Any] = c.execute(query, p or {})
+        query = text(q) if isinstance(q, str) else q
+        r = c.execute(query, p or {})
         query_str = str(q).upper()
         if any(kw in query_str for kw in ["INSERT", "UPDATE", "DELETE", "CREATE", "DROP", "ALTER"]):
             c.commit()
         if "SELECT" in query_str or "RETURNING" in query_str:
-            return r.fetchall()
-        return r.rowcount
+            # Convert Row objects to tuples for better type compatibility
+            return [tuple(row) for row in r.fetchall()]
+        # For write operations, return affected row count
+        return getattr(r, "rowcount", 0) or 0
+
+
+def is_result_list(result: Union[List[Tuple[Any, ...]], int]) -> TypeGuard[List[Tuple[Any, ...]]]:
+    """Type guard to check if db() result is a list of tuples."""
+    return isinstance(result, list)

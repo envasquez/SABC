@@ -3,22 +3,23 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import text
-
-from core.db_schema import engine
+from core.db_schema import Angler, PasswordResetToken, get_session
 
 from .config import logger
 
 
 def check_rate_limit(user_id: int, since: datetime) -> Optional[int]:
     try:
-        with engine.connect() as conn:
-            result = conn.execute(
-                text("""SELECT COUNT(*) FROM password_reset_tokens
-                       WHERE user_id = :user_id AND created_at > :since"""),
-                {"user_id": user_id, "since": since},
-            ).scalar()
-            return result
+        with get_session() as session:
+            count = (
+                session.query(PasswordResetToken)
+                .filter(
+                    PasswordResetToken.user_id == user_id,
+                    PasswordResetToken.created_at > since,
+                )
+                .count()
+            )
+            return count
     except Exception as e:
         logger.error(f"Error checking rate limit: {e}")
         return None
@@ -26,13 +27,14 @@ def check_rate_limit(user_id: int, since: datetime) -> Optional[int]:
 
 def insert_token(user_id: int, token: str, expires_at: datetime) -> bool:
     try:
-        with engine.connect() as conn:
-            conn.execute(
-                text("""INSERT INTO password_reset_tokens (user_id, token, expires_at, created_at)
-                       VALUES (:user_id, :token, :expires_at, NOW())"""),
-                {"user_id": user_id, "token": token, "expires_at": expires_at},
+        with get_session() as session:
+            reset_token = PasswordResetToken(
+                user_id=user_id,
+                token=token,
+                expires_at=expires_at,
+                created_at=datetime.now(),
             )
-            conn.commit()
+            session.add(reset_token)
             return True
     except Exception as e:
         logger.error(f"Error inserting token: {e}")
@@ -41,14 +43,19 @@ def insert_token(user_id: int, token: str, expires_at: datetime) -> bool:
 
 def fetch_token_data(token: str) -> Optional[tuple]:
     try:
-        with engine.connect() as conn:
-            result = conn.execute(
-                text("""SELECT prt.user_id, prt.expires_at, prt.used, a.email, a.name
-                       FROM password_reset_tokens prt
-                       JOIN anglers a ON prt.user_id = a.id
-                       WHERE prt.token = :token"""),
-                {"token": token},
-            ).fetchone()
+        with get_session() as session:
+            result = (
+                session.query(
+                    PasswordResetToken.user_id,
+                    PasswordResetToken.expires_at,
+                    PasswordResetToken.used,
+                    Angler.email,
+                    Angler.name,
+                )
+                .join(Angler, PasswordResetToken.user_id == Angler.id)
+                .filter(PasswordResetToken.token == token)
+                .first()
+            )
             return result
     except Exception as e:
         logger.error(f"Error fetching token data: {e}")
@@ -57,15 +64,18 @@ def fetch_token_data(token: str) -> Optional[tuple]:
 
 def mark_token_used(token: str) -> int:
     try:
-        with engine.connect() as conn:
-            result = conn.execute(
-                text("""UPDATE password_reset_tokens
-                       SET used = TRUE, used_at = NOW()
-                       WHERE token = :token AND used = 0"""),
-                {"token": token},
+        with get_session() as session:
+            from sqlalchemy import false
+
+            rowcount = (
+                session.query(PasswordResetToken)
+                .filter(
+                    PasswordResetToken.token == token,
+                    PasswordResetToken.used.is_(false()),
+                )
+                .update({"used": True, "used_at": datetime.now()})
             )
-            conn.commit()
-            return result.rowcount
+            return rowcount
     except Exception as e:
         logger.error(f"Error marking token as used: {e}")
         return 0
@@ -73,13 +83,20 @@ def mark_token_used(token: str) -> int:
 
 def delete_expired_tokens() -> int:
     try:
-        with engine.connect() as conn:
-            result = conn.execute(
-                text("""DELETE FROM password_reset_tokens
-                       WHERE expires_at < NOW() OR used = 1""")
+        with get_session() as session:
+            from sqlalchemy import or_, true
+
+            rowcount = (
+                session.query(PasswordResetToken)
+                .filter(
+                    or_(
+                        PasswordResetToken.expires_at < datetime.now(),
+                        PasswordResetToken.used.is_(true()),
+                    )
+                )
+                .delete()
             )
-            conn.commit()
-            return result.rowcount
+            return rowcount
     except Exception as e:
         logger.error(f"Error deleting expired tokens: {e}")
         return 0

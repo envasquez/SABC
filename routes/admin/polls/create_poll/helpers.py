@@ -1,32 +1,40 @@
 from datetime import datetime, timedelta
 from typing import Optional, Tuple
 
+from core.db_schema import Event, Poll, get_session
 from core.helpers.response import error_redirect
-from routes.dependencies import db
 
 
 def validate_and_get_event(
     poll_type: str, event_id: Optional[int]
 ) -> Tuple[Optional[tuple], Optional[object]]:
     if poll_type == "tournament_location" and event_id:
-        event_data = db(
-            "SELECT id, name, event_type, date FROM events WHERE id = :event_id",
-            {"event_id": event_id},
-        )
-        if not event_data:
-            return None, error_redirect("/admin/events", "Event not found")
-        event = event_data[0]
-        existing_poll = db(
-            "SELECT id FROM polls WHERE event_id = :event_id", {"event_id": event_id}
-        )
-        if existing_poll:
-            from fastapi.responses import RedirectResponse
+        with get_session() as session:
+            event_obj = session.query(Event).filter(Event.id == event_id).first()
 
-            return None, RedirectResponse(
-                f"/admin/polls/{existing_poll[0][0]}/edit?error=Poll already exists for this event",
-                status_code=302,
+            if not event_obj:
+                return None, error_redirect("/admin/events", "Event not found")
+
+            # Convert to tuple format for compatibility
+            event = (
+                event_obj.id,
+                event_obj.name,
+                event_obj.event_type,
+                event_obj.date.strftime("%Y-%m-%d"),
             )
-        return event, None
+
+            # Check if poll already exists
+            existing_poll = session.query(Poll).filter(Poll.event_id == event_id).first()
+
+            if existing_poll:
+                from fastapi.responses import RedirectResponse
+
+                return None, RedirectResponse(
+                    f"/admin/polls/{existing_poll.id}/edit?error=Poll already exists for this event",
+                    status_code=302,
+                )
+
+            return event, None
     return None, None
 
 

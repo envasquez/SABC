@@ -1,3 +1,4 @@
+{% from 'macros.html' import csrf_token %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -71,6 +72,7 @@
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form method="post" action="/logout" class="d-inline">
+                                        {{ csrf_token(request) }}
                                         <button type="submit" class="dropdown-item">
                                             <i class="bi bi-box-arrow-right me-2"></i>Logout
                                         </button>

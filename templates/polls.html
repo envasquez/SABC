@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert, badge %}
+{% from 'macros.html' import alert, badge, csrf_token %}
 
 {% block title %}Polls - South Austin Bass Club{% endblock %}
 
@@ -66,6 +66,7 @@
                         {% if poll.status == 'active' and user.member and not poll.user_has_voted %}
                             <!-- Voting Interface -->
                             <form method="POST" action="/polls/{{ poll.id }}/vote">
+                                {{ csrf_token(request) }}
                                 <div class="mb-3">
                                     <p class="fw-bold text-primary">
                                         <i class="bi bi-check-circle me-2"></i>Cast your vote:

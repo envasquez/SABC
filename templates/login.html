@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert %}
+{% from 'macros.html' import alert, csrf_token %}
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-4">
@@ -9,6 +9,7 @@
                 {{ alert('danger', error) }}
                 {{ alert('success', success) }}
                 <form method="post" action="/login">
+                    {{ csrf_token(request) }}
                     <div class="mb-3">
                         <label>Email</label>
                         <input type="email" name="email" class="form-control" required>

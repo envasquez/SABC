@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert %}
+{% from 'macros.html' import csrf_token, alert %}
 {% block title %}Edit Lake - South Austin Bass Club{% endblock %}
 {% block content %}
 <div class="container-fluid">
@@ -33,6 +33,7 @@
                 </div>
                 <div class="card-body">
                     <form method="POST" action="/admin/lakes/{{ lake[0] }}/update">
+                    {{ csrf_token(request) }}
                         <div class="mb-3">
                             <label for="display_name" class="form-label">Display Name</label>
                             <input type="text" class="form-control" id="display_name" name="display_name" value="{{ lake[2] }}" required>
@@ -114,6 +115,7 @@
 
                     <h5 class="mb-3"><i class="bi bi-plus-circle me-2"></i>Add New Ramp</h5>
                     <form method="POST" action="/admin/lakes/{{ lake[0] }}/ramps" id="addRampForm">
+                    {{ csrf_token(request) }}
                         <div class="mb-3">
                             <label for="ramp_name" class="form-label">Ramp Name</label>
                             <input type="text" class="form-control" id="ramp_name" name="name" required placeholder="e.g., Mansfield Dam Park">
@@ -144,6 +146,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="editRampForm" method="POST">
+                    {{ csrf_token(request) }}
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="edit_ramp_name" class="form-label">Ramp Name</label>

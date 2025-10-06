@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
 
+from core.db_schema import Lake, get_session
 from core.helpers.auth import require_admin
 from core.helpers.response import error_redirect
-from routes.dependencies import db
 
 router = APIRouter()
 
@@ -17,15 +17,13 @@ async def create_lake(
 ):
     _user = require_admin(request)
     try:
-        db(
-            """INSERT INTO lakes (yaml_key, display_name, google_maps_iframe)
-               VALUES (:yaml_key, :display_name, :google_maps_iframe)""",
-            {
-                "yaml_key": name.strip().lower().replace(" ", "_"),
-                "display_name": display_name.strip(),
-                "google_maps_iframe": google_maps_embed.strip(),
-            },
-        )
+        with get_session() as session:
+            lake = Lake(
+                yaml_key=name.strip().lower().replace(" ", "_"),
+                display_name=display_name.strip(),
+                google_maps_iframe=google_maps_embed.strip(),
+            )
+            session.add(lake)
         return RedirectResponse("/admin/lakes?success=Lake created successfully", status_code=302)
     except Exception as e:
         return error_redirect("/admin/lakes", str(e))
@@ -41,19 +39,12 @@ async def update_lake(
 ):
     _user = require_admin(request)
     try:
-        db(
-            """UPDATE lakes
-               SET yaml_key = :yaml_key,
-                   display_name = :display_name,
-                   google_maps_iframe = :google_maps_iframe
-               WHERE id = :id""",
-            {
-                "id": lake_id,
-                "yaml_key": name.strip().lower().replace(" ", "_"),
-                "display_name": display_name.strip(),
-                "google_maps_iframe": google_maps_embed.strip(),
-            },
-        )
+        with get_session() as session:
+            lake = session.query(Lake).filter(Lake.id == lake_id).first()
+            if lake:
+                lake.yaml_key = name.strip().lower().replace(" ", "_")
+                lake.display_name = display_name.strip()
+                lake.google_maps_iframe = google_maps_embed.strip()
         return RedirectResponse("/admin/lakes?success=Lake updated successfully", status_code=302)
     except Exception as e:
         return error_redirect("/admin/lakes", str(e))

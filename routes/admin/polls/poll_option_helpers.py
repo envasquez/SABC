@@ -1,19 +1,21 @@
-from routes.dependencies import db
+from core.db_schema import PollOption, get_session
 
 
 def update_or_create_poll_option(poll_id: int, option_text: str, option_id: str | None) -> None:
     if not option_text:
         return
-    if option_id:
-        db(
-            """UPDATE poll_options
-               SET option_text = :option_text
-               WHERE id = :option_id AND poll_id = :poll_id""",
-            {"option_text": option_text, "option_id": option_id, "poll_id": poll_id},
-        )
-    else:
-        db(
-            """INSERT INTO poll_options (poll_id, option_text, option_data)
-               VALUES (:poll_id, :option_text, :option_data)""",
-            {"poll_id": poll_id, "option_text": option_text, "option_data": "{}"},
-        )
+
+    with get_session() as session:
+        if option_id:
+            # Update existing poll option
+            poll_option = (
+                session.query(PollOption)
+                .filter(PollOption.id == int(option_id), PollOption.poll_id == poll_id)
+                .first()
+            )
+            if poll_option:
+                poll_option.option_text = option_text
+        else:
+            # Create new poll option
+            new_option = PollOption(poll_id=poll_id, option_text=option_text, option_data="{}")
+            session.add(new_option)

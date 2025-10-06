@@ -7,7 +7,7 @@ from typing import Optional
 
 import bcrypt
 
-from core.database import db
+from core.db_schema import Angler, get_session
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -44,21 +44,26 @@ def create_admin_user(
     password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
     try:
-        existing = db("SELECT id FROM anglers WHERE email = :email", {"email": email})
+        with get_session() as session:
+            existing = session.query(Angler).filter(Angler.email == email).first()
 
-        if existing:
-            db(
-                "UPDATE anglers SET password = :password, name = :name, is_admin = TRUE WHERE email = :email",
-                {"password": password_hash, "email": email, "name": name},
-            )
-            logger.info(f"Updated existing user {email} as admin")
-        else:
-            result = db(
-                "INSERT INTO anglers (name, email, password, member, is_admin) VALUES (:name, :email, :password, TRUE, TRUE) RETURNING id",
-                {"name": name, "email": email, "password": password_hash},
-            )
-            admin_id = result[0][0] if result else None
-            logger.info(f"Created new admin user {email} with ID: {admin_id}")
+            if existing:
+                existing.password_hash = password_hash
+                existing.name = name
+                existing.is_admin = True
+                logger.info(f"Updated existing user {email} as admin")
+            else:
+                new_admin = Angler(
+                    name=name,
+                    email=email,
+                    password_hash=password_hash,
+                    member=True,
+                    is_admin=True,
+                )
+                session.add(new_admin)
+                session.flush()
+                admin_id = new_admin.id
+                logger.info(f"Created new admin user {email} with ID: {admin_id}")
 
         if not interactive:
             print(f"Login: {email} / {password}")

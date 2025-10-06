@@ -129,6 +129,8 @@ celerybeat.pid
 result
 result-*
 .direnv/
+.nix-python-packages/
+.python-packages-installed
 
 # Session data
 sessions/

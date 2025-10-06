@@ -1,42 +1,56 @@
 from fastapi import Query, Request
 from fastapi.responses import RedirectResponse
 
+from core.db_schema import Event, Poll, get_session
 from core.helpers.auth import require_admin
 from core.helpers.response import error_redirect
-from routes.dependencies import db, get_all_ramps, get_lakes_list, templates
+from routes.dependencies import get_all_ramps, get_lakes_list, templates
 
 
 async def create_poll_form(request: Request, event_id: int = Query(None)):
     user = require_admin(request)
     try:
-        events = db(
-            "SELECT id, date, name, event_type, description FROM events WHERE date >= CURRENT_DATE AND event_type = 'sabc_tournament' ORDER BY date"
-        )
-        lakes = get_lakes_list()
-        ramps = get_all_ramps()
-
-        selected_event = None
-        if event_id is not None:
-            event_data = db(
-                "SELECT id, date, name, event_type, description FROM events WHERE id = :event_id",
-                {"event_id": event_id},
+        with get_session() as session:
+            # Get upcoming SABC tournaments
+            events = (
+                session.query(Event)
+                .filter(Event.date >= "CURRENT_DATE", Event.event_type == "sabc_tournament")
+                .order_by(Event.date)
+                .all()
             )
-            if not event_data:
-                return error_redirect("/admin/events", "Event not found")
-            selected_event = event_data[0]
 
-            existing_poll = db(
-                "SELECT id FROM polls WHERE event_id = :event_id", {"event_id": event_id}
-            )
-            if existing_poll:
-                return RedirectResponse(
-                    f"/admin/polls/{existing_poll[0][0]}/edit?info=Poll already exists for this event",
-                    status_code=302,
+            # Convert to tuple format for template compatibility
+            events_list = [(e.id, e.date, e.name, e.event_type, e.description) for e in events]
+
+            lakes = get_lakes_list()
+            ramps = get_all_ramps()
+
+            selected_event = None
+            if event_id is not None:
+                event = session.query(Event).filter(Event.id == event_id).first()
+                if not event:
+                    return error_redirect("/admin/events", "Event not found")
+
+                selected_event = (
+                    event.id,
+                    event.date,
+                    event.name,
+                    event.event_type,
+                    event.description,
                 )
+
+                # Check if poll already exists for this event
+                existing_poll = session.query(Poll).filter(Poll.event_id == event_id).first()
+                if existing_poll:
+                    return RedirectResponse(
+                        f"/admin/polls/{existing_poll.id}/edit?info=Poll already exists for this event",
+                        status_code=302,
+                    )
+
         context = {
             "request": request,
             "user": user,
-            "events": events,
+            "events": events_list,
             "selected_event": selected_event,
             "lakes": lakes,
             "ramps": ramps,

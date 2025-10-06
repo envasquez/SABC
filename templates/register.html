@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert %}
+{% from 'macros.html' import alert, csrf_token %}
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-4">
@@ -9,21 +9,32 @@
                 {{ alert('danger', error) }}
                 {{ alert('success', success) }}
                 <form method="post" action="/register">
+                    {{ csrf_token(request) }}
                     <div class="mb-3">
                         <label>First Name</label>
-                        <input type="text" name="first_name" class="form-control" required>
+                        <input type="text" name="first_name" class="form-control" value="{{ first_name or '' }}" required>
                     </div>
                     <div class="mb-3">
                         <label>Last Name</label>
-                        <input type="text" name="last_name" class="form-control" required>
+                        <input type="text" name="last_name" class="form-control" value="{{ last_name or '' }}" required>
                     </div>
                     <div class="mb-3">
                         <label>Email</label>
-                        <input type="email" name="email" class="form-control" required>
+                        <input type="email" name="email" class="form-control" value="{{ email or '' }}" required>
                     </div>
                     <div class="mb-3">
                         <label>Password</label>
                         <input type="password" name="password" class="form-control" required>
+                        <div class="form-text">
+                            Must be at least 12 characters and include:
+                            <ul class="mb-0 mt-1" style="font-size: 0.875em;">
+                                <li>At least one uppercase letter</li>
+                                <li>At least one lowercase letter</li>
+                                <li>At least one number</li>
+                                <li>At least one special character (!@#$%^&*)</li>
+                                <li>No sequential numbers (like 123 or 321)</li>
+                            </ul>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Register</button>
                 </form>

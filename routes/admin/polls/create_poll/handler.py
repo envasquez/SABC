@@ -1,6 +1,7 @@
 from fastapi import Request
 from fastapi.responses import RedirectResponse
 
+from core.db_schema import Poll, get_session
 from core.helpers.auth import require_admin
 from core.helpers.logging import get_logger
 from routes.admin.polls.create_poll.helpers import (
@@ -14,7 +15,6 @@ from routes.admin.polls.create_poll.options import (
     create_other_poll_options,
     create_tournament_location_options,
 )
-from routes.dependencies import db
 
 logger = get_logger("admin.polls.create")
 
@@ -39,25 +39,27 @@ async def create_poll(request: Request) -> RedirectResponse:
         starts_at = generate_starts_at(starts_at, event)
         description = generate_description(description, event)
 
-        poll_result = db(
-            "INSERT INTO polls (title, description, poll_type, event_id, created_by, starts_at, closes_at) VALUES (:title, :description, :poll_type, :event_id, :created_by, :starts_at, :closes_at) RETURNING id",
-            {
-                "title": title,
-                "description": description,
-                "poll_type": poll_type,
-                "event_id": event_id if event_id else None,
-                "created_by": user["id"],
-                "starts_at": starts_at,
-                "closes_at": closes_at,
-            },
-        )
-        poll_id = poll_result[0][0]
+        with get_session() as session:
+            new_poll = Poll(
+                title=title,
+                description=description,
+                poll_type=poll_type,
+                event_id=event_id if event_id else None,
+                created_by=user["id"],
+                starts_at=starts_at,
+                closes_at=closes_at,
+            )
+            session.add(new_poll)
+            session.flush()  # Get the poll_id before committing
+            poll_id = new_poll.id
+
         if poll_type == "tournament_location":
             create_tournament_location_options(poll_id, form, event)
         elif poll_type == "generic":
             create_generic_poll_options(poll_id, form)
         else:
             create_other_poll_options(poll_id, form)
+
         return RedirectResponse(
             f"/admin/polls/{poll_id}/edit?success=Poll created successfully", status_code=302
         )

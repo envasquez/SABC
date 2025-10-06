@@ -6,6 +6,7 @@
     <div class="card-header bg-warning text-white"><h4 class="mb-0"><i class="bi bi-person-gear me-2"></i>Edit User</h4></div>
     <div class="card-body">
         <form method="POST" action="/admin/users/{{ edit_user[0] }}/edit">
+                    {{ csrf_token(request) }}
             <div class="mb-3">
                 <label for="name" class="form-label">Name</label>
                 <input type="text" class="form-control" id="name" name="name" value="{{ edit_user[1] }}" required>

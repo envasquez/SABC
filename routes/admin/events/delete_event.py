@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
-from sqlalchemy import text
+from sqlalchemy import func, select
 
+from core.db_schema import Event, Poll, PollOption, PollVote, Result, Tournament, get_session
 from core.helpers.auth import require_admin
-from routes.dependencies import db, engine
 
 router = APIRouter()
 
@@ -13,46 +13,43 @@ async def delete_event(request: Request, event_id: int):
     """Delete an event and its associated data."""
     _user = require_admin(request)
     try:
-        # Check if event has results
-        has_results = db(
-            """SELECT COUNT(*)
-               FROM results r
-               JOIN tournaments t ON r.tournament_id = t.id
-               WHERE t.event_id = :event_id""",
-            {"event_id": event_id},
-        )
-
-        if has_results and has_results[0][0] > 0:
-            return JSONResponse(
-                {"error": "Cannot delete event with tournament results"}, status_code=400
+        with get_session() as session:
+            # Check if event has results
+            result_count = (
+                session.query(func.count(Result.id))
+                .join(Tournament, Result.tournament_id == Tournament.id)
+                .filter(Tournament.event_id == event_id)
+                .scalar()
             )
 
-        # Delete event and cascading data
-        with engine.begin() as conn:
+            if result_count and result_count > 0:
+                return JSONResponse(
+                    {"error": "Cannot delete event with tournament results"}, status_code=400
+                )
+
+            # Get all poll IDs for this event
+            poll_ids_query = select(Poll.id).where(Poll.event_id == event_id)
+            poll_ids = session.execute(poll_ids_query).scalars().all()
+
             # Delete poll votes
-            conn.execute(
-                text(
-                    "DELETE FROM poll_votes WHERE poll_id IN (SELECT id FROM polls WHERE event_id = :event_id)"
-                ),
-                {"event_id": event_id},
-            )
+            if poll_ids:
+                session.query(PollVote).filter(PollVote.poll_id.in_(poll_ids)).delete(
+                    synchronize_session=False
+                )
 
             # Delete poll options
-            conn.execute(
-                text(
-                    "DELETE FROM poll_options WHERE poll_id IN (SELECT id FROM polls WHERE event_id = :event_id)"
-                ),
-                {"event_id": event_id},
-            )
+            if poll_ids:
+                session.query(PollOption).filter(PollOption.poll_id.in_(poll_ids)).delete(
+                    synchronize_session=False
+                )
 
             # Delete polls
-            conn.execute(
-                text("DELETE FROM polls WHERE event_id = :event_id"), {"event_id": event_id}
-            )
+            session.query(Poll).filter(Poll.event_id == event_id).delete(synchronize_session=False)
 
             # Delete event (tournaments cascade automatically)
-            conn.execute(text("DELETE FROM events WHERE id = :id"), {"id": event_id})
-            # Auto-commits on context exit - no explicit commit needed
+            event = session.query(Event).filter(Event.id == event_id).first()
+            if event:
+                session.delete(event)
 
         return JSONResponse({"success": True}, status_code=200)
 

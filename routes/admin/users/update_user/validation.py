@@ -1,13 +1,13 @@
 from typing import Optional
 
+from core.db_schema import OfficerPosition, get_session
 from core.helpers.logging import get_logger
-from routes.dependencies import db
 
 logger = get_logger("admin.users.update.validation")
 
 
 def validate_and_prepare_email(email: str, name: str, member: bool, user_id: int) -> Optional[str]:
-    from routes.admin.users.create_user import generate_guest_email
+    from routes.admin.users.email_helpers import generate_guest_email
 
     email_cleaned = email.strip() if email else ""
     final_email = None
@@ -29,15 +29,23 @@ def validate_and_prepare_email(email: str, name: str, member: bool, user_id: int
 
 
 def update_officer_positions(user_id: int, officer_positions: list[str], current_year: int) -> None:
-    db(
-        "DELETE FROM officer_positions WHERE angler_id = :id AND year = :year",
-        {"id": user_id, "year": current_year},
-    )
-    if officer_positions:
-        for position in officer_positions:
-            position_cleaned = position.strip()
-            if position_cleaned:
-                db(
-                    "INSERT INTO officer_positions (angler_id, position, year) VALUES (:id, :position, :year)",
-                    {"id": user_id, "position": position_cleaned, "year": current_year},
-                )
+    with get_session() as session:
+        # Delete existing officer positions for this user and year
+        session.query(OfficerPosition).filter(
+            OfficerPosition.angler_id == user_id,
+            OfficerPosition.year == current_year,
+        ).delete()
+
+        # Add new officer positions
+        if officer_positions:
+            for position in officer_positions:
+                position_cleaned = position.strip()
+                if position_cleaned:
+                    officer_position = OfficerPosition(
+                        angler_id=user_id,
+                        position=position_cleaned,
+                        year=current_year,
+                    )
+                    session.add(officer_position)
+
+        session.commit()

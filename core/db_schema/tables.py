@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 from sqlalchemy import text
 
@@ -7,11 +8,19 @@ from core.db_schema.engine import engine
 logger = logging.getLogger(__name__)
 
 
-def get_table_definitions():
+def get_table_definitions() -> List[str]:
+    """Get table definitions for manual table creation.
+
+    Note: This is currently unused as we use migrations instead.
+    """
     return []
 
 
-def create_all_tables():
+def create_all_tables() -> None:
+    """Create all tables using table definitions.
+
+    Note: This is currently unused as we use migrations instead.
+    """
     logger.info("Creating PostgreSQL database tables...")
     table_definitions = get_table_definitions()
 
@@ -21,7 +30,7 @@ def create_all_tables():
         c.commit()
 
 
-def drop_all_tables():
+def drop_all_tables() -> None:
     logger.info("Dropping all PostgreSQL tables...")
     with engine.connect() as c:
         tables = [
@@ -42,5 +51,5 @@ def drop_all_tables():
         c.commit()
 
 
-def init_db():
+def init_db() -> None:
     create_all_tables()

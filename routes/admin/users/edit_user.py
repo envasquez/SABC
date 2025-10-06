@@ -2,9 +2,10 @@ from datetime import datetime
 
 from fastapi import APIRouter, Request
 
+from core.db_schema import Angler, OfficerPosition, get_session
 from core.helpers.auth import require_admin
 from core.helpers.response import error_redirect
-from routes.dependencies import db, templates
+from routes.dependencies import templates
 
 router = APIRouter()
 
@@ -12,28 +13,42 @@ router = APIRouter()
 @router.get("/admin/users/{user_id}/edit")
 async def edit_user_page(request: Request, user_id: int):
     user = require_admin(request)
-    edit_user = db(
-        "SELECT id, name, email, phone, member, is_admin FROM anglers WHERE id = :id",
-        {"id": user_id},
-    )
-    if not edit_user:
-        return error_redirect("/admin/users", "User not found")
 
-    current_year = datetime.now().year
-    officer_positions_result = db(
-        "SELECT position FROM officer_positions WHERE angler_id = :id AND year = :year ORDER BY position",
-        {"id": user_id, "year": current_year},
-    )
-    current_officer_positions = (
-        [row[0] for row in officer_positions_result] if officer_positions_result else []
-    )
+    with get_session() as session:
+        # Get the angler to edit
+        edit_angler = session.query(Angler).filter(Angler.id == user_id).first()
+        if not edit_angler:
+            return error_redirect("/admin/users", "User not found")
+
+        # Extract data while in session
+        edit_user = {
+            "id": edit_angler.id,
+            "name": edit_angler.name,
+            "email": edit_angler.email,
+            "phone": edit_angler.phone,
+            "member": edit_angler.member,
+            "is_admin": edit_angler.is_admin,
+        }
+
+        # Get officer positions for current year
+        current_year = datetime.now().year
+        positions = (
+            session.query(OfficerPosition.position)
+            .filter(
+                OfficerPosition.angler_id == user_id,
+                OfficerPosition.year == current_year,
+            )
+            .order_by(OfficerPosition.position)
+            .all()
+        )
+        current_officer_positions = [pos.position for pos in positions]
 
     return templates.TemplateResponse(
         "admin/edit_user.html",
         {
             "request": request,
             "user": user,
-            "edit_user": edit_user[0],
+            "edit_user": edit_user,
             "current_officer_positions": current_officer_positions,
             "current_year": current_year,
         },

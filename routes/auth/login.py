@@ -1,11 +1,16 @@
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse, Response
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
+from core.db_schema import Angler, get_session
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
-from routes.dependencies import bcrypt, db, templates, u
+from core.helpers.response import get_client_ip, set_user_session
+from routes.dependencies import bcrypt, templates, u
 
 router = APIRouter()
 logger = get_logger("auth.login")
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.get("/login")
@@ -18,33 +23,44 @@ async def login_page(request: Request) -> Response:
 
 
 @router.post("/login")
+@limiter.limit("5/minute")
 async def login(request: Request, email: str = Form(...), password: str = Form(...)) -> Response:
     email = email.lower().strip()
-    ip_address = request.client.host if request.client else "unknown"
-    try:
-        res = db(
-            "SELECT id, password_hash FROM anglers WHERE email=:email",
-            {"email": email},
-        )
-        if res and len(res) > 0 and res[0][1]:
-            if bcrypt.checkpw(password.encode(), res[0][1].encode()):
-                user_id = res[0][0]
-                # Clear session to prevent session fixation attacks
-                request.session.clear()
-                request.session["user_id"] = user_id
-                log_security_event(
-                    SecurityEvent.AUTH_LOGIN_SUCCESS,
-                    user_id=user_id,
-                    user_email=email,
-                    ip_address=ip_address,
-                    details={"method": "password"},
-                )
-                logger.info(
-                    "User login successful",
-                    extra={"user_id": user_id, "user_email": email, "ip_address": ip_address},
-                )
-                return RedirectResponse("/", status_code=302)
+    ip_address = get_client_ip(request)
 
+    try:
+        with get_session() as session:
+            angler = session.query(Angler).filter(Angler.email == email).first()
+
+            # Extract data while still in session context (avoid detached instance error)
+            if angler and angler.password_hash:
+                stored_hash = angler.password_hash.encode()
+                user_id = angler.id
+            else:
+                # User doesn't exist - perform dummy hash to prevent timing attack
+                stored_hash = bcrypt.hashpw(b"dummy_password", bcrypt.gensalt())
+                user_id = None
+
+        # Always perform comparison (constant time regardless of user existence)
+        password_valid = bcrypt.checkpw(password.encode(), stored_hash)
+
+        # Successful login
+        if password_valid and user_id:
+            set_user_session(request, user_id)
+            log_security_event(
+                SecurityEvent.AUTH_LOGIN_SUCCESS,
+                user_id=user_id,
+                user_email=email,
+                ip_address=ip_address,
+                details={"method": "password"},
+            )
+            logger.info(
+                "User login successful",
+                extra={"user_id": user_id, "user_email": email, "ip_address": ip_address},
+            )
+            return RedirectResponse("/", status_code=302)
+
+        # Failed login - log but don't reveal whether email exists
         log_security_event(
             SecurityEvent.AUTH_LOGIN_FAILURE,
             user_email=email,
@@ -75,7 +91,7 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
 @router.post("/logout")
 async def logout(request: Request) -> RedirectResponse:
     user_id = request.session.get("user_id")
-    ip_address = request.client.host if request.client else "unknown"
+    ip_address = get_client_ip(request)
 
     if user_id:
         log_security_event(

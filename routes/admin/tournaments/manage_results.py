@@ -47,15 +47,16 @@ async def delete_team_result(
     if not team_result:
         return JSONResponse({"error": "Team result not found"}, status_code=404)
 
-    # Delete individual results for both anglers
+    # Delete individual results for both anglers (use separate DELETEs to avoid SQL injection)
     qs.execute(
-        "DELETE FROM results WHERE tournament_id = :tid AND angler_id IN (:angler1, :angler2)",
-        {
-            "tid": tournament_id,
-            "angler1": team_result["angler1_id"],
-            "angler2": team_result["angler2_id"],
-        },
+        "DELETE FROM results WHERE tournament_id = :tid AND angler_id = :angler_id",
+        {"tid": tournament_id, "angler_id": team_result["angler1_id"]},
     )
+    if team_result["angler2_id"]:  # Handle solo team (angler2_id might be NULL)
+        qs.execute(
+            "DELETE FROM results WHERE tournament_id = :tid AND angler_id = :angler_id",
+            {"tid": tournament_id, "angler_id": team_result["angler2_id"]},
+        )
 
     # Delete the team result
     qs.execute(

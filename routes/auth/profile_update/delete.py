@@ -3,8 +3,9 @@
 from fastapi import Request
 from fastapi.responses import RedirectResponse
 
+from core.db_schema import Angler, get_session
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
-from routes.dependencies import db, u
+from routes.dependencies import u
 
 logger = get_logger("auth.profile_update.delete")
 
@@ -34,7 +35,12 @@ async def delete_account(request: Request, confirm: str) -> RedirectResponse:
             details={"method": "self_delete"},
         )
 
-        db("DELETE FROM anglers WHERE id = :user_id", {"user_id": user_id})
+        with get_session() as session:
+            angler = session.query(Angler).filter(Angler.id == user_id).first()
+            if angler:
+                session.delete(angler)
+                session.commit()
+
         request.session.clear()
 
         return RedirectResponse("/?success=Account deleted successfully", status_code=302)

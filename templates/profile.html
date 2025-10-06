@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert %}
+{% from 'macros.html' import csrf_token, alert %}
 {% block content %}
 <div class="mb-4"><h1><i class="bi bi-person-circle me-2"></i>Member Profile</h1></div>
 {{ alert('success', success) }}
@@ -48,6 +48,7 @@
 <!-- Edit Mode -->
 <div id="editMode" style="display:none">
 <form method="POST" action="/profile/update">
+                    {{ csrf_token(request) }}
 <div class="mb-3"><label class="form-label">Email</label><input type="email" class="form-control" name="email" value="{{user.email or ''}}" required></div>
 <div class="mb-3"><label class="form-label">Phone</label><input type="tel" class="form-control" name="phone" id="phoneInput" value="{{user.phone or ''}}" placeholder="(555) 123-4567" maxlength="14"></div>
 <div class="mb-3"><label class="form-label">Year Joined</label><input type="number" class="form-control" name="year_joined" value="{{user.year_joined or 2024}}" min="1981" max="2030"></div>
@@ -158,6 +159,7 @@
 <p><strong>Tournament results will remain for record-keeping.</strong></p>
 <p><strong>Type "DELETE" to confirm:</strong></p>
 <form method="POST" action="/profile/delete" id="deleteForm">
+                    {{ csrf_token(request) }}
 <input type="text" class="form-control" name="confirm" placeholder="Type DELETE to confirm" required id="deleteConfirm">
 </form>
 </div>
