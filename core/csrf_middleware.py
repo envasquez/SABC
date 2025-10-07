@@ -40,7 +40,10 @@ class CSRFMiddleware(BaseCSRFMiddleware):
             # If not in headers and it's a form POST, check the body
             if not submitted_csrf_token and request.method == "POST":
                 content_type = request.headers.get("content-type", "")
-                if "application/x-www-form-urlencoded" in content_type:
+                if (
+                    "application/x-www-form-urlencoded" in content_type
+                    or "multipart/form-data" in content_type
+                ):
                     # Read and cache the entire body
                     body_parts = []
                     async for chunk in request.stream():
@@ -48,10 +51,27 @@ class CSRFMiddleware(BaseCSRFMiddleware):
                     body = b"".join(body_parts)
 
                     # Parse form data to extract CSRF token
-                    from urllib.parse import parse_qs
+                    if "application/x-www-form-urlencoded" in content_type:
+                        from urllib.parse import parse_qs
 
-                    form_data = parse_qs(body.decode("utf-8"))
-                    submitted_csrf_token = form_data.get("csrf_token", [None])[0]
+                        form_data = parse_qs(body.decode("utf-8"))
+                        submitted_csrf_token = form_data.get("csrf_token", [None])[0]
+                    elif "multipart/form-data" in content_type:
+                        # Parse multipart form data
+                        from starlette.formparsers import MultiPartParser
+
+                        # Extract boundary from content-type
+                        content_type.split("boundary=")[-1].encode()
+                        MultiPartParser(headers=request.headers, stream=request.stream())
+                        # For now, try to extract csrf_token from body as string
+                        body_str = body.decode("utf-8", errors="ignore")
+                        if 'name="csrf_token"' in body_str:
+                            # Simple extraction - find csrf_token value
+                            import re
+
+                            match = re.search(r'name="csrf_token"\r?\n\r?\n([^\r\n]+)', body_str)
+                            if match:
+                                submitted_csrf_token = match.group(1)
 
                     # Create a new receive callable that replays the cached body
                     async def receive_with_cached_body():
