@@ -278,11 +278,18 @@ function confirmDeleteCurrentEvent() {
     // Close the modal
     bootstrap.Modal.getInstance(document.getElementById('deleteEventModal')).hide();
 
+    // Get CSRF token from cookie
+    const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrf_token='))
+        ?.split('=')[1];
+
     // Delete the event
     fetch(`/admin/events/${eventId}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
+            'x-csrf-token': csrfToken,
         }
     })
     .then(response => {
