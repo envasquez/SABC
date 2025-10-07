@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy import func, literal
+from sqlalchemy import case, desc, func, literal
 
 from core.db_schema import Angler, Event, Result, TeamResult, Tournament, get_session
 from core.helpers.logging import get_logger
@@ -86,15 +86,9 @@ async def profile_page(request: Request):
         )
 
         current_finishes = session.query(
-            func.sum(func.case((current_finishes_subquery.c.place == 1, 1), else_=0)).label(
-                "first"
-            ),
-            func.sum(func.case((current_finishes_subquery.c.place == 2, 1), else_=0)).label(
-                "second"
-            ),
-            func.sum(func.case((current_finishes_subquery.c.place == 3, 1), else_=0)).label(
-                "third"
-            ),
+            func.sum(case((current_finishes_subquery.c.place == 1, 1), else_=0)).label("first"),
+            func.sum(case((current_finishes_subquery.c.place == 2, 1), else_=0)).label("second"),
+            func.sum(case((current_finishes_subquery.c.place == 3, 1), else_=0)).label("third"),
         ).first()
 
         current_first = current_finishes[0] or 0 if current_finishes else 0
@@ -117,15 +111,9 @@ async def profile_page(request: Request):
         )
 
         all_time_finishes = session.query(
-            func.sum(func.case((all_time_finishes_subquery.c.place == 1, 1), else_=0)).label(
-                "first"
-            ),
-            func.sum(func.case((all_time_finishes_subquery.c.place == 2, 1), else_=0)).label(
-                "second"
-            ),
-            func.sum(func.case((all_time_finishes_subquery.c.place == 3, 1), else_=0)).label(
-                "third"
-            ),
+            func.sum(case((all_time_finishes_subquery.c.place == 1, 1), else_=0)).label("first"),
+            func.sum(case((all_time_finishes_subquery.c.place == 2, 1), else_=0)).label("second"),
+            func.sum(case((all_time_finishes_subquery.c.place == 3, 1), else_=0)).label("third"),
         ).first()
 
         all_time_first = all_time_finishes[0] or 0 if all_time_finishes else 0
@@ -137,7 +125,6 @@ async def profile_page(request: Request):
         try:
             # This is a complex query with CTEs - using text query would be acceptable
             # but let's try to do it with ORM
-            from sqlalchemy import case, desc
 
             # First subquery: tournament_standings
             tournament_standings_subquery = (
