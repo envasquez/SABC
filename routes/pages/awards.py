@@ -73,7 +73,15 @@ async def awards(request: Request, year: Optional[int] = None):
                 angler_totals[angler_id]["total_fish"] += result.get("num_fish", 0)
                 angler_totals[angler_id]["total_weight"] += float(result.get("total_weight", 0))
                 angler_totals[angler_id]["tournaments_fished"] += 1
-        aoy_standings = list(angler_totals.values())
+
+        # Filter to only include current members (matching profile page logic)
+        current_members_query = "SELECT id FROM anglers WHERE member = true"
+        current_member_ids = {row["id"] for row in qs.fetch_all(current_members_query, {})}
+        angler_totals_members_only = {
+            aid: data for aid, data in angler_totals.items() if aid in current_member_ids
+        }
+
+        aoy_standings = list(angler_totals_members_only.values())
         aoy_standings.sort(key=lambda x: (x["total_points"], x["total_weight"]), reverse=True)
         heavy_stringer = qs.fetch_all(get_heavy_stringer_query(), {"year": year})
         big_bass = qs.fetch_all(get_big_bass_query(), {"year": year})
