@@ -9,6 +9,9 @@ from core.db_schema import (
     Event,
     Lake,
     News,
+    Poll,
+    PollOption,
+    PollVote,
     Ramp,
     Result,
     TeamResult,
@@ -104,6 +107,7 @@ async def home_paginated(request: Request, page: int = 1):
         tournaments_with_results: List[Dict[str, Any]] = []
         for tournament in tournaments_query:
             tournament_id = tournament[0]
+            poll_id = tournament[17]
 
             # Get top 3 team results for this tournament
             Angler1 = aliased(Angler)
@@ -128,6 +132,62 @@ async def home_paginated(request: Request, page: int = 1):
                 .all()
             )
 
+            # Get poll data and check if user has voted
+            import json
+            from datetime import datetime
+
+            poll_data = None
+            user_has_voted = False
+            poll_is_open = False
+
+            if poll_id:
+                # Get poll status
+                poll = session.query(Poll).filter(Poll.id == poll_id).first()
+                if poll:
+                    now = datetime.now()
+                    poll_is_open = poll.starts_at <= now <= poll.closes_at
+
+                # Get poll options with vote counts (for all users if they've voted)
+                poll_options = (
+                    session.query(
+                        PollOption.id,
+                        PollOption.option_text,
+                        PollOption.option_data,
+                        func.count(PollVote.id).label("vote_count"),
+                    )
+                    .outerjoin(PollVote, PollOption.id == PollVote.option_id)
+                    .filter(PollOption.poll_id == poll_id)
+                    .group_by(PollOption.id, PollOption.option_text, PollOption.option_data)
+                    .all()
+                )
+
+                # Check if user has voted
+                if user:
+                    user_id = user.get("id") if isinstance(user, dict) else user.id
+                    user_vote = (
+                        session.query(PollVote)
+                        .filter(PollVote.poll_id == poll_id, PollVote.angler_id == user_id)
+                        .first()
+                    )
+                    user_has_voted = user_vote is not None
+
+                # Only show poll data if user has voted
+                if user_has_voted and poll_options:
+                    poll_data = []
+                    for opt in poll_options:
+                        try:
+                            option_data_dict = json.loads(opt.option_data) if opt.option_data else {}
+                        except (json.JSONDecodeError, TypeError):
+                            option_data_dict = {}
+
+                        poll_data.append(
+                            {
+                                "option_text": opt.option_text,
+                                "option_data": option_data_dict,
+                                "vote_count": opt.vote_count,
+                            }
+                        )
+
             tournament_dict = {
                 "id": tournament[0],
                 "date": tournament[1],
@@ -147,12 +207,15 @@ async def home_paginated(request: Request, page: int = 1):
                 "is_team": tournament[14],
                 "is_paper": tournament[15],
                 "complete": tournament[16],
-                "poll_id": tournament[17],
+                "poll_id": poll_id,
                 "total_anglers": tournament[18] or 0,
                 "total_fish": tournament[19] or 0,
                 "total_weight": tournament[20] or 0.0,
                 "aoy_points": tournament[21] if tournament[21] is not None else True,
                 "top_results": top_results_query,
+                "poll_data": poll_data,
+                "user_has_voted": user_has_voted,
+                "poll_is_open": poll_is_open,
             }
             tournaments_with_results.append(tournament_dict)
 

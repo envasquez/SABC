@@ -33,13 +33,7 @@
                             {% endif %}
                         </h5>
                         <small>
-                            {% if poll.status == 'upcoming' %}
-                                Poll Opens on {{ poll.starts_at.strftime('%Y-%m-%d') }} at {{ poll.starts_at.strftime('%H:%M') }}
-                            {% elif poll.status == 'active' %}
-                                Poll Closes on {{ poll.closes_at.strftime('%Y-%m-%d') }} at {{ poll.closes_at.strftime('%H:%M') }}
-                            {% else %}
-                                Poll Closed on {{ poll.closes_at.strftime('%Y-%m-%d') }}
-                            {% endif %}
+                            Poll Opens on {{ poll.starts_at.strftime('%m-%d-%Y at %H:%M') }} | Closes on {{ poll.closes_at.strftime('%m-%d-%Y at %H:%M') }}
                         </small>
                     </div>
                     {% if user and user.is_admin %}

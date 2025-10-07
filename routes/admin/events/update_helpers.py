@@ -79,13 +79,46 @@ def update_event_record(session: Session, event_params: Dict[str, Any]) -> int:
 
 
 def update_tournament_record(session: Session, tournament_params: Dict[str, Any]) -> int:
+    from sqlalchemy import or_
+
+    from core.db_schema import Lake, Ramp
+
     tournament = (
         session.query(Tournament)
         .filter(Tournament.event_id == tournament_params["event_id"])
         .first()
     )
     if tournament:
+        # Look up lake_id and ramp_id from lake_name and ramp_name
+        lake_id = None
+        ramp_id = None
+
+        if tournament_params.get("lake_name"):
+            lake = (
+                session.query(Lake)
+                .filter(
+                    or_(
+                        Lake.yaml_key == tournament_params["lake_name"],
+                        Lake.display_name == tournament_params["lake_name"],
+                    )
+                )
+                .first()
+            )
+            if lake:
+                lake_id = lake.id
+
+        if tournament_params.get("ramp_name") and lake_id:
+            ramp = (
+                session.query(Ramp)
+                .filter(Ramp.name == tournament_params["ramp_name"], Ramp.lake_id == lake_id)
+                .first()
+            )
+            if ramp:
+                ramp_id = ramp.id
+
         tournament.name = tournament_params["name"]
+        tournament.lake_id = lake_id
+        tournament.ramp_id = ramp_id
         tournament.lake_name = tournament_params["lake_name"]
         tournament.ramp_name = tournament_params["ramp_name"]
         tournament.start_time = (

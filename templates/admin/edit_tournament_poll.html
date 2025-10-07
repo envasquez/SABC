@@ -31,6 +31,7 @@
 
             <!-- Poll Configuration Form -->
             <form method="POST" action="/admin/polls/{{ poll[0] }}/edit">
+                <input type="hidden" name="csrf_token" value="{{ request.cookies.get('csrf_token') }}">
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-primary text-white">
                         <h5 class="mb-0">
@@ -88,15 +89,12 @@
                             {% for lake in lakes %}
                             <div class="col-md-6 col-lg-4">
                                 <div class="form-check">
-                                    <input class="form-check-input lake-checkbox" type="checkbox" 
-                                           name="lake_ids" value="{{ lake[0] }}" 
-                                           id="lake_{{ lake[0] }}" 
-                                           {% if not selected_lake_ids or lake[0] in selected_lake_ids %}checked{% endif %}>
-                                    <label class="form-check-label" for="lake_{{ lake[0] }}">
-                                        <strong>{{ lake[1] }}</strong>
-                                        {% if lake[2] %}
-                                        <br><small class="text-secondary">{{ lake[2] }}</small>
-                                        {% endif %}
+                                    <input class="form-check-input lake-checkbox" type="checkbox"
+                                           name="lake_ids" value="{{ lake.id }}"
+                                           id="lake_{{ lake.id }}"
+                                           {% if not selected_lake_ids or lake.id in selected_lake_ids %}checked{% endif %}>
+                                    <label class="form-check-label" for="lake_{{ lake.id }}">
+                                        <strong>{{ lake.display_name }}</strong>
                                     </label>
                                 </div>
                             </div>

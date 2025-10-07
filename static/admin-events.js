@@ -35,6 +35,9 @@ function loadLakes() {
                     editLakeSelect.appendChild(option);
                 });
             }
+
+            // Populate other tournament lake select
+            loadLakesForOtherTournament();
         });
 }
 
@@ -405,25 +408,36 @@ const EVENT_FORM_CONFIG = {
 };
 
 /**
- * Utility: Hide all specified sections
+ * Utility: Hide all specified sections and disable their inputs
  */
 function hideAllSections(sectionIds) {
     sectionIds.forEach(id => {
         const section = document.getElementById(id);
         if (section) {
             section.style.display = 'none';
+            // Disable all inputs in hidden sections so they don't submit
+            section.querySelectorAll('input, select, textarea').forEach(input => {
+                input.disabled = true;
+            });
         }
     });
 }
 
 /**
- * Utility: Show specified sections
+ * Utility: Show specified sections and enable their inputs
  */
 function showSections(sectionIds, displayType = 'flex') {
     sectionIds.forEach(id => {
         const section = document.getElementById(id);
         if (section) {
             section.style.display = displayType;
+            // Enable all inputs in visible sections
+            section.querySelectorAll('input, select, textarea').forEach(input => {
+                // Don't enable ramp selects - they're controlled by lake selection
+                if (!input.id.includes('ramp_name')) {
+                    input.disabled = false;
+                }
+            });
         }
     });
 }
@@ -566,23 +580,20 @@ function toggleEditEventFields() {
 }
 
 /**
- * Load lakes for other tournament type
+ * Populate other tournament lake dropdown from cached lakesData
  */
 function loadLakesForOtherTournament() {
-    fetch('/api/lakes')
-        .then(response => response.json())
-        .then(lakes => {
-            const lakeSelect = document.getElementById('other_lake_name');
-            if (lakeSelect) {
-                lakeSelect.innerHTML = '<option value="">-- Select Lake (Optional) --</option>';
-                lakes.forEach(lake => {
-                    const option = document.createElement('option');
-                    option.value = lake.name;
-                    option.textContent = lake.name;
-                    lakeSelect.appendChild(option);
-                });
-            }
+    const lakeSelect = document.getElementById('other_lake_name');
+    if (lakeSelect && lakesData.length > 0) {
+        lakeSelect.innerHTML = '<option value="">-- Select Lake (Optional) --</option>';
+        lakesData.forEach(lake => {
+            const option = document.createElement('option');
+            option.value = lake.name;
+            option.textContent = lake.name;
+            option.dataset.lakeKey = lake.key;
+            lakeSelect.appendChild(option);
         });
+    }
 }
 
 /**
@@ -757,9 +768,8 @@ function updateEmptyState(tabType, visibleCount) {
  * Setup all event listeners when DOM is ready
  */
 function setupEventListeners() {
-    // Load lakes on page load
+    // Load lakes on page load (this will also populate other tournament dropdown)
     loadLakes();
-    loadLakesForOtherTournament();
 
     // Event type change handlers
     const eventTypeSelect = document.getElementById('event_type');

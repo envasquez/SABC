@@ -101,6 +101,7 @@
     </div>
 
     <form method="POST" action="{% if edit_data %}/admin/{{ 'results/' + edit_data.result_id|string + '/edit' if edit_data.type == 'individual' else 'team-results/' + edit_data.team_result_id|string + '/edit' }}{% else %}/admin/tournaments/{{ tournament.id }}/enter-results{% endif %}" id="resultsForm">
+        <input type="hidden" name="csrf_token" value="{{ request.cookies.get('csrf_token') }}">
         <div class="card">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">

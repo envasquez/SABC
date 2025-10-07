@@ -55,7 +55,7 @@ async def polls(
             Poll.event_id,
             status_case.label("status"),
             user_voted_exists.label("user_has_voted"),
-        ).order_by(Poll.closes_at.desc())
+        ).order_by(Poll.starts_at.asc())
 
         polls_data = session.execute(polls_query).all()
 

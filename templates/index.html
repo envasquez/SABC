@@ -7,7 +7,7 @@
         <h1 class="h2 mb-4">Events 🎣</h1>
 
         {% set completed_tournaments = all_tournaments | selectattr('complete', 'equalto', True) | list %}
-        {% set upcoming_tournaments = all_tournaments | selectattr('complete', 'equalto', False) | list %}
+        {% set upcoming_tournaments = all_tournaments | selectattr('complete', 'equalto', False) | sort(attribute='date') | list %}
 
         <!-- Bootstrap Tabs -->
         <ul class="nav nav-tabs mb-4" id="tournamentTabs" role="tablist">
@@ -359,7 +359,7 @@
                         <div class="row g-3 mb-3">
                             <div class="col-6 col-md-3">
                                 <div class="text-center">
-                                    {% if tournament.start_time %}
+                                    {% if tournament.lake_display_name and tournament.start_time %}
                                         <i class="bi bi-sunrise text-warning mb-1 fs-4"></i>
                                         <div class="small text-secondary">Start</div>
                                         <div class="fw-semibold">{{ tournament.start_time | time_format }}</div>
@@ -374,7 +374,7 @@
                             </div>
                             <div class="col-6 col-md-3">
                                 <div class="text-center">
-                                    {% if tournament.end_time %}
+                                    {% if tournament.lake_display_name and tournament.end_time %}
                                         <i class="bi bi-clipboard-data text-primary mb-1 fs-4"></i>
                                         <div class="small text-secondary">Weigh-in</div>
                                         <div class="fw-semibold">{{ tournament.end_time | time_format }}</div>
@@ -409,8 +409,8 @@
                             </div>
                         </div>
 
-                        <!-- Poll Charts for upcoming tournaments -->
-                        {% if tournament.poll_id %}
+                        <!-- Google Maps or Poll Charts for upcoming tournaments -->
+                        {% if tournament.poll_id and tournament.user_has_voted and tournament.poll_data %}
                         <div class="mb-3">
                             <div class="bg-light border rounded p-3 position-relative" style="height: 200px;">
                                 <div class="text-center mb-2">
@@ -419,23 +419,43 @@
                                 <canvas id="poll-chart-{{ tournament.id }}"></canvas>
                             </div>
                         </div>
+                        {% elif tournament.google_maps_iframe %}
+                        <div class="mb-3">
+                            <div class="rounded overflow-hidden position-relative w-100" style="height: 180px;">
+                                <style>
+                                    .map-container-upcoming-{{ loop.index }} iframe {
+                                        position: absolute;
+                                        top: 0;
+                                        left: 0;
+                                        width: 100% !important;
+                                        height: 100% !important;
+                                        border: 0;
+                                    }
+                                </style>
+                                <div class="w-100 h-100 map-container-upcoming-{{ loop.index }}">
+                                    {{ tournament.google_maps_iframe|safe }}
+                                </div>
+                            </div>
+                        </div>
                         {% else %}
                         <div class="mb-3">
-                            <div class="bg-light border rounded d-flex align-items-center justify-content-center" style="height: 200px;">
-                                <div class="text-center text-secondary">
-                                    <i class="bi bi-geo-alt fs-1"></i>
-                                    <div>Location TBD</div>
-                                    <small class="d-block mt-2">No active poll</small>
+                            <div class="bg-white border border-2 border-dark rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <div class="text-center">
+                                    <i class="bi bi-geo-alt fs-1 text-dark"></i>
+                                    <div class="fw-bold fs-4 text-dark">Location TBD</div>
+                                    <div class="mt-2 text-dark">Will be determined by poll vote</div>
                                 </div>
                             </div>
                         </div>
                         {% endif %}
 
+                        {% if tournament.poll_id %}
                         <div class="d-flex justify-content-end">
-                            <a href="/tournaments/{{ tournament.id }}" class="btn btn-primary">
-                                <i class="bi bi-info-circle me-1"></i>View Details
+                            <a href="/polls" class="btn btn-success btn-lg">
+                                <i class="bi bi-hand-index me-2"></i>Vote on Location
                             </a>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
@@ -531,7 +551,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const pollData = {};
             {% for option in tournament.poll_data %}
             const optionData = {{ option.option_data | tojson | safe }};
-            const lakeName = optionData.lake_name || 'Lake {{ option.lake_id }}';
+            const lakeName = '{{ option.option_text }}';
             if (!pollData[lakeName]) {
                 pollData[lakeName] = 0;
             }
