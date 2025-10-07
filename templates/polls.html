@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert, badge, csrf_token %}
+{% from 'macros.html' import alert, badge, csrf_token, delete_modal %}
 
 {% block title %}Polls - South Austin Bass Club{% endblock %}
 
@@ -44,12 +44,12 @@
                     </div>
                     {% if user and user.is_admin %}
                     <div class="btn-group">
-                        <button class="btn btn-sm btn-warning" 
+                        <button class="btn btn-sm btn-warning"
                                 onclick="window.location.href='/admin/polls/{{ poll.id }}/edit'">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" 
-                                onclick="if(confirm('Delete this poll?')) fetch('/admin/polls/{{ poll.id }}', {method: 'DELETE'}).then(() => location.reload())">
+                        <button class="btn btn-sm btn-danger"
+                                onclick="deletePoll({{ poll.id }}, '{{ poll.title|e }}')">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
@@ -386,6 +386,83 @@
     {% endif %}
 </div>
 
+<!-- Delete Poll Confirmation Modal -->
+<div class="modal fade" id="deletePollModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Delete Poll</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <strong>⚠️ Warning:</strong> This action cannot be undone.
+                </div>
+                <p>You are about to permanently delete the poll:</p>
+                <p><strong id="deletePollTitle"></strong></p>
+                <p class="text-secondary">This will remove the poll, all options, and all votes. This cannot be reversed.</p>
+                <p><strong>Type "DELETE" to confirm:</strong></p>
+                <input type="text" class="form-control" id="deletePollConfirmInput" placeholder="Type DELETE to confirm" autocomplete="off">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeletePollBtn" disabled>
+                    <i class="bi bi-trash me-1"></i>Delete Poll
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="/static/polls.js"></script>
 <script src="/static/admin.js"></script>
+<script>
+let deletePollId = null;
+
+function deletePoll(pollId, pollTitle) {
+    deletePollId = pollId;
+    document.getElementById('deletePollTitle').textContent = pollTitle;
+    document.getElementById('deletePollConfirmInput').value = '';
+    document.getElementById('confirmDeletePollBtn').disabled = true;
+    new bootstrap.Modal(document.getElementById('deletePollModal')).show();
+}
+
+// Enable/disable delete button based on confirmation input
+document.getElementById('deletePollConfirmInput').addEventListener('input', function(e) {
+    const btn = document.getElementById('confirmDeletePollBtn');
+    btn.disabled = e.target.value !== 'DELETE';
+});
+
+document.getElementById('confirmDeletePollBtn').addEventListener('click', function() {
+    if (deletePollId && document.getElementById('deletePollConfirmInput').value === 'DELETE') {
+        // Get CSRF token from cookie
+        const csrfToken = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('csrf_token='))
+            ?.split('=')[1];
+
+        fetch(`/admin/polls/${deletePollId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-csrf-token': csrfToken,
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error deleting poll: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting poll: ' + error.message);
+        });
+
+        bootstrap.Modal.getInstance(document.getElementById('deletePollModal')).hide();
+    }
+});
+</script>
 {% endblock %}

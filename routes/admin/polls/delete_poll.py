@@ -24,6 +24,8 @@ async def delete_poll(request: Request, poll_id: int):
             # Delete poll
             session.query(Poll).filter(Poll.id == poll_id).delete()
 
+            session.commit()
+
         return JSONResponse({"success": True})
     except Exception as e:
         error_msg = sanitize_error_message(e, "Failed to delete poll")
