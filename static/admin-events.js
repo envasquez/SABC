@@ -126,6 +126,16 @@ function editEvent(id, date, eventType, name, description, hasPoll, pollActive) 
                         entryFee.value = data.entry_fee;
                     }
 
+                    const fishLimit = document.getElementById('edit_fish_limit');
+                    if (fishLimit && data.fish_limit !== undefined) {
+                        fishLimit.value = data.fish_limit;
+                    }
+
+                    const aoyPoints = document.getElementById('edit_aoy_points');
+                    if (aoyPoints && data.aoy_points !== undefined) {
+                        aoyPoints.value = data.aoy_points ? 'true' : 'false';
+                    }
+
                     // Set lake first
                     const lakeSelect = document.getElementById('edit_lake_name');
                     if (lakeSelect && data.lake_name) {
