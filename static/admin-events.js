@@ -262,7 +262,7 @@ function deleteEvent(id, hasDependencies, eventName = 'Event') {
     document.getElementById('delete-current-confirmation').value = '';
 
     // Show the modal
-    var modal = new bootstrap.Modal(document.getElementById('deleteCurrentEventModal'));
+    var modal = new bootstrap.Modal(document.getElementById('deleteEventModal'));
     modal.show();
 }
 
@@ -276,7 +276,7 @@ function confirmDeleteCurrentEvent() {
     }
 
     // Close the modal
-    bootstrap.Modal.getInstance(document.getElementById('deleteCurrentEventModal')).hide();
+    bootstrap.Modal.getInstance(document.getElementById('deleteEventModal')).hide();
 
     // Delete the event
     fetch(`/admin/events/${eventId}`, {
