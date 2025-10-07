@@ -554,8 +554,8 @@ function toggleEditEventFields() {
     const allEditSections = ['edit-tournament-fields', 'edit-sabc-fields', 'edit-holiday-fields'];
     hideAllSections(allEditSections);
 
-    // Show relevant edit sections
-    showSections(config.editSections);
+    // Show relevant edit sections using 'block' display
+    showSections(config.editSections, 'block');
 }
 
 /**
