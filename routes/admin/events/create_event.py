@@ -34,6 +34,12 @@ async def create_event(
 ):
     user = require_admin(request)
     try:
+        print(f"DEBUG CREATE EVENT - Received parameters:")
+        print(f"  lake_name: {repr(lake_name)}")
+        print(f"  ramp_name: {repr(ramp_name)}")
+        print(f"  start_time: {repr(start_time)}")
+        print(f"  weigh_in_time: {repr(weigh_in_time)}")
+
         validation = validate_event_data(
             date, name, event_type, start_time, weigh_in_time, entry_fee, lake_name
         )

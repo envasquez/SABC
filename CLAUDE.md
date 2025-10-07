@@ -21,6 +21,30 @@ South Austin Bass Club (SABC) tournament management system - modern FastAPI appl
 
 ## CRITICAL DEVELOPMENT RULES
 
+### 0. MANDATORY TESTING REQUIREMENT
+**ABSOLUTELY CRITICAL - NO EXCEPTIONS:**
+
+- **NEVER assume code works without testing**
+- **NEVER commit code without verifying it functions correctly**
+- **NEVER guess at solutions - investigate and test**
+
+**Required testing workflow:**
+1. Make code changes
+2. Restart the development server to load new code
+3. Test the functionality manually in the browser
+4. Verify database changes with direct queries
+5. Only after successful testing: commit and push
+
+**If you cannot test directly:**
+- Add debug logging to verify data flow
+- Check database state before and after operations
+- Ask the user to provide test results before proceeding
+
+**Violations of this rule cause:**
+- Wasted time fixing the same issue repeatedly
+- User frustration
+- Loss of confidence in AI assistance
+
 ### 1. Type Safety Requirements
 **ALL Python code MUST have proper type annotations:**
 
