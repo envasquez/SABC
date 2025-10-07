@@ -24,7 +24,9 @@ async def get_event_info(request: Request, event_id: int):
 
             if result:
                 event, tournament, poll = result
-                lake_display_name = event.lake_name or ""
+                # Prefer event data, but fall back to tournament data if event fields are null
+                lake_display_name = event.lake_name or (tournament.lake_name if tournament else "") or ""
+                ramp_name = event.ramp_name or (tournament.ramp_name if tournament else "") or ""
 
                 return JSONResponse(
                     {
@@ -40,7 +42,7 @@ async def get_event_info(request: Request, event_id: int):
                         if event.weigh_in_time is not None
                         else "",
                         "lake_name": lake_display_name,
-                        "ramp_name": event.ramp_name or "",
+                        "ramp_name": ramp_name,
                         "entry_fee": float(event.entry_fee)
                         if event.entry_fee is not None
                         else None,
