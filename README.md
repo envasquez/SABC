@@ -44,6 +44,24 @@ SABC Tournament Management System provides comprehensive tournament management f
 - Club bylaws and regulations
 - Historical information and archives
 
+## 🚨 SECURITY NOTICE
+
+**CRITICAL**: Read [SECURITY.md](SECURITY.md) before deploying to production.
+
+**Action Required for Existing Deployments:**
+- Gmail SMTP password exposed in audit - revoke and regenerate immediately
+- Rotate SECRET_KEY for all environments
+- Review database credentials and rotate if compromised
+- Follow complete credential rotation procedures in [SECURITY.md](SECURITY.md)
+
+**For New Deployments:**
+- Never commit `.env` files (already gitignored)
+- Use [.env.example](.env.example) template with secure random values
+- Store production secrets in platform environment variables (Digital Ocean, AWS, etc.)
+- Enable pre-commit hooks to prevent future secret leaks
+
+---
+
 ## 🚀 Quick Start
 
 ### Prerequisites

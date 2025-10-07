@@ -1,0 +1,84 @@
+# Pre-commit hooks for SABC repository
+# Install: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Detect secrets and credentials
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: package.lock.json
+
+  # General security checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      # Prevent committing large files (>500KB)
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+
+      # Check for merge conflict markers
+      - id: check-merge-conflict
+
+      # Detect private SSH/SSL keys
+      - id: detect-private-key
+
+      # Check YAML syntax
+      - id: check-yaml
+        exclude: '.github/workflows/'
+
+      # Check JSON syntax
+      - id: check-json
+
+      # Trim trailing whitespace
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+
+      # Ensure files end with newline
+      - id: end-of-file-fixer
+
+      # Check for debugger imports
+      - id: debug-statements
+
+  # Python code quality
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.8
+    hooks:
+      # Run Ruff linter
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+
+      # Run Ruff formatter
+      - id: ruff-format
+
+  # Python security linting
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.5
+    hooks:
+      - id: bandit
+        args: ['-c', 'pyproject.toml']
+        additional_dependencies: ['bandit[toml]']
+        exclude: 'test_.*\.py$'
+
+  # Type checking (optional - currently many errors)
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: v1.7.1
+  #   hooks:
+  #     - id: mypy
+  #       additional_dependencies: [types-all]
+  #       args: [--ignore-missing-imports]
+
+# Global configuration
+default_language_version:
+  python: python3.11
+
+exclude: |
+  (?x)^(
+    \.nix-python-packages/|
+    __pycache__/|
+    \.mypy_cache/|
+    \.ruff_cache/|
+    \.git/
+  )$

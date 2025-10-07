@@ -51,10 +51,17 @@ pyvenv.cfg
 *.db-wal
 *.db-shm
 
-# Environment variables
+# Environment variables - NEVER commit these files
 .env
+.env.*
+!.env.example
+!.env.production.example
 .env.local
-.env.*.local
+.env.development
+.env.production
+.env.staging
+.env.test
+*.env.backup
 
 # Logs
 *.log
@@ -148,13 +155,25 @@ media/
 local_settings.py
 dev.py
 
-# Security
+# Security - CRITICAL: Never commit these
 *.pem
 *.key
 *.crt
 *.cer
 secrets/
 cookies.txt
+*.credentials
+credentials.json
+service-account.json
+*.p12
+*.pfx
+id_rsa*
+id_dsa*
+id_ecdsa*
+id_ed25519*
+.ssh/
+authorized_keys
+known_hosts
 
 # Digital Ocean deployment config
 .do/
