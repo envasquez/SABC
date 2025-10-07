@@ -144,7 +144,7 @@ mypy .                         # Type checking
 ### Technology Stack
 
 - **Backend**: FastAPI 0.115+ with Python 3.11+
-- **Database**: PostgreSQL 17+ with SQLAlchemy Core
+- **Database**: PostgreSQL 17+ with SQLAlchemy ORM
 - **Frontend**: Jinja2 templates + HTMX for interactivity
 - **Type Safety**: Comprehensive type annotations throughout
 - **Development**: Nix for reproducible environment
@@ -173,18 +173,19 @@ sabc/
 │       ├── auth.py           # Authentication helpers
 │       ├── poll_processor.py # Poll automation
 │       └── logging_config.py # Logging configuration
-├── routes/                   # FastAPI route modules
-│   ├── auth.py              # Authentication routes
-│   ├── pages.py             # Public pages
-│   ├── voting.py            # Member voting
-│   ├── tournaments_public.py # Tournament results
-│   ├── awards.py            # Awards and standings
-│   └── admin/               # Admin-only routes
-│       ├── core.py          # Admin dashboard
-│       ├── events.py        # Event management
-│       ├── polls.py         # Poll creation
-│       ├── tournaments.py   # Tournament management
-│       └── users.py         # User management
+├── routes/                  # FastAPI route modules
+│   ├── auth/               # Authentication routes
+│   ├── pages/              # Public pages
+│   ├── voting/             # Member voting
+│   ├── tournaments/        # Tournament results
+│   ├── awards/             # Awards and standings
+│   └── admin/              # Admin-only routes
+│       ├── core/           # Admin dashboard and news
+│       ├── events/         # Event management
+│       ├── polls/          # Poll creation and management
+│       ├── tournaments/    # Tournament management
+│       ├── lakes/          # Lake and ramp management
+│       └── users/          # User management
 ├── templates/               # Jinja2 templates
 │   ├── base.html           # Base template
 │   ├── index.html          # Home page

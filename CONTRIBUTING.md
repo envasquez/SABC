@@ -151,28 +151,34 @@ from typing import *
 
 ### Database Patterns
 
-**Use type-safe database operations:**
+**Use type-safe database operations with ORM:**
 
 ```python
-# ✅ CORRECT - Type-safe database query
-from core.database import db
+# ✅ CORRECT - Type-safe ORM query
+from core.db_schema import Result, Angler, get_session
 from typing import List, Dict, Any
 
 def get_tournament_standings(tournament_id: int) -> List[Dict[str, Any]]:
     """Get tournament standings with proper typing."""
-    return db("""
-        SELECT
-            a.name,
-            r.total_weight,
-            r.points,
-            r.place
-        FROM results r
-        JOIN anglers a ON r.angler_id = a.id
-        WHERE r.tournament_id = :tournament_id
-        ORDER BY r.place ASC
-    """, {"tournament_id": tournament_id})
+    with get_session() as session:
+        results = (
+            session.query(Result, Angler)
+            .join(Angler, Result.angler_id == Angler.id)
+            .filter(Result.tournament_id == tournament_id)
+            .order_by(Result.place.asc())
+            .all()
+        )
+        return [
+            {
+                "name": angler.name,
+                "total_weight": result.total_weight,
+                "points": result.points,
+                "place": result.place
+            }
+            for result, angler in results
+        ]
 
-# ❌ AVOID - Untyped queries
+# ❌ AVOID - Untyped or unsafe queries
 def get_standings(id):
     return db(f"SELECT * FROM results WHERE tournament_id = {id}")
 ```
@@ -223,21 +229,21 @@ logger = get_logger(__name__)
 @router.post("/admin/tournaments/create")
 async def create_tournament(request: Request, data: TournamentCreateForm) -> RedirectResponse:
     """Create tournament with proper error handling."""
-    if not (user := require_admin(request)):
-        return RedirectResponse("/login")
+    user = require_admin(request)
 
     try:
-        tournament_id = db("""
-            INSERT INTO tournaments (event_id, lake_id, ramp_id, entry_fee)
-            VALUES (:event_id, :lake_id, :ramp_id, :entry_fee)
-        """, {
-            "event_id": data.event_id,
-            "lake_id": data.lake_id,
-            "ramp_id": data.ramp_id,
-            "entry_fee": data.entry_fee
-        })
+        with get_session() as session:
+            tournament = Tournament(
+                event_id=data.event_id,
+                lake_id=data.lake_id,
+                ramp_id=data.ramp_id,
+                entry_fee=data.entry_fee
+            )
+            session.add(tournament)
+            session.commit()
+            tournament_id = tournament.id
 
-        logger.info(f"Tournament created with ID {tournament_id} by user {user['id']}")
+        logger.info(f"Tournament created with ID {tournament_id} by user {user.id}")
         return RedirectResponse(f"/admin/tournaments?success=Tournament created successfully")
 
     except Exception as e:
@@ -391,12 +397,15 @@ Reviewers will check for:
 
 #### Database Queries
 ```python
-# Use the centralized query service
-from core.query_service import QueryService
+# Use the ORM with proper session management
+from core.db_schema import Tournament, get_session
 
-with engine.connect() as conn:
-    qs = QueryService(conn)
-    results = qs.fetch_all("SELECT * FROM tournaments WHERE year = :year", {"year": 2024})
+with get_session() as session:
+    results = (
+        session.query(Tournament)
+        .filter(Tournament.year == 2024)
+        .all()
+    )
 ```
 
 #### Authentication
@@ -414,10 +423,13 @@ async def admin_action(request: Request) -> RedirectResponse:
 ```python
 # Use consistent error responses
 from core.helpers.response import error_redirect
+from core.db_schema import Tournament, get_session
 
 try:
-    # Database operation
-    result = db("INSERT INTO ...", params)
+    with get_session() as session:
+        tournament = Tournament(event_id=event_id, lake_id=lake_id)
+        session.add(tournament)
+        session.commit()
     return RedirectResponse("/success")
 except Exception as e:
     logger.error(f"Operation failed: {e}")

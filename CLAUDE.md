@@ -14,7 +14,7 @@ South Austin Bass Club (SABC) tournament management system - modern FastAPI appl
 
 ## Technology Stack
 - **Backend**: FastAPI 0.115+ with Python 3.11+
-- **Database**: PostgreSQL 17+ with SQLAlchemy Core
+- **Database**: PostgreSQL 17+ with SQLAlchemy ORM
 - **Frontend**: Jinja2 templates with HTMX for interactivity
 - **Development**: Nix development environment
 - **Deployment**: Digital Ocean App Platform
@@ -143,18 +143,19 @@ ramps (id, lake_id, name, coordinates)
 ```
 routes/
 ├── __init__.py
-├── dependencies.py      # Shared dependencies
-├── auth.py             # Authentication routes
-├── pages.py            # Public pages
-├── voting.py           # Member voting
-├── tournaments_public.py # Tournament results
-├── awards.py           # Awards and standings
-└── admin/              # Admin-only routes
-    ├── core.py         # Dashboard
-    ├── events.py       # Event management
-    ├── polls.py        # Poll creation
-    ├── tournaments.py  # Tournament management
-    └── users.py        # User management
+├── dependencies.py        # Shared dependencies
+├── auth/                  # Authentication routes
+├── pages/                 # Public pages
+├── voting/                # Member voting
+├── tournaments/           # Tournament results
+├── awards/                # Awards and standings
+└── admin/                 # Admin-only routes
+    ├── core/              # Dashboard and news
+    ├── events/            # Event management
+    ├── polls/             # Poll creation and management
+    ├── tournaments/       # Tournament management
+    ├── lakes/             # Lake and ramp management
+    └── users/             # User management
 ```
 
 ### Route Type Annotations
@@ -284,28 +285,47 @@ PORT=8000
 
 ## Common Patterns
 
-### Database Queries
+### Database Queries with ORM
 ```python
-from core.database import db
+from core.db_schema import Result, Angler, get_session
 from typing import List, Dict, Any
 
 def get_tournament_results(tournament_id: int) -> List[Dict[str, Any]]:
-    return db("""
-        SELECT a.name, r.total_weight, r.points
-        FROM results r
-        JOIN anglers a ON r.angler_id = a.id
-        WHERE r.tournament_id = :tournament_id
-        ORDER BY r.points DESC
-    """, {"tournament_id": tournament_id})
+    with get_session() as session:
+        results = (
+            session.query(Result, Angler)
+            .join(Angler, Result.angler_id == Angler.id)
+            .filter(Result.tournament_id == tournament_id)
+            .order_by(Result.points.desc())
+            .all()
+        )
+        return [
+            {
+                "name": angler.name,
+                "total_weight": result.total_weight,
+                "points": result.points
+            }
+            for result, angler in results
+        ]
 ```
 
 ### Error Handling
 ```python
 from core.helpers.response import error_redirect
+from core.db_schema import Tournament, get_session
+from core.helpers.logging import get_logger
+
+logger = get_logger(__name__)
 
 try:
-    # Database operation
-    result = db("INSERT INTO ...", params)
+    with get_session() as session:
+        tournament = Tournament(
+            event_id=event_id,
+            lake_id=lake_id,
+            ramp_id=ramp_id
+        )
+        session.add(tournament)
+        session.commit()
     return RedirectResponse("/success")
 except Exception as e:
     logger.error(f"Operation failed: {e}")
