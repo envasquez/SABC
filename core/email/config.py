@@ -12,7 +12,7 @@ FROM_EMAIL = os.environ.get("FROM_EMAIL", "noreply@saustinbc.com")
 CLUB_NAME = "South Austin Bass Club"
 WEBSITE_URL = os.environ.get("WEBSITE_URL", "http://localhost:8000")
 
-RESET_RATE_LIMIT = 3
-RESET_RATE_WINDOW = 3600
+RESET_RATE_LIMIT = int(os.environ.get("RESET_RATE_LIMIT", "3"))
+RESET_RATE_WINDOW = int(os.environ.get("RESET_RATE_WINDOW", "3600"))
 
-TOKEN_EXPIRY_MINUTES = 30
+TOKEN_EXPIRY_MINUTES = int(os.environ.get("TOKEN_EXPIRY_MINUTES", "30"))
