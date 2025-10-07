@@ -1,5 +1,6 @@
 from fastapi import Query, Request
 from fastapi.responses import RedirectResponse
+from sqlalchemy import Date, cast, func
 
 from core.db_schema import Event, Poll, get_session
 from core.helpers.auth import require_admin
@@ -14,7 +15,10 @@ async def create_poll_form(request: Request, event_id: int = Query(None)):
             # Get upcoming SABC tournaments
             events = (
                 session.query(Event)
-                .filter(Event.date >= "CURRENT_DATE", Event.event_type == "sabc_tournament")
+                .filter(
+                    Event.date >= cast(func.current_date(), Date),
+                    Event.event_type == "sabc_tournament",
+                )
                 .order_by(Event.date)
                 .all()
             )
