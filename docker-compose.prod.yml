@@ -10,6 +10,10 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       DEBUG: ${DEBUG:-false}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      FROM_EMAIL: ${FROM_EMAIL}
+      WEBSITE_URL: ${WEBSITE_URL:-https://saustinbc.com}
     ports:
       - "8000:8000"
     depends_on:
