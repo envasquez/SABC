@@ -248,7 +248,13 @@
                                     <td>{{ event.lake_name or '-' }}</td>
                                     <td>
                                         <button class="btn btn-sm btn-warning" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteEvent({{ event.id }})"><i class="bi bi-trash"></i></button>
+                                        <button class="btn btn-sm btn-danger"
+                                                data-event-id="{{ event.id }}"
+                                                data-event-name="{{ event.name }}"
+                                                data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
+                                                onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -322,7 +328,13 @@
                                     <td>{{ event.lake_name or '-' }}</td>
                                     <td>
                                         <button class="btn btn-sm btn-warning" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteEvent({{ event.id }})"><i class="bi bi-trash"></i></button>
+                                        <button class="btn btn-sm btn-danger"
+                                                data-event-id="{{ event.id }}"
+                                                data-event-name="{{ event.name }}"
+                                                data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
+                                                onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -374,7 +386,13 @@
                                     <td>{{ event.lake_name or '-' }}</td>
                                     <td>
                                         <button class="btn btn-sm btn-warning" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteEvent({{ event.id }})"><i class="bi bi-trash"></i></button>
+                                        <button class="btn btn-sm btn-danger"
+                                                data-event-id="{{ event.id }}"
+                                                data-event-name="{{ event.name }}"
+                                                data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
+                                                onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -432,7 +450,13 @@
                                     <td>{{ event.lake_name or '-' }}</td>
                                     <td>
                                         <button class="btn btn-sm btn-warning" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-danger" onclick="deleteEvent({{ event.id }})"><i class="bi bi-trash"></i></button>
+                                        <button class="btn btn-sm btn-danger"
+                                                data-event-id="{{ event.id }}"
+                                                data-event-name="{{ event.name }}"
+                                                data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
+                                                onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
                                     </td>
                                 </tr>
                                 {% endfor %}
