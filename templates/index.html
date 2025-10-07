@@ -430,7 +430,6 @@
                         </div>
                         {% else %}
                         <!-- No location set yet - show poll results if user voted, otherwise show TBD -->
-                        <!-- DEBUG: id={{ tournament.id }} poll_id={{ tournament.poll_id }} poll_data={{ 'list[' + (tournament.poll_data | length | string) + ']' if tournament.poll_data else 'None' }} voted={{ tournament.user_has_voted }} -->
                         {% if tournament.poll_data and (tournament.poll_data | length > 0) %}
                         <div class="mb-3">
                             <!-- Tournament Poll Results -->

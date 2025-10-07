@@ -171,9 +171,6 @@ async def home_paginated(request: Request, page: int = 1):
                         .first()
                     )
                     user_has_voted = user_vote is not None
-                    print(
-                        f"DEBUG: poll_id={poll_id}, user_id={user_id}, voted={user_has_voted}, options={len(poll_options)}"
-                    )
 
                 # Only show poll data if user has voted
                 if user_has_voted and poll_options:
@@ -193,9 +190,6 @@ async def home_paginated(request: Request, page: int = 1):
                                 "vote_count": opt.vote_count,
                             }
                         )
-                    print(
-                        f"DEBUG POLL_DATA: poll_id={poll_id}, poll_data length={len(poll_data)}, user_has_voted={user_has_voted}"
-                    )
 
             tournament_dict = {
                 "id": tournament[0],
@@ -226,9 +220,6 @@ async def home_paginated(request: Request, page: int = 1):
                 "user_has_voted": user_has_voted,
                 "poll_is_open": poll_is_open,
             }
-            print(
-                f"DEBUG TOURNAMENT_DICT: id={tournament[0]}, poll_id={poll_id}, poll_data={'None' if poll_data is None else f'list[{len(poll_data)}]'}, user_has_voted={user_has_voted}, lake_name={tournament[5]}"
-            )
             tournaments_with_results.append(tournament_dict)
 
         # Get member count
