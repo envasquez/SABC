@@ -25,7 +25,9 @@ async def get_event_info(request: Request, event_id: int):
             if result:
                 event, tournament, poll = result
                 # Prefer event data, but fall back to tournament data if event fields are null
-                lake_display_name = event.lake_name or (tournament.lake_name if tournament else "") or ""
+                lake_display_name = (
+                    event.lake_name or (tournament.lake_name if tournament else "") or ""
+                )
                 ramp_name = event.ramp_name or (tournament.ramp_name if tournament else "") or ""
 
                 return JSONResponse(
