@@ -35,6 +35,7 @@ def create_event_record(event_params: Dict[str, Any]) -> int:
         session.add(event)
         session.flush()
         event_id = event.id
+        session.commit()
 
     return event_id
 
@@ -89,6 +90,7 @@ def create_tournament_record(event_id: int, tournament_params: Dict[str, Any]) -
             aoy_points=tournament_params["aoy_points"],
         )
         session.add(tournament)
+        session.commit()
 
 
 def create_tournament_poll(
@@ -110,6 +112,7 @@ def create_tournament_poll(
         session.add(poll)
         session.flush()
         poll_id = poll.id
+        session.commit()
 
     return poll_id
 
@@ -126,3 +129,4 @@ def create_poll_options(poll_id: int) -> None:
                 option_data=json.dumps(option_data),
             )
             session.add(poll_option)
+        session.commit()
