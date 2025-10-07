@@ -100,8 +100,23 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
             )
             past_tournament_years = [int(row[0]) for row in past_tournament_years_query]
 
+            # Get unique lakes for Past Tournaments tab filter
+            past_tournament_lakes_query = (
+                session.query(Event.lake_name)
+                .filter(
+                    Event.date < cast(func.current_date(), Date),
+                    Event.event_type == "sabc_tournament",
+                    Event.lake_name.isnot(None),
+                )
+                .distinct()
+                .order_by(Event.lake_name)
+                .all()
+            )
+            past_tournament_lakes = [row[0] for row in past_tournament_lakes_query if row[0]]
+
         ctx["past_tournaments"] = past_tournaments
         ctx["past_tournament_years"] = past_tournament_years
+        ctx["past_tournament_lakes"] = past_tournament_lakes
 
         upcoming_total_pages = (total_upcoming + per_page - 1) // per_page
         # Past tournaments don't use pagination - all loaded for client-side filtering

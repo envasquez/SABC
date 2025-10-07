@@ -223,10 +223,9 @@
                             <div class="col-md-2">
                                 <select class="form-select form-select-sm" id="sabc-lake-filter" onchange="filterEvents('sabc')">
                                     <option value="">All Lakes</option>
-                                    <option value="travis">Lake Travis</option>
-                                    <option value="austin">Lake Austin</option>
-                                    <option value="bastrop">Lake Bastrop</option>
-                                    <option value="buchanan">Lake Buchanan</option>
+                                    {% for lake in past_tournament_lakes %}
+                                    <option value="{{ lake }}">{{ lake }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <div class="col-md-2">
@@ -291,10 +290,9 @@
                             <div class="col-md-2">
                                 <select class="form-select form-select-sm" id="past-tournaments-lake-filter" onchange="filterEvents('past-tournaments')">
                                     <option value="">All Lakes</option>
-                                    <option value="travis">Lake Travis</option>
-                                    <option value="austin">Lake Austin</option>
-                                    <option value="bastrop">Lake Bastrop</option>
-                                    <option value="buchanan">Lake Buchanan</option>
+                                    {% for lake in past_tournament_lakes %}
+                                    <option value="{{ lake }}">{{ lake }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <div class="col-md-2">
