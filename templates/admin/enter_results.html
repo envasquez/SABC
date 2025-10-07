@@ -813,6 +813,7 @@ document.getElementById('resultsForm').addEventListener('submit', async function
             console.log(`Team ${teamId}: angler1_id =`, angler1Id);
             if (angler1Id) {
                 const angler1Data = new FormData();
+                angler1Data.append('csrf_token', formData.get('csrf_token'));
                 angler1Data.append('angler_id', angler1Id);
                 angler1Data.append('num_fish', formData.get(`angler1_fish_${teamId}`) || 0);
                 angler1Data.append('total_weight', formData.get(`angler1_weight_${teamId}`) || 0);
@@ -843,6 +844,7 @@ document.getElementById('resultsForm').addEventListener('submit', async function
             console.log(`Team ${teamId}: angler2_id =`, angler2Id);
             if (angler2Id) {
                 const angler2Data = new FormData();
+                angler2Data.append('csrf_token', formData.get('csrf_token'));
                 angler2Data.append('angler_id', angler2Id);
                 angler2Data.append('num_fish', formData.get(`angler2_fish_${teamId}`) || 0);
                 angler2Data.append('total_weight', formData.get(`angler2_weight_${teamId}`) || 0);
@@ -871,6 +873,7 @@ document.getElementById('resultsForm').addEventListener('submit', async function
             // Save team result (works for solo or team)
             if (angler1Id) {
                 const teamData = new FormData();
+                teamData.append('csrf_token', formData.get('csrf_token'));
                 teamData.append('angler1_id', angler1Id);
                 if (angler2Id) {
                     teamData.append('angler2_id', angler2Id);
