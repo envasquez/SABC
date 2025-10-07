@@ -91,7 +91,7 @@ trio-websocket==0.12.2
 types-PyYAML==6.0.12.20250915
 types-requests==2.32.4.20250913
 typing-inspection==0.4.1
-typing_extensions==4.15.0
+typing_extensions>=4.12.2
 tzdata==2025.2
 urllib3==2.5.0
 uvicorn==0.34.0
