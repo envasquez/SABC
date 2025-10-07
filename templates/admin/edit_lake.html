@@ -4,7 +4,7 @@
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-water me-2"></i>Edit Lake: {{ lake[2] }}</h1>
+        <h1><i class="bi bi-water me-2"></i>Edit Lake: {{ lake.display_name }}</h1>
         <a href="/admin/lakes" class="btn btn-secondary">
             <i class="bi bi-arrow-left"></i> Back to Lakes
         </a>
@@ -32,22 +32,22 @@
                     <h4 class="mb-0"><i class="bi bi-info-circle me-2"></i>Lake Details</h4>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="/admin/lakes/{{ lake[0] }}/update">
+                    <form method="POST" action="/admin/lakes/{{ lake.id }}/update">
                     {{ csrf_token(request) }}
                         <div class="mb-3">
                             <label for="display_name" class="form-label">Display Name</label>
-                            <input type="text" class="form-control" id="display_name" name="display_name" value="{{ lake[2] }}" required>
+                            <input type="text" class="form-control" id="display_name" name="display_name" value="{{ lake.display_name }}" required>
                         </div>
 
                         <div class="mb-3">
                             <label for="name" class="form-label">Database Name</label>
-                            <input type="text" class="form-control" id="name" name="name" value="{{ lake[1] }}" required>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ lake.yaml_key }}" required>
                             <small class="text-secondary">Lowercase, no spaces</small>
                         </div>
 
                         <div class="mb-3">
                             <label for="google_maps_embed" class="form-label">Google Maps Embed Code</label>
-                            <textarea class="form-control" id="google_maps_embed" name="google_maps_embed" rows="3">{{ lake[3] or '' }}</textarea>
+                            <textarea class="form-control" id="google_maps_embed" name="google_maps_embed" rows="3">{{ lake.google_maps_iframe or '' }}</textarea>
                             <small class="text-secondary">Full iframe embed code (optional)</small>
                         </div>
 
@@ -78,10 +78,10 @@
                             </thead>
                             <tbody>
                                 {% for ramp in ramps %}
-                                <tr id="ramp-row-{{ ramp[0] }}">
-                                    <td><strong>{{ ramp[1] }}</strong></td>
+                                <tr id="ramp-row-{{ ramp.id }}">
+                                    <td><strong>{{ ramp.name }}</strong></td>
                                     <td>
-                                        {% if ramp[2] %}
+                                        {% if ramp.google_maps_iframe %}
                                             <i class="bi bi-map text-success" title="Has map embed"></i>
                                         {% else %}
                                             <small class="text-secondary">No map</small>
@@ -89,14 +89,14 @@
                                     </td>
                                     <td>
                                         <button class="btn btn-sm btn-warning edit-ramp-btn"
-                                                data-id="{{ ramp[0] }}"
-                                                data-name="{{ ramp[1] }}"
-                                                data-map="{{ ramp[2] or '' }}">
+                                                data-id="{{ ramp.id }}"
+                                                data-name="{{ ramp.name }}"
+                                                data-map="{{ ramp.google_maps_iframe or '' }}">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         <button class="btn btn-sm btn-danger delete-ramp-btn"
-                                                data-id="{{ ramp[0] }}"
-                                                data-name="{{ ramp[1] }}">
+                                                data-id="{{ ramp.id }}"
+                                                data-name="{{ ramp.name }}">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </td>
@@ -114,7 +114,7 @@
                     <hr>
 
                     <h5 class="mb-3"><i class="bi bi-plus-circle me-2"></i>Add New Ramp</h5>
-                    <form method="POST" action="/admin/lakes/{{ lake[0] }}/ramps" id="addRampForm">
+                    <form method="POST" action="/admin/lakes/{{ lake.id }}/ramps" id="addRampForm">
                     {{ csrf_token(request) }}
                         <div class="mb-3">
                             <label for="ramp_name" class="form-label">Ramp Name</label>
