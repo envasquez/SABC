@@ -55,23 +55,27 @@ async def edit_event(
             fish_limit,
             aoy_points,
         )
-        with engine.connect() as conn:
-            rowcount = update_event_record(conn, event_params)
+        from core.db_schema import get_session
+
+        with get_session() as session:
+            rowcount = update_event_record(session, event_params)
             if rowcount == 0:
                 return RedirectResponse(
                     f"/admin/events?error=Event with ID {event_id} not found", status_code=302
                 )
-        if event_type == "sabc_tournament":
-            print(
-                f"DEBUG: Updating tournament for event {event_id} with params: {tournament_params}"
-            )
-            with engine.connect() as conn:
-                tournament_rowcount = update_tournament_record(conn, tournament_params)
+
+            if event_type == "sabc_tournament":
+                print(
+                    f"DEBUG: Updating tournament for event {event_id} with params: {tournament_params}"
+                )
+                tournament_rowcount = update_tournament_record(session, tournament_params)
                 if tournament_rowcount == 0:
                     return RedirectResponse(
                         f"/admin/events?error=Tournament record for event ID {event_id} not found",
                         status_code=302,
                     )
+
+            session.commit()
         if event_type == "sabc_tournament":
             update_poll_closing_date(event_id, poll_closes_date)
         return RedirectResponse("/admin/events?success=Event updated successfully", status_code=302)
