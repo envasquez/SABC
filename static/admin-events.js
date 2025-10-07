@@ -376,7 +376,7 @@ const EVENT_FORM_CONFIG = {
         editSections: ['edit-tournament-fields', 'edit-sabc-fields'],
         clearFields: ['start_time', 'weigh_in_time'],
         defaults: { start_time: '06:00', weigh_in_time: '15:00' },
-        requiredFields: ['start_time', 'weigh_in_time', 'lake_name', 'ramp_name'],
+        requiredFields: [], // No required fields - these will be set by poll voting
         descriptionField: 'description'
     },
     holiday: {
