@@ -12,12 +12,14 @@ from routes.admin import users as admin_users
 def register_routes(app: FastAPI) -> None:
     app.include_router(auth.router)
     app.include_router(password_reset.router)
+    # Register specific admin routes BEFORE the catch-all admin_core.router
     app.include_router(admin_lakes.router)
-    app.include_router(admin_core.router)
     app.include_router(admin_events.router)
     app.include_router(admin_polls.router)
     app.include_router(admin_tournaments.router)
     app.include_router(admin_users.router)
+    # Register catch-all /admin/{page} route LAST among admin routes
+    app.include_router(admin_core.router)
     app.include_router(api.router)
     app.include_router(static.router)
     app.include_router(voting.router)
