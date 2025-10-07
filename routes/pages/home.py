@@ -176,7 +176,9 @@ async def home_paginated(request: Request, page: int = 1):
                     poll_data = []
                     for opt in poll_options:
                         try:
-                            option_data_dict = json.loads(opt.option_data) if opt.option_data else {}
+                            option_data_dict = (
+                                json.loads(opt.option_data) if opt.option_data else {}
+                            )
                         except (json.JSONDecodeError, TypeError):
                             option_data_dict = {}
 

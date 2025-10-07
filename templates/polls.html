@@ -198,6 +198,7 @@
                                     {% endfor %}
                                     {% endif %}
                                 </div>
+                                <input type="hidden" name="option_id" id="vote_option_data">
                                 <button type="submit" class="btn btn-primary" onclick="return validateVote()">
                                     <i class="bi bi-check2 me-1"></i>Cast Vote
                                 </button>
@@ -230,10 +231,9 @@
                                     <!-- Hidden data elements for JavaScript -->
                                     {% for option in poll.options %}
                                     <div data-option-id="{{ option.id }}"
-                                         data-option-text="{{ option.text | escape }}"
-                                         data-option-data='{{ option.data if option.data else "{}" }}'
+                                         data-option-text="{{ option.option_text | escape }}"
+                                         data-option-data='{{ option.option_data if option.option_data else "{}" }}'
                                          data-vote-count="{{ option.vote_count }}"
-                                         data-votes='{{ option.votes | tojson if option.votes else "[]" }}'
                                          class="d-none"></div>
                                     {% endfor %}
                                     <div class="row">
@@ -411,6 +411,84 @@
 <script src="/static/polls.js"></script>
 <script src="/static/admin.js"></script>
 <script>
+// Populate lake dropdown on page load
+const lakesData = {{ lakes_data | tojson | safe }};
+
+document.addEventListener('DOMContentLoaded', function() {
+    const lakeSelect = document.getElementById('lake_select');
+    if (lakeSelect && lakesData) {
+        lakesData.forEach(lake => {
+            const option = document.createElement('option');
+            option.value = lake.id;
+            option.textContent = lake.name;
+            lakeSelect.appendChild(option);
+        });
+    }
+});
+
+function updateRamps() {
+    const lakeSelect = document.getElementById('lake_select');
+    const rampSelect = document.getElementById('ramp_select');
+
+    if (!lakeSelect || !rampSelect) return;
+
+    const lakeId = parseInt(lakeSelect.value);
+    rampSelect.innerHTML = '<option value="">Select a ramp...</option>';
+    rampSelect.disabled = true;
+
+    if (!lakeId) return;
+
+    const selectedLake = lakesData.find(lake => lake.id === lakeId);
+    if (selectedLake && selectedLake.ramps) {
+        selectedLake.ramps.forEach(ramp => {
+            const option = document.createElement('option');
+            option.value = ramp.id;
+            option.textContent = ramp.name;
+            rampSelect.appendChild(option);
+        });
+        if (selectedLake.ramps.length > 0) {
+            rampSelect.disabled = false;
+        }
+    }
+}
+
+function validateVote() {
+    const lakeSelect = document.getElementById('lake_select');
+    const rampSelect = document.getElementById('ramp_select');
+    const startTimeSelect = document.getElementById('start_time');
+    const endTimeSelect = document.getElementById('end_time');
+    const voteDataInput = document.getElementById('vote_option_data');
+
+    if (!lakeSelect.value) {
+        alert('Please select a lake');
+        return false;
+    }
+    if (!rampSelect.value) {
+        alert('Please select a ramp');
+        return false;
+    }
+    if (!startTimeSelect.value) {
+        alert('Please select a start time');
+        return false;
+    }
+    if (!endTimeSelect.value) {
+        alert('Please select an end time');
+        return false;
+    }
+
+    // Create JSON object with vote data
+    const voteData = {
+        lake_id: lakeSelect.value,
+        ramp_id: rampSelect.value,
+        start_time: startTimeSelect.value,
+        end_time: endTimeSelect.value
+    };
+
+    // Set the hidden field value to JSON string
+    voteDataInput.value = JSON.stringify(voteData);
+    return true;
+}
+
 let deletePollId = null;
 
 function deletePoll(pollId, pollTitle) {

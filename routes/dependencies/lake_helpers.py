@@ -7,13 +7,21 @@ from core.query_service import QueryService
 
 
 def find_lake_by_id(lake_id: int, field: str = "name") -> Optional[str]:
-    """Find a lake by ID and return a specific field."""
+    """Find a lake by ID and return a specific field.
+
+    Note: 'name' field maps to 'display_name' in the database.
+    """
     with engine.connect() as conn:
         qs = QueryService(conn)
         lake = qs.get_lake_by_id(lake_id)
         if not lake:
             return None
-        return lake.get(field, lake["name"]) if field != "name" else lake["name"]
+
+        # Map 'name' to 'display_name' for backwards compatibility
+        if field == "name":
+            return lake.get("display_name")
+
+        return lake.get(field)
 
 
 def get_lakes_list() -> List[Dict[str, Any]]:

@@ -9,7 +9,7 @@ from routes.admin.events.update_helpers import (
     update_poll_closing_date,
     update_tournament_record,
 )
-from routes.dependencies import engine, validate_event_data
+from routes.dependencies import validate_event_data
 
 router = APIRouter()
 
