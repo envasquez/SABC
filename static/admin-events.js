@@ -108,47 +108,73 @@ function editEvent(id, date, eventType, name, description, hasPoll, pollActive) 
                 document.getElementById('edit_name').value = data.name || name || '';
                 document.getElementById('edit_description').value = data.description || description || '';
 
+                // Toggle visibility of event type-specific fields FIRST
+                toggleEditEventFields();
+
                 // Handle SABC tournament fields
                 if (data.event_type === 'sabc_tournament') {
+                    console.log('Setting SABC tournament fields:', {
+                        start_time: data.start_time,
+                        weigh_in_time: data.weigh_in_time,
+                        entry_fee: data.entry_fee,
+                        fish_limit: data.fish_limit,
+                        aoy_points: data.aoy_points,
+                        lake_name: data.lake_name,
+                        ramp_name: data.ramp_name
+                    });
+
                     // Set tournament-specific fields
                     const startTime = document.getElementById('edit_start_time');
-                    if (startTime && data.start_time) {
-                        startTime.value = data.start_time;
+                    if (startTime) {
+                        startTime.value = data.start_time || '';
+                        console.log('Set start_time to:', startTime.value);
                     }
 
                     const weighInTime = document.getElementById('edit_weigh_in_time');
-                    if (weighInTime && data.weigh_in_time) {
-                        weighInTime.value = data.weigh_in_time;
+                    if (weighInTime) {
+                        weighInTime.value = data.weigh_in_time || '';
+                        console.log('Set weigh_in_time to:', weighInTime.value);
                     }
 
                     const entryFee = document.getElementById('edit_entry_fee');
-                    if (entryFee && data.entry_fee !== undefined) {
-                        entryFee.value = data.entry_fee;
+                    if (entryFee) {
+                        entryFee.value = data.entry_fee !== undefined ? data.entry_fee : '';
+                        console.log('Set entry_fee to:', entryFee.value);
                     }
 
                     const fishLimit = document.getElementById('edit_fish_limit');
-                    if (fishLimit && data.fish_limit !== undefined) {
-                        fishLimit.value = data.fish_limit;
+                    if (fishLimit) {
+                        fishLimit.value = data.fish_limit !== undefined ? data.fish_limit : '';
+                        console.log('Set fish_limit to:', fishLimit.value);
                     }
 
                     const aoyPoints = document.getElementById('edit_aoy_points');
-                    if (aoyPoints && data.aoy_points !== undefined) {
+                    if (aoyPoints) {
                         aoyPoints.value = data.aoy_points ? 'true' : 'false';
+                        console.log('Set aoy_points to:', aoyPoints.value);
                     }
 
-                    // Set lake first
+                    // Set lake - make sure the option exists in the dropdown
                     const lakeSelect = document.getElementById('edit_lake_name');
                     if (lakeSelect && data.lake_name) {
-                        lakeSelect.value = data.lake_name;
-                        // Then load ramps for this lake
-                        loadRamps(data.lake_name, 'edit_ramp_name');
-                        // Wait a bit for ramps to load, then set the selected ramp
-                        setTimeout(() => {
-                            const rampSelect = document.getElementById('edit_ramp_name');
-                            if (rampSelect && data.ramp_name) {
-                                rampSelect.value = data.ramp_name;
-                            }
-                        }, 500);
+                        // Check if the option exists
+                        const lakeOption = Array.from(lakeSelect.options).find(opt => opt.value === data.lake_name);
+                        if (lakeOption) {
+                            lakeSelect.value = data.lake_name;
+                            console.log('Set lake to:', data.lake_name);
+                            // Then load ramps for this lake
+                            loadRamps(data.lake_name, 'edit_ramp_name');
+                            // Wait a bit for ramps to load, then set the selected ramp
+                            setTimeout(() => {
+                                const rampSelect = document.getElementById('edit_ramp_name');
+                                if (rampSelect && data.ramp_name) {
+                                    rampSelect.value = data.ramp_name;
+                                    console.log('Set ramp to:', data.ramp_name);
+                                }
+                            }, 500);
+                        } else {
+                            console.warn('Lake option not found in dropdown:', data.lake_name);
+                        }
                     }
                 }
 
@@ -162,9 +188,6 @@ function editEvent(id, date, eventType, name, description, hasPoll, pollActive) 
 
                 // Setup poll fields
                 setupPollFields(data.event_type, hasPoll, data.poll_closes_at);
-
-                // Toggle visibility of event type-specific fields
-                toggleEditEventFields();
 
                 // Show the modal
                 const modal = new bootstrap.Modal(document.getElementById('editEventModal'));
