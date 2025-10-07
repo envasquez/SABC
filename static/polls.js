@@ -187,6 +187,15 @@ function selectLake(lakeId) {
 // No filtering functionality needed - times are independent of lake/ramp choices
 
 // Helper functions
+function formatTime12Hour(time24) {
+    // Parse time in HH:MM format
+    const [hours, minutes] = time24.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${hour12}:${minutes} ${ampm}`;
+}
+
 function getLakeName(lakeId) {
     if (!lakeId) return 'Unknown Lake';
 
@@ -337,8 +346,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     timesData.forEach(time => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td class="small">${time.start_time}</td>
-                            <td class="small">${time.weigh_in_time}</td>
+                            <td class="small">${formatTime12Hour(time.start_time)}</td>
+                            <td class="small">${formatTime12Hour(time.weigh_in_time)}</td>
                             <td class="small text-center">
                                 <span class="badge bg-primary">${time.votes}</span>
                             </td>

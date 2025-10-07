@@ -22,6 +22,7 @@ from core.db_schema import (
 from core.deps import templates
 from core.helpers.auth import get_user_optional
 from core.query_service import QueryService
+from routes.dependencies import get_lakes_list, get_ramps_for_lake
 
 router = APIRouter()
 
@@ -170,6 +171,9 @@ async def home_paginated(request: Request, page: int = 1):
                         .first()
                     )
                     user_has_voted = user_vote is not None
+                    print(
+                        f"DEBUG: poll_id={poll_id}, user_id={user_id}, voted={user_has_voted}, options={len(poll_options)}"
+                    )
 
                 # Only show poll data if user has voted
                 if user_has_voted and poll_options:
@@ -189,6 +193,9 @@ async def home_paginated(request: Request, page: int = 1):
                                 "vote_count": opt.vote_count,
                             }
                         )
+                    print(
+                        f"DEBUG POLL_DATA: poll_id={poll_id}, poll_data length={len(poll_data)}, user_has_voted={user_has_voted}"
+                    )
 
             tournament_dict = {
                 "id": tournament[0],
@@ -219,6 +226,9 @@ async def home_paginated(request: Request, page: int = 1):
                 "user_has_voted": user_has_voted,
                 "poll_is_open": poll_is_open,
             }
+            print(
+                f"DEBUG TOURNAMENT_DICT: id={tournament[0]}, poll_id={poll_id}, poll_data={'None' if poll_data is None else f'list[{len(poll_data)}]'}, user_has_voted={user_has_voted}, lake_name={tournament[5]}"
+            )
             tournaments_with_results.append(tournament_dict)
 
         # Get member count
@@ -280,6 +290,18 @@ async def home_paginated(request: Request, page: int = 1):
         qs = QueryService(conn)
         year_links = qs.get_tournament_years_with_first_id(items_per_page)
 
+    # Get lakes data for poll results rendering
+    lakes_data = [
+        {
+            "id": lake["id"],
+            "name": lake["display_name"],
+            "ramps": [
+                {"id": r["id"], "name": r["name"].title()} for r in get_ramps_for_lake(lake["id"])
+            ],
+        }
+        for lake in get_lakes_list()
+    ]
+
     return templates.TemplateResponse(
         "index.html",
         {
@@ -297,6 +319,7 @@ async def home_paginated(request: Request, page: int = 1):
             "latest_news": latest_news,
             "member_count": member_count,
             "year_links": year_links,
+            "lakes_data": lakes_data,
         },
     )
 

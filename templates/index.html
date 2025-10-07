@@ -410,16 +410,7 @@
                         </div>
 
                         <!-- Google Maps or Poll Charts for upcoming tournaments -->
-                        {% if tournament.poll_id and tournament.user_has_voted and tournament.poll_data %}
-                        <div class="mb-3">
-                            <div class="bg-light border rounded p-3 position-relative" style="height: 200px;">
-                                <div class="text-center mb-2">
-                                    <small class="text-secondary"><i class="bi bi-bar-chart-fill"></i> Current Poll Results</small>
-                                </div>
-                                <canvas id="poll-chart-{{ tournament.id }}"></canvas>
-                            </div>
-                        </div>
-                        {% elif tournament.google_maps_iframe %}
+                        {% if tournament.google_maps_iframe %}
                         <div class="mb-3">
                             <div class="rounded overflow-hidden position-relative w-100" style="height: 180px;">
                                 <style>
@@ -438,6 +429,78 @@
                             </div>
                         </div>
                         {% else %}
+                        <!-- No location set yet - show poll results if user voted, otherwise show TBD -->
+                        <!-- DEBUG: id={{ tournament.id }} poll_id={{ tournament.poll_id }} poll_data={{ 'list[' + (tournament.poll_data | length | string) + ']' if tournament.poll_data else 'None' }} voted={{ tournament.user_has_voted }} -->
+                        {% if tournament.poll_data and (tournament.poll_data | length > 0) %}
+                        <div class="mb-3">
+                            <!-- Tournament Poll Results -->
+                            <div class="tournament-results-container-home" data-tournament-id="{{ tournament.id }}">
+                                <div class="row">
+                                    <!-- Two-Level Bar Chart (Left Panel) -->
+                                    <div class="col-lg-8">
+                                        <!-- Lake Level Chart -->
+                                        <div class="card border-0 shadow-sm mb-3">
+                                            <div class="card-header bg-success text-white py-2">
+                                                <h6 class="mb-0"><i class="bi bi-geo-alt me-1"></i>Lakes</h6>
+                                            </div>
+                                            <div class="card-body p-3">
+                                                <div class="lakes-chart-container" id="lakesChart-{{ tournament.id }}">
+                                                    <!-- Lakes chart will be drawn here -->
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Ramp Level Chart -->
+                                        <div class="card border-0 shadow-sm">
+                                            <div class="card-header bg-success text-white py-2 d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-0"><i class="bi bi-signpost me-1"></i>Ramps</h6>
+                                                <small id="selectedLake-{{ tournament.id }}" class="opacity-75">Click a lake above</small>
+                                            </div>
+                                            <div class="card-body p-3">
+                                                <div class="ramps-chart-container" id="rampsChart-{{ tournament.id }}">
+                                                    <div class="text-secondary text-center py-4">
+                                                        <i class="bi bi-arrow-up me-2"></i>Select a lake above to see ramp breakdown
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Time Slots Table (Right Panel) -->
+                                    <div class="col-lg-4">
+                                        <div class="card border-0 shadow-sm h-100">
+                                            <div class="card-header bg-dark text-white py-2">
+                                                <h6 class="mb-0"><i class="bi bi-clock me-1"></i>Time Slots</h6>
+                                            </div>
+                                            <div class="card-body p-2">
+                                                <div class="time-table-container">
+                                                    <table class="table table-sm table-hover mb-0" id="timeTable-{{ tournament.id }}">
+                                                        <thead class="table-light sticky-top">
+                                                            <tr>
+                                                                <th class="text-dark fw-semibold small">Start</th>
+                                                                <th class="text-dark fw-semibold small">End</th>
+                                                                <th class="text-dark fw-semibold text-center small">Votes</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <!-- Time slots will be populated by JavaScript -->
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Hidden data for JavaScript -->
+                                {% for option in tournament.poll_data %}
+                                <div data-option-data='{{ option.option_data | tojson }}'
+                                     data-vote-count="{{ option.vote_count }}"
+                                     class="d-none poll-option-data"></div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% else %}
                         <div class="mb-3">
                             <div class="bg-white border border-2 border-dark rounded d-flex align-items-center justify-content-center" style="height: 200px;">
                                 <div class="text-center">
@@ -448,11 +511,18 @@
                             </div>
                         </div>
                         {% endif %}
+                        {% endif %}
 
-                        {% if tournament.poll_id %}
+                        {% if tournament.poll_id and not tournament.user_has_voted %}
                         <div class="d-flex justify-content-end">
                             <a href="/polls" class="btn btn-success btn-lg">
                                 <i class="bi bi-hand-index me-2"></i>Vote on Location
+                            </a>
+                        </div>
+                        {% elif tournament.poll_id and tournament.user_has_voted %}
+                        <div class="d-flex justify-content-end">
+                            <a href="/polls" class="btn btn-outline-info">
+                                <i class="bi bi-bar-chart-fill me-2"></i>View Full Results
                             </a>
                         </div>
                         {% endif %}
@@ -543,87 +613,195 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    {% for tournament in all_tournaments %}
-    {% if tournament.poll_data %}
-        const ctx{{ tournament.id }} = document.getElementById('poll-chart-{{ tournament.id }}');
-        if (ctx{{ tournament.id }}) {
-            // Process poll data
-            const pollData = {};
-            {% for option in tournament.poll_data %}
-            const optionData = {{ option.option_data | tojson | safe }};
-            const lakeName = '{{ option.option_text }}';
-            if (!pollData[lakeName]) {
-                pollData[lakeName] = 0;
-            }
-            pollData[lakeName] += {{ option.vote_count }};
-            {% endfor %}
+    // Render poll results on home page for upcoming tournaments
+    const resultsContainers = document.querySelectorAll('.tournament-results-container-home');
+    const lakesData = {{ lakes_data | tojson | safe if lakes_data is defined else '[]' }};
 
-            const labels = Object.keys(pollData);
-            const data = Object.values(pollData);
-            const total = data.reduce((a, b) => a + b, 0);
+    function formatTime12Hour(time24) {
+        const [hours, minutes] = time24.split(':');
+        const hour = parseInt(hours);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+        return `${hour12}:${minutes} ${ampm}`;
+    }
 
-            if (total > 0) {
-                new Chart(ctx{{ tournament.id }}, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Votes',
-                            data: data,
-                            backgroundColor: 'rgba(25, 88, 156, 0.8)',
-                            borderColor: 'rgba(25, 88, 156, 1)',
-                            borderWidth: 1,
-                            borderRadius: 3,
-                            barThickness: 25
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                                padding: 8,
-                                cornerRadius: 4,
-                                titleFont: { size: 11 },
-                                bodyFont: { size: 11 },
-                                callbacks: {
-                                    label: function(context) {
-                                        const votes = context.parsed.y;
-                                        const percentage = total > 0 ? ((votes / total) * 100).toFixed(0) : 0;
-                                        return votes + ' (' + percentage + '%)';
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: { stepSize: 1, font: { size: 10 } },
-                                grid: { color: 'rgba(0, 0, 0, 0.05)' }
-                            },
-                            x: {
-                                ticks: {
-                                    font: { size: 10, weight: 'bold' },
-                                    maxRotation: 45,
-                                    minRotation: 0
-                                },
-                                grid: { display: false }
-                            }
-                        },
-                        animation: {
-                            duration: 800,
-                            easing: 'easeOutQuart'
-                        }
-                    }
-                });
+    function getLakeName(lakeId) {
+        if (!lakeId) return 'Unknown Lake';
+        if (lakesData && Array.isArray(lakesData)) {
+            const lake = lakesData.find(l => l.id == lakeId);
+            if (lake) return lake.name;
+        }
+        return `Lake ${lakeId}`;
+    }
+
+    function getRampName(rampId) {
+        if (!rampId) return 'Unknown Ramp';
+        if (lakesData && Array.isArray(lakesData)) {
+            for (const lake of lakesData) {
+                const ramp = lake.ramps.find(r => r.id == rampId);
+                if (ramp) {
+                    return ramp.name.split(' ').map(word =>
+                        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                    ).join(' ');
+                }
             }
         }
-    {% endif %}
-    {% endfor %}
+        return `Ramp ${rampId}`;
+    }
+
+    function drawLakesChartHome(container, resultsData, tournamentId) {
+        const chartContainer = container.querySelector(`#lakesChart-${tournamentId}`);
+        if (!chartContainer) return;
+
+        const data = resultsData.lakes;
+        if (!data || data.length === 0) {
+            chartContainer.innerHTML = '<div class="text-secondary text-center py-4"><i class="bi bi-inbox me-2"></i>No votes yet</div>';
+            return;
+        }
+
+        const maxVotes = Math.max(...data.map(d => d.votes));
+        chartContainer.innerHTML = data.map(lake => {
+            const percentage = (lake.votes / maxVotes) * 100;
+            return `
+                <div class="lake-card mb-2" data-lake-id="${lake.id}" style="cursor: pointer;" onclick="selectLakeHome(${lake.id}, ${tournamentId})">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-semibold">${lake.name}</span>
+                        <span class="badge bg-primary">${lake.votes}</span>
+                    </div>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar lake-bar bg-success" role="progressbar" style="width: ${percentage}%"></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function drawRampsChartHome(lakeId, tournamentId) {
+        const container = document.querySelector(`#rampsChart-${tournamentId}`);
+        if (!container) return;
+
+        const resultsData = window[`pollResultsData_${tournamentId}`];
+        if (!resultsData || !resultsData.ramps) {
+            container.innerHTML = '<div class="text-secondary text-center py-4"><i class="bi bi-arrow-up me-2"></i>Select a lake above to see ramps</div>';
+            return;
+        }
+
+        const ramps = resultsData.ramps.filter(r => r.lake_id == lakeId);
+        if (ramps.length === 0) {
+            container.innerHTML = '<div class="text-secondary text-center py-4"><i class="bi bi-inbox me-2"></i>No votes for ramps at this lake</div>';
+            return;
+        }
+
+        const maxVotes = Math.max(...ramps.map(r => r.votes));
+        container.innerHTML = ramps.map(ramp => {
+            const percentage = (ramp.votes / maxVotes) * 100;
+            return `
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-semibold">${ramp.name}</span>
+                        <span class="badge bg-primary">${ramp.votes}</span>
+                    </div>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: ${percentage}%"></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function selectLakeHome(lakeId, tournamentId) {
+        const container = document.querySelector(`[data-tournament-id="${tournamentId}"]`);
+        if (!container) return;
+
+        container.querySelectorAll('.lake-card').forEach(card => {
+            card.classList.remove('border', 'border-primary', 'border-2');
+            card.style.backgroundColor = '';
+        });
+
+        const selectedCard = container.querySelector(`[data-lake-id="${lakeId}"]`);
+        if (selectedCard) {
+            selectedCard.classList.add('border', 'border-primary', 'border-2');
+            selectedCard.style.backgroundColor = 'rgba(13, 110, 253, 0.05)';
+        }
+
+        const selectedLakeLabel = container.querySelector(`#selectedLake-${tournamentId}`);
+        if (selectedLakeLabel) {
+            selectedLakeLabel.textContent = getLakeName(lakeId);
+        }
+
+        drawRampsChartHome(lakeId, tournamentId);
+    }
+
+    window.selectLakeHome = selectLakeHome;
+
+    resultsContainers.forEach(container => {
+        const tournamentId = container.dataset.tournamentId;
+        const optionElements = container.querySelectorAll('.poll-option-data');
+
+        const lakes = {};
+        const ramps = {};
+        const times = {};
+
+        optionElements.forEach(el => {
+            const pollOptionData = el.dataset.optionData ? JSON.parse(el.dataset.optionData) : {};
+            const voteCount = parseInt(el.dataset.voteCount) || 0;
+
+            if (voteCount === 0) return;
+
+            const lakeId = pollOptionData.lake_id;
+            const rampId = pollOptionData.ramp_id;
+            const startTime = pollOptionData.start_time;
+            const endTime = pollOptionData.end_time;
+
+            if (lakeId) {
+                if (!lakes[lakeId]) {
+                    lakes[lakeId] = { id: lakeId, name: getLakeName(lakeId), votes: 0 };
+                }
+                lakes[lakeId].votes += voteCount;
+            }
+
+            if (rampId) {
+                if (!ramps[rampId]) {
+                    ramps[rampId] = { id: rampId, lake_id: lakeId, name: getRampName(rampId), votes: 0 };
+                }
+                ramps[rampId].votes += voteCount;
+            }
+
+            if (startTime && endTime) {
+                const timeKey = `${startTime}-${endTime}`;
+                if (!times[timeKey]) {
+                    times[timeKey] = { start_time: startTime, weigh_in_time: endTime, votes: 0 };
+                }
+                times[timeKey].votes += voteCount;
+            }
+        });
+
+        const lakesArray = Object.values(lakes).sort((a, b) => b.votes - a.votes);
+        const rampsArray = Object.values(ramps).sort((a, b) => b.votes - a.votes);
+        const timesArray = Object.values(times).sort((a, b) => b.votes - a.votes);
+
+        const resultsData = { lakes: lakesArray, ramps: rampsArray, times: timesArray };
+        window[`pollResultsData_${tournamentId}`] = resultsData;
+
+        if (lakesArray.length > 0 || rampsArray.length > 0 || timesArray.length > 0) {
+            drawLakesChartHome(container, resultsData, tournamentId);
+
+            const timesTable = container.querySelector(`#timeTable-${tournamentId} tbody`);
+            if (timesTable && timesArray.length > 0) {
+                timesTable.innerHTML = timesArray.map(time => `
+                    <tr>
+                        <td class="small">${formatTime12Hour(time.start_time)}</td>
+                        <td class="small">${formatTime12Hour(time.weigh_in_time)}</td>
+                        <td class="small text-center"><span class="badge bg-primary">${time.votes}</span></td>
+                    </tr>
+                `).join('');
+            }
+
+            if (lakesArray.length === 1 && rampsArray.length > 0) {
+                selectLakeHome(lakesArray[0].id, tournamentId);
+            }
+        }
+    });
 });
 </script>
 
