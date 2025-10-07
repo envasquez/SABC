@@ -512,7 +512,7 @@
                         {% endif %}
                         {% endif %}
 
-                        {% if tournament.poll_id and not tournament.user_has_voted %}
+                        {% if tournament.poll_id and tournament.poll_is_open and not tournament.user_has_voted %}
                         <div class="d-flex justify-content-end">
                             <a href="/polls" class="btn btn-success btn-lg">
                                 <i class="bi bi-hand-index me-2"></i>Vote on Location
