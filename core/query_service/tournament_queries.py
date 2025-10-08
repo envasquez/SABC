@@ -1,10 +1,20 @@
-from typing import Optional
+"""Tournament-related database queries with full type safety."""
+
+from typing import Any, Dict, List, Optional
 
 from core.query_service.base import QueryServiceBase
 
 
 class TournamentQueries(QueryServiceBase):
+    """Query service for tournament database operations."""
+
     def auto_complete_past_tournaments(self) -> int:
+        """
+        Automatically mark past tournaments as complete.
+
+        Returns:
+            Number of tournaments updated
+        """
         result = self.execute(
             """
             UPDATE tournaments t
@@ -17,7 +27,16 @@ class TournamentQueries(QueryServiceBase):
         )
         return result.rowcount if result else 0
 
-    def get_tournament_by_id(self, tournament_id: int) -> Optional[dict]:
+    def get_tournament_by_id(self, tournament_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Get tournament by ID with event details.
+
+        Args:
+            tournament_id: Tournament ID to fetch
+
+        Returns:
+            Tournament dictionary with event date and name, or None if not found
+        """
         return self.fetch_one(
             """
             SELECT t.*, e.date, e.name
@@ -28,7 +47,16 @@ class TournamentQueries(QueryServiceBase):
             {"id": tournament_id},
         )
 
-    def get_tournament_results(self, tournament_id: int) -> list[dict]:
+    def get_tournament_results(self, tournament_id: int) -> List[Dict[str, Any]]:
+        """
+        Get all results for a tournament with angler details.
+
+        Args:
+            tournament_id: Tournament ID to fetch results for
+
+        Returns:
+            List of result dictionaries ordered by total weight descending
+        """
         return self.fetch_all(
             """
             SELECT r.*, a.name as angler_name, a.member
@@ -51,6 +79,19 @@ class TournamentQueries(QueryServiceBase):
         disqualified: bool = False,
         buy_in: bool = False,
     ) -> None:
+        """
+        Insert or update tournament result for an angler.
+
+        Args:
+            tournament_id: Tournament ID
+            angler_id: Angler ID
+            num_fish: Number of fish caught
+            total_weight: Total weight in pounds
+            big_bass_weight: Weight of biggest bass in pounds
+            dead_fish_penalty: Penalty weight for dead fish
+            disqualified: Whether angler was disqualified
+            buy_in: Whether this was a buy-in entry
+        """
         self.execute(
             """
             INSERT INTO results (
@@ -81,7 +122,16 @@ class TournamentQueries(QueryServiceBase):
             },
         )
 
-    def get_team_results(self, tournament_id: int) -> list[dict]:
+    def get_team_results(self, tournament_id: int) -> List[Dict[str, Any]]:
+        """
+        Get team results for a tournament with combined weights.
+
+        Args:
+            tournament_id: Tournament ID to fetch team results for
+
+        Returns:
+            List of team result dictionaries ordered by total weight descending
+        """
         query = """
             SELECT tr.id, tr.tournament_id, tr.angler1_id, tr.angler2_id, tr.place_finish,
                    a1.name as angler1_name, a1.member as angler1_member,
@@ -107,6 +157,15 @@ class TournamentQueries(QueryServiceBase):
         return self.fetch_all(query, {"tournament_id": tournament_id})
 
     def get_next_tournament_id(self, tournament_id: int) -> Optional[int]:
+        """
+        Get the ID of the next tournament chronologically.
+
+        Args:
+            tournament_id: Current tournament ID
+
+        Returns:
+            Next tournament ID, or None if this is the last tournament
+        """
         result = self.fetch_one(
             """
             SELECT t.id
@@ -121,6 +180,15 @@ class TournamentQueries(QueryServiceBase):
         return result["id"] if result else None
 
     def get_previous_tournament_id(self, tournament_id: int) -> Optional[int]:
+        """
+        Get the ID of the previous tournament chronologically.
+
+        Args:
+            tournament_id: Current tournament ID
+
+        Returns:
+            Previous tournament ID, or None if this is the first tournament
+        """
         result = self.fetch_one(
             """
             SELECT t.id
@@ -134,7 +202,16 @@ class TournamentQueries(QueryServiceBase):
         )
         return result["id"] if result else None
 
-    def get_tournament_years_with_first_id(self, items_per_page: int = 4) -> list[dict]:
+    def get_tournament_years_with_first_id(self, items_per_page: int = 4) -> List[Dict[str, Any]]:
+        """
+        Get years with pagination info for tournament history navigation.
+
+        Args:
+            items_per_page: Number of tournaments per page (default 4)
+
+        Returns:
+            List with year, first_tournament_id, and page_number for each year
+        """
         return self.fetch_all(
             """
             WITH ranked_tournaments AS (

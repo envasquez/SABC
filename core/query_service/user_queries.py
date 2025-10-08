@@ -1,3 +1,5 @@
+"""User-related database queries with full type safety."""
+
 from typing import Any, Dict, Optional
 
 from core.query_service.base import QueryServiceBase
@@ -14,15 +16,45 @@ ALLOWED_UPDATE_COLUMNS = {
 
 
 class UserQueries(QueryServiceBase):
+    """Query service for user/angler database operations."""
+
     def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+        """
+        Get user by email address (case-insensitive).
+
+        Args:
+            email: Email address to search for
+
+        Returns:
+            User dictionary if found, None otherwise
+        """
         return self.fetch_one(
             "SELECT * FROM anglers WHERE LOWER(email) = LOWER(:email)", {"email": email}
         )
 
     def get_user_by_id(self, user_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Get user by ID.
+
+        Args:
+            user_id: User ID to search for
+
+        Returns:
+            User dictionary if found, None otherwise
+        """
         return self.fetch_one("SELECT * FROM anglers WHERE id = :id", {"id": user_id})
 
-    def update_user(self, user_id: int, updates: dict) -> None:
+    def update_user(self, user_id: int, updates: Dict[str, Any]) -> None:
+        """
+        Update user fields.
+
+        Args:
+            user_id: ID of user to update
+            updates: Dictionary of column names and values to update
+
+        Raises:
+            ValueError: If any column names are not in ALLOWED_UPDATE_COLUMNS
+        """
         # Validate all column names against whitelist to prevent SQL injection
         invalid_columns = set(updates.keys()) - ALLOWED_UPDATE_COLUMNS
         if invalid_columns:
@@ -40,6 +72,19 @@ class UserQueries(QueryServiceBase):
         member: bool = False,
         is_admin: bool = False,
     ) -> int:
+        """
+        Create a new user.
+
+        Args:
+            name: Full name of the user
+            email: Email address (used for login)
+            password_hash: Bcrypt hashed password
+            member: Whether user is a club member
+            is_admin: Whether user has admin privileges
+
+        Returns:
+            ID of newly created user
+        """
         result = self.execute(
             """
             INSERT INTO anglers (name, email, password, member, is_admin)
@@ -57,4 +102,10 @@ class UserQueries(QueryServiceBase):
         return result.scalar()
 
     def delete_user(self, user_id: int) -> None:
+        """
+        Delete a user by ID.
+
+        Args:
+            user_id: ID of user to delete
+        """
         self.execute("DELETE FROM anglers WHERE id = :id", {"id": user_id})

@@ -1,9 +1,21 @@
+"""Event-related database queries with full type safety."""
+
+from typing import Any, Dict, List
+
 from core.query_service.base import QueryServiceBase
 from core.query_service.event_queries_admin import get_past_admin_query, get_upcoming_admin_query
 
 
 class EventQueries(QueryServiceBase):
-    def get_upcoming_events(self) -> list[dict]:
+    """Query service for event database operations."""
+
+    def get_upcoming_events(self) -> List[Dict[str, Any]]:
+        """
+        Get all upcoming events with associated poll and tournament data.
+
+        Returns:
+            List of event dictionaries with poll_id, tournament_id, and completion status
+        """
         return self.fetch_all(
             """
             SELECT e.*,
@@ -20,7 +32,13 @@ class EventQueries(QueryServiceBase):
         """
         )
 
-    def get_past_events(self) -> list[dict]:
+    def get_past_events(self) -> List[Dict[str, Any]]:
+        """
+        Get all past events with associated tournament data.
+
+        Returns:
+            List of event dictionaries with tournament details
+        """
         return self.fetch_all(
             """
             SELECT e.*,
@@ -41,7 +59,19 @@ class EventQueries(QueryServiceBase):
         upcoming_offset: int = 0,
         past_limit: int = 20,
         past_offset: int = 0,
-    ) -> dict:
+    ) -> Dict[str, Any]:
+        """
+        Get paginated event data for admin interface.
+
+        Args:
+            upcoming_limit: Maximum number of upcoming events to return
+            upcoming_offset: Number of upcoming events to skip
+            past_limit: Maximum number of past events to return
+            past_offset: Number of past events to skip
+
+        Returns:
+            Dictionary with total counts and paginated event lists
+        """
         total_upcoming = self.fetch_value("SELECT COUNT(*) FROM events WHERE date >= CURRENT_DATE")
         total_past = self.fetch_value(
             "SELECT COUNT(*) FROM events WHERE date < CURRENT_DATE AND event_type != 'holiday'"

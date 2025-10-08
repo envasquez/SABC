@@ -1,16 +1,39 @@
+"""Member-related database queries with full type safety."""
+
 from datetime import datetime
+from typing import Any, Dict, List
 
 from core.query_service.base import QueryServiceBase
 
 
 class MemberQueries(QueryServiceBase):
-    def get_all_members(self) -> list[dict]:
+    """Query service for member/angler database operations."""
+
+    def get_all_members(self) -> List[Dict[str, Any]]:
+        """
+        Get all club members.
+
+        Returns:
+            List of member dictionaries ordered by name
+        """
         return self.fetch_all("SELECT * FROM anglers WHERE member = TRUE ORDER BY name")
 
-    def get_all_anglers(self) -> list[dict]:
+    def get_all_anglers(self) -> List[Dict[str, Any]]:
+        """
+        Get all anglers (members and non-members).
+
+        Returns:
+            List of angler dictionaries ordered by name
+        """
         return self.fetch_all("SELECT * FROM anglers ORDER BY name")
 
-    def get_admin_anglers_list(self) -> list[dict]:
+    def get_admin_anglers_list(self) -> List[Dict[str, Any]]:
+        """
+        Get all anglers with officer positions for admin interface.
+
+        Returns:
+            List of angler dictionaries with officer_positions aggregated
+        """
         current_year = datetime.now().year
         return self.fetch_all(
             """
