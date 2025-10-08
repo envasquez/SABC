@@ -64,7 +64,7 @@ def db_session() -> Generator[Session, None, None]:
 
 
 @pytest.fixture(scope="function")
-def client(db_session: Session) -> TestClient:
+def client(db_session: Session) -> Generator[TestClient, None, None]:
     """
     Create a test client with a fresh database for each test.
 
@@ -281,7 +281,7 @@ def authenticated_client(
     """Return a test client with an authenticated regular user session."""
     response = client.post(
         "/login",
-        data={"email": regular_user.email, "password": test_password},
+        data={"email": regular_user.email or "", "password": test_password},
         follow_redirects=False,
     )
     if response.status_code not in [302, 303]:
@@ -294,7 +294,7 @@ def member_client(client: TestClient, member_user: Angler, test_password: str) -
     """Return a test client with an authenticated member session."""
     response = client.post(
         "/login",
-        data={"email": member_user.email, "password": test_password},
+        data={"email": member_user.email or "", "password": test_password},
         follow_redirects=False,
     )
     if response.status_code not in [302, 303]:
@@ -307,7 +307,7 @@ def admin_client(client: TestClient, admin_user: Angler, test_password: str) -> 
     """Return a test client with an authenticated admin session."""
     response = client.post(
         "/login",
-        data={"email": admin_user.email, "password": test_password},
+        data={"email": admin_user.email or "", "password": test_password},
         follow_redirects=False,
     )
     if response.status_code not in [302, 303]:

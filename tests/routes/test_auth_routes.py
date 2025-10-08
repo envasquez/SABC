@@ -28,7 +28,7 @@ class TestLoginRoute:
         """Test successful login with valid credentials."""
         response = client.post(
             "/login",
-            data={"email": regular_user.email, "password": test_password},
+            data={"email": regular_user.email or "", "password": test_password},
             follow_redirects=False,
         )
         assert response.status_code in [302, 303]
@@ -47,7 +47,7 @@ class TestLoginRoute:
         """Test login fails with wrong password."""
         response = client.post(
             "/login",
-            data={"email": regular_user.email, "password": "WrongPassword123!"},
+            data={"email": regular_user.email or "", "password": "WrongPassword123!"},
             follow_redirects=True,
         )
         assert b"invalid" in response.content.lower() or b"error" in response.content.lower()
@@ -82,7 +82,7 @@ class TestLoginRoute:
         for i in range(6):
             response = client.post(
                 "/login",
-                data={"email": regular_user.email, "password": "wrong"},
+                data={"email": regular_user.email or "", "password": "wrong"},
                 follow_redirects=False,
             )
         # 6th attempt should be rate limited
@@ -170,7 +170,7 @@ class TestRegisterRoute:
             data={
                 "first_name": "Another",
                 "last_name": "User",
-                "email": regular_user.email,
+                "email": regular_user.email or "",
                 "password": "SecurePassword123!",
             },
             follow_redirects=True,
@@ -232,7 +232,7 @@ class TestPasswordResetRoutes:
 
     def test_password_reset_request_page_renders(self, client: TestClient):
         """Test that password reset request page renders."""
-        response = client.get("/password-reset")
+        client.get("/password-reset")
         # Page might not exist yet, so this could fail
         # assert response.status_code == 200
 
