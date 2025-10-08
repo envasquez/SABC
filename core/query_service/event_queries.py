@@ -4,7 +4,8 @@ from core.query_service.event_queries_admin import get_past_admin_query, get_upc
 
 class EventQueries(QueryServiceBase):
     def get_upcoming_events(self) -> list[dict]:
-        return self.fetch_all("""
+        return self.fetch_all(
+            """
             SELECT e.*,
                    p.id as poll_id,
                    p.starts_at,
@@ -16,10 +17,12 @@ class EventQueries(QueryServiceBase):
             LEFT JOIN tournaments t ON e.id = t.event_id
             WHERE e.date >= CURRENT_DATE
             ORDER BY e.date
-        """)
+        """
+        )
 
     def get_past_events(self) -> list[dict]:
-        return self.fetch_all("""
+        return self.fetch_all(
+            """
             SELECT e.*,
                    t.id as tournament_id,
                    t.complete,
@@ -29,7 +32,8 @@ class EventQueries(QueryServiceBase):
             LEFT JOIN tournaments t ON e.id = t.event_id
             WHERE e.date < CURRENT_DATE
             ORDER BY e.date DESC
-        """)
+        """
+        )
 
     def get_admin_events_data(
         self,

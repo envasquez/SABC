@@ -15,7 +15,7 @@
             {{ alert('danger', request.query_params.get('error')) }}
         </div>
     </div>
-    
+
     <div class="row">
         <!-- Create New Lake Form -->
         <div class="col-md-4">
@@ -30,7 +30,7 @@
                             <label for="display_name" class="form-label">Display Name</label>
                             <input type="text" class="form-control" id="display_name" name="display_name" required maxlength="100" placeholder="Lake Travis">
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="name" class="form-label">Database Name</label>
                             <input type="text" class="form-control" id="name" name="name" required maxlength="50" placeholder="travis">
@@ -44,7 +44,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Existing Lakes List -->
         <div class="col-md-8">
             <div class="card">
@@ -155,7 +155,7 @@ function deleteLake(id, displayName) {
     document.getElementById('delete-lake-name').textContent = displayName;
     document.getElementById('delete-lake-id').value = id;
     document.getElementById('delete-confirmation').value = '';
-    
+
     // Show the modal
     new bootstrap.Modal(document.getElementById('deleteLakeModal')).show();
 }
@@ -163,15 +163,15 @@ function deleteLake(id, displayName) {
 function confirmDeleteLake() {
     const confirmText = document.getElementById('delete-confirmation').value;
     const lakeId = document.getElementById('delete-lake-id').value;
-    
+
     if (confirmText.trim() !== 'DELETE') {
         alert('Please type DELETE to confirm');
         return;
     }
-    
+
     // Close the modal
     bootstrap.Modal.getInstance(document.getElementById('deleteLakeModal')).hide();
-    
+
     // Delete the lake
     fetch(`/admin/lakes/${lakeId}`, {
         method: 'DELETE',
@@ -199,7 +199,7 @@ document.getElementById('display_name').addEventListener('input', function() {
         .replace(/lake\s+/gi, '')  // Remove "Lake " prefix
         .replace(/\s+/g, '_')       // Replace spaces with underscores
         .replace(/[^a-z0-9_]/g, ''); // Remove non-alphanumeric chars except underscores
-    
+
     document.getElementById('name').value = dbName;
 });
 </script>

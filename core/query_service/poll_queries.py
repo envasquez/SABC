@@ -14,12 +14,14 @@ class PollQueries(QueryServiceBase):
         return poll
 
     def get_active_polls(self) -> list[dict]:
-        return self.fetch_all("""
+        return self.fetch_all(
+            """
             SELECT * FROM polls
             WHERE starts_at <= CURRENT_TIMESTAMP
             AND closes_at >= CURRENT_TIMESTAMP
             ORDER BY closes_at
-        """)
+        """
+        )
 
     def get_user_vote(self, poll_id: int, user_id: int) -> Optional[dict]:
         return self.fetch_one(

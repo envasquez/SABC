@@ -221,7 +221,7 @@ print('Database reset complete!')
           shellHook = ''
             # Note: slowapi and starlette-csrf should be installed manually to .nix-python-packages
             # Run: python3.11 -m pip install --target .nix-python-packages starlette-csrf==3.0.0 slowapi==0.1.9
-            
+
             echo "🎣 SABC FastAPI Development Environment"
             echo "======================================"
             echo ""

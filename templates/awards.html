@@ -5,11 +5,11 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h2">🏆 {{ current_year }} Annual Awards</h1>
-            
+
             <!-- Year Selection Tabs -->
             <div class="btn-group" role="group">
                 {% for year in available_years %}
-                <a href="/awards/{{ year }}" 
+                <a href="/awards/{{ year }}"
                    class="btn {% if year == current_year %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
                     {{ year }}
                 </a>
@@ -56,7 +56,7 @@
         {% endif %}
 
         <!-- Awards Sections -->
-        
+
         <!-- Angler of the Year -->
         <div class="card mb-4">
             <div class="card-header bg-warning text-dark">

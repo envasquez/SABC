@@ -55,7 +55,7 @@
                         <p class="text-secondary">{{ poll.description }}</p>
                     </div>
                     {% endif %}
-                    
+
                     {% if poll.options %}
                         {% if poll.status == 'active' and user.member and not poll.user_has_voted %}
                             <!-- Voting Interface -->
@@ -80,7 +80,7 @@
                                                         <option value="">Choose a lake...</option>
                                                     </select>
                                                 </div>
-                                                
+
                                                 <!-- Ramp Selection -->
                                                 <div class="col-md-4">
                                                     <label for="ramp_select" class="form-label fw-bold small">
@@ -90,7 +90,7 @@
                                                         <option value="">First select a lake</option>
                                                     </select>
                                                 </div>
-                                                
+
                                                 <!-- Time Selection -->
                                                 <div class="col-md-4">
                                                     <label class="form-label fw-bold small">
@@ -174,22 +174,22 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            
+
                                             <!-- Vote Preview -->
                                             <div class="mt-3 p-3 border rounded bg-light d-none" id="vote_preview">
                                                 <h6 class="mb-2 text-dark">Your Vote:</h6>
                                                 <div id="vote_summary" class="text-dark"></div>
                                             </div>
-                                            
+
                                             <input type="hidden" name="option_id" id="vote_option_id" required>
                                         </div>
                                     </div>
-                                    
+
                                     {% else %}
                                     <!-- Regular polls - single column -->
                                     {% for option in poll.options %}
                                     <div class="form-check mb-2">
-                                        <input class="form-check-input" type="radio" name="option_id" 
+                                        <input class="form-check-input" type="radio" name="option_id"
                                                id="option_{{ option.id }}" value="{{ option.id }}" required>
                                         <label class="form-check-label" for="option_{{ option.id }}">
                                             {{ option.text }}
@@ -217,14 +217,14 @@
                             </div>
                         {% else %}
                         {% endif %}
-                        
+
                         <!-- Always show results if there are any votes -->
                         {% if poll.status == 'closed' or poll.user_has_voted or (poll.options | sum(attribute='vote_count')) > 0 %}
                             <div class="mt-3">
                                 {% set total_votes = poll.options | sum(attribute='vote_count') %}
                                 {% if poll.poll_type == 'tournament_location' %}
                                 <!-- Tournament location polls - interactive bar chart -->
-                                <div class="tournament-results-container" 
+                                <div class="tournament-results-container"
                                      data-poll-type="tournament_location"
                                      data-poll-id="{{ poll.id }}"
                                      class="d-none">
@@ -250,7 +250,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            
+
                                             <!-- Ramp Level Chart -->
                                             <div class="card border-0 shadow-sm">
                                                 <div class="card-header bg-success text-white py-2 d-flex justify-content-between align-items-center">
@@ -266,7 +266,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        
+
                                         <!-- Time Slots Table (Right Panel) -->
                                         <div class="col-lg-4">
                                             <div class="card border-0 shadow-sm h-100">
@@ -292,7 +292,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <!-- Vote count summary for tournament polls -->
                                     <div class="text-center mt-3 text-secondary">
                                         <small><i class="bi bi-people-fill me-1"></i>{{ total_votes }} member{{ 's' if total_votes != 1 else '' }} voted</small>
@@ -314,13 +314,13 @@
                                                 {% set bar_height = (option.vote_count / max_votes * 140) if max_votes > 0 else 0 %}
                                                 {% set colors = ['#0d6efd', '#198754', '#fd7e14', '#dc3545', '#6f42c1', '#20c997', '#ffc107'] %}
                                                 {% set color = colors[loop.index0 % colors|length] %}
-                                                
+
                                                 <div class="text-center d-flex flex-column align-items-center justify-content-end" style="flex: 1; max-width: 120px;">
                                                     <!-- The vertical bar with vote count inside -->
-                                                    <div class="rounded-top position-relative d-flex align-items-start justify-content-center" 
-                                                         style="height: {{ bar_height if bar_height > 20 else (20 if option.vote_count > 0 else 0) }}px; 
-                                                                width: 40px; 
-                                                                background: linear-gradient(to top, {{ color }}, {{ color }}dd); 
+                                                    <div class="rounded-top position-relative d-flex align-items-start justify-content-center"
+                                                         style="height: {{ bar_height if bar_height > 20 else (20 if option.vote_count > 0 else 0) }}px;
+                                                                width: 40px;
+                                                                background: linear-gradient(to top, {{ color }}, {{ color }}dd);
                                                                 transition: all 0.6s ease-in-out;
                                                                 box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
                                                          onmouseover="this.style.transform='scaleY(1.05)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'"
@@ -329,7 +329,7 @@
                                                             <span class="fw-bold text-white small" style="margin-top: 4px;">{{ option.vote_count }}</span>
                                                         {% endif %}
                                                     </div>
-                                                    
+
                                                     <!-- Option text below bar -->
                                                     <div class="mt-2 small text-center" style="max-width: 80px; line-height: 1.2;">
                                                         <span class="fw-medium text-white">{{ option.text }}</span>
@@ -340,7 +340,7 @@
                                             {% endfor %}
                                         </div>
                                     </div>
-                                    
+
                                     <!-- Vote count summary for generic polls -->
                                     <div class="text-center mt-4 text-secondary">
                                         <small><i class="bi bi-people-fill me-1"></i>{{ total_votes }} member{{ 's' if total_votes != 1 else '' }} voted</small>

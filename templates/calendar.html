@@ -50,12 +50,12 @@
                                         {% for w in m[1] %}
                                         <tr>
                                             {% for d in w %}
-                                            <td class="text-center p-0 {% if '†' in d %}bg-primary text-white calendar-event{% elif '§' in d %}bg-success text-white calendar-event{% elif '‡' in d %}bg-warning text-dark calendar-event{% elif '*' in d %}bg-danger text-white calendar-event{% endif %}" 
+                                            <td class="text-center p-0 {% if '†' in d %}bg-primary text-white calendar-event{% elif '§' in d %}bg-success text-white calendar-event{% elif '‡' in d %}bg-warning text-dark calendar-event{% elif '*' in d %}bg-danger text-white calendar-event{% endif %}"
                                                 style="height:20px;line-height:20px;{% if '†' in d or '§' in d or '‡' in d or '*' in d %}cursor:pointer;{% endif %}"
                                                 {% if '†' in d or '§' in d or '‡' in d or '*' in d %}
                                                 data-year="{{ current_year }}"
-                                                data-month="{{ month_num }}" 
-                                                data-day="{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}" 
+                                                data-month="{{ month_num }}"
+                                                data-day="{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}"
                                                 onclick="showEventDetails(this)"
                                                 {% endif %}>
                                                 {% if d %}{{d.replace('†','').replace('§','').replace('‡','').replace('*','')}}{% endif %}
@@ -97,7 +97,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Next Year Tab -->
     <div class="tab-pane fade" id="next-year" role="tabpanel" aria-labelledby="next-year-tab">
         <div class="card shadow-sm">
@@ -126,12 +126,12 @@
                                         {% for w in m[1] %}
                                         <tr>
                                             {% for d in w %}
-                                            <td class="text-center p-0 {% if '†' in d %}bg-primary text-white calendar-event{% elif '§' in d %}bg-success text-white calendar-event{% elif '‡' in d %}bg-warning text-dark calendar-event{% elif '*' in d %}bg-danger text-white calendar-event{% endif %}" 
+                                            <td class="text-center p-0 {% if '†' in d %}bg-primary text-white calendar-event{% elif '§' in d %}bg-success text-white calendar-event{% elif '‡' in d %}bg-warning text-dark calendar-event{% elif '*' in d %}bg-danger text-white calendar-event{% endif %}"
                                                 style="height:20px;line-height:20px;{% if '†' in d or '§' in d or '‡' in d or '*' in d %}cursor:pointer;{% endif %}"
                                                 {% if '†' in d or '§' in d or '‡' in d or '*' in d %}
                                                 data-year="{{ next_year }}"
-                                                data-month="{{ month_num }}" 
-                                                data-day="{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}" 
+                                                data-month="{{ month_num }}"
+                                                data-day="{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}"
                                                 onclick="showEventDetails(this)"
                                                 {% endif %}>
                                                 {% if d %}{{d.replace('†','').replace('§','').replace('‡','').replace('*','')}}{% endif %}
@@ -204,31 +204,31 @@ function showEventDetails(element) {
     const month = element.getAttribute('data-month');
     const day = element.getAttribute('data-day');
     const eventKey = month + '-' + day;
-    
+
     // Select the appropriate event details based on year
     const eventDetails = (year == '{{ current_year }}') ? currentEventDetails : nextEventDetails;
-    
+
     if (eventDetails[eventKey]) {
         const events = eventDetails[eventKey];
         const eventDate = events[0].date;
         const dateObj = new Date(eventDate + 'T00:00:00');
-        const formattedDate = dateObj.toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+        const formattedDate = dateObj.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
-        
+
         // Set modal title
         document.getElementById('eventModalTitle').innerHTML = formattedDate;
-        
+
         // Build modal body content
         let modalContent = '';
         events.forEach(function(event, index) {
             let eventTypeIcon = '';
             let eventTypeName = '';
             let eventTypeClass = '';
-            
+
             if (event.type === 'holiday') {
                 eventTypeIcon = '<i class="bi bi-calendar-x me-2"></i>';
                 eventTypeName = 'Federal Holiday';
@@ -250,7 +250,7 @@ function showEventDetails(element) {
                 eventTypeName = 'Event';
                 eventTypeClass = 'bg-secondary';
             }
-            
+
             modalContent += '<div class="mb-3">';
             modalContent += '<div class="d-flex align-items-center mb-2">';
             modalContent += '<span class="badge ' + eventTypeClass + ' me-2">' + eventTypeIcon + eventTypeName + '</span>';
@@ -259,7 +259,7 @@ function showEventDetails(element) {
             if (event.description) {
                 modalContent += '<p class="text-secondary mb-0">' + event.description + '</p>';
             }
-            
+
             // Add poll and tournament links if available
             if (event.poll_id) {
                 if (event.poll_status === 'active') {
@@ -274,24 +274,24 @@ function showEventDetails(element) {
                     modalContent += '</div>';
                 }
             }
-            
+
             if (event.tournament_link) {
                 modalContent += '<div class="mt-2">';
                 modalContent += '<a href="' + event.tournament_link + '" class="btn btn-success btn-sm">';
                 modalContent += '<i class="bi bi-trophy me-1"></i>View Tournament Results</a>';
                 modalContent += '</div>';
             }
-            
+
             modalContent += '</div>';
-            
+
             if (index < events.length - 1) {
                 modalContent += '<hr>';
             }
         });
-        
+
         // Set modal body
         document.getElementById('eventModalBody').innerHTML = modalContent;
-        
+
         // Show modal
         new bootstrap.Modal(document.getElementById('eventModal')).show();
     }

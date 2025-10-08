@@ -15,7 +15,7 @@
             {{ alert('danger', request.query_params.get('error')) }}
         </div>
     </div>
-    
+
     <div class="row">
         <!-- Create New News Form -->
         <div class="col-md-4">
@@ -30,13 +30,13 @@
                             <label for="title" class="form-label">Title</label>
                             <input type="text" class="form-control" id="title" name="title" required maxlength="200">
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="content" class="form-label">Content</label>
                             <textarea class="form-control" id="content" name="content" rows="4" required maxlength="1000"></textarea>
                             <small class="text-secondary">Maximum 1000 characters</small>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="priority" class="form-label">Priority</label>
                             <select class="form-select" id="priority" name="priority">
@@ -46,8 +46,8 @@
                             </select>
                             <small class="text-secondary">Higher priority items appear first</small>
                         </div>
-                        
-                        
+
+
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="bi bi-plus-circle"></i> Create News
                         </button>
@@ -55,7 +55,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Existing News List -->
         <div class="col-md-8">
             <div class="card">
@@ -118,15 +118,15 @@
                                         <small>{{ item[3].strftime('%Y-%m-%d') if item[3] else '' }}</small>
                                     </td>
                                     <td>
-                                        <button class="btn btn-sm btn-warning edit-btn" 
-                                                data-id="{{ item[0] }}" 
-                                                data-title="{{ item[1] }}" 
-                                                data-content="{{ item[2] }}" 
+                                        <button class="btn btn-sm btn-warning edit-btn"
+                                                data-id="{{ item[0] }}"
+                                                data-title="{{ item[1] }}"
+                                                data-content="{{ item[2] }}"
                                                 data-priority="{{ item[5] }}">
                                             <i class="bi bi-pencil"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-danger delete-btn" 
-                                                data-id="{{ item[0] }}" 
+                                        <button class="btn btn-sm btn-danger delete-btn"
+                                                data-id="{{ item[0] }}"
                                                 data-title="{{ item[1] }}">
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -227,17 +227,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const title = this.dataset.title;
             const content = this.dataset.content;
             const priority = this.dataset.priority;
-            
+
             editNews(id, title, content, priority);
         });
     });
-    
+
     // Delete button event listeners
     document.querySelectorAll('.delete-btn').forEach(button => {
         button.addEventListener('click', function() {
             const id = this.dataset.id;
             const title = this.dataset.title;
-            
+
             deleteNews(id, title);
         });
     });
@@ -246,12 +246,12 @@ document.addEventListener('DOMContentLoaded', function() {
 function editNews(id, title, content, priority) {
     // Set form action
     document.getElementById('editForm').action = `/admin/news/${id}/update`;
-    
+
     // Fill form fields
     document.getElementById('edit_title').value = title;
     document.getElementById('edit_content').value = content;
     document.getElementById('edit_priority').value = priority;
-    
+
     // Show modal
     new bootstrap.Modal(document.getElementById('editModal')).show();
 }

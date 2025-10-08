@@ -42,22 +42,22 @@
                         <div class="row g-3">
                             <div class="col-md-12">
                                 <label for="title" class="form-label">Poll Title</label>
-                                <input type="text" class="form-control" id="title" name="title" 
+                                <input type="text" class="form-control" id="title" name="title"
                                        value="{{ poll[1] }}" required>
                             </div>
                             <div class="col-md-12">
                                 <label for="description" class="form-label">Description</label>
-                                <textarea class="form-control" id="description" name="description" 
+                                <textarea class="form-control" id="description" name="description"
                                           rows="2" placeholder="Optional poll description...">{{ poll[5] if poll|length > 5 else '' }}</textarea>
                             </div>
                             <div class="col-md-6">
                                 <label for="starts_at" class="form-label">Poll Opens</label>
-                                <input type="datetime-local" class="form-control" id="starts_at" 
+                                <input type="datetime-local" class="form-control" id="starts_at"
                                        name="starts_at" value="{{ poll[4].strftime('%Y-%m-%dT%H:%M') if poll[4] else '' }}" required>
                             </div>
                             <div class="col-md-6">
                                 <label for="closes_at" class="form-label">Poll Closes</label>
-                                <input type="datetime-local" class="form-control" id="closes_at" 
+                                <input type="datetime-local" class="form-control" id="closes_at"
                                        name="closes_at" value="{{ poll[2].strftime('%Y-%m-%dT%H:%M') if poll[2] else '' }}" required>
                             </div>
                         </div>
@@ -72,10 +72,10 @@
                     </div>
                     <div class="card-body">
                         <p class="text-secondary mb-3">
-                            Select which lakes should be available as tournament location options. 
+                            Select which lakes should be available as tournament location options.
                             All lakes are selected by default.
                         </p>
-                        
+
                         <div class="mb-3">
                             <button type="button" class="btn btn-outline-primary btn-sm me-2" onclick="selectAllLakes()">
                                 <i class="bi bi-check-all me-1"></i>Select All
@@ -114,7 +114,7 @@
                 </div>
             </form>
         </div>
-        
+
         <!-- Individual Votes Management Section -->
         <div class="col-12 mt-4">
             <div class="card shadow-sm">
@@ -129,17 +129,17 @@
                             {% if option.votes %}
                             <div class="mb-4">
                                 <h6 class="text-primary border-bottom pb-2">
-                                    {{ option.text }} 
+                                    {{ option.text }}
                                     <span class="badge bg-primary ms-2">{{ option.votes|length }} votes</span>
                                 </h6>
-                                
+
                                 {% for vote in option.votes %}
                                 <div class="d-flex justify-content-between align-items-center bg-light rounded p-2 mb-2">
                                     <div>
                                         <strong>{{ vote.voter_name }}</strong>
                                         <small class="text-secondary ms-2">{{ vote.voted_at }}</small>
                                     </div>
-                                    <button class="btn btn-outline-danger btn-sm" 
+                                    <button class="btn btn-outline-danger btn-sm"
                                             onclick="if(confirm('Delete vote by {{ vote.voter_name }}?')) deleteVote({{ vote.vote_id }})"
                                             title="Delete this vote">
                                         <i class="bi bi-trash"></i> Delete Vote

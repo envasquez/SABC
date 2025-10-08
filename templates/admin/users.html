@@ -113,7 +113,7 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', function()
             .split('; ')
             .find(row => row.startsWith('csrf_token='))
             ?.split('=')[1];
-        
+
         fetch(`/admin/users/${deleteUserId}`, {
             method: 'DELETE',
             headers: {
@@ -133,7 +133,7 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', function()
             console.error('Error:', error);
             alert('Error deleting user: ' + error.message);
         });
-        
+
         bootstrap.Modal.getInstance(document.getElementById('deleteUserModal')).hide();
     }
 });

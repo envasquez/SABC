@@ -39,22 +39,22 @@
             <input type="hidden" name="csrf_token" value="{{ request.cookies.get('csrf_token') }}">
             <div class="mb-3">
                 <label for="title" class="form-label">Poll Title</label>
-                <input type="text" class="form-control" id="title" name="title" 
+                <input type="text" class="form-control" id="title" name="title"
                        value="{{ poll[1] }}" required>
             </div>
-            
+
             <div class="mb-3">
                 <label for="description" class="form-label">Description</label>
                 <textarea class="form-control" id="description" name="description" rows="2">{{ poll[5] if poll[5] else '' }}</textarea>
             </div>
-            
+
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="starts_at" class="form-label">
                             <i class="bi bi-play-circle me-1 text-success"></i>Poll Starts
                         </label>
-                        <input type="datetime-local" class="form-control" id="starts_at" name="starts_at" 
+                        <input type="datetime-local" class="form-control" id="starts_at" name="starts_at"
                                value="{{ poll[4].strftime('%Y-%m-%dT%H:%M') if poll[4] else '' }}">
                         <div class="form-text">When members can start voting</div>
                     </div>
@@ -64,24 +64,24 @@
                         <label for="closes_at" class="form-label">
                             <i class="bi bi-stop-circle me-1 text-warning"></i>Poll Closes <span class="text-danger">*</span>
                         </label>
-                        <input type="datetime-local" class="form-control" id="closes_at" name="closes_at" 
+                        <input type="datetime-local" class="form-control" id="closes_at" name="closes_at"
                                value="{{ poll[2].strftime('%Y-%m-%dT%H:%M') }}" required>
                         <div class="form-text">When voting will end</div>
                     </div>
                 </div>
             </div>
-            
+
             <div class="mb-4">
                 <label class="form-label fw-semibold">
                     <i class="bi bi-list-ul me-2 text-primary"></i>Poll Options
                 </label>
                 <div class="form-text mb-3">Edit the options that members can vote for. You need at least 2 options.</div>
-                
+
                 <div id="poll-options-container">
                     {% for option in poll_options %}
                     <div class="poll-option-row mb-2" data-option-id="{{ option.id }}">
                         <div class="input-group">
-                            <input type="text" class="form-control" name="poll_options[]" 
+                            <input type="text" class="form-control" name="poll_options[]"
                                    value="{{ option.text }}" placeholder="Option {{ loop.index }}" required>
                             <input type="hidden" name="option_ids[]" value="{{ option.id }}">
                             <button class="btn btn-outline-danger" type="button" onclick="removeOption(this)">
@@ -96,14 +96,14 @@
                     </div>
                     {% endfor %}
                 </div>
-                
+
                 <button type="button" class="btn btn-sm btn-outline-success" onclick="addOption()">
                     <i class="bi bi-plus-circle me-1"></i>Add Option
                 </button>
             </div>
-            
+
             <hr class="my-4">
-            
+
             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                 <a href="/polls" class="btn btn-secondary">Cancel</a>
                 <button type="submit" class="btn btn-primary">
@@ -126,17 +126,17 @@
                 {% if option.votes %}
                 <div class="mb-4">
                     <h6 class="text-primary border-bottom pb-2">
-                        {{ option.text }} 
+                        {{ option.text }}
                         <span class="badge bg-primary ms-2">{{ option.votes|length }} votes</span>
                     </h6>
-                    
+
                     {% for vote in option.votes %}
                     <div class="d-flex justify-content-between align-items-center bg-light rounded p-2 mb-2">
                         <div>
                             <strong>{{ vote.voter_name }}</strong>
                             <small class="text-secondary ms-2">{{ vote.voted_at }}</small>
                         </div>
-                        <button class="btn btn-outline-danger btn-sm" 
+                        <button class="btn btn-outline-danger btn-sm"
                                 onclick="if(confirm('Delete vote by {{ vote.voter_name }}?')) deleteVote({{ vote.vote_id }})"
                                 title="Delete this vote">
                             <i class="bi bi-trash"></i> Delete Vote

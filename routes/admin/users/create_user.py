@@ -36,11 +36,13 @@ async def create_user(request: Request):
 
         with engine.connect() as conn:
             result = conn.execute(
-                text("""
+                text(
+                    """
                     INSERT INTO anglers (name, email, phone, member)
                     VALUES (:name, :email, :phone, :member)
                     RETURNING id
-                """),
+                """
+                ),
                 {
                     "name": name,
                     "email": final_email,
