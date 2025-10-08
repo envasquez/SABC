@@ -1,0 +1,26 @@
+# Testing dependencies for SABC
+
+# Core testing framework
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+pytest-xdist==3.5.0  # Parallel test execution
+
+# Test data factories
+factory-boy==3.3.0
+faker==22.0.0
+
+# HTTP testing
+httpx==0.28.1  # Already in requirements.txt but ensuring it's available
+
+# Additional testing utilities
+pytest-timeout==2.2.0  # Timeout for hanging tests
+pytest-sugar==0.9.7  # Better test output
+pytest-randomly==3.15.0  # Randomize test order to catch dependencies
+
+# Security testing
+bandit==1.7.6  # Already used for security scanning
+
+# Coverage reporting
+coverage[toml]==7.4.0
