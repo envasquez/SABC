@@ -161,6 +161,7 @@ class TestValidateTournamentLocationVote:
         option_text, error = validate_tournament_location_vote(vote_data)
 
         assert error is None
+        assert option_text is not None
         assert "Lake Travis" in option_text
         assert "Mansfield Dam" in option_text
         assert "06:00 AM" in option_text
