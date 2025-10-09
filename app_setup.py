@@ -20,6 +20,8 @@ from core.deps import (
     time_format_filter,
 )
 from core.helpers.logging import configure_logging
+from core.monitoring import init_sentry
+from core.monitoring.middleware import MetricsMiddleware
 from core.security_middleware import SecurityHeadersMiddleware
 
 
@@ -29,6 +31,8 @@ def get_csrf_token(request: Request) -> str:
 
 
 def create_app() -> FastAPI:
+    # Initialize monitoring before anything else
+    init_sentry()
     configure_logging(log_level=os.environ.get("LOG_LEVEL", "INFO"))
 
     app = FastAPI(
@@ -48,6 +52,9 @@ def create_app() -> FastAPI:
     limiter = Limiter(key_func=get_remote_address)
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+    # Metrics middleware (should be early in the chain)
+    app.add_middleware(MetricsMiddleware)
 
     app.add_middleware(SecurityHeadersMiddleware)
 

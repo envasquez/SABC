@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from routes import api, auth, pages, password_reset, static, tournaments, voting
+from routes import api, auth, monitoring, pages, password_reset, static, tournaments, voting
 from routes.admin import core as admin_core
 from routes.admin import events as admin_events
 from routes.admin import lakes as admin_lakes
@@ -10,6 +10,8 @@ from routes.admin import users as admin_users
 
 
 def register_routes(app: FastAPI) -> None:
+    # Monitoring endpoints (metrics, health checks)
+    app.include_router(monitoring.router)
     app.include_router(auth.router)
     app.include_router(password_reset.router)
     # Register specific admin routes BEFORE the catch-all admin_core.router
