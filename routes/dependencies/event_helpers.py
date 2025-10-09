@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from core.db_schema import Event, engine, get_session
+from core.helpers.timezone import now_local
 from core.query_service import QueryService
 
 
@@ -53,7 +54,7 @@ def validate_event_data(
     """
     errors, warnings = [], []
     date_obj = datetime.strptime(date_str, "%Y-%m-%d")
-    if date_obj.date() < datetime.now().date():
+    if date_obj.date() < now_local().date():
         warnings.append(f"Creating event for past date: {date_str}")
 
     with get_session() as session:

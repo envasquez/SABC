@@ -4,6 +4,7 @@ from datetime import date, datetime
 from fastapi import APIRouter, Request
 
 from core.helpers.auth import get_user_optional
+from core.helpers.timezone import now_local
 from routes.dependencies import templates
 from routes.pages.calendar_data import get_year_calendar_data
 
@@ -23,7 +24,7 @@ class DateTimeEncoder(json.JSONEncoder):
 async def calendar_page(request: Request):
     """Display calendar page with current and next year events."""
     user = get_user_optional(request)
-    current_year = datetime.now().year
+    current_year = now_local().year
     next_year = current_year + 1
 
     # Get calendar data for both years

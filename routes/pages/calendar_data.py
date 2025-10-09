@@ -58,7 +58,9 @@ def get_year_calendar_data(year: int) -> Tuple[List[Any], Dict[str, Any], Set[st
             event_types_present.add(event_type)
 
             # Build event details with poll/tournament status
-            now, event_date = datetime.now().date(), date_obj.date()
+            from core.helpers.timezone import now_local
+
+            now, event_date = now_local().date(), date_obj.date()
             poll_id, poll_closed = event.poll_id, event.closed
             tournament_id, tournament_complete = event.tournament_id, event.tournament_complete
 

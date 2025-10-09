@@ -1,8 +1,9 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Optional, Tuple
 
 from core.db_schema import Event, Poll, get_session
 from core.helpers.response import error_redirect
+from core.helpers.timezone import now_local
 
 
 def validate_and_get_event(
@@ -51,10 +52,13 @@ def generate_poll_title(poll_type: str, title: str, event: Optional[tuple]) -> s
 def generate_starts_at(starts_at: str, event: Optional[tuple]) -> str:
     if not starts_at:
         if event:
+            # Still need datetime.strptime for parsing the event date string
+            from datetime import datetime
+
             event_date = datetime.strptime(event[3], "%Y-%m-%d")
             return (event_date - timedelta(days=7)).isoformat()
         else:
-            return (datetime.now() + timedelta(days=1)).isoformat()
+            return (now_local() + timedelta(days=1)).isoformat()
     return starts_at
 
 

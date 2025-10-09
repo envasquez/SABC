@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Request
@@ -22,16 +21,18 @@ router = APIRouter()
 @router.get("/awards")
 @router.get("/awards/{year}")
 async def awards(request: Request, year: Optional[int] = None):
+    from core.helpers.timezone import now_local
+
     user = get_user_optional(request)
     if year is None:
-        year = datetime.now().year
+        year = now_local().year
     with engine.connect() as conn:
         qs = QueryService(conn)
-        current_year = datetime.now().year
+        current_year = now_local().year
         available_years = qs.fetch_all(get_years_query(), {"year": current_year})
         years = [row["year"] for row in available_years]
         if not years:
-            years = [datetime.now().year]
+            years = [now_local().year]
         if year not in years:
             year = years[0]
         stats = qs.fetch_one(get_stats_query(), {"year": year}) or {

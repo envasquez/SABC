@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, Request
 
 from core.db_schema import engine
@@ -12,7 +10,9 @@ router = APIRouter()
 
 @router.get("/roster")
 async def roster(request: Request, user=Depends(require_auth)):
-    current_year = datetime.now().year
+    from core.helpers.timezone import now_local
+
+    current_year = now_local().year
     with engine.connect() as conn:
         qs = QueryService(conn)
         members = qs.fetch_all(
