@@ -66,10 +66,12 @@
 - [x] Add comprehensive docstrings with Args/Returns sections
 - [x] Create template rendering tests (30+ tests)
 
-**Remaining** (Optional enhancements):
-- [ ] Remove MyPy disable_error_code exemptions from pyproject.toml (can be done incrementally)
-- [ ] Add return type hints to routes/**/*.py (500+ functions - can be done iteratively)
-- [ ] Add type checking to pre-commit hooks (currently manual via check-code)
+**Optional Enhancements** (Partially Complete):
+- [x] Document MyPy disable_error_code exemptions in pyproject.toml (comprehensive comments added) ✅
+- [x] Add type checking to pre-commit hooks (MyPy now runs on every commit) ✅
+- [x] Add return type hints to authentication routes (register, profile, login) ✅
+- [ ] Remove MyPy disable_error_code exemptions (58 errors to fix - can be done incrementally)
+- [ ] Add return type hints to remaining 32 route functions (can be done iteratively)
 
 **Files Modified**:
 - ✅ core/query_service/base.py - Full type hints and docstrings
@@ -82,8 +84,12 @@
 - ✅ core/models/schemas.py - Comprehensive Pydantic models (195 lines, NEW)
 - ✅ tests/conftest.py - Fixed type issues
 - ✅ tests/routes/test_auth_routes.py - Fixed type issues
+- ✅ pyproject.toml - Documented MyPy disable_error_code settings
+- ✅ .pre-commit-config.yaml - Enabled MyPy hook
+- ✅ routes/auth/register.py - Added return type hints
+- ✅ routes/auth/profile.py - Added return type hints
 
-**MyPy Status**: ✅ **0 errors** across all 150 source files
+**MyPy Status**: ✅ **0 errors** across all 159 source files (with disable_error_code exemptions)
 
 **Impact**:
 - Data layer (query_service) now fully type-safe
