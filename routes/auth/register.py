@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -14,7 +14,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 
 @router.get("/register")
-async def register_page(request: Request):
+async def register_page(request: Request) -> Response:
     return (
         RedirectResponse("/")
         if u(request)
@@ -30,7 +30,7 @@ async def register(
     last_name: str = Form(...),
     email: str = Form(...),
     password: str = Form(...),
-):
+) -> Response:
     email = email.lower().strip()
     first_name = first_name.strip()
     last_name = last_name.strip()

@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from sqlalchemy import case, desc, func, literal
 
 from core.db_schema import Angler, Event, Result, TeamResult, Tournament, get_session
@@ -13,7 +13,7 @@ logger = get_logger("auth.profile")
 
 
 @router.get("/profile")
-async def profile_page(request: Request):
+async def profile_page(request: Request) -> Response:
     if not (user := u(request)):
         return RedirectResponse("/login")
 

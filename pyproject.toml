@@ -19,7 +19,17 @@ ignore = [
 ignore_missing_imports = true
 warn_return_any = false
 warn_unused_ignores = false
-# Disable strict type checking for minimal complexity approach
+# Disable specific error codes to maintain minimal complexity approach
+# These can be enabled incrementally as code quality improves:
+#   - union-attr: Union attribute access (FastAPI form data)
+#   - assignment: Type compatibility in assignments
+#   - var-annotated: Variable type annotations
+#   - index: Indexing operations
+#   - attr-defined: Attribute existence checks
+#   - arg-type: Function argument types
+#   - return-value: Return type compatibility
+#   - call-arg: Function call arguments
+#   - call-overload: Overloaded function calls
 disable_error_code = ["union-attr", "assignment", "var-annotated", "index", "attr-defined", "arg-type", "return-value", "call-arg", "call-overload"]
 # Exclude scripts directory to avoid module conflicts
 exclude = ["scripts/"]
