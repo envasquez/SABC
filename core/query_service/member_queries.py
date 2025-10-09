@@ -1,8 +1,8 @@
 """Member-related database queries with full type safety."""
 
-from datetime import datetime
 from typing import Any, Dict, List
 
+from core.helpers.timezone import now_local
 from core.query_service.base import QueryServiceBase
 
 
@@ -34,7 +34,7 @@ class MemberQueries(QueryServiceBase):
         Returns:
             List of angler dictionaries with officer_positions aggregated
         """
-        current_year = datetime.now().year
+        current_year = now_local().year
         return self.fetch_all(
             """
             SELECT a.id, a.name, a.email, a.phone, a.member, a.is_admin,
