@@ -3,18 +3,30 @@
 import os
 from typing import Optional
 
-import sentry_sdk
-from sentry_sdk.integrations.fastapi import FastApiIntegration
-from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+try:
+    import sentry_sdk
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+    from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+
+    SENTRY_AVAILABLE = True
+except ImportError:
+    SENTRY_AVAILABLE = False
 
 
 def init_sentry() -> None:
     """
     Initialize Sentry error monitoring.
 
-    Sentry will only be enabled if SENTRY_DSN environment variable is set.
+    Sentry will only be enabled if:
+    1. sentry-sdk package is installed
+    2. SENTRY_DSN environment variable is set
+
     This allows running without Sentry in development/test environments.
     """
+    if not SENTRY_AVAILABLE:
+        # Sentry SDK not installed - skip initialization
+        return
+
     sentry_dsn = os.environ.get("SENTRY_DSN")
 
     if not sentry_dsn:
@@ -26,7 +38,7 @@ def init_sentry() -> None:
     # Determine sample rate based on environment
     traces_sample_rate = 0.1 if environment == "production" else 0.0
 
-    sentry_sdk.init(
+    sentry_sdk.init(  # type: ignore[name-defined]
         dsn=sentry_dsn,
         environment=environment,
         # Set traces_sample_rate to capture performance monitoring data
@@ -34,8 +46,8 @@ def init_sentry() -> None:
         traces_sample_rate=traces_sample_rate,
         # Integrations for FastAPI and SQLAlchemy
         integrations=[
-            FastApiIntegration(transaction_style="endpoint"),
-            SqlalchemyIntegration(),
+            FastApiIntegration(transaction_style="endpoint"),  # type: ignore[name-defined]
+            SqlalchemyIntegration(),  # type: ignore[name-defined]
         ],
         # Send default PII (Personally Identifiable Information)
         send_default_pii=False,  # Don't send user data by default for privacy

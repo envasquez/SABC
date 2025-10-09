@@ -16,3 +16,4 @@ starlette-csrf==3.0.0
 slowapi==0.1.9
 sentry-sdk[fastapi]==1.45.0
 prometheus-client==0.20.0
+alembic==1.13.1

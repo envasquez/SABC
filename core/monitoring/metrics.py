@@ -1,9 +1,52 @@
 """Prometheus metrics for SABC application monitoring."""
 
-from prometheus_client import Counter, Gauge, Histogram, generate_latest
-from prometheus_client.core import CollectorRegistry
+try:
+    from prometheus_client import Counter, Gauge, Histogram, generate_latest
+    from prometheus_client.core import CollectorRegistry
 
-# Create a custom registry to avoid conflicts
+    PROMETHEUS_AVAILABLE = True
+except ImportError:
+    PROMETHEUS_AVAILABLE = False
+
+    # Create no-op classes for when prometheus is not available
+    class Counter:  # type: ignore[no-redef]
+        def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+            pass
+
+        def labels(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+            return self
+
+        def inc(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+            pass
+
+    class Gauge:  # type: ignore[no-redef]
+        def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+            pass
+
+        def set(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+            pass
+
+        def inc(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+            pass
+
+        def dec(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+            pass
+
+    class Histogram:  # type: ignore[no-redef]
+        def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+            pass
+
+        def labels(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+            return self
+
+        def observe(self, *args, **kwargs):  # type: ignore[no-untyped-def]
+            pass
+
+    class CollectorRegistry:  # type: ignore[no-redef]
+        pass
+
+
+# Create a custom registry to avoid conflicts (or no-op if prometheus not available)
 registry = CollectorRegistry()
 
 # Request metrics
@@ -70,6 +113,9 @@ def get_metrics() -> bytes:
     Get current metrics in Prometheus format.
 
     Returns:
-        Metrics data in Prometheus text format
+        Metrics data in Prometheus text format (or empty bytes if prometheus not available)
     """
-    return generate_latest(registry)
+    if not PROMETHEUS_AVAILABLE:
+        return b"# Prometheus client not installed\n"
+
+    return generate_latest(registry)  # type: ignore[name-defined]

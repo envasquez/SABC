@@ -178,3 +178,7 @@ known_hosts
 # Digital Ocean deployment config
 .do/
 test_sabc.db
+
+# Alembic - only ignore bytecode, not migration files
+alembic/__pycache__/
+alembic/versions/__pycache__/
