@@ -94,31 +94,42 @@
 
 ---
 
-#### 1.3 Timezone Handling 🟡 IN PROGRESS (35% Complete)
-**Status**: Foundation complete, critical voting routes updated
+#### 1.3 Timezone Handling 🟢 IN PROGRESS (50% Complete)
+**Status**: Foundation complete, critical routes updated
 **Priority**: HIGH
-**Effort**: 3 days
+**Effort**: 1-2 days remaining
 
 **Completed**:
 - [x] Create timezone utilities module (core/helpers/timezone.py - 109 lines)
 - [x] Define CLUB_TIMEZONE = America/Chicago (handles CST/CDT automatically)
 - [x] Implement helper functions: now_utc(), now_local(), to_local(), to_utc(), make_aware(), is_dst()
+- [x] Create comprehensive timezone utility tests (16 tests, 100% coverage)
 - [x] Update core/query_service/member_queries.py to use timezone-aware datetime
 - [x] Verify DST handling (automatic transition between -5/-6 hours)
 - [x] **CRITICAL**: Update all 3 voting routes to use timezone-aware datetime:
   - [x] routes/voting/vote_poll.py - vote timestamps now in Central Time
   - [x] routes/voting/helpers.py - poll processing uses Central Time
   - [x] routes/voting/list_polls.py - active poll detection uses Central Time
+- [x] Update admin routes (poll/event scheduling):
+  - [x] routes/admin/polls/create_poll/helpers.py
+  - [x] routes/dependencies/event_helpers.py
+- [x] Update page routes (6 files):
+  - [x] routes/pages/calendar.py
+  - [x] routes/pages/calendar_data.py
+  - [x] routes/pages/roster.py
+  - [x] routes/pages/awards.py
 
 **Critical Bug Fixed** ⚡:
 - Polls will no longer fail during DST transitions (March/November)
 - Vote timestamps correctly recorded in Austin, TX timezone
 - Active poll detection now works correctly across DST boundaries
+- Calendar and awards pages show correct year during DST transitions
 
-**Remaining** (~21 files to update):
-- [ ] Update admin routes (poll/event scheduling)
-- [ ] Update page routes (6 files)
-- [ ] Update database models to store timezone-aware datetimes
+**Remaining** (~4 files to update):
+- [ ] routes/pages/home.py
+- [ ] routes/auth/profile.py
+- [ ] routes/admin/users/update_user/save.py
+- [ ] routes/admin/users/edit_user.py
 - [ ] Test across DST boundary (March/November)
 
 **Files Modified**:
@@ -127,6 +138,12 @@
 - ✅ routes/voting/vote_poll.py (CRITICAL)
 - ✅ routes/voting/helpers.py (CRITICAL)
 - ✅ routes/voting/list_polls.py (CRITICAL)
+- ✅ routes/admin/polls/create_poll/helpers.py
+- ✅ routes/dependencies/event_helpers.py
+- ✅ routes/pages/calendar.py
+- ✅ routes/pages/calendar_data.py
+- ✅ routes/pages/roster.py
+- ✅ routes/pages/awards.py
 
 **Utilities Available**:
 ```python
@@ -771,7 +788,7 @@ jobs:
 
 | Phase | Status | Completion |
 |-------|--------|------------|
-| Phase 1: Security | 🟡 In Progress | 70% (1.1 ✅, 1.2 ✅, 1.3 🟡 35%, 1.4 pending) |
+| Phase 1: Security | 🟢 In Progress | 75% (1.1 ✅, 1.2 ✅, 1.3 🟢 50%, 1.4 pending) |
 | Phase 2: Testing | 🟢 In Progress | 70% (infrastructure ✅, 111 tests, 56% coverage) |
 | Phase 3: Observability | 🔴 Not Started | 0% |
 | Phase 4: Database | 🔴 Not Started | 0% |
