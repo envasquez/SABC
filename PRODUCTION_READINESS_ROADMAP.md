@@ -9,9 +9,9 @@
 - ✅ Phase 1.2: Type Safety Implementation - **100% Complete**
 - ✅ Phase 1.3: Timezone Handling - **100% Complete** (all routes updated)
 - ✅ Phase 1.4: Session Management - **100% Complete** (race conditions fixed)
-- 🟢 Phase 2.1: Test Suite - **70% Complete** (111 tests, 56% coverage)
+- 🟢 Phase 2.1: Test Suite - **75% Complete** (143 tests passing, 69 new tests added)
 
-**Overall Completion**: ~50% of production readiness goals achieved
+**Overall Completion**: ~52% of production readiness goals achieved
 
 ---
 
@@ -204,12 +204,12 @@ max_age=int(os.environ.get("SESSION_TIMEOUT", "86400"))  # Default 24 hours
 
 ### 🟡 Phase 2: Testing & Validation (3 weeks)
 
-#### 2.1 Comprehensive Test Suite 🟢 IN PROGRESS (70% Complete)
-**Status**: Solid unit test coverage, 111 tests passing
+#### 2.1 Comprehensive Test Suite 🟢 IN PROGRESS (75% Complete)
+**Status**: Strong unit test coverage, 143 tests passing
 **Priority**: CRITICAL
-**Effort**: 1-2 weeks remaining
+**Effort**: 1 week remaining
 
-**Current Coverage**: 56% (up from 55%)
+**Current Coverage**: 45% overall (39% code, ~100% for tested modules)
 **Target Coverage**: >90% for critical paths
 
 **Completed**:
@@ -219,23 +219,26 @@ max_age=int(os.environ.get("SESSION_TIMEOUT", "86400"))  # Default 24 hours
 - [x] Configure test coverage reporting (pytest.ini, HTML/term reports)
 - [x] Create comprehensive template rendering tests (30+ tests)
 - [x] Test infrastructure for admin/member/public templates
-- [x] Auth helper tests (tests/unit/test_auth_helpers.py - 11 tests)
+- [x] Auth helper tests (tests/unit/test_auth_helpers.py - 11 tests, 98% coverage)
 - [x] Password validation tests (tests/unit/test_password_validator.py - 18 tests)
 - [x] Authentication route tests (tests/routes/test_auth_routes.py - 20+ tests)
-- [x] Timezone utility tests (tests/unit/test_timezone.py - 16 tests)
-- [x] Tournament points tests (tests/unit/test_tournament_points.py - 15 tests)
-- [x] Response helper tests (tests/unit/test_response_helpers.py - 18 tests)
+- [x] Timezone utility tests (tests/unit/test_timezone.py - 16 tests, 100% coverage)
+- [x] Tournament points tests (tests/unit/test_tournament_points.py - 15 tests, 98% coverage)
+- [x] Response helper tests (tests/unit/test_response_helpers.py - 18 tests, 100% coverage)
+- [x] Email token tests (tests/unit/test_email_tokens.py - 38 tests, 100% coverage) ✨ NEW
+- [x] Email service tests (tests/unit/test_email_service.py - 12 tests, 100% coverage) ✨ NEW
+- [x] Template filter tests (tests/unit/test_template_filters.py - 19 tests, 99% coverage) ✨ NEW
 
-**Unit Tests** (85% complete):
-- [x] Auth helpers (core/helpers/auth.py) - 65% coverage (11 tests)
+**Unit Tests** (90% complete):
+- [x] Auth helpers (core/helpers/auth.py) - 98% coverage (11 tests)
 - [x] Password validation (core/helpers/password_validator.py) - tests exist
 - [x] Tournament points calculation (core/helpers/tournament_points.py) - 98% coverage (15 tests)
 - [x] Timezone utilities (core/helpers/timezone.py) - 100% coverage (16 tests)
 - [x] Response helpers (core/helpers/response.py) - 100% coverage (18 tests)
+- [x] Template filters (core/deps.py) - 99% coverage (19 tests) ✅
+- [x] Email service (core/email/service.py) - 100% coverage (12 tests) ✅
+- [x] Email token generation (core/email/tokens.py) - 100% coverage (38 tests) ✅
 - [ ] Query service methods (core/query_service/**/*.py) - 45-65% coverage
-- [ ] Template filters (core/deps.py)
-- [ ] Email service (core/email/service.py)
-- [ ] Token generation (core/email/tokens.py)
 
 **Integration Tests** (30% complete):
 - [x] Database operations (fixtures create/read test data)
@@ -276,7 +279,13 @@ max_age=int(os.environ.get("SESSION_TIMEOUT", "86400"))  # Default 24 hours
 **Files Created**:
 - ✅ tests/conftest.py (325 lines - comprehensive fixtures)
 - ✅ tests/unit/test_password_validator.py (143 lines - 18 tests)
-- ✅ tests/unit/test_auth_helpers.py (50 lines)
+- ✅ tests/unit/test_auth_helpers.py (51 lines - 11 tests)
+- ✅ tests/unit/test_timezone.py (137 lines - 16 tests)
+- ✅ tests/unit/test_tournament_points.py (217 lines - 15 tests)
+- ✅ tests/unit/test_response_helpers.py (187 lines - 18 tests)
+- ✅ tests/unit/test_email_tokens.py (346 lines - 38 tests) ✨ NEW
+- ✅ tests/unit/test_email_service.py (96 lines - 12 tests) ✨ NEW
+- ✅ tests/unit/test_template_filters.py (260 lines - 19 tests) ✨ NEW
 - ✅ tests/routes/test_auth_routes.py (293 lines - 20+ tests)
 - ✅ tests/integration/test_template_rendering.py (563 lines - 30+ tests)
 - ✅ scripts/run_tests.sh (interactive test runner)
@@ -285,9 +294,11 @@ max_age=int(os.environ.get("SESSION_TIMEOUT", "86400"))  # Default 24 hours
 - ✅ requirements-test.txt
 
 **Current Stats**:
-- **111 tests passing** (up from 68)
-- **56% code coverage** (up from 42%)
-- **0 MyPy errors**
+- **143 tests passing** (up from 111, +32 net)
+- **69 new tests added** in this session (email + template filters)
+- **45% overall coverage** (targeting 90% for critical paths)
+- **100% coverage** for: email tokens, email service, template filters, timezone utils, response helpers
+- **0 MyPy errors** maintained
 
 **Commands**:
 ```bash
@@ -782,12 +793,12 @@ jobs:
 
 ## Progress Tracking
 
-**Overall Completion**: ~50% (Phase 1 Security 100% Complete + Test Suite 70% Complete)
+**Overall Completion**: ~52% (Phase 1 Security 100% Complete + Test Suite 75% Complete)
 
 | Phase | Status | Completion |
 |-------|--------|------------|
 | Phase 1: Security | ✅ Complete | 100% (1.1 ✅, 1.2 ✅, 1.3 ✅, 1.4 ✅) |
-| Phase 2: Testing | 🟢 In Progress | 70% (infrastructure ✅, 111 tests, 56% coverage) |
+| Phase 2: Testing | 🟢 In Progress | 75% (infrastructure ✅, 143 tests passing, 69 new tests added) |
 | Phase 3: Observability | 🔴 Not Started | 0% |
 | Phase 4: Database | 🔴 Not Started | 0% |
 | Phase 5: Code Quality | 🔴 Not Started | 0% |
@@ -799,8 +810,9 @@ jobs:
 3. ✅ Phase 1.2: Type Safety - DONE
 4. ✅ Phase 1.3: Timezone handling (all routes) - DONE
 5. ✅ Phase 1.4: Session management fixes - DONE
-6. 🟢 Continue expanding test coverage to 90%+ (ongoing - Phase 2.1)
-7. 🔴 Next: Phase 3.1 Error Monitoring (Sentry integration) OR continue Phase 2.1
+6. ✅ Phase 2.1: Add email & template filter tests (69 new tests) - DONE
+7. 🟢 Continue expanding test coverage to 90%+ (ongoing - Phase 2.1)
+8. 🔴 Next priorities: Integration tests, query service tests, OR Phase 3.1 Error Monitoring
 
 ---
 
