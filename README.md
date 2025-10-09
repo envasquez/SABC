@@ -162,9 +162,10 @@ mypy .                         # Type checking
 ### Technology Stack
 
 - **Backend**: FastAPI 0.115+ with Python 3.11+
-- **Database**: PostgreSQL 17+ with SQLAlchemy ORM
+- **Database**: PostgreSQL 17+ with SQLAlchemy ORM + Alembic migrations
 - **Frontend**: Jinja2 templates + HTMX for interactivity
 - **Type Safety**: Comprehensive type annotations throughout
+- **Monitoring**: Sentry (errors) + Prometheus (metrics)
 - **Development**: Nix for reproducible environment
 - **Deployment**: Digital Ocean App Platform
 
@@ -185,18 +186,19 @@ sabc/
 │   ├── database.py           # Database connection and queries
 │   ├── schemas.py            # Pydantic models for validation
 │   ├── deps.py               # Dependency injection
-│   ├── db_schema.py          # Database schema definitions
-│   ├── query_service.py      # Centralized query service
+│   ├── db_schema/            # Database schema and models
+│   ├── query_service/        # Centralized query service
+│   ├── monitoring/           # Sentry + Prometheus monitoring
 │   └── helpers/              # Utility modules
 │       ├── auth.py           # Authentication helpers
-│       ├── poll_processor.py # Poll automation
-│       └── logging_config.py # Logging configuration
+│       ├── timezone.py       # Timezone utilities (Central Time)
+│       └── logging.py        # Logging configuration
 ├── routes/                  # FastAPI route modules
 │   ├── auth/               # Authentication routes
 │   ├── pages/              # Public pages
 │   ├── voting/             # Member voting
 │   ├── tournaments/        # Tournament results
-│   ├── awards/             # Awards and standings
+│   ├── monitoring/         # Metrics endpoint
 │   └── admin/              # Admin-only routes
 │       ├── core/           # Admin dashboard and news
 │       ├── events/         # Event management
@@ -204,15 +206,19 @@ sabc/
 │       ├── tournaments/    # Tournament management
 │       ├── lakes/          # Lake and ramp management
 │       └── users/          # User management
-├── templates/               # Jinja2 templates
-│   ├── base.html           # Base template
-│   ├── index.html          # Home page
-│   └── *.html              # Feature templates
+├── alembic/                # Database migrations (Alembic)
+│   ├── versions/           # Migration scripts
+│   └── env.py              # Migration environment
+├── templates/              # Jinja2 templates
 ├── static/                 # CSS and assets
-│   └── style.css           # Single stylesheet
+├── tests/                  # Test suite (185 tests)
+│   ├── unit/               # Unit tests
+│   ├── integration/        # Integration tests
+│   └── security/           # Security tests
 ├── scripts/                # Database and admin scripts
 ├── flake.nix              # Nix development environment
-└── CLAUDE.md              # AI development guidelines
+├── CLAUDE.md              # AI development guidelines
+└── DATABASE_MIGRATIONS.md # Migration documentation
 ```
 
 ## 📊 Database Schema
