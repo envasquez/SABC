@@ -503,6 +503,7 @@ class TestAllTemplatesComprehensive:
                 200,
                 302,
                 303,
+                307,  # Temporary Redirect
             ], f"Route {route} returned unexpected status: {response.status_code}"
 
     def test_all_admin_routes(

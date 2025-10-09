@@ -64,24 +64,36 @@ def db_session() -> Generator[Session, None, None]:
 
 
 @pytest.fixture(scope="function")
-def client(db_session: Session) -> Generator[TestClient, None, None]:
+def client(db_session: Session, monkeypatch) -> Generator[TestClient, None, None]:
     """
     Create a test client with a fresh database for each test.
 
     Overrides the database dependency to use the test database.
     """
-    app = create_app()
-    register_routes(app)
+    # Monkey-patch get_session to use test database
+    from contextlib import contextmanager
 
-    # Override database dependency
-    def override_get_session():
+    @contextmanager
+    def mock_get_session():
+        """Return test database session."""
         try:
             yield db_session
         finally:
             pass
 
-    # Apply override if needed (depends on your dependency structure)
-    # app.dependency_overrides[get_session] = override_get_session
+    # Override both get_session and get_db_session
+    monkeypatch.setattr("core.db_schema.session.get_session", mock_get_session)
+    monkeypatch.setattr("core.db_schema.get_session", mock_get_session)
+
+    def mock_get_db_session():
+        """Return test database session for FastAPI dependency injection."""
+        return db_session
+
+    monkeypatch.setattr("core.db_schema.session.get_db_session", mock_get_db_session)
+    monkeypatch.setattr("core.db_schema.get_db_session", mock_get_db_session)
+
+    app = create_app()
+    register_routes(app)
 
     with TestClient(app) as test_client:
         yield test_client
