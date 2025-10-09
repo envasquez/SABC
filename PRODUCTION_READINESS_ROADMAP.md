@@ -93,8 +93,8 @@
 
 ---
 
-#### 1.3 Timezone Handling 🟡 IN PROGRESS (20% Complete)
-**Status**: Foundation complete, migration in progress
+#### 1.3 Timezone Handling 🟡 IN PROGRESS (35% Complete)
+**Status**: Foundation complete, critical voting routes updated
 **Priority**: HIGH
 **Effort**: 3 days
 
@@ -104,12 +104,17 @@
 - [x] Implement helper functions: now_utc(), now_local(), to_local(), to_utc(), make_aware(), is_dst()
 - [x] Update core/query_service/member_queries.py to use timezone-aware datetime
 - [x] Verify DST handling (automatic transition between -5/-6 hours)
+- [x] **CRITICAL**: Update all 3 voting routes to use timezone-aware datetime:
+  - [x] routes/voting/vote_poll.py - vote timestamps now in Central Time
+  - [x] routes/voting/helpers.py - poll processing uses Central Time
+  - [x] routes/voting/list_polls.py - active poll detection uses Central Time
 
-**Remaining** (~24 files to update):
-- [ ] Update voting routes (CRITICAL for poll timing):
-  - [ ] routes/voting/vote_poll.py (line 78 - vote timestamp)
-  - [ ] routes/voting/helpers.py (line 22 - poll comparison)
-  - [ ] routes/voting/list_polls.py (line 31 - active poll check)
+**Critical Bug Fixed** ⚡:
+- Polls will no longer fail during DST transitions (March/November)
+- Vote timestamps correctly recorded in Austin, TX timezone
+- Active poll detection now works correctly across DST boundaries
+
+**Remaining** (~21 files to update):
 - [ ] Update admin routes (poll/event scheduling)
 - [ ] Update page routes (6 files)
 - [ ] Update database models to store timezone-aware datetimes
@@ -118,6 +123,9 @@
 **Files Modified**:
 - ✅ core/helpers/timezone.py (109 lines - NEW)
 - ✅ core/query_service/member_queries.py
+- ✅ routes/voting/vote_poll.py (CRITICAL)
+- ✅ routes/voting/helpers.py (CRITICAL)
+- ✅ routes/voting/list_polls.py (CRITICAL)
 
 **Utilities Available**:
 ```python
@@ -753,11 +761,11 @@ jobs:
 
 ## Progress Tracking
 
-**Overall Completion**: ~28% (Security + Type Safety + Timezone foundation complete)
+**Overall Completion**: ~30% (Security + Type Safety + Critical Timezone fixes complete)
 
 | Phase | Status | Completion |
 |-------|--------|------------|
-| Phase 1: Security | 🟡 In Progress | 65% (1.1 ✅, 1.2 ✅, 1.3 🟡 20%, 1.4 pending) |
+| Phase 1: Security | 🟡 In Progress | 70% (1.1 ✅, 1.2 ✅, 1.3 🟡 35%, 1.4 pending) |
 | Phase 2: Testing | 🟡 In Progress | 40% (infrastructure ✅, 68 tests, 42% coverage) |
 | Phase 3: Observability | 🔴 Not Started | 0% |
 | Phase 4: Database | 🔴 Not Started | 0% |
@@ -768,8 +776,9 @@ jobs:
 1. ✅ Complete credential rotation - DONE
 2. ✅ Set up test infrastructure - DONE
 3. ✅ Phase 1.2: Type Safety - DONE
-4. 🟡 Phase 1.3: Timezone Handling - IN PROGRESS (20% - foundation complete)
-5. Continue expanding test coverage to 90%+ (ongoing)
+4. ✅ Phase 1.3: Critical timezone fixes (voting routes) - DONE
+5. 🟡 Complete remaining timezone updates (~21 files)
+6. Continue expanding test coverage to 90%+ (ongoing)
 
 ---
 
