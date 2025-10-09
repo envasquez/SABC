@@ -1,6 +1,6 @@
 from typing import Optional
 
-from core.db_schema import OfficerPosition, get_session
+from core.db_schema import OfficerPosition
 from core.helpers.logging import get_logger
 
 logger = get_logger("admin.users.update.validation")
@@ -28,24 +28,31 @@ def validate_and_prepare_email(email: str, name: str, member: bool, user_id: int
     return final_email
 
 
-def update_officer_positions(user_id: int, officer_positions: list[str], current_year: int) -> None:
-    with get_session() as session:
-        # Delete existing officer positions for this user and year
-        session.query(OfficerPosition).filter(
-            OfficerPosition.angler_id == user_id,
-            OfficerPosition.year == current_year,
-        ).delete()
+def update_officer_positions(
+    session, user_id: int, officer_positions: list[str], current_year: int
+) -> None:
+    """Update officer positions for a user within an existing session transaction.
 
-        # Add new officer positions
-        if officer_positions:
-            for position in officer_positions:
-                position_cleaned = position.strip()
-                if position_cleaned:
-                    officer_position = OfficerPosition(
-                        angler_id=user_id,
-                        position=position_cleaned,
-                        year=current_year,
-                    )
-                    session.add(officer_position)
+    Args:
+        session: Active SQLAlchemy session (must be managed by caller)
+        user_id: User ID to update positions for
+        officer_positions: List of position titles
+        current_year: Year for the positions
+    """
+    # Delete existing officer positions for this user and year
+    session.query(OfficerPosition).filter(
+        OfficerPosition.angler_id == user_id,
+        OfficerPosition.year == current_year,
+    ).delete()
 
-        session.commit()
+    # Add new officer positions
+    if officer_positions:
+        for position in officer_positions:
+            position_cleaned = position.strip()
+            if position_cleaned:
+                officer_position = OfficerPosition(
+                    angler_id=user_id,
+                    position=position_cleaned,
+                    year=current_year,
+                )
+                session.add(officer_position)

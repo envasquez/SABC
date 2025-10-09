@@ -1,16 +1,26 @@
 import json
 from datetime import datetime, timedelta
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from sqlalchemy import or_
+from sqlalchemy.orm import Session
 
 from core.db_schema import Event, Lake, Poll, PollOption, Ramp, Tournament, get_session
 
 
-def create_event_record(event_params: Dict[str, Any]) -> int:
+def create_event_record(event_params: Dict[str, Any], session: Optional[Session] = None) -> int:
+    """Create event record within an existing session or create a new one.
+
+    Args:
+        event_params: Event parameters dictionary
+        session: Optional existing session. If None, creates and manages its own session.
+
+    Returns:
+        int: Created event ID
+    """
     event_params_filtered = {k: v for k, v in event_params.items() if k != "fish_limit"}
 
-    with get_session() as session:
+    def _create(sess: Session) -> int:
         event = Event(
             date=datetime.strptime(event_params_filtered["date"], "%Y-%m-%d").date(),
             year=event_params_filtered["year"],
@@ -32,22 +42,39 @@ def create_event_record(event_params: Dict[str, Any]) -> int:
             entry_fee=event_params_filtered["entry_fee"],
             holiday_name=event_params_filtered["holiday_name"],
         )
-        session.add(event)
-        session.flush()
-        event_id = event.id
-        session.commit()
+        sess.add(event)
+        sess.flush()
+        return event.id
 
-    return event_id
+    if session is not None:
+        # Use provided session (caller manages commit)
+        return _create(session)
+    else:
+        # Create and manage own session
+        with get_session() as sess:
+            event_id = _create(sess)
+            # Context manager will commit
+        return event_id
 
 
-def create_tournament_record(event_id: int, tournament_params: Dict[str, Any]) -> None:
-    with get_session() as session:
+def create_tournament_record(
+    event_id: int, tournament_params: Dict[str, Any], session: Optional[Session] = None
+) -> None:
+    """Create tournament record within an existing session or create a new one.
+
+    Args:
+        event_id: Event ID to link tournament to
+        tournament_params: Tournament parameters dictionary
+        session: Optional existing session. If None, creates and manages its own session.
+    """
+
+    def _create(sess: Session) -> None:
         lake_id = None
         ramp_id = None
 
         if tournament_params.get("lake_name"):
             lake = (
-                session.query(Lake)
+                sess.query(Lake)
                 .filter(
                     or_(
                         Lake.yaml_key == tournament_params["lake_name"],
@@ -61,7 +88,7 @@ def create_tournament_record(event_id: int, tournament_params: Dict[str, Any]) -
 
         if tournament_params.get("ramp_name") and lake_id:
             ramp = (
-                session.query(Ramp)
+                sess.query(Ramp)
                 .filter(Ramp.name == tournament_params["ramp_name"], Ramp.lake_id == lake_id)
                 .first()
             )
@@ -89,17 +116,43 @@ def create_tournament_record(event_id: int, tournament_params: Dict[str, Any]) -
             entry_fee=tournament_params["entry_fee"],
             aoy_points=tournament_params["aoy_points"],
         )
-        session.add(tournament)
-        session.commit()
+        sess.add(tournament)
+
+    if session is not None:
+        # Use provided session (caller manages commit)
+        _create(session)
+    else:
+        # Create and manage own session
+        with get_session() as sess:
+            _create(sess)
+            # Context manager will commit
 
 
 def create_tournament_poll(
-    event_id: int, name: str, description: str, date_obj: datetime, user_id: int
+    event_id: int,
+    name: str,
+    description: str,
+    date_obj: datetime,
+    user_id: int,
+    session: Optional[Session] = None,
 ) -> int:
+    """Create tournament poll within an existing session or create a new one.
+
+    Args:
+        event_id: Event ID to link poll to
+        name: Poll title
+        description: Poll description
+        date_obj: Tournament date
+        user_id: Creator user ID
+        session: Optional existing session. If None, creates and manages its own session.
+
+    Returns:
+        int: Created poll ID
+    """
     poll_starts = date_obj - timedelta(days=7)
     poll_closes = date_obj - timedelta(days=5)
 
-    with get_session() as session:
+    def _create(sess: Session) -> int:
         poll = Poll(
             title=name,
             description=description if description else f"Vote for location for {name}",
@@ -109,17 +162,31 @@ def create_tournament_poll(
             closes_at=poll_closes,
             poll_type="tournament_location",
         )
-        session.add(poll)
-        session.flush()
-        poll_id = poll.id
-        session.commit()
+        sess.add(poll)
+        sess.flush()
+        return poll.id
 
-    return poll_id
+    if session is not None:
+        # Use provided session (caller manages commit)
+        return _create(session)
+    else:
+        # Create and manage own session
+        with get_session() as sess:
+            poll_id = _create(sess)
+            # Context manager will commit
+        return poll_id
 
 
-def create_poll_options(poll_id: int) -> None:
-    with get_session() as session:
-        all_lakes = session.query(Lake).order_by(Lake.display_name).all()
+def create_poll_options(poll_id: int, session: Optional[Session] = None) -> None:
+    """Create poll options for all lakes within an existing session or create a new one.
+
+    Args:
+        poll_id: Poll ID to create options for
+        session: Optional existing session. If None, creates and manages its own session.
+    """
+
+    def _create(sess: Session) -> None:
+        all_lakes = sess.query(Lake).order_by(Lake.display_name).all()
 
         for lake in all_lakes:
             option_data = {"lake_id": lake.id}
@@ -128,5 +195,13 @@ def create_poll_options(poll_id: int) -> None:
                 option_text=lake.display_name,
                 option_data=json.dumps(option_data),
             )
-            session.add(poll_option)
-        session.commit()
+            sess.add(poll_option)
+
+    if session is not None:
+        # Use provided session (caller manages commit)
+        _create(session)
+    else:
+        # Create and manage own session
+        with get_session() as sess:
+            _create(sess)
+            # Context manager will commit

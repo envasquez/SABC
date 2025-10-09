@@ -56,7 +56,7 @@ def create_app() -> FastAPI:
         SessionMiddleware,
         secret_key=os.environ.get("SECRET_KEY", "dev-key-change-in-production"),
         session_cookie="sabc_session",
-        max_age=86400,  # 24 hours
+        max_age=int(os.environ.get("SESSION_TIMEOUT", "86400")),  # Default 24 hours
         same_site="lax",  # "lax" for better compatibility, "strict" for maximum security
         https_only=os.environ.get("ENVIRONMENT", "development") == "production",
     )

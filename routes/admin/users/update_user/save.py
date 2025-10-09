@@ -1,6 +1,5 @@
 """User update save operations."""
 
-
 from fastapi import Form, Request
 from fastapi.responses import RedirectResponse
 
@@ -50,16 +49,14 @@ async def update_user(
             angler.member = update_params["member"]
             angler.is_admin = update_params["is_admin"]
 
-            # Commit the changes
-            session.commit()
-
-            # Update officer positions
+            # Update officer positions in same transaction
             from core.helpers.timezone import now_local
 
             current_year = now_local().year
-            update_officer_positions(user_id, officer_positions, current_year)
+            update_officer_positions(session, user_id, officer_positions, current_year)
 
-            # Get updated state
+            # Flush to get updated state but don't commit yet (context manager will commit)
+            session.flush()
             session.refresh(angler)
             after = (angler.name, angler.email, angler.phone, angler.member, angler.is_admin)
 

@@ -75,7 +75,7 @@ async def edit_event(
                         status_code=302,
                     )
 
-            session.commit()
+            # Context manager will commit automatically on successful exit
         if event_type == "sabc_tournament":
             update_poll_closing_date(event_id, poll_closes_date)
         return RedirectResponse("/admin/events?success=Event updated successfully", status_code=302)
