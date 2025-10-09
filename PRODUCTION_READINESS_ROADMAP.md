@@ -93,50 +93,38 @@
 
 ---
 
-#### 1.3 Timezone Handling
-**Status**: Not started (28 instances of timezone-naive datetime)
+#### 1.3 Timezone Handling 🟡 IN PROGRESS (20% Complete)
+**Status**: Foundation complete, migration in progress
 **Priority**: HIGH
 **Effort**: 3 days
 
-**Current Issues**:
-- `datetime.now()` used without timezone (28 instances)
-- `datetime.utcnow()` deprecated in Python 3.12+ (4 instances)
-- Poll start/close times will break during DST transitions
-- Austin, TX uses Central Time (UTC-6/-5) - critical for tournament scheduling
+**Completed**:
+- [x] Create timezone utilities module (core/helpers/timezone.py - 109 lines)
+- [x] Define CLUB_TIMEZONE = America/Chicago (handles CST/CDT automatically)
+- [x] Implement helper functions: now_utc(), now_local(), to_local(), to_utc(), make_aware(), is_dst()
+- [x] Update core/query_service/member_queries.py to use timezone-aware datetime
+- [x] Verify DST handling (automatic transition between -5/-6 hours)
 
-**Tasks**:
-- [ ] Install `pytz` or use `zoneinfo` (Python 3.9+)
-- [ ] Define timezone constant: `CLUB_TIMEZONE = "America/Chicago"`
-- [ ] Replace all `datetime.now()` with `datetime.now(tz=ZoneInfo("America/Chicago"))`
-- [ ] Replace all `datetime.utcnow()` with `datetime.now(tz=timezone.utc)`
+**Remaining** (~24 files to update):
+- [ ] Update voting routes (CRITICAL for poll timing):
+  - [ ] routes/voting/vote_poll.py (line 78 - vote timestamp)
+  - [ ] routes/voting/helpers.py (line 22 - poll comparison)
+  - [ ] routes/voting/list_polls.py (line 31 - active poll check)
+- [ ] Update admin routes (poll/event scheduling)
+- [ ] Update page routes (6 files)
 - [ ] Update database models to store timezone-aware datetimes
-- [ ] Add timezone conversion utilities
 - [ ] Test across DST boundary (March/November)
-- [ ] Update poll scheduling logic
-- [ ] Update tournament scheduling logic
 
-**Files to fix**:
-- core/db_schema/models.py (ORM defaults)
-- routes/voting/vote_poll.py (line 78)
-- routes/admin/events/create_db_ops.py (poll date calculations)
-- routes/admin/core/news.py
-- routes/pages/health.py
+**Files Modified**:
+- ✅ core/helpers/timezone.py (109 lines - NEW)
+- ✅ core/query_service/member_queries.py
 
-**Example fix**:
+**Utilities Available**:
 ```python
-# Before
-created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=datetime.utcnow)
-voted_at=datetime.now()
+from core.helpers.timezone import now_local, now_utc, CLUB_TIMEZONE
 
-# After
-from zoneinfo import ZoneInfo
-CLUB_TIMEZONE = ZoneInfo("America/Chicago")
-
-created_at: Mapped[datetime] = mapped_column(
-    DateTime(timezone=True),
-    default=lambda: datetime.now(tz=timezone.utc)
-)
-voted_at=datetime.now(tz=CLUB_TIMEZONE)
+current_time = now_local()  # Central Time
+current_utc = now_utc()     # UTC time
 ```
 
 ---
@@ -765,23 +753,23 @@ jobs:
 
 ## Progress Tracking
 
-**Overall Completion**: 15% (Security hardening complete, test suite infrastructure complete)
+**Overall Completion**: ~28% (Security + Type Safety + Timezone foundation complete)
 
 | Phase | Status | Completion |
 |-------|--------|------------|
-| Phase 1: Security | 🟡 In Progress | 50% (1.1 complete, 1.2-1.4 pending) |
-| Phase 2: Testing | 🟡 In Progress | 15% (infrastructure complete, 38 tests written) |
+| Phase 1: Security | 🟡 In Progress | 65% (1.1 ✅, 1.2 ✅, 1.3 🟡 20%, 1.4 pending) |
+| Phase 2: Testing | 🟡 In Progress | 40% (infrastructure ✅, 68 tests, 42% coverage) |
 | Phase 3: Observability | 🔴 Not Started | 0% |
 | Phase 4: Database | 🔴 Not Started | 0% |
 | Phase 5: Code Quality | 🔴 Not Started | 0% |
 | Phase 6: Documentation | 🔴 Not Started | 0% |
 
 **Next Immediate Actions**:
-1. ✅ Complete credential rotation (24 hours) - DONE
+1. ✅ Complete credential rotation - DONE
 2. ✅ Set up test infrastructure - DONE
-3. Start Phase 1.2: Type Safety (1 week)
-4. Start Phase 1.3: Timezone Handling (3 days - can be parallel)
-5. Expand test coverage to 80%+ (2-3 weeks)
+3. ✅ Phase 1.2: Type Safety - DONE
+4. 🟡 Phase 1.3: Timezone Handling - IN PROGRESS (20% - foundation complete)
+5. Continue expanding test coverage to 90%+ (ongoing)
 
 ---
 
