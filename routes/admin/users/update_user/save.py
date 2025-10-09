@@ -1,6 +1,5 @@
 """User update save operations."""
 
-from datetime import datetime
 
 from fastapi import Form, Request
 from fastapi.responses import RedirectResponse
@@ -55,7 +54,9 @@ async def update_user(
             session.commit()
 
             # Update officer positions
-            current_year = datetime.now().year
+            from core.helpers.timezone import now_local
+
+            current_year = now_local().year
             update_officer_positions(user_id, officer_positions, current_year)
 
             # Get updated state

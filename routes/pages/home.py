@@ -135,7 +135,6 @@ async def home_paginated(request: Request, page: int = 1):
 
             # Get poll data and check if user has voted
             import json
-            from datetime import datetime
 
             poll_data = None
             user_has_voted = False
@@ -145,7 +144,9 @@ async def home_paginated(request: Request, page: int = 1):
                 # Get poll status
                 poll = session.query(Poll).filter(Poll.id == poll_id).first()
                 if poll:
-                    now = datetime.now()
+                    from core.helpers.timezone import now_local
+
+                    now = now_local()
                     poll_is_open = poll.starts_at <= now <= poll.closes_at
 
                 # Get poll options with vote counts (for all users if they've voted)

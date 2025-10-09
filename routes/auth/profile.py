@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Request
@@ -35,7 +34,9 @@ async def profile_page(request: Request):
             "created_at": angler.created_at,
         }
 
-        current_year = datetime.now().year
+        from core.helpers.timezone import now_local
+
+        current_year = now_local().year
 
         # Tournaments count
         tournaments_count = (

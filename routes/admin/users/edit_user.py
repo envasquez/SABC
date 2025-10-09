@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from fastapi import APIRouter, Request
 
 from core.db_schema import Angler, OfficerPosition, get_session
@@ -31,7 +29,9 @@ async def edit_user_page(request: Request, user_id: int):
         }
 
         # Get officer positions for current year
-        current_year = datetime.now().year
+        from core.helpers.timezone import now_local
+
+        current_year = now_local().year
         positions = (
             session.query(OfficerPosition.position)
             .filter(
