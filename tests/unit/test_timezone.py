@@ -1,9 +1,9 @@
 """Unit tests for timezone utilities."""
 
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 import pytest
-from zoneinfo import ZoneInfo
 
 from core.helpers.timezone import (
     CLUB_TIMEZONE,
