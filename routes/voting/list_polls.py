@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
@@ -7,6 +6,7 @@ from sqlalchemy import case, exists, false, func, select, true
 from core.db_schema import Angler, Poll, PollVote, get_session
 from core.deps import templates
 from core.helpers.auth import require_auth
+from core.helpers.timezone import now_local
 from routes.dependencies import get_lakes_list, get_ramps_for_lake
 from routes.voting.helpers import get_poll_options, process_closed_polls
 
@@ -28,7 +28,7 @@ async def polls(
         )
 
         # Build status case expression
-        now = datetime.now()
+        now = now_local()
         status_case = case(
             (Poll.starts_at > now, "upcoming"),
             (

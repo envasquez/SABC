@@ -1,5 +1,4 @@
 import json
-from datetime import datetime
 from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, Form, Request
@@ -9,6 +8,7 @@ from core.db_schema import Poll, PollOption, PollVote, get_session
 from core.helpers.auth import require_auth
 from core.helpers.logging import get_logger
 from core.helpers.response import sanitize_error_message
+from core.helpers.timezone import now_local
 from routes.voting.vote_validation import (
     get_or_create_option_id,
     validate_poll_state,
@@ -75,7 +75,7 @@ async def vote_in_poll(
                 poll_id=poll_id,
                 option_id=actual_option_id,
                 angler_id=user["id"],
-                voted_at=datetime.now(),
+                voted_at=now_local(),
             )
             session.add(new_vote)
 

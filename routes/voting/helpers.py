@@ -6,6 +6,7 @@ from typing import Any, Dict, List
 from sqlalchemy import exists, false, func, select
 
 from core.db_schema import Event, Poll, PollOption, PollVote, Tournament, engine, get_session
+from core.helpers.timezone import now_local
 from core.query_service import QueryService
 
 
@@ -19,7 +20,7 @@ def process_closed_polls() -> int:
     try:
         with get_session() as session:
             # Find closed polls that need processing
-            now = datetime.now()
+            now = now_local()
             closed_polls_query = (
                 select(Poll.id, Poll.event_id, Poll.poll_type, Poll.closes_at)
                 .join(Event, Poll.event_id == Event.id)
