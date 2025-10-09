@@ -1,15 +1,16 @@
 # Production Readiness Roadmap - SABC Tournament Management
 
-**Current Status**: 🟡 In Progress - Type Safety & Testing Complete (Grade: C+ / 70%)
+**Current Status**: 🟡 In Progress - Strong Test Coverage (Grade: B- / 80%)
 **Target**: 🟢 Production Ready (Grade: A- / 90%+)
-**Estimated Timeline**: 6-8 weeks remaining (down from 2-3 months)
+**Estimated Timeline**: 5-6 weeks remaining (down from 6-8 weeks)
 
 **Recent Progress**:
 - ✅ Phase 1.1: Credential Management - **100% Complete**
 - ✅ Phase 1.2: Type Safety Implementation - **100% Complete**
-- 🟡 Phase 2.1: Test Suite - **40% Complete** (68 tests, 42% coverage)
+- 🟢 Phase 1.3: Timezone Handling - **35% Complete** (critical voting routes fixed)
+- 🟢 Phase 2.1: Test Suite - **60% Complete** (93 tests, 55% coverage)
 
-**Overall Completion**: ~25% of production readiness goals achieved
+**Overall Completion**: ~35% of production readiness goals achieved
 
 ---
 
@@ -188,12 +189,12 @@ with get_session() as session:
 
 ### 🟡 Phase 2: Testing & Validation (3 weeks)
 
-#### 2.1 Comprehensive Test Suite 🟡 IN PROGRESS (40% Complete)
-**Status**: Test infrastructure complete, 68 tests written
+#### 2.1 Comprehensive Test Suite 🟢 IN PROGRESS (60% Complete)
+**Status**: Strong unit test coverage, 93 tests passing
 **Priority**: CRITICAL
-**Effort**: 3 weeks
+**Effort**: 2 weeks remaining
 
-**Current Coverage**: 42% (up from ~0%)
+**Current Coverage**: 55% (up from 42%)
 **Target Coverage**: >90% for critical paths
 
 **Completed**:
@@ -203,15 +204,18 @@ with get_session() as session:
 - [x] Configure test coverage reporting (pytest.ini, HTML/term reports)
 - [x] Create comprehensive template rendering tests (30+ tests)
 - [x] Test infrastructure for admin/member/public templates
-- [x] Auth helper tests (tests/unit/test_auth_helpers.py)
+- [x] Auth helper tests (tests/unit/test_auth_helpers.py - 11 tests)
 - [x] Password validation tests (tests/unit/test_password_validator.py - 18 tests)
 - [x] Authentication route tests (tests/routes/test_auth_routes.py - 20+ tests)
+- [x] Timezone utility tests (tests/unit/test_timezone.py - 16 tests)
+- [x] Tournament points tests (tests/unit/test_tournament_points.py - 15 tests)
 
-**Unit Tests** (50% complete):
-- [x] Auth helpers (core/helpers/auth.py)
-- [x] Password validation (core/helpers/password_validator.py)
-- [ ] Tournament points calculation (core/helpers/tournament_points.py)
-- [ ] Query service methods (core/query_service/**/*.py)
+**Unit Tests** (75% complete):
+- [x] Auth helpers (core/helpers/auth.py) - 65% coverage (11 tests)
+- [x] Password validation (core/helpers/password_validator.py) - tests exist
+- [x] Tournament points calculation (core/helpers/tournament_points.py) - 98% coverage (15 tests)
+- [x] Timezone utilities (core/helpers/timezone.py) - 100% coverage (16 tests)
+- [ ] Query service methods (core/query_service/**/*.py) - 45-65% coverage
 - [ ] Template filters (core/deps.py)
 - [ ] Email service (core/email/service.py)
 - [ ] Token generation (core/email/tokens.py)
