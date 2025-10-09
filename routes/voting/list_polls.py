@@ -28,7 +28,8 @@ async def polls(
         )
 
         # Build status case expression
-        now = now_local()
+        # Use naive datetime for database comparison (DB stores naive datetimes)
+        now = now_local().replace(tzinfo=None)
         status_case = case(
             (Poll.starts_at > now, "upcoming"),
             (

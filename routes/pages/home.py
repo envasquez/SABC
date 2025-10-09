@@ -144,10 +144,13 @@ async def home_paginated(request: Request, page: int = 1):
                 # Get poll status
                 poll = session.query(Poll).filter(Poll.id == poll_id).first()
                 if poll:
-                    from core.helpers.timezone import now_local
+                    from core.helpers.timezone import make_aware, now_local
 
                     now = now_local()
-                    poll_is_open = poll.starts_at <= now <= poll.closes_at
+                    # Make poll datetimes timezone-aware for comparison
+                    starts_at = make_aware(poll.starts_at) if poll.starts_at else None
+                    closes_at = make_aware(poll.closes_at) if poll.closes_at else None
+                    poll_is_open = starts_at and closes_at and starts_at <= now <= closes_at
 
                 # Get poll options with vote counts (for all users if they've voted)
                 poll_options = (
