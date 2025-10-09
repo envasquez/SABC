@@ -1,6 +1,18 @@
 """Pytest configuration and shared fixtures for SABC tests."""
 
 import os
+
+# CRITICAL: Set test database URL BEFORE any imports
+# This must happen before core.db_schema.engine imports and creates the engine
+# Use file-based SQLite so multiple engines can share the same database
+TEST_DATABASE_URL = "sqlite:///test_sabc.db"  # File-based SQLite for tests
+os.environ["DATABASE_URL"] = TEST_DATABASE_URL
+os.environ["ENVIRONMENT"] = "test"
+os.environ["SECRET_KEY"] = "test-secret-key-for-testing-only-minimum-32-characters-long"
+os.environ["DEBUG"] = "false"
+os.environ["LOG_LEVEL"] = "ERROR"
+
+# ruff: noqa: E402 - Must set env vars before imports
 from datetime import datetime, timezone
 from typing import Generator
 
@@ -14,9 +26,6 @@ from sqlalchemy.pool import StaticPool
 from app_routes import register_routes
 from app_setup import create_app
 from core.db_schema import Angler, Base, Event, Lake, Poll, PollOption, Ramp, Tournament
-
-# Test database configuration
-TEST_DATABASE_URL = "sqlite:///:memory:"  # In-memory SQLite for fast tests
 
 # Create test engine with in-memory SQLite
 test_engine = create_engine(

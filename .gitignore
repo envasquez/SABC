@@ -177,3 +177,4 @@ known_hosts
 
 # Digital Ocean deployment config
 .do/
+test_sabc.db
