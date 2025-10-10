@@ -1,7 +1,7 @@
 """Sentry error monitoring integration for SABC application."""
 
 import os
-from typing import Optional
+from typing import Any, Optional
 
 try:
     import sentry_sdk
@@ -56,11 +56,11 @@ def init_sentry() -> None:
         # Attach stack traces to all messages
         attach_stacktrace=True,
         # Before send hook to filter sensitive data
-        before_send=filter_sensitive_data,
+        before_send=filter_sensitive_data,  # type: ignore[arg-type]
     )
 
 
-def filter_sensitive_data(event: dict, hint: dict) -> Optional[dict]:
+def filter_sensitive_data(event: dict[str, Any], hint: dict[str, Any]) -> Optional[dict[str, Any]]:
     """
     Filter sensitive data from Sentry events before sending.
 
