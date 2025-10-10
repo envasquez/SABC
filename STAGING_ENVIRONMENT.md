@@ -1,5 +1,14 @@
 # Staging Environment Setup - SABC Tournament Management
 
+**📌 IMPORTANT**: This document covers Digital Ocean **App Platform** deployment (PaaS).
+
+For the **recommended Docker Compose on Droplet** approach (matching your current production setup), see **[STAGING_DEPLOYMENT.md](STAGING_DEPLOYMENT.md)** instead.
+
+---
+
+## App Platform Deployment (Alternative)
+
+This document provides instructions for setting up staging using Digital Ocean App Platform (Platform-as-a-Service). This is an alternative to the Docker-based approach.
 This document provides complete instructions for setting up and managing the staging environment for the South Austin Bass Club (SABC) tournament management application.
 
 ## Overview

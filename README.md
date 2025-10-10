@@ -305,15 +305,40 @@ Structured data for tournament parameters:
 
 ## 🚀 Deployment
 
-### Digital Ocean App Platform
+### Production: Docker Compose on Digital Ocean Droplet
 
-The application is designed for deployment on Digital Ocean's App Platform with:
+**Current production deployment** uses Docker Compose with:
 
-- **Managed PostgreSQL** - Automatic database provisioning
-- **Environment Variables** - Secure configuration management
-- **Auto-scaling** - Horizontal scaling based on traffic
-- **SSL/HTTPS** - Automatic certificate management
-- **Health Checks** - Application monitoring
+- **Docker Containers** - Web (FastAPI), PostgreSQL, Nginx, Certbot
+- **Manual Deployment** - SSH → git pull → [restart.sh](restart.sh)
+- **SSL** - Let's Encrypt via Certbot
+- **Cost** - ~$12/month (Basic Droplet + included bandwidth)
+
+**Deployment:**
+```bash
+ssh root@<production-ip>
+cd /opt/sabc
+./restart.sh  # Pulls latest code, rebuilds containers, restarts
+```
+
+See [docker-compose.prod.yml](docker-compose.prod.yml) for full configuration.
+
+### Staging: Same Docker Setup on Separate Droplet
+
+For safe testing before production deployment:
+
+- **Infrastructure** - Separate droplet mirroring production
+- **Configuration** - [STAGING_DEPLOYMENT.md](STAGING_DEPLOYMENT.md)
+- **Test Data** - Automated seeding with [scripts/seed_staging_data.py](scripts/seed_staging_data.py)
+- **Cost** - ~$6/month (smaller droplet)
+
+### Alternative: Digital Ocean App Platform (PaaS)
+
+For a managed platform approach, see [STAGING_ENVIRONMENT.md](STAGING_ENVIRONMENT.md).
+
+Benefits:
+- Managed PostgreSQL, auto-scaling, automatic SSL
+- Higher cost (~$18-30/month vs $6-12/month for Droplet)
 
 ### Environment Variables
 
@@ -321,21 +346,31 @@ The application is designed for deployment on Digital Ocean's App Platform with:
 # Required
 DATABASE_URL=postgresql://user:pass@host:5432/sabc
 SECRET_KEY=your-secure-secret-key
+DB_PASSWORD=your-db-password
+
+# SMTP
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+FROM_EMAIL=noreply@saustinbc.com
 
 # Optional
 LOG_LEVEL=INFO
 DEBUG=false
-PORT=8000
+WEBSITE_URL=https://saustinbc.com
+SENTRY_DSN=https://xxx@sentry.io/yyy
+ENVIRONMENT=production
 ```
 
 ### Deployment Checklist
 
-- [ ] Environment variables configured
-- [ ] Database schema initialized
-- [ ] Admin user created
-- [ ] Health check endpoint responding
-- [ ] SSL certificate configured
-- [ ] Domain pointing to application
+- [ ] Environment variables configured in `.env`
+- [ ] Database container healthy
+- [ ] Admin user created via [scripts/setup_admin.py](scripts/setup_admin.py)
+- [ ] Health check endpoint responding (`/health`)
+- [ ] SSL certificate configured (Certbot)
+- [ ] Domain DNS pointing to droplet
+- [ ] Nginx reverse proxy running
+- [ ] Firewall configured (UFW: 22, 80, 443)
 
 ## 🧪 Testing
 
