@@ -8,7 +8,11 @@ from core.db_schema import engine
 def db(
     q: Union[str, TextClause], p: Optional[Dict[str, Any]] = None
 ) -> Union[List[Tuple[Any, ...]], int]:
-    """Execute a database query and return results or row count.
+    """Execute a database query and return results or row count (DEPRECATED).
+
+    .. deprecated:: 1.0
+        Use SQLAlchemy ORM with :func:`get_session` and QueryService instead.
+        This function will be removed in a future version.
 
     Args:
         q: SQL query string or TextClause
@@ -18,6 +22,13 @@ def db(
         For SELECT queries: List of tuples (rows)
         For INSERT/UPDATE/DELETE: Row count (int)
     """
+    import warnings
+
+    warnings.warn(
+        "db() is deprecated, use SQLAlchemy ORM with get_session() and QueryService instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     with engine.connect() as c:
         query = text(q) if isinstance(q, str) else q
         r = c.execute(query, p or {})

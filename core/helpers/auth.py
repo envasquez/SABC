@@ -29,7 +29,10 @@ def u(r: Request) -> Optional[UserDict]:
 
 def admin(r: Request) -> UserDict:
     """
-    Get current user and require admin privileges (legacy function).
+    Get current user and require admin privileges (DEPRECATED).
+
+    .. deprecated:: 1.0
+        Use :func:`require_admin` instead. This function will be removed in a future version.
 
     Args:
         r: FastAPI Request object
@@ -40,6 +43,13 @@ def admin(r: Request) -> UserDict:
     Raises:
         HTTPException: 302 redirect if not authenticated or not admin
     """
+    import warnings
+
+    warnings.warn(
+        "admin() is deprecated, use require_admin() instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     user = u(r)
     if user and user["is_admin"]:
         return user
@@ -48,7 +58,11 @@ def admin(r: Request) -> UserDict:
 
 async def require_admin_async(request: Request) -> UserDict:
     """
-    Async version of require_admin for FastAPI dependencies.
+    Async version of require_admin for FastAPI dependencies (DEPRECATED).
+
+    .. deprecated:: 1.0
+        FastAPI supports sync dependencies. Use :func:`require_admin` instead.
+        This function will be removed in a future version.
 
     Args:
         request: FastAPI Request object
@@ -59,6 +73,14 @@ async def require_admin_async(request: Request) -> UserDict:
     Raises:
         HTTPException: 302 redirect if not authenticated or not admin
     """
+    import warnings
+
+    warnings.warn(
+        "require_admin_async() is deprecated, FastAPI supports sync dependencies. "
+        "Use require_admin() instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     return admin(request)
 
 
