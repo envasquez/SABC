@@ -37,10 +37,10 @@ async def request_password_reset(
         with get_session() as session:
             user = session.query(Angler).filter(func.lower(Angler.email) == email.lower()).first()
 
-            if user:
+            if user and user.email:
                 # Extract data while in session
                 user_id = user.id
-                name = user.name
+                name = user.name or "Member"
                 user_email = user.email
 
                 token = create_password_reset_token(user_id, user_email)

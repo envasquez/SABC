@@ -51,7 +51,8 @@ async def create_user(request: Request):
                 },
             )
             conn.commit()
-            angler_id = result.fetchone()[0]
+            row = result.fetchone()
+            angler_id = row[0] if row else None
 
         logger.info(
             "New user created",

@@ -353,4 +353,4 @@ def get_csrf_token(client: TestClient, url: str = "/") -> str:
     """Helper to extract CSRF token from a page."""
     response = client.get(url)
     # Extract CSRF token from cookies or page HTML
-    return response.cookies.get("csrf_token", "")
+    return response.cookies.get("csrf_token") or ""

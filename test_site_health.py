@@ -211,15 +211,15 @@ class SiteHealthChecker:
                     links = soup.find_all("a", href=True)
 
                     for link in links:
-                        href = link["href"]
+                        href = link["href"]  # type: ignore[index]
 
                         # Skip external links, anchors, javascript, mailto
                         if (
-                            href.startswith("http")
-                            and self.base_url not in href
-                            or href.startswith("#")
-                            or href.startswith("javascript:")
-                            or href.startswith("mailto:")
+                            str(href).startswith("http")  # type: ignore[union-attr]
+                            and self.base_url not in str(href)
+                            or str(href).startswith("#")  # type: ignore[union-attr]
+                            or str(href).startswith("javascript:")  # type: ignore[union-attr]
+                            or str(href).startswith("mailto:")  # type: ignore[union-attr]
                         ):
                             continue
 

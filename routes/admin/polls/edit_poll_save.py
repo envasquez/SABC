@@ -44,8 +44,8 @@ async def update_poll(request: Request, poll_id: int) -> RedirectResponse:
             if poll:
                 poll.title = title
                 poll.description = description
-                poll.starts_at = starts_at
-                poll.closes_at = closes_at
+                poll.starts_at = starts_at  # type: ignore[assignment]
+                poll.closes_at = closes_at  # type: ignore[assignment]
 
         # Update poll options
         for i, option_text in enumerate(poll_options):
