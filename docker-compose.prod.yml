@@ -14,6 +14,9 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       FROM_EMAIL: ${FROM_EMAIL}
       WEBSITE_URL: ${WEBSITE_URL:-https://saustinbc.com}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      RELEASE_VERSION: ${RELEASE_VERSION:-}
     ports:
       - "8000:8000"
     depends_on:
