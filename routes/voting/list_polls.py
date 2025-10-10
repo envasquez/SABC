@@ -83,7 +83,7 @@ async def polls(
                     "event_id": poll_row.event_id,
                     "status": poll_row.status,
                     "user_has_voted": bool(poll_row.user_has_voted),
-                    "options": get_poll_options(poll_row.id, user.get("is_admin")),
+                    "options": get_poll_options(poll_row.id, bool(user.get("is_admin"))),
                     "member_count": member_count,
                     "unique_voters": unique_voters,
                     "participation_percent": round(
