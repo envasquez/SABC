@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Any
 
 from fastapi import FastAPI, Request
@@ -76,6 +77,8 @@ def create_app() -> FastAPI:
         cookie_secure=os.environ.get("ENVIRONMENT", "development") == "production",
         cookie_samesite="lax",
         header_name="x-csrf-token",
+        # Exempt password reset POST - it's already protected by cryptographic token
+        exempt_urls=[re.compile(r"^/reset-password$")],
     )
 
     app.mount("/static", StaticFiles(directory="static"), name="static")
