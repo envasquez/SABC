@@ -4,7 +4,19 @@ from datetime import date, datetime, time
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Numeric, String, Text, Time
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+    Time,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -36,7 +48,9 @@ class PasswordResetToken(Base):
     __tablename__ = "password_reset_tokens"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("anglers.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("anglers.id", ondelete="CASCADE"), nullable=False
+    )
     token: Mapped[str] = mapped_column(String, nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     used: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
@@ -73,8 +87,12 @@ class Poll(Base):
     title: Mapped[str] = mapped_column(Text, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text)
     poll_type: Mapped[str] = mapped_column(Text, nullable=False)
-    event_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("events.id"))
-    created_by: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("anglers.id"))
+    event_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("events.id", ondelete="SET NULL")
+    )
+    created_by: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("anglers.id", ondelete="SET NULL")
+    )
     created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=datetime.utcnow)
     starts_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     closes_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
@@ -87,9 +105,12 @@ class PollOption(Base):
     """Poll option model."""
 
     __tablename__ = "poll_options"
+    __table_args__ = (UniqueConstraint("poll_id", "option_text", name="uq_poll_option_text"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    poll_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("polls.id"))
+    poll_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("polls.id", ondelete="CASCADE")
+    )
     option_text: Mapped[str] = mapped_column(Text, nullable=False)
     option_data: Mapped[Optional[str]] = mapped_column(Text)
     display_order: Mapped[Optional[int]] = mapped_column(Integer, default=0)
@@ -99,11 +120,18 @@ class PollVote(Base):
     """Poll vote model."""
 
     __tablename__ = "poll_votes"
+    __table_args__ = (UniqueConstraint("poll_id", "angler_id", name="uq_poll_vote_angler"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    poll_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("polls.id"))
-    option_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("poll_options.id"))
-    angler_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("anglers.id"))
+    poll_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("polls.id", ondelete="CASCADE")
+    )
+    option_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("poll_options.id", ondelete="CASCADE")
+    )
+    angler_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("anglers.id", ondelete="CASCADE")
+    )
     voted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=datetime.utcnow)
 
 
@@ -115,7 +143,9 @@ class News(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     title: Mapped[str] = mapped_column(Text, nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    author_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("anglers.id"))
+    author_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("anglers.id", ondelete="SET NULL")
+    )
     created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=datetime.utcnow)
     published: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
@@ -142,7 +172,9 @@ class Ramp(Base):
     __tablename__ = "ramps"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    lake_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("lakes.id"))
+    lake_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("lakes.id", ondelete="CASCADE")
+    )
     name: Mapped[str] = mapped_column(Text, nullable=False)
     google_maps_iframe: Mapped[Optional[str]] = mapped_column(Text)
     created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=datetime.utcnow)
@@ -154,11 +186,19 @@ class Tournament(Base):
     __tablename__ = "tournaments"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    event_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("events.id"))
-    poll_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("polls.id"))
+    event_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("events.id", ondelete="CASCADE")
+    )
+    poll_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("polls.id", ondelete="SET NULL")
+    )
     name: Mapped[str] = mapped_column(Text, nullable=False)
-    lake_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("lakes.id"))
-    ramp_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("ramps.id"))
+    lake_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("lakes.id", ondelete="SET NULL")
+    )
+    ramp_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("ramps.id", ondelete="SET NULL")
+    )
     lake_name: Mapped[Optional[str]] = mapped_column(Text)
     ramp_name: Mapped[Optional[str]] = mapped_column(Text)
     start_time: Mapped[Optional[time]] = mapped_column(Time)
@@ -169,7 +209,9 @@ class Tournament(Base):
     is_paper: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
     big_bass_carryover: Mapped[Optional[Decimal]] = mapped_column(Numeric, default=0.0)
     complete: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
-    created_by: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("anglers.id"))
+    created_by: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("anglers.id", ondelete="SET NULL")
+    )
     limit_type: Mapped[Optional[str]] = mapped_column(Text, default="angler")
     aoy_points: Mapped[Optional[bool]] = mapped_column(Boolean, default=True)
 
@@ -178,10 +220,20 @@ class Result(Base):
     """Result model."""
 
     __tablename__ = "results"
+    __table_args__ = (
+        CheckConstraint("num_fish >= 0", name="ck_result_num_fish_positive"),
+        CheckConstraint("total_weight >= 0", name="ck_result_total_weight_positive"),
+        CheckConstraint("big_bass_weight >= 0", name="ck_result_big_bass_weight_positive"),
+        CheckConstraint("dead_fish_penalty >= 0", name="ck_result_dead_fish_penalty_positive"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    tournament_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("tournaments.id"))
-    angler_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("anglers.id"))
+    tournament_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("tournaments.id", ondelete="CASCADE")
+    )
+    angler_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("anglers.id", ondelete="CASCADE")
+    )
     num_fish: Mapped[Optional[int]] = mapped_column(Integer, default=0)
     total_weight: Mapped[Optional[Decimal]] = mapped_column(Numeric, default=0.0)
     big_bass_weight: Mapped[Optional[Decimal]] = mapped_column(Numeric, default=0.0)
@@ -196,11 +248,20 @@ class TeamResult(Base):
     """Team result model."""
 
     __tablename__ = "team_results"
+    __table_args__ = (
+        CheckConstraint("total_weight >= 0", name="ck_team_result_total_weight_positive"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    tournament_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("tournaments.id"))
-    angler1_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("anglers.id"))
-    angler2_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("anglers.id"))
+    tournament_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("tournaments.id", ondelete="CASCADE")
+    )
+    angler1_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("anglers.id", ondelete="CASCADE")
+    )
+    angler2_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("anglers.id", ondelete="CASCADE")
+    )
     total_weight: Mapped[Optional[Decimal]] = mapped_column(Numeric, default=0.0)
     place_finish: Mapped[Optional[int]] = mapped_column(Integer)
 
@@ -211,7 +272,9 @@ class OfficerPosition(Base):
     __tablename__ = "officer_positions"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    angler_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("anglers.id"))
+    angler_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("anglers.id", ondelete="CASCADE")
+    )
     position: Mapped[str] = mapped_column(Text, nullable=False)
     year: Mapped[int] = mapped_column(Integer, nullable=False)
     elected_date: Mapped[Optional[date]] = mapped_column(Date)
