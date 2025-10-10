@@ -139,7 +139,7 @@ git commit -m "Your changes"
 ### PostgreSQL-First Approach
 - **Business logic in SQL** - Use views, functions, triggers where complex
 - **SQLAlchemy ORM** - Use declarative models with relationships for cleaner code
-- **Alembic migrations** - Version-controlled schema changes (see DATABASE_MIGRATIONS.md)
+- **Alembic migrations** - Version-controlled schema changes (see docs/DATABASE_MIGRATIONS.md)
 - **Pydantic validation** - Use Pydantic models for request/response validation
 - **Type-safe queries** - Proper parameter binding and type hints throughout
 - **Performance-focused** - Optimized queries and indexes
@@ -159,7 +159,7 @@ alembic upgrade head
 alembic downgrade -1
 ```
 
-**IMPORTANT**: See [DATABASE_MIGRATIONS.md](DATABASE_MIGRATIONS.md) for complete documentation.
+**IMPORTANT**: See [docs/DATABASE_MIGRATIONS.md](docs/DATABASE_MIGRATIONS.md) for complete documentation.
 
 ### Schema Organization
 ```sql

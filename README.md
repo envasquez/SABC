@@ -218,7 +218,7 @@ sabc/
 ├── scripts/                # Database and admin scripts
 ├── flake.nix              # Nix development environment
 ├── CLAUDE.md              # AI development guidelines
-└── DATABASE_MIGRATIONS.md # Migration documentation
+└── docs/                  # Documentation files
 ```
 
 ## 📊 Database Schema
@@ -328,13 +328,13 @@ See [docker-compose.prod.yml](docker-compose.prod.yml) for full configuration.
 For safe testing before production deployment:
 
 - **Infrastructure** - Separate droplet mirroring production
-- **Configuration** - [STAGING_DEPLOYMENT.md](STAGING_DEPLOYMENT.md)
+- **Configuration** - [STAGING_DEPLOYMENT.md](docs/STAGING_DEPLOYMENT.md)
 - **Test Data** - Automated seeding with [scripts/seed_staging_data.py](scripts/seed_staging_data.py)
 - **Cost** - ~$6/month (smaller droplet)
 
 ### Alternative: Digital Ocean App Platform (PaaS)
 
-For a managed platform approach, see [STAGING_ENVIRONMENT.md](STAGING_ENVIRONMENT.md).
+For a managed platform approach, see [STAGING_ENVIRONMENT.md](docs/STAGING_ENVIRONMENT.md).
 
 Benefits:
 - Managed PostgreSQL, auto-scaling, automatic SSL
