@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import Connection
 
-from core.deps import get_admin_or_redirect, get_db, templates
+from core.deps import get_db, templates
+from core.helpers.auth import require_admin
 from core.query_service import QueryService
 
 router = APIRouter()
@@ -11,7 +12,7 @@ router = APIRouter()
 @router.get("/admin/tournaments")
 async def admin_tournaments_list(
     request: Request,
-    user=Depends(get_admin_or_redirect),
+    user=Depends(require_admin),
     conn: Connection = Depends(get_db),
 ):
     if isinstance(user, RedirectResponse):

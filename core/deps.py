@@ -1,15 +1,12 @@
 import json
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, AsyncGenerator, Dict, Union
+from typing import Any, AsyncGenerator
 
-from fastapi import Request
-from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import Connection
 
 from core.db_schema import engine
-from core.helpers.auth import admin, require_admin_async
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -77,10 +74,3 @@ templates.env.filters["time_format"] = time_format_filter
 async def get_db() -> AsyncGenerator[Connection, None]:
     with engine.connect() as conn:
         yield conn
-
-
-async def get_admin_or_redirect(request: Request) -> Union[Dict[str, Any], RedirectResponse]:
-    return admin(request)
-
-
-require_admin = require_admin_async

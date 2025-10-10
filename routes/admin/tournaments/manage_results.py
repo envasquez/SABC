@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import Connection
 
-from core.deps import get_admin_or_redirect, get_db
+from core.deps import get_db
+from core.helpers.auth import require_admin
 from core.query_service import QueryService
 
 router = APIRouter()
@@ -12,7 +13,7 @@ router = APIRouter()
 async def delete_result(
     tournament_id: int,
     result_id: int,
-    user=Depends(get_admin_or_redirect),
+    user=Depends(require_admin),
     conn: Connection = Depends(get_db),
 ):
     if isinstance(user, RedirectResponse):
@@ -30,7 +31,7 @@ async def delete_result(
 async def delete_team_result(
     tournament_id: int,
     team_result_id: int,
-    user=Depends(get_admin_or_redirect),
+    user=Depends(require_admin),
     conn: Connection = Depends(get_db),
 ):
     if isinstance(user, RedirectResponse):
@@ -73,7 +74,7 @@ async def delete_team_result(
 @router.post("/admin/tournaments/{tournament_id}/toggle-complete")
 async def toggle_tournament_complete(
     tournament_id: int,
-    user=Depends(get_admin_or_redirect),
+    user=Depends(require_admin),
     conn: Connection = Depends(get_db),
 ):
     if isinstance(user, RedirectResponse):

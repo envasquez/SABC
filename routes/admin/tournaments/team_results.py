@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import Connection
 
-from core.deps import get_admin_or_redirect, get_db
+from core.deps import get_db
+from core.helpers.auth import require_admin
 from core.query_service import QueryService
 
 router = APIRouter()
@@ -14,7 +15,7 @@ router = APIRouter()
 async def save_team_result(
     tournament_id: int,
     request: Request,
-    user=Depends(get_admin_or_redirect),
+    user=Depends(require_admin),
     conn: Connection = Depends(get_db),
 ):
     if isinstance(user, RedirectResponse):
