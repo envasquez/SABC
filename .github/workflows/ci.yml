@@ -26,6 +26,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements-ci.txt
+        pip install bandit
 
     - name: Run linting checks
       run: |
@@ -38,7 +39,10 @@ jobs:
     - name: Run type checking
       run: |
         mypy . --ignore-missing-imports --no-strict-optional
-      continue-on-error: true
+
+    - name: Run security scan (Bandit)
+      run: |
+        bandit -r . -ll --exclude=./tests,./htmlcov,./.pytest_cache
 
   test:
     runs-on: ubuntu-latest
@@ -57,11 +61,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements-ci.txt
 
-    - name: Run tests
+    - name: Run tests with coverage
       run: |
-        echo "🧪 Running Test Suite"
-        echo "===================="
-        pytest tests/ -v --tb=short
+        echo "🧪 Running Test Suite with Coverage"
+        echo "===================================="
+        pytest tests/ -v --tb=short --cov=. --cov-report=html --cov-report=term-missing --cov-fail-under=40
 
     - name: Upload test results
       if: always()
@@ -175,6 +179,8 @@ jobs:
 
         if [[ "${{ needs.lint-and-format.result }}" == "success" && "${{ needs.test.result }}" == "success" && "${{ needs.build.result }}" == "success" ]]; then
           echo "✅ Pipeline completed successfully!"
+          exit 0
         else
           echo "❌ Pipeline had failures - check individual jobs"
+          exit 1
         fi
