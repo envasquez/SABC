@@ -175,8 +175,8 @@ id_ed25519*
 authorized_keys
 known_hosts
 
-# Digital Ocean deployment config
-.do/
+# Digital Ocean deployment config (track staging config, ignore production)
+.do/app.yaml
 test_sabc.db
 
 # Alembic - only ignore bytecode, not migration files

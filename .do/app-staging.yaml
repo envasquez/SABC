@@ -1,0 +1,164 @@
+# Digital Ocean App Platform Specification - STAGING Environment
+# This file configures the staging deployment for SABC Tournament Management
+#
+# To deploy:
+# 1. Create staging branch: git checkout -b staging && git push origin staging
+# 2. In Digital Ocean dashboard: Apps → Create App → Import from this spec
+# 3. Configure environment secrets (SECRET_KEY, SMTP credentials, SENTRY_DSN)
+# 4. Deploy and monitor
+
+name: sabc-staging
+region: nyc3
+
+# Staging Database (separate from production)
+databases:
+  - name: db
+    engine: PG
+    version: "17"
+    production: false
+    size: db-s-1vcpu-1gb  # Basic tier - $12/month
+
+# Web Application
+services:
+  - name: web
+    # Source Code
+    github:
+      repo: your-org/SABC
+      branch: staging
+      deploy_on_push: true
+
+    # Build Configuration
+    build_command: |
+      pip install --upgrade pip && \
+      pip install -r requirements.txt
+
+    # Runtime Configuration
+    run_command: |
+      alembic upgrade head && \
+      uvicorn app:app --host 0.0.0.0 --port 8080 --workers 1
+
+    # Environment
+    environment_slug: python
+    instance_count: 1
+    instance_size_slug: basic-xxs  # $5/month - upgrade if needed
+
+    # HTTP Configuration
+    http_port: 8080
+    routes:
+      - path: /
+
+    # Health Check
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 30
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+
+    # Environment Variables
+    envs:
+      # Application Environment
+      - key: ENVIRONMENT
+        value: staging
+        scope: RUN_AND_BUILD_TIME
+
+      # Database (auto-injected by Digital Ocean)
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+        scope: RUN_TIME
+
+      # Security (MUST BE SET IN DASHBOARD)
+      - key: SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+        # Generate with: python -c "import secrets; print(secrets.token_urlsafe(64))"
+
+      # SMTP Configuration (MUST BE SET IN DASHBOARD)
+      - key: SMTP_SERVER
+        value: smtp.gmail.com
+        scope: RUN_TIME
+
+      - key: SMTP_PORT
+        value: "587"
+        scope: RUN_TIME
+
+      - key: SMTP_USERNAME
+        scope: RUN_TIME
+        type: SECRET
+        # Set in Digital Ocean dashboard
+
+      - key: SMTP_PASSWORD
+        scope: RUN_TIME
+        type: SECRET
+        # Set in Digital Ocean dashboard
+
+      # Monitoring (OPTIONAL)
+      - key: SENTRY_DSN
+        scope: RUN_TIME
+        type: SECRET
+        # Create separate Sentry project for staging
+
+      # Logging
+      - key: LOG_LEVEL
+        value: DEBUG
+        scope: RUN_TIME
+
+      # Session Configuration
+      - key: SESSION_TIMEOUT
+        value: "86400"
+        scope: RUN_TIME
+
+      # Release Tracking
+      - key: RELEASE_VERSION
+        value: staging-${_self.COMMIT_SHORT_SHA}
+        scope: RUN_TIME
+
+      # Python Configuration
+      - key: PYTHONUNBUFFERED
+        value: "1"
+        scope: RUN_TIME
+
+# Pre-Deployment Job (Database Migrations)
+jobs:
+  - name: migrate-db
+    kind: PRE_DEPLOY
+
+    github:
+      repo: your-org/SABC
+      branch: staging
+
+    build_command: |
+      pip install --upgrade pip && \
+      pip install -r requirements.txt
+
+    run_command: |
+      echo "Running database migrations..." && \
+      alembic upgrade head && \
+      echo "Migrations completed successfully"
+
+    environment_slug: python
+
+    envs:
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+        scope: RUN_TIME
+
+# Alerts (optional but recommended)
+alerts:
+  - rule: DEPLOYMENT_FAILED
+  - rule: DOMAIN_FAILED
+  - rule: APP_CRASHED
+
+# Features
+features:
+  - buildpack-stack=ubuntu-22
+
+# Ingress Configuration
+ingress:
+  rules:
+    - component:
+        name: web
+      match:
+        path:
+          prefix: /
