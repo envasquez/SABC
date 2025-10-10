@@ -16,7 +16,7 @@
 - ✅ Phase 4.1: Database Migrations - **100% Complete** (Alembic configured and baseline set)
 - ✅ Phase 4.2: Database Constraints - **100% Complete** (21 FK relationships, 7 constraints added)
 - ✅ Phase 5.1: Error Handling - **100% Complete** (3 silent error handlers fixed with logging)
-- ✅ Phase 5.2: Code Deduplication - **100% Complete** (Legacy functions deprecated)
+- ✅ Phase 5.2: Code Deduplication - **100% Complete** (Legacy code removed, ~107 lines cleaned)
 
 **Overall Completion**: ~86% of production readiness goals achieved
 
@@ -642,24 +642,30 @@ roadmap had already been resolved:
 
 **Completed Tasks:**
 - [x] Audit codebase for actual duplication patterns
-- [x] Deprecate db() function with DeprecationWarning
-- [x] Deprecate admin() function with DeprecationWarning
-- [x] Deprecate require_admin_async() function with DeprecationWarning
+- [x] Remove db() function entirely from core/database.py
+- [x] Remove admin() function from core/helpers/auth.py
+- [x] Remove require_admin_async() function from core/helpers/auth.py
+- [x] Remove get_admin_or_redirect() from core/deps.py
+- [x] Update 5 tournament admin routes to use require_admin()
+- [x] Clean up all imports in dependencies modules
 - [x] All 185 tests passing (0 failures)
 
 **Files Modified:**
-- ✅ core/database.py - Added deprecation warning to db()
-- ✅ core/helpers/auth.py - Added deprecation warnings to admin() and require_admin_async()
+- ✅ core/database.py - Removed db() function (now just placeholder with docs)
+- ✅ core/helpers/auth.py - Removed admin() and require_admin_async()
+- ✅ core/deps.py - Removed unused imports and get_admin_or_redirect()
+- ✅ routes/dependencies/__init__.py - Cleaned up imports
+- ✅ routes/admin/tournaments/*.py (5 files) - Updated to use require_admin()
 
 **Impact:**
-- ✅ Codifies best practices through deprecation warnings
-- ✅ Guides developers toward modern patterns (ORM over raw SQL)
-- ✅ No breaking changes - all functions still work
-- ✅ Deprecation warnings help with gradual migration
+- ✅ ~107 net lines of code removed (130 removed, 23 added for proper imports)
+- ✅ All code uses modern patterns (QueryService, require_admin, get_session)
+- ✅ No breaking changes - deprecated code that wasn't used has been removed
+- ✅ Cleaner, more maintainable codebase
 
 **Conclusion:**
-Codebase is already well-structured. Phase 5.2 formalizes deprecation of legacy
-patterns rather than performing risky large-scale refactoring.
+Codebase is already well-structured. Phase 5.2 removed unused legacy code entirely
+rather than just deprecating it, resulting in a cleaner codebase.
 
 ---
 
@@ -909,7 +915,7 @@ jobs:
 10. ✅ Phase 4.1: Database Migrations (Alembic) - DONE
 11. ✅ Phase 4.2: Database Constraints (21 FK relationships, 7 constraints) - DONE
 12. ✅ Phase 5.1: Error Handling (3 silent handlers fixed with logging) - DONE
-13. ✅ Phase 5.2: Code Deduplication (Legacy functions deprecated) - DONE
+13. ✅ Phase 5.2: Code Deduplication (Legacy code removed, ~107 lines cleaned) - DONE
 
 **Next Immediate Actions**:
 1. 🟠 Phase 6.2: Staging Environment (HIGH priority - production blocker)
