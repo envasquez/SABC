@@ -78,10 +78,13 @@ def create_app() -> FastAPI:
         cookie_samesite="lax",
         header_name="x-csrf-token",
         # Exempt authentication endpoints - they have their own security measures
+        # These endpoints either use email verification, session management, or rate limiting
         exempt_urls=[
-            re.compile(r"^/login$"),  # Login POST
-            re.compile(r"^/forgot-password$"),  # Password reset request
-            re.compile(r"^/reset-password$"),  # Password reset submission
+            re.compile(r"^/login$"),  # Login - protected by rate limiting + bcrypt
+            re.compile(r"^/logout$"),  # Logout - session-based, no sensitive state change
+            re.compile(r"^/register$"),  # Registration - email verification required
+            re.compile(r"^/forgot-password$"),  # Password reset request - email verification
+            re.compile(r"^/reset-password$"),  # Password reset - cryptographic tokens
         ],
     )
 
