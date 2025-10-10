@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 import bcrypt
 from fastapi import APIRouter, Form, Query, Request
 from fastapi.responses import RedirectResponse
@@ -55,7 +57,9 @@ async def process_password_reset(
     try:
         error_msg = validate_password_reset(password, password_confirm)
         if error_msg:
-            return error_redirect(f"/reset-password?token={token}", error_msg)
+            return RedirectResponse(
+                f"/reset-password?token={token}&error={quote(error_msg)}", status_code=303
+            )
 
         token_data = verify_reset_token(token)
 
@@ -92,4 +96,6 @@ async def process_password_reset(
         )
     except Exception as e:
         logger.error(f"Error processing password reset: {e}", exc_info=True)
-        return error_redirect(f"/reset-password?token={token}", ERROR_RESET_FAILED)
+        return RedirectResponse(
+            f"/reset-password?token={token}&error={quote(ERROR_RESET_FAILED)}", status_code=303
+        )

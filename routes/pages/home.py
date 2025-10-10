@@ -224,9 +224,6 @@ async def home_paginated(request: Request, page: int = 1):
                 "user_has_voted": user_has_voted,
                 "poll_is_open": poll_is_open,
             }
-            print(
-                f"BUTTON DEBUG: tournament_id={tournament[0]}, poll_id={poll_id}, user_has_voted={user_has_voted}, user={'yes' if user else 'no'}"
-            )
             tournaments_with_results.append(tournament_dict)
 
         # Get member count
