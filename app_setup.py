@@ -77,8 +77,12 @@ def create_app() -> FastAPI:
         cookie_secure=os.environ.get("ENVIRONMENT", "development") == "production",
         cookie_samesite="lax",
         header_name="x-csrf-token",
-        # Exempt password reset POST - it's already protected by cryptographic token
-        exempt_urls=[re.compile(r"^/reset-password$")],
+        # Exempt authentication endpoints - they have their own security measures
+        exempt_urls=[
+            re.compile(r"^/login$"),  # Login POST
+            re.compile(r"^/forgot-password$"),  # Password reset request
+            re.compile(r"^/reset-password$"),  # Password reset submission
+        ],
     )
 
     app.mount("/static", StaticFiles(directory="static"), name="static")
