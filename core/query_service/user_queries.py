@@ -62,7 +62,8 @@ class UserQueries(QueryServiceBase):
 
         set_clause = ", ".join(f"{k} = :{k}" for k in updates.keys())
         params = {**updates, "id": user_id}
-        self.execute(f"UPDATE anglers SET {set_clause} WHERE id = :id", params)
+        # Safe: column names validated against whitelist, values parameterized
+        self.execute(f"UPDATE anglers SET {set_clause} WHERE id = :id", params)  # nosec B608
 
     def create_user(
         self,

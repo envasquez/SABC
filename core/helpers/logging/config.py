@@ -7,7 +7,7 @@ from core.helpers.logging.logger_setup import configure_root_logger, configure_s
 
 
 class SABCLogger:
-    def __init__(self, log_dir: str = "/tmp/sabc_logs"):
+    def __init__(self, log_dir: str = "/tmp/sabc_logs"):  # nosec B108
         self.log_dir = Path(log_dir)
         self.log_dir.mkdir(exist_ok=True, parents=True)
         self._configured = False

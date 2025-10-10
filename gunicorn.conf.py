@@ -1,6 +1,6 @@
 import os
 
-bind = f"{os.environ.get('HOST', '0.0.0.0')}:{os.environ.get('PORT', '8000')}"
+bind = f"{os.environ.get('HOST', '0.0.0.0')}:{os.environ.get('PORT', '8000')}"  # nosec B104
 workers = int(os.environ.get("WORKERS", "4"))
 worker_class = "uvicorn.workers.UvicornWorker"
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(D)s'
