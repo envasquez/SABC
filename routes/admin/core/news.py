@@ -76,7 +76,7 @@ async def update_news(
                 news_item.content = content.strip()
                 news_item.published = True
                 news_item.priority = priority
-                news_item.last_edited_by = user["id"]
+                news_item.last_edited_by = user["id"]  # type: ignore[assignment]
                 news_item.updated_at = datetime.utcnow()
                 session.commit()
 

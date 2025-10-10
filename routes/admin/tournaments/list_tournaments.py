@@ -24,7 +24,7 @@ async def admin_tournaments_list(
     qs.auto_complete_past_tournaments()
     conn.commit()
 
-    tournaments = qs.fetch_all()
+    tournaments = qs.fetch_all()  # type: ignore[call-arg]
 
     for t in tournaments:
         t["total_participants"] = t["result_count"] + t["team_result_count"]

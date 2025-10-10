@@ -1,6 +1,8 @@
 from datetime import timedelta
 from typing import Optional, Tuple
 
+from fastapi.responses import RedirectResponse
+
 from core.db_schema import Event, Poll, get_session
 from core.helpers.response import error_redirect
 from core.helpers.timezone import now_local
@@ -8,7 +10,7 @@ from core.helpers.timezone import now_local
 
 def validate_and_get_event(
     poll_type: str, event_id: Optional[int]
-) -> Tuple[Optional[tuple], Optional[object]]:
+) -> Tuple[Optional[tuple], Optional[RedirectResponse]]:
     if poll_type == "tournament_location" and event_id:
         with get_session() as session:
             event_obj = session.query(Event).filter(Event.id == event_id).first()
@@ -28,8 +30,6 @@ def validate_and_get_event(
             existing_poll = session.query(Poll).filter(Poll.event_id == event_id).first()
 
             if existing_poll:
-                from fastapi.responses import RedirectResponse
-
                 return None, RedirectResponse(
                     f"/admin/polls/{existing_poll.id}/edit?error=Poll already exists for this event",
                     status_code=302,

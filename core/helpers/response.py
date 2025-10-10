@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from fastapi import Request
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -29,9 +29,9 @@ def json_error(message: str, status_code: int = 400) -> JSONResponse:
 
 
 def json_success(
-    data: Optional[dict] = None, message: Optional[str] = None, status_code: int = 200
+    data: Optional[Dict[str, Any]] = None, message: Optional[str] = None, status_code: int = 200
 ) -> JSONResponse:
-    response = {"success": True}
+    response: Dict[str, Any] = {"success": True}
     if data is not None:
         response["data"] = data
     if message:

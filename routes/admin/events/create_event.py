@@ -62,7 +62,7 @@ async def create_event(
         event_id = create_event_record(event_params)
         if event_type == "sabc_tournament":
             create_tournament_record(event_id, tournament_params)
-            poll_id = create_tournament_poll(event_id, name, description, date_obj, user["id"])
+            poll_id = create_tournament_poll(event_id, name, description, date_obj, user["id"])  # type: ignore[arg-type]
             create_poll_options(poll_id)
         return RedirectResponse(
             f"/admin/events?success=Event created successfully{warning_msg}", status_code=302

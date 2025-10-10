@@ -1,13 +1,21 @@
 import json
-from typing import Any, Dict
+from typing import Any, Dict, Union
+
+from starlette.datastructures import FormData
 
 from core.db_schema import PollOption, get_session
 from routes.dependencies import find_lake_by_id, get_lakes_list
 
 
-def create_tournament_location_options(poll_id: int, form: Dict[str, Any], event: tuple) -> None:
+def create_tournament_location_options(
+    poll_id: int, form: Union[FormData, Dict[str, Any]], event: tuple
+) -> None:
     with get_session() as session:
-        selected_lake_ids = form.getlist("lake_ids")
+        # Handle both FormData and dict
+        if isinstance(form, FormData):
+            selected_lake_ids = form.getlist("lake_ids")
+        else:
+            selected_lake_ids = form.get("lake_ids", [])
         if selected_lake_ids:
             for lake_id_raw in selected_lake_ids:
                 if isinstance(lake_id_raw, str):
@@ -30,9 +38,13 @@ def create_tournament_location_options(poll_id: int, form: Dict[str, Any], event
                 session.add(new_option)
 
 
-def create_generic_poll_options(poll_id: int, form: Dict[str, Any]) -> None:
+def create_generic_poll_options(poll_id: int, form: Union[FormData, Dict[str, Any]]) -> None:
     with get_session() as session:
-        poll_options = form.getlist("poll_options[]")
+        # Handle both FormData and dict
+        if isinstance(form, FormData):
+            poll_options = form.getlist("poll_options[]")
+        else:
+            poll_options = form.get("poll_options[]", [])
         for option_text_raw in poll_options:
             if isinstance(option_text_raw, str) and option_text_raw.strip():
                 new_option = PollOption(
@@ -43,7 +55,7 @@ def create_generic_poll_options(poll_id: int, form: Dict[str, Any]) -> None:
                 session.add(new_option)
 
 
-def create_other_poll_options(poll_id: int, form: Dict[str, Any]) -> None:
+def create_other_poll_options(poll_id: int, form: Union[FormData, Dict[str, Any]]) -> None:
     with get_session() as session:
         for key in form.keys():
             value = form[key]

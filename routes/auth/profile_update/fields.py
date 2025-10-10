@@ -31,7 +31,7 @@ async def update_profile_fields(
         is_valid, formatted_phone, error_msg = validate_phone_number(phone)
         if not is_valid:
             return RedirectResponse(f"/profile?error={error_msg}", status_code=302)
-        phone = formatted_phone
+        phone = formatted_phone  # type: ignore[assignment]
 
         with get_session() as session:
             existing_email = (

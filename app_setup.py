@@ -46,12 +46,12 @@ def create_app() -> FastAPI:
 
             return json.dumps(content, cls=CustomJSONEncoder, ensure_ascii=False).encode("utf-8")
 
-    app.default_response_class = CustomJSONResponse
+    app.default_response_class = CustomJSONResponse  # type: ignore[attr-defined]
 
     # Rate limiting
     limiter = Limiter(key_func=get_remote_address)
     app.state.limiter = limiter
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
     # Metrics middleware (should be early in the chain)
     app.add_middleware(MetricsMiddleware)

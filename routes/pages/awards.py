@@ -50,13 +50,13 @@ async def awards(request: Request, year: Optional[int] = None):
         for result in all_tournament_results:
             if current_tournament_id != result["tournament_id"]:
                 if current_tournament_results:
-                    tournaments_points[current_tournament_id] = calculate_tournament_points(
+                    tournaments_points[current_tournament_id] = calculate_tournament_points(  # type: ignore[index]
                         current_tournament_results
                     )
                 current_tournament_id, current_tournament_results = result["tournament_id"], []
             current_tournament_results.append(dict(result))
         if current_tournament_results:
-            tournaments_points[current_tournament_id] = calculate_tournament_points(
+            tournaments_points[current_tournament_id] = calculate_tournament_points(  # type: ignore[index]
                 current_tournament_results
             )
         for tournament_results in tournaments_points.values():

@@ -6,6 +6,7 @@ from sqlalchemy import Connection
 
 from core.deps import get_db
 from core.helpers.auth import require_admin
+from core.helpers.forms import get_form_int
 from core.query_service import QueryService
 
 router = APIRouter()
@@ -21,12 +22,17 @@ async def save_team_result(
     if isinstance(user, RedirectResponse):
         return user
 
-    form = await request.form()
+    form_data = await request.form()
     qs = QueryService(conn)
 
     try:
-        angler1_id = int(form.get("angler1_id"))
-        angler2_id = int(form.get("angler2_id")) if form.get("angler2_id") else None
+        angler1_id_val = get_form_int(form_data, "angler1_id")
+        angler2_id = get_form_int(form_data, "angler2_id")
+
+        if angler1_id_val is None:
+            return JSONResponse({"error": "Angler 1 ID is required"}, status_code=400)
+
+        angler1_id = angler1_id_val
         total_weight = Decimal("0")
         angler1_weight = qs.fetch_value(
             "SELECT total_weight FROM results WHERE tournament_id = :tid AND angler_id = :aid",
@@ -42,11 +48,11 @@ async def save_team_result(
             if angler2_weight:
                 total_weight += Decimal(str(angler2_weight))
         # Check if team_result_id was provided (edit mode)
-        team_result_id = form.get("team_result_id")
+        team_result_id = get_form_int(form_data, "team_result_id")
         if team_result_id:
             existing = qs.fetch_one(
                 "SELECT id FROM team_results WHERE id = :id",
-                {"id": int(team_result_id)},
+                {"id": team_result_id},
             )
         else:
             # Check for existing team by angler combination

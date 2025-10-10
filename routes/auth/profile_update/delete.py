@@ -29,8 +29,8 @@ async def delete_account(request: Request, confirm: str) -> RedirectResponse:
         )
         log_security_event(
             SecurityEvent.AUTH_ACCOUNT_DELETED,
-            user_id=user_id,
-            user_email=user_email,
+            user_id=user_id,  # type: ignore[arg-type]
+            user_email=user_email,  # type: ignore[arg-type]
             ip_address=request.client.host if request.client else "unknown",
             details={"method": "self_delete"},
         )

@@ -150,7 +150,7 @@ async def home_paginated(request: Request, page: int = 1):
                     # Make poll datetimes timezone-aware for comparison
                     starts_at = make_aware(poll.starts_at) if poll.starts_at else None
                     closes_at = make_aware(poll.closes_at) if poll.closes_at else None
-                    poll_is_open = starts_at and closes_at and starts_at <= now <= closes_at
+                    poll_is_open = starts_at and closes_at and starts_at <= now <= closes_at  # type: ignore[assignment]
 
                 # Get poll options with vote counts (for all users if they've voted)
                 poll_options = (
@@ -168,7 +168,7 @@ async def home_paginated(request: Request, page: int = 1):
 
                 # Check if user has voted
                 if user:
-                    user_id = user.get("id") if isinstance(user, dict) else user.id
+                    user_id = user.get("id") if isinstance(user, dict) else user.id  # type: ignore[attr-defined]
                     user_vote = (
                         session.query(PollVote)
                         .filter(PollVote.poll_id == poll_id, PollVote.angler_id == user_id)

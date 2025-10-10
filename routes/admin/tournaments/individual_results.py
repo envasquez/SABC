@@ -6,6 +6,7 @@ from sqlalchemy import Connection
 
 from core.deps import get_db
 from core.helpers.auth import require_admin
+from core.helpers.forms import get_form_bool, get_form_float, get_form_int
 from core.query_service import QueryService
 
 router = APIRouter()
@@ -22,19 +23,23 @@ async def save_result(
     if isinstance(user, RedirectResponse):
         return user
 
-    form = await request.form()
+    form_data = await request.form()
     qs = QueryService(conn)
 
     try:
         # Extract form data
-        angler_id = int(form.get("angler_id"))
-        num_fish = int(form.get("num_fish", 0))
-        total_weight = Decimal(form.get("total_weight", "0"))
-        big_bass_weight = Decimal(form.get("big_bass_weight", "0"))
-        dead_fish_penalty = Decimal(form.get("dead_fish", "0"))
-        disqualified = form.get("disqualified") == "on"
-        buy_in = form.get("buy_in") == "on"
-        was_member = form.get("was_member") == "on"  # Checkbox: checked="on", unchecked=None
+        angler_id_val = get_form_int(form_data, "angler_id")
+        if angler_id_val is None:
+            return JSONResponse({"error": "Angler ID is required"}, status_code=400)
+
+        angler_id = angler_id_val
+        num_fish = get_form_int(form_data, "num_fish", 0) or 0
+        total_weight = Decimal(str(get_form_float(form_data, "total_weight", 0.0) or 0.0))
+        big_bass_weight = Decimal(str(get_form_float(form_data, "big_bass_weight", 0.0) or 0.0))
+        dead_fish_penalty = Decimal(str(get_form_float(form_data, "dead_fish", 0.0) or 0.0))
+        disqualified = get_form_bool(form_data, "disqualified")
+        buy_in = get_form_bool(form_data, "buy_in")
+        was_member = get_form_bool(form_data, "was_member")
 
         # Check if result already exists
         existing = qs.fetch_one(

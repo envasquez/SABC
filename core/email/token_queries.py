@@ -56,7 +56,7 @@ def fetch_token_data(token: str) -> Optional[tuple]:
                 .filter(PasswordResetToken.token == token)
                 .first()
             )
-            return result
+            return result  # type: ignore[return-value]
     except Exception as e:
         logger.error(f"Error fetching token data: {e}")
         return None

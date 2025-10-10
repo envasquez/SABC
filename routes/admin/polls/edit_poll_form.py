@@ -42,14 +42,14 @@ async def edit_poll_form(request: Request, poll_id: int):
             # Get poll options with vote counts
             with engine.connect() as conn:
                 qs = QueryService(conn)
-                context["poll_options"] = qs.get_poll_options_with_votes(
+                context["poll_options"] = qs.get_poll_options_with_votes(  # type: ignore[assignment]
                     poll_id, include_details=True
                 )
 
             # Handle tournament location polls differently
             if poll_obj.poll_type == "tournament_location":
                 lakes = get_lakes_list()
-                context["lakes"] = lakes
+                context["lakes"] = lakes  # type: ignore[assignment]
 
                 # Get selected lakes for this poll
                 poll_options = session.query(PollOption).filter(PollOption.poll_id == poll_id).all()
