@@ -5,4 +5,4 @@ from fastapi import APIRouter
 router = APIRouter()
 
 # Import routes to register them with the router
-from routes.monitoring import metrics  # noqa: F401, E402
+from routes.monitoring import metrics, sentry_test  # noqa: F401, E402
