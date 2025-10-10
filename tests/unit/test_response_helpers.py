@@ -24,15 +24,15 @@ class TestRedirectHelpers:
         result = error_redirect("/dashboard", "Something went wrong")
 
         assert isinstance(result, RedirectResponse)
-        assert result.status_code == 302
+        assert result.status_code == 303  # POST-Redirect-GET pattern
         # URL encoding converts spaces to %20
         assert result.headers["location"] == "/dashboard?error=Something%20went%20wrong"
 
     def test_error_redirect_custom_status_code(self):
         """Test error_redirect accepts custom status code."""
-        result = error_redirect("/dashboard", "Error", status_code=303)
+        result = error_redirect("/dashboard", "Error", status_code=302)
 
-        assert result.status_code == 303
+        assert result.status_code == 302
 
     def test_error_redirect_encodes_special_characters(self):
         """Test error_redirect properly handles special characters in message."""
@@ -46,15 +46,15 @@ class TestRedirectHelpers:
         result = success_redirect("/dashboard", "Operation successful")
 
         assert isinstance(result, RedirectResponse)
-        assert result.status_code == 302
+        assert result.status_code == 303  # POST-Redirect-GET pattern
         # URL encoding converts spaces to %20
         assert result.headers["location"] == "/dashboard?success=Operation%20successful"
 
     def test_success_redirect_custom_status_code(self):
         """Test success_redirect accepts custom status code."""
-        result = success_redirect("/home", "Done", status_code=303)
+        result = success_redirect("/home", "Done", status_code=302)
 
-        assert result.status_code == 303
+        assert result.status_code == 302
 
 
 class TestJSONHelpers:

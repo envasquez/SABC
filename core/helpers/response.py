@@ -16,11 +16,23 @@ def sanitize_error_message(error: Exception, generic_message: str = "An error oc
     return generic_message
 
 
-def error_redirect(path: str, message: str, status_code: int = 302) -> RedirectResponse:
+def error_redirect(path: str, message: str, status_code: int = 303) -> RedirectResponse:
+    """
+    Redirect with error message (typically after failed form submission).
+
+    Uses 303 See Other by default (POST-Redirect-GET pattern).
+    Use 302 for GET-to-GET redirects if needed.
+    """
     return RedirectResponse(f"{path}?error={message}", status_code=status_code)
 
 
-def success_redirect(path: str, message: str, status_code: int = 302) -> RedirectResponse:
+def success_redirect(path: str, message: str, status_code: int = 303) -> RedirectResponse:
+    """
+    Redirect with success message (typically after successful form submission).
+
+    Uses 303 See Other by default (POST-Redirect-GET pattern).
+    Use 302 for GET-to-GET redirects if needed.
+    """
     return RedirectResponse(f"{path}?success={message}", status_code=status_code)
 
 
