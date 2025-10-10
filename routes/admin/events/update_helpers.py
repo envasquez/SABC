@@ -4,6 +4,9 @@ from typing import Any, Dict
 from sqlalchemy.orm import Session
 
 from core.db_schema import Event, Poll, Tournament, get_session
+from core.helpers.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 def prepare_event_params(
@@ -147,5 +150,9 @@ def update_poll_closing_date(event_id: int, poll_closes_date: str) -> None:
             poll = session.query(Poll).filter(Poll.event_id == event_id).first()
             if poll:
                 poll.closes_at = closes_dt
-    except ValueError:
-        pass
+    except ValueError as e:
+        logger.warning(
+            f"Invalid poll_closes_date format for event {event_id}: '{poll_closes_date}'. "
+            f"Expected ISO format (YYYY-MM-DD HH:MM:SS). Error: {e}. "
+            f"Poll closing date not updated."
+        )

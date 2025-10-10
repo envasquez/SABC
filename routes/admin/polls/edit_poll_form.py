@@ -5,9 +5,12 @@ from fastapi.responses import RedirectResponse
 
 from core.db_schema import Poll, PollOption, engine, get_session
 from core.helpers.auth import require_admin
+from core.helpers.logging import get_logger
 from core.helpers.response import error_redirect
 from core.query_service import QueryService
 from routes.dependencies import get_lakes_list, templates
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -58,8 +61,12 @@ async def edit_poll_form(request: Request, poll_id: int):
                             data = json.loads(option.option_data)
                             if "lake_id" in data and data["lake_id"] is not None:
                                 selected_lake_ids.add(int(data["lake_id"]))
-                        except (json.JSONDecodeError, ValueError):
-                            pass
+                        except (json.JSONDecodeError, ValueError) as e:
+                            logger.warning(
+                                f"Invalid JSON in poll option {option.id} for poll {poll_id}: {e}. "
+                                f"Skipping this option."
+                            )
+                            # Skip this option, continue with others
 
                 context["selected_lake_ids"] = selected_lake_ids
                 return templates.TemplateResponse("admin/edit_tournament_poll.html", context)

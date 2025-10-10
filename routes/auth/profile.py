@@ -219,8 +219,9 @@ async def profile_page(request: Request) -> Response:
             )
             if aoy_result:
                 aoy_position = aoy_result[0]
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to calculate AOY standings for user {user['id']}: {e}")
+            # aoy_position remains None, which is acceptable
 
         stats = {
             "tournaments": tournaments_count,
