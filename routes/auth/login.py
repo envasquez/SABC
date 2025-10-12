@@ -15,10 +15,20 @@ limiter = Limiter(key_func=get_remote_address)
 
 @router.get("/login")
 async def login_page(request: Request) -> Response:
-    return (
-        RedirectResponse("/")
-        if u(request)
-        else templates.TemplateResponse("login.html", {"request": request})
+    if u(request):
+        return RedirectResponse("/")
+
+    # Extract query parameters for success/error messages
+    success = request.query_params.get("success")
+    error = request.query_params.get("error")
+
+    return templates.TemplateResponse(
+        "login.html",
+        {
+            "request": request,
+            "success": success,
+            "error": error,
+        },
     )
 
 
