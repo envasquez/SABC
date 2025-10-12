@@ -29,6 +29,10 @@ async def reset_password_form(
         if not token_data:
             return error_redirect("/forgot-password", ERROR_INVALID_TOKEN)
 
+        # Extract query parameters for error/success messages
+        error = request.query_params.get("error")
+        success = request.query_params.get("success")
+
         return templates.TemplateResponse(
             "auth/reset_password.html",
             {
@@ -36,6 +40,8 @@ async def reset_password_form(
                 "token": token,
                 "user_name": token_data["name"],
                 "expires_at": token_data["expires_at"],
+                "error": error,
+                "success": success,
             },
         )
 
