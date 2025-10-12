@@ -72,6 +72,7 @@ async def process_password_reset(
             angler = session.query(Angler).filter(Angler.id == token_data["user_id"]).first()
             if angler:
                 angler.password_hash = password_hash
+                session.commit()  # CRITICAL: Must commit to save password change!
 
         use_reset_token(token)
 
