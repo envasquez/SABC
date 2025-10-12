@@ -85,9 +85,9 @@ def test_complete_password_reset_and_login_flow(client: TestClient, db_session: 
         f"Location: {reset_response.headers.get('location')}"
     )
 
-    assert (
-        "/login" in reset_response.headers.get("location", "")
-    ), f"Password reset didn't redirect to login. Location: {reset_response.headers.get('location')}"
+    assert "/login" in reset_response.headers.get("location", ""), (
+        f"Password reset didn't redirect to login. Location: {reset_response.headers.get('location')}"
+    )
 
     print("6. Password reset completed, redirected to login")
 
@@ -100,9 +100,9 @@ def test_complete_password_reset_and_login_flow(client: TestClient, db_session: 
 
     # Step 6: Verify old password no longer works
     old_password_still_works = bcrypt.checkpw(old_password.encode(), user.password_hash.encode())
-    assert (
-        not old_password_still_works
-    ), "Old password still works! Password wasn't actually changed!"
+    assert not old_password_still_works, (
+        "Old password still works! Password wasn't actually changed!"
+    )
     print("8. ✅ Old password no longer works")
 
     # Step 7: User attempts to login with NEW password
@@ -127,9 +127,9 @@ def test_complete_password_reset_and_login_flow(client: TestClient, db_session: 
 
     # Should redirect to home page, not back to login
     location = login_response.headers.get("location", "")
-    assert (
-        location == "/" or "login" not in location.lower()
-    ), f"Login failed - redirected back to login page. Location: {location}"
+    assert location == "/" or "login" not in location.lower(), (
+        f"Login failed - redirected back to login page. Location: {location}"
+    )
 
     # Should have session cookie
     assert "sabc_session" in login_response.cookies, "No session cookie set - login failed!"
