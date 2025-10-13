@@ -3,6 +3,12 @@
 from decimal import Decimal
 from typing import Optional, Tuple
 
+# Tournament validation constants
+MAX_TOTAL_WEIGHT = 50.0  # Maximum total weight for a 5-fish limit (lbs)
+MAX_BIG_BASS_WEIGHT = 15.0  # Maximum single bass weight (world record ~22 lbs, but rare)
+MAX_AVG_FISH_WEIGHT = 10.0  # Maximum average weight per fish (lbs)
+MIN_AVG_FISH_WEIGHT = 0.5  # Minimum average weight per fish (lbs)
+
 
 def validate_tournament_result(
     num_fish: int,
@@ -35,15 +41,15 @@ def validate_tournament_result(
     if total_weight < 0:
         return False, "Total weight cannot be negative"
 
-    if total_weight > 50.0:  # Reasonable maximum for 5 bass
-        return False, "Total weight exceeds reasonable maximum (50 lbs)"
+    if total_weight > MAX_TOTAL_WEIGHT:
+        return False, f"Total weight exceeds reasonable maximum ({MAX_TOTAL_WEIGHT} lbs)"
 
     # Validate big bass weight
     if big_bass_weight < 0:
         return False, "Big bass weight cannot be negative"
 
-    if big_bass_weight > 15.0:  # World record largemouth is ~22 lbs, but rare
-        return False, "Big bass weight exceeds reasonable maximum (15 lbs)"
+    if big_bass_weight > MAX_BIG_BASS_WEIGHT:
+        return False, f"Big bass weight exceeds reasonable maximum ({MAX_BIG_BASS_WEIGHT} lbs)"
 
     # Big bass can't exceed total weight
     if big_bass_weight > total_weight:
@@ -59,11 +65,17 @@ def validate_tournament_result(
     # Average weight check (reasonable range)
     if num_fish > 0:
         avg_weight = total_weight / num_fish
-        if avg_weight > 10.0:  # Each bass over 10 lbs is suspicious
-            return False, "Average fish weight exceeds reasonable maximum"
+        if avg_weight > MAX_AVG_FISH_WEIGHT:
+            return (
+                False,
+                f"Average fish weight exceeds reasonable maximum ({MAX_AVG_FISH_WEIGHT} lbs)",
+            )
 
-        if avg_weight < 0.5 and total_weight > 0:  # Each bass under 0.5 lbs is suspicious
-            return False, "Average fish weight below reasonable minimum"
+        if avg_weight < MIN_AVG_FISH_WEIGHT and total_weight > 0:
+            return (
+                False,
+                f"Average fish weight below reasonable minimum ({MIN_AVG_FISH_WEIGHT} lbs)",
+            )
 
     return True, None
 

@@ -60,16 +60,21 @@ async def polls(
 
         polls_data = session.execute(polls_query).all()
 
+        # Fetch all vote counts in a single query to avoid N+1
+        poll_ids = [poll_row.id for poll_row in polls_data]
+        vote_counts_query = (
+            select(PollVote.poll_id, func.count(func.distinct(PollVote.angler_id)).label("count"))
+            .where(PollVote.poll_id.in_(poll_ids))
+            .group_by(PollVote.poll_id)
+        )
+        vote_counts_data = session.execute(vote_counts_query).all()
+        vote_counts = {row[0]: row[1] for row in vote_counts_data}
+
         # Build polls list with vote counts
         polls: List[Dict[str, Any]] = []
         for poll_row in polls_data:
-            # Get unique voters count for this poll
-            unique_voters = (
-                session.query(func.count(func.distinct(PollVote.angler_id)))
-                .filter(PollVote.poll_id == poll_row.id)
-                .scalar()
-                or 0
-            )
+            # Get vote count from pre-fetched data
+            unique_voters = vote_counts.get(poll_row.id, 0)
 
             polls.append(
                 {

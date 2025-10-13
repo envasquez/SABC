@@ -1,4 +1,5 @@
 from typing import Any, Dict, Optional
+from urllib.parse import quote
 
 from fastapi import Request
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -22,8 +23,17 @@ def error_redirect(path: str, message: str, status_code: int = 303) -> RedirectR
 
     Uses 303 See Other by default (POST-Redirect-GET pattern).
     Use 302 for GET-to-GET redirects if needed.
+
+    Args:
+        path: Path to redirect to
+        message: Error message to display (will be URL-encoded)
+        status_code: HTTP status code for redirect
+
+    Returns:
+        RedirectResponse with encoded error message
     """
-    return RedirectResponse(f"{path}?error={message}", status_code=status_code)
+    encoded_message = quote(message)
+    return RedirectResponse(f"{path}?error={encoded_message}", status_code=status_code)
 
 
 def success_redirect(path: str, message: str, status_code: int = 303) -> RedirectResponse:
@@ -32,8 +42,17 @@ def success_redirect(path: str, message: str, status_code: int = 303) -> Redirec
 
     Uses 303 See Other by default (POST-Redirect-GET pattern).
     Use 302 for GET-to-GET redirects if needed.
+
+    Args:
+        path: Path to redirect to
+        message: Success message to display (will be URL-encoded)
+        status_code: HTTP status code for redirect
+
+    Returns:
+        RedirectResponse with encoded success message
     """
-    return RedirectResponse(f"{path}?success={message}", status_code=status_code)
+    encoded_message = quote(message)
+    return RedirectResponse(f"{path}?success={encoded_message}", status_code=status_code)
 
 
 def json_error(message: str, status_code: int = 400) -> JSONResponse:
