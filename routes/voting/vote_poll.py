@@ -58,6 +58,10 @@ async def vote_in_poll(
                 try:
                     actual_option_id = int(option_id)
                 except (ValueError, TypeError):
+                    logger.error(
+                        "Invalid option_id format",
+                        extra={"poll_id": poll_id, "user_id": user["id"], "option_id": option_id},
+                    )
                     return RedirectResponse("/polls?error=Invalid option selected", status_code=302)
 
                 # Validate option exists for this poll
@@ -68,7 +72,18 @@ async def vote_in_poll(
                     .first()
                 )
                 if not option_exists:
-                    return RedirectResponse("/polls?error=Invalid option selected", status_code=302)
+                    logger.warning(
+                        "Vote attempted for non-existent option - poll may have been edited",
+                        extra={
+                            "poll_id": poll_id,
+                            "user_id": user["id"],
+                            "option_id": actual_option_id,
+                        },
+                    )
+                    return RedirectResponse(
+                        "/polls?error=This poll was recently updated. Please refresh and try again.",
+                        status_code=302,
+                    )
 
             # Cast vote
             new_vote = PollVote(

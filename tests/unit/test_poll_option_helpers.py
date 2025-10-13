@@ -48,9 +48,22 @@ class TestUpdateOrCreatePollOption:
         # Mock existing poll option
         mock_existing_option = MagicMock()
         mock_existing_option.option_text = "Old Text"
-        mock_session.query.return_value.filter.return_value.first.return_value = (
-            mock_existing_option
-        )
+
+        # Setup mock query chain for both queries:
+        # 1. First query - find the existing option by ID
+        # 2. Second query - check for duplicate text (should return None - no duplicate)
+        mock_query = MagicMock()
+        mock_session.query.return_value = mock_query
+
+        # First call returns existing option, second call returns None (no duplicate)
+        mock_query.filter.return_value.filter.return_value.first.side_effect = [
+            mock_existing_option,  # First query: find existing option
+            None,  # Second query: no duplicate text found
+        ]
+        mock_query.filter.return_value.first.side_effect = [
+            mock_existing_option,  # First query: find existing option
+            None,  # Second query: no duplicate text found
+        ]
 
         update_or_create_poll_option(poll_id=123, option_text="Updated Text", option_id="456")
 
