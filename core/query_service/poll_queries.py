@@ -84,14 +84,20 @@ class PollQueries(QueryServiceBase):
         )
         if include_details:
             for option in options:
-                voters = self.fetch_all(
+                votes = self.fetch_all(
                     """
-                    SELECT a.name FROM poll_votes pv
+                    SELECT
+                        pv.id as vote_id,
+                        pv.voted_at,
+                        a.name as voter_name,
+                        a.id as voter_id
+                    FROM poll_votes pv
                     JOIN anglers a ON pv.angler_id = a.id
                     WHERE pv.option_id = :option_id
-                    ORDER BY a.name
+                    ORDER BY pv.voted_at DESC
                 """,
                     {"option_id": option["id"]},
                 )
-                option["voters"] = [v["name"] for v in voters]
+                option["votes"] = votes
+                option["voters"] = [v["voter_name"] for v in votes]
         return options
