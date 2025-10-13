@@ -30,12 +30,10 @@ services:
       sh -c "
         echo 'Waiting for database...';
         sleep 15;
+        echo 'Applying database migrations...';
+        alembic upgrade head;
         echo 'Setting up database...';
         python scripts/setup_db.py;
-        echo 'Loading lakes...';
-        python scripts/load_lakes.py;
-        echo 'Loading holidays...';
-        python scripts/load_holidays.py 2024 2025;
         echo 'Creating admin user...';
         python scripts/setup_admin.py --non-interactive;
         echo 'Starting server...';

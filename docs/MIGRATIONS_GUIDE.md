@@ -114,7 +114,28 @@ Create Date: 2025-01-15 10:30:00
 
 ## Production Deployment
 
-### Step-by-Step Process
+### Automatic Migration Application
+
+**Migrations are automatically applied on production startup!**
+
+The production Docker Compose configuration ([docker-compose.prod.yml](../docker-compose.prod.yml:33-34)) runs `alembic upgrade head` during container startup, ensuring the database schema is always up-to-date.
+
+Startup sequence:
+1. Wait for PostgreSQL to be ready (15 seconds)
+2. **Apply database migrations** (`alembic upgrade head`)
+3. Setup database views
+4. Create admin user if needed
+5. Start FastAPI server
+
+This means:
+- ✅ New deployments automatically get the latest schema
+- ✅ No manual migration steps required during deployment
+- ✅ Migrations are idempotent and safe to re-run
+- ✅ Failed migrations prevent the server from starting (fail-fast)
+
+### Manual Deployment (if needed)
+
+If you need to apply migrations manually outside of Docker:
 
 1. **Backup Database**
    ```bash
