@@ -198,8 +198,7 @@
                                     {% endfor %}
                                     {% endif %}
                                 </div>
-                                <input type="hidden" name="option_id" id="vote_option_data">
-                                <button type="submit" class="btn btn-primary" onclick="return validateVote()">
+                                <button type="submit" class="btn btn-primary" {% if poll.poll_type == 'tournament_location' %}onclick="return validateVote()"{% endif %}>
                                     <i class="bi bi-check2 me-1"></i>Cast Vote
                                 </button>
                             </form>
