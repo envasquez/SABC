@@ -18,8 +18,15 @@ async def polls(
     request: Request,
     background_tasks: BackgroundTasks,
     user: Dict[str, Any] = Depends(require_auth),
+    tab: str = "club",
+    p: int = 1,
 ):
     background_tasks.add_task(process_closed_polls)
+
+    # Pagination settings
+    items_per_page = 4
+    page = max(1, p)  # Ensure page is at least 1
+    offset = (page - 1) * items_per_page
 
     with get_session() as session:
         # Get member count
@@ -44,8 +51,33 @@ async def polls(
             select(1).where(PollVote.poll_id == Poll.id).where(PollVote.angler_id == user["id"])
         )
 
-        # Query polls with status and voted flag
-        polls_query = select(
+        # Count active polls for each tab (for tab labels)
+        active_club_polls = (
+            session.query(func.count(Poll.id))
+            .filter(
+                Poll.poll_type != "tournament_location",
+                Poll.starts_at <= now,
+                Poll.closes_at >= now,
+                Poll.closed.is_(false()),
+            )
+            .scalar()
+            or 0
+        )
+
+        active_tournament_polls = (
+            session.query(func.count(Poll.id))
+            .filter(
+                Poll.poll_type == "tournament_location",
+                Poll.starts_at <= now,
+                Poll.closes_at >= now,
+                Poll.closed.is_(false()),
+            )
+            .scalar()
+            or 0
+        )
+
+        # Base query for polls with status and voted flag
+        base_query = select(
             Poll.id,
             Poll.title,
             Poll.description,
@@ -56,8 +88,31 @@ async def polls(
             Poll.event_id,
             status_case.label("status"),
             user_voted_exists.label("user_has_voted"),
-        ).order_by(Poll.starts_at.asc())
+        )
 
+        # Filter by tab type
+        if tab == "tournament":
+            base_query = base_query.where(Poll.poll_type == "tournament_location")
+        else:
+            # Club polls - everything except tournament_location
+            base_query = base_query.where(Poll.poll_type != "tournament_location")
+
+        # Get total count for pagination
+        count_query = select(func.count()).select_from(base_query.subquery())
+        total_polls = session.execute(count_query).scalar() or 0
+
+        # Apply ordering: active first, then upcoming, then closed (by date)
+        # Order by status priority, then by start date
+        status_order = case(
+            (status_case == "active", 1),
+            (status_case == "upcoming", 2),
+            (status_case == "closed", 3),
+        )
+        polls_query = (
+            base_query.order_by(status_order, Poll.starts_at.desc())
+            .limit(items_per_page)
+            .offset(offset)
+        )
         polls_data = session.execute(polls_query).all()
 
         # Fetch all vote counts in a single query to avoid N+1
@@ -97,6 +152,30 @@ async def polls(
                 }
             )
 
+    # Calculate pagination metadata
+    total_pages = (total_polls + items_per_page - 1) // items_per_page if total_polls > 0 else 1
+    start_index = offset + 1 if total_polls > 0 else 0
+    end_index = min(offset + items_per_page, total_polls)
+
+    # Calculate page range for pagination (show up to 5 page numbers)
+    max_pages_shown = 5
+    half_range = max_pages_shown // 2
+
+    if total_pages <= max_pages_shown:
+        page_range = range(1, total_pages + 1)
+    else:
+        start_page = max(1, page - half_range)
+        end_page = min(total_pages, page + half_range)
+
+        # Adjust if we're near the start or end
+        if end_page - start_page + 1 < max_pages_shown:
+            if start_page == 1:
+                end_page = min(total_pages, start_page + max_pages_shown - 1)
+            else:
+                start_page = max(1, end_page - max_pages_shown + 1)
+
+        page_range = range(start_page, end_page + 1)
+
     lakes_data = [
         {
             "id": lake["id"],
@@ -108,5 +187,20 @@ async def polls(
         for lake in get_lakes_list()
     ]
     return templates.TemplateResponse(
-        "polls.html", {"request": request, "user": user, "polls": polls, "lakes_data": lakes_data}
+        "polls.html",
+        {
+            "request": request,
+            "user": user,
+            "polls": polls,
+            "lakes_data": lakes_data,
+            "current_tab": tab,
+            "current_page": page,
+            "total_pages": total_pages,
+            "page_range": page_range,
+            "start_index": start_index,
+            "end_index": end_index,
+            "total_polls": total_polls,
+            "active_club_polls": active_club_polls,
+            "active_tournament_polls": active_tournament_polls,
+        },
     )

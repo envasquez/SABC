@@ -6,7 +6,7 @@
 {% block content %}
 <div class="mb-4">
     <h1 class="display-5">
-        <i class="bi bi-card-checklist me-2"></i>Club Polls
+        <i class="bi bi-card-checklist me-2"></i>Polls
     </h1>
     <p class="lead text-secondary">Member voting and tournament location polls</p>
 </div>
@@ -14,6 +14,34 @@
 <!-- Error and Success Messages -->
 {{ alert('danger', request.query_params.get('error')) }}
 {{ alert('success', request.query_params.get('success')) }}
+
+<!-- Bootstrap Tabs -->
+<ul class="nav nav-tabs mb-4" id="pollTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if current_tab == 'club' %}active{% endif %}"
+                id="club-tab"
+                onclick="window.location.href='/polls?tab=club&p=1'"
+                type="button"
+                role="tab">
+            <i class="bi bi-card-checklist me-1"></i>Club Polls
+            {% if active_club_polls > 0 %}
+                <span class="badge bg-success ms-2">{{ active_club_polls }} active</span>
+            {% endif %}
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if current_tab == 'tournament' %}active{% endif %}"
+                id="tournament-tab"
+                onclick="window.location.href='/polls?tab=tournament&p=1'"
+                type="button"
+                role="tab">
+            <i class="bi bi-geo-alt me-1"></i>Tournament Polls
+            {% if active_tournament_polls > 0 %}
+                <span class="badge bg-success ms-2">{{ active_tournament_polls }} active</span>
+            {% endif %}
+        </button>
+    </li>
+</ul>
 
 <div class="row g-4">
     {% if polls %}
@@ -359,6 +387,57 @@
             </div>
         </div>
         {% endfor %}
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <div class="col-12">
+            <nav aria-label="Poll pagination" class="mt-4">
+                <ul class="pagination justify-content-center custom-pagination">
+                    {% if current_page > 1 %}
+                        <li class="page-item">
+                            <a class="page-link" href="/polls?tab={{ current_tab }}&p=1" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="/polls?tab={{ current_tab }}&p={{ current_page - 1 }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% for page_num in page_range %}
+                        {% if page_num == current_page %}
+                            <li class="page-item active" aria-current="page">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="/polls?tab={{ current_tab }}&p={{ page_num }}">{{ page_num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if current_page < total_pages %}
+                        <li class="page-item">
+                            <a class="page-link" href="/polls?tab={{ current_tab }}&p={{ current_page + 1 }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="/polls?tab={{ current_tab }}&p={{ total_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+            <div class="text-center text-secondary small mb-4">
+                Showing {{ start_index }}–{{ end_index }} of {{ total_polls }} polls
+            </div>
+        </div>
+        {% endif %}
     {% else %}
     <div class="col-12">
         <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
