@@ -553,7 +553,7 @@
                     {% for news_item in latest_news %}
                     <div class="mb-3 border-bottom pb-2">
                         <div class="d-flex align-items-start justify-content-between mb-1">
-                            <h6 class="small fw-bold mb-0">{{ news_item[1] | safe }}</h6>
+                            <h6 class="small fw-bold mb-0">{{ news_item[1] }}</h6>
                             {% if news_item[5] == 2 %}
                                 <span class="badge bg-danger ms-2 small">Urgent</span>
                             {% elif news_item[5] == 1 %}
@@ -562,7 +562,7 @@
                                 <span class="badge bg-success ms-2 small">Normal</span>
                             {% endif %}
                         </div>
-                        <p class="small mb-1">{{ news_item[2] | safe }}</p>
+                        <p class="small mb-1">{{ news_item[2] }}</p>
                         <small class="text-secondary">
                             {% set display_date = news_item[4] if news_item[8] else news_item[3] %}
                             {% set original_author = news_item[7] %}

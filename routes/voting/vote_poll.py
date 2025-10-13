@@ -57,7 +57,7 @@ async def vote_in_poll(
             else:
                 try:
                     actual_option_id = int(option_id)
-                except ValueError:
+                except (ValueError, TypeError):
                     return RedirectResponse("/polls?error=Invalid option selected", status_code=302)
 
                 # Validate option exists for this poll
@@ -78,6 +78,20 @@ async def vote_in_poll(
                 voted_at=now_local(),
             )
             session.add(new_vote)
+            session.flush()  # Ensure vote is written to database
+            vote_id = new_vote.id  # Verify we got an ID back from the database
+
+            if not vote_id:
+                logger.error(
+                    "Vote creation failed - no ID returned",
+                    extra={"poll_id": poll_id, "user_id": user["id"]},
+                )
+                return RedirectResponse("/polls?error=Failed to record vote", status_code=302)
+
+            logger.info(
+                "Vote cast successfully",
+                extra={"poll_id": poll_id, "user_id": user["id"], "vote_id": vote_id},
+            )
 
         return RedirectResponse("/polls?success=Vote cast successfully", status_code=302)
     except Exception as e:

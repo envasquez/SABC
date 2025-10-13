@@ -98,10 +98,11 @@ function drawLakesChart(resultsData) {
     // Build HTML bar chart with clickable bars
     container.innerHTML = data.map(lake => {
         const percentage = (lake.votes / maxVotes) * 100;
+        const escapedName = escapeHtml(lake.name);
         return `
             <div class="lake-card mb-2" data-lake-id="${lake.id}" style="cursor: pointer;" onclick="selectLake(${lake.id})">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="fw-semibold">${lake.name}</span>
+                    <span class="fw-semibold">${escapedName}</span>
                     <span class="badge bg-primary">${lake.votes}</span>
                 </div>
                 <div class="progress" style="height: 25px;">
@@ -141,10 +142,11 @@ function drawRampsChart(lakeId) {
     // Build HTML bar chart
     container.innerHTML = ramps.map(ramp => {
         const percentage = (ramp.votes / maxVotes) * 100;
+        const escapedName = escapeHtml(ramp.name);
         return `
             <div class="mb-2">
                 <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="fw-semibold">${ramp.name}</span>
+                    <span class="fw-semibold">${escapedName}</span>
                     <span class="badge bg-primary">${ramp.votes}</span>
                 </div>
                 <div class="progress" style="height: 25px;">
