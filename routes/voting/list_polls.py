@@ -80,6 +80,27 @@ async def polls(
             or 0
         )
 
+        # Count upcoming polls for each tab (for tab labels)
+        upcoming_club_polls = (
+            session.query(func.count(Poll.id))
+            .filter(
+                Poll.poll_type != "tournament_location",
+                Poll.starts_at > now,
+            )
+            .scalar()
+            or 0
+        )
+
+        upcoming_tournament_polls = (
+            session.query(func.count(Poll.id))
+            .filter(
+                Poll.poll_type == "tournament_location",
+                Poll.starts_at > now,
+            )
+            .scalar()
+            or 0
+        )
+
         # Base query for polls with status and voted flag
         base_query = select(
             Poll.id,
@@ -214,5 +235,7 @@ async def polls(
             "total_polls": total_polls,
             "active_club_polls": active_club_polls,
             "active_tournament_polls": active_tournament_polls,
+            "upcoming_club_polls": upcoming_club_polls,
+            "upcoming_tournament_polls": upcoming_tournament_polls,
         },
     )

@@ -27,6 +27,9 @@
             {% if active_club_polls > 0 %}
                 <span class="badge bg-success ms-2">{{ active_club_polls }} active</span>
             {% endif %}
+            {% if upcoming_club_polls > 0 %}
+                <span class="badge bg-info ms-1">{{ upcoming_club_polls }} upcoming</span>
+            {% endif %}
         </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -38,6 +41,9 @@
             <i class="bi bi-geo-alt me-1"></i>Tournament Polls
             {% if active_tournament_polls > 0 %}
                 <span class="badge bg-success ms-2">{{ active_tournament_polls }} active</span>
+            {% endif %}
+            {% if upcoming_tournament_polls > 0 %}
+                <span class="badge bg-info ms-1">{{ upcoming_tournament_polls }} upcoming</span>
             {% endif %}
         </button>
     </li>
