@@ -9,10 +9,17 @@
  */
 async function deleteVote(voteId) {
     try {
+        // Get CSRF token from cookie
+        const csrfToken = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('csrf_token='))
+            ?.split('=')[1];
+
         const response = await fetch(`/admin/votes/${voteId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
+                'x-csrf-token': csrfToken,
             }
         });
 
