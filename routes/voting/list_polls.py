@@ -8,7 +8,11 @@ from core.deps import templates
 from core.helpers.auth import require_auth
 from core.helpers.timezone import now_local
 from routes.dependencies import get_lakes_list, get_ramps_for_lake
-from routes.voting.helpers import get_poll_options, process_closed_polls
+from routes.voting.helpers import (
+    get_poll_options,
+    get_seasonal_tournament_history,
+    process_closed_polls,
+)
 
 router = APIRouter()
 
@@ -131,6 +135,13 @@ async def polls(
             # Get vote count from pre-fetched data
             unique_voters = vote_counts.get(poll_row.id, 0)
 
+            # Get seasonal history for tournament polls
+            seasonal_history = []
+            if poll_row.poll_type == "tournament_location":
+                poll_obj = session.query(Poll).filter(Poll.id == poll_row.id).first()
+                if poll_obj:
+                    seasonal_history = get_seasonal_tournament_history(session, poll_obj)
+
             polls.append(
                 {
                     "id": poll_row.id,
@@ -149,6 +160,7 @@ async def polls(
                     "participation_percent": round(
                         (unique_voters / member_count * 100) if member_count > 0 else 0, 1
                     ),
+                    "seasonal_history": seasonal_history,
                 }
             )
 

@@ -324,6 +324,72 @@
                                     <div class="text-center mt-3 text-secondary">
                                         <small><i class="bi bi-people-fill me-1"></i>{{ total_votes }} member{{ 's' if total_votes != 1 else '' }} voted</small>
                                     </div>
+
+                                    <!-- Seasonal Tournament History -->
+                                    {% if poll.seasonal_history and poll.seasonal_history|length > 0 %}
+                                    <div class="mt-4">
+                                        <div class="card border-info">
+                                            <div class="card-header bg-info text-white py-2">
+                                                <h6 class="mb-0">
+                                                    <i class="bi bi-calendar3 me-1"></i>
+                                                    {{ poll.seasonal_history[0].month_name }} Tournament History
+                                                </h6>
+                                            </div>
+                                            <div class="card-body p-3">
+                                                <div class="row g-2">
+                                                    {% for hist in poll.seasonal_history %}
+                                                    <div class="col-md-6">
+                                                        <div class="card bg-dark border-secondary h-100">
+                                                            <div class="card-body p-3">
+                                                                <h6 class="card-title mb-2">
+                                                                    <a href="/tournaments/{{ hist.tournament_id }}" class="text-info text-decoration-none">
+                                                                        {{ hist.month_name }} {{ hist.year }}
+                                                                        <small class="text-muted">({{ hist.date.strftime('%m/%d') }})</small>
+                                                                        <i class="bi bi-box-arrow-up-right small ms-1"></i>
+                                                                    </a>
+                                                                </h6>
+                                                                <p class="mb-2 small">
+                                                                    <i class="bi bi-geo-alt text-success"></i>
+                                                                    <strong>{{ hist.lake_name }}</strong>
+                                                                    {% if hist.ramp_name != 'TBD' %}
+                                                                        <br><span class="text-muted ms-3">{{ hist.ramp_name }}</span>
+                                                                    {% endif %}
+                                                                </p>
+
+                                                                <div class="row g-2 small">
+                                                                    <div class="col-4">
+                                                                        <i class="bi bi-people text-primary"></i>
+                                                                        {{ hist.num_anglers }} anglers
+                                                                    </div>
+                                                                    <div class="col-4">
+                                                                        <i class="bi bi-trophy text-warning"></i>
+                                                                        {{ hist.num_limits }} limits
+                                                                    </div>
+                                                                    <div class="col-4 {% if hist.num_zeros > 0 %}text-danger{% else %}text-muted{% endif %}">
+                                                                        <i class="bi bi-x-circle"></i>
+                                                                        {{ hist.num_zeros }} zero{{ 's' if hist.num_zeros != 1 else '' }}
+                                                                    </div>
+                                                                    <div class="col-12">
+                                                                        <i class="bi bi-graph-up text-success"></i>
+                                                                        <strong>Top 3:</strong>
+                                                                        {% if hist.top_3_weights|length > 0 %}
+                                                                            {% for weight in hist.top_3_weights %}
+                                                                                {{ "%.1f"|format(weight) }}{% if not loop.last %}, {% endif %}
+                                                                            {% endfor %} lbs
+                                                                        {% else %}
+                                                                            N/A
+                                                                        {% endif %}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
                                 </div>
                                 {% else %}
                                 <!-- Regular polls - vertical bar chart results -->

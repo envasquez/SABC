@@ -3,9 +3,21 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List
 
-from sqlalchemy import exists, false, func, select
+from sqlalchemy import case, distinct, exists, extract, false, func, select
+from sqlalchemy.orm import Session
 
-from core.db_schema import Event, Poll, PollOption, PollVote, Tournament, engine, get_session
+from core.db_schema import (
+    Event,
+    Lake,
+    Poll,
+    PollOption,
+    PollVote,
+    Ramp,
+    Result,
+    Tournament,
+    engine,
+    get_session,
+)
 from core.helpers.timezone import now_local
 from core.query_service import QueryService
 
@@ -14,6 +26,116 @@ def get_poll_options(poll_id: int, is_admin: bool = False) -> List[Dict[str, Any
     with engine.connect() as conn:
         qs = QueryService(conn)
         return qs.get_poll_options_with_votes(poll_id, include_details=is_admin)
+
+
+def get_seasonal_tournament_history(
+    session: Session, poll: Poll, years_back: int = 4
+) -> List[Dict[str, Any]]:
+    """
+    Get tournament history for the same month as the poll's event date.
+
+    For a November 2025 poll, returns data for November tournaments
+    from previous years (2024, 2023, 2022, 2021).
+
+    Args:
+        session: Database session
+        poll: The poll object
+        years_back: Number of years to look back (default: 4)
+
+    Returns:
+        List of tournament history dictionaries with stats
+    """
+    # Get the poll's associated event to determine month
+    if not poll.event_id:
+        return []
+
+    event = session.query(Event).filter(Event.id == poll.event_id).first()
+    if not event:
+        return []
+
+    target_month = event.date.month  # e.g., 11 for November
+    target_year = event.date.year
+    month_name = event.date.strftime("%B")  # "November"
+
+    # Query tournaments from the same month in previous years
+    history = []
+    for year_offset in range(1, years_back + 1):
+        past_year = target_year - year_offset
+
+        # Find completed tournament(s) in that month/year
+        tournament_query = (
+            session.query(
+                Tournament.id,
+                Tournament.fish_limit,
+                Event.date,
+                Lake.display_name.label("lake_name"),
+                Ramp.name.label("ramp_name"),
+                func.count(distinct(Result.angler_id)).label("num_anglers"),
+                func.sum(case((Result.total_weight == 0, 1), else_=0)).label("num_zeros"),
+            )
+            .join(Event, Tournament.event_id == Event.id)
+            .outerjoin(Lake, Tournament.lake_id == Lake.id)
+            .outerjoin(Ramp, Tournament.ramp_id == Ramp.id)
+            .outerjoin(Result, Tournament.id == Result.tournament_id)
+            .filter(
+                Tournament.complete.is_(True),
+                extract("year", Event.date) == past_year,
+                extract("month", Event.date) == target_month,
+            )
+            .group_by(
+                Tournament.id,
+                Tournament.fish_limit,
+                Event.date,
+                Lake.display_name,
+                Ramp.name,
+            )
+            .order_by(Event.date.desc())
+            .first()
+        )
+
+        if tournament_query:
+            tournament_id = tournament_query.id
+            fish_limit = tournament_query.fish_limit or 5
+
+            # Calculate number of limits for this tournament
+            num_limits = (
+                session.query(func.count(Result.id))
+                .filter(
+                    Result.tournament_id == tournament_id,
+                    Result.num_fish >= fish_limit,
+                    Result.disqualified.is_(False),
+                )
+                .scalar()
+                or 0
+            )
+
+            # Get top 3 weights for this tournament
+            top_3_results = (
+                session.query(Result.total_weight)
+                .filter(Result.tournament_id == tournament_id, Result.disqualified.is_(False))
+                .order_by(Result.total_weight.desc())
+                .limit(3)
+                .all()
+            )
+
+            history.append(
+                {
+                    "tournament_id": tournament_id,
+                    "year": past_year,
+                    "month_name": month_name,
+                    "date": tournament_query.date,
+                    "lake_name": tournament_query.lake_name or "TBD",
+                    "ramp_name": tournament_query.ramp_name or "TBD",
+                    "num_anglers": tournament_query.num_anglers or 0,
+                    "num_limits": num_limits,
+                    "num_zeros": tournament_query.num_zeros or 0,
+                    "top_3_weights": [float(r.total_weight) for r in top_3_results]
+                    if top_3_results
+                    else [],
+                }
+            )
+
+    return history
 
 
 def process_closed_polls() -> int:
