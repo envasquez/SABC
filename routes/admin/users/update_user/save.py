@@ -55,10 +55,16 @@ async def update_user(
             current_year = now_local().year
             update_officer_positions(session, user_id, officer_positions, current_year)
 
-            # Flush to get updated state but don't commit yet (context manager will commit)
-            session.flush()
-            session.refresh(angler)
-            after = (angler.name, angler.email, angler.phone, angler.member, angler.is_admin)
+            # Flush to get updated state with proper error handling
+            try:
+                session.flush()
+                session.refresh(angler)
+                after = (angler.name, angler.email, angler.phone, angler.member, angler.is_admin)
+            except Exception as flush_error:
+                # If flush fails, rollback and re-raise
+                log_update_exception(user, user_id, flush_error, update_params)
+                session.rollback()
+                raise
 
         if after != before:
             log_update_completed(request, user, user_id, update_params, before, after)

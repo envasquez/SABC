@@ -52,6 +52,24 @@ def validate_tournament_location_vote(vote_data: dict) -> Tuple[Optional[str], O
     required_fields = ["lake_id", "ramp_id", "start_time", "end_time"]
     if not all(f in vote_data for f in required_fields):
         return None, "Invalid vote data"
+
+    # Validate time format and order
+    try:
+        from datetime import datetime
+
+        start_time = datetime.strptime(vote_data["start_time"], "%H:%M")
+        end_time = datetime.strptime(vote_data["end_time"], "%H:%M")
+
+        if end_time <= start_time:
+            return None, "End time must be after start time"
+
+        # Validate reasonable tournament hours (4 AM to 11 PM)
+        if start_time.hour < 4 or end_time.hour > 23:
+            return None, "Tournament times must be between 4:00 AM and 11:00 PM"
+
+    except ValueError:
+        return None, "Invalid time format. Use HH:MM"
+
     lake_id_int = int(vote_data["lake_id"])
     if not validate_lake_ramp_combo(lake_id_int, vote_data["ramp_id"]):
         return None, "Invalid vote data"
@@ -64,25 +82,54 @@ def validate_tournament_location_vote(vote_data: dict) -> Tuple[Optional[str], O
 
 
 def get_or_create_option_id(poll_id: int, option_text: str, vote_data: dict) -> Optional[int]:
+    """Get or create a poll option, handling race conditions with database constraint.
+
+    Uses ON CONFLICT DO NOTHING to handle concurrent creation attempts safely.
+    The unique constraint uq_poll_option_text (poll_id, option_text) prevents duplicates.
+    """
+    from sqlalchemy import text
+    from sqlalchemy.exc import IntegrityError
+
     with get_session() as session:
-        # Check for existing option
-        existing_option = (
-            session.query(PollOption)
-            .filter(PollOption.poll_id == poll_id)
-            .filter(PollOption.option_text == option_text)
-            .first()
-        )
+        try:
+            # Try to insert new option using ON CONFLICT to handle race condition
+            vote_data["lake_id"] = int(vote_data["lake_id"])
+            result = session.execute(
+                text("""
+                    INSERT INTO poll_options (poll_id, option_text, option_data)
+                    VALUES (:poll_id, :option_text, :option_data::jsonb)
+                    ON CONFLICT (poll_id, option_text) DO NOTHING
+                    RETURNING id
+                """),
+                {
+                    "poll_id": poll_id,
+                    "option_text": option_text,
+                    "option_data": json.dumps(vote_data),
+                },
+            )
+            session.flush()
 
-        if existing_option:
-            return existing_option.id
+            # If INSERT succeeded, we get the ID back
+            row = result.fetchone()
+            if row:
+                return row[0]
 
-        # Create new option
-        vote_data["lake_id"] = int(vote_data["lake_id"])
-        new_option = PollOption(
-            poll_id=poll_id,
-            option_text=option_text,
-            option_data=json.dumps(vote_data),
-        )
-        session.add(new_option)
-        session.flush()  # Flush to get the ID
-        return new_option.id
+            # If INSERT was skipped due to conflict, fetch existing option
+            existing_option = (
+                session.query(PollOption)
+                .filter(PollOption.poll_id == poll_id)
+                .filter(PollOption.option_text == option_text)
+                .first()
+            )
+            return existing_option.id if existing_option else None
+
+        except IntegrityError:
+            # In case of any integrity error, try to fetch existing option
+            session.rollback()
+            existing_option = (
+                session.query(PollOption)
+                .filter(PollOption.poll_id == poll_id)
+                .filter(PollOption.option_text == option_text)
+                .first()
+            )
+            return existing_option.id if existing_option else None

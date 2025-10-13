@@ -475,6 +475,20 @@ function validateVote() {
         return false;
     }
 
+    // Validate time order - start time must be before end time
+    if (startTimeSelect.value >= endTimeSelect.value) {
+        alert('Start time must be before end time');
+        return false;
+    }
+
+    // Validate reasonable tournament hours (4 AM to 11 PM)
+    const startHour = parseInt(startTimeSelect.value.split(':')[0]);
+    const endHour = parseInt(endTimeSelect.value.split(':')[0]);
+    if (startHour < 4 || endHour > 23) {
+        alert('Tournament times must be between 4:00 AM and 11:00 PM');
+        return false;
+    }
+
     // Create JSON object with vote data
     const voteData = {
         lake_id: lakeSelect.value,

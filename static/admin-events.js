@@ -41,8 +41,8 @@ function loadLakes() {
         });
 }
 
-// Load ramps when lake is selected
-function loadRamps(lakeName, rampSelectId = 'edit_ramp_name') {
+// Load ramps when lake is selected - returns Promise for async/await support
+async function loadRamps(lakeName, rampSelectId = 'edit_ramp_name') {
     const rampSelect = document.getElementById(rampSelectId);
 
     if (!rampSelect) return;
@@ -65,30 +65,31 @@ function loadRamps(lakeName, rampSelectId = 'edit_ramp_name') {
 
     console.log(`Loading ramps for lake: ${lakeName} (key: ${lake.key})`);
 
-    fetch(`/api/lakes/${lake.key}/ramps`)
-        .then(response => response.json())
-        .then(data => {
-            console.log(`Loaded ${data.ramps?.length || 0} ramps for ${lakeName}`);
-            rampSelect.innerHTML = '<option value="">-- Select Ramp --</option>';
-            if (data.ramps && data.ramps.length > 0) {
-                data.ramps.forEach(ramp => {
-                    const option = document.createElement('option');
-                    // Handle both string ramps and object ramps with name property
-                    const rampName = typeof ramp === 'string' ? ramp : ramp.name;
-                    option.value = rampName;
-                    option.textContent = rampName;
-                    rampSelect.appendChild(option);
-                });
-                rampSelect.disabled = false;
-            } else {
-                rampSelect.disabled = true;
-            }
-        })
-        .catch(error => {
-            console.error(`Error loading ramps for ${lakeName}:`, error);
-            rampSelect.innerHTML = '<option value="">-- Error loading ramps --</option>';
+    try {
+        const response = await fetch(`/api/lakes/${lake.key}/ramps`);
+        const data = await response.json();
+
+        console.log(`Loaded ${data.ramps?.length || 0} ramps for ${lakeName}`);
+        rampSelect.innerHTML = '<option value="">-- Select Ramp --</option>';
+
+        if (data.ramps && data.ramps.length > 0) {
+            data.ramps.forEach(ramp => {
+                const option = document.createElement('option');
+                // Handle both string ramps and object ramps with name property
+                const rampName = typeof ramp === 'string' ? ramp : ramp.name;
+                option.value = rampName;
+                option.textContent = rampName;
+                rampSelect.appendChild(option);
+            });
+            rampSelect.disabled = false;
+        } else {
             rampSelect.disabled = true;
-        });
+        }
+    } catch (error) {
+        console.error(`Error loading ramps for ${lakeName}:`, error);
+        rampSelect.innerHTML = '<option value="">-- Error loading ramps --</option>';
+        rampSelect.disabled = true;
+    }
 }
 
 function editEvent(id, date, eventType, name, description, hasPoll, pollActive) {
@@ -165,16 +166,16 @@ function editEvent(id, date, eventType, name, description, hasPoll, pollActive) 
                         if (lakeOption) {
                             lakeSelect.value = data.lake_name;
                             console.log('Set lake to:', data.lake_name);
-                            // Then load ramps for this lake
-                            loadRamps(data.lake_name, 'edit_ramp_name');
-                            // Wait a bit for ramps to load, then set the selected ramp
-                            setTimeout(() => {
+                            // Then load ramps for this lake and await completion
+                            loadRamps(data.lake_name, 'edit_ramp_name').then(() => {
                                 const rampSelect = document.getElementById('edit_ramp_name');
                                 if (rampSelect && data.ramp_name) {
                                     rampSelect.value = data.ramp_name;
                                     console.log('Set ramp to:', data.ramp_name);
                                 }
-                            }, 500);
+                            }).catch(error => {
+                                console.error('Error setting ramp selection:', error);
+                            });
                         } else {
                             console.warn('Lake option not found in dropdown:', data.lake_name);
                         }
@@ -350,11 +351,18 @@ function confirmDeletePastEvent() {
     // Close the modal
     bootstrap.Modal.getInstance(document.getElementById('deletePastEventModal')).hide();
 
+    // Get CSRF token from cookie
+    const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrf_token='))
+        ?.split('=')[1];
+
     // Delete the event
     fetch(`/admin/events/${eventId}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
+            'x-csrf-token': csrfToken,
         }
     })
     .then(response => {
