@@ -65,9 +65,6 @@ async def edit_event(
                 )
 
             if event_type == "sabc_tournament":
-                print(
-                    f"DEBUG: Updating tournament for event {event_id} with params: {tournament_params}"
-                )
                 tournament_rowcount = update_tournament_record(session, tournament_params)
                 if tournament_rowcount == 0:
                     return RedirectResponse(

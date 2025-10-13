@@ -39,7 +39,7 @@ async def delete_account(request: Request, confirm: str) -> RedirectResponse:
             angler = session.query(Angler).filter(Angler.id == user_id).first()
             if angler:
                 session.delete(angler)
-                session.commit()
+                # Context manager will commit automatically on successful exit
 
         request.session.clear()
 

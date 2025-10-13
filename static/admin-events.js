@@ -398,29 +398,36 @@ function confirmDeletePastEvent() {
 }
 
 // Configuration-driven event form management
+// Base configurations for reuse
+const BASE_TOURNAMENT_CONFIG = {
+    clearFields: ['start_time', 'weigh_in_time'],
+    defaults: { start_time: '06:00', weigh_in_time: '15:00' },
+    requiredFields: []
+};
+
+const EMPTY_CONFIG = {
+    clearFields: [],
+    defaults: {},
+    requiredFields: []
+};
+
 const EVENT_FORM_CONFIG = {
     sabc_tournament: {
+        ...BASE_TOURNAMENT_CONFIG,
         visibleSections: ['sabc-tournament-fields'],
         editSections: ['edit-tournament-fields', 'edit-sabc-fields'],
-        clearFields: ['start_time', 'weigh_in_time'],
-        defaults: { start_time: '06:00', weigh_in_time: '15:00' },
-        requiredFields: [], // No required fields - these will be set by poll voting
         descriptionField: 'description'
     },
     holiday: {
+        ...EMPTY_CONFIG,
         visibleSections: ['holiday-fields'],
         editSections: ['edit-holiday-fields'],
-        clearFields: [],
-        defaults: {},
-        requiredFields: [],
         descriptionField: null
     },
     other_tournament: {
+        ...EMPTY_CONFIG,
         visibleSections: ['other-tournament-fields'],
         editSections: ['edit-tournament-fields'],
-        clearFields: [],
-        defaults: {},
-        requiredFields: [],
         descriptionField: 'other_description'
     }
 };

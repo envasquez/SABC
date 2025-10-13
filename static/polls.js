@@ -99,8 +99,14 @@ function drawLakesChart(resultsData) {
     container.innerHTML = data.map(lake => {
         const percentage = (lake.votes / maxVotes) * 100;
         const escapedName = escapeHtml(lake.name);
+        // Ensure lake.id is a safe integer to prevent XSS
+        const lakeId = parseInt(lake.id, 10);
+        if (isNaN(lakeId)) {
+            console.error('Invalid lake ID:', lake.id);
+            return '';
+        }
         return `
-            <div class="lake-card mb-2" data-lake-id="${lake.id}" style="cursor: pointer;" onclick="selectLake(${lake.id})">
+            <div class="lake-card mb-2" data-lake-id="${lakeId}" style="cursor: pointer;" onclick="selectLake(${lakeId})">
                 <div class="d-flex justify-content-between align-items-center mb-1">
                     <span class="fw-semibold">${escapedName}</span>
                     <span class="badge bg-primary">${lake.votes}</span>

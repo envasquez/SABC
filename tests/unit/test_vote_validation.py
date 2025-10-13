@@ -269,8 +269,15 @@ class TestGetOrCreateOptionId:
 
     @patch("routes.voting.vote_validation.get_session")
     def test_returns_existing_option_id(self, mock_get_session: Mock):
-        """Test returns ID of existing option."""
+        """Test returns ID of existing option (ON CONFLICT case)."""
         mock_session = MagicMock()
+
+        # Mock the execute result - ON CONFLICT returns no row
+        mock_result = MagicMock()
+        mock_result.fetchone.return_value = None  # No row returned (conflict occurred)
+        mock_session.execute.return_value = mock_result
+
+        # Mock the existing option query
         mock_option = MagicMock()
         mock_option.id = 42
         mock_session.query().filter().filter().first.return_value = mock_option
@@ -280,43 +287,46 @@ class TestGetOrCreateOptionId:
         result = get_or_create_option_id(1, "Test Option", vote_data)
 
         assert result == 42
-        # Should not have called add() since option exists
-        mock_session.add.assert_not_called()
 
     @patch("routes.voting.vote_validation.get_session")
     def test_creates_new_option_when_not_exists(self, mock_get_session: Mock):
         """Test creates new option when it doesn't exist."""
         mock_session = MagicMock()
-        mock_session.query().filter().filter().first.return_value = None  # No existing
 
-        # Mock the new option's ID after flush
-        def side_effect_flush():
-            # Simulate the option getting an ID after flush
-            pass
-
-        mock_session.flush.side_effect = side_effect_flush
+        # Mock the execute result - successful insert returns ID
+        mock_result = MagicMock()
+        mock_result.fetchone.return_value = (99,)  # New option ID
+        mock_session.execute.return_value = mock_result
         mock_get_session.return_value.__enter__.return_value = mock_session
 
         vote_data = {"lake_id": "1", "ramp_id": "2"}
-        get_or_create_option_id(1, "New Option", vote_data)
+        result = get_or_create_option_id(1, "New Option", vote_data)
 
-        # Should have called add() and flush()
-        mock_session.add.assert_called_once()
+        # Should return the new ID
+        assert result == 99
+        mock_session.execute.assert_called_once()
         mock_session.flush.assert_called_once()
 
     @patch("routes.voting.vote_validation.get_session")
     def test_converts_lake_id_to_int(self, mock_get_session: Mock):
         """Test converts lake_id string to int before storing."""
         mock_session = MagicMock()
-        mock_session.query().filter().filter().first.return_value = None
+
+        # Mock successful insert
+        mock_result = MagicMock()
+        mock_result.fetchone.return_value = (123,)
+        mock_session.execute.return_value = mock_result
         mock_get_session.return_value.__enter__.return_value = mock_session
 
         vote_data = {"lake_id": "123", "ramp_id": "2"}  # String lake_id
         get_or_create_option_id(1, "Option", vote_data)
 
-        # Verify PollOption was created with converted lake_id
-        add_call = mock_session.add.call_args[0][0]
-        stored_data = json.loads(add_call.option_data)
+        # Verify execute was called with converted data
+        call_args = mock_session.execute.call_args
+        params = call_args[0][1]  # Get the parameters dict
+
+        # Parse the JSON that was passed
+        stored_data = json.loads(params["option_data"])
         assert stored_data["lake_id"] == 123  # Should be int
         assert isinstance(stored_data["lake_id"], int)
 
@@ -324,7 +334,11 @@ class TestGetOrCreateOptionId:
     def test_stores_vote_data_as_json(self, mock_get_session: Mock):
         """Test stores vote data as JSON string."""
         mock_session = MagicMock()
-        mock_session.query().filter().filter().first.return_value = None
+
+        # Mock successful insert
+        mock_result = MagicMock()
+        mock_result.fetchone.return_value = (456,)
+        mock_session.execute.return_value = mock_result
         mock_get_session.return_value.__enter__.return_value = mock_session
 
         vote_data = {
@@ -335,8 +349,11 @@ class TestGetOrCreateOptionId:
         }
         get_or_create_option_id(1, "Option", vote_data)
 
-        add_call = mock_session.add.call_args[0][0]
+        # Verify execute was called with JSON data
+        call_args = mock_session.execute.call_args
+        params = call_args[0][1]  # Get the parameters dict
+
         # Should be able to parse the stored JSON
-        parsed_data = json.loads(add_call.option_data)
+        parsed_data = json.loads(params["option_data"])
         assert parsed_data["ramp_id"] == "2"
         assert parsed_data["start_time"] == "06:00"

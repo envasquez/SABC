@@ -52,7 +52,7 @@ async def create_news(
                 priority=priority,
             )
             session.add(news_item)
-            session.commit()
+            # Context manager will commit automatically on successful exit
 
         return RedirectResponse("/admin/news?success=News created successfully", status_code=302)
     except Exception as e:
@@ -78,7 +78,7 @@ async def update_news(
                 news_item.priority = priority
                 news_item.last_edited_by = user["id"]  # type: ignore[assignment]
                 news_item.updated_at = datetime.utcnow()
-                session.commit()
+                # Context manager will commit automatically on successful exit
 
         return RedirectResponse("/admin/news?success=News updated successfully", status_code=302)
     except Exception as e:
@@ -93,7 +93,7 @@ async def delete_news(request: Request, news_id: int):
             news_item = session.query(News).filter(News.id == news_id).first()
             if news_item:
                 session.delete(news_item)
-                session.commit()
+                # Context manager will commit automatically on successful exit
 
         return JSONResponse({"success": True})
     except Exception as e:

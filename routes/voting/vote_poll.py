@@ -3,6 +3,7 @@ from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
+from sqlalchemy.exc import IntegrityError
 
 from core.db_schema import Poll, PollOption, PollVote, get_session
 from core.helpers.auth import require_auth
@@ -11,7 +12,6 @@ from core.helpers.response import sanitize_error_message
 from core.helpers.timezone import now_local
 from routes.voting.vote_validation import (
     get_or_create_option_id,
-    validate_poll_state,
     validate_tournament_location_vote,
 )
 
@@ -30,18 +30,55 @@ async def vote_in_poll(
         return RedirectResponse("/polls?error=Only members can vote", status_code=302)
 
     try:
-        error = validate_poll_state(poll_id, user["id"])
-        if error:
-            return RedirectResponse(f"/polls?error={error}", status_code=302)
-
         with get_session() as session:
-            # Get poll type
-            poll = session.query(Poll).filter(Poll.id == poll_id).first()
+            # Acquire row lock on poll to prevent concurrent voting issues
+            poll = (
+                session.query(Poll)
+                .filter(Poll.id == poll_id)
+                .with_for_update()  # Lock the poll row
+                .first()
+            )
+
             if not poll:
                 return RedirectResponse("/polls?error=Invalid poll", status_code=302)
 
+            # Check for existing vote with lock to prevent race condition
+            existing_vote = (
+                session.query(PollVote)
+                .filter(PollVote.poll_id == poll_id, PollVote.angler_id == user["id"])
+                .with_for_update()  # Lock if exists
+                .first()
+            )
+
+            if existing_vote:
+                logger.info(
+                    "User attempted to vote twice in same poll",
+                    extra={"poll_id": poll_id, "user_id": user["id"]},
+                )
+                return RedirectResponse(
+                    "/polls?error=You have already voted in this poll", status_code=302
+                )
+
+            # Validate poll is currently active (time window check)
+            current_time = now_local()
+            if not (poll.starts_at <= current_time <= poll.closes_at):
+                logger.info(
+                    "Vote attempted on inactive poll",
+                    extra={
+                        "poll_id": poll_id,
+                        "user_id": user["id"],
+                        "poll_starts": poll.starts_at,
+                        "poll_closes": poll.closes_at,
+                        "current_time": current_time,
+                    },
+                )
+                return RedirectResponse(
+                    "/polls?error=This poll is not currently active", status_code=302
+                )
+
             poll_type = poll.poll_type
 
+            # Process vote data based on poll type
             if poll_type == "tournament_location":
                 try:
                     vote_data = json.loads(option_id)
@@ -85,30 +122,56 @@ async def vote_in_poll(
                         status_code=302,
                     )
 
-            # Cast vote
-            new_vote = PollVote(
-                poll_id=poll_id,
-                option_id=actual_option_id,
-                angler_id=user["id"],
-                voted_at=now_local(),
-            )
-            session.add(new_vote)
-            session.flush()  # Ensure vote is written to database
-            vote_id = new_vote.id  # Verify we got an ID back from the database
-
-            if not vote_id:
-                logger.error(
-                    "Vote creation failed - no ID returned",
-                    extra={"poll_id": poll_id, "user_id": user["id"]},
+            # Cast vote with IntegrityError handling
+            try:
+                new_vote = PollVote(
+                    poll_id=poll_id,
+                    option_id=actual_option_id,
+                    angler_id=user["id"],
+                    voted_at=current_time,
                 )
-                return RedirectResponse("/polls?error=Failed to record vote", status_code=302)
+                session.add(new_vote)
+                session.flush()  # Ensure vote is written to database
+                vote_id = new_vote.id  # Verify we got an ID back from the database
 
-            logger.info(
-                "Vote cast successfully",
-                extra={"poll_id": poll_id, "user_id": user["id"], "vote_id": vote_id},
-            )
+                if not vote_id:
+                    logger.error(
+                        "Vote creation failed - no ID returned",
+                        extra={"poll_id": poll_id, "user_id": user["id"]},
+                    )
+                    return RedirectResponse("/polls?error=Failed to record vote", status_code=302)
+
+                logger.info(
+                    "Vote cast successfully",
+                    extra={"poll_id": poll_id, "user_id": user["id"], "vote_id": vote_id},
+                )
+
+            except IntegrityError as e:
+                # Database constraint prevented duplicate vote
+                # This is a fallback - the earlier check should catch this
+                logger.warning(
+                    "Duplicate vote prevented by database constraint",
+                    extra={"poll_id": poll_id, "user_id": user["id"], "error": str(e)},
+                )
+                return RedirectResponse(
+                    "/polls?error=You have already voted in this poll", status_code=302
+                )
 
         return RedirectResponse("/polls?success=Vote cast successfully", status_code=302)
+
+    except IntegrityError as e:
+        # Handle any other integrity errors at outer level
+        logger.error(
+            "Database integrity error during voting",
+            extra={"poll_id": poll_id, "user_id": user["id"], "error": str(e)},
+        )
+        return RedirectResponse(
+            "/polls?error=Unable to cast vote. Please try again.", status_code=302
+        )
     except Exception as e:
         error_msg = sanitize_error_message(e, "Failed to cast vote. Please try again.")
+        logger.error(
+            "Unexpected error during voting",
+            extra={"poll_id": poll_id, "user_id": user.get("id"), "error": str(e)},
+        )
         return RedirectResponse(f"/polls?error={error_msg}", status_code=302)

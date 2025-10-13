@@ -24,7 +24,7 @@ async def delete_poll(request: Request, poll_id: int):
             # Delete poll
             session.query(Poll).filter(Poll.id == poll_id).delete()
 
-            session.commit()
+            # Context manager will commit automatically on successful exit
 
         return JSONResponse({"success": True})
     except Exception as e:
