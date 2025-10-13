@@ -3,6 +3,9 @@
  * JavaScript for /admin/events page - event creation, editing, filtering
  */
 
+// Debug mode - set to false for production
+const DEBUG = false;
+
 // Load lakes when page loads
 let lakesData = [];
 function loadLakes() {
@@ -41,7 +44,14 @@ function loadLakes() {
         });
 }
 
-// Load ramps when lake is selected - returns Promise for async/await support
+/**
+ * Load boat ramps for a selected lake
+ * Fetches ramps from API and populates the specified select element
+ *
+ * @param {string} lakeName - Name of the lake to load ramps for
+ * @param {string} rampSelectId - ID of the select element to populate (default: 'edit_ramp_name')
+ * @returns {Promise<void>} Promise that resolves when ramps are loaded
+ */
 async function loadRamps(lakeName, rampSelectId = 'edit_ramp_name') {
     const rampSelect = document.getElementById(rampSelectId);
 
@@ -56,20 +66,20 @@ async function loadRamps(lakeName, rampSelectId = 'edit_ramp_name') {
     // Find the lake key from lakesData
     const lake = lakesData.find(l => l.name === lakeName);
     if (!lake) {
-        console.warn(`Lake not found in lakesData: "${lakeName}"`);
-        console.log('Available lakes:', lakesData.map(l => l.name));
+        if (DEBUG) console.warn(`Lake not found in lakesData: "${lakeName}"`);
+        if (DEBUG) console.log('Available lakes:', lakesData.map(l => l.name));
         rampSelect.innerHTML = '<option value="">-- Select Ramp --</option>';
         rampSelect.disabled = true;
         return;
     }
 
-    console.log(`Loading ramps for lake: ${lakeName} (key: ${lake.key})`);
+    if (DEBUG) console.log(`Loading ramps for lake: ${lakeName} (key: ${lake.key})`);
 
     try {
         const response = await fetch(`/api/lakes/${lake.key}/ramps`);
         const data = await response.json();
 
-        console.log(`Loaded ${data.ramps?.length || 0} ramps for ${lakeName}`);
+        if (DEBUG) console.log(`Loaded ${data.ramps?.length || 0} ramps for ${lakeName}`);
         rampSelect.innerHTML = '<option value="">-- Select Ramp --</option>';
 
         if (data.ramps && data.ramps.length > 0) {
@@ -99,7 +109,7 @@ function editEvent(id, date, eventType, name, description, hasPoll, pollActive) 
         fetch(`/admin/events/${id}/info`)
             .then(response => response.json())
             .then(data => {
-                console.log('DEBUG: Event data loaded:', data);
+                if (DEBUG) console.log('DEBUG: Event data loaded:', data);
                 if (data.error) {
                     alert('Error loading event data: ' + data.error);
                     return;
@@ -117,7 +127,7 @@ function editEvent(id, date, eventType, name, description, hasPoll, pollActive) 
 
                 // Handle SABC tournament fields
                 if (data.event_type === 'sabc_tournament') {
-                    console.log('Setting SABC tournament fields:', {
+                    if (DEBUG) console.log('Setting SABC tournament fields:', {
                         start_time: data.start_time,
                         weigh_in_time: data.weigh_in_time,
                         entry_fee: data.entry_fee,
@@ -131,31 +141,31 @@ function editEvent(id, date, eventType, name, description, hasPoll, pollActive) 
                     const startTime = document.getElementById('edit_start_time');
                     if (startTime) {
                         startTime.value = data.start_time || '';
-                        console.log('Set start_time to:', startTime.value);
+                        if (DEBUG) console.log('Set start_time to:', startTime.value);
                     }
 
                     const weighInTime = document.getElementById('edit_weigh_in_time');
                     if (weighInTime) {
                         weighInTime.value = data.weigh_in_time || '';
-                        console.log('Set weigh_in_time to:', weighInTime.value);
+                        if (DEBUG) console.log('Set weigh_in_time to:', weighInTime.value);
                     }
 
                     const entryFee = document.getElementById('edit_entry_fee');
                     if (entryFee) {
                         entryFee.value = data.entry_fee !== undefined ? data.entry_fee : '';
-                        console.log('Set entry_fee to:', entryFee.value);
+                        if (DEBUG) console.log('Set entry_fee to:', entryFee.value);
                     }
 
                     const fishLimit = document.getElementById('edit_fish_limit');
                     if (fishLimit) {
                         fishLimit.value = data.fish_limit !== undefined ? data.fish_limit : '';
-                        console.log('Set fish_limit to:', fishLimit.value);
+                        if (DEBUG) console.log('Set fish_limit to:', fishLimit.value);
                     }
 
                     const aoyPoints = document.getElementById('edit_aoy_points');
                     if (aoyPoints) {
                         aoyPoints.value = data.aoy_points ? 'true' : 'false';
-                        console.log('Set aoy_points to:', aoyPoints.value);
+                        if (DEBUG) console.log('Set aoy_points to:', aoyPoints.value);
                     }
 
                     // Set lake - make sure the option exists in the dropdown
@@ -165,19 +175,19 @@ function editEvent(id, date, eventType, name, description, hasPoll, pollActive) 
                         const lakeOption = Array.from(lakeSelect.options).find(opt => opt.value === data.lake_name);
                         if (lakeOption) {
                             lakeSelect.value = data.lake_name;
-                            console.log('Set lake to:', data.lake_name);
+                            if (DEBUG) console.log('Set lake to:', data.lake_name);
                             // Then load ramps for this lake and await completion
                             loadRamps(data.lake_name, 'edit_ramp_name').then(() => {
                                 const rampSelect = document.getElementById('edit_ramp_name');
                                 if (rampSelect && data.ramp_name) {
                                     rampSelect.value = data.ramp_name;
-                                    console.log('Set ramp to:', data.ramp_name);
+                                    if (DEBUG) console.log('Set ramp to:', data.ramp_name);
                                 }
                             }).catch(error => {
                                 console.error('Error setting ramp selection:', error);
                             });
                         } else {
-                            console.warn('Lake option not found in dropdown:', data.lake_name);
+                            if (DEBUG) console.warn('Lake option not found in dropdown:', data.lake_name);
                         }
                     }
                 }
@@ -205,7 +215,7 @@ function editEvent(id, date, eventType, name, description, hasPoll, pollActive) 
 
     // Check if lakes are already loaded
     if (lakesData.length === 0) {
-        console.log('Lakes not loaded, loading now...');
+        if (DEBUG) console.log('Lakes not loaded, loading now...');
         fetch('/api/lakes')
             .then(response => response.json())
             .then(lakes => {
