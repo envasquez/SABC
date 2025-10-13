@@ -73,7 +73,7 @@ class PollQueries(QueryServiceBase):
         """
         options = self.fetch_all(
             """
-            SELECT po.*, COUNT(pv.id) as vote_count
+            SELECT po.*, po.option_text as text, COUNT(pv.id) as vote_count
             FROM poll_options po
             LEFT JOIN poll_votes pv ON po.id = pv.option_id
             WHERE po.poll_id = :poll_id
