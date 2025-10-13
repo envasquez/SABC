@@ -93,9 +93,11 @@ class Poll(Base):
     created_by: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("anglers.id", ondelete="SET NULL")
     )
-    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=datetime.utcnow)
-    starts_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    closes_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    created_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow
+    )
+    starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    closes_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     closed: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
     multiple_votes: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
     winning_option_id: Mapped[Optional[int]] = mapped_column(Integer)
@@ -132,7 +134,9 @@ class PollVote(Base):
     angler_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("anglers.id", ondelete="CASCADE")
     )
-    voted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=datetime.utcnow)
+    voted_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), default=datetime.utcnow
+    )
 
 
 class News(Base):
