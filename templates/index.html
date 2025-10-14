@@ -802,6 +802,32 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Switch to Completed Tournaments tab if page parameter is present
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageParam = urlParams.get('p');
+
+    // If there's a page parameter (pagination), switch to Completed tab
+    if (pageParam) {
+        const completedTab = document.getElementById('completed-tab');
+        const upcomingTab = document.getElementById('upcoming-tab');
+        const completedPane = document.getElementById('completed-pane');
+        const upcomingPane = document.getElementById('upcoming-pane');
+
+        if (completedTab && upcomingTab && completedPane && upcomingPane) {
+            // Activate Completed tab
+            completedTab.classList.add('active');
+            completedTab.setAttribute('aria-selected', 'true');
+            upcomingTab.classList.remove('active');
+            upcomingTab.setAttribute('aria-selected', 'false');
+
+            // Show Completed pane, hide Upcoming pane
+            completedPane.classList.add('show', 'active');
+            upcomingPane.classList.remove('show', 'active');
+        }
+    }
+});
 </script>
 
 
