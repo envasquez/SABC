@@ -221,6 +221,7 @@ class TournamentQueries(QueryServiceBase):
                        ROW_NUMBER() OVER (PARTITION BY EXTRACT(YEAR FROM e.date) ORDER BY e.date ASC, t.id ASC) as year_row
                 FROM tournaments t
                 JOIN events e ON t.event_id = e.id
+                WHERE t.complete = TRUE
             )
             SELECT year,
                    id as first_tournament_id,
