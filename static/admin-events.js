@@ -822,6 +822,13 @@ function setupEventListeners() {
         });
     }
 
+    const otherLakeSelect = document.getElementById('other_lake_name');
+    if (otherLakeSelect) {
+        otherLakeSelect.addEventListener('change', function() {
+            loadRamps(this.value, 'other_ramp_name');
+        });
+    }
+
     // Initialize with default state
     toggleEventFields();
 
