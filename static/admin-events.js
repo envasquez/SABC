@@ -426,7 +426,7 @@ const EVENT_FORM_CONFIG = {
     },
     other_tournament: {
         ...EMPTY_CONFIG,
-        visibleSections: ['other-tournament-fields'],
+        visibleSections: ['other-tournament-fields', 'other-tournament-description'],
         editSections: ['edit-tournament-fields'],
         descriptionField: 'other_description'
     }
@@ -564,7 +564,7 @@ function toggleEventFields() {
 
     // Hide all possible sections first
     const allSections = ['sabc-tournament-fields', 'other-tournament-fields',
-                        'other-fields', 'sabc-fields', 'holiday-fields'];
+                        'other-tournament-description', 'other-fields', 'sabc-fields', 'holiday-fields'];
     hideAllSections(allSections);
 
     // Show relevant sections for this event type
