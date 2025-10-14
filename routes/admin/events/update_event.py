@@ -64,7 +64,7 @@ async def edit_event(
                     f"/admin/events?error=Event with ID {event_id} not found", status_code=302
                 )
 
-            if event_type == "sabc_tournament":
+            if event_type in ["sabc_tournament", "other_tournament"]:
                 tournament_rowcount = update_tournament_record(session, tournament_params)
                 if tournament_rowcount == 0:
                     return RedirectResponse(

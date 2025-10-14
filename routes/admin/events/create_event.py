@@ -60,8 +60,9 @@ async def create_event(
             aoy_points,
         )
         event_id = create_event_record(event_params)
-        if event_type == "sabc_tournament":
+        if event_type in ["sabc_tournament", "other_tournament"]:
             create_tournament_record(event_id, tournament_params)
+        if event_type == "sabc_tournament":
             poll_id = create_tournament_poll(event_id, name, description, date_obj, user["id"])  # type: ignore[arg-type]
             create_poll_options(poll_id)
         return RedirectResponse(
