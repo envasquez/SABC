@@ -9,7 +9,7 @@ def validate_password_strength(password: str) -> Tuple[bool, str]:
     Validate password meets security requirements.
 
     Requirements:
-    - Minimum 12 characters
+    - Minimum 8 characters
     - At least one uppercase letter
     - At least one lowercase letter
     - At least one number
@@ -22,8 +22,8 @@ def validate_password_strength(password: str) -> Tuple[bool, str]:
     Returns:
         Tuple of (is_valid, error_message)
     """
-    if len(password) < 12:
-        return False, "Password must be at least 12 characters long"
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long"
 
     if not re.search(r"[A-Z]", password):
         return False, "Password must contain at least one uppercase letter"
@@ -68,7 +68,7 @@ def validate_password_strength(password: str) -> Tuple[bool, str]:
 def get_password_requirements_text() -> str:
     """Get human-readable password requirements for display."""
     return """Password must:
-• Be at least 12 characters long
+• Be at least 8 characters long
 • Include uppercase and lowercase letters
 • Include at least one number
 • Include at least one special character (!@#$%^&* etc.)
