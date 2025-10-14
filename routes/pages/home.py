@@ -120,6 +120,9 @@ async def home_paginated(request: Request, page: int = 1):
             build_tournament_query(complete_filter=False).order_by(Event.date.asc()).all()
         )
 
+        # Count upcoming tournaments
+        total_upcoming_tournaments = len(upcoming_tournaments_query)
+
         # Combine both queries
         tournaments_query = list(completed_tournaments_query) + list(upcoming_tournaments_query)
 
@@ -328,6 +331,7 @@ async def home_paginated(request: Request, page: int = 1):
             "start_index": start_index,
             "end_index": end_index,
             "total_tournaments": total_completed_tournaments,
+            "total_upcoming_tournaments": total_upcoming_tournaments,
             "latest_news": latest_news,
             "member_count": member_count,
             "year_links": year_links,
