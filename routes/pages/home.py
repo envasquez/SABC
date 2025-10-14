@@ -33,77 +33,95 @@ async def home_paginated(request: Request, page: int = 1):
     offset = (page - 1) * items_per_page
 
     with get_session() as session:
-        # Get total tournament count
-        total_tournaments = (
+        # Get total COMPLETED tournament count (for pagination)
+        total_completed_tournaments = (
             session.query(func.count(Tournament.id))
             .join(Event, Tournament.event_id == Event.id)
+            .filter(Tournament.complete.is_(True))
             .scalar()
             or 0
         )
 
-        # Get tournaments with aggregated data
-        tournaments_query = (
-            session.query(
-                Tournament.id,
-                Event.date,
-                Event.name,
-                Event.description,
-                Lake.display_name.label("lake_display_name"),
-                Lake.yaml_key.label("lake_name"),
-                Ramp.name.label("ramp_name"),
-                Ramp.google_maps_iframe.label("ramp_google_maps"),
-                Lake.google_maps_iframe.label("lake_google_maps"),
-                Tournament.start_time,
-                Tournament.end_time,
-                Tournament.entry_fee,
-                Tournament.fish_limit,
-                Tournament.limit_type,
-                Tournament.is_team,
-                Tournament.is_paper,
-                Tournament.complete,
-                Tournament.poll_id,
-                func.count(func.distinct(Result.angler_id)).label("total_anglers"),
-                func.sum(Result.num_fish).label("total_fish"),
-                func.sum(Result.total_weight - Result.dead_fish_penalty).label("total_weight"),
-                Tournament.aoy_points,
+        # Base query for tournament data
+        def build_tournament_query(complete_filter: bool | None = None):
+            query = (
+                session.query(
+                    Tournament.id,
+                    Event.date,
+                    Event.name,
+                    Event.description,
+                    Lake.display_name.label("lake_display_name"),
+                    Lake.yaml_key.label("lake_name"),
+                    Ramp.name.label("ramp_name"),
+                    Ramp.google_maps_iframe.label("ramp_google_maps"),
+                    Lake.google_maps_iframe.label("lake_google_maps"),
+                    Tournament.start_time,
+                    Tournament.end_time,
+                    Tournament.entry_fee,
+                    Tournament.fish_limit,
+                    Tournament.limit_type,
+                    Tournament.is_team,
+                    Tournament.is_paper,
+                    Tournament.complete,
+                    Tournament.poll_id,
+                    func.count(func.distinct(Result.angler_id)).label("total_anglers"),
+                    func.sum(Result.num_fish).label("total_fish"),
+                    func.sum(Result.total_weight - Result.dead_fish_penalty).label("total_weight"),
+                    Tournament.aoy_points,
+                )
+                .join(Event, Tournament.event_id == Event.id)
+                .outerjoin(Lake, Tournament.lake_id == Lake.id)
+                .outerjoin(Ramp, Tournament.ramp_id == Ramp.id)
+                .outerjoin(
+                    Result,
+                    (Tournament.id == Result.tournament_id) & (Result.disqualified.is_(False)),
+                )
+                .outerjoin(
+                    Angler,
+                    (Result.angler_id == Angler.id) & (Angler.name != "Admin User"),
+                )
+                .group_by(
+                    Tournament.id,
+                    Event.date,
+                    Event.name,
+                    Event.description,
+                    Lake.display_name,
+                    Lake.yaml_key,
+                    Ramp.name,
+                    Ramp.google_maps_iframe,
+                    Lake.google_maps_iframe,
+                    Tournament.start_time,
+                    Tournament.end_time,
+                    Tournament.entry_fee,
+                    Tournament.fish_limit,
+                    Tournament.limit_type,
+                    Tournament.is_team,
+                    Tournament.is_paper,
+                    Tournament.complete,
+                    Tournament.poll_id,
+                    Tournament.aoy_points,
+                )
             )
-            .join(Event, Tournament.event_id == Event.id)
-            .outerjoin(Lake, Tournament.lake_id == Lake.id)
-            .outerjoin(Ramp, Tournament.ramp_id == Ramp.id)
-            .outerjoin(
-                Result,
-                (Tournament.id == Result.tournament_id) & (Result.disqualified.is_(False)),
-            )
-            .outerjoin(
-                Angler,
-                (Result.angler_id == Angler.id) & (Angler.name != "Admin User"),
-            )
-            .group_by(
-                Tournament.id,
-                Event.date,
-                Event.name,
-                Event.description,
-                Lake.display_name,
-                Lake.yaml_key,
-                Ramp.name,
-                Ramp.google_maps_iframe,
-                Lake.google_maps_iframe,
-                Tournament.start_time,
-                Tournament.end_time,
-                Tournament.entry_fee,
-                Tournament.fish_limit,
-                Tournament.limit_type,
-                Tournament.is_team,
-                Tournament.is_paper,
-                Tournament.complete,
-                Tournament.poll_id,
-                Tournament.aoy_points,
-            )
+            if complete_filter is not None:
+                query = query.filter(Tournament.complete.is_(complete_filter))
+            return query
+
+        # Get COMPLETED tournaments with pagination
+        completed_tournaments_query = (
+            build_tournament_query(complete_filter=True)
             .order_by(Event.date.desc())
             .limit(items_per_page)
             .offset(offset)
             .all()
         )
+
+        # Get ALL UPCOMING tournaments (no pagination)
+        upcoming_tournaments_query = (
+            build_tournament_query(complete_filter=False).order_by(Event.date.asc()).all()
+        )
+
+        # Combine both queries
+        tournaments_query = list(completed_tournaments_query) + list(upcoming_tournaments_query)
 
         tournaments_with_results: List[Dict[str, Any]] = []
         for tournament in tournaments_query:
@@ -256,9 +274,9 @@ async def home_paginated(request: Request, page: int = 1):
             .all()
         )
 
-    total_pages = (total_tournaments + items_per_page - 1) // items_per_page
+    total_pages = (total_completed_tournaments + items_per_page - 1) // items_per_page
     start_index = offset + 1
-    end_index = min(offset + items_per_page, total_tournaments)
+    end_index = min(offset + items_per_page, total_completed_tournaments)
 
     # Calculate page range for pagination (show up to 5 page numbers)
     max_pages_shown = 5
@@ -309,7 +327,7 @@ async def home_paginated(request: Request, page: int = 1):
             "has_next": page < total_pages,
             "start_index": start_index,
             "end_index": end_index,
-            "total_tournaments": total_tournaments,
+            "total_tournaments": total_completed_tournaments,
             "latest_news": latest_news,
             "member_count": member_count,
             "year_links": year_links,
