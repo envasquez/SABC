@@ -261,8 +261,11 @@ function showEventDetails(element) {
             }
 
             // Add tournament details if available (for sabc_tournament and other_tournament)
+            // For SABC tournaments with active polls, only show lake/ramp (times are in the poll)
+            // For other tournaments, show all details including times
             if (event.type === 'sabc_tournament' || event.type === 'other_tournament') {
-                if (event.lake_name || event.start_time || event.end_time) {
+                const showTimes = event.type === 'other_tournament' || !event.poll_id;
+                if (event.lake_name || (showTimes && (event.start_time || event.end_time))) {
                     modalContent += '<div class="mt-2 small text-muted">';
                     if (event.lake_name) {
                         modalContent += '<div><i class="bi bi-geo-alt me-1"></i><strong>Lake:</strong> ' + event.lake_name;
@@ -271,10 +274,10 @@ function showEventDetails(element) {
                         }
                         modalContent += '</div>';
                     }
-                    if (event.start_time) {
+                    if (showTimes && event.start_time) {
                         modalContent += '<div><i class="bi bi-clock me-1"></i><strong>Start:</strong> ' + event.start_time + '</div>';
                     }
-                    if (event.end_time) {
+                    if (showTimes && event.end_time) {
                         modalContent += '<div><i class="bi bi-clock-fill me-1"></i><strong>Weigh-in:</strong> ' + event.end_time + '</div>';
                     }
                     modalContent += '</div>';
