@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Set, Tuple
 
 from sqlalchemy import extract
 
-from core.db_schema import Event, Poll, PollOption, Tournament, get_session
+from core.db_schema import Event, Poll, Tournament, get_session
 from routes.pages.calendar_structure import build_calendar_structure
 
 
@@ -102,33 +102,8 @@ def get_year_calendar_data(year: int) -> Tuple[List[Any], Dict[str, Any], Set[st
                     if event.start_time
                     else None,
                     "end_time": event.end_time.strftime("%I:%M %p") if event.end_time else None,
-                    "poll_options": [],  # Will be populated below
                 }
             )
-
-        # Fetch poll options for all polls in this year
-        poll_ids = [event.poll_id for event in tournament_events if event.poll_id]
-        if poll_ids:
-            poll_options = (
-                session.query(PollOption)
-                .filter(PollOption.poll_id.in_(poll_ids))
-                .order_by(PollOption.poll_id, PollOption.display_order)
-                .all()
-            )
-
-            # Group options by poll_id
-            options_by_poll: Dict[int, List[str]] = {}
-            for option in poll_options:
-                if option.poll_id is not None:
-                    if option.poll_id not in options_by_poll:
-                        options_by_poll[option.poll_id] = []
-                    options_by_poll[option.poll_id].append(option.option_text)
-
-            # Add poll options to event details
-            for event_key, events in event_details.items():
-                for event in events:
-                    if event["poll_id"] and event["poll_id"] in options_by_poll:
-                        event["poll_options"] = options_by_poll[event["poll_id"]]
 
     # Build calendar structure with event markers
     calendar_structure = build_calendar_structure(year, all_events)
