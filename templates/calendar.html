@@ -281,6 +281,18 @@ function showEventDetails(element) {
                 }
             }
 
+            // Add poll options if available (for upcoming polls)
+            if (event.poll_id && event.poll_options && event.poll_options.length > 0) {
+                modalContent += '<div class="mt-2 small">';
+                modalContent += '<div class="text-muted mb-1"><i class="bi bi-list-ul me-1"></i><strong>Poll Options:</strong></div>';
+                modalContent += '<ul class="mb-0 ps-3">';
+                event.poll_options.forEach(function(option) {
+                    modalContent += '<li class="text-muted">' + option + '</li>';
+                });
+                modalContent += '</ul>';
+                modalContent += '</div>';
+            }
+
             // Add poll and tournament links if available
             if (event.poll_id) {
                 if (event.poll_status === 'active') {
