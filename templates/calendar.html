@@ -260,6 +260,27 @@ function showEventDetails(element) {
                 modalContent += '<p class="text-secondary mb-0">' + event.description + '</p>';
             }
 
+            // Add tournament details if available (for sabc_tournament and other_tournament)
+            if (event.type === 'sabc_tournament' || event.type === 'other_tournament') {
+                if (event.lake_name || event.start_time || event.end_time) {
+                    modalContent += '<div class="mt-2 small text-muted">';
+                    if (event.lake_name) {
+                        modalContent += '<div><i class="bi bi-geo-alt me-1"></i><strong>Lake:</strong> ' + event.lake_name;
+                        if (event.ramp_name) {
+                            modalContent += ' - ' + event.ramp_name;
+                        }
+                        modalContent += '</div>';
+                    }
+                    if (event.start_time) {
+                        modalContent += '<div><i class="bi bi-clock me-1"></i><strong>Start:</strong> ' + event.start_time + '</div>';
+                    }
+                    if (event.end_time) {
+                        modalContent += '<div><i class="bi bi-clock-fill me-1"></i><strong>Weigh-in:</strong> ' + event.end_time + '</div>';
+                    }
+                    modalContent += '</div>';
+                }
+            }
+
             // Add poll and tournament links if available
             if (event.poll_id) {
                 if (event.poll_status === 'active') {

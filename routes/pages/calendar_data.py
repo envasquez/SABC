@@ -30,6 +30,10 @@ def get_year_calendar_data(year: int) -> Tuple[List[Any], Dict[str, Any], Set[st
                 Poll.closed,
                 Tournament.id.label("tournament_id"),
                 Tournament.complete.label("tournament_complete"),
+                Tournament.lake_name,
+                Tournament.ramp_name,
+                Tournament.start_time,
+                Tournament.end_time,
             )
             .outerjoin(Poll, Event.id == Poll.event_id)
             .outerjoin(Tournament, Event.id == Tournament.event_id)
@@ -92,6 +96,12 @@ def get_year_calendar_data(year: int) -> Tuple[List[Any], Dict[str, Any], Set[st
                     "tournament_id": tournament_id,
                     "tournament_complete": tournament_complete,
                     "tournament_link": tournament_link,
+                    "lake_name": event.lake_name if event.lake_name else None,
+                    "ramp_name": event.ramp_name if event.ramp_name else None,
+                    "start_time": event.start_time.strftime("%I:%M %p")
+                    if event.start_time
+                    else None,
+                    "end_time": event.end_time.strftime("%I:%M %p") if event.end_time else None,
                 }
             )
 
