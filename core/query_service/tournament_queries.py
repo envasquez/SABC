@@ -15,14 +15,16 @@ class TournamentQueries(QueryServiceBase):
         Returns:
             Number of tournaments updated
         """
+        # SQLite-compatible UPDATE using subquery instead of FROM clause
         result = self.execute(
             """
-            UPDATE tournaments t
+            UPDATE tournaments
             SET complete = TRUE
-            FROM events e
-            WHERE t.event_id = e.id
-            AND e.date < CURRENT_DATE
-            AND t.complete = FALSE
+            WHERE event_id IN (
+                SELECT id FROM events
+                WHERE date < CURRENT_DATE
+            )
+            AND complete = FALSE
             """,
         )
         return result.rowcount if result else 0
@@ -212,20 +214,21 @@ class TournamentQueries(QueryServiceBase):
         Returns:
             List with year, first_tournament_id, and page_number for each year
         """
+        # SQLite-compatible version using CAST(strftime()) instead of EXTRACT()
         return self.fetch_all(
             """
             WITH ranked_tournaments AS (
-                SELECT EXTRACT(YEAR FROM e.date)::int AS year,
+                SELECT CAST(strftime('%Y', e.date) AS INTEGER) AS year,
                        t.id,
                        ROW_NUMBER() OVER (ORDER BY e.date DESC, t.id DESC) as overall_row,
-                       ROW_NUMBER() OVER (PARTITION BY EXTRACT(YEAR FROM e.date) ORDER BY e.date ASC, t.id ASC) as year_row
+                       ROW_NUMBER() OVER (PARTITION BY CAST(strftime('%Y', e.date) AS INTEGER) ORDER BY e.date ASC, t.id ASC) as year_row
                 FROM tournaments t
                 JOIN events e ON t.event_id = e.id
                 WHERE t.complete = TRUE
             )
             SELECT year,
                    id as first_tournament_id,
-                   CEIL(overall_row::float / :items_per_page)::int as page_number
+                   CAST(CEIL(CAST(overall_row AS REAL) / :items_per_page) AS INTEGER) as page_number
             FROM ranked_tournaments
             WHERE year_row = 1
             ORDER BY year DESC
