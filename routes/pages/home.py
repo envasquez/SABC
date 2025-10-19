@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import RedirectResponse
 from sqlalchemy import case, func
 from sqlalchemy.orm import aliased
 
@@ -30,7 +31,6 @@ router = APIRouter()
 async def home_paginated(request: Request, page: int = 1):
     user = get_user_optional(request)
     items_per_page = 4
-    offset = (page - 1) * items_per_page
 
     with get_session() as session:
         # Get total COMPLETED tournament count (for pagination)
@@ -41,6 +41,21 @@ async def home_paginated(request: Request, page: int = 1):
             .scalar()
             or 0
         )
+
+        # Calculate total pages and validate page number
+        total_pages = (
+            (total_completed_tournaments + items_per_page - 1) // items_per_page
+            if total_completed_tournaments > 0
+            else 1
+        )
+
+        # Validate page is within bounds - redirect to last page if too high
+        if page > total_pages and total_pages > 0:
+            return RedirectResponse(f"/?p={total_pages}", status_code=303)
+
+        # Ensure page is at least 1
+        page = max(1, page)
+        offset = (page - 1) * items_per_page
 
         # Base query for tournament data
         def build_tournament_query(complete_filter: bool | None = None):
@@ -277,7 +292,7 @@ async def home_paginated(request: Request, page: int = 1):
             .all()
         )
 
-    total_pages = (total_completed_tournaments + items_per_page - 1) // items_per_page
+    # Pagination metadata (total_pages already calculated above)
     start_index = offset + 1
     end_index = min(offset + items_per_page, total_completed_tournaments)
 

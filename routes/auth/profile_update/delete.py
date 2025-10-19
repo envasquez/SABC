@@ -2,6 +2,7 @@
 
 from fastapi import Request
 from fastapi.responses import RedirectResponse
+from sqlalchemy.exc import IntegrityError
 
 from core.db_schema import Angler, get_session
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
@@ -17,7 +18,7 @@ async def delete_account(request: Request, confirm: str) -> RedirectResponse:
 
     if confirm != "DELETE":
         return RedirectResponse(
-            "/profile?error=Confirmation text must be exactly 'DELETE'", status_code=302
+            "/profile?error=Confirmation text must be exactly 'DELETE'", status_code=303
         )
 
     try:
@@ -43,10 +44,21 @@ async def delete_account(request: Request, confirm: str) -> RedirectResponse:
 
         request.session.clear()
 
-        return RedirectResponse("/?success=Account deleted successfully", status_code=302)
+        return RedirectResponse("/?success=Account deleted successfully", status_code=303)
 
+    except IntegrityError as e:
+        # Foreign key constraint error - user has related data (results, votes, etc.)
+        logger.warning(
+            "Account deletion failed due to existing data",
+            extra={"user_id": user["id"], "error": str(e)},
+        )
+        return RedirectResponse(
+            "/profile?error=Cannot delete account. You have tournament results, votes, or other "
+            "associated data. Please contact an administrator for assistance.",
+            status_code=303,
+        )
     except Exception as e:
         logger.error(
             "Account deletion error", extra={"user_id": user["id"], "error": str(e)}, exc_info=True
         )
-        return RedirectResponse("/profile?error=Failed to delete account", status_code=302)
+        return RedirectResponse("/profile?error=Failed to delete account", status_code=303)

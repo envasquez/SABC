@@ -103,7 +103,7 @@ async def register(
                 "ip_address": ip_address,
             },
         )
-        return RedirectResponse("/", status_code=302)
+        return RedirectResponse("/", status_code=303)
     except Exception as e:
         logger.error(
             "Registration error",
@@ -125,4 +125,3 @@ async def register(
                 "email": email,
             },
         )
-    return RedirectResponse("/login", status_code=302)

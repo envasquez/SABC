@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import Date, Integer, cast, exists, func, select
 
@@ -12,6 +12,9 @@ from routes.dependencies import templates
 
 router = APIRouter()
 
+# Valid admin pages
+VALID_ADMIN_PAGES = {"events", "users", "tournaments"}
+
 
 @router.get("/admin")
 async def admin_root(request: Request):
@@ -22,6 +25,11 @@ async def admin_root(request: Request):
 @router.get("/admin/{page}")
 async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_page: int = 1):
     user = require_admin(request)
+
+    # Validate page parameter
+    if page not in VALID_ADMIN_PAGES:
+        raise HTTPException(status_code=404, detail=f"Admin page '{page}' not found")
+
     ctx: Dict[str, Any] = {"request": request, "user": user}
     if page == "events":
         per_page = 20

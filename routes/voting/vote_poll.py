@@ -27,7 +27,7 @@ async def vote_in_poll(
     user: Dict[str, Any] = Depends(require_auth),
 ) -> RedirectResponse:
     if not user.get("member"):
-        return RedirectResponse("/polls?error=Only members can vote", status_code=302)
+        return RedirectResponse("/polls?error=Only members can vote", status_code=303)
 
     try:
         with get_session() as session:
@@ -40,7 +40,7 @@ async def vote_in_poll(
             )
 
             if not poll:
-                return RedirectResponse("/polls?error=Invalid poll", status_code=302)
+                return RedirectResponse("/polls?error=Invalid poll", status_code=303)
 
             # Check for existing vote with lock to prevent race condition
             existing_vote = (
@@ -56,7 +56,7 @@ async def vote_in_poll(
                     extra={"poll_id": poll_id, "user_id": user["id"]},
                 )
                 return RedirectResponse(
-                    "/polls?error=You have already voted in this poll", status_code=302
+                    "/polls?error=You have already voted in this poll", status_code=303
                 )
 
             # Validate poll is currently active (time window check)
@@ -73,7 +73,7 @@ async def vote_in_poll(
                     },
                 )
                 return RedirectResponse(
-                    "/polls?error=This poll is not currently active", status_code=302
+                    "/polls?error=This poll is not currently active", status_code=303
                 )
 
             poll_type = poll.poll_type
@@ -83,12 +83,12 @@ async def vote_in_poll(
                 try:
                     vote_data = json.loads(option_id)
                 except (json.JSONDecodeError, ValueError):
-                    return RedirectResponse("/polls?error=Invalid vote data", status_code=302)
+                    return RedirectResponse("/polls?error=Invalid vote data", status_code=303)
 
                 option_text, error = validate_tournament_location_vote(vote_data)
                 if error or not option_text:
                     return RedirectResponse(
-                        f"/polls?error={error or 'Invalid vote data'}", status_code=302
+                        f"/polls?error={error or 'Invalid vote data'}", status_code=303
                     )
                 actual_option_id = get_or_create_option_id(poll_id, option_text, vote_data)
             else:
@@ -99,7 +99,7 @@ async def vote_in_poll(
                         "Invalid option_id format",
                         extra={"poll_id": poll_id, "user_id": user["id"], "option_id": option_id},
                     )
-                    return RedirectResponse("/polls?error=Invalid option selected", status_code=302)
+                    return RedirectResponse("/polls?error=Invalid option selected", status_code=303)
 
                 # Validate option exists for this poll
                 option_exists = (
@@ -119,7 +119,7 @@ async def vote_in_poll(
                     )
                     return RedirectResponse(
                         "/polls?error=This poll was recently updated. Please refresh and try again.",
-                        status_code=302,
+                        status_code=303,
                     )
 
             # Cast vote with IntegrityError handling
@@ -139,7 +139,7 @@ async def vote_in_poll(
                         "Vote creation failed - no ID returned",
                         extra={"poll_id": poll_id, "user_id": user["id"]},
                     )
-                    return RedirectResponse("/polls?error=Failed to record vote", status_code=302)
+                    return RedirectResponse("/polls?error=Failed to record vote", status_code=303)
 
                 logger.info(
                     "Vote cast successfully",
@@ -154,10 +154,10 @@ async def vote_in_poll(
                     extra={"poll_id": poll_id, "user_id": user["id"], "error": str(e)},
                 )
                 return RedirectResponse(
-                    "/polls?error=You have already voted in this poll", status_code=302
+                    "/polls?error=You have already voted in this poll", status_code=303
                 )
 
-        return RedirectResponse("/polls?success=Vote cast successfully", status_code=302)
+        return RedirectResponse("/polls?success=Vote cast successfully", status_code=303)
 
     except IntegrityError as e:
         # Handle any other integrity errors at outer level
@@ -166,7 +166,7 @@ async def vote_in_poll(
             extra={"poll_id": poll_id, "user_id": user["id"], "error": str(e)},
         )
         return RedirectResponse(
-            "/polls?error=Unable to cast vote. Please try again.", status_code=302
+            "/polls?error=Unable to cast vote. Please try again.", status_code=303
         )
     except Exception as e:
         error_msg = sanitize_error_message(e, "Failed to cast vote. Please try again.")
@@ -174,4 +174,4 @@ async def vote_in_poll(
             "Unexpected error during voting",
             extra={"poll_id": poll_id, "user_id": user.get("id"), "error": str(e)},
         )
-        return RedirectResponse(f"/polls?error={error_msg}", status_code=302)
+        return RedirectResponse(f"/polls?error={error_msg}", status_code=303)

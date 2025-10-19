@@ -1,6 +1,7 @@
 import logging
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
+from fastapi.responses import RedirectResponse
 
 from core.db_schema import engine
 from core.deps import templates
@@ -72,8 +73,23 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
                 },
             )
     except ValueError as e:
-        logger.error(f"ValueError for tournament {tournament_id}: {e}")
-        raise HTTPException(status_code=404, detail="Tournament not found")
+        # Tournament doesn't exist - redirect to home with friendly message
+        logger.info(
+            "Tournament not found - redirecting to home",
+            extra={"tournament_id": tournament_id, "error": str(e)},
+        )
+        return RedirectResponse(
+            "/?error=Tournament not found. Showing latest tournaments instead.",
+            status_code=303,
+        )
     except Exception as e:
-        logger.error(f"Exception for tournament {tournament_id}: {e}", exc_info=True)
-        raise HTTPException(status_code=404, detail="Tournament not found")
+        # Unexpected error - redirect to home with generic message
+        logger.error(
+            "Unexpected error loading tournament - redirecting to home",
+            extra={"tournament_id": tournament_id, "error": str(e)},
+            exc_info=True,
+        )
+        return RedirectResponse(
+            "/?error=Unable to load tournament. Please try again later.",
+            status_code=303,
+        )

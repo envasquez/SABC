@@ -68,7 +68,7 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
                 "User login successful",
                 extra={"user_id": user_id, "user_email": email, "ip_address": ip_address},
             )
-            return RedirectResponse("/", status_code=302)
+            return RedirectResponse("/", status_code=303)
 
         # Failed login - log but don't reveal whether email exists
         log_security_event(
@@ -111,4 +111,4 @@ async def logout(request: Request) -> RedirectResponse:
         )
         logger.info("User logout", extra={"user_id": user_id, "ip_address": ip_address})
     request.session.clear()
-    return RedirectResponse("/", status_code=302)
+    return RedirectResponse("/", status_code=303)

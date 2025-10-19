@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
+from fastapi.responses import RedirectResponse
 from sqlalchemy import case, exists, false, func, select, true
 
 from core.db_schema import Angler, Poll, PollVote, get_session
@@ -30,7 +31,6 @@ async def polls(
     # Pagination settings
     items_per_page = 4
     page = max(1, p)  # Ensure page is at least 1
-    offset = (page - 1) * items_per_page
 
     with get_session() as session:
         # Get member count
@@ -126,6 +126,15 @@ async def polls(
         count_query = select(func.count()).select_from(base_query.subquery())
         total_polls = session.execute(count_query).scalar() or 0
 
+        # Calculate total pages and validate page number
+        total_pages = (total_polls + items_per_page - 1) // items_per_page if total_polls > 0 else 1
+
+        # Validate page is within bounds - redirect to last page if too high
+        if page > total_pages and total_pages > 0:
+            return RedirectResponse(f"/polls?tab={tab}&p={total_pages}", status_code=303)
+
+        offset = (page - 1) * items_per_page
+
         # Apply ordering: active first, then upcoming, then closed (by date)
         # Order by status priority, then by start date
         status_order = case(
@@ -185,8 +194,7 @@ async def polls(
                 }
             )
 
-    # Calculate pagination metadata
-    total_pages = (total_polls + items_per_page - 1) // items_per_page if total_polls > 0 else 1
+    # Calculate pagination metadata (total_pages already calculated above)
     start_index = offset + 1 if total_polls > 0 else 0
     end_index = min(offset + items_per_page, total_polls)
 
