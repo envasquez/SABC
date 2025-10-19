@@ -214,14 +214,22 @@ class TournamentQueries(QueryServiceBase):
         Returns:
             List with year, first_tournament_id, and page_number for each year
         """
-        # SQLite-compatible version using CAST(strftime()) instead of EXTRACT()
-        return self.fetch_all(
-            """
+        # Detect database dialect and use appropriate year extraction function
+        dialect_name = self.conn.dialect.name
+
+        if dialect_name == "sqlite":
+            # SQLite uses strftime('%Y', date)
+            year_expr = "CAST(strftime('%Y', e.date) AS INTEGER)"
+        else:
+            # PostgreSQL uses EXTRACT(YEAR FROM date)
+            year_expr = "EXTRACT(YEAR FROM e.date)::int"
+
+        query = f"""  # nosec B608
             WITH ranked_tournaments AS (
-                SELECT CAST(strftime('%Y', e.date) AS INTEGER) AS year,
+                SELECT {year_expr} AS year,
                        t.id,
                        ROW_NUMBER() OVER (ORDER BY e.date DESC, t.id DESC) as overall_row,
-                       ROW_NUMBER() OVER (PARTITION BY CAST(strftime('%Y', e.date) AS INTEGER) ORDER BY e.date ASC, t.id ASC) as year_row
+                       ROW_NUMBER() OVER (PARTITION BY {year_expr} ORDER BY e.date ASC, t.id ASC) as year_row
                 FROM tournaments t
                 JOIN events e ON t.event_id = e.id
                 WHERE t.complete = TRUE
@@ -232,6 +240,6 @@ class TournamentQueries(QueryServiceBase):
             FROM ranked_tournaments
             WHERE year_row = 1
             ORDER BY year DESC
-        """,
-            {"items_per_page": items_per_page},
-        )
+        """
+
+        return self.fetch_all(query, {"items_per_page": items_per_page})
