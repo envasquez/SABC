@@ -111,6 +111,7 @@ jobs:
         mkdir -p dist
         tar -czf dist/sabc-${{ github.sha }}.tar.gz \
           --exclude='.git' \
+          --exclude='dist' \
           --exclude='tests' \
           --exclude='htmlcov' \
           --exclude='*.pyc' \
