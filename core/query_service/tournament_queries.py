@@ -224,7 +224,8 @@ class TournamentQueries(QueryServiceBase):
             # PostgreSQL uses EXTRACT(YEAR FROM date)
             year_expr = "EXTRACT(YEAR FROM e.date)::int"
 
-        query = f"""  # nosec B608
+        # Security note: year_expr contains only hardcoded SQL fragments, not user input
+        query = f"""
             WITH ranked_tournaments AS (
                 SELECT {year_expr} AS year,
                        t.id,
@@ -242,4 +243,4 @@ class TournamentQueries(QueryServiceBase):
             ORDER BY year DESC
         """
 
-        return self.fetch_all(query, {"items_per_page": items_per_page})
+        return self.fetch_all(query, {"items_per_page": items_per_page})  # nosec B608
