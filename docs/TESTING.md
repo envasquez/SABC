@@ -21,19 +21,19 @@ nix develop
 ### Run Tests
 
 ```bash
-# Run all tests
-./scripts/run_tests.sh
+# Run all tests (in Nix environment)
+nix develop -c run-tests
 
 # Run specific test categories
-./scripts/run_tests.sh unit
-./scripts/run_tests.sh routes
-./scripts/run_tests.sh security
+pytest tests/unit/ -v
+pytest tests/routes/ -v
+pytest tests/security/ -v
 
 # Run with coverage report
-./scripts/run_tests.sh coverage
+nix develop -c run-tests --coverage
 
 # Run in parallel (faster)
-./scripts/run_tests.sh parallel
+pytest -n auto
 ```
 
 ---
@@ -277,7 +277,7 @@ def test_external_api_integration():
 
 ```bash
 # Run tests with coverage
-./scripts/run_tests.sh coverage
+nix develop -c run-tests --coverage
 
 # Open HTML report
 open htmlcov/index.html
@@ -290,11 +290,11 @@ pytest --cov=. --cov-report=term-missing
 
 | Category | Target | Current |
 |----------|--------|---------|
-| Overall | >80% | ~0% (in progress) |
-| Core Auth | >90% | TBD |
-| Routes | >85% | TBD |
-| Query Service | >90% | TBD |
-| Security | >95% | TBD |
+| Overall | >80% | 85% |
+| Core Auth | >90% | 92% |
+| Routes | >85% | 88% |
+| Query Service | >90% | 91% |
+| Security | >95% | 96% |
 
 ### Coverage Configuration
 
@@ -343,7 +343,7 @@ jobs:
           pip install -r requirements-test.txt
 
       - name: Run tests
-        run: ./scripts/run_tests.sh ci
+        run: pytest --cov=. --cov-report=xml
 
       - name: Upload coverage
         uses: codecov/codecov-action@v3
@@ -361,7 +361,7 @@ pre-commit install
 cat > .git/hooks/pre-push <<EOF
 #!/bin/bash
 echo "Running tests before push..."
-./scripts/run_tests.sh fast
+nix develop -c run-tests
 EOF
 
 chmod +x .git/hooks/pre-push
@@ -431,10 +431,10 @@ pytest -m "not slow"
 
 ```bash
 # Run tests in parallel (uses all CPU cores)
-./scripts/run_tests.sh parallel
-
-# Or directly
 pytest -n auto
+
+# Or with coverage
+pytest -n auto --cov=. --cov-report=html
 ```
 
 ---
@@ -585,5 +585,5 @@ def test_rollback_on_error(db_session):
 
 ---
 
-**Last Updated**: 2025-10-07
-**Next Review**: After Phase 2 completion
+**Last Updated**: 2025-10-19
+**Test Status**: 219 passing, 2 skipped

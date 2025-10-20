@@ -259,3 +259,7 @@ After deployment:
 4. Set up alerting rules
 5. Monitor for 1 week and tune sampling/alerts
 6. Document any custom metrics added
+
+---
+
+**Last Updated**: 2025-10-19
