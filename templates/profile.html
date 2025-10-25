@@ -86,15 +86,26 @@
 </div>
 </div>
 </div>
+
+<!-- Weight per Tournament -->
+<div class="card mt-4">
+<div class="card-header">
+<h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Weight per Tournament</h5>
+</div>
+<div class="card-body">
+<canvas id="monthlyWeightChart" style="max-height: 400px;"></canvas>
+</div>
+</div>
 </div>
 
 <div class="col-lg-4">
 <div class="card">
 <div class="card-header"><h5><i class="bi bi-trophy me-2"></i>Angler Stats</h5></div>
 <div class="card-body">
+<h6 class="text-primary mb-3"><i class="bi bi-bar-chart me-1"></i>Team Totals</h6>
 <div class="row text-center g-3 mb-4">
-<div class="col-4"><div class="h3 text-primary">{{stats.tournaments}}</div><small>Tournaments</small></div>
-<div class="col-4"><div class="h3 text-info">{{stats.best_weight|int if stats.best_weight == 0 else "%.1f"|format(stats.best_weight)}}</div><small>Best Weight</small></div>
+<div class="col-4"><div class="h3 text-primary">{{stats.team_tournaments}}</div><small>Tournaments</small></div>
+<div class="col-4"><div class="h3 text-info">{{stats.best_team_weight|int if stats.best_team_weight == 0 else "%.1f"|format(stats.best_team_weight)}}</div><small>Best Weight</small></div>
 <div class="col-4"><div class="h3 text-success">{{"%.1f"|format(stats.big_bass)}} lbs</div><small>Biggest Bass</small></div>
 </div>
 
@@ -102,33 +113,31 @@
 
 <!-- Tabs Navigation -->
 <ul class="nav nav-pills nav-sm mb-3 justify-content-center" id="finishTabs" role="tablist">
+{% for year in stats.year_finishes.keys()|sort(reverse=True) %}
 <li class="nav-item" role="presentation">
-<button class="nav-link active" id="current-year-tab" data-bs-toggle="pill" data-bs-target="#current-year" type="button" role="tab" aria-controls="current-year" aria-selected="true">{{current_year}}</button>
+<button class="nav-link {% if loop.first %}active{% endif %}" id="year-{{year}}-tab" data-bs-toggle="pill" data-bs-target="#year-{{year}}" type="button" role="tab" aria-controls="year-{{year}}" aria-selected="{% if loop.first %}true{% else %}false{% endif %}">{{year}}</button>
 </li>
+{% endfor %}
 <li class="nav-item" role="presentation">
-<button class="nav-link" id="all-time-tab" data-bs-toggle="pill" data-bs-target="#all-time" type="button" role="tab" aria-controls="all-time" aria-selected="false">Since 2023</button>
+<button class="nav-link" id="all-time-tab" data-bs-toggle="pill" data-bs-target="#all-time" type="button" role="tab" aria-controls="all-time" aria-selected="false">All-Time</button>
 </li>
 </ul>
 
 <!-- Tab Content -->
 <div class="tab-content" id="finishTabsContent">
-<!-- Current Year Tab -->
-<div class="tab-pane fade show active" id="current-year" role="tabpanel" aria-labelledby="current-year-tab">
+{% for year, finishes in stats.year_finishes.items()|sort(reverse=True) %}
+<!-- {{year}} Tab -->
+<div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="year-{{year}}" role="tabpanel" aria-labelledby="year-{{year}}-tab">
 <div class="row text-center g-2 mb-3">
-<div class="col-4"><div class="p-2 rounded" style="background-color: #fff8dc; border: 1px solid #ffd700;"><div class="h4" style="color: #ffd700;"><i class="bi bi-trophy"></i></div><div class="h5" style="color: #b8860b;">{{stats.current_first}}</div><small style="color: #b8860b;">1st</small></div></div>
-<div class="col-4"><div class="p-2 rounded" style="background-color: #f5f5f5; border: 1px solid #c0c0c0; background-image: linear-gradient(135deg, #e8e8e8 0%, #f5f5f5 50%, #e8e8e8 100%);"><div class="h4" style="color: #a8a8a8;"><i class="bi bi-award"></i></div><div class="h5" style="color: #2c2c2c;">{{stats.current_second}}</div><small style="color: #2c2c2c;">2nd</small></div></div>
-<div class="col-4"><div class="p-2 bg-warning bg-opacity-25 rounded"><div class="h4" style="color:#cd7f32"><i class="bi bi-award"></i></div><div class="h5" style="color:#cd7f32">{{stats.current_third}}</div><small>3rd</small></div></div>
+<div class="col-4"><div class="p-2 rounded" style="background-color: #fff8dc; border: 1px solid #ffd700;"><div class="h4" style="color: #ffd700;"><i class="bi bi-trophy"></i></div><div class="h5" style="color: #b8860b;">{{finishes.first}}</div><small style="color: #b8860b;">1st</small></div></div>
+<div class="col-4"><div class="p-2 rounded" style="background-color: #f5f5f5; border: 1px solid #c0c0c0; background-image: linear-gradient(135deg, #e8e8e8 0%, #f5f5f5 50%, #e8e8e8 100%);"><div class="h4" style="color: #a8a8a8;"><i class="bi bi-award"></i></div><div class="h5" style="color: #2c2c2c;">{{finishes.second}}</div><small style="color: #2c2c2c;">2nd</small></div></div>
+<div class="col-4"><div class="p-2 bg-warning bg-opacity-25 rounded"><div class="h4" style="color:#cd7f32"><i class="bi bi-award"></i></div><div class="h5" style="color:#cd7f32">{{finishes.third}}</div><small>3rd</small></div></div>
 </div>
-
-<!-- AOY Position for Current Year -->
-<div class="text-center">
-<div class="p-3 bg-warning bg-opacity-10 rounded">
-<i class="bi bi-star text-warning h4 mb-1"></i>
-<div class="h4 text-warning">{% if stats.aoy_position %}#{{stats.aoy_position}}{% else %}?{% endif %}</div>
-<small>Current AOY Position</small>
+<div class="text-center mt-2">
+<div class="text-muted"><small>Tournaments Fished: <strong>{{finishes.tournaments}}</strong></small></div>
 </div>
 </div>
-</div>
+{% endfor %}
 
 <!-- All Time Tab -->
 <div class="tab-pane fade" id="all-time" role="tabpanel" aria-labelledby="all-time-tab">
@@ -235,5 +244,114 @@ if (phoneInput) {
         }
     });
 }
+</script>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+// Monthly Weight Chart
+const monthlyData = {{ stats.monthly_data | tojson }};
+
+// Generate dynamic datasets for each year
+const datasets = [];
+const colors = [
+    { border: 'rgb(54, 162, 235)', bg: 'rgba(54, 162, 235, 0.1)' },    // Blue - 2023
+    { border: 'rgb(75, 192, 192)', bg: 'rgba(75, 192, 192, 0.1)' },    // Teal - 2024
+    { border: 'rgb(255, 205, 86)', bg: 'rgba(255, 205, 86, 0.1)' },    // Gold - 2025
+    { border: 'rgb(255, 99, 132)', bg: 'rgba(255, 99, 132, 0.1)' },    // Red - 2026
+    { border: 'rgb(153, 102, 255)', bg: 'rgba(153, 102, 255, 0.1)' },  // Purple - 2027
+];
+
+const years = Object.keys(monthlyData).sort();
+years.forEach((year, index) => {
+    const colorIndex = index % colors.length;
+    datasets.push({
+        label: year,
+        data: monthlyData[year],
+        borderColor: colors[colorIndex].border,
+        backgroundColor: colors[colorIndex].bg,
+        tension: 0.3,
+        fill: true
+    });
+});
+
+const ctx = document.getElementById('monthlyWeightChart').getContext('2d');
+const monthlyWeightChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        datasets: datasets
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                    color: '#ffffff',
+                    font: {
+                        size: 12
+                    }
+                }
+            },
+            tooltip: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                    label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        if (context.parsed.y !== null) {
+                            label += context.parsed.y.toFixed(2) + ' lbs';
+                        }
+                        return label;
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: '#ffffff',
+                    callback: function(value) {
+                        return value + ' lbs';
+                    }
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                title: {
+                    display: true,
+                    text: 'Total Weight (lbs)',
+                    color: '#ffffff'
+                }
+            },
+            x: {
+                ticks: {
+                    color: '#ffffff'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                },
+                title: {
+                    display: true,
+                    text: 'Month',
+                    color: '#ffffff'
+                }
+            }
+        },
+        interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false
+        }
+    }
+});
 </script>
 {% endblock %}

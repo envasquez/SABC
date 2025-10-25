@@ -71,32 +71,74 @@ async def profile_page(request: Request) -> Response:
             or 0
         )
 
-        # Current year finishes (team results)
-        current_finishes_subquery = (
-            session.query(
-                func.row_number().over(order_by=TeamResult.total_weight.desc()).label("place")
-            )
-            .select_from(TeamResult)
-            .join(Tournament, TeamResult.tournament_id == Tournament.id)
+        # Team tournaments count
+        team_tournaments_count = (
+            session.query(func.count(func.distinct(Tournament.id)))
+            .join(TeamResult, TeamResult.tournament_id == Tournament.id)
             .join(Event, Tournament.event_id == Event.id)
-            .filter(
-                (TeamResult.angler1_id == user["id"]) | (TeamResult.angler2_id == user["id"]),
-                Event.year == current_year,
-            )
-            .subquery()
+            .filter((TeamResult.angler1_id == user["id"]) | (TeamResult.angler2_id == user["id"]))
+            .scalar()
+            or 0
         )
 
-        current_finishes = session.query(
-            func.sum(case((current_finishes_subquery.c.place == 1, 1), else_=0)).label("first"),
-            func.sum(case((current_finishes_subquery.c.place == 2, 1), else_=0)).label("second"),
-            func.sum(case((current_finishes_subquery.c.place == 3, 1), else_=0)).label("third"),
-        ).first()
+        # Best team weight
+        best_team_weight = (
+            session.query(func.coalesce(func.max(TeamResult.total_weight), 0))
+            .join(Tournament, TeamResult.tournament_id == Tournament.id)
+            .filter((TeamResult.angler1_id == user["id"]) | (TeamResult.angler2_id == user["id"]))
+            .scalar()
+            or 0
+        )
 
-        current_first = current_finishes[0] or 0 if current_finishes else 0
-        current_second = current_finishes[1] or 0 if current_finishes else 0
-        current_third = current_finishes[2] or 0 if current_finishes else 0
+        # Helper function to get team finishes for a specific year
+        def get_year_finishes(year: int) -> Dict[str, int]:
+            """Get 1st, 2nd, 3rd place team finishes for a specific year."""
+            finishes_subquery = (
+                session.query(
+                    func.row_number().over(order_by=TeamResult.total_weight.desc()).label("place")
+                )
+                .select_from(TeamResult)
+                .join(Tournament, TeamResult.tournament_id == Tournament.id)
+                .join(Event, Tournament.event_id == Event.id)
+                .filter(
+                    (TeamResult.angler1_id == user["id"]) | (TeamResult.angler2_id == user["id"]),
+                    Event.year == year,
+                )
+                .subquery()
+            )
 
-        # All time finishes (team results from 2022+)
+            finishes = session.query(
+                func.sum(case((finishes_subquery.c.place == 1, 1), else_=0)).label("first"),
+                func.sum(case((finishes_subquery.c.place == 2, 1), else_=0)).label("second"),
+                func.sum(case((finishes_subquery.c.place == 3, 1), else_=0)).label("third"),
+            ).first()
+
+            # Count tournaments for this year
+            year_tournaments = (
+                session.query(func.count(func.distinct(Tournament.id)))
+                .join(TeamResult, TeamResult.tournament_id == Tournament.id)
+                .join(Event, Tournament.event_id == Event.id)
+                .filter(
+                    (TeamResult.angler1_id == user["id"]) | (TeamResult.angler2_id == user["id"]),
+                    Event.year == year,
+                )
+                .scalar()
+                or 0
+            )
+
+            return {
+                "first": finishes[0] or 0 if finishes else 0,
+                "second": finishes[1] or 0 if finishes else 0,
+                "third": finishes[2] or 0 if finishes else 0,
+                "tournaments": year_tournaments,
+            }
+
+        # Get team finishes for each year (2023-current)
+        year_finishes = {}
+        for year in range(2023, current_year + 1):
+            year_finishes[year] = get_year_finishes(year)
+
+        # All time finishes (team results from 2023+)
         all_time_finishes_subquery = (
             session.query(
                 func.row_number().over(order_by=TeamResult.total_weight.desc()).label("place")
@@ -106,7 +148,7 @@ async def profile_page(request: Request) -> Response:
             .join(Event, Tournament.event_id == Event.id)
             .filter(
                 (TeamResult.angler1_id == user["id"]) | (TeamResult.angler2_id == user["id"]),
-                Event.year >= 2022,
+                Event.year >= 2023,
             )
             .subquery()
         )
@@ -120,6 +162,38 @@ async def profile_page(request: Request) -> Response:
         all_time_first = all_time_finishes[0] or 0 if all_time_finishes else 0
         all_time_second = all_time_finishes[1] or 0 if all_time_finishes else 0
         all_time_third = all_time_finishes[2] or 0 if all_time_finishes else 0
+
+        # Monthly weight aggregation for chart (2023-current year)
+        monthly_weights = (
+            session.query(
+                Event.year,
+                func.extract("month", Event.date).label("month"),
+                func.sum(Result.total_weight - func.coalesce(Result.dead_fish_penalty, 0)).label(
+                    "total_weight"
+                ),
+            )
+            .join(Tournament, Tournament.event_id == Event.id)
+            .join(Result, Result.tournament_id == Tournament.id)
+            .filter(
+                Result.angler_id == user["id"],
+                Result.disqualified.is_(False),
+                Event.year >= 2023,
+            )
+            .group_by(Event.year, func.extract("month", Event.date))
+            .order_by(Event.year, func.extract("month", Event.date))
+            .all()
+        )
+
+        # Format monthly data for Chart.js
+        monthly_data: Dict[str, Any] = {}
+        for year in range(2023, current_year + 1):
+            monthly_data[str(year)] = [0] * 12
+
+        for year, month, weight in monthly_weights:
+            year_str = str(year)
+            month_idx = int(month) - 1  # Convert to 0-indexed
+            if year_str in monthly_data and 0 <= month_idx < 12:
+                monthly_data[year_str][month_idx] = float(weight or 0)
 
         # AOY position (complex query - keeping similar structure)
         aoy_position: Optional[int] = None
@@ -227,13 +301,14 @@ async def profile_page(request: Request) -> Response:
             "tournaments": tournaments_count,
             "best_weight": best_weight,
             "big_bass": big_bass,
-            "current_first": current_first,
-            "current_second": current_second,
-            "current_third": current_third,
+            "team_tournaments": team_tournaments_count,
+            "best_team_weight": best_team_weight,
+            "year_finishes": year_finishes,
             "all_time_first": all_time_first,
             "all_time_second": all_time_second,
             "all_time_third": all_time_third,
             "aoy_position": aoy_position,
+            "monthly_data": monthly_data,
         }
 
     return templates.TemplateResponse(
