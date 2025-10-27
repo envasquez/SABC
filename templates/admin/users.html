@@ -3,8 +3,15 @@
 {% block title %}Manage Anglers - South Austin Bass Club{% endblock %}
 {% block content %}
 <div class="mb-4">
-    <h1 class="display-5"><i class="bi bi-people me-2"></i>Manage Anglers</h1>
-    <p class="lead text-secondary">User administration</p>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="display-5 mb-0"><i class="bi bi-people me-2"></i>Manage Anglers</h1>
+            <p class="lead text-secondary mb-0">User administration</p>
+        </div>
+        <button class="btn btn-primary btn-lg" onclick="showAddUserModal()">
+            <i class="bi bi-person-plus me-2"></i>Add User
+        </button>
+    </div>
     <div class="row mb-3">
         <div class="col-md-3">
             {{ stat_card('person-check', 'Members', member_count, 'success') }}
@@ -60,6 +67,62 @@
 </table>
 {{ alert('info', 'No users found.' if not users else None) }}
 
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-person-plus me-2"></i>Add New User</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="mb-3">
+                        <label for="addUserName" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="addUserName" required placeholder="Enter full name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="addUserEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="addUserEmail" placeholder="email@example.com (optional)">
+                        <small class="text-muted">If left blank for guests, a placeholder email will be generated</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="addUserPhone" class="form-label">Phone</label>
+                        <input type="tel" class="form-control" id="addUserPhone" placeholder="(512) 555-1234 (optional)">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">User Type <span class="text-danger">*</span></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="userType" id="userTypeGuest" value="guest" checked>
+                            <label class="form-check-label" for="userTypeGuest">
+                                <i class="bi bi-person me-1"></i><strong>Guest</strong>
+                                <br><small class="text-muted">Can fish tournaments, cannot vote in polls</small>
+                            </label>
+                        </div>
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="radio" name="userType" id="userTypeMember" value="member">
+                            <label class="form-check-label" for="userTypeMember">
+                                <i class="bi bi-person-check me-1"></i><strong>Member</strong>
+                                <br><small class="text-muted">Full club member with voting rights</small>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Note:</strong> New users will receive an email with instructions to set their password (if email provided).
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitAddUser()">
+                    <i class="bi bi-check-circle me-1"></i>Create User
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteUserModal" tabindex="-1">
     <div class="modal-dialog">
@@ -90,6 +153,69 @@
 
 <script>
 let deleteUserId = null;
+
+/**
+ * Show the Add User modal
+ */
+function showAddUserModal() {
+    // Clear the form
+    document.getElementById('addUserForm').reset();
+    // Show the modal
+    new bootstrap.Modal(document.getElementById('addUserModal')).show();
+}
+
+/**
+ * Submit the add user form
+ */
+async function submitAddUser() {
+    const name = document.getElementById('addUserName').value.trim();
+    const email = document.getElementById('addUserEmail').value.trim();
+    const phone = document.getElementById('addUserPhone').value.trim();
+    const isMember = document.getElementById('userTypeMember').checked;
+
+    // Validate name is required
+    if (!name) {
+        alert('Name is required');
+        return;
+    }
+
+    // Get CSRF token from cookie
+    const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrf_token='))
+        ?.split('=')[1];
+
+    try {
+        const response = await fetch('/admin/users', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-csrf-token': csrfToken,
+            },
+            body: JSON.stringify({
+                name: name,
+                email: email || null,
+                phone: phone || null,
+                member: isMember
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+            // Show success message and reload
+            alert(data.message + '\n\nThe page will now reload to show the new user.');
+            location.reload();
+        } else {
+            alert('Error: ' + (data.message || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error creating user:', error);
+        alert('Error creating user: ' + error.message);
+    }
+}
 
 function deleteUser(userId, userName) {
     console.log('deleteUser called with:', userId, userName);

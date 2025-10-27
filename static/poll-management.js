@@ -4,6 +4,21 @@
  */
 
 /**
+ * Format a date for datetime-local input
+ * @param {Date|string} date - The date to format
+ * @returns {string} Formatted date string (YYYY-MM-DDTHH:MM)
+ */
+function formatDateTimeLocal(date) {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+/**
  * Add a new poll option to the container
  * @param {string} containerId - ID of the poll options container (default: 'poll-options-container')
  * @param {boolean} includeHiddenId - Whether to include a hidden option_id field (for edit mode)
@@ -92,8 +107,6 @@ function updatePlaceholders(containerId = 'poll-options-container') {
         }
     });
 }
-
-// Note: formatDateTimeLocal() is available from utils.js (loaded in base.html)
 
 /**
  * Set intelligent poll timing defaults based on event date

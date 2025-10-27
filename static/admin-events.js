@@ -3,9 +3,6 @@
  * JavaScript for /admin/events page - event creation, editing, filtering
  */
 
-// Debug mode - set to false for production
-const DEBUG = false;
-
 // Load lakes when page loads
 let lakesData = [];
 function loadLakes() {
@@ -66,20 +63,14 @@ async function loadRamps(lakeName, rampSelectId = 'edit_ramp_name') {
     // Find the lake key from lakesData
     const lake = lakesData.find(l => l.name === lakeName);
     if (!lake) {
-        if (DEBUG) console.warn(`Lake not found in lakesData: "${lakeName}"`);
-        if (DEBUG) console.log('Available lakes:', lakesData.map(l => l.name));
         rampSelect.innerHTML = '<option value="">-- Select Ramp --</option>';
         rampSelect.disabled = true;
         return;
     }
 
-    if (DEBUG) console.log(`Loading ramps for lake: ${lakeName} (key: ${lake.key})`);
-
     try {
         const response = await fetch(`/api/lakes/${lake.key}/ramps`);
         const data = await response.json();
-
-        if (DEBUG) console.log(`Loaded ${data.ramps?.length || 0} ramps for ${lakeName}`);
         rampSelect.innerHTML = '<option value="">-- Select Ramp --</option>';
 
         if (data.ramps && data.ramps.length > 0) {
@@ -102,14 +93,13 @@ async function loadRamps(lakeName, rampSelectId = 'edit_ramp_name') {
     }
 }
 
-function editEvent(id, date, eventType, name, description, hasPoll, pollActive) {
+function editEvent(id, date, eventType, name, description, hasPoll) {
     // Ensure lakes are loaded before proceeding
     const ensureLakesLoadedAndEdit = () => {
         // Fetch complete event data
         fetch(`/admin/events/${id}/info`)
             .then(response => response.json())
             .then(data => {
-                if (DEBUG) console.log('DEBUG: Event data loaded:', data);
                 if (data.error) {
                     alert('Error loading event data: ' + data.error);
                     return;
@@ -127,45 +117,30 @@ function editEvent(id, date, eventType, name, description, hasPoll, pollActive) 
 
                 // Handle SABC tournament fields
                 if (data.event_type === 'sabc_tournament') {
-                    if (DEBUG) console.log('Setting SABC tournament fields:', {
-                        start_time: data.start_time,
-                        weigh_in_time: data.weigh_in_time,
-                        entry_fee: data.entry_fee,
-                        fish_limit: data.fish_limit,
-                        aoy_points: data.aoy_points,
-                        lake_name: data.lake_name,
-                        ramp_name: data.ramp_name
-                    });
-
                     // Set tournament-specific fields
                     const startTime = document.getElementById('edit_start_time');
                     if (startTime) {
                         startTime.value = data.start_time || '';
-                        if (DEBUG) console.log('Set start_time to:', startTime.value);
                     }
 
                     const weighInTime = document.getElementById('edit_weigh_in_time');
                     if (weighInTime) {
                         weighInTime.value = data.weigh_in_time || '';
-                        if (DEBUG) console.log('Set weigh_in_time to:', weighInTime.value);
                     }
 
                     const entryFee = document.getElementById('edit_entry_fee');
                     if (entryFee) {
                         entryFee.value = data.entry_fee !== undefined ? data.entry_fee : '';
-                        if (DEBUG) console.log('Set entry_fee to:', entryFee.value);
                     }
 
                     const fishLimit = document.getElementById('edit_fish_limit');
                     if (fishLimit) {
                         fishLimit.value = data.fish_limit !== undefined ? data.fish_limit : '';
-                        if (DEBUG) console.log('Set fish_limit to:', fishLimit.value);
                     }
 
                     const aoyPoints = document.getElementById('edit_aoy_points');
                     if (aoyPoints) {
                         aoyPoints.value = data.aoy_points ? 'true' : 'false';
-                        if (DEBUG) console.log('Set aoy_points to:', aoyPoints.value);
                     }
 
                     // Set lake - make sure the option exists in the dropdown
@@ -175,19 +150,15 @@ function editEvent(id, date, eventType, name, description, hasPoll, pollActive) 
                         const lakeOption = Array.from(lakeSelect.options).find(opt => opt.value === data.lake_name);
                         if (lakeOption) {
                             lakeSelect.value = data.lake_name;
-                            if (DEBUG) console.log('Set lake to:', data.lake_name);
                             // Then load ramps for this lake and await completion
                             loadRamps(data.lake_name, 'edit_ramp_name').then(() => {
                                 const rampSelect = document.getElementById('edit_ramp_name');
                                 if (rampSelect && data.ramp_name) {
                                     rampSelect.value = data.ramp_name;
-                                    if (DEBUG) console.log('Set ramp to:', data.ramp_name);
                                 }
                             }).catch(error => {
                                 console.error('Error setting ramp selection:', error);
                             });
-                        } else {
-                            if (DEBUG) console.warn('Lake option not found in dropdown:', data.lake_name);
                         }
                     }
                 }
@@ -215,7 +186,6 @@ function editEvent(id, date, eventType, name, description, hasPoll, pollActive) 
 
     // Check if lakes are already loaded
     if (lakesData.length === 0) {
-        if (DEBUG) console.log('Lakes not loaded, loading now...');
         fetch('/api/lakes')
             .then(response => response.json())
             .then(lakes => {
@@ -254,10 +224,6 @@ function setupPollFields(eventType, hasPoll, pollClosesAt) {
     }
 }
 
-function fetchPollClosesDate(eventId, inputElement) {
-    // This would need a backend endpoint to get the poll closes date
-    // For now, just a placeholder
-}
 
 function deleteEvent(id, hasDependencies, eventName = 'Event') {
     // Set the event name in the modal
