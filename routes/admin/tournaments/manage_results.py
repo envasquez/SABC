@@ -24,6 +24,7 @@ async def delete_result(
         "DELETE FROM results WHERE id = :id AND tournament_id = :tid",
         {"id": result_id, "tid": tournament_id},
     )
+    conn.commit()
     return JSONResponse({"success": True})
 
 
