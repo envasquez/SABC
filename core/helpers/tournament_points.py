@@ -26,11 +26,7 @@ def calculate_tournament_points(results: List[Dict[str, Any]]) -> List[Dict[str,
     df["total_weight"] = df["total_weight"].astype(float)
     df["big_bass_weight"] = df["big_bass_weight"].astype(float)
 
-    # Calculate net weight (total_weight - dead_fish_penalty)
-    # This ensures penalties are accounted for in ranking and points
-    if "dead_fish_penalty" in df.columns:
-        df["dead_fish_penalty"] = df["dead_fish_penalty"].fillna(0).astype(float)
-        df["total_weight"] = df["total_weight"] - df["dead_fish_penalty"]
+    # Note: total_weight already has dead_fish_penalty subtracted when saved to DB
 
     # Separate buy-ins and disqualified from regular results
     regular_results = df[~df["buy_in"] & ~df["disqualified"]].copy()

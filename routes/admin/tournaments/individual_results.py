@@ -34,9 +34,11 @@ async def save_result(
 
         angler_id = angler_id_val
         num_fish = get_form_int(form_data, "num_fish", 0) or 0
-        total_weight = Decimal(str(get_form_float(form_data, "total_weight", 0.0) or 0.0))
+        gross_weight = Decimal(str(get_form_float(form_data, "total_weight", 0.0) or 0.0))
         big_bass_weight = Decimal(str(get_form_float(form_data, "big_bass_weight", 0.0) or 0.0))
         dead_fish_penalty = Decimal(str(get_form_float(form_data, "dead_fish", 0.0) or 0.0))
+        # Calculate net weight (gross weight - penalty)
+        total_weight = gross_weight - dead_fish_penalty
         disqualified = get_form_bool(form_data, "disqualified")
         buy_in = get_form_bool(form_data, "buy_in")
         was_member = get_form_bool(form_data, "was_member")
@@ -95,7 +97,7 @@ async def save_result(
         # Check if this angler has a teammate in this tournament
         teammate_result = qs.fetch_one(
             """SELECT r.angler_id,
-                      (r.total_weight - COALESCE(r.dead_fish_penalty, 0)) as net_weight,
+                      r.total_weight as net_weight,
                       tr.id as team_result_id
                FROM team_results tr
                LEFT JOIN results r ON (
@@ -109,10 +111,9 @@ async def save_result(
         )
 
         if teammate_result:
-            # Calculate combined team weight (both anglers' net weight after penalties)
+            # Calculate combined team weight (total_weight already has penalty subtracted)
             teammate_net_weight = teammate_result.get("net_weight", 0) or 0
-            current_angler_net_weight = total_weight - dead_fish_penalty
-            team_total_weight = current_angler_net_weight + Decimal(str(teammate_net_weight))
+            team_total_weight = total_weight + Decimal(str(teammate_net_weight))
 
             # Update existing team result
             qs.execute(
