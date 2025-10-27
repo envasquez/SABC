@@ -269,6 +269,9 @@
                         <th>Place finish</th>
                         <th>Name</th>
                         <th>Points</th>
+                        {% if user and user.is_admin %}
+                        <th>Actions</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -282,6 +285,13 @@
                             {% endif %}
                         </td>
                         <td>{{ result[2] }}</td>
+                        {% if user and user.is_admin %}
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteBuyInResult({{ tournament[0] }}, {{ result[4] }}, '{{ result[0] }}')" title="Delete buy-in result">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -405,6 +415,47 @@ function deleteIndividualResult(tournamentId, resultId, anglerName) {
         .catch(error => {
             console.error('Error:', error);
             alert('Error deleting result. Please try again.');
+        });
+    }
+}
+
+function deleteBuyInResult(tournamentId, resultId, anglerName) {
+    if (confirm(`Are you sure you want to delete the buy-in result for ${anglerName}?\n\nThis action cannot be undone.`)) {
+        const csrfToken = getCsrfToken();
+        console.log('CSRF Token:', csrfToken);
+
+        if (!csrfToken) {
+            alert('CSRF token not found. Please refresh the page and try again.');
+            return;
+        }
+
+        fetch(`/admin/tournaments/${tournamentId}/results/${resultId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-csrf-token': csrfToken,
+            }
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (response.ok) {
+                // Reload the page to show updated results
+                window.location.reload();
+            } else {
+                response.text().then(text => {
+                    console.error('Error response:', text);
+                    try {
+                        const data = JSON.parse(text);
+                        alert(data.error || 'Error deleting buy-in result. Please try again.');
+                    } catch(e) {
+                        alert('Error deleting buy-in result: ' + text);
+                    }
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting buy-in result. Please try again.');
         });
     }
 }

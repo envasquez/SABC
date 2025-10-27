@@ -56,6 +56,7 @@ def format_buy_in_results(calculated_results: List[dict]) -> Tuple[int, List[Tup
             buy_in_place,
             int(buy_ins[0]["calculated_points"]) if buy_ins else 0,
             bool(r.get("was_member", True)),
+            int(r.get("id", 0)),  # Add result ID for delete functionality
         )
         for r in buy_ins
     ]
