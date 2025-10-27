@@ -23,7 +23,7 @@ class TestDeadFishPenalties:
     def create_result(
         self,
         angler_id: int,
-        total_weight: float,
+        gross_weight: float,
         dead_fish_penalty: float = 0.0,
         big_bass_weight: float = 0.0,
         was_member: bool = True,
@@ -31,10 +31,20 @@ class TestDeadFishPenalties:
         disqualified: bool = False,
         num_fish: int = 5,
     ) -> Dict[str, Any]:
-        """Create a tournament result for testing."""
+        """
+        Create a tournament result for testing.
+
+        Args:
+            gross_weight: Weight BEFORE penalty is subtracted
+            dead_fish_penalty: Penalty amount to subtract
+
+        Note: The database stores net_weight (gross - penalty) in total_weight column.
+        This simulates what happens when results are saved via the form.
+        """
+        net_weight = gross_weight - dead_fish_penalty
         return {
             "angler_id": angler_id,
-            "total_weight": total_weight,
+            "total_weight": net_weight,  # DB stores net weight
             "dead_fish_penalty": dead_fish_penalty,
             "big_bass_weight": big_bass_weight,
             "was_member": was_member,
@@ -46,9 +56,9 @@ class TestDeadFishPenalties:
     def test_no_penalties_normal_ranking(self):
         """Test that normal ranking works without any penalties."""
         results = [
-            self.create_result(1, total_weight=15.0, big_bass_weight=5.0),
-            self.create_result(2, total_weight=12.0, big_bass_weight=4.0),
-            self.create_result(3, total_weight=10.0, big_bass_weight=3.0),
+            self.create_result(1, gross_weight=15.0, big_bass_weight=5.0),
+            self.create_result(2, gross_weight=12.0, big_bass_weight=4.0),
+            self.create_result(3, gross_weight=10.0, big_bass_weight=3.0),
         ]
         calculated = calculate_tournament_points(results)
 
@@ -67,9 +77,9 @@ class TestDeadFishPenalties:
         """Test that 0.25 lb penalty affects ranking correctly."""
         results = [
             # Angler 1: 10.50 gross - 0.25 penalty = 10.25 net
-            self.create_result(1, total_weight=10.50, dead_fish_penalty=0.25, big_bass_weight=4.0),
+            self.create_result(1, gross_weight=10.50, dead_fish_penalty=0.25, big_bass_weight=4.0),
             # Angler 2: 10.00 gross - 0.00 penalty = 10.00 net
-            self.create_result(2, total_weight=10.00, dead_fish_penalty=0.0, big_bass_weight=3.5),
+            self.create_result(2, gross_weight=10.00, dead_fish_penalty=0.0, big_bass_weight=3.5),
         ]
         calculated = calculate_tournament_points(results)
 
@@ -89,9 +99,9 @@ class TestDeadFishPenalties:
         """Test that 0.50 lb penalty correctly changes ranking order."""
         results = [
             # Angler 1: 10.25 gross - 0.25 penalty = 10.00 net
-            self.create_result(1, total_weight=10.25, dead_fish_penalty=0.25, big_bass_weight=4.0),
+            self.create_result(1, gross_weight=10.25, dead_fish_penalty=0.25, big_bass_weight=4.0),
             # Angler 2: 10.00 gross - 0.50 penalty = 9.50 net (should drop to 2nd)
-            self.create_result(2, total_weight=10.00, dead_fish_penalty=0.50, big_bass_weight=3.5),
+            self.create_result(2, gross_weight=10.00, dead_fish_penalty=0.50, big_bass_weight=3.5),
         ]
         calculated = calculate_tournament_points(results)
 
@@ -111,13 +121,13 @@ class TestDeadFishPenalties:
         """Test complex scenario with multiple anglers having different penalties."""
         results = [
             # Angler 1: 15.00 gross - 0.50 penalty = 14.50 net (should be 1st)
-            self.create_result(1, total_weight=15.00, dead_fish_penalty=0.50, big_bass_weight=5.0),
+            self.create_result(1, gross_weight=15.00, dead_fish_penalty=0.50, big_bass_weight=5.0),
             # Angler 2: 14.00 gross - 0.00 penalty = 14.00 net (should be 2nd)
-            self.create_result(2, total_weight=14.00, dead_fish_penalty=0.0, big_bass_weight=4.5),
+            self.create_result(2, gross_weight=14.00, dead_fish_penalty=0.0, big_bass_weight=4.5),
             # Angler 3: 14.50 gross - 0.75 penalty = 13.75 net (should be 3rd)
-            self.create_result(3, total_weight=14.50, dead_fish_penalty=0.75, big_bass_weight=4.0),
+            self.create_result(3, gross_weight=14.50, dead_fish_penalty=0.75, big_bass_weight=4.0),
             # Angler 4: 13.00 gross - 0.25 penalty = 12.75 net (should be 4th)
-            self.create_result(4, total_weight=13.00, dead_fish_penalty=0.25, big_bass_weight=3.5),
+            self.create_result(4, gross_weight=13.00, dead_fish_penalty=0.25, big_bass_weight=3.5),
         ]
         calculated = calculate_tournament_points(results)
 
@@ -142,9 +152,9 @@ class TestDeadFishPenalties:
         """Test that penalties can create ties that are broken by big bass."""
         results = [
             # Angler 1: 10.50 gross - 0.50 penalty = 10.00 net, 5.0 bass (wins tie)
-            self.create_result(1, total_weight=10.50, dead_fish_penalty=0.50, big_bass_weight=5.0),
+            self.create_result(1, gross_weight=10.50, dead_fish_penalty=0.50, big_bass_weight=5.0),
             # Angler 2: 10.25 gross - 0.25 penalty = 10.00 net, 4.0 bass (loses tie)
-            self.create_result(2, total_weight=10.25, dead_fish_penalty=0.25, big_bass_weight=4.0),
+            self.create_result(2, gross_weight=10.25, dead_fish_penalty=0.25, big_bass_weight=4.0),
         ]
         calculated = calculate_tournament_points(results)
 
@@ -164,11 +174,11 @@ class TestDeadFishPenalties:
         """Test that penalties work correctly with guest anglers (0 points)."""
         results = [
             # Member: 12.00 gross - 0.25 penalty = 11.75 net (1st, 100 pts)
-            self.create_result(1, total_weight=12.00, dead_fish_penalty=0.25, was_member=True),
+            self.create_result(1, gross_weight=12.00, dead_fish_penalty=0.25, was_member=True),
             # Guest: 12.50 gross - 0.50 penalty = 12.00 net (actually higher, but 0 pts)
-            self.create_result(2, total_weight=12.50, dead_fish_penalty=0.50, was_member=False),
+            self.create_result(2, gross_weight=12.50, dead_fish_penalty=0.50, was_member=False),
             # Member: 11.00 gross - 0.00 penalty = 11.00 net (3rd, 99 pts)
-            self.create_result(3, total_weight=11.00, dead_fish_penalty=0.0, was_member=True),
+            self.create_result(3, gross_weight=11.00, dead_fish_penalty=0.0, was_member=True),
         ]
         calculated = calculate_tournament_points(results)
 
@@ -194,9 +204,9 @@ class TestDeadFishPenalties:
         """Test that angler with 0 fish and penalty still gets correctly ranked."""
         results = [
             # Member with fish
-            self.create_result(1, total_weight=10.00, dead_fish_penalty=0.0, num_fish=5),
+            self.create_result(1, gross_weight=10.00, dead_fish_penalty=0.0, num_fish=5),
             # Member with 0 fish (should get 98 points)
-            self.create_result(2, total_weight=0.0, dead_fish_penalty=0.0, num_fish=0),
+            self.create_result(2, gross_weight=0.0, dead_fish_penalty=0.0, num_fish=0),
         ]
         calculated = calculate_tournament_points(results)
 
@@ -211,9 +221,9 @@ class TestDeadFishPenalties:
         """Test that buy-in results with penalties are placed correctly."""
         results = [
             # Regular member
-            self.create_result(1, total_weight=10.00, dead_fish_penalty=0.0, buy_in=False),
+            self.create_result(1, gross_weight=10.00, dead_fish_penalty=0.0, buy_in=False),
             # Buy-in with penalty: 5.00 gross - 0.25 penalty = 4.75 net
-            self.create_result(2, total_weight=5.00, dead_fish_penalty=0.25, buy_in=True),
+            self.create_result(2, gross_weight=5.00, dead_fish_penalty=0.25, buy_in=True),
         ]
         calculated = calculate_tournament_points(results)
 
@@ -232,19 +242,19 @@ class TestDeadFishPenalties:
         """Test a realistic tournament with multiple penalties."""
         results = [
             # 1st: 18.75 gross - 0.25 penalty = 18.50 net
-            self.create_result(1, total_weight=18.75, dead_fish_penalty=0.25, big_bass_weight=6.0),
+            self.create_result(1, gross_weight=18.75, dead_fish_penalty=0.25, big_bass_weight=6.0),
             # 2nd: 17.50 gross - 0.00 penalty = 17.50 net
-            self.create_result(2, total_weight=17.50, dead_fish_penalty=0.0, big_bass_weight=5.5),
+            self.create_result(2, gross_weight=17.50, dead_fish_penalty=0.0, big_bass_weight=5.5),
             # 3rd: 18.00 gross - 0.50 penalty = 17.50 net (tied, loses on big bass)
-            self.create_result(3, total_weight=18.00, dead_fish_penalty=0.50, big_bass_weight=5.0),
+            self.create_result(3, gross_weight=18.00, dead_fish_penalty=0.50, big_bass_weight=5.0),
             # Guest: 20.00 gross - 0.75 penalty = 19.25 net (highest, but 0 pts)
             self.create_result(
-                4, total_weight=20.00, dead_fish_penalty=0.75, was_member=False, big_bass_weight=7.0
+                4, gross_weight=20.00, dead_fish_penalty=0.75, was_member=False, big_bass_weight=7.0
             ),
             # 4th: 15.00 gross - 0.25 penalty = 14.75 net
-            self.create_result(5, total_weight=15.00, dead_fish_penalty=0.25, big_bass_weight=4.5),
+            self.create_result(5, gross_weight=15.00, dead_fish_penalty=0.25, big_bass_weight=4.5),
             # Zero: 0.00 gross
-            self.create_result(6, total_weight=0.0, dead_fish_penalty=0.0, num_fish=0),
+            self.create_result(6, gross_weight=0.0, dead_fish_penalty=0.0, num_fish=0),
         ]
         calculated = calculate_tournament_points(results)
 
