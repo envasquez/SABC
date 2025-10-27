@@ -57,15 +57,20 @@ class TournamentQueries(QueryServiceBase):
             tournament_id: Tournament ID to fetch results for
 
         Returns:
-            List of result dictionaries ordered by total weight descending
+            List of result dictionaries ordered by net weight (after penalties) descending
         """
         return self.fetch_all(
             """
-            SELECT r.*, a.name as angler_name, a.member
+            SELECT r.id, r.tournament_id, r.angler_id, r.num_fish,
+                   (r.total_weight - COALESCE(r.dead_fish_penalty, 0)) as total_weight,
+                   r.big_bass_weight, r.dead_fish_penalty, r.disqualified,
+                   r.buy_in, r.was_member,
+                   a.name as angler_name, a.member
             FROM results r
             JOIN anglers a ON r.angler_id = a.id
             WHERE r.tournament_id = :tournament_id AND a.name != 'Admin User'
-            ORDER BY r.total_weight DESC
+            ORDER BY (r.total_weight - COALESCE(r.dead_fish_penalty, 0)) DESC,
+                     r.big_bass_weight DESC
         """,
             {"tournament_id": tournament_id},
         )

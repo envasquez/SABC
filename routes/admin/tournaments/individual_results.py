@@ -94,7 +94,9 @@ async def save_result(
         # Auto-create/update team result if this completes a team pairing
         # Check if this angler has a teammate in this tournament
         teammate_result = qs.fetch_one(
-            """SELECT r.angler_id, r.total_weight, tr.id as team_result_id
+            """SELECT r.angler_id,
+                      (r.total_weight - COALESCE(r.dead_fish_penalty, 0)) as net_weight,
+                      tr.id as team_result_id
                FROM team_results tr
                LEFT JOIN results r ON (
                    (tr.angler1_id = r.angler_id OR tr.angler2_id = r.angler_id)
@@ -107,9 +109,10 @@ async def save_result(
         )
 
         if teammate_result:
-            # Calculate combined team weight
-            teammate_weight = teammate_result.get("total_weight", 0) or 0
-            team_total_weight = total_weight + Decimal(str(teammate_weight))
+            # Calculate combined team weight (both anglers' net weight after penalties)
+            teammate_net_weight = teammate_result.get("net_weight", 0) or 0
+            current_angler_net_weight = total_weight - dead_fish_penalty
+            team_total_weight = current_angler_net_weight + Decimal(str(teammate_net_weight))
 
             # Update existing team result
             qs.execute(
