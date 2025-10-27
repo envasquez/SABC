@@ -20,6 +20,27 @@ async def delete_result(
         return JSONResponse({"error": "Unauthorized"}, status_code=403)
 
     qs = QueryService(conn)
+
+    # First get the angler_id from the result
+    result = qs.fetch_one(
+        "SELECT angler_id FROM results WHERE id = :id AND tournament_id = :tid",
+        {"id": result_id, "tid": tournament_id},
+    )
+
+    if not result:
+        return JSONResponse({"error": "Result not found"}, status_code=404)
+
+    angler_id = result["angler_id"]
+
+    # Delete any team_results that include this angler
+    qs.execute(
+        """DELETE FROM team_results
+           WHERE tournament_id = :tid
+           AND (angler1_id = :aid OR angler2_id = :aid)""",
+        {"tid": tournament_id, "aid": angler_id},
+    )
+
+    # Now delete the individual result
     qs.execute(
         "DELETE FROM results WHERE id = :id AND tournament_id = :tid",
         {"id": result_id, "tid": tournament_id},
