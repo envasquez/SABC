@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import Connection
@@ -7,6 +9,7 @@ from core.helpers.auth import require_admin
 from core.query_service import QueryService
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.delete("/admin/tournaments/{tournament_id}/results/{result_id}")
@@ -17,8 +20,10 @@ async def delete_result(
     conn: Connection = Depends(get_db),
 ):
     if isinstance(user, RedirectResponse):
+        logger.warning(f"Unauthorized delete attempt for result {result_id}")
         return JSONResponse({"error": "Unauthorized"}, status_code=403)
 
+    logger.info(f"Deleting result {result_id} from tournament {tournament_id}")
     qs = QueryService(conn)
 
     # First get the angler_id from the result
@@ -28,11 +33,14 @@ async def delete_result(
     )
 
     if not result:
+        logger.error(f"Result {result_id} not found in tournament {tournament_id}")
         return JSONResponse({"error": "Result not found"}, status_code=404)
 
     angler_id = result["angler_id"]
+    logger.info(f"Found angler_id {angler_id} for result {result_id}")
 
     # Delete any team_results that include this angler
+    logger.info(f"Deleting team_results for angler {angler_id} in tournament {tournament_id}")
     qs.execute(
         """DELETE FROM team_results
            WHERE tournament_id = :tid
@@ -41,11 +49,14 @@ async def delete_result(
     )
 
     # Now delete the individual result
+    logger.info(f"Deleting individual result {result_id}")
     qs.execute(
         "DELETE FROM results WHERE id = :id AND tournament_id = :tid",
         {"id": result_id, "tid": tournament_id},
     )
+    logger.info("Committing transaction")
     conn.commit()
+    logger.info(f"Successfully deleted result {result_id}")
     return JSONResponse({"success": True})
 
 

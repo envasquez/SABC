@@ -203,6 +203,9 @@
                         <th>Total weight</th>
                         <th>Points</th>
                         <th>Big bass weight</th>
+                        {% if user and user.is_admin %}
+                        <th>Actions</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody>
@@ -225,6 +228,13 @@
                                 0.00
                             {% endif %}
                         </td>
+                        {% if user and user.is_admin %}
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteIndividualResult({{ tournament[0] }}, {{ result[7] }}, '{{ result[1] }}')" title="Delete result">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -350,6 +360,31 @@
 
 <script>
 
+function deleteIndividualResult(tournamentId, resultId, anglerName) {
+    if (confirm(`Are you sure you want to delete the result for ${anglerName}?\n\nThis will also delete any team results that include this angler.\n\nThis action cannot be undone.`)) {
+        fetch(`/admin/tournaments/${tournamentId}/results/${resultId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                // Reload the page to show updated results
+                window.location.reload();
+            } else {
+                response.json().then(data => {
+                    alert(data.error || 'Error deleting result. Please try again.');
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting result. Please try again.');
+        });
+    }
+}
+
 function deleteTeamResult(tournamentId, teamResultId, teamName, isSolo) {
     const memberText = isSolo ? 'this angler' : 'both team members';
     if (confirm(`Are you sure you want to delete the team result for ${teamName}?\n\nThis will also delete the individual results for ${memberText}.\n\nThis action cannot be undone.`)) {
@@ -364,7 +399,9 @@ function deleteTeamResult(tournamentId, teamResultId, teamName, isSolo) {
                 // Reload the page to show updated results
                 window.location.reload();
             } else {
-                alert('Error deleting team result. Please try again.');
+                response.json().then(data => {
+                    alert(data.error || 'Error deleting team result. Please try again.');
+                });
             }
         })
         .catch(error => {
