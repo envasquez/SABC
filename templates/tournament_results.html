@@ -360,12 +360,21 @@
 
 <script>
 
+function getCsrfToken() {
+    return document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrf_token='))
+        ?.split('=')[1];
+}
+
 function deleteIndividualResult(tournamentId, resultId, anglerName) {
     if (confirm(`Are you sure you want to delete the result for ${anglerName}?\n\nThis will also delete any team results that include this angler.\n\nThis action cannot be undone.`)) {
+        const csrfToken = getCsrfToken();
         fetch(`/admin/tournaments/${tournamentId}/results/${resultId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
+                'x-csrf-token': csrfToken,
             }
         })
         .then(response => {
@@ -388,10 +397,12 @@ function deleteIndividualResult(tournamentId, resultId, anglerName) {
 function deleteTeamResult(tournamentId, teamResultId, teamName, isSolo) {
     const memberText = isSolo ? 'this angler' : 'both team members';
     if (confirm(`Are you sure you want to delete the team result for ${teamName}?\n\nThis will also delete the individual results for ${memberText}.\n\nThis action cannot be undone.`)) {
+        const csrfToken = getCsrfToken();
         fetch(`/admin/tournaments/${tournamentId}/team-results/${teamResultId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
+                'x-csrf-token': csrfToken,
             }
         })
         .then(response => {
