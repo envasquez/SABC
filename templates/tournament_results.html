@@ -370,6 +370,14 @@ function getCsrfToken() {
 function deleteIndividualResult(tournamentId, resultId, anglerName) {
     if (confirm(`Are you sure you want to delete the result for ${anglerName}?\n\nThis will also delete any team results that include this angler.\n\nThis action cannot be undone.`)) {
         const csrfToken = getCsrfToken();
+        console.log('CSRF Token:', csrfToken);
+        console.log('All cookies:', document.cookie);
+
+        if (!csrfToken) {
+            alert('CSRF token not found. Please refresh the page and try again.');
+            return;
+        }
+
         fetch(`/admin/tournaments/${tournamentId}/results/${resultId}`, {
             method: 'DELETE',
             headers: {
@@ -378,12 +386,19 @@ function deleteIndividualResult(tournamentId, resultId, anglerName) {
             }
         })
         .then(response => {
+            console.log('Response status:', response.status);
             if (response.ok) {
                 // Reload the page to show updated results
                 window.location.reload();
             } else {
-                response.json().then(data => {
-                    alert(data.error || 'Error deleting result. Please try again.');
+                response.text().then(text => {
+                    console.error('Error response:', text);
+                    try {
+                        const data = JSON.parse(text);
+                        alert(data.error || 'Error deleting result. Please try again.');
+                    } catch(e) {
+                        alert('Error deleting result: ' + text);
+                    }
                 });
             }
         })
@@ -398,6 +413,13 @@ function deleteTeamResult(tournamentId, teamResultId, teamName, isSolo) {
     const memberText = isSolo ? 'this angler' : 'both team members';
     if (confirm(`Are you sure you want to delete the team result for ${teamName}?\n\nThis will also delete the individual results for ${memberText}.\n\nThis action cannot be undone.`)) {
         const csrfToken = getCsrfToken();
+        console.log('CSRF Token:', csrfToken);
+
+        if (!csrfToken) {
+            alert('CSRF token not found. Please refresh the page and try again.');
+            return;
+        }
+
         fetch(`/admin/tournaments/${tournamentId}/team-results/${teamResultId}`, {
             method: 'DELETE',
             headers: {
@@ -406,12 +428,19 @@ function deleteTeamResult(tournamentId, teamResultId, teamName, isSolo) {
             }
         })
         .then(response => {
+            console.log('Response status:', response.status);
             if (response.ok) {
                 // Reload the page to show updated results
                 window.location.reload();
             } else {
-                response.json().then(data => {
-                    alert(data.error || 'Error deleting team result. Please try again.');
+                response.text().then(text => {
+                    console.error('Error response:', text);
+                    try {
+                        const data = JSON.parse(text);
+                        alert(data.error || 'Error deleting team result. Please try again.');
+                    } catch(e) {
+                        alert('Error deleting team result: ' + text);
+                    }
                 });
             }
         })
