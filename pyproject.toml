@@ -23,3 +23,31 @@ warn_unused_ignores = false
 # Exclude scripts directory to avoid module conflicts
 exclude = ["scripts/"]
 # Type check all Python files
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "tests/*",
+    ".nix-python-packages/*",
+    "*/site-packages/*",
+    "*/dist-packages/*",
+    "*/__pycache__/*",
+    "venv/*",
+    "env/*",
+    "test_*.py",
+    "*_test.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+skip_covered = false
+precision = 1
