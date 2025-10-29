@@ -2,6 +2,7 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse, Response
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Angler, get_session
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
@@ -81,9 +82,23 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
             "Login attempt failed - invalid credentials",
             extra={"user_email": email, "ip_address": ip_address},
         )
-    except Exception as e:
+
+    except SQLAlchemyError as e:
         logger.error(
-            "Login error",
+            "Database error during login",
+            extra={"user_email": email, "ip_address": ip_address, "error": str(e)},
+            exc_info=True,
+        )
+        log_security_event(
+            SecurityEvent.AUTH_LOGIN_FAILURE,
+            user_email=email,
+            ip_address=ip_address,
+            details={"reason": "database_error"},
+        )
+
+    except Exception as e:
+        logger.critical(
+            "Unexpected error during login",
             extra={"user_email": email, "ip_address": ip_address, "error": str(e)},
             exc_info=True,
         )
@@ -93,6 +108,7 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
             ip_address=ip_address,
             details={"reason": "system_error", "error": str(e)},
         )
+
     return templates.TemplateResponse(
         "login.html", {"request": request, "error": "Invalid email or password"}
     )

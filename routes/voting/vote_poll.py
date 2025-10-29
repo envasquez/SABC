@@ -3,7 +3,7 @@ from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from core.db_schema import Poll, PollOption, PollVote, get_session
 from core.helpers.auth import require_auth
@@ -164,14 +164,34 @@ async def vote_in_poll(
         logger.error(
             "Database integrity error during voting",
             extra={"poll_id": poll_id, "user_id": user["id"], "error": str(e)},
+            exc_info=True,
         )
         return RedirectResponse(
             "/polls?error=Unable to cast vote. Please try again.", status_code=303
         )
+
+    except SQLAlchemyError as e:
+        logger.error(
+            "Database error during voting",
+            extra={"poll_id": poll_id, "user_id": user["id"], "error": str(e)},
+            exc_info=True,
+        )
+        return RedirectResponse(
+            "/polls?error=Database error. Please try again.", status_code=303
+        )
+
+    except (json.JSONDecodeError, ValueError) as e:
+        logger.warning(
+            "Invalid vote data format",
+            extra={"poll_id": poll_id, "user_id": user["id"], "error": str(e)},
+        )
+        return RedirectResponse("/polls?error=Invalid vote data", status_code=303)
+
     except Exception as e:
         error_msg = sanitize_error_message(e, "Failed to cast vote. Please try again.")
-        logger.error(
+        logger.critical(
             "Unexpected error during voting",
             extra={"poll_id": poll_id, "user_id": user.get("id"), "error": str(e)},
+            exc_info=True,
         )
         return RedirectResponse(f"/polls?error={error_msg}", status_code=303)
