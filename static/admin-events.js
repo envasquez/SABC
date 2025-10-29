@@ -225,142 +225,88 @@ function setupPollFields(eventType, hasPoll, pollClosesAt) {
 }
 
 
-function deleteEvent(id, hasDependencies, eventName = 'Event') {
+/**
+ * Unified delete event handler - works for both current and past events
+ * @param {number} id - Event ID to delete
+ * @param {boolean} hasDependencies - Whether event has dependencies (polls, tournaments)
+ * @param {string} eventName - Event name for display
+ * @param {string} context - 'current' or 'past' to determine which modal to use
+ */
+function showDeleteEventModal(id, hasDependencies, eventName = 'Event', context = 'current') {
+    const modalId = context === 'current' ? 'deleteEventModal' : 'deletePastEventModal';
+    const prefix = context === 'current' ? 'delete-current' : 'delete';
+
     // Set the event name in the modal
-    document.getElementById('delete-current-event-name').textContent = eventName;
-    document.getElementById('delete-current-event-id').value = id;
+    document.getElementById(`${prefix}-event-name`).textContent = eventName;
+    document.getElementById(`${prefix}-event-id`).value = id;
 
     // Show/hide dependencies warning
-    var warningElement = document.getElementById('delete-current-dependencies-warning');
-    if (hasDependencies) {
-        warningElement.style.display = 'block';
-    } else {
-        warningElement.style.display = 'none';
-    }
+    const warningElement = document.getElementById(`${prefix}-dependencies-warning`);
+    warningElement.style.display = hasDependencies ? 'block' : 'none';
 
     // Clear the confirmation input
-    document.getElementById('delete-current-confirmation').value = '';
+    document.getElementById(`${prefix}-confirmation`).value = '';
 
     // Show the modal
-    var modal = new bootstrap.Modal(document.getElementById('deleteEventModal'));
+    const modal = new bootstrap.Modal(document.getElementById(modalId));
     modal.show();
+}
+
+/**
+ * Confirm and execute event deletion
+ * @param {string} context - 'current' or 'past' to determine which modal elements to use
+ */
+async function confirmDeleteEvent(context = 'current') {
+    const modalId = context === 'current' ? 'deleteEventModal' : 'deletePastEventModal';
+    const prefix = context === 'current' ? 'delete-current' : 'delete';
+
+    const confirmText = document.getElementById(`${prefix}-confirmation`).value;
+    const eventId = document.getElementById(`${prefix}-event-id`).value;
+
+    if (confirmText.trim() !== 'DELETE') {
+        showToast('Please type DELETE to confirm', 'warning');
+        return;
+    }
+
+    // Close the modal
+    bootstrap.Modal.getInstance(document.getElementById(modalId)).hide();
+
+    try {
+        const response = await deleteRequest(`/admin/events/${eventId}`);
+
+        if (response.ok) {
+            showToast('Event deleted successfully', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            const data = await response.json().catch(() => ({}));
+            const errorMsg = data.error || 'Failed to delete event';
+
+            if (response.status === 400) {
+                showToast(`Cannot delete event: ${errorMsg}`, 'error');
+            } else {
+                showToast(`Error deleting event: ${errorMsg}`, 'error');
+            }
+        }
+    } catch (error) {
+        showToast(`Network error: ${error.message}`, 'error');
+    }
+}
+
+// Wrapper functions for backward compatibility with existing HTML onclick handlers
+function deleteEvent(id, hasDependencies, eventName = 'Event') {
+    showDeleteEventModal(id, hasDependencies, eventName, 'current');
 }
 
 function confirmDeleteCurrentEvent() {
-    var confirmText = document.getElementById('delete-current-confirmation').value;
-    var eventId = document.getElementById('delete-current-event-id').value;
-
-    if (confirmText.trim() !== 'DELETE') {
-        alert('Please type DELETE to confirm');
-        return;
-    }
-
-    // Close the modal
-    bootstrap.Modal.getInstance(document.getElementById('deleteEventModal')).hide();
-
-    // Get CSRF token from cookie
-    const csrfToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrf_token='))
-        ?.split('=')[1];
-
-    // Delete the event
-    fetch(`/admin/events/${eventId}`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-csrf-token': csrfToken,
-        }
-    })
-    .then(response => {
-        if (response.ok) {
-            location.reload();
-        } else {
-            // Try to get the error message from the response
-            return response.json().then(data => {
-                if (response.status === 400) {
-                    alert('Cannot delete event: ' + (data.error || 'Event has dependencies'));
-                } else {
-                    alert('Error deleting event: ' + (data.error || 'Server error'));
-                }
-            }).catch(() => {
-                // If JSON parsing fails, show generic error
-                alert('Error deleting event (status: ' + response.status + ')');
-            });
-        }
-    })
-    .catch(error => {
-        alert('Network error deleting event: ' + error.message);
-    });
+    confirmDeleteEvent('current');
 }
 
 function deletePastEvent(id, name, hasDependencies) {
-    // Set the event name in the modal
-    document.getElementById('delete-event-name').textContent = name;
-    document.getElementById('delete-event-id').value = id;
-
-    // Show/hide dependencies warning
-    var warningElement = document.getElementById('delete-dependencies-warning');
-    if (hasDependencies) {
-        warningElement.style.display = 'block';
-    } else {
-        warningElement.style.display = 'none';
-    }
-
-    // Clear the confirmation input
-    document.getElementById('delete-confirmation').value = '';
-
-    // Show the modal
-    var modal = new bootstrap.Modal(document.getElementById('deletePastEventModal'));
-    modal.show();
+    showDeleteEventModal(id, hasDependencies, name, 'past');
 }
 
 function confirmDeletePastEvent() {
-    var confirmText = document.getElementById('delete-confirmation').value;
-    var eventId = document.getElementById('delete-event-id').value;
-
-    if (confirmText.trim() !== 'DELETE') {
-        alert('Please type DELETE to confirm');
-        return;
-    }
-
-    // Close the modal
-    bootstrap.Modal.getInstance(document.getElementById('deletePastEventModal')).hide();
-
-    // Get CSRF token from cookie
-    const csrfToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrf_token='))
-        ?.split('=')[1];
-
-    // Delete the event
-    fetch(`/admin/events/${eventId}`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-csrf-token': csrfToken,
-        }
-    })
-    .then(response => {
-        if (response.ok) {
-            location.reload();
-        } else {
-            // Try to get the error message from the response
-            return response.json().then(data => {
-                if (response.status === 400) {
-                    alert('Cannot delete event: ' + (data.error || 'Event has dependencies'));
-                } else {
-                    alert('Error deleting event: ' + (data.error || 'Server error'));
-                }
-            }).catch(() => {
-                // If JSON parsing fails, show generic error
-                alert('Error deleting event (status: ' + response.status + ')');
-            });
-        }
-    })
-    .catch(error => {
-        alert('Network error deleting event: ' + error.message);
-    });
+    confirmDeleteEvent('past');
 }
 
 // Configuration-driven event form management
