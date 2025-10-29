@@ -12,99 +12,132 @@
 ::after {
   color: inherit;
 }
-body {
-  background: var(--bg) !important;
-  color: var(--text) !important;
+
+/* Base body styles - use html selector for higher specificity */
+html body {
+  background: var(--bg);
+  color: var(--text);
 }
-input,
-textarea,
-select,
-.form-control,
-.form-select,
-.modal-content,
-.card {
-  background: var(--bg2) !important;
-  color: var(--text) !important;
-  border-color: var(--border) !important;
+
+/* Form controls - use multiple class selectors for specificity */
+body input,
+body textarea,
+body select,
+body .form-control,
+body .form-select,
+body .modal-content,
+body .card {
+  background: var(--bg2);
+  color: var(--text);
+  border-color: var(--border);
 }
-.table,
-th,
-td {
-  color: var(--text) !important;
-  border-color: var(--border) !important;
+
+/* Tables - use descendant selectors for specificity */
+body .table,
+body .table th,
+body .table td {
+  color: var(--text);
+  border-color: var(--border);
 }
-.dropdown-menu {
-  background: var(--bg2) !important;
+
+/* Dropdowns - use descendant selectors */
+body .dropdown-menu {
+  background: var(--bg2);
 }
-.dropdown-item {
-  color: var(--text) !important;
+
+body .dropdown-menu .dropdown-item {
+  color: var(--text);
 }
-.dropdown-item:hover {
-  background: var(--bg) !important;
+
+body .dropdown-menu .dropdown-item:hover {
+  background: var(--bg);
 }
-label,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  color: var(--text) !important;
+
+/* Typography - use body descendant selector */
+body label,
+body h1,
+body h2,
+body h3,
+body h4,
+body h5,
+body h6 {
+  color: var(--text);
 }
-.text-muted {
-  color: var(--muted) !important;
+
+body .text-muted {
+  color: var(--muted);
 }
+
+/* Button close - already specific enough */
 .btn-close {
   filter: invert(1) brightness(200%);
 }
-a {
+
+/* Links - use body descendant for specificity */
+body a {
   color: #6ea8fe;
 }
-a:hover {
+
+body a:hover {
   color: #8bb9fe;
 }
-.nav-tabs .nav-link {
-  color: var(--muted) !important;
-}
-.nav-tabs .nav-link.active {
-  color: var(--text) !important;
-  background: #4a5158 !important;
-  border-color: var(--border) var(--border) #4a5158 !important;
-}
-.alert {
-  color: var(--text) !important;
-}
-.form-check-input {
-  background-color: var(--bg) !important;
-  border-color: var(--border) !important;
-}
-.form-check-input:checked {
-  background-color: var(--primary) !important;
-  border-color: var(--primary) !important;
-}
-.card-header {
-  background-color: var(--bg2) !important;
-  border-bottom: 2px solid var(--border) !important;
+
+/* Nav tabs - use chained selectors for specificity */
+body .nav-tabs .nav-link {
+  color: var(--muted);
 }
 
-/* Fix Bootstrap Darkly text colors to be lighter */
-.text-primary {
-  color: #6ea8fe !important;
+body .nav-tabs .nav-link.active {
+  color: var(--text);
+  background: #4a5158;
+  border-color: var(--border) var(--border) #4a5158;
 }
-.text-success {
-  color: #75b798 !important;
+
+/* Alerts - use body descendant */
+body .alert {
+  color: var(--text);
 }
-.text-warning {
-  color: #f0ad4e !important;
+
+/* Form checkboxes - use chained selectors */
+body .form-check-input {
+  background-color: var(--bg);
+  border-color: var(--border);
 }
-.text-danger {
-  color: #ee5f5b !important;
+
+body .form-check-input:checked {
+  background-color: var(--primary);
+  border-color: var(--primary);
 }
-.text-info {
-  color: #5bc0de !important;
+
+/* Card headers - use descendant selector */
+body .card .card-header {
+  background-color: var(--bg2);
+  border-bottom: 2px solid var(--border);
 }
-.text-secondary {
-  color: #adb5bd !important;
+
+/* Fix Bootstrap Darkly text colors to be lighter - use body descendant */
+body .text-primary {
+  color: #6ea8fe;
+}
+
+body .text-success {
+  color: #75b798;
+}
+
+body .text-warning {
+  color: #f0ad4e;
+}
+
+body .text-danger {
+  color: #ee5f5b;
+}
+
+body .text-info {
+  color: #5bc0de;
+}
+
+body .text-secondary {
+  color: #adb5bd;
 }
 
 /* Medal/Trophy colors for podium finishes */
@@ -112,23 +145,29 @@ a:hover {
   background-color: #fff8dc;
   border: 1px solid #ffd700;
 }
-.color-gold {
-  color: #ffd700 !important;
+
+body .color-gold {
+  color: #ffd700;
 }
-.color-gold-dark {
-  color: #b8860b !important;
+
+body .color-gold-dark {
+  color: #b8860b;
 }
+
 .medal-silver {
   background-color: #f5f5f5;
   border: 1px solid #c0c0c0;
   background-image: linear-gradient(135deg, #e8e8e8 0%, #f5f5f5 50%, #e8e8e8 100%);
 }
-.color-silver {
-  color: #a8a8a8 !important;
+
+body .color-silver {
+  color: #a8a8a8;
 }
-.color-silver-dark {
-  color: #2c2c2c !important;
+
+body .color-silver-dark {
+  color: #2c2c2c;
 }
-.color-bronze {
-  color: #cd7f32 !important;
+
+body .color-bronze {
+  color: #cd7f32;
 }
