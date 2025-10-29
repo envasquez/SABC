@@ -9,31 +9,18 @@
  */
 async function deleteVote(voteId) {
     try {
-        // Get CSRF token from cookie
-        const csrfToken = document.cookie
-            .split('; ')
-            .find(row => row.startsWith('csrf_token='))
-            ?.split('=')[1];
-
-        const response = await fetch(`/admin/votes/${voteId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-csrf-token': csrfToken,
-            }
-        });
-
+        const response = await deleteRequest(`/admin/votes/${voteId}`);
         const result = await response.json();
 
         if (result.success) {
             // Show success message and reload page
-            alert('Vote deleted successfully: ' + result.message);
-            location.reload();
+            showToast('Vote deleted successfully: ' + result.message, 'success');
+            setTimeout(() => location.reload(), 1000);
         } else {
-            alert('Error: ' + result.error);
+            showToast('Error: ' + result.error, 'error');
         }
     } catch (error) {
-        alert('Error deleting vote: ' + error.message);
+        showToast('Error deleting vote: ' + error.message, 'error');
     }
 }
 

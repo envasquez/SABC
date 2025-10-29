@@ -7,10 +7,12 @@
 function submitVote(pollId, canVote, userId) {
     if (!canVote) {
         if (!userId) {
-            alert('Please log in to vote.');
-            window.location.href = '/login?next=/polls';
+            showToast('Please log in to vote.', 'warning');
+            setTimeout(() => {
+                window.location.href = '/login?next=/polls';
+            }, 1500);
         } else {
-            alert('You must be a verified member to vote in polls.');
+            showToast('You must be a verified member to vote in polls.', 'warning');
         }
         return;
     }
@@ -23,12 +25,12 @@ function submitVote(pollId, canVote, userId) {
     const rampSelect = form.querySelector('select[name="ramp"]');
 
     if (!lakeSelect || !lakeSelect.value) {
-        alert('Please select a lake');
+        showToast('Please select a lake', 'warning');
         return;
     }
 
     if (!rampSelect || !rampSelect.value) {
-        alert('Please select a ramp');
+        showToast('Please select a ramp', 'warning');
         return;
     }
 
@@ -40,14 +42,15 @@ function submitVote(pollId, canVote, userId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            showToast('Vote submitted successfully!', 'success');
+            setTimeout(() => location.reload(), 1000);
         } else {
-            alert(data.error || 'Error submitting vote');
+            showToast(data.error || 'Error submitting vote', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error submitting vote. Please try again.');
+        showToast('Error submitting vote. Please try again.', 'error');
     });
 }
 

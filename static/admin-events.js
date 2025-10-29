@@ -101,7 +101,7 @@ function editEvent(id, date, eventType, name, description, hasPoll) {
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
-                    alert('Error loading event data: ' + data.error);
+                    showToast('Error loading event data: ' + data.error, 'error');
                     return;
                 }
 
@@ -180,7 +180,7 @@ function editEvent(id, date, eventType, name, description, hasPoll) {
             })
             .catch(error => {
                 console.error('Error loading event data:', error);
-                alert('Error loading event data. Please try again.');
+                showToast('Error loading event data. Please try again.', 'error');
             });
     };
 
