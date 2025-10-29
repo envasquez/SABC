@@ -176,9 +176,7 @@ async def vote_in_poll(
             extra={"poll_id": poll_id, "user_id": user["id"], "error": str(e)},
             exc_info=True,
         )
-        return RedirectResponse(
-            "/polls?error=Database error. Please try again.", status_code=303
-        )
+        return RedirectResponse("/polls?error=Database error. Please try again.", status_code=303)
 
     except (json.JSONDecodeError, ValueError) as e:
         logger.warning(
