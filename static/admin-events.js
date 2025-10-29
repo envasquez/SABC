@@ -42,7 +42,7 @@ function loadLakes() {
 }
 
 /**
- * Load boat ramps for a selected lake
+ * Load boat ramps for a selected lake using LakeRampSelector component
  * Fetches ramps from API and populates the specified select element
  *
  * @param {string} lakeName - Name of the lake to load ramps for
@@ -50,47 +50,17 @@ function loadLakes() {
  * @returns {Promise<void>} Promise that resolves when ramps are loaded
  */
 async function loadRamps(lakeName, rampSelectId = 'edit_ramp_name') {
-    const rampSelect = document.getElementById(rampSelectId);
+    // Create a temporary lake select ID (not used but required by component)
+    const tempLakeId = `temp_lake_for_${rampSelectId}`;
 
-    if (!rampSelect) return;
+    const selector = new LakeRampSelector({
+        lakeSelectId: tempLakeId,
+        rampSelectId: rampSelectId,
+        lakesData: lakesData,
+        useApi: true
+    });
 
-    if (!lakeName) {
-        rampSelect.innerHTML = '<option value="">-- Select Ramp --</option>';
-        rampSelect.disabled = true;
-        return;
-    }
-
-    // Find the lake key from lakesData
-    const lake = lakesData.find(l => l.name === lakeName);
-    if (!lake) {
-        rampSelect.innerHTML = '<option value="">-- Select Ramp --</option>';
-        rampSelect.disabled = true;
-        return;
-    }
-
-    try {
-        const response = await fetch(`/api/lakes/${lake.key}/ramps`);
-        const data = await response.json();
-        rampSelect.innerHTML = '<option value="">-- Select Ramp --</option>';
-
-        if (data.ramps && data.ramps.length > 0) {
-            data.ramps.forEach(ramp => {
-                const option = document.createElement('option');
-                // Handle both string ramps and object ramps with name property
-                const rampName = typeof ramp === 'string' ? ramp : ramp.name;
-                option.value = rampName;
-                option.textContent = rampName;
-                rampSelect.appendChild(option);
-            });
-            rampSelect.disabled = false;
-        } else {
-            rampSelect.disabled = true;
-        }
-    } catch (error) {
-        console.error(`Error loading ramps for ${lakeName}:`, error);
-        rampSelect.innerHTML = '<option value="">-- Error loading ramps --</option>';
-        rampSelect.disabled = true;
-    }
+    await selector.loadRampsForLake(lakeName);
 }
 
 function editEvent(id, date, eventType, name, description, hasPoll) {

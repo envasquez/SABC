@@ -54,7 +54,13 @@ function submitVote(pollId, canVote, userId) {
     });
 }
 
-// Lake/ramp selection functionality
+/**
+ * Lake/ramp selection functionality using LakeRampSelector component
+ * Updates ramp dropdown when lake selection changes
+ *
+ * @param {string} pollId - ID of the poll form
+ * @param {Object} lakesAndRamps - Lakes data object with ramps
+ */
 function onLakeChange(pollId, lakesAndRamps) {
     const lakeSelect = document.querySelector(`#vote-form-${pollId} select[name="lake"]`);
     const rampSelect = document.querySelector(`#vote-form-${pollId} select[name="ramp"]`);
@@ -63,24 +69,15 @@ function onLakeChange(pollId, lakesAndRamps) {
 
     const lakeId = lakeSelect.value;
 
-    // Clear ramp options
-    rampSelect.innerHTML = '<option value="">-- Select Ramp --</option>';
-    rampSelect.disabled = true;
-
-    if (!lakeId || !lakesAndRamps[lakeId]) return;
-
-    // Populate ramps for selected lake
-    const ramps = lakesAndRamps[lakeId].ramps || [];
-    ramps.forEach(ramp => {
-        const option = document.createElement('option');
-        option.value = ramp.id;
-        option.textContent = ramp.name;
-        rampSelect.appendChild(option);
+    // Create selector instance for this poll form
+    const selector = new LakeRampSelector({
+        lakeSelectId: lakeSelect.id || `poll_${pollId}_lake`,
+        rampSelectId: rampSelect.id || `poll_${pollId}_ramp`,
+        lakesData: lakesAndRamps,
+        useApi: false
     });
 
-    if (ramps.length > 0) {
-        rampSelect.disabled = false;
-    }
+    selector.loadRampsForLakeId(lakeId);
 }
 
 // Chart functionality for tournament polls
