@@ -1,6 +1,6 @@
 """SQLAlchemy ORM models for SABC database tables."""
 
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timezone
 from decimal import Decimal
 from typing import Optional
 
@@ -18,6 +18,14 @@ from sqlalchemy import (
     UniqueConstraint,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+def utc_now() -> datetime:
+    """Return timezone-aware UTC datetime.
+
+    Replacement for datetime.utcnow() which returns naive datetime.
+    """
+    return datetime.now(timezone.utc)
 
 
 class Base(DeclarativeBase):
@@ -39,7 +47,7 @@ class Angler(Base):
     password_hash: Mapped[Optional[str]] = mapped_column(Text)
     year_joined: Mapped[Optional[int]] = mapped_column(Integer)
     phone: Mapped[Optional[str]] = mapped_column(Text)
-    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=utc_now)
 
 
 class PasswordResetToken(Base):
@@ -52,10 +60,10 @@ class PasswordResetToken(Base):
         Integer, ForeignKey("anglers.id", ondelete="CASCADE"), nullable=False
     )
     token: Mapped[str] = mapped_column(String, nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     used: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
-    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=datetime.utcnow)
-    used_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=utc_now)
+    used_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
 
 
 class Event(Base):
@@ -94,7 +102,7 @@ class Poll(Base):
         Integer, ForeignKey("anglers.id", ondelete="SET NULL")
     )
     created_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow
+        DateTime(timezone=True), default=utc_now
     )
     starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     closes_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -135,7 +143,7 @@ class PollVote(Base):
         Integer, ForeignKey("anglers.id", ondelete="CASCADE")
     )
     voted_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow
+        DateTime(timezone=True), default=utc_now
     )
 
 
@@ -150,11 +158,11 @@ class News(Base):
     author_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("anglers.id", ondelete="SET NULL")
     )
-    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=utc_now)
     published: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
     priority: Mapped[Optional[int]] = mapped_column(Integer, default=0)
-    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     last_edited_by: Mapped[Optional[int]] = mapped_column(Integer)
 
 
@@ -167,7 +175,7 @@ class Lake(Base):
     yaml_key: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
     display_name: Mapped[str] = mapped_column(Text, nullable=False)
     google_maps_iframe: Mapped[Optional[str]] = mapped_column(Text)
-    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=utc_now)
 
 
 class Ramp(Base):
@@ -181,7 +189,7 @@ class Ramp(Base):
     )
     name: Mapped[str] = mapped_column(Text, nullable=False)
     google_maps_iframe: Mapped[Optional[str]] = mapped_column(Text)
-    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=utc_now)
 
 
 class Tournament(Base):

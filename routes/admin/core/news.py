@@ -1,9 +1,7 @@
-from datetime import datetime
-
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core.db_schema import Angler, News, get_session
+from core.db_schema import Angler, News, get_session, utc_now
 from core.helpers.auth import require_admin
 from core.helpers.response import error_redirect, sanitize_error_message
 from routes.dependencies import templates
@@ -77,7 +75,7 @@ async def update_news(
                 news_item.published = True
                 news_item.priority = priority
                 news_item.last_edited_by = user["id"]  # type: ignore[assignment]
-                news_item.updated_at = datetime.utcnow()
+                news_item.updated_at = utc_now()
                 # Context manager will commit automatically on successful exit
 
         return RedirectResponse("/admin/news?success=News updated successfully", status_code=302)

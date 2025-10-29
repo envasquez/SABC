@@ -14,6 +14,7 @@ from core.db_schema.models import (
     Result,
     TeamResult,
     Tournament,
+    utc_now,
 )
 from core.db_schema.session import SessionLocal, get_db_session, get_session
 from core.db_schema.tables import create_all_tables, drop_all_tables, init_db
@@ -40,4 +41,5 @@ __all__ = [
     "SessionLocal",
     "get_session",
     "get_db_session",
+    "utc_now",
 ]

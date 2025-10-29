@@ -1,9 +1,7 @@
-from datetime import datetime
-
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from core.db_schema import Angler, get_session
+from core.db_schema import Angler, get_session, utc_now
 
 router = APIRouter()
 
@@ -17,7 +15,7 @@ async def health_check():
             "status": "healthy",
             "database": "connected",
             "angler_count": angler_count,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": utc_now().isoformat(),
         }
     except Exception as e:
         return JSONResponse(
@@ -26,6 +24,6 @@ async def health_check():
                 "status": "unhealthy",
                 "database": "disconnected",
                 "error": str(e),
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": utc_now().isoformat(),
             },
         )
