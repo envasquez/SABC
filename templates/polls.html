@@ -554,12 +554,12 @@
                                     </div>
                                     <div class="card-body p-3">
                                         <!-- Vertical Bar Chart Container -->
-                                        <div class="d-flex align-items-end justify-content-around mb-4 mt-2" style="height: 180px; position: relative;">
+                                        <div class="d-flex align-items-end justify-content-around mb-4 mt-2" style="height: 250px; position: relative;">
                                             {% set max_votes = poll.options | map(attribute='vote_count') | max %}
                                             {% for option in poll.options %}
                                                 {% if option.vote_count > 0 %}
                                                 {% set percentage = (option.vote_count / total_votes * 100) if total_votes > 0 else 0 %}
-                                                {% set bar_height = (option.vote_count / max_votes * 140) if max_votes > 0 else 0 %}
+                                                {% set bar_height = (option.vote_count / max_votes * 180) if max_votes > 0 else 0 %}
                                                 {% set colors = ['#0d6efd', '#198754', '#fd7e14', '#dc3545', '#6f42c1', '#20c997', '#ffc107'] %}
                                                 {% set color = colors[loop.index0 % colors|length] %}
 
