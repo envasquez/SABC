@@ -73,16 +73,10 @@
           done
           echo "✓ PostgreSQL is ready!"
 
-          # Initialize database if needed
-          echo "Initializing database..."
-          python -c "
-from core.db_schema import create_all_tables
-try:
-    create_all_tables()
-    print('✓ Database initialized successfully')
-except Exception as e:
-    print(f'Note: {e}')
-"
+          # Run database migrations if needed
+          echo "Running database migrations..."
+          alembic upgrade head
+          echo "✓ Database migrations complete"
 
           # Start FastAPI application
           echo "Starting FastAPI on http://localhost:8000"
