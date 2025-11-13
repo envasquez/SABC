@@ -105,7 +105,7 @@ body .text-info {
   color: #5bc0de;
 }
 body .text-secondary {
-  color: #adb5bd;
+  color: #dee2e6; /* Lighter gray for better contrast on dark background */
 }
 
 /* Medal/Trophy colors for podium finishes */
