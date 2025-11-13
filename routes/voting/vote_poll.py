@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
@@ -12,6 +12,7 @@ from core.helpers.response import sanitize_error_message
 from core.helpers.timezone import now_local
 from routes.voting.vote_validation import (
     get_or_create_option_id,
+    validate_proxy_vote,
     validate_tournament_location_vote,
 )
 
@@ -24,10 +25,16 @@ async def vote_in_poll(
     request: Request,
     poll_id: int,
     option_id: str = Form(),
+    vote_as_angler_id: Optional[int] = Form(None),
     user: Dict[str, Any] = Depends(require_auth),
 ) -> RedirectResponse:
     if not user.get("member"):
         return RedirectResponse("/polls?error=Only members can vote", status_code=303)
+
+    # Determine if this is a proxy vote (admin voting on behalf of someone)
+    is_proxy_vote = vote_as_angler_id is not None and user.get("is_admin", False)
+    voting_for_angler_id = vote_as_angler_id if is_proxy_vote else user["id"]
+    target_angler_name = None
 
     try:
         with get_session() as session:
@@ -42,10 +49,32 @@ async def vote_in_poll(
             if not poll:
                 return RedirectResponse("/polls?error=Invalid poll", status_code=303)
 
+            # Validate proxy vote if applicable
+            if is_proxy_vote:
+                # Non-admins cannot cast proxy votes
+                if not user.get("is_admin", False):
+                    logger.warning(
+                        "Non-admin attempted proxy vote",
+                        extra={
+                            "poll_id": poll_id,
+                            "user_id": user["id"],
+                            "target_id": vote_as_angler_id,
+                        },
+                    )
+                    return RedirectResponse(
+                        "/polls?error=Only admins can vote on behalf of members", status_code=303
+                    )
+
+                target_angler_name, error = validate_proxy_vote(
+                    user["id"], voting_for_angler_id, poll_id, session
+                )
+                if error:
+                    return RedirectResponse(f"/polls?error={error}", status_code=303)
+
             # Check for existing vote with lock to prevent race condition
             existing_vote = (
                 session.query(PollVote)
-                .filter(PollVote.poll_id == poll_id, PollVote.angler_id == user["id"])
+                .filter(PollVote.poll_id == poll_id, PollVote.angler_id == voting_for_angler_id)
                 .with_for_update()  # Lock if exists
                 .first()
             )
@@ -127,8 +156,10 @@ async def vote_in_poll(
                 new_vote = PollVote(
                     poll_id=poll_id,
                     option_id=actual_option_id,
-                    angler_id=user["id"],
+                    angler_id=voting_for_angler_id,
                     voted_at=current_time,
+                    cast_by_admin=is_proxy_vote,
+                    cast_by_admin_id=user["id"] if is_proxy_vote else None,
                 )
                 session.add(new_vote)
                 session.flush()  # Ensure vote is written to database
@@ -141,10 +172,23 @@ async def vote_in_poll(
                     )
                     return RedirectResponse("/polls?error=Failed to record vote", status_code=303)
 
-                logger.info(
-                    "Vote cast successfully",
-                    extra={"poll_id": poll_id, "user_id": user["id"], "vote_id": vote_id},
-                )
+                if is_proxy_vote:
+                    logger.info(
+                        "Admin cast proxy vote",
+                        extra={
+                            "admin_id": user["id"],
+                            "admin_name": user.get("name"),
+                            "voted_for_angler_id": voting_for_angler_id,
+                            "voted_for_name": target_angler_name,
+                            "poll_id": poll_id,
+                            "vote_id": vote_id,
+                        },
+                    )
+                else:
+                    logger.info(
+                        "Vote cast successfully",
+                        extra={"poll_id": poll_id, "user_id": user["id"], "vote_id": vote_id},
+                    )
 
             except IntegrityError as e:
                 # Database constraint prevented duplicate vote

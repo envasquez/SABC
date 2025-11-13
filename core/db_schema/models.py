@@ -141,6 +141,10 @@ class PollVote(Base):
         Integer, ForeignKey("anglers.id", ondelete="CASCADE")
     )
     voted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=utc_now)
+    cast_by_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    cast_by_admin_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("anglers.id", ondelete="SET NULL"), nullable=True
+    )
 
 
 class News(Base):

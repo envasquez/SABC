@@ -91,8 +91,32 @@
                     {% endif %}
 
                     {% if poll.options %}
-                        {% if poll.status == 'active' and user.member and not poll.user_has_voted %}
-                            <!-- Voting Interface -->
+                        <!-- Per-Poll Tabs for Admin Proxy Voting -->
+                        {% if user.is_admin and poll.status == 'active' %}
+                        <ul class="nav nav-tabs mb-3" id="poll{{ poll.id }}Tabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="vote-tab-{{ poll.id }}" data-bs-toggle="tab"
+                                        data-bs-target="#vote-pane-{{ poll.id }}" type="button" role="tab">
+                                    <i class="bi bi-person-check me-1"></i>Your Vote
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="admin-vote-tab-{{ poll.id }}" data-bs-toggle="tab"
+                                        data-bs-target="#admin-vote-pane-{{ poll.id }}" type="button" role="tab">
+                                    <i class="bi bi-person-badge me-1"></i>Cast Vote For Member
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="poll{{ poll.id }}TabContent">
+                            <!-- Your Vote Tab -->
+                            <div class="tab-pane fade show active" id="vote-pane-{{ poll.id }}" role="tabpanel">
+                                {% if poll.user_has_voted %}
+                                    <div class="alert alert-success">
+                                        <i class="bi bi-check-circle me-2"></i>You have already voted in this poll.
+                                    </div>
+                                {% else %}
+                            <!-- Regular Voting Interface (hidden on Admin Vote tab) -->
                             <form method="POST" action="/polls/{{ poll.id }}/vote">
                                 {{ csrf_token(request) }}
                                 <div class="mb-3">
@@ -302,6 +326,181 @@
                                 </div>
                             </div>
                             {% endif %}
+                                {% endif %} <!-- Close else for user_has_voted (admin tab) -->
+                            </div> <!-- Close vote-pane (admin tab) -->
+
+                            <!-- Cast Vote For Member Tab (admin tab) -->
+                            <div class="tab-pane fade" id="admin-vote-pane-{{ poll.id }}" role="tabpanel">
+                                <div class="card border-warning">
+                                    <div class="card-header bg-warning text-dark">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-person-badge me-2"></i><strong>Admin: Cast Vote on Behalf of Member</strong>
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <form method="POST" action="/polls/{{ poll.id }}/vote" onsubmit="return validateProxyVote{{ poll.id }}()">
+                                            {{ csrf_token(request) }}
+                                            <div class="mb-3">
+                                                <label for="vote_as_angler_{{ poll.id }}" class="form-label fw-bold">
+                                                    <i class="bi bi-person-check me-1"></i>Select Member to Vote For:
+                                                </label>
+                                                <select name="vote_as_angler_id" id="vote_as_angler_{{ poll.id }}" class="form-select" required>
+                                                    <option value="">Choose a member...</option>
+                                                    {% for member in members %}
+                                                        <option value="{{ member.id }}">{{ member.name }} ({{ member.email }})</option>
+                                                    {% endfor %}
+                                                </select>
+                                                <div class="form-text">Select which member you are casting a vote for</div>
+                                            </div>
+
+                                            {% if poll.poll_type == 'tournament_location' %}
+                                            <!-- Tournament location options for admin -->
+                                            <div class="card mb-3 border-secondary">
+                                                <div class="card-body">
+                                                    <div class="row g-3">
+                                                        <div class="col-md-4">
+                                                            <label class="form-label fw-bold small">
+                                                                <i class="bi bi-geo-alt me-1"></i>Lake
+                                                            </label>
+                                                            <select id="admin_lake_select_{{ poll.id }}" class="form-select form-select-sm" required onchange="updateAdminRamps{{ poll.id }}()">
+                                                                <option value="">Choose a lake...</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label fw-bold small">
+                                                                <i class="bi bi-signpost me-1"></i>Ramp
+                                                            </label>
+                                                            <select id="admin_ramp_select_{{ poll.id }}" class="form-select form-select-sm" required disabled>
+                                                                <option value="">First select a lake</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label class="form-label fw-bold small">
+                                                                <i class="bi bi-clock me-1"></i>Times
+                                                            </label>
+                                                            <div class="d-flex gap-2">
+                                                                <div class="flex-fill">
+                                                                    <select id="admin_start_time_{{ poll.id }}" class="form-select form-select-sm" required title="Start Time">
+                                                                        <option value="">Start...</option>
+                                                                        <option value="05:00">5:00 AM</option>
+                                                                        <option value="05:30">5:30 AM</option>
+                                                                        <option value="06:00" selected>6:00 AM</option>
+                                                                        <option value="06:30">6:30 AM</option>
+                                                                        <option value="07:00">7:00 AM</option>
+                                                                        <option value="07:30">7:30 AM</option>
+                                                                    </select>
+                                                                </div>
+                                                                <div class="flex-fill">
+                                                                    <select id="admin_end_time_{{ poll.id }}" class="form-select form-select-sm" required title="End Time">
+                                                                        <option value="">End...</option>
+                                                                        <option value="14:00">2:00 PM</option>
+                                                                        <option value="14:30">2:30 PM</option>
+                                                                        <option value="15:00" selected>3:00 PM</option>
+                                                                        <option value="15:30">3:30 PM</option>
+                                                                        <option value="16:00">4:00 PM</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <input type="hidden" name="option_id" id="admin_vote_option_id_{{ poll.id }}" required>
+                                            {% else %}
+                                            <!-- Regular poll options for admin -->
+                                            {% for option in poll.options %}
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="radio" name="option_id"
+                                                       id="admin_option_{{ poll.id }}_{{ option.id }}" value="{{ option.id }}" required>
+                                                <label class="form-check-label" for="admin_option_{{ poll.id }}_{{ option.id }}">
+                                                    {{ option.text }}
+                                                </label>
+                                            </div>
+                                            {% endfor %}
+                                            {% endif %}
+
+                                            <button type="submit" class="btn btn-warning w-100 mt-3">
+                                                <i class="bi bi-check-square me-2"></i>Cast Vote on Behalf of Selected Member
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div> <!-- Close admin-vote-pane -->
+                        </div> <!-- Close tab-content -->
+                        {% elif poll.status == 'active' and user.member and not poll.user_has_voted %}
+                            <!-- Non-admin member voting (no tabs) -->
+                            <form method="POST" action="/polls/{{ poll.id }}/vote">
+                                {{ csrf_token(request) }}
+                                <div class="mb-3">
+                                    <p class="fw-bold text-primary">
+                                        <i class="bi bi-check-circle me-2"></i>Cast your vote:
+                                    </p>
+                                    {% if poll.poll_type == 'tournament_location' %}
+                                    <!-- Tournament location polls - interactive selection -->
+                                    <div class="card mb-3">
+                                        <div class="card-body">
+                                            <!-- Lake/Ramp/Time selection same as admin tab -->
+                                            <div class="row g-3">
+                                                <div class="col-md-4">
+                                                    <label for="lake_select_nonadmin_{{ poll.id }}" class="form-label fw-bold small">
+                                                        <i class="bi bi-geo-alt me-1"></i>Lake
+                                                    </label>
+                                                    <select id="lake_select_nonadmin_{{ poll.id }}" class="form-select form-select-sm" required onchange="updateRampsNonAdmin{{ poll.id }}()">
+                                                        <option value="">Choose a lake...</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label for="ramp_select_nonadmin_{{ poll.id }}" class="form-label fw-bold small">
+                                                        <i class="bi bi-signpost me-1"></i>Ramp
+                                                    </label>
+                                                    <select id="ramp_select_nonadmin_{{ poll.id }}" class="form-select form-select-sm" required disabled>
+                                                        <option value="">First select a lake</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-bold small">
+                                                        <i class="bi bi-clock me-1"></i>Times
+                                                    </label>
+                                                    <div class="d-flex gap-2">
+                                                        <div class="flex-fill">
+                                                            <select id="start_time_nonadmin_{{ poll.id }}" class="form-select form-select-sm" required title="Start Time">
+                                                                <option value="">Start...</option>
+                                                                <option value="05:00" selected>5:00 AM</option>
+                                                                <option value="06:00">6:00 AM</option>
+                                                                <option value="07:00">7:00 AM</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="flex-fill">
+                                                            <select id="end_time_nonadmin_{{ poll.id }}" class="form-select form-select-sm" required title="End Time">
+                                                                <option value="">End...</option>
+                                                                <option value="14:00">2:00 PM</option>
+                                                                <option value="15:00" selected>3:00 PM</option>
+                                                                <option value="16:00">4:00 PM</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="option_id" id="vote_option_id_nonadmin_{{ poll.id }}" required>
+                                    {% else %}
+                                    <!-- Regular poll options -->
+                                    {% for option in poll.options %}
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="option_id"
+                                               id="option_nonadmin_{{ poll.id }}_{{ option.id }}" value="{{ option.id }}" required>
+                                        <label class="form-check-label" for="option_nonadmin_{{ poll.id }}_{{ option.id }}">
+                                            {{ option.text }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                    {% endif %}
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check2 me-1"></i>Cast Vote
+                                </button>
+                            </form>
                         {% elif poll.status == 'active' and not user.member %}
                             <!-- Non-member message -->
                             <div class="alert alert-warning">
@@ -714,6 +913,7 @@
 const lakesData = {{ lakes_data | tojson | safe }};
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Populate regular voting form lake dropdown
     const lakeSelect = document.getElementById('lake_select');
     if (lakeSelect && lakesData) {
         lakesData.forEach(lake => {
@@ -723,6 +923,19 @@ document.addEventListener('DOMContentLoaded', function() {
             lakeSelect.appendChild(option);
         });
     }
+
+    // Populate admin proxy voting form lake dropdowns (for all polls)
+    const adminLakeSelects = document.querySelectorAll('[id^="admin_lake_select_"]');
+    adminLakeSelects.forEach(adminLakeSelect => {
+        if (lakesData) {
+            lakesData.forEach(lake => {
+                const option = document.createElement('option');
+                option.value = lake.id;
+                option.textContent = lake.name;
+                adminLakeSelect.appendChild(option);
+            });
+        }
+    });
 });
 
 function updateRamps() {
@@ -750,6 +963,103 @@ function updateRamps() {
         }
     }
 }
+
+// Create dynamic admin ramp update functions for each poll
+{% for poll in polls %}
+{% if poll.poll_type == 'tournament_location' %}
+window.updateAdminRamps{{ poll.id }} = function() {
+    const lakeSelect = document.getElementById('admin_lake_select_{{ poll.id }}');
+    const rampSelect = document.getElementById('admin_ramp_select_{{ poll.id }}');
+
+    if (!lakeSelect || !rampSelect) return;
+
+    const lakeId = parseInt(lakeSelect.value);
+    rampSelect.innerHTML = '<option value="">Select a ramp...</option>';
+    rampSelect.disabled = true;
+
+    if (!lakeId) return;
+
+    const selectedLake = lakesData.find(lake => lake.id === lakeId);
+    if (selectedLake && selectedLake.ramps) {
+        selectedLake.ramps.forEach(ramp => {
+            const option = document.createElement('option');
+            option.value = ramp.id;
+            option.textContent = ramp.name;
+            rampSelect.appendChild(option);
+        });
+        if (selectedLake.ramps.length > 0) {
+            rampSelect.disabled = false;
+        }
+    }
+};
+
+window.validateProxyVote{{ poll.id }} = function() {
+    const lakeSelect = document.getElementById('admin_lake_select_{{ poll.id }}');
+    const rampSelect = document.getElementById('admin_ramp_select_{{ poll.id }}');
+    const startTimeSelect = document.getElementById('admin_start_time_{{ poll.id }}');
+    const endTimeSelect = document.getElementById('admin_end_time_{{ poll.id }}');
+    const voteDataInput = document.getElementById('admin_vote_option_id_{{ poll.id }}');
+    const memberSelect = document.getElementById('vote_as_angler_{{ poll.id }}');
+
+    if (!memberSelect.value) {
+        alert('Please select a member to vote for');
+        return false;
+    }
+
+    if (!lakeSelect.value) {
+        alert('Please select a lake');
+        return false;
+    }
+    if (!rampSelect.value) {
+        alert('Please select a ramp');
+        return false;
+    }
+    if (!startTimeSelect.value) {
+        alert('Please select a start time');
+        return false;
+    }
+    if (!endTimeSelect.value) {
+        alert('Please select an end time');
+        return false;
+    }
+
+    // Validate time order
+    if (startTimeSelect.value >= endTimeSelect.value) {
+        alert('Start time must be before end time');
+        return false;
+    }
+
+    // Validate reasonable tournament hours
+    const startHour = parseInt(startTimeSelect.value.split(':')[0]);
+    const endHour = parseInt(endTimeSelect.value.split(':')[0]);
+    if (startHour < 4 || endHour > 23) {
+        alert('Tournament times must be between 4:00 AM and 11:00 PM');
+        return false;
+    }
+
+    // Create JSON object with vote data
+    const voteData = {
+        lake_id: lakeSelect.value,
+        ramp_id: rampSelect.value,
+        start_time: startTimeSelect.value,
+        end_time: endTimeSelect.value
+    };
+
+    // Set the hidden field value to JSON string
+    voteDataInput.value = JSON.stringify(voteData);
+    return true;
+};
+{% else %}
+window.validateProxyVote{{ poll.id }} = function() {
+    const memberSelect = document.getElementById('vote_as_angler_{{ poll.id }}');
+    if (!memberSelect.value) {
+        alert('Please select a member to vote for');
+        return false;
+    }
+    return true;
+};
+{% endif %}
+{% endfor %}
 
 function validateVote() {
     const lakeSelect = document.getElementById('lake_select');
