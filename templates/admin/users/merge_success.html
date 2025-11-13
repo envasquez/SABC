@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% from 'macros.html' import alert %}
+{% block title %}Merge Completed - South Austin Bass Club{% endblock %}
+{% block content %}
+<div class="mb-4">
+    <div class="alert alert-success border-success">
+        <h4 class="alert-heading"><i class="bi bi-check-circle-fill me-2"></i>Merge Completed Successfully!</h4>
+        <p class="mb-0">All data has been migrated from the source account to the target account.</p>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card bg-dark border-secondary">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-person-x me-2"></i>Source Account (Old)</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>ID:</strong> {{ result.source_angler_id }}</p>
+                    <p class="text-muted mb-0">This account still exists but has no data. You can delete it below if desired.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card bg-dark border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-person-check me-2"></i>Target Account (Active)</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>ID:</strong> {{ result.target_angler_id }}</p>
+                    <p class="text-success mb-0">All data has been consolidated into this account.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card bg-dark mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-list-check me-2"></i>Migration Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="text-center p-3 bg-secondary rounded">
+                        <h3 class="text-success mb-1">{{ result.migrated.results }}</h3>
+                        <small class="text-muted">Tournament Results</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center p-3 bg-secondary rounded">
+                        <h3 class="text-success mb-1">{{ result.migrated.team_results }}</h3>
+                        <small class="text-muted">Team Results</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center p-3 bg-secondary rounded">
+                        <h3 class="text-success mb-1">{{ result.migrated.poll_votes }}</h3>
+                        <small class="text-muted">Poll Votes</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center p-3 bg-secondary rounded">
+                        <h3 class="text-success mb-1">{{ result.migrated.officer_positions }}</h3>
+                        <small class="text-muted">Officer Positions</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center p-3 bg-secondary rounded">
+                        <h3 class="text-muted mb-1">{{ result.migrated.polls_created }}</h3>
+                        <small class="text-muted">Polls Created</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center p-3 bg-secondary rounded">
+                        <h3 class="text-muted mb-1">{{ result.migrated.news_authored }}</h3>
+                        <small class="text-muted">News Articles</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center p-3 bg-secondary rounded">
+                        <h3 class="text-muted mb-1">{{ result.migrated.tournaments_created }}</h3>
+                        <small class="text-muted">Tournaments Created</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center p-3 bg-secondary rounded">
+                        <h3 class="text-muted mb-1">{{ result.migrated.proxy_votes_cast }}</h3>
+                        <small class="text-muted">Proxy Votes Cast</small>
+                    </div>
+                </div>
+            </div>
+
+            {% if result.deleted_duplicate_votes > 0 %}
+            <div class="alert alert-warning border-warning mt-3">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>{{ result.deleted_duplicate_votes }}</strong> duplicate poll vote(s) were deleted (where both accounts voted on the same poll).
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card bg-dark border-warning">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="bi bi-trash me-2"></i>Delete Old Account (Optional)</h5>
+        </div>
+        <div class="card-body">
+            <p>The source account (ID {{ result.source_angler_id }}) is now empty and can be safely deleted if desired.</p>
+            <p class="text-muted small mb-3">Note: Deleting the account will remove it from the system entirely. This cannot be undone.</p>
+
+            <form method="POST" action="/admin/users/merge/delete" onsubmit="return confirm('Are you sure you want to delete this account? This cannot be undone.');">
+                <input type="hidden" name="angler_id" value="{{ result.source_angler_id }}">
+                <button type="submit" class="btn btn-danger me-2">
+                    <i class="bi bi-trash me-2"></i>Delete Old Account
+                </button>
+                <a href="/admin/users" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Keep Account & Return to User List
+                </a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
