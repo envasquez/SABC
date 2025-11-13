@@ -90,7 +90,7 @@ async def vote_in_poll(
                     return RedirectResponse(
                         f"/polls?error={error or 'Invalid vote data'}", status_code=303
                     )
-                actual_option_id = get_or_create_option_id(poll_id, option_text, vote_data)
+                actual_option_id = get_or_create_option_id(poll_id, option_text, vote_data, session)
             else:
                 try:
                     actual_option_id = int(option_id)

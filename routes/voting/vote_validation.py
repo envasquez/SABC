@@ -81,21 +81,28 @@ def validate_tournament_location_vote(vote_data: dict) -> Tuple[Optional[str], O
     return option_text, None
 
 
-def get_or_create_option_id(poll_id: int, option_text: str, vote_data: dict) -> Optional[int]:
+def get_or_create_option_id(poll_id: int, option_text: str, vote_data: dict, session=None) -> Optional[int]:
     """Get or create a poll option, handling race conditions with database constraint.
 
     Uses ON CONFLICT DO NOTHING to handle concurrent creation attempts safely.
     The unique constraint uq_poll_option_text (poll_id, option_text) prevents duplicates.
+
+    Args:
+        poll_id: The poll ID
+        option_text: The option text
+        vote_data: The vote data dict
+        session: Existing SQLAlchemy session (if None, creates new session)
     """
     from sqlalchemy import text
     from sqlalchemy.exc import IntegrityError
 
-    with get_session() as session:
+    def _execute(sess):
+        """Inner function to execute the query with provided session."""
         try:
             # Try to insert new option using ON CONFLICT to handle race condition
             vote_data["lake_id"] = int(vote_data["lake_id"])
             vote_data_json = json.dumps(vote_data)
-            result = session.execute(
+            result = sess.execute(
                 text("""
                     INSERT INTO poll_options (poll_id, option_text, option_data)
                     VALUES (:poll_id, :option_text, CAST(:option_data AS jsonb))
@@ -108,7 +115,7 @@ def get_or_create_option_id(poll_id: int, option_text: str, vote_data: dict) -> 
                     "option_data": vote_data_json,
                 },
             )
-            session.flush()
+            sess.flush()
 
             # If INSERT succeeded, we get the ID back
             row = result.fetchone()
@@ -117,7 +124,7 @@ def get_or_create_option_id(poll_id: int, option_text: str, vote_data: dict) -> 
 
             # If INSERT was skipped due to conflict, fetch existing option
             existing_option = (
-                session.query(PollOption)
+                sess.query(PollOption)
                 .filter(PollOption.poll_id == poll_id)
                 .filter(PollOption.option_text == option_text)
                 .first()
@@ -126,11 +133,18 @@ def get_or_create_option_id(poll_id: int, option_text: str, vote_data: dict) -> 
 
         except IntegrityError:
             # In case of any integrity error, try to fetch existing option
-            session.rollback()
+            sess.rollback()
             existing_option = (
-                session.query(PollOption)
+                sess.query(PollOption)
                 .filter(PollOption.poll_id == poll_id)
                 .filter(PollOption.option_text == option_text)
                 .first()
             )
             return existing_option.id if existing_option else None
+
+    # Use provided session or create a new one
+    if session is not None:
+        return _execute(session)
+    else:
+        with get_session() as new_session:
+            return _execute(new_session)
