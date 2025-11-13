@@ -67,6 +67,8 @@ def get_seasonal_tournament_history(
             session.query(
                 Tournament.id,
                 Tournament.fish_limit,
+                Tournament.start_time,
+                Tournament.end_time,
                 Event.date,
                 Lake.display_name.label("lake_name"),
                 Ramp.name.label("ramp_name"),
@@ -85,6 +87,8 @@ def get_seasonal_tournament_history(
             .group_by(
                 Tournament.id,
                 Tournament.fish_limit,
+                Tournament.start_time,
+                Tournament.end_time,
                 Event.date,
                 Lake.display_name,
                 Ramp.name,
@@ -124,6 +128,8 @@ def get_seasonal_tournament_history(
                     "year": past_year,
                     "month_name": month_name,
                     "date": tournament_query.date,
+                    "start_time": tournament_query.start_time,
+                    "end_time": tournament_query.end_time,
                     "lake_name": tournament_query.lake_name or "TBD",
                     "ramp_name": tournament_query.ramp_name or "TBD",
                     "num_anglers": tournament_query.num_anglers or 0,

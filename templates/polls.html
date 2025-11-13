@@ -290,6 +290,12 @@
                                                             {% if hist.ramp_name != 'TBD' %}
                                                                 <br><span class="text-muted ms-3">{{ hist.ramp_name }}</span>
                                                             {% endif %}
+                                                            {% if hist.start_time and hist.end_time %}
+                                                                <br><span class="text-muted ms-3">
+                                                                    <i class="bi bi-clock"></i>
+                                                                    {{ hist.start_time | time_format }} - {{ hist.end_time | time_format }}
+                                                                </span>
+                                                            {% endif %}
                                                         </p>
 
                                                         <div class="row g-2 small">
@@ -560,6 +566,12 @@
                                                             {% if hist.ramp_name != 'TBD' %}
                                                                 <br><span class="text-muted ms-3">{{ hist.ramp_name }}</span>
                                                             {% endif %}
+                                                            {% if hist.start_time and hist.end_time %}
+                                                                <br><span class="text-muted ms-3">
+                                                                    <i class="bi bi-clock"></i>
+                                                                    {{ hist.start_time | time_format }} - {{ hist.end_time | time_format }}
+                                                                </span>
+                                                            {% endif %}
                                                         </p>
 
                                                         <div class="row g-2 small">
@@ -707,6 +719,12 @@
                                                                     <strong>{{ hist.lake_name }}</strong>
                                                                     {% if hist.ramp_name != 'TBD' %}
                                                                         <br><span class="text-muted ms-3">{{ hist.ramp_name }}</span>
+                                                                    {% endif %}
+                                                                    {% if hist.start_time and hist.end_time %}
+                                                                        <br><span class="text-muted ms-3">
+                                                                            <i class="bi bi-clock"></i>
+                                                                            {{ hist.start_time | time_format }} - {{ hist.end_time | time_format }}
+                                                                        </span>
                                                                     {% endif %}
                                                                 </p>
 
