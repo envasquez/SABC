@@ -81,7 +81,9 @@ def validate_tournament_location_vote(vote_data: dict) -> Tuple[Optional[str], O
     return option_text, None
 
 
-def get_or_create_option_id(poll_id: int, option_text: str, vote_data: dict, session=None) -> Optional[int]:
+def get_or_create_option_id(
+    poll_id: int, option_text: str, vote_data: dict, session=None
+) -> Optional[int]:
     """Get or create a poll option, handling race conditions with database constraint.
 
     Uses ON CONFLICT DO NOTHING to handle concurrent creation attempts safely.
