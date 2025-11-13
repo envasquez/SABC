@@ -812,6 +812,7 @@
 const lakesData = {{ lakes_data | tojson | safe }};
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Populate regular voting form lake dropdown
     const lakeSelect = document.getElementById('lake_select');
     if (lakeSelect && lakesData) {
         lakesData.forEach(lake => {
@@ -821,6 +822,19 @@ document.addEventListener('DOMContentLoaded', function() {
             lakeSelect.appendChild(option);
         });
     }
+
+    // Populate admin proxy voting form lake dropdowns (for all polls)
+    const adminLakeSelects = document.querySelectorAll('[id^="admin_lake_select_"]');
+    adminLakeSelects.forEach(adminLakeSelect => {
+        if (lakesData) {
+            lakesData.forEach(lake => {
+                const option = document.createElement('option');
+                option.value = lake.id;
+                option.textContent = lake.name;
+                adminLakeSelect.appendChild(option);
+            });
+        }
+    });
 });
 
 function updateRamps() {
@@ -848,6 +862,103 @@ function updateRamps() {
         }
     }
 }
+
+// Create dynamic admin ramp update functions for each poll
+{% for poll in polls %}
+{% if poll.poll_type == 'tournament_location' %}
+window.updateAdminRamps{{ poll.id }} = function() {
+    const lakeSelect = document.getElementById('admin_lake_select_{{ poll.id }}');
+    const rampSelect = document.getElementById('admin_ramp_select_{{ poll.id }}');
+
+    if (!lakeSelect || !rampSelect) return;
+
+    const lakeId = parseInt(lakeSelect.value);
+    rampSelect.innerHTML = '<option value="">Select a ramp...</option>';
+    rampSelect.disabled = true;
+
+    if (!lakeId) return;
+
+    const selectedLake = lakesData.find(lake => lake.id === lakeId);
+    if (selectedLake && selectedLake.ramps) {
+        selectedLake.ramps.forEach(ramp => {
+            const option = document.createElement('option');
+            option.value = ramp.id;
+            option.textContent = ramp.name;
+            rampSelect.appendChild(option);
+        });
+        if (selectedLake.ramps.length > 0) {
+            rampSelect.disabled = false;
+        }
+    }
+};
+
+window.validateProxyVote{{ poll.id }} = function() {
+    const lakeSelect = document.getElementById('admin_lake_select_{{ poll.id }}');
+    const rampSelect = document.getElementById('admin_ramp_select_{{ poll.id }}');
+    const startTimeSelect = document.getElementById('admin_start_time_{{ poll.id }}');
+    const endTimeSelect = document.getElementById('admin_end_time_{{ poll.id }}');
+    const voteDataInput = document.getElementById('admin_vote_option_id_{{ poll.id }}');
+    const memberSelect = document.getElementById('vote_as_angler_{{ poll.id }}');
+
+    if (!memberSelect.value) {
+        alert('Please select a member to vote for');
+        return false;
+    }
+
+    if (!lakeSelect.value) {
+        alert('Please select a lake');
+        return false;
+    }
+    if (!rampSelect.value) {
+        alert('Please select a ramp');
+        return false;
+    }
+    if (!startTimeSelect.value) {
+        alert('Please select a start time');
+        return false;
+    }
+    if (!endTimeSelect.value) {
+        alert('Please select an end time');
+        return false;
+    }
+
+    // Validate time order
+    if (startTimeSelect.value >= endTimeSelect.value) {
+        alert('Start time must be before end time');
+        return false;
+    }
+
+    // Validate reasonable tournament hours
+    const startHour = parseInt(startTimeSelect.value.split(':')[0]);
+    const endHour = parseInt(endTimeSelect.value.split(':')[0]);
+    if (startHour < 4 || endHour > 23) {
+        alert('Tournament times must be between 4:00 AM and 11:00 PM');
+        return false;
+    }
+
+    // Create JSON object with vote data
+    const voteData = {
+        lake_id: lakeSelect.value,
+        ramp_id: rampSelect.value,
+        start_time: startTimeSelect.value,
+        end_time: endTimeSelect.value
+    };
+
+    // Set the hidden field value to JSON string
+    voteDataInput.value = JSON.stringify(voteData);
+    return true;
+};
+{% else %}
+window.validateProxyVote{{ poll.id }} = function() {
+    const memberSelect = document.getElementById('vote_as_angler_{{ poll.id }}');
+    if (!memberSelect.value) {
+        alert('Please select a member to vote for');
+        return false;
+    }
+    return true;
+};
+{% endif %}
+{% endfor %}
 
 function validateVote() {
     const lakeSelect = document.getElementById('lake_select');
