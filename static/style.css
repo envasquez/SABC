@@ -63,13 +63,14 @@ a {
 a:hover {
   color: #8bb9fe;
 }
-.nav-tabs .nav-link {
-  color: var(--muted) !important;
+/* Use body prefix for higher specificity instead of !important */
+body .nav-tabs .nav-link {
+  color: var(--muted);
 }
-.nav-tabs .nav-link.active {
-  color: var(--text) !important;
-  background: #4a5158 !important;
-  border-color: var(--border) var(--border) #4a5158 !important;
+body .nav-tabs .nav-link.active {
+  color: var(--text);
+  background: #4a5158;
+  border-color: var(--border) var(--border) #4a5158;
 }
 .alert {
   color: var(--text) !important;
@@ -87,24 +88,24 @@ a:hover {
   border-bottom: 2px solid var(--border) !important;
 }
 
-/* Fix Bootstrap Darkly text colors to be lighter */
-.text-primary {
-  color: #6ea8fe !important;
+/* Fix Bootstrap Darkly text colors to be lighter - Use body prefix for specificity */
+body .text-primary {
+  color: #6ea8fe;
 }
-.text-success {
-  color: #75b798 !important;
+body .text-success {
+  color: #75b798;
 }
-.text-warning {
-  color: #f0ad4e !important;
+body .text-warning {
+  color: #f0ad4e;
 }
-.text-danger {
-  color: #ee5f5b !important;
+body .text-danger {
+  color: #ee5f5b;
 }
-.text-info {
-  color: #5bc0de !important;
+body .text-info {
+  color: #5bc0de;
 }
-.text-secondary {
-  color: #adb5bd !important;
+body .text-secondary {
+  color: #adb5bd;
 }
 
 /* Medal/Trophy colors for podium finishes */
@@ -114,11 +115,11 @@ a:hover {
 }
 
 .color-gold {
-  color: #ffd700 !important;
+  color: #ffd700;
 }
 
 .color-gold-dark {
-  color: #b8860b !important;
+  color: #b8860b;
 }
 
 .medal-silver {
@@ -128,13 +129,13 @@ a:hover {
 }
 
 .color-silver {
-  color: #a8a8a8 !important;
+  color: #a8a8a8;
 }
 
 .color-silver-dark {
-  color: #2c2c2c !important;
+  color: #2c2c2c;
 }
 
 .color-bronze {
-  color: #cd7f32 !important;
+  color: #cd7f32;
 }
