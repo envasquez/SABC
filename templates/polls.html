@@ -91,6 +91,104 @@
                     {% endif %}
 
                     {% if poll.options %}
+                        {% if user.is_admin and poll.status == 'active' %}
+                            <!-- Admin Proxy Voting Interface -->
+                            <div class="card border-warning mb-4">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-person-badge me-2"></i><strong>Admin: Cast Vote on Behalf of Member</strong>
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <form method="POST" action="/polls/{{ poll.id }}/vote" onsubmit="return validateProxyVote{{ poll.id }}()">
+                                        {{ csrf_token(request) }}
+                                        <div class="mb-3">
+                                            <label for="vote_as_angler_{{ poll.id }}" class="form-label fw-bold">
+                                                <i class="bi bi-person-check me-1"></i>Select Member to Vote For:
+                                            </label>
+                                            <select name="vote_as_angler_id" id="vote_as_angler_{{ poll.id }}" class="form-select" required>
+                                                <option value="">Choose a member...</option>
+                                                {% for member in members %}
+                                                    <option value="{{ member.id }}">{{ member.name }} ({{ member.email }})</option>
+                                                {% endfor %}
+                                            </select>
+                                            <div class="form-text">Select which member you are casting a vote for</div>
+                                        </div>
+
+                                        {% if poll.poll_type == 'tournament_location' %}
+                                        <!-- Tournament location options for admin -->
+                                        <div class="card mb-3 border-secondary">
+                                            <div class="card-body">
+                                                <div class="row g-3">
+                                                    <div class="col-md-4">
+                                                        <label class="form-label fw-bold small">
+                                                            <i class="bi bi-geo-alt me-1"></i>Lake
+                                                        </label>
+                                                        <select id="admin_lake_select_{{ poll.id }}" class="form-select form-select-sm" required onchange="updateAdminRamps{{ poll.id }}()">
+                                                            <option value="">Choose a lake...</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label fw-bold small">
+                                                            <i class="bi bi-signpost me-1"></i>Ramp
+                                                        </label>
+                                                        <select id="admin_ramp_select_{{ poll.id }}" class="form-select form-select-sm" required disabled>
+                                                            <option value="">First select a lake</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label fw-bold small">
+                                                            <i class="bi bi-clock me-1"></i>Times
+                                                        </label>
+                                                        <div class="d-flex gap-2">
+                                                            <div class="flex-fill">
+                                                                <select id="admin_start_time_{{ poll.id }}" class="form-select form-select-sm" required title="Start Time">
+                                                                    <option value="">Start...</option>
+                                                                    <option value="05:00">5:00 AM</option>
+                                                                    <option value="05:30">5:30 AM</option>
+                                                                    <option value="06:00" selected>6:00 AM</option>
+                                                                    <option value="06:30">6:30 AM</option>
+                                                                    <option value="07:00">7:00 AM</option>
+                                                                    <option value="07:30">7:30 AM</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="flex-fill">
+                                                                <select id="admin_end_time_{{ poll.id }}" class="form-select form-select-sm" required title="End Time">
+                                                                    <option value="">End...</option>
+                                                                    <option value="14:00">2:00 PM</option>
+                                                                    <option value="14:30">2:30 PM</option>
+                                                                    <option value="15:00" selected>3:00 PM</option>
+                                                                    <option value="15:30">3:30 PM</option>
+                                                                    <option value="16:00">4:00 PM</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="option_id" id="admin_vote_option_id_{{ poll.id }}" required>
+                                        {% else %}
+                                        <!-- Regular poll options for admin -->
+                                        {% for option in poll.options %}
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="radio" name="option_id"
+                                                   id="admin_option_{{ poll.id }}_{{ option.id }}" value="{{ option.id }}" required>
+                                            <label class="form-check-label" for="admin_option_{{ poll.id }}_{{ option.id }}">
+                                                {{ option.text }}
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                        {% endif %}
+
+                                        <button type="submit" class="btn btn-warning w-100 mt-3">
+                                            <i class="bi bi-check-square me-2"></i>Cast Vote on Behalf of Selected Member
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endif %}
+
                         {% if poll.status == 'active' and user.member and not poll.user_has_voted %}
                             <!-- Voting Interface -->
                             <form method="POST" action="/polls/{{ poll.id }}/vote">

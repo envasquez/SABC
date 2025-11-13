@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 
 from sqlalchemy import exists, select
 
-from core.db_schema import Poll, PollOption, PollVote, get_session
+from core.db_schema import Angler, Poll, PollOption, PollVote, get_session
 from routes.dependencies import (
     find_lake_by_id,
     find_ramp_name_by_id,
@@ -148,3 +148,42 @@ def get_or_create_option_id(poll_id: int, option_text: str, vote_data: dict, ses
     else:
         with get_session() as new_session:
             return _execute(new_session)
+
+
+def validate_proxy_vote(
+    admin_id: int, target_angler_id: int, poll_id: int, session
+) -> Tuple[Optional[str], Optional[str]]:
+    """Validate that an admin can cast a proxy vote for a target angler.
+
+    Args:
+        admin_id: ID of the admin casting the vote
+        target_angler_id: ID of the angler being voted for
+        poll_id: ID of the poll
+        session: Active database session
+
+    Returns:
+        Tuple of (target_angler_name, error_message)
+        If successful: (name, None)
+        If error: (None, error_message)
+    """
+    # Check that target angler exists
+    target_angler = session.query(Angler).filter(Angler.id == target_angler_id).first()
+
+    if not target_angler:
+        return None, "Selected member not found"
+
+    # Check that target angler is a member
+    if not target_angler.member:
+        return None, "Only club members can vote. Selected user is not a member."
+
+    # Check that target angler hasn't already voted
+    existing_vote = (
+        session.query(PollVote)
+        .filter(PollVote.poll_id == poll_id, PollVote.angler_id == target_angler_id)
+        .first()
+    )
+
+    if existing_vote:
+        return None, f"{target_angler.name} has already voted in this poll"
+
+    return target_angler.name, None

@@ -90,9 +90,13 @@ class PollQueries(QueryServiceBase):
                         pv.id as vote_id,
                         pv.voted_at,
                         a.name as voter_name,
-                        a.id as voter_id
+                        a.id as voter_id,
+                        pv.cast_by_admin,
+                        pv.cast_by_admin_id,
+                        admin.name as admin_name
                     FROM poll_votes pv
                     JOIN anglers a ON pv.angler_id = a.id
+                    LEFT JOIN anglers admin ON pv.cast_by_admin_id = admin.id
                     WHERE pv.option_id = :option_id
                     ORDER BY pv.voted_at DESC
                 """,

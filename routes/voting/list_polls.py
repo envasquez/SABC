@@ -217,6 +217,19 @@ async def polls(
 
         page_range = range(start_page, end_page + 1)
 
+    # Get all members for admin proxy voting dropdown
+    with get_session() as session:
+        all_members = (
+            session.query(Angler.id, Angler.name, Angler.email)
+            .filter(Angler.member.is_(true()))
+            .order_by(Angler.name)
+            .all()
+        )
+        members_list = [
+            {"id": m.id, "name": m.name, "email": m.email}
+            for m in all_members
+        ]
+
     lakes_data = [
         {
             "id": lake["id"],
@@ -233,6 +246,7 @@ async def polls(
             "request": request,
             "user": user,
             "polls": polls,
+            "members": members_list,
             "lakes_data": lakes_data,
             "current_tab": tab,
             "current_page": page,
