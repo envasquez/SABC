@@ -107,7 +107,11 @@ def create_app() -> FastAPI:
     ) -> JSONResponse:
         # Handle FormData which is not JSON serializable
         try:
-            body = exc.body if isinstance(exc.body, (dict, list, str, int, float, bool, type(None))) else str(exc.body)
+            body = (
+                exc.body
+                if isinstance(exc.body, (dict, list, str, int, float, bool, type(None)))
+                else str(exc.body)
+            )
         except Exception:
             body = None
 

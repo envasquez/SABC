@@ -55,7 +55,11 @@ async def vote_in_poll(
                 if not user.get("is_admin", False):
                     logger.warning(
                         "Non-admin attempted proxy vote",
-                        extra={"poll_id": poll_id, "user_id": user["id"], "target_id": vote_as_angler_id},
+                        extra={
+                            "poll_id": poll_id,
+                            "user_id": user["id"],
+                            "target_id": vote_as_angler_id,
+                        },
                     )
                     return RedirectResponse(
                         "/polls?error=Only admins can vote on behalf of members", status_code=303

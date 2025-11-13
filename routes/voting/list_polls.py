@@ -225,10 +225,7 @@ async def polls(
             .order_by(Angler.name)
             .all()
         )
-        members_list = [
-            {"id": m.id, "name": m.name, "email": m.email}
-            for m in all_members
-        ]
+        members_list = [{"id": m.id, "name": m.name, "email": m.email} for m in all_members]
 
     lakes_data = [
         {
