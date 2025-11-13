@@ -105,7 +105,7 @@ body .text-info {
   color: #5bc0de;
 }
 body .text-secondary {
-  color: #dee2e6; /* Lighter gray for better contrast on dark background */
+  color: #dee2e6 !important; /* Lighter gray for better contrast - needs !important to override Bootstrap */
 }
 
 /* Medal/Trophy colors for podium finishes */
