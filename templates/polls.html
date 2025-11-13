@@ -47,6 +47,17 @@
             {% endif %}
         </button>
     </li>
+    {% if user.is_admin %}
+    <li class="nav-item" role="presentation">
+        <button class="nav-link {% if current_tab == 'admin_vote' %}active{% endif %}"
+                id="admin-vote-tab"
+                onclick="window.location.href='/polls?tab=admin_vote&p=1'"
+                type="button"
+                role="tab">
+            <i class="bi bi-person-badge me-1"></i>Cast Vote For Member
+        </button>
+    </li>
+    {% endif %}
 </ul>
 
 <div class="row g-4">
@@ -91,8 +102,8 @@
                     {% endif %}
 
                     {% if poll.options %}
-                        {% if user.is_admin and poll.status == 'active' %}
-                            <!-- Admin Proxy Voting Interface -->
+                        {% if user.is_admin and poll.status == 'active' and current_tab == 'admin_vote' %}
+                            <!-- Admin Proxy Voting Interface (shown only on Admin Vote tab) -->
                             <div class="card border-warning mb-4">
                                 <div class="card-header bg-warning text-dark">
                                     <h6 class="mb-0">
@@ -189,8 +200,8 @@
                             </div>
                         {% endif %}
 
-                        {% if poll.status == 'active' and user.member and not poll.user_has_voted %}
-                            <!-- Voting Interface -->
+                        {% if poll.status == 'active' and user.member and not poll.user_has_voted and current_tab != 'admin_vote' %}
+                            <!-- Regular Voting Interface (hidden on Admin Vote tab) -->
                             <form method="POST" action="/polls/{{ poll.id }}/vote">
                                 {{ csrf_token(request) }}
                                 <div class="mb-3">
