@@ -94,17 +94,18 @@ def get_or_create_option_id(poll_id: int, option_text: str, vote_data: dict) -> 
         try:
             # Try to insert new option using ON CONFLICT to handle race condition
             vote_data["lake_id"] = int(vote_data["lake_id"])
+            vote_data_json = json.dumps(vote_data)
             result = session.execute(
                 text("""
                     INSERT INTO poll_options (poll_id, option_text, option_data)
-                    VALUES (:poll_id, :option_text, :option_data::jsonb)
+                    VALUES (:poll_id, :option_text, CAST(:option_data AS jsonb))
                     ON CONFLICT (poll_id, option_text) DO NOTHING
                     RETURNING id
                 """),
                 {
                     "poll_id": poll_id,
                     "option_text": option_text,
-                    "option_data": json.dumps(vote_data),
+                    "option_data": vote_data_json,
                 },
             )
             session.flush()
