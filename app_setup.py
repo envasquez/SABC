@@ -105,9 +105,15 @@ def create_app() -> FastAPI:
     async def validation_exception_handler(
         request: Request, exc: RequestValidationError
     ) -> JSONResponse:
+        # Handle FormData which is not JSON serializable
+        try:
+            body = exc.body if isinstance(exc.body, (dict, list, str, int, float, bool, type(None))) else str(exc.body)
+        except Exception:
+            body = None
+
         return JSONResponse(
             status_code=422,
-            content={"detail": exc.errors(), "body": exc.body},
+            content={"detail": exc.errors(), "body": body},
         )
 
     @app.exception_handler(ValueError)
