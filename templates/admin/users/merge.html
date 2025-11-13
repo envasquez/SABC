@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert %}
+{% from 'macros.html' import alert, csrf_token %}
 {% block title %}Merge Duplicate Accounts - South Austin Bass Club{% endblock %}
 {% block content %}
 <div class="mb-4">
@@ -112,6 +112,7 @@
         </div>
         <div class="card-body">
             <form method="POST" action="/admin/users/merge/execute" id="merge_form">
+                {{ csrf_token(request) }}
                 <input type="hidden" name="source_id" id="form_source_id">
                 <input type="hidden" name="target_id" id="form_target_id">
 
@@ -176,8 +177,17 @@ function loadPreview() {
     formData.append('source_id', sourceId);
     formData.append('target_id', targetId);
 
+    // Get CSRF token from cookie
+    const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrf_token='))
+        ?.split('=')[1];
+
     fetch('/admin/users/merge/preview', {
         method: 'POST',
+        headers: {
+            'x-csrf-token': csrfToken
+        },
         body: formData
     })
     .then(response => response.json())
