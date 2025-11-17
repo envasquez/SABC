@@ -6,14 +6,14 @@ from sqlalchemy.exc import IntegrityError
 
 from core.db_schema import Angler, get_session
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
-from routes.dependencies import u
+from routes.dependencies import get_current_user
 
 logger = get_logger("auth.profile_update.delete")
 
 
 async def delete_account(request: Request, confirm: str) -> RedirectResponse:
     """Handle account self-deletion."""
-    if not (user := u(request)):
+    if not (user := get_current_user(request)):
         return RedirectResponse("/login")
 
     if confirm != "DELETE":

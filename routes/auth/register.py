@@ -6,7 +6,7 @@ from slowapi.util import get_remote_address
 from core.db_schema import Angler, get_session
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
 from core.helpers.password_validator import validate_password_strength
-from routes.dependencies import bcrypt, templates, u
+from routes.dependencies import bcrypt, get_current_user, templates
 
 router = APIRouter()
 logger = get_logger("auth.register")
@@ -17,7 +17,7 @@ limiter = Limiter(key_func=get_remote_address)
 async def register_page(request: Request) -> Response:
     return (
         RedirectResponse("/")
-        if u(request)
+        if get_current_user(request)
         else templates.TemplateResponse("register.html", {"request": request})
     )
 

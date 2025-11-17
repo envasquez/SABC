@@ -7,11 +7,11 @@ import pytest
 from fastapi import HTTPException, Request
 
 from core.helpers.auth import (
+    get_current_user,
     get_user_optional,
     require_admin,
     require_auth,
     require_member,
-    u,
 )
 
 
@@ -26,15 +26,15 @@ class TestAuthHelpers:
         request.session = {}
         if user_id is not None:
             request.session["user_id"] = user_id
-        # Note: We can't easily mock the database connection in u()
+        # Note: We can't easily mock the database connection in get_current_user()
         # These tests verify the function behavior, but integration tests
         # are needed for full database interaction testing
         return request
 
-    def test_u_with_no_session_returns_none(self):
-        """Test u() returns None when no user_id in session."""
+    def test_get_current_user_with_no_session_returns_none(self):
+        """Test get_current_user() returns None when no user_id in session."""
         request = self.create_mock_request()
-        result = u(request)
+        result = get_current_user(request)
         assert result is None
 
     def test_get_user_optional_returns_none_when_not_authenticated(self):
@@ -77,8 +77,10 @@ class TestAuthHelpers:
 class TestAuthIntegration:
     """Integration tests for auth helpers with database."""
 
-    def test_u_returns_user_data_when_authenticated(self, authenticated_client, regular_user):
-        """Test u() returns user dictionary when user_id in session."""
+    def test_get_current_user_returns_user_data_when_authenticated(
+        self, authenticated_client, regular_user
+    ):
+        """Test get_current_user() returns user dictionary when user_id in session."""
         # This requires integration testing with actual database and session
         # covered in test_auth_routes.py
         pass
