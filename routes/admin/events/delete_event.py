@@ -46,7 +46,12 @@ async def delete_event(request: Request, event_id: int):
             # Delete polls
             session.query(Poll).filter(Poll.event_id == event_id).delete(synchronize_session=False)
 
-            # Delete event (tournaments cascade automatically)
+            # Delete tournaments explicitly (no longer CASCADE)
+            session.query(Tournament).filter(Tournament.event_id == event_id).delete(
+                synchronize_session=False
+            )
+
+            # Delete event
             event = session.query(Event).filter(Event.id == event_id).first()
             if event:
                 session.delete(event)
