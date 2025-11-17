@@ -3,9 +3,7 @@
 Tests admin-only functionality for managing tournaments and entering results.
 """
 
-from datetime import date, datetime, time, timedelta, timezone
 
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 

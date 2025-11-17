@@ -6,7 +6,6 @@ covering the workflow from viewing polls to casting votes.
 
 from datetime import datetime, timedelta, timezone
 
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 

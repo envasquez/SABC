@@ -4,7 +4,6 @@ Tests the complete authentication lifecycle including registration, login,
 logout, and session management.
 """
 
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -370,7 +369,7 @@ class TestPasswordSecurity:
         test_password = "TestPassword123!"
         import bcrypt
 
-        password_hash = bcrypt.hashpw(test_password.encode(), bcrypt.gensalt()).decode()
+        bcrypt.hashpw(test_password.encode(), bcrypt.gensalt()).decode()
         client.post(
             "/register",
             data={

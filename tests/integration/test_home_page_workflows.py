@@ -4,13 +4,12 @@ Tests the main landing page functionality including content display,
 navigation, and user-specific features.
 """
 
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from core.db_schema import Angler, Event, Lake, News, Ramp, Result, Tournament
+from core.db_schema import Angler, Event, News, Result, Tournament
 
 
 class TestHomePageAccess:
