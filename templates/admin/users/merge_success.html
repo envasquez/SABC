@@ -16,7 +16,7 @@
                 </div>
                 <div class="card-body">
                     <p class="mb-1"><strong>ID:</strong> {{ result.source_angler_id }}</p>
-                    <p class="text-muted mb-0">This account still exists but has no data. You can delete it below if desired.</p>
+                    <p class="text-warning mb-0"><strong>⚠️ Account kept for audit purposes - do not delete</strong></p>
                 </div>
             </div>
         </div>
@@ -98,24 +98,22 @@
         </div>
     </div>
 
-    <div class="card bg-dark border-warning">
-        <div class="card-header bg-warning text-dark">
-            <h5 class="mb-0"><i class="bi bi-trash me-2"></i>Delete Old Account (Optional)</h5>
+    <div class="card bg-dark border-danger">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="bi bi-exclamation-triangle-fill me-2"></i>About the Old Account</h5>
         </div>
         <div class="card-body">
-            <p>The source account (ID {{ result.source_angler_id }}) is now empty and can be safely deleted if desired.</p>
-            <p class="text-muted small mb-3">Note: Deleting the account will remove it from the system entirely. This cannot be undone.</p>
+            <div class="alert alert-danger border-danger">
+                <h6 class="alert-heading"><i class="bi bi-shield-exclamation me-2"></i>DO NOT DELETE THE OLD ACCOUNT</h6>
+                <p class="mb-2">The source account (ID {{ result.source_angler_id }}) must be kept in the system to preserve data integrity.</p>
+                <p class="mb-0"><strong>Important:</strong> Due to database constraints, deleting the old account may cause unintended data loss. The account will remain in the system but is now empty and inactive.</p>
+            </div>
 
-            <form method="POST" action="/admin/users/merge/delete" onsubmit="return confirm('Are you sure you want to delete this account? This cannot be undone.');">
-                {{ csrf_token(request) }}
-                <input type="hidden" name="angler_id" value="{{ result.source_angler_id }}">
-                <button type="submit" class="btn btn-danger me-2">
-                    <i class="bi bi-trash me-2"></i>Delete Old Account
-                </button>
-                <a href="/admin/users" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-2"></i>Keep Account & Return to User List
-                </a>
-            </form>
+            <p class="text-muted mb-3">The old account serves as an audit trail and must not be deleted. It will not interfere with normal operations.</p>
+
+            <a href="/admin/users" class="btn btn-primary">
+                <i class="bi bi-arrow-left me-2"></i>Return to User List
+            </a>
         </div>
     </div>
 </div>
