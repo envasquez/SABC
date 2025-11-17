@@ -43,6 +43,7 @@ class TestRegistrationWorkflow:
 
     def test_registration_with_existing_email_fails(self, client: TestClient, regular_user: Angler):
         """Test that registration with an existing email address fails."""
+        assert regular_user.email is not None
         response = client.post(
             "/register",
             data={
@@ -110,6 +111,7 @@ class TestLoginWorkflow:
         self, client: TestClient, regular_user: Angler, test_password: str
     ):
         """Test successful login creates authenticated session."""
+        assert regular_user.email is not None
         response = client.post(
             "/login",
             data={"email": regular_user.email, "password": test_password},
@@ -125,6 +127,7 @@ class TestLoginWorkflow:
 
     def test_login_with_wrong_password_fails(self, client: TestClient, regular_user: Angler):
         """Test login with incorrect password is rejected."""
+        assert regular_user.email is not None
         response = client.post(
             "/login",
             data={"email": regular_user.email, "password": "WrongPassword123!"},
@@ -187,6 +190,7 @@ class TestLoginWorkflow:
         self, client: TestClient, regular_user: Angler
     ):
         """Test that multiple failed login attempts trigger rate limiting."""
+        assert regular_user.email is not None
         # Attempt login multiple times with wrong password
         for _ in range(6):
             client.post(
@@ -241,6 +245,7 @@ class TestSessionManagement:
         self, client: TestClient, regular_user: Angler, test_password: str
     ):
         """Test that authentication session persists across multiple requests."""
+        assert regular_user.email is not None
         # Login
         client.post(
             "/login",
@@ -265,6 +270,7 @@ class TestSessionManagement:
         self, client: TestClient, regular_user: Angler, test_password: str
     ):
         """Test that session stores user ID after successful login."""
+        assert regular_user.email is not None
         response = client.post(
             "/login",
             data={"email": regular_user.email, "password": test_password},
@@ -286,6 +292,7 @@ class TestProfileAccess:
 
         assert response.status_code == 200
         assert regular_user.name in response.text
+        assert regular_user.email is not None
         assert regular_user.email in response.text
 
     def test_unauthenticated_user_redirected_from_profile(self, client: TestClient):
@@ -336,6 +343,7 @@ class TestPasswordSecurity:
 
         user = db_session.query(Angler).filter(Angler.email == "security@example.com").first()
         assert user is not None
+        assert user.password_hash is not None
         # Password hash should not equal plaintext password
         assert user.password_hash != password
         # Password hash should be bcrypt format (starts with $2b$)

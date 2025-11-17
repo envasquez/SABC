@@ -247,7 +247,7 @@ class TestRosterPageContent:
     def test_roster_handles_no_members_gracefully(self, client: TestClient, db_session: Session):
         """Test that roster displays appropriately when no members exist."""
         # Remove all members
-        db_session.query(Angler).filter(Angler.member is True).delete()
+        db_session.query(Angler).filter(Angler.member.is_(True)).delete()
         db_session.commit()
 
         response = client.get("/roster")
