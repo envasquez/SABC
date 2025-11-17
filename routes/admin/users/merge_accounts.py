@@ -65,7 +65,7 @@ async def merge_execute(
         return error_redirect("/admin/users/merge", "Source and target accounts must be different")
 
     try:
-        result = execute_merge(source_id, target_id, admin_id=user.id)
+        result = execute_merge(source_id, target_id, admin_id=user["id"])
 
         # Show success page with merge summary
         return templates.TemplateResponse(
