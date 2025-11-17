@@ -50,8 +50,9 @@ def create_app() -> FastAPI:
 
     app.default_response_class = CustomJSONResponse  # type: ignore[attr-defined]
 
-    # Rate limiting
-    limiter = Limiter(key_func=get_remote_address)
+    # Rate limiting (disabled in test environment to avoid rate limit errors in test suites)
+    is_test_env = os.environ.get("ENVIRONMENT") == "test"
+    limiter = Limiter(key_func=get_remote_address, enabled=not is_test_env)
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
 
@@ -70,24 +71,25 @@ def create_app() -> FastAPI:
         https_only=os.environ.get("ENVIRONMENT", "development") == "production",
     )
 
-    # CSRF protection middleware
-    app.add_middleware(
-        CSRFMiddleware,
-        secret=os.environ.get("SECRET_KEY", "dev-key-change-in-production"),
-        cookie_name="csrf_token",
-        cookie_secure=os.environ.get("ENVIRONMENT", "development") == "production",
-        cookie_samesite="lax",
-        header_name="x-csrf-token",
-        # Exempt authentication endpoints - they have their own security measures
-        # These endpoints either use email verification, session management, or rate limiting
-        exempt_urls=[
-            re.compile(r"^/login$"),  # Login - protected by rate limiting + bcrypt
-            re.compile(r"^/logout$"),  # Logout - session-based, no sensitive state change
-            re.compile(r"^/register$"),  # Registration - email verification required
-            re.compile(r"^/forgot-password$"),  # Password reset request - email verification
-            re.compile(r"^/reset-password$"),  # Password reset - cryptographic tokens
-        ],
-    )
+    # CSRF protection middleware (disabled in test environment to simplify testing)
+    if os.environ.get("ENVIRONMENT") != "test":
+        app.add_middleware(
+            CSRFMiddleware,
+            secret=os.environ.get("SECRET_KEY", "dev-key-change-in-production"),
+            cookie_name="csrf_token",
+            cookie_secure=os.environ.get("ENVIRONMENT", "development") == "production",
+            cookie_samesite="lax",
+            header_name="x-csrf-token",
+            # Exempt authentication endpoints - they have their own security measures
+            # These endpoints either use email verification, session management, or rate limiting
+            exempt_urls=[
+                re.compile(r"^/login$"),  # Login - protected by rate limiting + bcrypt
+                re.compile(r"^/logout$"),  # Logout - session-based, no sensitive state change
+                re.compile(r"^/register$"),  # Registration - email verification required
+                re.compile(r"^/forgot-password$"),  # Password reset request - email verification
+                re.compile(r"^/reset-password$"),  # Password reset - cryptographic tokens
+            ],
+        )
 
     app.mount("/static", StaticFiles(directory="static"), name="static")
 

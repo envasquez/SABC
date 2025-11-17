@@ -17,6 +17,27 @@ from routes.dependencies import validate_event_data
 router = APIRouter()
 
 
+@router.get("/admin/events/create")
+async def create_event_page(request: Request):
+    """Display event creation form."""
+    from routes.dependencies import templates
+
+    user = require_admin(request)
+    if isinstance(user, RedirectResponse):
+        return user
+
+    # Reuse the events list template which has inline creation capability
+    return templates.TemplateResponse(
+        "admin/events.html",
+        {
+            "request": request,
+            "user": user,
+            "events": [],  # Empty list for create mode
+            "create_mode": True,
+        },
+    )
+
+
 @router.post("/admin/events/create")
 async def create_event(
     request: Request,

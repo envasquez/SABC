@@ -45,35 +45,43 @@ async def awards(request: Request, year: Optional[int] = None):
         all_tournament_results = qs.fetch_all(get_tournament_results_query(), {"year": year})
         tournaments_points: Dict[int, List[Dict[str, Any]]] = {}
         angler_totals: Dict[int, Dict[str, Any]] = {}
-        current_tournament_id: Optional[int] = None
-        current_tournament_results: List[Dict[str, Any]] = []
-        for result in all_tournament_results:
-            if current_tournament_id != result["tournament_id"]:
-                if current_tournament_results:
-                    tournaments_points[current_tournament_id] = calculate_tournament_points(  # type: ignore[index]
-                        current_tournament_results
-                    )
-                current_tournament_id, current_tournament_results = result["tournament_id"], []
-            current_tournament_results.append(dict(result))
-        if current_tournament_results:
-            tournaments_points[current_tournament_id] = calculate_tournament_points(  # type: ignore[index]
-                current_tournament_results
-            )
-        for tournament_results in tournaments_points.values():
-            for result in tournament_results:
-                angler_id = result["angler_id"]
-                if angler_id not in angler_totals:
-                    angler_totals[angler_id] = {
-                        "name": result["angler_name"],
-                        "total_points": 0,
-                        "total_fish": 0,
-                        "total_weight": 0.0,
-                        "tournaments_fished": 0,
-                    }
-                angler_totals[angler_id]["total_points"] += result.get("calculated_points", 0)
-                angler_totals[angler_id]["total_fish"] += result.get("num_fish", 0)
-                angler_totals[angler_id]["total_weight"] += float(result.get("total_weight", 0))
-                angler_totals[angler_id]["tournaments_fished"] += 1
+
+        try:
+            current_tournament_id: Optional[int] = None
+            current_tournament_results: List[Dict[str, Any]] = []
+            for result in all_tournament_results:
+                if current_tournament_id != result["tournament_id"]:
+                    if current_tournament_results:
+                        tournaments_points[current_tournament_id] = calculate_tournament_points(  # type: ignore[index]
+                            current_tournament_results
+                        )
+                    current_tournament_id, current_tournament_results = result["tournament_id"], []
+                current_tournament_results.append(dict(result))
+            if current_tournament_results:
+                tournaments_points[current_tournament_id] = calculate_tournament_points(  # type: ignore[index]
+                    current_tournament_results
+                )
+            for tournament_results in tournaments_points.values():
+                for result in tournament_results:
+                    angler_id = result["angler_id"]
+                    if angler_id not in angler_totals:
+                        angler_totals[angler_id] = {
+                            "name": result["angler_name"],
+                            "total_points": 0,
+                            "total_fish": 0,
+                            "total_weight": 0.0,
+                            "tournaments_fished": 0,
+                        }
+                    angler_totals[angler_id]["total_points"] += result.get("calculated_points", 0)
+                    angler_totals[angler_id]["total_fish"] += result.get("num_fish", 0)
+                    angler_totals[angler_id]["total_weight"] += float(result.get("total_weight", 0))
+                    angler_totals[angler_id]["tournaments_fished"] += 1
+        except Exception as e:
+            # Log error but continue - show empty standings
+            from core.helpers.logging import get_logger
+
+            logger = get_logger(__name__)
+            logger.error(f"Error calculating tournament points: {e}")
 
         # Filter to only include current members (matching profile page logic)
         current_members_query = "SELECT id FROM anglers WHERE member = true"

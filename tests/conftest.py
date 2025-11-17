@@ -14,7 +14,7 @@ os.environ["LOG_LEVEL"] = "ERROR"
 
 # ruff: noqa: E402 - Must set env vars before imports
 from datetime import datetime, timezone
-from typing import Generator
+from typing import Any, Dict, Generator, Optional
 
 import bcrypt
 import pytest
@@ -33,6 +33,24 @@ test_engine = create_engine(
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
+
+# Configure SQLite to handle Decimal types (convert to float for storage)
+from decimal import Decimal
+
+from sqlalchemy import event
+
+
+@event.listens_for(test_engine, "connect")
+def set_sqlite_decimal_support(dbapi_conn, connection_record):
+    """Add Decimal support to SQLite by registering adapters."""
+    import sqlite3
+
+    # Adapter: Convert Decimal to float when storing
+    sqlite3.register_adapter(Decimal, lambda d: float(d))
+
+    # Converter: Convert back to Decimal when retrieving (optional, can keep as float)
+    # sqlite3.register_converter("DECIMAL", lambda s: Decimal(s.decode('utf-8')))
+
 
 TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
@@ -111,7 +129,7 @@ def client(db_session: Session, monkeypatch) -> Generator[TestClient, None, None
 @pytest.fixture
 def test_password() -> str:
     """Standard test password for all test users."""
-    return "TestPassword123!"
+    return "TestPassword!@#$Secure9"
 
 
 @pytest.fixture
@@ -261,7 +279,10 @@ def test_poll(db_session: Session, test_event: Event, admin_user: Angler) -> Pol
     """Create a test poll for testing."""
     from datetime import timedelta
 
-    now = datetime.now(tz=timezone.utc)
+    from core.helpers.timezone import now_local
+
+    # Use naive datetime for SQLite compatibility (matches production behavior)
+    now = now_local().replace(tzinfo=None)
     poll = Poll(
         title="Test Poll",
         description="Test poll description",
@@ -300,39 +321,75 @@ def authenticated_client(
     client: TestClient, regular_user: Angler, test_password: str
 ) -> TestClient:
     """Return a test client with an authenticated regular user session."""
+    # First, get the login page to obtain CSRF token
+    login_page = client.get("/login")
+    csrf_token_cookie = login_page.cookies.get("csrf_token")
+    csrf_token = csrf_token_cookie if csrf_token_cookie is not None else ""
+
+    # Now login with CSRF token
     response = client.post(
         "/login",
-        data={"email": regular_user.email or "", "password": test_password},
+        data={
+            "email": regular_user.email or "",
+            "password": test_password,
+            "csrf_token": csrf_token,
+        },
         follow_redirects=False,
     )
-    if response.status_code not in [302, 303]:
-        pass  # CSRF protection active
+    if response.status_code not in [302, 303, 307]:
+        raise RuntimeError(
+            f"Login failed with status {response.status_code}: {response.text[:200]}"
+        )
     return client
 
 
 @pytest.fixture
 def member_client(client: TestClient, member_user: Angler, test_password: str) -> TestClient:
     """Return a test client with an authenticated member session."""
+    # First, get the login page to obtain CSRF token
+    login_page = client.get("/login")
+    csrf_token_cookie = login_page.cookies.get("csrf_token")
+    csrf_token = csrf_token_cookie if csrf_token_cookie is not None else ""
+
+    # Now login with CSRF token
     response = client.post(
         "/login",
-        data={"email": member_user.email or "", "password": test_password},
+        data={
+            "email": member_user.email or "",
+            "password": test_password,
+            "csrf_token": csrf_token,
+        },
         follow_redirects=False,
     )
-    if response.status_code not in [302, 303]:
-        pass  # CSRF protection active
+    if response.status_code not in [302, 303, 307]:
+        raise RuntimeError(
+            f"Login failed with status {response.status_code}: {response.text[:200]}"
+        )
     return client
 
 
 @pytest.fixture
 def admin_client(client: TestClient, admin_user: Angler, test_password: str) -> TestClient:
     """Return a test client with an authenticated admin session."""
+    # First, get the login page to obtain CSRF token
+    login_page = client.get("/login")
+    csrf_token_cookie = login_page.cookies.get("csrf_token")
+    csrf_token = csrf_token_cookie if csrf_token_cookie is not None else ""
+
+    # Now login with CSRF token
     response = client.post(
         "/login",
-        data={"email": admin_user.email or "", "password": test_password},
+        data={
+            "email": admin_user.email or "",
+            "password": test_password,
+            "csrf_token": csrf_token,
+        },
         follow_redirects=False,
     )
-    if response.status_code not in [302, 303]:
-        pass  # CSRF protection active
+    if response.status_code not in [302, 303, 307]:
+        raise RuntimeError(
+            f"Login failed with status {response.status_code}: {response.text[:200]}"
+        )
     return client
 
 
@@ -341,16 +398,46 @@ def admin_client(client: TestClient, admin_user: Angler, test_password: str) -> 
 
 def login_user(client: TestClient, email: str, password: str) -> bool:
     """Helper to log in a user and return success status."""
+    # Get CSRF token first
+    login_page = client.get("/login")
+    csrf_token_cookie = login_page.cookies.get("csrf_token")
+    csrf_token = csrf_token_cookie if csrf_token_cookie is not None else ""
+
     response = client.post(
         "/login",
-        data={"email": email, "password": password},
+        data={"email": email, "password": password, "csrf_token": csrf_token},
         follow_redirects=False,
     )
-    return response.status_code in [302, 303]
+    return response.status_code in [302, 303, 307]
 
 
 def get_csrf_token(client: TestClient, url: str = "/") -> str:
     """Helper to extract CSRF token from a page."""
     response = client.get(url)
-    # Extract CSRF token from cookies or page HTML
-    return response.cookies.get("csrf_token") or ""
+    # Extract CSRF token from cookies
+    token = response.cookies.get("csrf_token")
+    return token if token is not None else ""
+
+
+def post_with_csrf(
+    client: TestClient, url: str, data: Optional[Dict[str, Any]] = None, **kwargs: Any
+) -> Any:
+    """Helper to POST data with CSRF token automatically included.
+
+    Args:
+        client: TestClient instance
+        url: URL to POST to
+        data: Form data dictionary (optional, defaults to empty dict)
+        **kwargs: Additional arguments to pass to client.post()
+
+    Returns:
+        Response from the POST request
+    """
+    # Get CSRF token
+    csrf_token = get_csrf_token(client, url)
+
+    # Add CSRF token to data
+    data_with_csrf: Dict[str, Any] = {**(data or {}), "csrf_token": csrf_token}
+
+    # Make the POST request
+    return client.post(url, data=data_with_csrf, **kwargs)

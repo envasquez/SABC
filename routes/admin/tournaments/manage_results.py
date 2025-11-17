@@ -12,6 +12,60 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
+@router.get("/admin/tournaments/{tournament_id}/manage-results")
+async def manage_results_page(
+    tournament_id: int,
+    user=Depends(require_admin),
+    conn: Connection = Depends(get_db),
+):
+    """Display tournament results management page."""
+    from core.deps import templates
+
+    if isinstance(user, RedirectResponse):
+        return user
+
+    # Get tournament and results data
+    qs = QueryService(conn)
+    try:
+        from routes.tournaments.data import fetch_tournament_data
+
+        (
+            tournament,
+            stats,
+            team_results,
+            individual_results,
+            buy_in_place,
+            buy_in_results,
+            disqualified_results,
+        ) = fetch_tournament_data(qs, tournament_id)
+
+        # Build fake request object for template
+        from starlette.requests import Request as StarletteRequest
+
+        scope = {
+            "type": "http",
+            "method": "GET",
+            "path": f"/admin/tournaments/{tournament_id}/manage-results",
+            "query_string": b"",
+            "headers": [],
+        }
+        request = StarletteRequest(scope)
+
+        return templates.TemplateResponse(
+            "admin/tournaments/manage_results.html",
+            {
+                "request": request,
+                "user": user,
+                "tournament": tournament,
+                "individual_results": individual_results,
+                "team_results": team_results,
+            },
+        )
+    except Exception as e:
+        logger.error(f"Error loading manage results page: {e}")
+        return RedirectResponse("/admin/tournaments", status_code=303)
+
+
 @router.delete("/admin/tournaments/{tournament_id}/results/{result_id}")
 async def delete_result(
     tournament_id: int,

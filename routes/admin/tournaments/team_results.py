@@ -94,26 +94,28 @@ async def save_team_result(
             )
         conn.commit()
         # Recalculate place_finish using actual weights from results table
+        # SQLite-compatible version using subquery instead of FROM clause
         qs.execute(
-            """WITH calculated_weights AS (
-                   SELECT tr.id,
-                          COALESCE(r1.total_weight, 0) + COALESCE(r2.total_weight, 0) as weight
-                   FROM team_results tr
-                   LEFT JOIN results r1 ON tr.angler1_id = r1.angler_id
-                       AND tr.tournament_id = r1.tournament_id
-                   LEFT JOIN results r2 ON tr.angler2_id = r2.angler_id
-                       AND tr.tournament_id = r2.tournament_id
-                   WHERE tr.tournament_id = :tid
-               ),
-               ranked_teams AS (
-                   SELECT id,
-                          RANK() OVER (ORDER BY weight DESC) as place
-                   FROM calculated_weights
+            """UPDATE team_results
+               SET place_finish = (
+                   SELECT place FROM (
+                       WITH calculated_weights AS (
+                           SELECT tr.id,
+                                  COALESCE(r1.total_weight, 0) + COALESCE(r2.total_weight, 0) as weight
+                           FROM team_results tr
+                           LEFT JOIN results r1 ON tr.angler1_id = r1.angler_id
+                               AND tr.tournament_id = r1.tournament_id
+                           LEFT JOIN results r2 ON tr.angler2_id = r2.angler_id
+                               AND tr.tournament_id = r2.tournament_id
+                           WHERE tr.tournament_id = :tid
+                       )
+                       SELECT id,
+                              RANK() OVER (ORDER BY weight DESC) as place
+                       FROM calculated_weights
+                   ) ranked_teams
+                   WHERE ranked_teams.id = team_results.id
                )
-               UPDATE team_results tr
-               SET place_finish = rt.place
-               FROM ranked_teams rt
-               WHERE tr.id = rt.id""",
+               WHERE tournament_id = :tid""",
             {"tid": tournament_id},
         )
         conn.commit()
