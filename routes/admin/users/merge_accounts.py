@@ -1,8 +1,6 @@
 """Routes for merging duplicate user accounts."""
 
-from typing import Any, Union
-
-from fastapi import APIRouter, Form, HTTPException, Request
+from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.helpers.auth import AdminUser

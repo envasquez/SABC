@@ -1,6 +1,6 @@
 """Service for merging duplicate user accounts."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from sqlalchemy import and_, or_, update
 from sqlalchemy.exc import IntegrityError
