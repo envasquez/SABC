@@ -65,8 +65,9 @@ async def vote_in_poll(
                         "/polls?error=Only admins can vote on behalf of members", status_code=303
                     )
 
+                admin_id = int(user["id"]) if isinstance(user.get("id"), (int, str)) else 0
                 target_angler_name, error = validate_proxy_vote(
-                    user["id"], voting_for_angler_id, poll_id, session
+                    admin_id, voting_for_angler_id, poll_id, session
                 )
                 if error:
                     return RedirectResponse(f"/polls?error={error}", status_code=303)

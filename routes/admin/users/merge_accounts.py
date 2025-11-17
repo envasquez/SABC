@@ -65,7 +65,9 @@ async def merge_execute(
         return error_redirect("/admin/users/merge", "Source and target accounts must be different")
 
     try:
-        admin_id = int(user["id"]) if user.get("id") else None
+        admin_id: int | None = None
+        if user_id := user.get("id"):
+            admin_id = int(user_id) if isinstance(user_id, (int, str)) else None
         result = execute_merge(source_id, target_id, admin_id=admin_id)
 
         # Show success page with merge summary
