@@ -98,9 +98,7 @@ class TestHomePageContent:
         # Should show user name or profile link
         assert regular_user.name in response.text or "/profile" in response.text.lower()
 
-    def test_home_page_navigation_shows_admin_links_for_admin(
-        self, admin_client: TestClient
-    ):
+    def test_home_page_navigation_shows_admin_links_for_admin(self, admin_client: TestClient):
         """Test that navigation shows admin links for admin users."""
         response = admin_client.get("/")
 
@@ -221,9 +219,7 @@ class TestCalendarPageContent:
         """Test that calendar can navigate to different months via query params."""
         # Try to view next month
         next_month = date.today() + timedelta(days=32)
-        response = client.get(
-            f"/calendar?year={next_month.year}&month={next_month.month}"
-        )
+        response = client.get(f"/calendar?year={next_month.year}&month={next_month.month}")
 
         assert response.status_code == 200
 
@@ -240,9 +236,7 @@ class TestRosterPageContent:
         assert response.status_code == 200
         assert member_user.name in response.text
 
-    def test_roster_does_not_show_non_members(
-        self, client: TestClient, regular_user: Angler
-    ):
+    def test_roster_does_not_show_non_members(self, client: TestClient, regular_user: Angler):
         """Test that roster only displays members, not all users."""
         response = client.get("/roster")
 
@@ -250,9 +244,7 @@ class TestRosterPageContent:
         # Non-member should not appear on roster
         assert regular_user.name not in response.text or "member" not in response.text.lower()
 
-    def test_roster_handles_no_members_gracefully(
-        self, client: TestClient, db_session: Session
-    ):
+    def test_roster_handles_no_members_gracefully(self, client: TestClient, db_session: Session):
         """Test that roster displays appropriately when no members exist."""
         # Remove all members
         db_session.query(Angler).filter(Angler.member is True).delete()

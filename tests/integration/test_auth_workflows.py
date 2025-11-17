@@ -41,9 +41,7 @@ class TestRegistrationWorkflow:
         assert user.is_admin is False
         assert user.password_hash is not None
 
-    def test_registration_with_existing_email_fails(
-        self, client: TestClient, regular_user: Angler
-    ):
+    def test_registration_with_existing_email_fails(self, client: TestClient, regular_user: Angler):
         """Test that registration with an existing email address fails."""
         response = client.post(
             "/register",
@@ -211,9 +209,7 @@ class TestLoginWorkflow:
 class TestLogoutWorkflow:
     """Tests for user logout workflow."""
 
-    def test_logout_clears_session(
-        self, authenticated_client: TestClient, regular_user: Angler
-    ):
+    def test_logout_clears_session(self, authenticated_client: TestClient, regular_user: Angler):
         """Test that logout properly clears the user session."""
         # Verify user is logged in first
         profile_response = authenticated_client.get("/profile", follow_redirects=False)
@@ -310,9 +306,7 @@ class TestProfileAccess:
         # Check for member indicator in page
         assert "member" in response.text.lower()
 
-    def test_admin_profile_shows_admin_status(
-        self, admin_client: TestClient, admin_user: Angler
-    ):
+    def test_admin_profile_shows_admin_status(self, admin_client: TestClient, admin_user: Angler):
         """Test that admin profile correctly displays admin status."""
         response = admin_client.get("/profile")
 
@@ -325,9 +319,7 @@ class TestProfileAccess:
 class TestPasswordSecurity:
     """Tests for password security features."""
 
-    def test_password_is_hashed_not_stored_plaintext(
-        self, client: TestClient, db_session: Session
-    ):
+    def test_password_is_hashed_not_stored_plaintext(self, client: TestClient, db_session: Session):
         """Test that passwords are stored as hashes, not plaintext."""
         password = "SecurePassword123!"
 

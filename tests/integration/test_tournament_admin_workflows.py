@@ -3,7 +3,6 @@
 Tests admin-only functionality for managing tournaments and entering results.
 """
 
-
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -346,9 +345,7 @@ class TestLakeAndRampManagement:
         assert response.status_code == 200
         assert test_lake.display_name in response.text
 
-    def test_admin_can_access_edit_lake_page(
-        self, admin_client: TestClient, test_lake: Lake
-    ):
+    def test_admin_can_access_edit_lake_page(self, admin_client: TestClient, test_lake: Lake):
         """Test that admins can access lake editing page."""
         response = admin_client.get(f"/admin/lakes/{test_lake.id}/edit")
 
@@ -375,9 +372,7 @@ class TestUserManagement:
         assert member_user.name in response.text
         assert regular_user.name in response.text
 
-    def test_admin_can_access_edit_user_page(
-        self, admin_client: TestClient, member_user: Angler
-    ):
+    def test_admin_can_access_edit_user_page(self, admin_client: TestClient, member_user: Angler):
         """Test that admins can access user editing page."""
         response = admin_client.get(f"/admin/users/{member_user.id}/edit")
 
@@ -401,9 +396,7 @@ class TestPollManagementByAdmin:
 
         assert response.status_code == 200
 
-    def test_admin_can_access_edit_poll_page(
-        self, admin_client: TestClient, test_poll: Poll
-    ):
+    def test_admin_can_access_edit_poll_page(self, admin_client: TestClient, test_poll: Poll):
         """Test that admins can access poll editing page."""
         response = admin_client.get(f"/admin/polls/{test_poll.id}/edit")
 
