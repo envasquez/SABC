@@ -33,7 +33,11 @@ async def vote_in_poll(
 
     # Determine if this is a proxy vote (admin voting on behalf of someone)
     is_proxy_vote = vote_as_angler_id is not None and user.get("is_admin", False)
-    voting_for_angler_id = vote_as_angler_id if is_proxy_vote else user["id"]
+    user_id_val = user.get("id")
+    if is_proxy_vote and vote_as_angler_id is not None:
+        voting_for_angler_id: int = vote_as_angler_id
+    else:
+        voting_for_angler_id = int(user_id_val) if isinstance(user_id_val, (int, str)) else 0
     target_angler_name = None
 
     try:
@@ -65,7 +69,8 @@ async def vote_in_poll(
                         "/polls?error=Only admins can vote on behalf of members", status_code=303
                     )
 
-                admin_id = int(user["id"]) if isinstance(user.get("id"), (int, str)) else 0
+                user_id_value = user.get("id")
+                admin_id: int = int(user_id_value) if isinstance(user_id_value, (int, str)) else 0
                 target_angler_name, error = validate_proxy_vote(
                     admin_id, voting_for_angler_id, poll_id, session
                 )
