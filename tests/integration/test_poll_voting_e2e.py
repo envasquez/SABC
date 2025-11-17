@@ -24,6 +24,7 @@ class TestPollVotingEndToEnd:
         assert response.status_code == 200
         assert "Test Poll" in response.text
         assert "Test Option" in response.text
+        assert test_poll.description is not None
         assert test_poll.description in response.text
 
     def test_non_member_cannot_access_polls(self, authenticated_client: TestClient):
@@ -46,8 +47,8 @@ class TestPollVotingEndToEnd:
         response = member_client.post(
             "/vote-poll",
             data={
-                "poll_id": test_poll.id,
-                "option_id": test_poll_option.id,
+                "poll_id": str(test_poll.id),
+                "option_id": str(test_poll_option.id),
             },
             follow_redirects=False,
         )
@@ -81,8 +82,8 @@ class TestPollVotingEndToEnd:
         member_client.post(
             "/vote-poll",
             data={
-                "poll_id": test_poll.id,
-                "option_id": test_poll_option.id,
+                "poll_id": str(test_poll.id),
+                "option_id": str(test_poll_option.id),
             },
             follow_redirects=False,
         )
@@ -91,8 +92,8 @@ class TestPollVotingEndToEnd:
         response = member_client.post(
             "/vote-poll",
             data={
-                "poll_id": test_poll.id,
-                "option_id": test_poll_option.id,
+                "poll_id": str(test_poll.id),
+                "option_id": str(test_poll_option.id),
             },
             follow_redirects=False,
         )
@@ -153,8 +154,8 @@ class TestPollVotingEndToEnd:
         response = member_client.post(
             "/vote-poll",
             data={
-                "poll_id": closed_poll.id,
-                "option_id": option.id,
+                "poll_id": str(closed_poll.id),
+                "option_id": str(option.id),
             },
             follow_redirects=False,
         )
@@ -215,8 +216,8 @@ class TestPollVotingEndToEnd:
         response = member_client.post(
             "/vote-poll",
             data={
-                "poll_id": future_poll.id,
-                "option_id": option.id,
+                "poll_id": str(future_poll.id),
+                "option_id": str(option.id),
             },
             follow_redirects=False,
         )
@@ -289,8 +290,8 @@ class TestTournamentLocationPollVoting:
         response = member_client.post(
             "/vote-poll",
             data={
-                "poll_id": tournament_poll.id,
-                "option_id": option.id,
+                "poll_id": str(tournament_poll.id),
+                "option_id": str(option.id),
             },
             follow_redirects=False,
         )
@@ -321,8 +322,8 @@ class TestPollVotingPermissions:
         response = client.post(
             "/vote-poll",
             data={
-                "poll_id": test_poll.id,
-                "option_id": test_poll_option.id,
+                "poll_id": str(test_poll.id),
+                "option_id": str(test_poll_option.id),
             },
             follow_redirects=False,
         )
@@ -338,8 +339,8 @@ class TestPollVotingPermissions:
         response = authenticated_client.post(
             "/vote-poll",
             data={
-                "poll_id": test_poll.id,
-                "option_id": test_poll_option.id,
+                "poll_id": str(test_poll.id),
+                "option_id": str(test_poll_option.id),
             },
             follow_redirects=False,
         )
@@ -357,8 +358,8 @@ class TestPollVotingPermissions:
         response = member_client.post(
             "/vote-poll",
             data={
-                "poll_id": test_poll.id,
-                "option_id": 99999,  # Invalid option ID
+                "poll_id": str(test_poll.id),
+                "option_id": "99999",  # Invalid option ID
             },
             follow_redirects=False,
         )
@@ -380,8 +381,8 @@ class TestPollVotingPermissions:
         response = member_client.post(
             "/vote-poll",
             data={
-                "poll_id": 99999,  # Invalid poll ID
-                "option_id": test_poll_option.id,
+                "poll_id": "99999",  # Invalid poll ID
+                "option_id": str(test_poll_option.id),
             },
             follow_redirects=False,
         )
@@ -411,9 +412,9 @@ class TestAdminProxyVoting:
         response = admin_client.post(
             "/vote-poll",
             data={
-                "poll_id": test_poll.id,
-                "option_id": test_poll_option.id,
-                "vote_as_angler_id": member_user.id,
+                "poll_id": str(test_poll.id),
+                "option_id": str(test_poll_option.id),
+                "vote_as_angler_id": str(member_user.id),
             },
             follow_redirects=False,
         )
@@ -449,9 +450,9 @@ class TestAdminProxyVoting:
         response = member_client.post(
             "/vote-poll",
             data={
-                "poll_id": test_poll.id,
-                "option_id": test_poll_option.id,
-                "vote_as_angler_id": admin_user.id,
+                "poll_id": str(test_poll.id),
+                "option_id": str(test_poll_option.id),
+                "vote_as_angler_id": str(admin_user.id),
             },
             follow_redirects=False,
         )
@@ -484,9 +485,9 @@ class TestAdminProxyVoting:
         response = admin_client.post(
             "/vote-poll",
             data={
-                "poll_id": test_poll.id,
-                "option_id": test_poll_option.id,
-                "vote_as_angler_id": regular_user.id,
+                "poll_id": str(test_poll.id),
+                "option_id": str(test_poll_option.id),
+                "vote_as_angler_id": str(regular_user.id),
             },
             follow_redirects=False,
         )

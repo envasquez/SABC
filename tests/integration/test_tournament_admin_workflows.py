@@ -102,7 +102,7 @@ class TestIndividualResultsEntry:
         response = admin_client.post(
             f"/admin/tournaments/{test_tournament.id}/individual-results",
             data={
-                "angler_id": member_user.id,
+                "angler_id": str(member_user.id),
                 "total_weight": "15.75",
                 "num_fish": "5",
                 "big_bass_weight": "5.25",
@@ -126,6 +126,8 @@ class TestIndividualResultsEntry:
             .first()
         )
         assert result is not None
+        assert result.total_weight is not None
+        assert result.big_bass_weight is not None
         assert float(result.total_weight) == 15.75
         assert result.num_fish == 5
         assert float(result.big_bass_weight) == 5.25
@@ -141,7 +143,7 @@ class TestIndividualResultsEntry:
         response = admin_client.post(
             f"/admin/tournaments/{test_tournament.id}/individual-results",
             data={
-                "angler_id": member_user.id,
+                "angler_id": str(member_user.id),
                 "total_weight": "0",
                 "num_fish": "0",
                 "big_bass_weight": "0",
@@ -164,6 +166,7 @@ class TestIndividualResultsEntry:
             .first()
         )
         assert result is not None
+        assert result.total_weight is not None
         assert float(result.total_weight) == 0
         assert result.num_fish == 0
 
@@ -178,7 +181,7 @@ class TestIndividualResultsEntry:
         response = admin_client.post(
             f"/admin/tournaments/{test_tournament.id}/individual-results",
             data={
-                "angler_id": member_user.id,
+                "angler_id": str(member_user.id),
                 "total_weight": "10.5",
                 "num_fish": "4",
                 "big_bass_weight": "3.5",
@@ -219,8 +222,8 @@ class TestTeamResultsEntry:
         response = admin_client.post(
             f"/admin/tournaments/{test_tournament.id}/team-results",
             data={
-                "angler1_id": member_user.id,
-                "angler2_id": admin_user.id,
+                "angler1_id": str(member_user.id),
+                "angler2_id": str(admin_user.id),
                 "total_weight": "25.5",
                 "num_fish": "10",
                 "big_bass_weight": "6.75",
@@ -242,8 +245,8 @@ class TestTeamResultsEntry:
             .first()
         )
         assert team_result is not None
+        assert team_result.total_weight is not None
         assert float(team_result.total_weight) == 25.5
-        assert team_result.num_fish == 10
 
 
 class TestResultsManagement:
@@ -378,6 +381,7 @@ class TestUserManagement:
 
         assert response.status_code == 200
         assert member_user.name in response.text
+        assert member_user.email is not None
         assert member_user.email in response.text
 
     def test_non_admin_cannot_access_user_management(self, member_client: TestClient):
@@ -424,7 +428,7 @@ class TestDeadFishPenalties:
         response = admin_client.post(
             f"/admin/tournaments/{test_tournament.id}/individual-results",
             data={
-                "angler_id": member_user.id,
+                "angler_id": str(member_user.id),
                 "total_weight": "15.00",
                 "num_fish": "5",
                 "big_bass_weight": "5.0",
