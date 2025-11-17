@@ -41,9 +41,7 @@ async def merge_preview(
         preview_data = preview_merge(source_id, target_id)
         return JSONResponse(content={"success": True, "data": preview_data})
     except AccountMergeError as e:
-        return JSONResponse(
-            content={"success": False, "error": str(e)}, status_code=400
-        )
+        return JSONResponse(content={"success": False, "error": str(e)}, status_code=400)
     except Exception as e:
         return JSONResponse(
             content={"success": False, "error": f"Unexpected error: {str(e)}"},
@@ -61,14 +59,10 @@ async def merge_execute(
 ):
     """Execute the account merge operation."""
     if not confirm:
-        return error_redirect(
-            "/admin/users/merge", "You must confirm the merge operation"
-        )
+        return error_redirect("/admin/users/merge", "You must confirm the merge operation")
 
     if source_id == target_id:
-        return error_redirect(
-            "/admin/users/merge", "Source and target accounts must be different"
-        )
+        return error_redirect("/admin/users/merge", "Source and target accounts must be different")
 
     try:
         result = execute_merge(source_id, target_id, admin_id=user.id)
@@ -88,9 +82,7 @@ async def merge_execute(
     except AccountMergeError as e:
         return error_redirect("/admin/users/merge", f"Merge failed: {str(e)}")
     except Exception as e:
-        return error_redirect(
-            "/admin/users/merge", f"Unexpected error during merge: {str(e)}"
-        )
+        return error_redirect("/admin/users/merge", f"Unexpected error during merge: {str(e)}")
 
 
 @router.post("/admin/users/merge/delete")
@@ -100,12 +92,8 @@ async def merge_delete_account(
     """Delete the old account after successful merge."""
     try:
         delete_merged_account(angler_id)
-        return success_redirect(
-            "/admin/users", f"Account ID {angler_id} deleted successfully"
-        )
+        return success_redirect("/admin/users", f"Account ID {angler_id} deleted successfully")
     except AccountMergeError as e:
         return error_redirect("/admin/users", f"Delete failed: {str(e)}")
     except Exception as e:
-        return error_redirect(
-            "/admin/users", f"Unexpected error during delete: {str(e)}"
-        )
+        return error_redirect("/admin/users", f"Unexpected error during delete: {str(e)}")

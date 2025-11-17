@@ -76,27 +76,19 @@ def preview_merge(source_angler_id: int, target_angler_id: int) -> Dict[str, Any
 
     with get_session() as session:
         # Count results
-        results_count = (
-            session.query(Result).filter(Result.angler_id == source_angler_id).count()
-        )
+        results_count = session.query(Result).filter(Result.angler_id == source_angler_id).count()
 
         # Count team results (as angler1 or angler2)
         team_results_angler1_count = (
-            session.query(TeamResult)
-            .filter(TeamResult.angler1_id == source_angler_id)
-            .count()
+            session.query(TeamResult).filter(TeamResult.angler1_id == source_angler_id).count()
         )
         team_results_angler2_count = (
-            session.query(TeamResult)
-            .filter(TeamResult.angler2_id == source_angler_id)
-            .count()
+            session.query(TeamResult).filter(TeamResult.angler2_id == source_angler_id).count()
         )
 
         # Count poll votes
         poll_votes_count = (
-            session.query(PollVote)
-            .filter(PollVote.angler_id == source_angler_id)
-            .count()
+            session.query(PollVote).filter(PollVote.angler_id == source_angler_id).count()
         )
 
         # Count officer positions
@@ -112,22 +104,16 @@ def preview_merge(source_angler_id: int, target_angler_id: int) -> Dict[str, Any
         )
 
         # Count news articles
-        news_authored_count = (
-            session.query(News).filter(News.author_id == source_angler_id).count()
-        )
+        news_authored_count = session.query(News).filter(News.author_id == source_angler_id).count()
 
         # Count tournaments created
         tournaments_created_count = (
-            session.query(Tournament)
-            .filter(Tournament.created_by == source_angler_id)
-            .count()
+            session.query(Tournament).filter(Tournament.created_by == source_angler_id).count()
         )
 
         # Count proxy votes cast
         proxy_votes_cast_count = (
-            session.query(PollVote)
-            .filter(PollVote.cast_by_admin_id == source_angler_id)
-            .count()
+            session.query(PollVote).filter(PollVote.cast_by_admin_id == source_angler_id).count()
         )
 
         # Find duplicate poll votes (both accounts voted on same poll)
@@ -137,9 +123,7 @@ def preview_merge(source_angler_id: int, target_angler_id: int) -> Dict[str, Any
             .filter(PollVote.angler_id == source_angler_id)
             .filter(
                 PollVote.poll_id.in_(
-                    session.query(PollVote.poll_id).filter(
-                        PollVote.angler_id == target_angler_id
-                    )
+                    session.query(PollVote.poll_id).filter(PollVote.angler_id == target_angler_id)
                 )
             )
             .all()
@@ -218,9 +202,7 @@ def execute_merge(
             # Handle poll votes with duplicates
             # First, delete duplicate votes (where both accounts voted on same poll)
             if preview["duplicate_poll_votes"]:
-                duplicate_poll_ids = [
-                    dv["poll_id"] for dv in preview["duplicate_poll_votes"]
-                ]
+                duplicate_poll_ids = [dv["poll_id"] for dv in preview["duplicate_poll_votes"]]
                 deleted_votes = (
                     session.query(PollVote)
                     .filter(
@@ -231,9 +213,7 @@ def execute_merge(
                     )
                     .delete(synchronize_session=False)
                 )
-                logger.warning(
-                    f"Deleted {deleted_votes} duplicate poll votes for source angler"
-                )
+                logger.warning(f"Deleted {deleted_votes} duplicate poll votes for source angler")
 
             # Update remaining poll votes
             session.execute(
@@ -334,25 +314,15 @@ def delete_merged_account(angler_id: int) -> bool:
         results_count = session.query(Result).filter(Result.angler_id == angler_id).count()
         team_results_count = (
             session.query(TeamResult)
-            .filter(
-                or_(
-                    TeamResult.angler1_id == angler_id, TeamResult.angler2_id == angler_id
-                )
-            )
+            .filter(or_(TeamResult.angler1_id == angler_id, TeamResult.angler2_id == angler_id))
             .count()
         )
-        poll_votes_count = (
-            session.query(PollVote).filter(PollVote.angler_id == angler_id).count()
-        )
+        poll_votes_count = session.query(PollVote).filter(PollVote.angler_id == angler_id).count()
         officer_count = (
-            session.query(OfficerPosition)
-            .filter(OfficerPosition.angler_id == angler_id)
-            .count()
+            session.query(OfficerPosition).filter(OfficerPosition.angler_id == angler_id).count()
         )
 
-        total_records = (
-            results_count + team_results_count + poll_votes_count + officer_count
-        )
+        total_records = results_count + team_results_count + poll_votes_count + officer_count
 
         if total_records > 0:
             raise AccountMergeError(
