@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from core.db_schema import Angler, Event, Lake, Poll, Ramp, Result, TeamResult, Tournament
+from tests.conftest import post_with_csrf
 
 
 class TestAdminDashboardAccess:
@@ -99,14 +100,14 @@ class TestIndividualResultsEntry:
         db_session: Session,
     ):
         """Test that admins can successfully enter individual tournament results."""
-        response = admin_client.post(
-            f"/admin/tournaments/{test_tournament.id}/individual-results",
+        response = post_with_csrf(
+            admin_client,
+            f"/admin/tournaments/{test_tournament.id}/results",
             data={
                 "angler_id": str(member_user.id),
                 "total_weight": "15.75",
                 "num_fish": "5",
                 "big_bass_weight": "5.25",
-                "points": "100",
                 "buy_in": "true",
                 "disqualified": "false",
             },
@@ -140,14 +141,14 @@ class TestIndividualResultsEntry:
         db_session: Session,
     ):
         """Test that admins can enter results for anglers who caught zero fish."""
-        response = admin_client.post(
-            f"/admin/tournaments/{test_tournament.id}/individual-results",
+        response = post_with_csrf(
+            admin_client,
+            f"/admin/tournaments/{test_tournament.id}/results",
             data={
                 "angler_id": str(member_user.id),
                 "total_weight": "0",
                 "num_fish": "0",
                 "big_bass_weight": "0",
-                "points": "0",
                 "buy_in": "false",
                 "disqualified": "false",
             },
@@ -178,14 +179,14 @@ class TestIndividualResultsEntry:
         db_session: Session,
     ):
         """Test that admins can mark tournament results as disqualified."""
-        response = admin_client.post(
-            f"/admin/tournaments/{test_tournament.id}/individual-results",
+        response = post_with_csrf(
+            admin_client,
+            f"/admin/tournaments/{test_tournament.id}/results",
             data={
                 "angler_id": str(member_user.id),
                 "total_weight": "10.5",
                 "num_fish": "4",
                 "big_bass_weight": "3.5",
-                "points": "0",
                 "buy_in": "true",
                 "disqualified": "true",
             },
@@ -219,8 +220,9 @@ class TestTeamResultsEntry:
         db_session: Session,
     ):
         """Test that admins can successfully enter team tournament results."""
-        response = admin_client.post(
-            f"/admin/tournaments/{test_tournament.id}/team-results",
+        response = post_with_csrf(
+            admin_client,
+            f"/admin/tournaments/{test_tournament.id}/team",
             data={
                 "angler1_id": str(member_user.id),
                 "angler2_id": str(admin_user.id),
@@ -267,7 +269,6 @@ class TestResultsManagement:
             total_weight=12.5,
             num_fish=5,
             big_bass_weight=4.0,
-            points=100,
             disqualified=False,
             buy_in=True,
         )
@@ -294,7 +295,6 @@ class TestResultsManagement:
             total_weight=12.5,
             num_fish=5,
             big_bass_weight=4.0,
-            points=100,
             disqualified=False,
             buy_in=True,
         )
@@ -303,7 +303,8 @@ class TestResultsManagement:
         db_session.refresh(result)
 
         # Delete the result
-        response = admin_client.post(
+        response = post_with_csrf(
+            admin_client,
             f"/admin/tournaments/{test_tournament.id}/delete-result/{result.id}",
             follow_redirects=False,
         )
@@ -425,15 +426,15 @@ class TestDeadFishPenalties:
         db_session: Session,
     ):
         """Test that admins can enter results with dead fish penalties."""
-        response = admin_client.post(
-            f"/admin/tournaments/{test_tournament.id}/individual-results",
+        response = post_with_csrf(
+            admin_client,
+            f"/admin/tournaments/{test_tournament.id}/results",
             data={
                 "angler_id": str(member_user.id),
                 "total_weight": "15.00",
                 "num_fish": "5",
                 "big_bass_weight": "5.0",
                 "dead_fish_penalty": "0.25",  # Quarter pound penalty
-                "points": "100",
                 "buy_in": "true",
                 "disqualified": "false",
             },
@@ -471,7 +472,6 @@ class TestDeadFishPenalties:
             num_fish=5,
             big_bass_weight=5.0,
             dead_fish_penalty=0.50,  # Half pound penalty
-            points=100,
             disqualified=False,
             buy_in=True,
         )

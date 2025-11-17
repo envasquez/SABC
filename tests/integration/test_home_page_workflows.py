@@ -126,7 +126,6 @@ class TestHomePageAOYStandings:
             total_weight=15.5,
             num_fish=5,
             big_bass_weight=5.2,
-            points=100,
             disqualified=False,
             buy_in=True,
         )
@@ -273,7 +272,6 @@ class TestAwardsPageContent:
             total_weight=18.75,
             num_fish=5,
             big_bass_weight=6.25,
-            points=100,
             disqualified=False,
             buy_in=True,
         )
@@ -330,7 +328,6 @@ class TestTournamentResultsPageContent:
             total_weight=12.5,
             num_fish=5,
             big_bass_weight=4.0,
-            points=100,
             disqualified=False,
             buy_in=True,
         )
@@ -358,7 +355,6 @@ class TestTournamentResultsPageContent:
             total_weight=20.5,
             num_fish=5,
             big_bass_weight=6.5,
-            points=100,
             disqualified=False,
             buy_in=True,
         )
@@ -368,7 +364,6 @@ class TestTournamentResultsPageContent:
             total_weight=15.25,
             num_fish=5,
             big_bass_weight=5.0,
-            points=99,
             disqualified=False,
             buy_in=True,
         )

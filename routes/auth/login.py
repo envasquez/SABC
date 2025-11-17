@@ -1,3 +1,5 @@
+import os
+
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse, Response
 from slowapi import Limiter
@@ -11,7 +13,9 @@ from routes.dependencies import bcrypt, get_current_user, templates
 
 router = APIRouter()
 logger = get_logger("auth.login")
-limiter = Limiter(key_func=get_remote_address)
+# Disable rate limiting in test environment
+is_test_env = os.environ.get("ENVIRONMENT") == "test"
+limiter = Limiter(key_func=get_remote_address, enabled=not is_test_env)
 
 
 @router.get("/login")

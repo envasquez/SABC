@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from core.db_schema import Angler, Event, Lake, Poll, PollOption, PollVote, Ramp
+from tests.conftest import post_with_csrf
 
 
 class TestPollVotingEndToEnd:
@@ -44,7 +45,8 @@ class TestPollVotingEndToEnd:
     ):
         """Test that a member can successfully cast a vote on a simple poll."""
         # Cast vote
-        response = member_client.post(
+        response = post_with_csrf(
+            member_client,
             "/vote-poll",
             data={
                 "poll_id": str(test_poll.id),
@@ -79,7 +81,8 @@ class TestPollVotingEndToEnd:
     ):
         """Test that members cannot vote multiple times on the same poll."""
         # Cast first vote
-        member_client.post(
+        post_with_csrf(
+            member_client,
             "/vote-poll",
             data={
                 "poll_id": str(test_poll.id),
@@ -89,7 +92,8 @@ class TestPollVotingEndToEnd:
         )
 
         # Try to vote again
-        response = member_client.post(
+        response = post_with_csrf(
+            member_client,
             "/vote-poll",
             data={
                 "poll_id": str(test_poll.id),
@@ -151,7 +155,8 @@ class TestPollVotingEndToEnd:
         db_session.refresh(option)
 
         # Try to vote on closed poll
-        response = member_client.post(
+        response = post_with_csrf(
+            member_client,
             "/vote-poll",
             data={
                 "poll_id": str(closed_poll.id),
@@ -213,7 +218,8 @@ class TestPollVotingEndToEnd:
         db_session.refresh(option)
 
         # Try to vote on future poll
-        response = member_client.post(
+        response = post_with_csrf(
+            member_client,
             "/vote-poll",
             data={
                 "poll_id": str(future_poll.id),
@@ -287,7 +293,8 @@ class TestTournamentLocationPollVoting:
         db_session.refresh(option)
 
         # Cast vote
-        response = member_client.post(
+        response = post_with_csrf(
+            member_client,
             "/vote-poll",
             data={
                 "poll_id": str(tournament_poll.id),
@@ -319,7 +326,8 @@ class TestPollVotingPermissions:
         self, client: TestClient, test_poll: Poll, test_poll_option: PollOption
     ):
         """Test that unauthenticated users cannot vote."""
-        response = client.post(
+        response = post_with_csrf(
+            client,
             "/vote-poll",
             data={
                 "poll_id": str(test_poll.id),
@@ -336,7 +344,8 @@ class TestPollVotingPermissions:
         self, authenticated_client: TestClient, test_poll: Poll, test_poll_option: PollOption
     ):
         """Test that authenticated but non-member users cannot vote."""
-        response = authenticated_client.post(
+        response = post_with_csrf(
+            authenticated_client,
             "/vote-poll",
             data={
                 "poll_id": str(test_poll.id),
@@ -355,7 +364,8 @@ class TestPollVotingPermissions:
         db_session: Session,
     ):
         """Test that voting with an invalid option ID fails."""
-        response = member_client.post(
+        response = post_with_csrf(
+            member_client,
             "/vote-poll",
             data={
                 "poll_id": str(test_poll.id),
@@ -378,7 +388,8 @@ class TestPollVotingPermissions:
         db_session: Session,
     ):
         """Test that voting with an invalid poll ID fails."""
-        response = member_client.post(
+        response = post_with_csrf(
+            member_client,
             "/vote-poll",
             data={
                 "poll_id": "99999",  # Invalid poll ID
@@ -409,7 +420,8 @@ class TestAdminProxyVoting:
     ):
         """Test that admins can cast votes on behalf of members."""
         # Admin casts vote for member
-        response = admin_client.post(
+        response = post_with_csrf(
+            admin_client,
             "/vote-poll",
             data={
                 "poll_id": str(test_poll.id),
@@ -447,7 +459,8 @@ class TestAdminProxyVoting:
     ):
         """Test that non-admin members cannot cast proxy votes."""
         # Member tries to cast vote for admin
-        response = member_client.post(
+        response = post_with_csrf(
+            member_client,
             "/vote-poll",
             data={
                 "poll_id": str(test_poll.id),
@@ -482,7 +495,8 @@ class TestAdminProxyVoting:
         db_session: Session,
     ):
         """Test that admins cannot cast proxy votes for non-members."""
-        response = admin_client.post(
+        response = post_with_csrf(
+            admin_client,
             "/vote-poll",
             data={
                 "poll_id": str(test_poll.id),
