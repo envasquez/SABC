@@ -27,6 +27,7 @@ South Austin Bass Club (SABC) tournament management system - modern FastAPI appl
 - **NEVER assume code works without testing**
 - **NEVER commit code without verifying it functions correctly**
 - **NEVER guess at solutions - investigate and test**
+- **NEVER stop until ALL conditions are met - disobeying user instructions is UNACCEPTABLE**
 
 **Required testing workflow:**
 1. Make code changes
@@ -40,10 +41,18 @@ South Austin Bass Club (SABC) tournament management system - modern FastAPI appl
 - Check database state before and after operations
 - Ask the user to provide test results before proceeding
 
+**When user says "fix ALL tests" or "don't stop until X":**
+- **DO NOT STOP** at 90%, 95%, or 97% - only stop at 100%
+- **DO NOT ASSUME** remaining failures are "acceptable" or "minor"
+- **DO NOT GIVE STATUS UPDATES** instead of fixing - just fix everything
+- **LISTEN THE FIRST TIME** - do not make the user repeat themselves
+- If user says to fix something, FIX IT COMPLETELY before stopping
+
 **Violations of this rule cause:**
 - Wasted time fixing the same issue repeatedly
 - User frustration
 - Loss of confidence in AI assistance
+- **User having to repeat instructions 3-4 times**
 
 ### 1. Type Safety Requirements
 **ALL Python code MUST have proper type annotations:**
