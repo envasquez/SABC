@@ -57,7 +57,7 @@ class PasswordResetToken(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("anglers.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer, ForeignKey("anglers.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     token: Mapped[str] = mapped_column(String, nullable=False, index=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
@@ -117,7 +117,7 @@ class PollOption(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     poll_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("polls.id", ondelete="CASCADE"), index=True
+        Integer, ForeignKey("polls.id", ondelete="RESTRICT"), index=True
     )
     option_text: Mapped[str] = mapped_column(Text, nullable=False)
     option_data: Mapped[Optional[str]] = mapped_column(Text)
@@ -132,13 +132,13 @@ class PollVote(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     poll_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("polls.id", ondelete="CASCADE"), index=True
+        Integer, ForeignKey("polls.id", ondelete="RESTRICT"), index=True
     )
     option_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("poll_options.id", ondelete="CASCADE"), index=True
+        Integer, ForeignKey("poll_options.id", ondelete="RESTRICT"), index=True
     )
     angler_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("anglers.id", ondelete="CASCADE"), index=True
+        Integer, ForeignKey("anglers.id", ondelete="RESTRICT"), index=True
     )
     voted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=utc_now)
     cast_by_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
@@ -185,7 +185,7 @@ class Ramp(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     lake_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("lakes.id", ondelete="CASCADE"), index=True
+        Integer, ForeignKey("lakes.id", ondelete="RESTRICT"), index=True
     )
     name: Mapped[str] = mapped_column(Text, nullable=False)
     google_maps_iframe: Mapped[Optional[str]] = mapped_column(Text)
@@ -199,7 +199,7 @@ class Tournament(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     event_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("events.id", ondelete="CASCADE"), index=True
+        Integer, ForeignKey("events.id", ondelete="RESTRICT"), index=True
     )
     poll_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("polls.id", ondelete="SET NULL"), index=True
@@ -241,10 +241,10 @@ class Result(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     tournament_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("tournaments.id", ondelete="CASCADE"), index=True
+        Integer, ForeignKey("tournaments.id", ondelete="RESTRICT"), index=True
     )
     angler_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("anglers.id", ondelete="CASCADE"), index=True
+        Integer, ForeignKey("anglers.id", ondelete="RESTRICT"), index=True
     )
     num_fish: Mapped[Optional[int]] = mapped_column(Integer, default=0)
     total_weight: Mapped[Optional[Decimal]] = mapped_column(Numeric, default=0.0)
@@ -266,13 +266,13 @@ class TeamResult(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     tournament_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("tournaments.id", ondelete="CASCADE"), index=True
+        Integer, ForeignKey("tournaments.id", ondelete="RESTRICT"), index=True
     )
     angler1_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("anglers.id", ondelete="CASCADE"), index=True
+        Integer, ForeignKey("anglers.id", ondelete="RESTRICT"), index=True
     )
     angler2_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("anglers.id", ondelete="CASCADE"), index=True
+        Integer, ForeignKey("anglers.id", ondelete="RESTRICT"), index=True
     )
     total_weight: Mapped[Optional[Decimal]] = mapped_column(Numeric, default=0.0)
     place_finish: Mapped[Optional[int]] = mapped_column(Integer)
@@ -285,7 +285,7 @@ class OfficerPosition(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     angler_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("anglers.id", ondelete="CASCADE"), index=True
+        Integer, ForeignKey("anglers.id", ondelete="RESTRICT"), index=True
     )
     position: Mapped[str] = mapped_column(Text, nullable=False)
     year: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
