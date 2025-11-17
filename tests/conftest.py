@@ -279,7 +279,10 @@ def test_poll(db_session: Session, test_event: Event, admin_user: Angler) -> Pol
     """Create a test poll for testing."""
     from datetime import timedelta
 
-    now = datetime.now(tz=timezone.utc)
+    from core.helpers.timezone import now_local
+
+    # Use naive datetime for SQLite compatibility (matches production behavior)
+    now = now_local().replace(tzinfo=None)
     poll = Poll(
         title="Test Poll",
         description="Test poll description",

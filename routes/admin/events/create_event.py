@@ -26,11 +26,14 @@ async def create_event_page(request: Request):
     if isinstance(user, RedirectResponse):
         return user
 
+    # Reuse the events list template which has inline creation capability
     return templates.TemplateResponse(
-        "admin/events/create.html",
+        "admin/events.html",
         {
             "request": request,
             "user": user,
+            "events": [],  # Empty list for create mode
+            "create_mode": True,
         },
     )
 

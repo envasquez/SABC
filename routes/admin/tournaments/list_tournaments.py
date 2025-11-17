@@ -24,7 +24,24 @@ async def admin_tournaments_list(
     qs.auto_complete_past_tournaments()
     conn.commit()
 
-    tournaments = qs.fetch_all()  # type: ignore[call-arg]
+    # Fetch all tournaments with event and lake information
+    tournaments = qs.fetch_all(
+        """
+        SELECT
+            t.id,
+            t.complete,
+            t.entry_fee,
+            e.date,
+            e.name,
+            l.display_name as lake_name,
+            (SELECT COUNT(*) FROM results WHERE tournament_id = t.id) as result_count,
+            (SELECT COUNT(*) FROM team_results WHERE tournament_id = t.id) as team_result_count
+        FROM tournaments t
+        JOIN events e ON t.event_id = e.id
+        LEFT JOIN lakes l ON t.lake_id = l.id
+        ORDER BY e.date DESC
+        """
+    )
 
     for t in tournaments:
         t["total_participants"] = t["result_count"] + t["team_result_count"]

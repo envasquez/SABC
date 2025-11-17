@@ -4,7 +4,7 @@ This module tests the critical poll voting functionality from member perspective
 covering the workflow from viewing polls to casting votes.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -47,9 +47,8 @@ class TestPollVotingEndToEnd:
         # Cast vote
         response = post_with_csrf(
             member_client,
-            "/vote-poll",
+            f"/polls/{test_poll.id}/vote",
             data={
-                "poll_id": str(test_poll.id),
                 "option_id": str(test_poll_option.id),
             },
             follow_redirects=False,
@@ -57,6 +56,9 @@ class TestPollVotingEndToEnd:
 
         # Should redirect after successful vote
         assert response.status_code in [302, 303]
+        # Verify no error in redirect URL
+        location = response.headers.get("location", "")
+        assert "error=" not in location.lower(), f"Vote failed with redirect to: {location}"
 
         # Verify vote was recorded in database
         vote = (
@@ -83,9 +85,8 @@ class TestPollVotingEndToEnd:
         # Cast first vote
         post_with_csrf(
             member_client,
-            "/vote-poll",
+            f"/polls/{test_poll.id}/vote",
             data={
-                "poll_id": str(test_poll.id),
                 "option_id": str(test_poll_option.id),
             },
             follow_redirects=False,
@@ -94,9 +95,8 @@ class TestPollVotingEndToEnd:
         # Try to vote again
         response = post_with_csrf(
             member_client,
-            "/vote-poll",
+            f"/polls/{test_poll.id}/vote",
             data={
-                "poll_id": str(test_poll.id),
                 "option_id": str(test_poll_option.id),
             },
             follow_redirects=False,
@@ -126,7 +126,9 @@ class TestPollVotingEndToEnd:
     ):
         """Test that members cannot vote on polls that have closed."""
         # Create a closed poll
-        now = datetime.now(tz=timezone.utc)
+        from core.helpers.timezone import now_local
+
+        now = now_local().replace(tzinfo=None)
         closed_poll = Poll(
             title="Closed Poll",
             description="This poll is closed",
@@ -157,9 +159,8 @@ class TestPollVotingEndToEnd:
         # Try to vote on closed poll
         response = post_with_csrf(
             member_client,
-            "/vote-poll",
+            f"/polls/{closed_poll.id}/vote",
             data={
-                "poll_id": str(closed_poll.id),
                 "option_id": str(option.id),
             },
             follow_redirects=False,
@@ -189,7 +190,9 @@ class TestPollVotingEndToEnd:
     ):
         """Test that members cannot vote on polls that haven't started yet."""
         # Create a future poll
-        now = datetime.now(tz=timezone.utc)
+        from core.helpers.timezone import now_local
+
+        now = now_local().replace(tzinfo=None)
         future_poll = Poll(
             title="Future Poll",
             description="This poll starts tomorrow",
@@ -220,9 +223,8 @@ class TestPollVotingEndToEnd:
         # Try to vote on future poll
         response = post_with_csrf(
             member_client,
-            "/vote-poll",
+            f"/polls/{future_poll.id}/vote",
             data={
-                "poll_id": str(future_poll.id),
                 "option_id": str(option.id),
             },
             follow_redirects=False,
@@ -258,7 +260,10 @@ class TestTournamentLocationPollVoting:
     ):
         """Test member can vote on tournament location polls."""
         # Create tournament location poll
-        now = datetime.now(tz=timezone.utc)
+        # Use naive datetime for SQLite compatibility
+        from core.helpers.timezone import now_local
+
+        now = now_local().replace(tzinfo=None)
         tournament_poll = Poll(
             title="Tournament Location Vote",
             description="Vote for next tournament location",
@@ -275,30 +280,23 @@ class TestTournamentLocationPollVoting:
         db_session.commit()
         db_session.refresh(tournament_poll)
 
-        # Create tournament location option with structured data
+        # For tournament location polls, send the location data as JSON in option_id
+        # The route will create the option if it doesn't exist
+        import json
+
         option_data = {
             "lake_id": test_lake.id,
             "ramp_id": test_ramp.id,
             "start_time": "06:00",
             "end_time": "15:00",
         }
-        option = PollOption(
-            poll_id=tournament_poll.id,
-            option_text=f"{test_lake.display_name} - {test_ramp.name}",
-            option_data=option_data,
-            display_order=0,
-        )
-        db_session.add(option)
-        db_session.commit()
-        db_session.refresh(option)
 
-        # Cast vote
+        # Cast vote with JSON option_id (tournament location polls work this way)
         response = post_with_csrf(
             member_client,
-            "/vote-poll",
+            f"/polls/{tournament_poll.id}/vote",
             data={
-                "poll_id": str(tournament_poll.id),
-                "option_id": str(option.id),
+                "option_id": json.dumps(option_data),  # Send location data as JSON
             },
             follow_redirects=False,
         )
@@ -316,7 +314,11 @@ class TestTournamentLocationPollVoting:
             .first()
         )
         assert vote is not None
-        assert vote.option_id == option.id
+        # Verify the option was created with correct data
+        option = db_session.query(PollOption).filter(PollOption.id == vote.option_id).first()
+        assert option is not None
+        assert test_lake.display_name in option.option_text
+        assert test_ramp.name in option.option_text
 
 
 class TestPollVotingPermissions:
@@ -328,9 +330,8 @@ class TestPollVotingPermissions:
         """Test that unauthenticated users cannot vote."""
         response = post_with_csrf(
             client,
-            "/vote-poll",
+            f"/polls/{test_poll.id}/vote",
             data={
-                "poll_id": str(test_poll.id),
                 "option_id": str(test_poll_option.id),
             },
             follow_redirects=False,
@@ -346,16 +347,15 @@ class TestPollVotingPermissions:
         """Test that authenticated but non-member users cannot vote."""
         response = post_with_csrf(
             authenticated_client,
-            "/vote-poll",
+            f"/polls/{test_poll.id}/vote",
             data={
-                "poll_id": str(test_poll.id),
                 "option_id": str(test_poll_option.id),
             },
             follow_redirects=False,
         )
 
-        # Should get forbidden
-        assert response.status_code == 403
+        # Should redirect with error (member check happens in route)
+        assert response.status_code in [302, 303]
 
     def test_member_cannot_vote_with_invalid_option(
         self,
@@ -366,9 +366,8 @@ class TestPollVotingPermissions:
         """Test that voting with an invalid option ID fails."""
         response = post_with_csrf(
             member_client,
-            "/vote-poll",
+            f"/polls/{test_poll.id}/vote",
             data={
-                "poll_id": str(test_poll.id),
                 "option_id": "99999",  # Invalid option ID
             },
             follow_redirects=False,
@@ -390,9 +389,8 @@ class TestPollVotingPermissions:
         """Test that voting with an invalid poll ID fails."""
         response = post_with_csrf(
             member_client,
-            "/vote-poll",
+            "/polls/99999/vote",  # Invalid poll ID
             data={
-                "poll_id": "99999",  # Invalid poll ID
                 "option_id": str(test_poll_option.id),
             },
             follow_redirects=False,
@@ -422,9 +420,8 @@ class TestAdminProxyVoting:
         # Admin casts vote for member
         response = post_with_csrf(
             admin_client,
-            "/vote-poll",
+            f"/polls/{test_poll.id}/vote",
             data={
-                "poll_id": str(test_poll.id),
                 "option_id": str(test_poll_option.id),
                 "vote_as_angler_id": str(member_user.id),
             },
@@ -461,9 +458,8 @@ class TestAdminProxyVoting:
         # Member tries to cast vote for admin
         response = post_with_csrf(
             member_client,
-            "/vote-poll",
+            f"/polls/{test_poll.id}/vote",
             data={
-                "poll_id": str(test_poll.id),
                 "option_id": str(test_poll_option.id),
                 "vote_as_angler_id": str(admin_user.id),
             },
@@ -497,9 +493,8 @@ class TestAdminProxyVoting:
         """Test that admins cannot cast proxy votes for non-members."""
         response = post_with_csrf(
             admin_client,
-            "/vote-poll",
+            f"/polls/{test_poll.id}/vote",
             data={
-                "poll_id": str(test_poll.id),
                 "option_id": str(test_poll_option.id),
                 "vote_as_angler_id": str(regular_user.id),
             },

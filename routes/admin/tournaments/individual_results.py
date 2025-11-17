@@ -36,7 +36,14 @@ async def save_result(
         num_fish = get_form_int(form_data, "num_fish", 0) or 0
         gross_weight = Decimal(str(get_form_float(form_data, "total_weight", 0.0) or 0.0))
         big_bass_weight = Decimal(str(get_form_float(form_data, "big_bass_weight", 0.0) or 0.0))
-        dead_fish_penalty = Decimal(str(get_form_float(form_data, "dead_fish", 0.0) or 0.0))
+        # Accept both "dead_fish" and "dead_fish_penalty" field names
+        dead_fish_penalty = Decimal(
+            str(
+                get_form_float(form_data, "dead_fish_penalty", 0.0)
+                or get_form_float(form_data, "dead_fish", 0.0)
+                or 0.0
+            )
+        )
         # Calculate net weight (gross weight - penalty)
         total_weight = gross_weight - dead_fish_penalty
         disqualified = get_form_bool(form_data, "disqualified")
@@ -139,5 +146,40 @@ async def save_result(
         if request.headers.get(
             "X-Requested-With"
         ) == "XMLHttpRequest" or "application/json" in request.headers.get("Accept", ""):
+            return JSONResponse({"success": False, "error": str(e)}, status_code=400)
+        raise
+
+
+@router.post("/admin/tournaments/{tournament_id}/delete-result/{result_id}")
+async def delete_result(
+    tournament_id: int,
+    result_id: int,
+    request: Request,
+    user=Depends(require_admin),
+    conn: Connection = Depends(get_db),
+):
+    """Delete an individual tournament result."""
+    if isinstance(user, RedirectResponse):
+        return user
+
+    qs = QueryService(conn)
+
+    try:
+        # Delete the result
+        qs.execute(
+            "DELETE FROM results WHERE id = :id AND tournament_id = :tid",
+            {"id": result_id, "tid": tournament_id},
+        )
+        conn.commit()
+
+        # Return success response
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return JSONResponse({"success": True, "message": "Result deleted successfully"})
+
+        return RedirectResponse(
+            f"/admin/tournaments/{tournament_id}/enter-results", status_code=303
+        )
+    except Exception as e:
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JSONResponse({"success": False, "error": str(e)}, status_code=400)
         raise

@@ -26,6 +26,12 @@ async def polls(
     tab: str = "club",
     p: int = 1,
 ):
+    # Only members can view polls
+    if not user.get("member"):
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=403, detail="Only members can view polls")
+
     background_tasks.add_task(process_closed_polls)
 
     # Pagination settings
