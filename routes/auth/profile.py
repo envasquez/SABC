@@ -6,7 +6,7 @@ from sqlalchemy import case, desc, func, literal
 
 from core.db_schema import Angler, Event, Result, TeamResult, Tournament, get_session
 from core.helpers.logging import get_logger
-from routes.dependencies import templates, u
+from routes.dependencies import get_current_user, templates
 
 router = APIRouter()
 logger = get_logger("auth.profile")
@@ -14,7 +14,7 @@ logger = get_logger("auth.profile")
 
 @router.get("/profile")
 async def profile_page(request: Request) -> Response:
-    if not (user := u(request)):
+    if not (user := get_current_user(request)):
         return RedirectResponse("/login")
 
     with get_session() as session:

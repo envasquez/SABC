@@ -7,7 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from core.db_schema import Angler, get_session
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
 from core.helpers.response import get_client_ip, set_user_session
-from routes.dependencies import bcrypt, templates, u
+from routes.dependencies import bcrypt, get_current_user, templates
 
 router = APIRouter()
 logger = get_logger("auth.login")
@@ -16,7 +16,7 @@ limiter = Limiter(key_func=get_remote_address)
 
 @router.get("/login")
 async def login_page(request: Request) -> Response:
-    if u(request):
+    if get_current_user(request):
         return RedirectResponse("/")
 
     # Extract query parameters for success/error messages

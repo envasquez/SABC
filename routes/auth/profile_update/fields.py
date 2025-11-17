@@ -7,7 +7,7 @@ from core.db_schema import Angler, get_session
 from core.helpers.logging import get_logger
 from routes.auth.profile_update.password import handle_password_change
 from routes.auth.validation import validate_phone_number
-from routes.dependencies import u
+from routes.dependencies import get_current_user
 
 logger = get_logger("auth.profile_update.fields")
 
@@ -22,7 +22,7 @@ async def update_profile_fields(
     confirm_password: str,
 ) -> RedirectResponse:
     """Handle profile field updates including optional password change."""
-    if not (user := u(request)):
+    if not (user := get_current_user(request)):
         return RedirectResponse("/login")
 
     try:

@@ -10,17 +10,17 @@ from core.query_service import QueryService
 UserDict = Dict[str, Union[int, str, bool, None]]
 
 
-def u(r: Request) -> Optional[UserDict]:
+def get_current_user(request: Request) -> Optional[UserDict]:
     """
     Get current user from session.
 
     Args:
-        r: FastAPI Request object
+        request: FastAPI Request object
 
     Returns:
         User dictionary if authenticated, None otherwise
     """
-    if uid := r.session.get("user_id"):
+    if uid := request.session.get("user_id"):
         with engine.connect() as conn:
             qs = QueryService(conn)
             return qs.get_user_by_id(uid)
@@ -40,7 +40,7 @@ def require_auth(request: Request) -> UserDict:
     Raises:
         HTTPException: 303 redirect to login if not authenticated
     """
-    user = u(request)
+    user = get_current_user(request)
     if not user:
         raise HTTPException(status_code=303, headers={"Location": "/login"})
     return user
@@ -59,7 +59,7 @@ def require_admin(request: Request) -> UserDict:
     Raises:
         HTTPException: 302 redirect if not authenticated or not admin
     """
-    user = u(request)
+    user = get_current_user(request)
     if not user:
         raise HTTPException(status_code=302, headers={"Location": "/login"})
     if not user.get("is_admin"):
@@ -80,7 +80,7 @@ def require_member(request: Request) -> UserDict:
     Raises:
         HTTPException: 303 redirect if not authenticated, 403 if not a member
     """
-    user = u(request)
+    user = get_current_user(request)
     if not user:
         raise HTTPException(status_code=303, headers={"Location": "/login"})
     if not user.get("member"):
@@ -98,7 +98,7 @@ def get_user_optional(request: Request) -> Optional[UserDict]:
     Returns:
         User dictionary if authenticated, None otherwise
     """
-    return u(request)
+    return get_current_user(request)
 
 
 # Type aliases for FastAPI dependency injection

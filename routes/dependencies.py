@@ -14,19 +14,19 @@ from routes.dependencies import (
     get_admin_anglers_list,
     get_admin_events_data,
     get_all_ramps,
+    get_current_user,
     get_federal_holidays,
     get_lakes_list,
     get_ramps_for_lake,
     templates,
     time_format_filter,
-    u,
     validate_event_data,
     validate_lake_ramp_combo,
 )
 
 __all__ = [
     "admin",
-    "u",
+    "get_current_user",
     "db",
     "templates",
     "engine",
