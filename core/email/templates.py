@@ -36,3 +36,50 @@ The {CLUB_NAME} Team
 """
 
     return subject, text_body, html_body
+
+
+def generate_news_email_content(title: str, content: str) -> tuple[str, str, str]:
+    """Generate email content for news notifications.
+
+    Args:
+        title: News post title
+        content: Full news content
+
+    Returns:
+        Tuple of (subject, text_body, html_body)
+    """
+    subject = f"{CLUB_NAME} - {title}"
+
+    # Create excerpt (first 200 chars of content)
+    excerpt = content[:200] + ("..." if len(content) > 200 else "")
+    news_url = f"{WEBSITE_URL}/#news"
+
+    text_body = f"""
+Hello,
+
+{CLUB_NAME} has posted a new update:
+
+{title}
+
+{excerpt}
+
+Read the full update at: {news_url}
+
+Thanks,
+The {CLUB_NAME} Team
+"""
+
+    html_body = f"""
+<html>
+<body>
+<p>Hello,</p>
+<p>{CLUB_NAME} has posted a new update:</p>
+<h2>{title}</h2>
+<p>{excerpt}</p>
+<p><a href="{news_url}">Read the full update</a></p>
+<p>Thanks,<br>The {CLUB_NAME} Team</p>
+</body>
+</html>
+"""
+
+    return subject, text_body, html_body
