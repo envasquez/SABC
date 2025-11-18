@@ -47,10 +47,14 @@
                             <small class="text-secondary">Higher priority items appear first</small>
                         </div>
 
-
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-plus-circle"></i> Create News
-                        </button>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> Create News
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="sendTestEmail()">
+                                <i class="bi bi-envelope-check"></i> Send Test Email
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -242,6 +246,43 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+function sendTestEmail() {
+    const title = document.getElementById('title').value;
+    const content = document.getElementById('content').value;
+
+    if (!title || !content) {
+        alert('Please fill in both title and content before sending a test email');
+        return;
+    }
+
+    if (!confirm('Send a test email to yourself with this content?')) {
+        return;
+    }
+
+    // Create form data
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('content', content);
+
+    // Send test email
+    fetch('/admin/news/test-email', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.redirected) {
+            window.location.href = response.url;
+        } else {
+            return response.text().then(text => {
+                throw new Error('Failed to send test email');
+            });
+        }
+    })
+    .catch(error => {
+        alert('Error sending test email: ' + error.message);
+    });
+}
 
 function editNews(id, title, content, priority) {
     // Set form action

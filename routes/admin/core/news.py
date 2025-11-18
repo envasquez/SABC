@@ -111,6 +111,34 @@ async def update_news(
         return error_redirect("/admin/news", str(e))
 
 
+@router.post("/admin/news/test-email")
+async def test_news_email(request: Request, title: str = Form(...), content: str = Form(...)):
+    """Send a test email notification to the currently logged-in admin."""
+    user = require_admin(request)
+
+    # Get admin's email
+    admin_email = user.get("email")
+    if not admin_email or not isinstance(admin_email, str):
+        return error_redirect("/admin/news", "Your admin account has no email address configured")
+
+    try:
+        # Send test email only to the admin
+        success = send_news_notification([admin_email], title.strip(), content.strip())
+
+        if success:
+            return RedirectResponse(
+                f"/admin/news?success=Test email sent to {admin_email}", status_code=302
+            )
+        else:
+            return error_redirect(
+                "/admin/news", "Failed to send test email. Check SMTP configuration."
+            )
+
+    except Exception as e:
+        logger.error(f"Test email error: {e}")
+        return error_redirect("/admin/news", "Failed to send test email")
+
+
 @router.delete("/admin/news/{news_id}")
 async def delete_news(request: Request, news_id: int):
     _user = require_admin(request)
