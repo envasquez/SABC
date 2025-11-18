@@ -39,20 +39,25 @@ def create_tournament_location_options(
 
 
 def create_generic_poll_options(poll_id: int, form: Union[FormData, Dict[str, Any]]) -> None:
+    # Handle both FormData and dict
+    if isinstance(form, FormData):
+        poll_options = form.getlist("poll_options[]")
+    else:
+        poll_options = form.get("poll_options[]", [])
+
+    # Validate that at least one option is provided
+    valid_options = [opt for opt in poll_options if isinstance(opt, str) and opt.strip()]
+    if not valid_options:
+        raise ValueError("At least one poll option is required")
+
     with get_session() as session:
-        # Handle both FormData and dict
-        if isinstance(form, FormData):
-            poll_options = form.getlist("poll_options[]")
-        else:
-            poll_options = form.get("poll_options[]", [])
-        for option_text_raw in poll_options:
-            if isinstance(option_text_raw, str) and option_text_raw.strip():
-                new_option = PollOption(
-                    poll_id=poll_id,
-                    option_text=option_text_raw.strip(),
-                    option_data=json.dumps({}),
-                )
-                session.add(new_option)
+        for option_text_raw in valid_options:
+            new_option = PollOption(
+                poll_id=poll_id,
+                option_text=option_text_raw.strip(),
+                option_data=json.dumps({}),
+            )
+            session.add(new_option)
 
 
 def create_other_poll_options(poll_id: int, form: Union[FormData, Dict[str, Any]]) -> None:

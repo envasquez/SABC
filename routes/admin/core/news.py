@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Form, Request
+from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.db_schema import Angler, News, get_session, utc_now
@@ -8,6 +8,7 @@ from core.email import send_news_notification
 from core.helpers.auth import require_admin
 from core.helpers.logging import get_logger
 from core.helpers.response import error_redirect, sanitize_error_message
+from core.helpers.sanitize import sanitize_html
 from routes.dependencies import templates
 
 logger = get_logger(__name__)
@@ -46,12 +47,26 @@ async def create_news(
     request: Request, title: str = Form(...), content: str = Form(...), priority: int = Form(0)
 ):
     user = require_admin(request)
+
+    # Validate inputs
+    title_clean = title.strip()
+    content_clean = content.strip()
+
+    if not title_clean:
+        raise HTTPException(status_code=422, detail="Title cannot be empty")
+    if not content_clean:
+        raise HTTPException(status_code=422, detail="Content cannot be empty")
+
+    # Sanitize inputs to prevent XSS
+    title_safe = sanitize_html(title_clean)
+    content_safe = sanitize_html(content_clean)
+
     try:
         # Create the news post
         with get_session() as session:
             news_item = News(
-                title=title.strip(),
-                content=content.strip(),
+                title=title_safe,
+                content=content_safe,
                 author_id=user["id"],
                 published=True,
                 priority=priority,
@@ -72,7 +87,7 @@ async def create_news(
                 ]
 
             if member_emails:
-                send_news_notification(member_emails, title.strip(), content.strip())
+                send_news_notification(member_emails, title_safe, content_safe)
             else:
                 logger.info("No member emails found - skipping news notification")
 
@@ -94,12 +109,26 @@ async def update_news(
     priority: int = Form(0),
 ):
     user = require_admin(request)
+
+    # Validate inputs
+    title_clean = title.strip()
+    content_clean = content.strip()
+
+    if not title_clean:
+        raise HTTPException(status_code=422, detail="Title cannot be empty")
+    if not content_clean:
+        raise HTTPException(status_code=422, detail="Content cannot be empty")
+
+    # Sanitize inputs to prevent XSS
+    title_safe = sanitize_html(title_clean)
+    content_safe = sanitize_html(content_clean)
+
     try:
         with get_session() as session:
             news_item = session.query(News).filter(News.id == news_id).first()
             if news_item:
-                news_item.title = title.strip()
-                news_item.content = content.strip()
+                news_item.title = title_safe
+                news_item.content = content_safe
                 news_item.published = True
                 news_item.priority = priority
                 news_item.last_edited_by = user["id"]  # type: ignore[assignment]
