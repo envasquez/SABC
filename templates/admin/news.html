@@ -247,6 +247,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+function getCsrfToken() {
+    return document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrf_token='))
+        ?.split('=')[1];
+}
+
 function sendTestEmail() {
     const title = document.getElementById('title').value;
     const content = document.getElementById('content').value;
@@ -260,10 +267,11 @@ function sendTestEmail() {
         return;
     }
 
-    // Create form data
+    // Create form data with CSRF token
     const formData = new FormData();
     formData.append('title', title);
     formData.append('content', content);
+    formData.append('csrf_token', getCsrfToken());
 
     // Send test email
     fetch('/admin/news/test-email', {
