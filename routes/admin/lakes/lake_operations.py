@@ -39,8 +39,10 @@ async def create_lake(
         return RedirectResponse("/admin/lakes?success=Lake created successfully", status_code=302)
     except HTTPException:
         raise
-    except IntegrityError as e:
-        raise HTTPException(status_code=400, detail="Duplicate lake name or database constraint violation")
+    except IntegrityError:
+        raise HTTPException(
+            status_code=400, detail="Duplicate lake name or database constraint violation"
+        )
     except Exception as e:
         return error_redirect("/admin/lakes", str(e))
 

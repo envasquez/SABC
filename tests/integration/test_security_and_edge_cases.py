@@ -67,9 +67,7 @@ class TestNewsManagement:
             "priority": "1",
         }
 
-        response = post_with_csrf(
-            admin_client, f"/admin/news/{news_id}/update", data=form_data
-        )
+        response = post_with_csrf(admin_client, f"/admin/news/{news_id}/update", data=form_data)
 
         assert response.status_code in [200, 302, 303]
 
@@ -138,9 +136,7 @@ class TestNewsManagement:
         # Email function should have been called
         assert mock_send_email.called
 
-    def test_test_email_button_works(
-        self, admin_client: TestClient, admin_user: Angler
-    ):
+    def test_test_email_button_works(self, admin_client: TestClient, admin_user: Angler):
         """Test the 'Send Test Email' button functionality."""
         # Ensure admin has email
         if not admin_user.email:
@@ -160,9 +156,7 @@ class TestNewsManagement:
 class TestInputValidation:
     """Tests for input validation and sanitization."""
 
-    def test_xss_prevention_in_news_title(
-        self, admin_client: TestClient, db_session: Session
-    ):
+    def test_xss_prevention_in_news_title(self, admin_client: TestClient, db_session: Session):
         """Test that XSS attempts in news titles are handled."""
         xss_payload = '<script>alert("XSS")</script>'
 
@@ -249,7 +243,9 @@ class TestEventEdgeCases:
             "year": str(past_date.year),
         }
 
-        response = post_with_csrf(admin_client, "/admin/events/create", data=form_data, follow_redirects=False)
+        response = post_with_csrf(
+            admin_client, "/admin/events/create", data=form_data, follow_redirects=False
+        )
 
         # Should allow past events (for historical data)
         assert response.status_code in [200, 302, 303]
@@ -258,9 +254,7 @@ class TestEventEdgeCases:
         assert event is not None
         assert event.date == past_date
 
-    def test_event_with_far_future_date(
-        self, admin_client: TestClient, db_session: Session
-    ):
+    def test_event_with_far_future_date(self, admin_client: TestClient, db_session: Session):
         """Test creating an event far in the future."""
         future_date = date.today() + timedelta(days=365 * 2)  # 2 years ahead
 
@@ -271,7 +265,9 @@ class TestEventEdgeCases:
             "year": str(future_date.year),
         }
 
-        response = post_with_csrf(admin_client, "/admin/events/create", data=form_data, follow_redirects=False)
+        response = post_with_csrf(
+            admin_client, "/admin/events/create", data=form_data, follow_redirects=False
+        )
 
         assert response.status_code in [200, 302, 303]
 
@@ -287,7 +283,9 @@ class TestEventEdgeCases:
             "year": str((date.today() + timedelta(days=10)).year),
         }
 
-        response = post_with_csrf(admin_client, "/admin/events/create", data=form_data, follow_redirects=False)
+        response = post_with_csrf(
+            admin_client, "/admin/events/create", data=form_data, follow_redirects=False
+        )
 
         # Should allow duplicates (events on different dates)
         assert response.status_code in [200, 302, 303]
@@ -301,7 +299,9 @@ class TestEventEdgeCases:
             "year": "2025",
         }
 
-        response = post_with_csrf(admin_client, "/admin/events/create", data=form_data, follow_redirects=False)
+        response = post_with_csrf(
+            admin_client, "/admin/events/create", data=form_data, follow_redirects=False
+        )
 
         # Should reject invalid date
         assert response.status_code in [302, 303]  # Redirects with error
@@ -310,9 +310,7 @@ class TestEventEdgeCases:
 class TestPollEdgeCases:
     """Tests for poll edge cases."""
 
-    def test_poll_with_start_after_end(
-        self, admin_client: TestClient, test_event: Event
-    ):
+    def test_poll_with_start_after_end(self, admin_client: TestClient, test_event: Event):
         """Test creating a poll where start time is after end time."""
         now = datetime.now(timezone.utc)
         starts_at = now + timedelta(days=7)
@@ -362,7 +360,9 @@ class TestPollEdgeCases:
             "closes_at": (now + timedelta(days=7)).isoformat(),
         }
 
-        response = post_with_csrf(admin_client, "/admin/polls/create", data=form_data, follow_redirects=False)
+        response = post_with_csrf(
+            admin_client, "/admin/polls/create", data=form_data, follow_redirects=False
+        )
 
         # Should reject poll without options
         assert response.status_code in [302, 303]  # Redirects with error
@@ -421,9 +421,7 @@ class TestAccessControl:
 class TestDatabaseEdgeCases:
     """Tests for database edge cases and constraints."""
 
-    def test_creating_lake_with_duplicate_yaml_key(
-        self, admin_client: TestClient, test_lake: Lake
-    ):
+    def test_creating_lake_with_duplicate_yaml_key(self, admin_client: TestClient, test_lake: Lake):
         """Test creating a lake with a duplicate yaml_key."""
         form_data = {
             "name": test_lake.yaml_key,  # Duplicate
@@ -480,9 +478,7 @@ class TestErrorHandling:
             "google_maps_embed": "",
         }
 
-        response = post_with_csrf(
-            admin_client, "/admin/lakes/99999/update", data=form_data
-        )
+        response = post_with_csrf(admin_client, "/admin/lakes/99999/update", data=form_data)
 
         # Should return error
         assert response.status_code in [404, 500]

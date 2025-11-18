@@ -52,7 +52,8 @@ def validate_event_data(
     Returns:
         Dictionary with 'errors' and 'warnings' lists
     """
-    errors, warnings = [], []
+    errors: List[str] = []
+    warnings: List[str] = []
 
     # Validate date format
     try:

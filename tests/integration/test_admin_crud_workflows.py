@@ -9,7 +9,7 @@ from datetime import date, datetime, timedelta, timezone
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from core.db_schema import Angler, Event, Lake, Poll, PollOption, Ramp
+from core.db_schema import Angler, Event, Lake, Poll, Ramp
 from tests.conftest import post_with_csrf
 
 
@@ -23,9 +23,7 @@ class TestEventCreation:
         assert response.status_code == 200
         assert "create" in response.text.lower() or "event" in response.text.lower()
 
-    def test_admin_can_create_basic_event(
-        self, admin_client: TestClient, db_session: Session
-    ):
+    def test_admin_can_create_basic_event(self, admin_client: TestClient, db_session: Session):
         """Test creating a basic event with required fields only."""
         event_date = date.today() + timedelta(days=30)
 
@@ -75,6 +73,7 @@ class TestEventCreation:
         assert event is not None
         assert event.description == "Full event with all details"
         # Decimal has high precision, just check it's close to 35
+        assert event.entry_fee is not None
         assert float(event.entry_fee) == 35.00
 
     def test_create_event_validates_required_fields(self, admin_client: TestClient):
@@ -120,9 +119,7 @@ class TestEventUpdate:
     #     # Error: "Tournament record for event ID X not found"
     #     pass
 
-    def test_non_admin_cannot_update_event(
-        self, member_client: TestClient, test_event: Event
-    ):
+    def test_non_admin_cannot_update_event(self, member_client: TestClient, test_event: Event):
         """Test that non-admin users cannot update events."""
         form_data = {
             "event_id": str(test_event.id),
@@ -193,9 +190,7 @@ class TestLakeManagement:
         assert response.status_code == 200
         assert test_lake.display_name in response.text
 
-    def test_admin_can_create_lake(
-        self, admin_client: TestClient, db_session: Session
-    ):
+    def test_admin_can_create_lake(self, admin_client: TestClient, db_session: Session):
         """Test creating a new lake with correct field names."""
         form_data = {
             "name": "new test lake",  # Will become new_test_lake as yaml_key
@@ -231,9 +226,7 @@ class TestLakeManagement:
         db_session.refresh(test_lake)
         assert test_lake.display_name == "Updated Lake Name"
 
-    def test_admin_can_delete_lake(
-        self, admin_client: TestClient, db_session: Session
-    ):
+    def test_admin_can_delete_lake(self, admin_client: TestClient, db_session: Session):
         """Test deleting a lake."""
         # Create lake to delete
         lake = Lake(
@@ -362,9 +355,7 @@ class TestPollCreation:
         deleted_poll = db_session.query(Poll).filter(Poll.id == poll_id).first()
         assert deleted_poll is None
 
-    def test_non_admin_cannot_create_poll(
-        self, member_client: TestClient, test_event: Event
-    ):
+    def test_non_admin_cannot_create_poll(self, member_client: TestClient, test_event: Event):
         """Test that non-admin users cannot create polls."""
         form_data = {
             "event_id": str(test_event.id),
@@ -398,9 +389,7 @@ class TestUserManagement:
     #     # Route is /admin/users/{id}/edit (POST) not /update
     #     pass
 
-    def test_admin_cannot_delete_themselves(
-        self, admin_client: TestClient, admin_user: Angler
-    ):
+    def test_admin_cannot_delete_themselves(self, admin_client: TestClient, admin_user: Angler):
         """Test that admins cannot delete their own account."""
         response = admin_client.delete(f"/admin/users/{admin_user.id}")
 
@@ -410,9 +399,7 @@ class TestUserManagement:
         assert "error" in json_response
         assert "cannot delete yourself" in json_response["error"].lower()
 
-    def test_admin_can_delete_other_user(
-        self, admin_client: TestClient, db_session: Session
-    ):
+    def test_admin_can_delete_other_user(self, admin_client: TestClient, db_session: Session):
         """Test that admins can delete other users."""
         # Create a user to delete
         user_to_delete = Angler(

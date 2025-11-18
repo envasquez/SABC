@@ -46,9 +46,7 @@ def create_generic_poll_options(poll_id: int, form: Union[FormData, Dict[str, An
         poll_options = form.get("poll_options[]", [])
 
     # Validate that at least one option is provided
-    valid_options = [
-        opt for opt in poll_options if isinstance(opt, str) and opt.strip()
-    ]
+    valid_options = [opt for opt in poll_options if isinstance(opt, str) and opt.strip()]
     if not valid_options:
         raise ValueError("At least one poll option is required")
 
