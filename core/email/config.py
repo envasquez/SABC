@@ -16,3 +16,8 @@ RESET_RATE_LIMIT = int(os.environ.get("RESET_RATE_LIMIT", "3"))
 RESET_RATE_WINDOW = int(os.environ.get("RESET_RATE_WINDOW", "3600"))
 
 TOKEN_EXPIRY_MINUTES = int(os.environ.get("TOKEN_EXPIRY_MINUTES", "30"))
+
+# Testing: Override email recipients for development/testing
+# When set, ALL emails (news, password reset, etc) will ONLY go to this address
+# Example: TEST_EMAIL_OVERRIDE=your.email@gmail.com
+TEST_EMAIL_OVERRIDE = os.environ.get("TEST_EMAIL_OVERRIDE")
