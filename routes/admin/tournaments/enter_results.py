@@ -8,6 +8,7 @@ from sqlalchemy import Connection
 from core.deps import get_db, templates
 from core.helpers.auth import require_admin
 from core.query_service import QueryService
+from routes.tournaments.helpers import auto_complete_past_tournaments
 
 router = APIRouter()
 
@@ -22,9 +23,10 @@ async def enter_results_page(
     if isinstance(user, RedirectResponse):
         return user
 
+    # Auto-complete past tournaments using ORM session
+    auto_complete_past_tournaments()
+
     qs = QueryService(conn)
-    qs.auto_complete_past_tournaments()
-    conn.commit()
 
     tournament = qs.get_tournament_by_id(tournament_id)
     if not tournament:

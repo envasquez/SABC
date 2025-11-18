@@ -8,27 +8,6 @@ from core.query_service.base import QueryServiceBase
 class TournamentQueries(QueryServiceBase):
     """Query service for tournament database operations."""
 
-    def auto_complete_past_tournaments(self) -> int:
-        """
-        Automatically mark past tournaments as complete.
-
-        Returns:
-            Number of tournaments updated
-        """
-        # SQLite-compatible UPDATE using subquery instead of FROM clause
-        result = self.execute(
-            """
-            UPDATE tournaments
-            SET complete = TRUE
-            WHERE event_id IN (
-                SELECT id FROM events
-                WHERE date < CURRENT_DATE
-            )
-            AND complete = FALSE
-            """,
-        )
-        return result.rowcount if result else 0
-
     def get_tournament_by_id(self, tournament_id: int) -> Optional[Dict[str, Any]]:
         """
         Get tournament by ID with event details.

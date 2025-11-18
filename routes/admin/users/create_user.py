@@ -2,9 +2,8 @@ import json
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
-from sqlalchemy import text
 
-from core.db_schema import engine
+from core.db_schema import Angler, get_session
 from core.helpers.auth import require_admin
 from core.helpers.logging import get_logger
 from routes.admin.users.email_helpers import generate_guest_email
@@ -34,25 +33,17 @@ async def create_user(request: Request):
         elif not member:
             final_email = generate_guest_email(name)
 
-        with engine.connect() as conn:
-            result = conn.execute(
-                text(
-                    """
-                    INSERT INTO anglers (name, email, phone, member)
-                    VALUES (:name, :email, :phone, :member)
-                    RETURNING id
-                """
-                ),
-                {
-                    "name": name,
-                    "email": final_email,
-                    "phone": phone,
-                    "member": member,
-                },
+        with get_session() as session:
+            new_angler = Angler(
+                name=name,
+                email=final_email,
+                phone=phone,
+                member=member,
             )
-            conn.commit()
-            row = result.fetchone()
-            angler_id = row[0] if row else None
+            session.add(new_angler)
+            session.commit()
+            session.refresh(new_angler)
+            angler_id = new_angler.id
 
         logger.info(
             "New user created",
