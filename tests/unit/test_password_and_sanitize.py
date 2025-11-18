@@ -5,7 +5,6 @@ Targets:
 - core/helpers/sanitize.py (41.2% → 90%+)
 """
 
-
 from core.helpers.password_validator import (
     get_password_requirements_text,
     validate_password_strength,
