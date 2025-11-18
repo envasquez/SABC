@@ -1,10 +1,16 @@
+from typing import List
+
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.db_schema import Angler, News, get_session, utc_now
+from core.email import send_news_notification
 from core.helpers.auth import require_admin
+from core.helpers.logging import get_logger
 from core.helpers.response import error_redirect, sanitize_error_message
 from routes.dependencies import templates
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -41,6 +47,7 @@ async def create_news(
 ):
     user = require_admin(request)
     try:
+        # Create the news post
         with get_session() as session:
             news_item = News(
                 title=title.strip(),
@@ -51,6 +58,27 @@ async def create_news(
             )
             session.add(news_item)
             # Context manager will commit automatically on successful exit
+
+        # Send email notifications to all members (non-blocking)
+        try:
+            with get_session() as session:
+                # Get all member emails (members only, exclude null emails)
+                member_emails: List[str] = [
+                    email
+                    for (email,) in session.query(Angler.email)
+                    .filter(Angler.member == True, Angler.email.isnot(None))  # noqa: E712
+                    .all()
+                    if email
+                ]
+
+            if member_emails:
+                send_news_notification(member_emails, title.strip(), content.strip())
+            else:
+                logger.info("No member emails found - skipping news notification")
+
+        except Exception as email_error:
+            # Log email failure but don't fail the news post creation
+            logger.error(f"Failed to send news notifications: {email_error}")
 
         return RedirectResponse("/admin/news?success=News created successfully", status_code=302)
     except Exception as e:
@@ -81,6 +109,34 @@ async def update_news(
         return RedirectResponse("/admin/news?success=News updated successfully", status_code=302)
     except Exception as e:
         return error_redirect("/admin/news", str(e))
+
+
+@router.post("/admin/news/test-email")
+async def test_news_email(request: Request, title: str = Form(...), content: str = Form(...)):
+    """Send a test email notification to the currently logged-in admin."""
+    user = require_admin(request)
+
+    # Get admin's email
+    admin_email = user.get("email")
+    if not admin_email or not isinstance(admin_email, str):
+        return error_redirect("/admin/news", "Your admin account has no email address configured")
+
+    try:
+        # Send test email only to the admin
+        success = send_news_notification([admin_email], title.strip(), content.strip())
+
+        if success:
+            return RedirectResponse(
+                f"/admin/news?success=Test email sent to {admin_email}", status_code=302
+            )
+        else:
+            return error_redirect(
+                "/admin/news", "Failed to send test email. Check SMTP configuration."
+            )
+
+    except Exception as e:
+        logger.error(f"Test email error: {e}")
+        return error_redirect("/admin/news", "Failed to send test email")
 
 
 @router.delete("/admin/news/{news_id}")

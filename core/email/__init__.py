@@ -1,4 +1,4 @@
-from .service import send_password_reset_email
+from .service import send_news_notification, send_password_reset_email
 from .tokens import (
     cleanup_expired_tokens,
     create_password_reset_token,
@@ -8,6 +8,7 @@ from .tokens import (
 
 __all__ = [
     "send_password_reset_email",
+    "send_news_notification",
     "create_password_reset_token",
     "verify_reset_token",
     "use_reset_token",
