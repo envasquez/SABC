@@ -5,6 +5,7 @@ from sqlalchemy import Connection
 from core.deps import get_db, templates
 from core.helpers.auth import require_admin
 from core.query_service import QueryService
+from routes.tournaments.helpers import auto_complete_past_tournaments
 
 router = APIRouter()
 
@@ -18,11 +19,10 @@ async def admin_tournaments_list(
     if isinstance(user, RedirectResponse):
         return user
 
-    qs = QueryService(conn)
+    # Auto-complete past tournaments using ORM session
+    auto_complete_past_tournaments()
 
-    # Auto-complete past tournaments
-    qs.auto_complete_past_tournaments()
-    conn.commit()
+    qs = QueryService(conn)
 
     # Fetch all tournaments with event and lake information
     tournaments = qs.fetch_all(

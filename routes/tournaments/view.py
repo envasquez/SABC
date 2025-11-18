@@ -8,6 +8,7 @@ from core.deps import templates
 from core.helpers.auth import OptionalUser
 from core.query_service import QueryService
 from routes.tournaments.data import fetch_tournament_data
+from routes.tournaments.helpers import auto_complete_past_tournaments
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -24,10 +25,11 @@ async def tournaments_list(request: Request, user: OptionalUser):
 @router.get("/tournaments/{tournament_id}")
 async def tournament_results(request: Request, tournament_id: int, user: OptionalUser):
     try:
+        # Auto-complete past tournaments using ORM session
+        auto_complete_past_tournaments()
+
         with engine.connect() as conn:
             qs = QueryService(conn)
-            qs.auto_complete_past_tournaments()
-            conn.commit()
             (
                 tournament,
                 stats,
