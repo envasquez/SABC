@@ -53,7 +53,14 @@ def validate_event_data(
         Dictionary with 'errors' and 'warnings' lists
     """
     errors, warnings = [], []
-    date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+
+    # Validate date format
+    try:
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+    except (ValueError, TypeError):
+        errors.append(f"Invalid date format: {date_str}. Expected YYYY-MM-DD")
+        return {"errors": errors, "warnings": warnings}
+
     if date_obj.date() < now_local().date():
         warnings.append(f"Creating event for past date: {date_str}")
 
