@@ -25,9 +25,7 @@ class TestHomePageWithData:
         response = client.get("/")
         assert response.status_code == 200
 
-    def test_home_page_with_multiple_tournaments(
-        self, client: TestClient, db_session: Session
-    ):
+    def test_home_page_with_multiple_tournaments(self, client: TestClient, db_session: Session):
         """Test home page with multiple tournaments."""
         for i in range(3):
             event = Event(

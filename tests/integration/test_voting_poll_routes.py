@@ -17,9 +17,7 @@ class TestPollListRoute:
         response = member_client.get("/polls")
         assert response.status_code == 200
 
-    def test_polls_list_with_active_poll(
-        self, member_client: TestClient, db_session: Session
-    ):
+    def test_polls_list_with_active_poll(self, member_client: TestClient, db_session: Session):
         """Test polls list shows active polls."""
         event = Event(
             name="Event",

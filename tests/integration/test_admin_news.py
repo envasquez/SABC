@@ -28,9 +28,7 @@ class TestAdminNews:
         )
         assert response.status_code in [200, 303]
 
-    def test_admin_edit_news(
-        self, admin_client: TestClient, db_session: Session, admin_user
-    ):
+    def test_admin_edit_news(self, admin_client: TestClient, db_session: Session, admin_user):
         """Test admin can edit news."""
         news = News(
             title="Original",
@@ -44,9 +42,7 @@ class TestAdminNews:
         response = admin_client.get(f"/admin/news/{news.id}/edit")
         assert response.status_code == 200
 
-    def test_admin_delete_news(
-        self, admin_client: TestClient, db_session: Session, admin_user
-    ):
+    def test_admin_delete_news(self, admin_client: TestClient, db_session: Session, admin_user):
         """Test admin can delete news."""
         news = News(
             title="Delete Me",

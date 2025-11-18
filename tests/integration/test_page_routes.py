@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from core.db_schema import Angler, Event, Lake, Ramp, Result, Tournament
+from core.db_schema import Angler, Event
 
 
 class TestAwardsPage:

@@ -17,9 +17,7 @@ class TestAdminEvents:
         response = admin_client.get("/admin/events")
         assert response.status_code == 200
 
-    def test_admin_create_tournament_event(
-        self, admin_client: TestClient, db_session: Session
-    ):
+    def test_admin_create_tournament_event(self, admin_client: TestClient, db_session: Session):
         """Test admin creates tournament event."""
         response = post_with_csrf(
             admin_client,
@@ -33,9 +31,7 @@ class TestAdminEvents:
         )
         assert response.status_code in [200, 303]
 
-    def test_admin_create_meeting_event(
-        self, admin_client: TestClient, db_session: Session
-    ):
+    def test_admin_create_meeting_event(self, admin_client: TestClient, db_session: Session):
         """Test admin creates meeting event."""
         response = post_with_csrf(
             admin_client,
@@ -49,9 +45,7 @@ class TestAdminEvents:
         )
         assert response.status_code in [200, 303]
 
-    def test_admin_edit_event(
-        self, admin_client: TestClient, db_session: Session
-    ):
+    def test_admin_edit_event(self, admin_client: TestClient, db_session: Session):
         """Test admin edits event."""
         event = Event(
             name="Edit Me",
@@ -65,9 +59,7 @@ class TestAdminEvents:
         response = admin_client.get(f"/admin/events/{event.id}/edit")
         assert response.status_code == 200
 
-    def test_admin_update_event(
-        self, admin_client: TestClient, db_session: Session
-    ):
+    def test_admin_update_event(self, admin_client: TestClient, db_session: Session):
         """Test admin updates event."""
         event = Event(
             name="Update Me",
@@ -90,9 +82,7 @@ class TestAdminEvents:
         )
         assert response.status_code in [200, 303]
 
-    def test_admin_delete_event(
-        self, admin_client: TestClient, db_session: Session
-    ):
+    def test_admin_delete_event(self, admin_client: TestClient, db_session: Session):
         """Test admin deletes event."""
         event = Event(
             name="Delete Me",
