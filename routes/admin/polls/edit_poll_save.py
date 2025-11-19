@@ -1,11 +1,11 @@
 import json
 from datetime import datetime
-from typing import Optional
+from typing import Dict, Optional
 
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 
-from core.db_schema import Poll, PollOption, get_session
+from core.db_schema import Poll, PollOption, PollVote, get_session
 from core.helpers.auth import require_admin
 from core.helpers.forms import get_form_string
 from core.helpers.logging import get_logger
@@ -19,6 +19,7 @@ logger = get_logger("admin.polls.edit")
 @router.post("/admin/polls/{poll_id}/edit")
 async def update_poll(request: Request, poll_id: int) -> RedirectResponse:
     user = require_admin(request)
+    kept_options_with_votes = []  # Track options we couldn't remove (for user feedback)
     try:
         form_data = await request.form()
         title = get_form_string(form_data, "title")
@@ -54,31 +55,75 @@ async def update_poll(request: Request, poll_id: int) -> RedirectResponse:
 
             # Handle tournament location polls differently
             if poll.poll_type == "tournament_location":
-                # Delete existing options
-                session.query(PollOption).filter(PollOption.poll_id == poll_id).delete()
+                # Smart update strategy to handle polls with existing votes
+                # 1. Get existing options with their lake_ids
+                existing_options = (
+                    session.query(PollOption).filter(PollOption.poll_id == poll_id).all()
+                )
+                existing_lake_ids = set()
+                option_map: Dict[int, PollOption] = {}  # lake_id -> option
 
-                # Create new options based on selected lakes
-                if lake_ids:
-                    for lake_id_raw in lake_ids:
-                        lake_id = int(lake_id_raw)
-                        lake_name = find_lake_by_id(lake_id, "name")
-                        if lake_name:
-                            new_option = PollOption(
-                                poll_id=poll_id,
-                                option_text=lake_name,
-                                option_data=json.dumps({"lake_id": lake_id}),
-                            )
-                            session.add(new_option)
-                else:
-                    # If no lakes selected, use all lakes as default
+                for option in existing_options:
+                    if option.option_data:
+                        try:
+                            data = json.loads(option.option_data)
+                            if "lake_id" in data:
+                                lake_id = data["lake_id"]
+                                existing_lake_ids.add(lake_id)
+                                option_map[lake_id] = option
+                        except json.JSONDecodeError:
+                            pass
+
+                # 2. Determine which lakes to keep, add, remove
+                selected_lake_ids = (
+                    set(int(lid) for lid in lake_ids if isinstance(lid, str)) if lake_ids else set()
+                )
+
+                # If no lakes selected, use all lakes as default
+                if not selected_lake_ids:
                     all_lakes = get_lakes_list()
-                    for lake in all_lakes:
+                    selected_lake_ids = set(lake["id"] for lake in all_lakes)
+
+                lakes_to_add = selected_lake_ids - existing_lake_ids
+                lakes_to_remove = existing_lake_ids - selected_lake_ids
+
+                # 3. Add new options for newly selected lakes
+                for lake_id in lakes_to_add:
+                    lake_name = find_lake_by_id(lake_id, "name")
+                    if lake_name:
                         new_option = PollOption(
                             poll_id=poll_id,
-                            option_text=lake["display_name"],
-                            option_data=json.dumps({"lake_id": lake["id"]}),
+                            option_text=lake_name,
+                            option_data=json.dumps({"lake_id": lake_id}),
                         )
                         session.add(new_option)
+
+                # 4. Remove options that are no longer selected (only if they have no votes)
+                for lake_id in lakes_to_remove:
+                    opt_to_remove: Optional[PollOption] = option_map.get(lake_id)
+                    if opt_to_remove:
+                        # Check if this option has any votes
+                        vote_count = (
+                            session.query(PollVote)
+                            .filter(PollVote.option_id == opt_to_remove.id)
+                            .count()
+                        )
+
+                        if vote_count == 0:
+                            # Safe to delete - no votes
+                            session.delete(opt_to_remove)
+                        else:
+                            # Option has votes - keep it but log a warning
+                            kept_options_with_votes.append(opt_to_remove.option_text)
+                            logger.warning(
+                                f"Cannot remove poll option (ID {opt_to_remove.id}) - has {vote_count} vote(s)",
+                                extra={
+                                    "poll_id": poll_id,
+                                    "option_id": opt_to_remove.id,
+                                    "lake_id": lake_id,
+                                    "vote_count": vote_count,
+                                },
+                            )
             else:
                 # Handle simple/generic polls - update options in place
                 # Note: This code runs outside the session context, should be moved inside
@@ -104,8 +149,13 @@ async def update_poll(request: Request, poll_id: int) -> RedirectResponse:
             },
         )
 
+        # Build success message
+        success_msg = "Poll updated successfully"
+        if kept_options_with_votes:
+            success_msg += f". Note: Some options ({', '.join(kept_options_with_votes)}) could not be removed because they have existing votes."
+
         return RedirectResponse(
-            f"/admin/polls/{poll_id}/edit?success=Poll updated successfully", status_code=302
+            f"/admin/polls/{poll_id}/edit?success={success_msg}", status_code=302
         )
     except Exception as e:
         logger.error(
