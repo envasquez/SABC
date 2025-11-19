@@ -384,7 +384,7 @@ function deleteIndividualResult(tournamentId, resultId, anglerName) {
         console.log('All cookies:', document.cookie);
 
         if (!csrfToken) {
-            alert('CSRF token not found. Please refresh the page and try again.');
+            showToast('CSRF token not found. Please refresh the page and try again.', 'error');
             return;
         }
 
@@ -405,16 +405,16 @@ function deleteIndividualResult(tournamentId, resultId, anglerName) {
                     console.error('Error response:', text);
                     try {
                         const data = JSON.parse(text);
-                        alert(data.error || 'Error deleting result. Please try again.');
+                        showToast(data.error || 'Error deleting result. Please try again.', 'error');
                     } catch(e) {
-                        alert('Error deleting result: ' + text);
+                        showToast('Error deleting result: ' + text, 'error');
                     }
                 });
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error deleting result. Please try again.');
+            showToast('Error deleting result. Please try again.', 'error');
         });
     }
 }
@@ -425,7 +425,7 @@ function deleteBuyInResult(tournamentId, resultId, anglerName) {
         console.log('CSRF Token:', csrfToken);
 
         if (!csrfToken) {
-            alert('CSRF token not found. Please refresh the page and try again.');
+            showToast('CSRF token not found. Please refresh the page and try again.', 'error');
             return;
         }
 
@@ -446,16 +446,16 @@ function deleteBuyInResult(tournamentId, resultId, anglerName) {
                     console.error('Error response:', text);
                     try {
                         const data = JSON.parse(text);
-                        alert(data.error || 'Error deleting buy-in result. Please try again.');
+                        showToast(data.error || 'Error deleting buy-in result. Please try again.', 'error');
                     } catch(e) {
-                        alert('Error deleting buy-in result: ' + text);
+                        showToast('Error deleting buy-in result: ' + text, 'error');
                     }
                 });
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error deleting buy-in result. Please try again.');
+            showToast('Error deleting buy-in result. Please try again.', 'error');
         });
     }
 }
@@ -467,7 +467,7 @@ function deleteTeamResult(tournamentId, teamResultId, teamName, isSolo) {
         console.log('CSRF Token:', csrfToken);
 
         if (!csrfToken) {
-            alert('CSRF token not found. Please refresh the page and try again.');
+            showToast('CSRF token not found. Please refresh the page and try again.', 'error');
             return;
         }
 
@@ -488,16 +488,16 @@ function deleteTeamResult(tournamentId, teamResultId, teamName, isSolo) {
                     console.error('Error response:', text);
                     try {
                         const data = JSON.parse(text);
-                        alert(data.error || 'Error deleting team result. Please try again.');
+                        showToast(data.error || 'Error deleting team result. Please try again.', 'error');
                     } catch(e) {
-                        alert('Error deleting team result: ' + text);
+                        showToast('Error deleting team result: ' + text, 'error');
                     }
                 });
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error deleting team result. Please try again.');
+            showToast('Error deleting team result. Please try again.', 'error');
         });
     }
 }

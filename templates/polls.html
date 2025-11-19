@@ -1033,30 +1033,30 @@ window.validateProxyVote{{ poll.id }} = function() {
     const memberSelect = document.getElementById('vote_as_angler_{{ poll.id }}');
 
     if (!memberSelect.value) {
-        alert('Please select a member to vote for');
+        showToast('Please select a member to vote for', 'warning');
         return false;
     }
 
     if (!lakeSelect.value) {
-        alert('Please select a lake');
+        showToast('Please select a lake', 'warning');
         return false;
     }
     if (!rampSelect.value) {
-        alert('Please select a ramp');
+        showToast('Please select a ramp', 'warning');
         return false;
     }
     if (!startTimeSelect.value) {
-        alert('Please select a start time');
+        showToast('Please select a start time', 'warning');
         return false;
     }
     if (!endTimeSelect.value) {
-        alert('Please select an end time');
+        showToast('Please select an end time', 'warning');
         return false;
     }
 
     // Validate time order
     if (startTimeSelect.value >= endTimeSelect.value) {
-        alert('Start time must be before end time');
+        showToast('Start time must be before end time', 'warning');
         return false;
     }
 
@@ -1064,7 +1064,7 @@ window.validateProxyVote{{ poll.id }} = function() {
     const startHour = parseInt(startTimeSelect.value.split(':')[0]);
     const endHour = parseInt(endTimeSelect.value.split(':')[0]);
     if (startHour < 4 || endHour > 23) {
-        alert('Tournament times must be between 4:00 AM and 11:00 PM');
+        showToast('Tournament times must be between 4:00 AM and 11:00 PM', 'warning');
         return false;
     }
 
@@ -1084,14 +1084,14 @@ window.validateProxyVote{{ poll.id }} = function() {
 window.validateProxyVote{{ poll.id }} = function() {
     const memberSelect = document.getElementById('vote_as_angler_{{ poll.id }}');
     if (!memberSelect.value) {
-        alert('Please select a member to vote for');
+        showToast('Please select a member to vote for', 'warning');
         return false;
     }
 
     // Check if an option is selected
     const selectedOption = document.querySelector('input[name="option_id"]:checked');
     if (!selectedOption) {
-        alert('Please select an option to vote for');
+        showToast('Please select an option to vote for', 'warning');
         return false;
     }
 
@@ -1133,25 +1133,25 @@ window.validateVoteNonAdmin{{ poll.id }} = function() {
     const voteDataInput = document.getElementById('vote_option_id_nonadmin_{{ poll.id }}');
 
     if (!lakeSelect.value) {
-        alert('Please select a lake');
+        showToast('Please select a lake', 'warning');
         return false;
     }
     if (!rampSelect.value) {
-        alert('Please select a ramp');
+        showToast('Please select a ramp', 'warning');
         return false;
     }
     if (!startTimeSelect.value) {
-        alert('Please select a start time');
+        showToast('Please select a start time', 'warning');
         return false;
     }
     if (!endTimeSelect.value) {
-        alert('Please select an end time');
+        showToast('Please select an end time', 'warning');
         return false;
     }
 
     // Validate time order
     if (startTimeSelect.value >= endTimeSelect.value) {
-        alert('Start time must be before end time');
+        showToast('Start time must be before end time', 'warning');
         return false;
     }
 
@@ -1159,7 +1159,7 @@ window.validateVoteNonAdmin{{ poll.id }} = function() {
     const startHour = parseInt(startTimeSelect.value.split(':')[0]);
     const endHour = parseInt(endTimeSelect.value.split(':')[0]);
     if (startHour < 4 || endHour > 23) {
-        alert('Tournament times must be between 4:00 AM and 11:00 PM');
+        showToast('Tournament times must be between 4:00 AM and 11:00 PM', 'warning');
         return false;
     }
 
@@ -1186,25 +1186,25 @@ function validateVote() {
     const voteDataInput = document.getElementById('vote_option_id');
 
     if (!lakeSelect.value) {
-        alert('Please select a lake');
+        showToast('Please select a lake', 'warning');
         return false;
     }
     if (!rampSelect.value) {
-        alert('Please select a ramp');
+        showToast('Please select a ramp', 'warning');
         return false;
     }
     if (!startTimeSelect.value) {
-        alert('Please select a start time');
+        showToast('Please select a start time', 'warning');
         return false;
     }
     if (!endTimeSelect.value) {
-        alert('Please select an end time');
+        showToast('Please select an end time', 'warning');
         return false;
     }
 
     // Validate time order - start time must be before end time
     if (startTimeSelect.value >= endTimeSelect.value) {
-        alert('Start time must be before end time');
+        showToast('Start time must be before end time', 'warning');
         return false;
     }
 
@@ -1212,7 +1212,7 @@ function validateVote() {
     const startHour = parseInt(startTimeSelect.value.split(':')[0]);
     const endHour = parseInt(endTimeSelect.value.split(':')[0]);
     if (startHour < 4 || endHour > 23) {
-        alert('Tournament times must be between 4:00 AM and 11:00 PM');
+        showToast('Tournament times must be between 4:00 AM and 11:00 PM', 'warning');
         return false;
     }
 
@@ -1265,12 +1265,12 @@ document.getElementById('confirmDeletePollBtn').addEventListener('click', functi
             if (data.success) {
                 location.reload();
             } else {
-                alert('Error deleting poll: ' + (data.error || 'Unknown error'));
+                showToast('Error deleting poll: ' + (data.error || 'Unknown error'), 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error deleting poll: ' + error.message);
+            showToast('Error deleting poll: ' + error.message, 'error');
         });
 
         bootstrap.Modal.getInstance(document.getElementById('deletePollModal')).hide();

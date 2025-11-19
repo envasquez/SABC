@@ -97,16 +97,16 @@ function toggleComplete(tournamentId, currentStatus) {
         .then(data => {
             if (data.success) {
                 // Show success message
-                alert(data.message);
+                showToast(data.message, 'success');
                 // Reload the page to reflect changes
                 window.location.reload();
             } else {
-                alert('Error: ' + (data.error || 'Unknown error'));
+                showToast('Error: ' + (data.error || 'Unknown error'), 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error updating tournament status');
+            showToast('Error updating tournament status', 'error');
         });
     }
 }

@@ -259,7 +259,7 @@ function sendTestEmail() {
     const content = document.getElementById('content').value;
 
     if (!title || !content) {
-        alert('Please fill in both title and content before sending a test email');
+        showToast('Please fill in both title and content before sending a test email', 'warning');
         return;
     }
 
@@ -288,7 +288,7 @@ function sendTestEmail() {
         }
     })
     .catch(error => {
-        alert('Error sending test email: ' + error.message);
+        showToast('Error sending test email: ' + error.message, 'error');
     });
 }
 
@@ -320,7 +320,7 @@ function confirmDeleteNews() {
     const newsId = document.getElementById('delete-news-id').value;
 
     if (confirmText.trim() !== 'DELETE') {
-        alert('Please type DELETE to confirm');
+        showToast('Please type DELETE to confirm', 'warning');
         return;
     }
 
@@ -339,11 +339,11 @@ function confirmDeleteNews() {
         if (data.success) {
             window.location.reload();
         } else {
-            alert('Error deleting news: ' + (data.error || 'Unknown error'));
+            showToast('Error deleting news: ' + (data.error || 'Unknown error'), 'error');
         }
     })
     .catch(error => {
-        alert('Error deleting news: ' + error.message);
+        showToast('Error deleting news: ' + error.message, 'error');
     });
 }
 </script>

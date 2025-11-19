@@ -24,7 +24,8 @@ async def delete_event_post(request: Request, event_id: int):
 
             if result_count and result_count > 0:
                 return RedirectResponse(
-                    "/admin/events?error=Cannot delete event with tournament results", status_code=303
+                    "/admin/events?error=Cannot delete event with tournament results",
+                    status_code=303,
                 )
 
             # Get all poll IDs for this event

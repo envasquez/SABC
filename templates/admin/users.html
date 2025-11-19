@@ -180,7 +180,7 @@ async function submitAddUser() {
 
     // Validate name is required
     if (!name) {
-        alert('Name is required');
+        showToast('Name is required', 'warning');
         return;
     }
 
@@ -211,14 +211,14 @@ async function submitAddUser() {
             // Close modal
             bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
             // Show success message and reload
-            alert(data.message + '\n\nThe page will now reload to show the new user.');
+            showToast(data.message, 'success'); setTimeout(() => location.reload(), 1500);
             location.reload();
         } else {
-            alert('Error: ' + (data.message || 'Unknown error'));
+            showToast('Error: ' + (data.message || 'Unknown error'), 'error');
         }
     } catch (error) {
         console.error('Error creating user:', error);
-        alert('Error creating user: ' + error.message);
+        showToast('Error creating user: ' + error.message, 'error');
     }
 }
 
@@ -257,12 +257,12 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', function()
             if (data.success) {
                 location.reload();
             } else {
-                alert('Error deleting user: ' + (data.error || 'Unknown error'));
+                showToast('Error deleting user: ' + (data.error || 'Unknown error'), 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error deleting user: ' + error.message);
+            showToast('Error deleting user: ' + error.message, 'error');
         });
 
         bootstrap.Modal.getInstance(document.getElementById('deleteUserModal')).hide();

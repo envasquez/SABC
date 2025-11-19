@@ -744,7 +744,7 @@ function createGuest() {
     const phone = document.getElementById('guestPhone').value.trim();
 
     if (!name) {
-        alert('Guest name is required');
+        showToast('Guest name is required', 'warning');
         return;
     }
 
@@ -783,14 +783,14 @@ function createGuest() {
             // Clear the form
             document.getElementById('createGuestForm').reset();
 
-            alert(`Guest "${name}" created successfully!`);
+            showToast(`Guest "${name}" created successfully!`, 'success');
         } else {
-            alert('Error creating guest: ' + (data.message || 'Unknown error'));
+            showToast('Error creating guest: ' + (data.message || 'Unknown error'), 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error creating guest. Please try again.');
+        showToast('Error creating guest. Please try again.', 'error');
     });
 }
 
@@ -900,7 +900,7 @@ document.getElementById('resultsForm').addEventListener('submit', async function
         window.location.href = `/tournaments/${tournamentId}`;
     } catch (error) {
         console.error('Error saving results:', error);
-        alert('Error saving results. Please try again.');
+        showToast('Error saving results. Please try again.', 'error');
     }
 });
 </script>

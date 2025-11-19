@@ -165,7 +165,7 @@ function confirmDeleteLake() {
     const lakeId = document.getElementById('delete-lake-id').value;
 
     if (confirmText.trim() !== 'DELETE') {
-        alert('Please type DELETE to confirm');
+        showToast('Please type DELETE to confirm', 'warning');
         return;
     }
 
@@ -184,11 +184,11 @@ function confirmDeleteLake() {
         if (data.success) {
             window.location.reload();
         } else {
-            alert('Error deleting lake: ' + (data.error || 'Unknown error'));
+            showToast('Error deleting lake: ' + (data.error || 'Unknown error'), 'error');
         }
     })
     .catch(error => {
-        alert('Error deleting lake: ' + error.message);
+        showToast('Error deleting lake: ' + error.message, 'error');
     });
 }
 

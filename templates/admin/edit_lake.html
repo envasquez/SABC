@@ -256,12 +256,12 @@ document.getElementById('confirmDeleteRampBtn').addEventListener('click', functi
             if (data.success) {
                 location.reload();
             } else {
-                alert('Error deleting ramp: ' + (data.error || 'Unknown error'));
+                showToast('Error deleting ramp: ' + (data.error || 'Unknown error'), 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error deleting ramp: ' + error.message);
+            showToast('Error deleting ramp: ' + error.message, 'error');
         });
 
         bootstrap.Modal.getInstance(document.getElementById('deleteRampModal')).hide();
