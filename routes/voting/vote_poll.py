@@ -99,8 +99,16 @@ async def vote_in_poll(
             current_time = now_local()
 
             # Ensure all datetimes are timezone-aware for comparison
-            poll_starts = poll.starts_at if poll.starts_at.tzinfo else poll.starts_at.replace(tzinfo=current_time.tzinfo)
-            poll_closes = poll.closes_at if poll.closes_at.tzinfo else poll.closes_at.replace(tzinfo=current_time.tzinfo)
+            poll_starts = (
+                poll.starts_at
+                if poll.starts_at.tzinfo
+                else poll.starts_at.replace(tzinfo=current_time.tzinfo)
+            )
+            poll_closes = (
+                poll.closes_at
+                if poll.closes_at.tzinfo
+                else poll.closes_at.replace(tzinfo=current_time.tzinfo)
+            )
 
             if not (poll_starts <= current_time <= poll_closes):
                 logger.info(

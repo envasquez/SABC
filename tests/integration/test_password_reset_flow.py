@@ -8,7 +8,6 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 import bcrypt
-import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
