@@ -95,9 +95,14 @@ async def vote_in_poll(
                 )
 
             # Validate poll is currently active (time window check)
-            # Use naive datetime for database comparison (DB stores naive datetimes)
-            current_time = now_local().replace(tzinfo=None)
-            if not (poll.starts_at <= current_time <= poll.closes_at):
+            # Poll times are stored as timezone-aware, so use timezone-aware comparison
+            current_time = now_local()
+
+            # Ensure all datetimes are timezone-aware for comparison
+            poll_starts = poll.starts_at if poll.starts_at.tzinfo else poll.starts_at.replace(tzinfo=current_time.tzinfo)
+            poll_closes = poll.closes_at if poll.closes_at.tzinfo else poll.closes_at.replace(tzinfo=current_time.tzinfo)
+
+            if not (poll_starts <= current_time <= poll_closes):
                 logger.info(
                     "Vote attempted on inactive poll",
                     extra={
