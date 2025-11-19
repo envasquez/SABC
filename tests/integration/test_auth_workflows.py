@@ -198,14 +198,27 @@ class TestLoginWorkflow:
     def test_multiple_failed_login_attempts_are_rate_limited(
         self, client: TestClient, regular_user: Angler
     ):
-        """Test that multiple failed login attempts trigger rate limiting."""
+        """Test that multiple failed login attempts trigger rate limiting.
+
+        Note: This test is conditionally skipped in test environments where
+        rate limiting is intentionally disabled to speed up tests. Rate limiting
+        is a production security feature that should be tested in staging/prod
+        environments or via manual testing.
+
+        The test verifies that after 6 failed login attempts, subsequent attempts
+        are blocked with a 429 (Too Many Requests) status code.
+        """
         import os
 
         import pytest
 
         # Skip this test in test environment where rate limiting is disabled
+        # Rate limiting is a production-only security feature
         if os.environ.get("ENVIRONMENT") == "test":
-            pytest.skip("Rate limiting is disabled in test environment")
+            pytest.skip(
+                "Rate limiting is disabled in test environment - "
+                "test only runs in staging/production environments"
+            )
 
         assert regular_user.email is not None
         # Attempt login multiple times with wrong password
