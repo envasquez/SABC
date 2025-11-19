@@ -26,6 +26,16 @@ async def register_page(request: Request) -> Response:
     )
 
 
+@router.get("/auth/register")
+async def register_page_auth(request: Request) -> Response:
+    """Alternative route for /auth/register."""
+    return (
+        RedirectResponse("/")
+        if get_current_user(request)
+        else templates.TemplateResponse("register.html", {"request": request})
+    )
+
+
 @router.post("/register")
 @limiter.limit("3/hour")
 async def register(

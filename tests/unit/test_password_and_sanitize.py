@@ -50,7 +50,7 @@ class TestPasswordValidator:
         """Test number requirement."""
         is_valid, error = validate_password_strength("NoNumbers!")
         assert is_valid is False
-        assert "number" in error.lower()
+        assert "digit" in error.lower()
 
     def test_password_no_special_char(self):
         """Test special character requirement."""

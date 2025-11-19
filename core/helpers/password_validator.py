@@ -32,7 +32,7 @@ def validate_password_strength(password: str) -> Tuple[bool, str]:
         return False, "Password must contain at least one lowercase letter"
 
     if not re.search(r"\d", password):
-        return False, "Password must contain at least one number"
+        return False, "Password must contain at least one digit"
 
     if not re.search(r"[!@#$%^&*(),.?\":{}|<>_\-+=\[\]\\/'~`]", password):
         return False, "Password must contain at least one special character"

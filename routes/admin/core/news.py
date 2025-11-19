@@ -100,6 +100,29 @@ async def create_news(
         return error_redirect("/admin/news", str(e))
 
 
+@router.get("/admin/news/{news_id}/edit")
+async def edit_news_form(request: Request, news_id: int):
+    """GET endpoint for editing news - returns the edit form."""
+    user = require_admin(request)
+
+    with get_session() as session:
+        news_item = session.query(News).filter(News.id == news_id).first()
+        if not news_item:
+            return RedirectResponse(
+                f"/admin/news?error=News item with ID {news_id} not found", status_code=302
+            )
+
+    # Return the admin news page with the news item data
+    return templates.TemplateResponse(
+        "admin/news.html",
+        {
+            "request": request,
+            "user": user,
+            "edit_news": news_item,
+        },
+    )
+
+
 @router.post("/admin/news/{news_id}/update")
 async def update_news(
     request: Request,
@@ -166,6 +189,22 @@ async def test_news_email(request: Request, title: str = Form(...), content: str
     except Exception as e:
         logger.error(f"Test email error: {e}")
         return error_redirect("/admin/news", "Failed to send test email")
+
+
+@router.post("/admin/news/{news_id}/delete")
+async def delete_news_post(request: Request, news_id: int):
+    """POST endpoint for deleting news (for form submissions)."""
+    _user = require_admin(request)
+    try:
+        with get_session() as session:
+            news_item = session.query(News).filter(News.id == news_id).first()
+            if news_item:
+                session.delete(news_item)
+                # Context manager will commit automatically on successful exit
+
+        return RedirectResponse("/admin/news?success=News deleted successfully", status_code=303)
+    except Exception as e:
+        return error_redirect("/admin/news", str(e))
 
 
 @router.delete("/admin/news/{news_id}")

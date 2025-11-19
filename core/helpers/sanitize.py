@@ -95,15 +95,26 @@ def sanitize_lakes_data(lakes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     ]
 
 
-def sanitize_event_data(events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def sanitize_event_data(events):
     """Sanitize event data for safe template rendering.
 
     Args:
-        events: List of event dictionaries
+        events: Either a single event dictionary or a list of event dictionaries
 
     Returns:
-        Sanitized event data
+        Sanitized event data (same type as input)
     """
+    # Handle single dict input
+    if isinstance(events, dict):
+        sanitized_event = {}
+        for key, value in events.items():
+            if isinstance(value, str):
+                sanitized_event[key] = sanitize_html(value)
+            else:
+                sanitized_event[key] = value
+        return sanitized_event
+
+    # Handle list input
     sanitized = []
     for event in events:
         sanitized_event = {}

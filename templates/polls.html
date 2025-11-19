@@ -435,7 +435,7 @@
                         </div> <!-- Close tab-content -->
                         {% elif poll.status == 'active' and user.member and not poll.user_has_voted %}
                             <!-- Non-admin member voting (no tabs) -->
-                            <form method="POST" action="/polls/{{ poll.id }}/vote">
+                            <form method="POST" action="/polls/{{ poll.id }}/vote" {% if poll.poll_type == 'tournament_location' %}onsubmit="return validateVoteNonAdmin{{ poll.id }}()"{% endif %}>
                                 {{ csrf_token(request) }}
                                 <div class="mb-3">
                                     <p class="fw-bold text-primary">
@@ -954,6 +954,19 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+
+    // Populate non-admin member voting form lake dropdowns (for all tournament polls)
+    const nonAdminLakeSelects = document.querySelectorAll('[id^="lake_select_nonadmin_"]');
+    nonAdminLakeSelects.forEach(nonAdminLakeSelect => {
+        if (lakesData) {
+            lakesData.forEach(lake => {
+                const option = document.createElement('option');
+                option.value = lake.id;
+                option.textContent = lake.name;
+                nonAdminLakeSelect.appendChild(option);
+            });
+        }
+    });
 });
 
 function updateRamps() {
@@ -1074,6 +1087,92 @@ window.validateProxyVote{{ poll.id }} = function() {
         alert('Please select a member to vote for');
         return false;
     }
+
+    // Check if an option is selected
+    const selectedOption = document.querySelector('input[name="option_id"]:checked');
+    if (!selectedOption) {
+        alert('Please select an option to vote for');
+        return false;
+    }
+
+    return true;
+};
+
+// Create dynamic non-admin ramp update and validation functions for each tournament poll
+window.updateRampsNonAdmin{{ poll.id }} = function() {
+    const lakeSelect = document.getElementById('lake_select_nonadmin_{{ poll.id }}');
+    const rampSelect = document.getElementById('ramp_select_nonadmin_{{ poll.id }}');
+
+    if (!lakeSelect || !rampSelect) return;
+
+    const lakeId = parseInt(lakeSelect.value);
+    rampSelect.innerHTML = '<option value="">Select a ramp...</option>';
+    rampSelect.disabled = true;
+
+    if (!lakeId) return;
+
+    const selectedLake = lakesData.find(lake => lake.id === lakeId);
+    if (selectedLake && selectedLake.ramps) {
+        selectedLake.ramps.forEach(ramp => {
+            const option = document.createElement('option');
+            option.value = ramp.id;
+            option.textContent = ramp.name;
+            rampSelect.appendChild(option);
+        });
+        if (selectedLake.ramps.length > 0) {
+            rampSelect.disabled = false;
+        }
+    }
+};
+
+window.validateVoteNonAdmin{{ poll.id }} = function() {
+    const lakeSelect = document.getElementById('lake_select_nonadmin_{{ poll.id }}');
+    const rampSelect = document.getElementById('ramp_select_nonadmin_{{ poll.id }}');
+    const startTimeSelect = document.getElementById('start_time_nonadmin_{{ poll.id }}');
+    const endTimeSelect = document.getElementById('end_time_nonadmin_{{ poll.id }}');
+    const voteDataInput = document.getElementById('vote_option_id_nonadmin_{{ poll.id }}');
+
+    if (!lakeSelect.value) {
+        alert('Please select a lake');
+        return false;
+    }
+    if (!rampSelect.value) {
+        alert('Please select a ramp');
+        return false;
+    }
+    if (!startTimeSelect.value) {
+        alert('Please select a start time');
+        return false;
+    }
+    if (!endTimeSelect.value) {
+        alert('Please select an end time');
+        return false;
+    }
+
+    // Validate time order
+    if (startTimeSelect.value >= endTimeSelect.value) {
+        alert('Start time must be before end time');
+        return false;
+    }
+
+    // Validate reasonable tournament hours
+    const startHour = parseInt(startTimeSelect.value.split(':')[0]);
+    const endHour = parseInt(endTimeSelect.value.split(':')[0]);
+    if (startHour < 4 || endHour > 23) {
+        alert('Tournament times must be between 4:00 AM and 11:00 PM');
+        return false;
+    }
+
+    // Create JSON object with vote data
+    const voteData = {
+        lake_id: lakeSelect.value,
+        ramp_id: rampSelect.value,
+        start_time: startTimeSelect.value,
+        end_time: endTimeSelect.value
+    };
+
+    // Set the hidden field value to JSON string
+    voteDataInput.value = JSON.stringify(voteData);
     return true;
 };
 {% endif %}

@@ -168,13 +168,13 @@
 <script src="/static/admin.js"></script>
 <script src="/static/poll-management.js"></script>
 <script>
-// Override addOption to include hidden option_ids field for edit mode
-window.addOptionEdit = function() {
-    addOption('poll-options-container', true);
-};
+// Save reference to original addOption function
+const originalAddOption = addOption;
 
-// Use addOptionEdit for this page
-window.addOption = window.addOptionEdit;
+// Override addOption to include hidden option_ids field for edit mode
+window.addOption = function() {
+    originalAddOption('poll-options-container', true);
+};
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {

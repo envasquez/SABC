@@ -1,11 +1,65 @@
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import func, select
 
 from core.db_schema import Event, Poll, PollOption, PollVote, Result, Tournament, get_session
 from core.helpers.auth import require_admin
 
 router = APIRouter()
+
+
+@router.post("/admin/events/{event_id}/delete")
+async def delete_event_post(request: Request, event_id: int):
+    """Delete an event via POST (for form submissions)."""
+    _user = require_admin(request)
+    try:
+        with get_session() as session:
+            # Check if event has results
+            result_count = (
+                session.query(func.count(Result.id))
+                .join(Tournament, Result.tournament_id == Tournament.id)
+                .filter(Tournament.event_id == event_id)
+                .scalar()
+            )
+
+            if result_count and result_count > 0:
+                return RedirectResponse(
+                    "/admin/events?error=Cannot delete event with tournament results", status_code=303
+                )
+
+            # Get all poll IDs for this event
+            poll_ids_query = select(Poll.id).where(Poll.event_id == event_id)
+            poll_ids = session.execute(poll_ids_query).scalars().all()
+
+            # Delete poll votes
+            if poll_ids:
+                session.query(PollVote).filter(PollVote.poll_id.in_(poll_ids)).delete(
+                    synchronize_session=False
+                )
+
+            # Delete poll options
+            if poll_ids:
+                session.query(PollOption).filter(PollOption.poll_id.in_(poll_ids)).delete(
+                    synchronize_session=False
+                )
+
+            # Delete polls
+            session.query(Poll).filter(Poll.event_id == event_id).delete(synchronize_session=False)
+
+            # Delete tournaments explicitly (no longer CASCADE)
+            session.query(Tournament).filter(Tournament.event_id == event_id).delete(
+                synchronize_session=False
+            )
+
+            # Delete event
+            event = session.query(Event).filter(Event.id == event_id).first()
+            if event:
+                session.delete(event)
+
+        return RedirectResponse("/admin/events?success=Event deleted successfully", status_code=303)
+
+    except Exception as e:
+        return RedirectResponse(f"/admin/events?error=Database error: {str(e)}", status_code=303)
 
 
 @router.delete("/admin/events/{event_id}")
