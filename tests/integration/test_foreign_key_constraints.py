@@ -419,9 +419,7 @@ class TestUserForeignKeyConstraints:
     ):
         """Test that the last admin user cannot be deleted."""
         # Verify admin_user is the only admin
-        admin_count = (
-            db_session.query(Angler).filter(Angler.is_admin.is_(True)).count()
-        )
+        admin_count = db_session.query(Angler).filter(Angler.is_admin.is_(True)).count()
 
         if admin_count == 1:
             # Try to delete the only admin
