@@ -48,13 +48,16 @@ async def update_poll(request: Request, poll_id: int) -> RedirectResponse:
             if not poll:
                 return RedirectResponse("/admin/polls?error=Poll not found", status_code=302)
 
+            # Store poll_type before session closes
+            poll_type = poll.poll_type
+
             poll.title = title
             poll.description = description
             poll.starts_at = starts_at  # type: ignore[assignment]
             poll.closes_at = closes_at  # type: ignore[assignment]
 
             # Handle tournament location polls differently
-            if poll.poll_type == "tournament_location":
+            if poll_type == "tournament_location":
                 # Smart update strategy to handle polls with existing votes
                 # 1. Get existing options with their lake_ids
                 existing_options = (
@@ -131,7 +134,7 @@ async def update_poll(request: Request, poll_id: int) -> RedirectResponse:
 
         # For non-tournament polls, update options outside session context
         # This maintains backward compatibility with existing behavior
-        if not poll or poll.poll_type != "tournament_location":
+        if poll_type != "tournament_location":
             for i, option_text in enumerate(poll_options):
                 # Ensure we have a string value
                 text = option_text if isinstance(option_text, str) else ""
