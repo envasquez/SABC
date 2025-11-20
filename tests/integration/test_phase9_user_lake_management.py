@@ -4,7 +4,6 @@ Tests for admin user management, lake/ramp operations, and API endpoints.
 Focuses on low-coverage areas in user CRUD and lake management workflows.
 """
 
-
 from decimal import Decimal
 
 from fastapi.testclient import TestClient
