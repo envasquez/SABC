@@ -139,3 +139,91 @@ body .text-secondary {
 .color-bronze {
   color: #cd7f32;
 }
+
+/* ========================================
+   Mobile Browser Compatibility Fixes
+   ======================================== */
+
+/* iOS Safari: Prevent zoom on input focus (requires 16px+ font size) */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+textarea,
+select {
+  font-size: 16px !important;
+}
+
+/* iOS Safari: Fix 100vh issue (bottom bar covers content) */
+@supports (-webkit-touch-callout: none) {
+  main.container {
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* iOS Safari: Fix sticky navbar performance */
+.navbar {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* iOS/Android: Prevent tap highlight flash on interactive elements */
+button, a, .nav-link, .dropdown-item, .btn {
+  -webkit-tap-highlight-color: transparent;
+  tap-highlight-color: transparent;
+}
+
+/* Android Chrome: Smooth momentum scrolling */
+body {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Android Chrome: Fix select dropdown appearance */
+select, .form-select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 20px;
+  padding-right: 32px;
+}
+
+/* Mobile: Ensure touch targets are at least 44x44px (Apple/Google guidelines) */
+button, .btn, .nav-link, .dropdown-item, input[type="submit"], input[type="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Mobile: Improve form readability */
+label {
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+/* Mobile: Prevent text size adjust on orientation change */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Mobile: Ensure clickable areas don't overlap */
+.nav-item {
+  padding: 4px 0;
+}
+
+/* Tablet/Desktop: Restore normal font sizes */
+@media (min-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 1rem !important;
+  }
+}

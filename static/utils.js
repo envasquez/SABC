@@ -4,6 +4,67 @@
  */
 
 /**
+ * Check if browser supports required features
+ * Shows warning banner for incompatible browsers
+ * @returns {boolean} True if browser is compatible
+ */
+function checkBrowserCompatibility() {
+    const required = {
+        fetch: typeof fetch === 'function',
+        promise: typeof Promise !== 'undefined',
+        arrow: (() => true)() === true,
+        classlist: 'classList' in document.createElement('div'),
+        queryselector: 'querySelector' in document,
+        localstorage: (function() {
+            try {
+                return 'localStorage' in window && window.localStorage !== null;
+            } catch(e) {
+                return false;
+            }
+        })()
+    };
+
+    const unsupported = Object.keys(required).filter(f => !required[f]);
+
+    if (unsupported.length > 0) {
+        console.error('Unsupported browser features:', unsupported);
+        showBrowserWarning();
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Show warning banner for incompatible browsers
+ * @private
+ */
+function showBrowserWarning() {
+    // Wait for DOM to be ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', showBrowserWarning);
+        return;
+    }
+
+    const banner = document.createElement('div');
+    banner.className = 'alert alert-warning alert-dismissible position-fixed top-0 start-0 end-0 m-3';
+    banner.style.zIndex = '9999';
+    banner.innerHTML = `
+        <strong><i class="bi bi-exclamation-triangle me-2"></i>Browser Update Recommended</strong>
+        <p class="mb-0 small">Some features may not work properly. Please update your browser for the best experience.</p>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    document.body.insertBefore(banner, document.body.firstChild);
+}
+
+// Run compatibility check on page load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkBrowserCompatibility);
+} else {
+    checkBrowserCompatibility();
+}
+
+/**
  * Escape HTML to prevent XSS attacks
  * Converts special characters to HTML entities
  *
@@ -95,10 +156,60 @@ function createToastContainer() {
 }
 
 /**
- * Async DELETE request with CSRF token
+ * Fetch with automatic retry on failure
+ * Handles network issues and temporary server errors gracefully
+ *
+ * @param {string} url - URL to fetch
+ * @param {Object} options - Fetch options
+ * @param {number} retries - Maximum retry attempts (default: 3)
+ * @returns {Promise<Response>} Fetch response
+ *
+ * @example
+ * const response = await fetchWithRetry('/api/data', { method: 'GET' });
+ * if (response.ok) {
+ *     const data = await response.json();
+ * }
+ */
+async function fetchWithRetry(url, options = {}, retries = 3) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const response = await fetch(url, options);
+
+            // Success - return immediately
+            if (response.ok) return response;
+
+            // Client errors (4xx) - don't retry
+            if (response.status >= 400 && response.status < 500) {
+                return response;
+            }
+
+            // Server errors (5xx) - retry
+            if (i === retries - 1) {
+                return response; // Last attempt, return error response
+            }
+
+            console.warn(`Request failed with status ${response.status}, retrying (${i + 1}/${retries})...`);
+        } catch (error) {
+            // Network error or timeout
+            if (i === retries - 1) {
+                console.error('Request failed after all retries:', error);
+                throw error;
+            }
+
+            console.warn(`Network error, retrying (${i + 1}/${retries})...`, error.message);
+        }
+
+        // Wait before retry: 1s, 2s, 4s (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+    }
+}
+
+/**
+ * Async DELETE request with CSRF token and retry logic
  * Convenience function for making DELETE requests with proper CSRF protection
  *
  * @param {string} url - URL to send DELETE request to
+ * @param {number} retries - Maximum retry attempts (default: 3)
  * @returns {Promise<Response>} Fetch response
  *
  * @example
@@ -107,14 +218,14 @@ function createToastContainer() {
  *     showToast('Deleted successfully', 'success');
  * }
  */
-async function deleteRequest(url) {
-    return fetch(url, {
+async function deleteRequest(url, retries = 3) {
+    return fetchWithRetry(url, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
             'x-csrf-token': getCsrfToken(),
         }
-    });
+    }, retries);
 }
 
 /**
