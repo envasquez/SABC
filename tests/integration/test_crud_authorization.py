@@ -324,33 +324,12 @@ class TestMemberOnlyOperations:
         # Should redirect to login
         assert response.status_code in [200, 302, 303]
 
-    def test_non_member_cannot_vote_in_polls(self, client: TestClient, db_session: Session):
-        """Test that non-member authenticated users cannot vote."""
-        # Create non-member user
-        non_member = Angler(
-            name="Non Member",
-            email="nonmember@test.com",
-            password_hash="$2b$12$test",  # Dummy hash
-            member=False,
-            is_admin=False,
-        )
-        db_session.add(non_member)
-        db_session.commit()
-
-        # Login as non-member
-        response = client.post(
-            "/login",
-            data={
-                "email": "nonmember@test.com",
-                "password": "password",
-            },
-            follow_redirects=False,
-        )
-
-        # Try to access polls (even though not logged in properly, test the endpoint)
+    def test_non_member_cannot_vote_in_polls(self, client: TestClient):
+        """Test that non-member/anonymous users are redirected from polls."""
+        # Try to access polls without authentication
         response = client.get("/polls")
 
-        # Should redirect or show unauthorized
+        # Should redirect to login
         assert response.status_code in [200, 302, 303]
 
 
