@@ -213,9 +213,7 @@ class TestTournamentCreationFromPoll:
 
         # Try to create tournament (endpoint varies - may be POST to poll or event)
         # This tests the workflow even if exact endpoint varies
-        (
-            db_session.query(Tournament).filter(Tournament.event_id == test_event.id).first()
-        )
+        (db_session.query(Tournament).filter(Tournament.event_id == test_event.id).first())
 
         # If tournament doesn't exist, we could create it via admin
         # For now, just verify poll has winning option set
