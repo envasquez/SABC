@@ -149,7 +149,9 @@ class TestIndividualResultsUpdate:
         # Verify penalty was recorded and net weight calculated
         db_session.refresh(result)
         assert result.dead_fish_penalty is not None and float(result.dead_fish_penalty) == 0.5
-        assert result.total_weight is not None and float(result.total_weight) == 15.0  # Gross - penalty
+        assert (
+            result.total_weight is not None and float(result.total_weight) == 15.0
+        )  # Gross - penalty
 
 
 class TestIndividualResultsDeletion:
@@ -338,7 +340,9 @@ class TestTeamResultsCreation:
             .first()
         )
         assert team_result is not None
-        assert team_result.total_weight is not None and float(team_result.total_weight) == 25.5  # Sum of both weights
+        assert (
+            team_result.total_weight is not None and float(team_result.total_weight) == 25.5
+        )  # Sum of both weights
 
 
 class TestTeamResultsDeletion:
