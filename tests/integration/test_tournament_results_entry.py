@@ -140,7 +140,9 @@ class TestIndividualResults:
         )
         assert updated_result is not None
         assert updated_result.num_fish == 5
-        assert updated_result.total_weight is not None and float(updated_result.total_weight) == 18.0
+        assert (
+            updated_result.total_weight is not None and float(updated_result.total_weight) == 18.0
+        )
 
     def test_save_result_with_dead_fish_penalty(
         self,
@@ -283,7 +285,9 @@ class TestTeamResults:
             .first()
         )
         assert team_result is not None
-        assert team_result.total_weight is not None and float(team_result.total_weight) == 22.0  # 10.0 + 12.0
+        assert (
+            team_result.total_weight is not None and float(team_result.total_weight) == 22.0
+        )  # 10.0 + 12.0
 
     def test_save_team_result_solo_angler(
         self,
@@ -383,7 +387,9 @@ class TestTeamResults:
         db_session.expire_all()
         updated_team = db_session.query(TeamResult).filter(TeamResult.id == team_id).first()
         assert updated_team is not None
-        assert updated_team.total_weight is not None and float(updated_team.total_weight) == 22.0  # 10.0 + 12.0
+        assert (
+            updated_team.total_weight is not None and float(updated_team.total_weight) == 22.0
+        )  # 10.0 + 12.0
 
     def test_save_team_result_missing_angler1(
         self, admin_client: TestClient, test_tournament: Tournament
@@ -570,4 +576,6 @@ class TestAutoTeamResultUpdate:
         db_session.expire_all()
         updated_team = db_session.query(TeamResult).filter(TeamResult.id == team_id).first()
         assert updated_team is not None
-        assert updated_team.total_weight is not None and float(updated_team.total_weight) == 27.0  # 15.0 + 12.0
+        assert (
+            updated_team.total_weight is not None and float(updated_team.total_weight) == 27.0
+        )  # 15.0 + 12.0
