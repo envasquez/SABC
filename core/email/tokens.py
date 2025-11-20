@@ -1,4 +1,5 @@
 import secrets
+import sys
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -52,7 +53,12 @@ def verify_reset_token(token: str) -> Optional[dict]:
             return None
         return {"user_id": user_id, "email": email, "name": name, "expires_at": expires_at}
     except Exception as e:
-        logger.error(f"Error verifying reset token: {e}")
+        # Use try-except to prevent logging failures from breaking the app
+        try:
+            logger.error(f"Error verifying reset token: {e}")
+        except Exception:
+            # Fallback to print if logging fails (e.g., file handler issues)
+            print(f"Error verifying reset token: {e}", file=sys.stderr)
         return None
 
 
