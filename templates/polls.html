@@ -131,20 +131,20 @@
                                             <div class="row g-3">
                                                 <!-- Lake Selection -->
                                                 <div class="col-md-4">
-                                                    <label for="lake_select" class="form-label fw-bold small">
+                                                    <label for="lake_select_admin_own_{{ poll.id }}" class="form-label fw-bold small">
                                                         <i class="bi bi-geo-alt me-1"></i>Lake
                                                     </label>
-                                                    <select id="lake_select" class="form-select form-select-sm" required onchange="updateRamps()">
+                                                    <select id="lake_select_admin_own_{{ poll.id }}" class="form-select form-select-sm" required onchange="updateRampsAdminOwn{{ poll.id }}()">
                                                         <option value="">Choose a lake...</option>
                                                     </select>
                                                 </div>
 
                                                 <!-- Ramp Selection -->
                                                 <div class="col-md-4">
-                                                    <label for="ramp_select" class="form-label fw-bold small">
+                                                    <label for="ramp_select_admin_own_{{ poll.id }}" class="form-label fw-bold small">
                                                         <i class="bi bi-signpost me-1"></i>Ramp
                                                     </label>
-                                                    <select id="ramp_select" class="form-select form-select-sm" required disabled>
+                                                    <select id="ramp_select_admin_own_{{ poll.id }}" class="form-select form-select-sm" required disabled>
                                                         <option value="">First select a lake</option>
                                                     </select>
                                                 </div>
@@ -156,7 +156,7 @@
                                                     </label>
                                                     <div class="d-flex gap-2">
                                                         <div class="flex-fill">
-                                                            <select id="start_time" class="form-select form-select-sm" required title="Start Time">
+                                                            <select id="start_time_admin_own_{{ poll.id }}" class="form-select form-select-sm" required title="Start Time">
                                                                 <option value="">Start...</option>
                                                                 <option value="05:00" selected>5:00 AM</option>
                                                                 <option value="05:30">5:30 AM</option>
@@ -193,7 +193,7 @@
                                                             <small class="text-secondary d-block text-center mt-1">Start</small>
                                                         </div>
                                                         <div class="flex-fill">
-                                                            <select id="end_time" class="form-select form-select-sm" required title="End Time">
+                                                            <select id="end_time_admin_own_{{ poll.id }}" class="form-select form-select-sm" required title="End Time">
                                                                 <option value="">End...</option>
                                                                 <option value="05:00">5:00 AM</option>
                                                                 <option value="05:30">5:30 AM</option>
@@ -233,13 +233,7 @@
                                                 </div>
                                             </div>
 
-                                            <!-- Vote Preview -->
-                                            <div class="mt-3 p-3 border rounded bg-light d-none" id="vote_preview">
-                                                <h6 class="mb-2 text-dark">Your Vote:</h6>
-                                                <div id="vote_summary" class="text-dark"></div>
-                                            </div>
-
-                                            <input type="hidden" name="option_id" id="vote_option_id" required>
+                                            <input type="hidden" name="option_id" id="vote_option_id_admin_own_{{ poll.id }}" required>
                                         </div>
                                     </div>
 
@@ -256,7 +250,7 @@
                                     {% endfor %}
                                     {% endif %}
                                 </div>
-                                <button type="submit" class="btn btn-primary" {% if poll.poll_type == 'tournament_location' %}onclick="return validateVote()"{% endif %}>
+                                <button type="submit" class="btn btn-primary" {% if poll.poll_type == 'tournament_location' %}onclick="return validateVoteAdminOwn{{ poll.id }}()"{% endif %}>
                                     <i class="bi bi-check2 me-1"></i>Cast Vote
                                 </button>
                             </form>
@@ -931,49 +925,57 @@
 const lakesData = {{ lakes_data | tojson | safe }};
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Populate regular voting form lake dropdown
-    const lakeSelect = document.getElementById('lake_select');
-    if (lakeSelect && lakesData) {
+    if (!lakesData) {
+        console.error('Lakes data not loaded');
+        return;
+    }
+
+    // Populate admin own vote lake dropdowns (for all polls)
+    const adminOwnLakeSelects = document.querySelectorAll('[id^="lake_select_admin_own_"]');
+    adminOwnLakeSelects.forEach(adminOwnLakeSelect => {
         lakesData.forEach(lake => {
             const option = document.createElement('option');
             option.value = lake.id;
             option.textContent = lake.name;
-            lakeSelect.appendChild(option);
+            adminOwnLakeSelect.appendChild(option);
         });
-    }
+    });
 
     // Populate admin proxy voting form lake dropdowns (for all polls)
     const adminLakeSelects = document.querySelectorAll('[id^="admin_lake_select_"]');
     adminLakeSelects.forEach(adminLakeSelect => {
-        if (lakesData) {
-            lakesData.forEach(lake => {
-                const option = document.createElement('option');
-                option.value = lake.id;
-                option.textContent = lake.name;
-                adminLakeSelect.appendChild(option);
-            });
-        }
+        lakesData.forEach(lake => {
+            const option = document.createElement('option');
+            option.value = lake.id;
+            option.textContent = lake.name;
+            adminLakeSelect.appendChild(option);
+        });
     });
 
     // Populate non-admin member voting form lake dropdowns (for all tournament polls)
     const nonAdminLakeSelects = document.querySelectorAll('[id^="lake_select_nonadmin_"]');
     nonAdminLakeSelects.forEach(nonAdminLakeSelect => {
-        if (lakesData) {
-            lakesData.forEach(lake => {
-                const option = document.createElement('option');
-                option.value = lake.id;
-                option.textContent = lake.name;
-                nonAdminLakeSelect.appendChild(option);
-            });
-        }
+        lakesData.forEach(lake => {
+            const option = document.createElement('option');
+            option.value = lake.id;
+            option.textContent = lake.name;
+            nonAdminLakeSelect.appendChild(option);
+        });
     });
 });
 
-function updateRamps() {
-    const lakeSelect = document.getElementById('lake_select');
-    const rampSelect = document.getElementById('ramp_select');
+// Create dynamic functions for each poll
+{% for poll in polls %}
+{% if poll.poll_type == 'tournament_location' %}
+// Admin own vote functions
+window.updateRampsAdminOwn{{ poll.id }} = function() {
+    const lakeSelect = document.getElementById('lake_select_admin_own_{{ poll.id }}');
+    const rampSelect = document.getElementById('ramp_select_admin_own_{{ poll.id }}');
 
-    if (!lakeSelect || !rampSelect) return;
+    if (!lakeSelect || !rampSelect) {
+        console.error('Admin own vote: Lake or ramp select not found for poll {{ poll.id }}');
+        return;
+    }
 
     const lakeId = parseInt(lakeSelect.value);
     rampSelect.innerHTML = '<option value="">Select a ramp...</option>';
@@ -993,11 +995,62 @@ function updateRamps() {
             rampSelect.disabled = false;
         }
     }
-}
+};
 
-// Create dynamic admin ramp update functions for each poll
-{% for poll in polls %}
-{% if poll.poll_type == 'tournament_location' %}
+window.validateVoteAdminOwn{{ poll.id }} = function() {
+    const lakeSelect = document.getElementById('lake_select_admin_own_{{ poll.id }}');
+    const rampSelect = document.getElementById('ramp_select_admin_own_{{ poll.id }}');
+    const startTimeSelect = document.getElementById('start_time_admin_own_{{ poll.id }}');
+    const endTimeSelect = document.getElementById('end_time_admin_own_{{ poll.id }}');
+    const voteDataInput = document.getElementById('vote_option_id_admin_own_{{ poll.id }}');
+
+    if (!lakeSelect || !lakeSelect.value) {
+        showToast('Please select a lake', 'warning');
+        return false;
+    }
+    if (!rampSelect || !rampSelect.value) {
+        showToast('Please select a ramp', 'warning');
+        return false;
+    }
+    if (!startTimeSelect || !startTimeSelect.value) {
+        showToast('Please select a start time', 'warning');
+        return false;
+    }
+    if (!endTimeSelect || !endTimeSelect.value) {
+        showToast('Please select an end time', 'warning');
+        return false;
+    }
+
+    // Validate time order
+    if (startTimeSelect.value >= endTimeSelect.value) {
+        showToast('Start time must be before end time', 'warning');
+        return false;
+    }
+
+    // Validate reasonable tournament hours
+    const startHour = parseInt(startTimeSelect.value.split(':')[0]);
+    const endHour = parseInt(endTimeSelect.value.split(':')[0]);
+    if (startHour < 4 || endHour > 23) {
+        showToast('Tournament times must be between 4:00 AM and 11:00 PM', 'warning');
+        return false;
+    }
+
+    // Create JSON object with vote data
+    const voteData = {
+        lake_id: parseInt(lakeSelect.value),
+        ramp_id: parseInt(rampSelect.value),
+        start_time: startTimeSelect.value,
+        end_time: endTimeSelect.value
+    };
+
+    // Set the hidden field value to JSON string
+    voteDataInput.value = JSON.stringify(voteData);
+    console.log('Admin own vote data:', voteData);
+    return true;
+};
+
+// Admin proxy vote functions
+{% endif %}
 window.updateAdminRamps{{ poll.id }} = function() {
     const lakeSelect = document.getElementById('admin_lake_select_{{ poll.id }}');
     const rampSelect = document.getElementById('admin_ramp_select_{{ poll.id }}');
@@ -1177,57 +1230,6 @@ window.validateVoteNonAdmin{{ poll.id }} = function() {
 };
 {% endif %}
 {% endfor %}
-
-function validateVote() {
-    const lakeSelect = document.getElementById('lake_select');
-    const rampSelect = document.getElementById('ramp_select');
-    const startTimeSelect = document.getElementById('start_time');
-    const endTimeSelect = document.getElementById('end_time');
-    const voteDataInput = document.getElementById('vote_option_id');
-
-    if (!lakeSelect.value) {
-        showToast('Please select a lake', 'warning');
-        return false;
-    }
-    if (!rampSelect.value) {
-        showToast('Please select a ramp', 'warning');
-        return false;
-    }
-    if (!startTimeSelect.value) {
-        showToast('Please select a start time', 'warning');
-        return false;
-    }
-    if (!endTimeSelect.value) {
-        showToast('Please select an end time', 'warning');
-        return false;
-    }
-
-    // Validate time order - start time must be before end time
-    if (startTimeSelect.value >= endTimeSelect.value) {
-        showToast('Start time must be before end time', 'warning');
-        return false;
-    }
-
-    // Validate reasonable tournament hours (4 AM to 11 PM)
-    const startHour = parseInt(startTimeSelect.value.split(':')[0]);
-    const endHour = parseInt(endTimeSelect.value.split(':')[0]);
-    if (startHour < 4 || endHour > 23) {
-        showToast('Tournament times must be between 4:00 AM and 11:00 PM', 'warning');
-        return false;
-    }
-
-    // Create JSON object with vote data
-    const voteData = {
-        lake_id: lakeSelect.value,
-        ramp_id: rampSelect.value,
-        start_time: startTimeSelect.value,
-        end_time: endTimeSelect.value
-    };
-
-    // Set the hidden field value to JSON string
-    voteDataInput.value = JSON.stringify(voteData);
-    return true;
-}
 
 let deletePollId = null;
 
