@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -53,8 +55,12 @@ async def create_poll(request: Request) -> RedirectResponse:
             return error_response
 
         title = generate_poll_title(poll_type, title, event)
-        starts_at = generate_starts_at(starts_at, event)
+        starts_at_str = generate_starts_at(starts_at, event)
         description = generate_description(description, event)
+
+        # Parse datetime strings to datetime objects
+        starts_at_dt = datetime.fromisoformat(starts_at_str)
+        closes_at_dt = datetime.fromisoformat(closes_at)
 
         # Create poll in database
         with get_session() as session:
@@ -64,8 +70,8 @@ async def create_poll(request: Request) -> RedirectResponse:
                 poll_type=poll_type,
                 event_id=event_id if event_id else None,
                 created_by=user["id"],
-                starts_at=starts_at,
-                closes_at=closes_at,
+                starts_at=starts_at_dt,
+                closes_at=closes_at_dt,
             )
             session.add(new_poll)
             session.flush()  # Get the poll_id before committing
