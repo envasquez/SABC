@@ -1167,25 +1167,8 @@ window.validateProxyVote{{ poll.id }} = function() {
     voteDataInput.value = JSON.stringify(voteData);
     return true;
 };
-{% else %}
-window.validateProxyVote{{ poll.id }} = function() {
-    const memberSelect = document.getElementById('vote_as_angler_{{ poll.id }}');
-    if (!memberSelect.value) {
-        showToast('Please select a member to vote for', 'warning');
-        return false;
-    }
 
-    // Check if an option is selected
-    const selectedOption = document.querySelector('input[name="option_id"]:checked');
-    if (!selectedOption) {
-        showToast('Please select an option to vote for', 'warning');
-        return false;
-    }
-
-    return true;
-};
-
-// Create dynamic non-admin ramp update and validation functions for each tournament poll
+// Create dynamic non-admin ramp update and validation functions for tournament polls
 window.updateRampsNonAdmin{{ poll.id }} = function() {
     console.log('[SABC] updateRampsNonAdmin{{ poll.id }} called');
     const lakeSelect = document.getElementById('lake_select_nonadmin_{{ poll.id }}');
@@ -1282,6 +1265,23 @@ window.validateVoteNonAdmin{{ poll.id }} = function() {
 
     // Set the hidden field value to JSON string
     voteDataInput.value = JSON.stringify(voteData);
+    return true;
+};
+{% else %}
+window.validateProxyVote{{ poll.id }} = function() {
+    const memberSelect = document.getElementById('vote_as_angler_{{ poll.id }}');
+    if (!memberSelect.value) {
+        showToast('Please select a member to vote for', 'warning');
+        return false;
+    }
+
+    // Check if an option is selected
+    const selectedOption = document.querySelector('input[name="option_id"]:checked');
+    if (!selectedOption) {
+        showToast('Please select an option to vote for', 'warning');
+        return false;
+    }
+
     return true;
 };
 {% endif %}
