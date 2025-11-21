@@ -130,9 +130,8 @@ class TestPasswordResetFlow:
 
         # Mock time to be 2 hours in the future (tokens expire in 1 hour)
         future_time = datetime.now(tz=timezone.utc) + timedelta(hours=2)
-        with patch("core.email.tokens.datetime") as mock_datetime:
-            mock_datetime.now.return_value = future_time
-            mock_datetime.side_effect = lambda *args, **kw: datetime(*args, **kw)
+        with patch("core.email.tokens.now_utc") as mock_now_utc:
+            mock_now_utc.return_value = future_time
 
             response = client.post(
                 "/reset-password",
