@@ -1,6 +1,6 @@
 import secrets
 import sys
-from datetime import timedelta
+from datetime import timedelta, timezone
 from typing import Optional
 
 from core.helpers.timezone import now_utc
@@ -49,6 +49,13 @@ def verify_reset_token(token: str) -> Optional[dict]:
         if used:
             logger.warning(f"Already used password reset token for user {user_id}")
             return None
+
+        # Handle timezone-naive datetimes from SQLite (test database)
+        # SQLite stores datetimes as strings and returns them as naive datetimes
+        # PostgreSQL returns timezone-aware datetimes correctly
+        if expires_at.tzinfo is None:
+            # Assume naive datetime is UTC and make it aware
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
 
         if now_utc() > expires_at:
             logger.warning(f"Expired password reset token for user {user_id}")

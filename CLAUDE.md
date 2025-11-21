@@ -21,7 +21,46 @@ South Austin Bass Club (SABC) tournament management system - modern FastAPI appl
 
 ## CRITICAL DEVELOPMENT RULES
 
-### 0. MANDATORY TESTING REQUIREMENT
+### 0. MANDATORY PRE-COMMIT CHECKS
+**ABSOLUTELY CRITICAL - NO EXCEPTIONS - BREAKING CI IS UNACCEPTABLE:**
+
+**BEFORE EVERY COMMIT, YOU MUST RUN:**
+```bash
+# 1. Format code (auto-fixes issues)
+nix develop -c format-code
+
+# 2. Check code quality (type checking + linting)
+nix develop -c check-code
+
+# 3. Run ALL tests
+nix develop -c run-tests
+
+# 4. ONLY commit if ALL THREE pass
+git add .
+git commit -m "Your message"
+git push
+```
+
+**CI PIPELINE RULES:**
+- **NEVER commit without running all three commands above**
+- **NEVER push code that fails format-code, check-code, or run-tests**
+- **NEVER assume "it will probably work" - ALWAYS verify locally first**
+- **NEVER skip tests because "they're slow" - CI is even slower when broken**
+- Breaking the CI pipeline wastes time and requires multiple fix commits
+
+**If any command fails:**
+- Fix ALL issues it reports
+- Re-run the command to verify the fix
+- Do NOT proceed to the next command until current one passes
+- Do NOT commit until ALL THREE commands pass
+
+**Violations of this rule cause:**
+- Broken CI pipeline requiring emergency fixes
+- Multiple commits to fix the same issue
+- Wasted time debugging CI failures
+- User frustration and loss of confidence
+
+### 1. MANDATORY TESTING REQUIREMENT
 **ABSOLUTELY CRITICAL - NO EXCEPTIONS:**
 
 - **NEVER assume code works without testing**
@@ -31,10 +70,11 @@ South Austin Bass Club (SABC) tournament management system - modern FastAPI appl
 
 **Required testing workflow:**
 1. Make code changes
-2. Restart the development server to load new code
-3. Test the functionality manually in the browser
-4. Verify database changes with direct queries
-5. Only after successful testing: commit and push
+2. Run `format-code`, `check-code`, and `run-tests` (see above)
+3. Restart the development server to load new code
+4. Test the functionality manually in the browser
+5. Verify database changes with direct queries
+6. Only after ALL checks pass: commit and push
 
 **If you cannot test directly:**
 - Add debug logging to verify data flow
