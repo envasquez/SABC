@@ -925,13 +925,17 @@
 const lakesData = {{ lakes_data | tojson | safe }};
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('[SABC] DOMContentLoaded fired');
+
     if (!lakesData) {
-        console.error('Lakes data not loaded');
+        console.error('[SABC] Lakes data not loaded!');
         return;
     }
+    console.log('[SABC] Lakes data loaded:', lakesData.length, 'lakes');
 
     // Populate admin own vote lake dropdowns (for all polls)
     const adminOwnLakeSelects = document.querySelectorAll('[id^="lake_select_admin_own_"]');
+    console.log('[SABC] Found', adminOwnLakeSelects.length, 'admin own lake selects');
     adminOwnLakeSelects.forEach(adminOwnLakeSelect => {
         lakesData.forEach(lake => {
             const option = document.createElement('option');
@@ -939,10 +943,19 @@ document.addEventListener('DOMContentLoaded', function() {
             option.textContent = lake.name;
             adminOwnLakeSelect.appendChild(option);
         });
+        // Add event listeners for mobile (onchange might not fire reliably)
+        adminOwnLakeSelect.addEventListener('change', function() {
+            const pollId = this.id.replace('lake_select_admin_own_', '');
+            console.log('[SABC] Admin own lake changed for poll', pollId, 'to', this.value);
+            if (window['updateRampsAdminOwn' + pollId]) {
+                window['updateRampsAdminOwn' + pollId]();
+            }
+        });
     });
 
     // Populate admin proxy voting form lake dropdowns (for all polls)
     const adminLakeSelects = document.querySelectorAll('[id^="admin_lake_select_"]');
+    console.log('[SABC] Found', adminLakeSelects.length, 'admin proxy lake selects');
     adminLakeSelects.forEach(adminLakeSelect => {
         lakesData.forEach(lake => {
             const option = document.createElement('option');
@@ -950,10 +963,19 @@ document.addEventListener('DOMContentLoaded', function() {
             option.textContent = lake.name;
             adminLakeSelect.appendChild(option);
         });
+        // Add event listeners for mobile
+        adminLakeSelect.addEventListener('change', function() {
+            const pollId = this.id.replace('admin_lake_select_', '');
+            console.log('[SABC] Admin proxy lake changed for poll', pollId, 'to', this.value);
+            if (window['updateAdminRamps' + pollId]) {
+                window['updateAdminRamps' + pollId]();
+            }
+        });
     });
 
     // Populate non-admin member voting form lake dropdowns (for all tournament polls)
     const nonAdminLakeSelects = document.querySelectorAll('[id^="lake_select_nonadmin_"]');
+    console.log('[SABC] Found', nonAdminLakeSelects.length, 'non-admin lake selects');
     nonAdminLakeSelects.forEach(nonAdminLakeSelect => {
         lakesData.forEach(lake => {
             const option = document.createElement('option');
@@ -961,7 +983,20 @@ document.addEventListener('DOMContentLoaded', function() {
             option.textContent = lake.name;
             nonAdminLakeSelect.appendChild(option);
         });
+        // Add event listeners for mobile (CRITICAL: This is what the user is using)
+        nonAdminLakeSelect.addEventListener('change', function() {
+            const pollId = this.id.replace('lake_select_nonadmin_', '');
+            console.log('[SABC] Non-admin lake changed for poll', pollId, 'to', this.value);
+            if (window['updateRampsNonAdmin' + pollId]) {
+                console.log('[SABC] Calling updateRampsNonAdmin' + pollId);
+                window['updateRampsNonAdmin' + pollId]();
+            } else {
+                console.error('[SABC] Function updateRampsNonAdmin' + pollId + ' not found!');
+            }
+        });
     });
+
+    console.log('[SABC] All lake dropdowns populated successfully');
 });
 
 // Create dynamic functions for each poll
@@ -1152,27 +1187,49 @@ window.validateProxyVote{{ poll.id }} = function() {
 
 // Create dynamic non-admin ramp update and validation functions for each tournament poll
 window.updateRampsNonAdmin{{ poll.id }} = function() {
+    console.log('[SABC] updateRampsNonAdmin{{ poll.id }} called');
     const lakeSelect = document.getElementById('lake_select_nonadmin_{{ poll.id }}');
     const rampSelect = document.getElementById('ramp_select_nonadmin_{{ poll.id }}');
 
-    if (!lakeSelect || !rampSelect) return;
+    if (!lakeSelect) {
+        console.error('[SABC] Lake select not found: lake_select_nonadmin_{{ poll.id }}');
+        return;
+    }
+    if (!rampSelect) {
+        console.error('[SABC] Ramp select not found: ramp_select_nonadmin_{{ poll.id }}');
+        return;
+    }
 
     const lakeId = parseInt(lakeSelect.value);
+    console.log('[SABC] Selected lake ID:', lakeId);
+
     rampSelect.innerHTML = '<option value="">Select a ramp...</option>';
     rampSelect.disabled = true;
 
-    if (!lakeId) return;
+    if (!lakeId) {
+        console.log('[SABC] No lake selected, keeping ramps disabled');
+        return;
+    }
 
     const selectedLake = lakesData.find(lake => lake.id === lakeId);
+    if (!selectedLake) {
+        console.error('[SABC] Lake not found in lakesData:', lakeId);
+        return;
+    }
+
+    console.log('[SABC] Found lake:', selectedLake.name, 'with', selectedLake.ramps ? selectedLake.ramps.length : 0, 'ramps');
+
     if (selectedLake && selectedLake.ramps) {
         selectedLake.ramps.forEach(ramp => {
             const option = document.createElement('option');
             option.value = ramp.id;
             option.textContent = ramp.name;
             rampSelect.appendChild(option);
+            console.log('[SABC] Added ramp:', ramp.name);
         });
         if (selectedLake.ramps.length > 0) {
             rampSelect.disabled = false;
+            console.log('[SABC] Ramp select enabled with', selectedLake.ramps.length, 'options');
         }
     }
 };
