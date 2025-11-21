@@ -10,6 +10,7 @@ from core.email.tokens import (
     use_reset_token,
     verify_reset_token,
 )
+from core.helpers.timezone import now_utc
 
 
 class TestGenerateResetToken:
@@ -108,7 +109,7 @@ class TestCreatePasswordResetToken:
         # Verify expiry time was passed correctly
         call_args = mock_insert.call_args[0]
         expires_at = call_args[2]
-        expected_expiry = datetime.now() + timedelta(minutes=TOKEN_EXPIRY_MINUTES)
+        expected_expiry = now_utc() + timedelta(minutes=TOKEN_EXPIRY_MINUTES)
         # Allow 1 second tolerance for test execution time
         assert abs((expires_at - expected_expiry).total_seconds()) < 1
 
@@ -119,7 +120,7 @@ class TestVerifyResetToken:
     @patch("core.email.tokens.fetch_token_data")
     def test_verifies_valid_token(self, mock_fetch: Mock):
         """Test verification of valid, unused, non-expired token."""
-        future_time = datetime.now() + timedelta(hours=1)
+        future_time = now_utc() + timedelta(hours=1)
         mock_fetch.return_value = (1, future_time, False, "user@test.com", "Test User")
 
         result = verify_reset_token("valid_token")
@@ -142,7 +143,7 @@ class TestVerifyResetToken:
     @patch("core.email.tokens.fetch_token_data")
     def test_rejects_used_token(self, mock_fetch: Mock):
         """Test rejection of already-used token."""
-        future_time = datetime.now() + timedelta(hours=1)
+        future_time = now_utc() + timedelta(hours=1)
         mock_fetch.return_value = (1, future_time, True, "user@test.com", "Test User")  # used=True
 
         result = verify_reset_token("used_token")
@@ -152,7 +153,7 @@ class TestVerifyResetToken:
     @patch("core.email.tokens.fetch_token_data")
     def test_rejects_expired_token(self, mock_fetch: Mock):
         """Test rejection of expired token."""
-        past_time = datetime.now() - timedelta(hours=1)
+        past_time = now_utc() - timedelta(hours=1)
         mock_fetch.return_value = (1, past_time, False, "user@test.com", "Test User")
 
         result = verify_reset_token("expired_token")
@@ -254,7 +255,7 @@ class TestTokenIntegration:
         mock_check.return_value = 0
         mock_generate.return_value = "test_token_123"
         mock_insert.return_value = True
-        future_time = datetime.now() + timedelta(hours=1)
+        future_time = now_utc() + timedelta(hours=1)
         mock_fetch.return_value = (1, future_time, False, "user@test.com", "User")
         mock_mark.return_value = 1
 
