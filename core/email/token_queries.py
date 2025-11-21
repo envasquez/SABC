@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Optional
 
 from core.db_schema import Angler, PasswordResetToken, get_session
+from core.helpers.timezone import now_utc
 
 from .config import logger
 
@@ -32,7 +33,7 @@ def insert_token(user_id: int, token: str, expires_at: datetime) -> bool:
                 user_id=user_id,
                 token=token,
                 expires_at=expires_at,
-                created_at=datetime.now(),
+                created_at=now_utc(),
             )
             session.add(reset_token)
             return True
@@ -73,7 +74,7 @@ def mark_token_used(token: str) -> int:
                     PasswordResetToken.token == token,
                     PasswordResetToken.used.is_(false()),
                 )
-                .update({"used": True, "used_at": datetime.now()})
+                .update({"used": True, "used_at": now_utc()})
             )
             return rowcount
     except Exception as e:
@@ -90,7 +91,7 @@ def delete_expired_tokens() -> int:
                 session.query(PasswordResetToken)
                 .filter(
                     or_(
-                        PasswordResetToken.expires_at < datetime.now(),
+                        PasswordResetToken.expires_at < now_utc(),
                         PasswordResetToken.used.is_(true()),
                     )
                 )

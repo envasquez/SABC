@@ -1,7 +1,9 @@
 import secrets
 import sys
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Optional
+
+from core.helpers.timezone import now_utc
 
 from .config import RESET_RATE_LIMIT, RESET_RATE_WINDOW, TOKEN_EXPIRY_MINUTES, logger
 from .token_queries import (
@@ -19,14 +21,14 @@ def generate_reset_token() -> str:
 
 def create_password_reset_token(user_id: int, email: str) -> Optional[str]:
     try:
-        since = datetime.now() - timedelta(seconds=RESET_RATE_WINDOW)
+        since = now_utc() - timedelta(seconds=RESET_RATE_WINDOW)
         recent_count = check_rate_limit(user_id, since)
         if recent_count and recent_count >= RESET_RATE_LIMIT:
             logger.warning(f"Rate limit exceeded for user {user_id} ({email})")
             return None
 
         token = generate_reset_token()
-        expires_at = datetime.now() + timedelta(minutes=TOKEN_EXPIRY_MINUTES)
+        expires_at = now_utc() + timedelta(minutes=TOKEN_EXPIRY_MINUTES)
         if insert_token(user_id, token, expires_at):
             logger.info(f"Created password reset token for user {user_id} ({email})")
             return token
@@ -48,7 +50,7 @@ def verify_reset_token(token: str) -> Optional[dict]:
             logger.warning(f"Already used password reset token for user {user_id}")
             return None
 
-        if datetime.now() > expires_at:
+        if now_utc() > expires_at:
             logger.warning(f"Expired password reset token for user {user_id}")
             return None
         return {"user_id": user_id, "email": email, "name": name, "expires_at": expires_at}
