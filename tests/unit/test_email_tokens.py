@@ -1,6 +1,6 @@
 """Unit tests for email token generation and verification."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import Mock, patch
 
 from core.email.tokens import (
