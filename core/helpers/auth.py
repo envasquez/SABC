@@ -42,7 +42,14 @@ def require_auth(request: Request) -> UserDict:
     """
     user = get_current_user(request)
     if not user:
-        raise HTTPException(status_code=303, headers={"Location": "/login"})
+        # Include the current URL as 'next' parameter for post-login redirect
+        from urllib.parse import quote
+
+        current_path = str(request.url.path)
+        if request.url.query:
+            current_path += f"?{request.url.query}"
+        next_param = quote(current_path, safe="/?&=")
+        raise HTTPException(status_code=303, headers={"Location": f"/login?next={next_param}"})
     return user
 
 
@@ -61,7 +68,14 @@ def require_admin(request: Request) -> UserDict:
     """
     user = get_current_user(request)
     if not user:
-        raise HTTPException(status_code=302, headers={"Location": "/login"})
+        # Include the current URL as 'next' parameter for post-login redirect
+        from urllib.parse import quote
+
+        current_path = str(request.url.path)
+        if request.url.query:
+            current_path += f"?{request.url.query}"
+        next_param = quote(current_path, safe="/?&=")
+        raise HTTPException(status_code=302, headers={"Location": f"/login?next={next_param}"})
     if not user.get("is_admin"):
         raise HTTPException(status_code=302, headers={"Location": "/"})
     return user
@@ -82,7 +96,14 @@ def require_member(request: Request) -> UserDict:
     """
     user = get_current_user(request)
     if not user:
-        raise HTTPException(status_code=303, headers={"Location": "/login"})
+        # Include the current URL as 'next' parameter for post-login redirect
+        from urllib.parse import quote
+
+        current_path = str(request.url.path)
+        if request.url.query:
+            current_path += f"?{request.url.query}"
+        next_param = quote(current_path, safe="/?&=")
+        raise HTTPException(status_code=303, headers={"Location": f"/login?next={next_param}"})
     if not user.get("member"):
         raise HTTPException(status_code=403)
     return user

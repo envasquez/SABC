@@ -23,9 +23,10 @@ async def login_page(request: Request) -> Response:
     if get_current_user(request):
         return RedirectResponse("/")
 
-    # Extract query parameters for success/error messages
+    # Extract query parameters for success/error messages and next redirect
     success = request.query_params.get("success")
     error = request.query_params.get("error")
+    next_url = request.query_params.get("next", "/")
 
     return templates.TemplateResponse(
         "login.html",
@@ -33,15 +34,33 @@ async def login_page(request: Request) -> Response:
             "request": request,
             "success": success,
             "error": error,
+            "next_url": next_url,
         },
     )
 
 
 @router.post("/login")
 @limiter.limit("5/minute")
-async def login(request: Request, email: str = Form(...), password: str = Form(...)) -> Response:
+async def login(
+    request: Request,
+    email: str = Form(...),
+    password: str = Form(...),
+    next_url: str = Form("/"),
+) -> Response:
     email = email.lower().strip()
     ip_address = get_client_ip(request)
+
+    # Validate next_url to prevent open redirect attacks
+    # Only allow relative URLs (must start with /) and reject external URLs
+    safe_next_url = "/"
+    if next_url and isinstance(next_url, str):
+        # Remove leading/trailing whitespace
+        next_url = next_url.strip()
+        # Only allow relative URLs starting with /
+        if next_url.startswith("/") and not next_url.startswith("//"):
+            # Reject URLs with schemes (http://, https://, etc.)
+            if "://" not in next_url:
+                safe_next_url = next_url
 
     try:
         with get_session() as session:
@@ -73,7 +92,7 @@ async def login(request: Request, email: str = Form(...), password: str = Form(.
                 "User login successful",
                 extra={"user_id": user_id, "user_email": email, "ip_address": ip_address},
             )
-            return RedirectResponse("/", status_code=303)
+            return RedirectResponse(safe_next_url, status_code=303)
 
         # Failed login - log but don't reveal whether email exists
         log_security_event(
