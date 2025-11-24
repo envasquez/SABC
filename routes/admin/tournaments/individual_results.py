@@ -1,3 +1,4 @@
+import logging
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, Request
@@ -10,6 +11,7 @@ from core.helpers.forms import get_form_bool, get_form_float, get_form_int
 from core.query_service import QueryService
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post("/admin/tournaments/{tournament_id}/results")
@@ -27,9 +29,12 @@ async def save_result(
     qs = QueryService(conn)
 
     try:
+        logger.info(f"Saving result for tournament {tournament_id}")
+
         # Extract form data
         angler_id_val = get_form_int(form_data, "angler_id")
         if angler_id_val is None:
+            logger.error(f"Tournament {tournament_id}: Angler ID is required")
             return JSONResponse({"error": "Angler ID is required"}, status_code=400)
 
         angler_id = angler_id_val
@@ -131,6 +136,9 @@ async def save_result(
             )
 
         conn.commit()
+        logger.info(
+            f"Successfully saved result for tournament {tournament_id}, angler {angler_id}, weight {total_weight}"
+        )
 
         # Check if this is an AJAX request
         if request.headers.get(
@@ -142,6 +150,7 @@ async def save_result(
             f"/admin/tournaments/{tournament_id}/enter-results", status_code=303
         )
     except Exception as e:
+        logger.error(f"Error saving result for tournament {tournament_id}: {str(e)}", exc_info=True)
         # Return JSON error for AJAX requests
         if request.headers.get(
             "X-Requested-With"
