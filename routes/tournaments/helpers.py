@@ -10,13 +10,14 @@ from core.db_schema import get_session
 
 def auto_complete_past_tournaments() -> int:
     """
-    Automatically mark past tournaments as complete.
+    Automatically mark past tournaments as complete if date has passed AND has results.
 
     Returns:
         Number of tournaments updated
     """
     with get_session() as session:
         # SQLite-compatible UPDATE using subquery instead of FROM clause
+        # A tournament is complete if: date/time has passed AND has 1 or more results
         result: Result[Any] = session.execute(
             text(
                 """
@@ -27,6 +28,9 @@ def auto_complete_past_tournaments() -> int:
                     WHERE date < CURRENT_DATE
                 )
                 AND complete = FALSE
+                AND id IN (
+                    SELECT DISTINCT tournament_id FROM results
+                )
                 """
             )
         )
