@@ -24,6 +24,10 @@ async def tournaments_list(request: Request, user: OptionalUser):
 
 @router.get("/tournaments/{tournament_id}")
 async def tournament_results(request: Request, tournament_id: int, user: OptionalUser):
+    # TEMPORARY FIX: Redirect tournament 169 to 171 (Lake Belton Nov 2025)
+    if tournament_id == 169:
+        return RedirectResponse("/tournaments/171", status_code=301)
+
     try:
         # Auto-complete past tournaments using ORM session
         auto_complete_past_tournaments()
