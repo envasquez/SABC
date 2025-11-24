@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 from sqlalchemy.orm import Session
 
-from core.db_schema import Angler, Event, News, Result, Tournament
+from core.db_schema import Angler, Event, News
 from tests.conftest import TestClient, post_with_csrf
 
 
@@ -458,11 +458,6 @@ class TestAdminDashboard:
         response = admin_client.get("/admin/users")
         assert response.status_code == 200
 
-    def test_admin_tournaments_page(self, admin_client: TestClient):
-        """Admin should be able to view tournaments page."""
-        response = admin_client.get("/admin/tournaments")
-        assert response.status_code == 200
-
     def test_admin_invalid_page_returns_404(self, admin_client: TestClient):
         """Invalid admin page should return 404."""
         response = admin_client.get("/admin/invalid")
@@ -567,44 +562,3 @@ class TestAdminUsersPage:
         assert response.status_code == 200
         assert member_user.name in response.text
         assert admin_user.name in response.text
-
-
-class TestAdminTournamentsPage:
-    """Test admin tournaments page functionality."""
-
-    def test_admin_tournaments_shows_tournament_list(
-        self,
-        admin_client: TestClient,
-        db_session: Session,
-        test_event: Event,
-        test_tournament: Tournament,
-    ):
-        """Admin tournaments page should list tournaments."""
-        response = admin_client.get("/admin/tournaments")
-        assert response.status_code == 200
-        assert test_event.name in response.text
-
-    def test_admin_tournaments_shows_result_counts(
-        self,
-        admin_client: TestClient,
-        db_session: Session,
-        test_event: Event,
-        test_tournament: Tournament,
-        member_user: Angler,
-    ):
-        """Admin tournaments page should show result counts."""
-        # Add a result
-        result = Result(
-            tournament_id=test_tournament.id,
-            angler_id=member_user.id,
-            total_weight=15.0,
-            num_fish=5,
-            disqualified=False,
-        )
-        db_session.add(result)
-        db_session.commit()
-
-        response = admin_client.get("/admin/tournaments")
-        assert response.status_code == 200
-        # Should show the tournament
-        assert test_event.name in response.text

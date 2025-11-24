@@ -79,12 +79,6 @@ class TestAdminPages:
 
         assert response.status_code == 200
 
-    def test_admin_tournaments_page_loads(self, admin_client: TestClient):
-        """Test that admin tournaments list page loads."""
-        response = admin_client.get("/admin/tournaments")
-
-        assert response.status_code == 200
-
 
 class TestAPIEndpoints:
     """Test API endpoints for coverage."""

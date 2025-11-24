@@ -46,7 +46,7 @@ class TestEnterResultsPage:
             "/admin/tournaments/99999/enter-results", follow_redirects=False
         )
         assert response.status_code == 303
-        assert "admin/tournaments" in response.headers.get("location", "")
+        assert "admin/events" in response.headers.get("location", "")
 
 
 class TestIndividualResults:

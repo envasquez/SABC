@@ -30,7 +30,7 @@ async def enter_results_page(
 
     tournament = qs.get_tournament_by_id(tournament_id)
     if not tournament:
-        return RedirectResponse("/admin/tournaments", status_code=303)
+        return RedirectResponse("/admin/events", status_code=303)
 
     anglers = qs.get_all_anglers()
     results = qs.get_tournament_results(tournament_id)

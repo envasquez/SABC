@@ -63,7 +63,7 @@ async def manage_results_page(
         )
     except Exception as e:
         logger.error(f"Error loading manage results page: {e}")
-        return RedirectResponse("/admin/tournaments", status_code=303)
+        return RedirectResponse("/admin/events", status_code=303)
 
 
 @router.delete("/admin/tournaments/{tournament_id}/results/{result_id}")

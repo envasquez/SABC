@@ -378,26 +378,6 @@ class TestLakeAndRampWorkflows:
         assert response.status_code in [200, 404]
 
 
-class TestTournamentAdditionalWorkflows:
-    """Test additional tournament workflows."""
-
-    def test_admin_can_mark_tournament_complete(
-        self, admin_client: TestClient, db_session: Session
-    ):
-        """Test marking a tournament as complete."""
-        # This would test the completion workflow
-        # Just verify the route exists
-        response = admin_client.get("/admin/tournaments")
-
-        assert response.status_code == 200
-
-    def test_admin_can_view_tournament_stats(self, admin_client: TestClient, db_session: Session):
-        """Test viewing tournament statistics."""
-        response = admin_client.get("/admin/tournaments")
-
-        assert response.status_code == 200
-
-
 class TestNewsAdditionalCoverage:
     """Additional news management tests."""
 

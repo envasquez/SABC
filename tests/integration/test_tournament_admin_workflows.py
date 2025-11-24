@@ -34,25 +34,6 @@ class TestAdminDashboardAccess:
         assert response.status_code in [302, 303]
 
 
-class TestTournamentListingAdmin:
-    """Tests for admin tournament listing page."""
-
-    def test_admin_can_view_tournaments_list(
-        self, admin_client: TestClient, test_tournament: Tournament
-    ):
-        """Test that admins can view list of tournaments."""
-        response = admin_client.get("/admin/tournaments")
-
-        assert response.status_code == 200
-        assert test_tournament.name in response.text
-
-    def test_non_admin_cannot_view_tournaments_admin_list(self, member_client: TestClient):
-        """Test that non-admins cannot access admin tournaments list."""
-        response = member_client.get("/admin/tournaments", follow_redirects=False)
-
-        assert response.status_code in [302, 303, 403]
-
-
 class TestTournamentResultsEntryAccess:
     """Tests for tournament results entry page access."""
 

@@ -150,12 +150,6 @@ class TestTournamentResultsDetailed:
 
         assert response.status_code in [200, 302, 303, 404]
 
-    def test_view_tournament_list(self, admin_client: TestClient, db_session: Session):
-        """Test viewing list of all tournaments."""
-        response = admin_client.get("/admin/tournaments")
-
-        assert response.status_code == 200
-
     def test_tournament_results_with_buy_in(
         self,
         admin_client: TestClient,

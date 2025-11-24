@@ -261,34 +261,6 @@ class TestAdminTemplates:
         response = admin_client.get("/admin/events")
         assert response.status_code == 200
 
-    def test_admin_tournaments_page_renders(self, admin_client: TestClient, db_session: Session):
-        """Test that admin tournaments page renders without errors."""
-        # Create tournament
-        lake = Lake(yaml_key="test-lake", display_name="Test Lake")
-        db_session.add(lake)
-        db_session.flush()
-
-        event = Event(
-            date=date.today(),
-            year=date.today().year,
-            name="Tournament",
-            event_type="sabc_tournament",
-        )
-        db_session.add(event)
-        db_session.flush()
-
-        tournament = Tournament(
-            event_id=event.id,
-            name=event.name,
-            lake_id=lake.id,
-            complete=False,
-        )
-        db_session.add(tournament)
-        db_session.commit()
-
-        response = admin_client.get("/admin/tournaments")
-        assert response.status_code == 200
-
     def test_admin_enter_results_page_renders(
         self, admin_client: TestClient, db_session: Session, admin_user: Angler
     ):
@@ -533,7 +505,6 @@ class TestAllTemplatesComprehensive:
             "/admin/users",
             "/admin/lakes",
             "/admin/events",
-            "/admin/tournaments",
             "/admin/polls/create",
             "/admin/news",
         ]

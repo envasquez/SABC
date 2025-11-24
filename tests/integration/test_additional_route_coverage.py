@@ -124,43 +124,6 @@ class TestAdminUsers:
 class TestAdminTournaments:
     """Test admin tournament management."""
 
-    def test_admin_tournaments_list_loads(self, admin_client: TestClient):
-        """Test tournaments list page loads."""
-        response = admin_client.get("/admin/tournaments")
-        assert response.status_code == 200
-
-    def test_admin_tournaments_with_data(self, admin_client: TestClient, db_session: Session):
-        """Test tournaments list with existing tournaments."""
-        event = Event(
-            name="Tournament",
-            date=datetime.now().date(),
-            year=datetime.now().year,
-            event_type="tournament",
-        )
-        db_session.add(event)
-        db_session.commit()
-
-        lake = Lake(yaml_key="test", display_name="Test")
-        db_session.add(lake)
-        db_session.commit()
-
-        ramp = Ramp(lake_id=lake.id, name="Ramp")
-        db_session.add(ramp)
-        db_session.commit()
-
-        tournament = Tournament(
-            event_id=event.id,
-            name="Test Tournament",
-            lake_id=lake.id,
-            ramp_id=ramp.id,
-            complete=False,
-        )
-        db_session.add(tournament)
-        db_session.commit()
-
-        response = admin_client.get("/admin/tournaments")
-        assert response.status_code == 200
-
     def test_admin_tournament_enter_results_loads(
         self, admin_client: TestClient, db_session: Session
     ):
