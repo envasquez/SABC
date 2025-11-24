@@ -1,4 +1,3 @@
-import logging
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, Request
@@ -11,7 +10,6 @@ from core.helpers.forms import get_form_int
 from core.query_service import QueryService
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
 
 
 @router.post("/admin/tournaments/{tournament_id}/team-results")
@@ -28,7 +26,6 @@ async def save_team_result(
     qs = QueryService(conn)
 
     try:
-        logger.info(f"Saving team result for tournament {tournament_id}")
         angler1_id_val = get_form_int(form_data, "angler1_id")
         angler2_id = get_form_int(form_data, "angler2_id")
 
@@ -96,9 +93,6 @@ async def save_team_result(
                 },
             )
         conn.commit()
-        logger.info(
-            f"Saved team result for tournament {tournament_id}: angler1={angler1_id}, angler2={angler2_id}, weight={total_weight}"
-        )
         # Recalculate place_finish using actual weights from results table
         # SQLite-compatible version using subquery instead of FROM clause
         qs.execute(
@@ -131,9 +125,6 @@ async def save_team_result(
             f"/admin/tournaments/{tournament_id}/enter-results", status_code=303
         )
     except Exception as e:
-        logger.error(
-            f"Error saving team result for tournament {tournament_id}: {str(e)}", exc_info=True
-        )
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JSONResponse({"success": False, "error": str(e)}, status_code=400)
         raise

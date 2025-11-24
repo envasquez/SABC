@@ -24,10 +24,6 @@ async def tournaments_list(request: Request, user: OptionalUser):
 
 @router.get("/tournaments/{tournament_id}")
 async def tournament_results(request: Request, tournament_id: int, user: OptionalUser):
-    # TEMPORARY FIX: Redirect tournament 169 to 171 (Lake Belton Nov 2025)
-    if tournament_id == 169:
-        return RedirectResponse("/tournaments/171", status_code=301)
-
     try:
         # Auto-complete past tournaments using ORM session
         auto_complete_past_tournaments()
@@ -69,7 +65,7 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
             next_tournament_id = qs.get_next_tournament_id(tournament_id)
             prev_tournament_id = qs.get_previous_tournament_id(tournament_id)
             year_links = qs.get_tournament_years_with_first_id(4)
-            response = templates.TemplateResponse(
+            return templates.TemplateResponse(
                 "tournament_results.html",
                 {
                     "request": request,
@@ -86,11 +82,6 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
                     "year_links": year_links,
                 },
             )
-            # Prevent browser caching of tournament results to ensure fresh data
-            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-            response.headers["Pragma"] = "no-cache"
-            response.headers["Expires"] = "0"
-            return response
     except ValueError as e:
         # Tournament doesn't exist - redirect to home with friendly message
         logger.info(
