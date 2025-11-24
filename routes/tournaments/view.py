@@ -65,7 +65,7 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
             next_tournament_id = qs.get_next_tournament_id(tournament_id)
             prev_tournament_id = qs.get_previous_tournament_id(tournament_id)
             year_links = qs.get_tournament_years_with_first_id(4)
-            return templates.TemplateResponse(
+            response = templates.TemplateResponse(
                 "tournament_results.html",
                 {
                     "request": request,
@@ -82,6 +82,11 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
                     "year_links": year_links,
                 },
             )
+            # Prevent browser caching of tournament results to ensure fresh data
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+            return response
     except ValueError as e:
         # Tournament doesn't exist - redirect to home with friendly message
         logger.info(
