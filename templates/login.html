@@ -10,6 +10,7 @@
                 {{ alert('success', success) }}
                 <form method="post" action="/login">
                     {{ csrf_token(request) }}
+                    <input type="hidden" name="next_url" value="{{ next_url }}">
                     <div class="mb-3">
                         <label>Email</label>
                         <input type="email" name="email" class="form-control" required>

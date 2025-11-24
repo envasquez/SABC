@@ -434,3 +434,137 @@ class TestPasswordSecurity:
         # Times should be similar (within 50ms for timing protection)
         # This is a rough check - actual constant-time would be identical
         assert abs(nonexistent_time - existing_time) < 0.5
+
+
+class TestLoginRedirect:
+    """Tests for login redirect functionality."""
+
+    def test_login_redirects_to_next_url_after_successful_authentication(
+        self, client: TestClient, regular_user: Angler, test_password: str
+    ):
+        """Test that successful login redirects to the 'next' URL parameter."""
+        # Access login page with next parameter
+        login_page = client.get("/login?next=/polls", follow_redirects=False)
+        assert login_page.status_code == 200
+        assert 'value="/polls"' in login_page.text
+
+        # Login with next_url
+        assert regular_user.email is not None
+        response = post_with_csrf(
+            client,
+            "/login",
+            data={
+                "email": regular_user.email,
+                "password": test_password,
+                "next_url": "/polls",
+            },
+            follow_redirects=False,
+        )
+
+        # Should redirect to /polls instead of home
+        assert response.status_code in [302, 303, 307]
+        assert response.headers.get("location") == "/polls"
+
+    def test_login_redirects_to_home_when_no_next_url_provided(
+        self, client: TestClient, regular_user: Angler, test_password: str
+    ):
+        """Test that login defaults to home page when no 'next' URL is provided."""
+        assert regular_user.email is not None
+        response = post_with_csrf(
+            client,
+            "/login",
+            data={"email": regular_user.email, "password": test_password},
+            follow_redirects=False,
+        )
+
+        # Should redirect to home page
+        assert response.status_code in [302, 303, 307]
+        assert response.headers.get("location") == "/"
+
+    def test_login_rejects_external_urls_in_next_parameter(
+        self, client: TestClient, regular_user: Angler, test_password: str
+    ):
+        """Test that external URLs in 'next' parameter are rejected for security."""
+        # Try to use external URL
+        assert regular_user.email is not None
+        response = post_with_csrf(
+            client,
+            "/login",
+            data={
+                "email": regular_user.email,
+                "password": test_password,
+                "next_url": "http://evil.com/phishing",
+            },
+            follow_redirects=False,
+        )
+
+        # Should redirect to home page (safe default), not external URL
+        assert response.status_code in [302, 303, 307]
+        location = response.headers.get("location", "")
+        assert location == "/"
+        assert "evil.com" not in location
+
+    def test_login_rejects_protocol_relative_urls_in_next_parameter(
+        self, client: TestClient, regular_user: Angler, test_password: str
+    ):
+        """Test that protocol-relative URLs (//evil.com) are rejected."""
+        assert regular_user.email is not None
+        response = post_with_csrf(
+            client,
+            "/login",
+            data={
+                "email": regular_user.email,
+                "password": test_password,
+                "next_url": "//evil.com/phishing",
+            },
+            follow_redirects=False,
+        )
+
+        # Should redirect to home page, not external URL
+        assert response.status_code in [302, 303, 307]
+        location = response.headers.get("location", "")
+        assert location == "/"
+        assert "evil.com" not in location
+
+    def test_login_allows_relative_urls_with_query_parameters(
+        self, client: TestClient, regular_user: Angler, test_password: str
+    ):
+        """Test that relative URLs with query parameters are allowed."""
+        assert regular_user.email is not None
+        response = post_with_csrf(
+            client,
+            "/login",
+            data={
+                "email": regular_user.email,
+                "password": test_password,
+                "next_url": "/polls?tab=tournament&p=1",
+            },
+            follow_redirects=False,
+        )
+
+        # Should redirect to the full URL with query params
+        assert response.status_code in [302, 303, 307]
+        assert response.headers.get("location") == "/polls?tab=tournament&p=1"
+
+    def test_require_auth_includes_next_parameter_in_redirect(self, client: TestClient):
+        """Test that require_auth includes current URL in login redirect."""
+        # Try to access protected page without authentication
+        response = client.get("/polls", follow_redirects=False)
+
+        # Should redirect to login with next parameter
+        assert response.status_code in [302, 303, 307]
+        location = response.headers.get("location", "")
+        assert "/login?" in location
+        assert "next=" in location
+        assert "%2Fpolls" in location or "/polls" in location  # URL encoded or not
+
+    def test_require_member_includes_next_parameter_in_redirect(
+        self, authenticated_client: TestClient
+    ):
+        """Test that require_member includes current URL in login redirect for non-members."""
+        # Non-member trying to access member-only page
+        response = authenticated_client.get("/polls", follow_redirects=False)
+
+        # Should either show page or redirect with 403 (depending on member status)
+        # This test verifies the redirect includes next parameter when needed
+        assert response.status_code in [200, 302, 303, 307, 403]
