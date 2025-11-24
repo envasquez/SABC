@@ -151,3 +151,60 @@
     </div>
 </div>
 {% endmacro %}
+
+{# Time select options macro - generates time options for dropdowns #}
+{% macro time_select_options(start_hour=5, end_hour=20, interval_minutes=30, selected_time='') %}
+{% for hour in range(start_hour, end_hour + 1) %}
+    {% for minute in [0, interval_minutes] if minute < 60 %}
+        {% set time_24 = "%02d:%02d"|format(hour, minute) %}
+        {% set hour_12 = hour if hour <= 12 else hour - 12 %}
+        {% set hour_12 = 12 if hour_12 == 0 else hour_12 %}
+        {% set ampm = 'AM' if hour < 12 else 'PM' %}
+        {% set time_display = "%d:%02d %s"|format(hour_12, minute, ampm) %}
+        <option value="{{ time_24 }}" {% if time_24 == selected_time %}selected{% endif %}>{{ time_display }}</option>
+    {% endfor %}
+{% endfor %}
+{% endmacro %}
+
+{# Seasonal tournament history card macro #}
+{% macro seasonal_history_card(seasonal_history, card_class='border-info', header_class='bg-info text-white') %}
+{% if seasonal_history and seasonal_history|length > 0 %}
+<div class="card {{ card_class }}">
+    <div class="card-header {{ header_class }} py-2">
+        <h6 class="mb-0">
+            <i class="bi bi-calendar3 me-1"></i>
+            {{ seasonal_history[0].month_name }} Tournament History
+        </h6>
+    </div>
+    <div class="card-body p-3">
+        <div class="row g-2">
+            {% for history in seasonal_history %}
+            <div class="col-4">
+                <div class="text-center p-2 bg-light rounded">
+                    <div class="small text-secondary">{{ history.year }}</div>
+                    <div class="fw-semibold">
+                        {% if history.lake_name %}
+                            {{ history.lake_name[:15] }}{% if history.lake_name|length > 15 %}...{% endif %}
+                        {% else %}
+                            <span class="text-secondary">No Data</span>
+                        {% endif %}
+                    </div>
+                    {% if history.winner %}
+                    <div class="small text-success">
+                        <i class="bi bi-trophy-fill"></i>
+                        {% set winner_parts = history.winner.split() %}
+                        {% if winner_parts|length >= 2 %}
+                            {{ winner_parts[0][0] }}.{{ winner_parts[-1] }}
+                        {% else %}
+                            {{ history.winner }}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endmacro %}
