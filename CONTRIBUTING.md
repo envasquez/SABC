@@ -391,6 +391,220 @@ Reviewers will check for:
 - **Test coverage** - Adequate testing of changes
 - **Documentation** - Clear and up-to-date docs
 
+## 🧩 Component Usage
+
+### IMPORTANT: Use Existing Components First!
+
+**Before writing ANY code**, check if a component already exists:
+
+1. **Frontend Components**: See [templates/components/README.md](templates/components/README.md)
+2. **Backend Helpers**: See [docs/COMPONENTS.md](docs/COMPONENTS.md)
+
+**Using existing components**:
+- Reduces code duplication
+- Ensures consistency across the application
+- Makes maintenance easier
+- Prevents bugs through battle-tested code
+
+### Available Frontend Components
+
+#### Jinja2 Macros (in templates/macros.html)
+
+```jinja2
+{% from "macros.html" import csrf_token, form_field, alert, badge, card %}
+
+{# Security - ALWAYS use CSRF tokens in POST forms #}
+<form method="POST" action="/submit">
+    {{ csrf_token(request) }}
+    {{ form_field('Email', 'email', type='email', required=True) }}
+    <button type="submit">Submit</button>
+</form>
+
+{# User feedback #}
+{{ alert('success', 'Operation completed!') }}
+{{ alert('danger', 'Operation failed', dismissible=False) }}
+
+{# Badges #}
+{{ badge('Active', 'success', 'check-circle') }}
+{{ member_badge(angler.member) }}
+{{ officer_badge('President') }}
+
+{# Containers #}
+{% call card(title='Results', header_class='bg-success text-white') %}
+    <p>Card content here</p>
+{% endcall %}
+```
+
+See [templates/components/README.md](templates/components/README.md) for complete macro documentation.
+
+#### JavaScript Utilities (in static/utils.js)
+
+```javascript
+// Security
+const safeText = escapeHtml(userInput);
+const csrfToken = getCsrfToken();
+
+// User feedback
+showToast('Saved successfully', 'success');
+showToast('Operation failed', 'error', 3000);
+
+// HTTP operations
+const response = await fetchWithRetry('/api/data');
+const deleteResp = await deleteRequest('/admin/items/123');
+
+// Modal control
+showModal('confirmModal');
+hideModal('confirmModal');
+
+// Lake/ramp selection
+const selector = new LakeRampSelector({
+    lakeSelectId: 'lake',
+    rampSelectId: 'ramp',
+    lakesData: lakesData,
+    useApi: true
+});
+selector.autoWire();
+
+// Delete confirmation workflow
+const deleteManager = new DeleteConfirmationManager({
+    modalId: 'deleteModal',
+    itemNameElementId: 'itemName',
+    confirmInputId: 'confirmInput',
+    confirmButtonId: 'confirmBtn',
+    deleteUrlTemplate: (id) => `/admin/items/${id}`,
+    onSuccess: () => location.reload()
+});
+deleteManager.confirm(123, 'Item Name');
+```
+
+### Available Backend Components
+
+#### Authentication Helpers
+
+```python
+from core.helpers.auth import get_current_user, require_auth, require_member, require_admin
+
+# Optional auth (for pages that work for everyone)
+user = get_current_user(request)
+if not user:
+    return RedirectResponse("/login")
+
+# Required auth (raises 403 if not authenticated)
+user = require_auth(request)
+
+# Member-only (polls, voting)
+user = require_member(request)
+
+# Admin-only (management functions)
+user = require_admin(request)
+```
+
+#### CRUD Helpers (Phase 4 - NEW!)
+
+```python
+from core.helpers.crud import delete_entity, check_foreign_key_usage, bulk_delete
+
+# Simple delete
+@router.delete("/admin/users/{user_id}")
+async def delete_user(request: Request, user_id: int) -> Response:
+    return delete_entity(
+        request, user_id, Angler,
+        success_message="User deleted successfully",
+        error_message="Failed to delete user"
+    )
+
+# Delete with FK validation
+def _check_ramp_usage(session: Session, ramp_id: int) -> Optional[str]:
+    return check_foreign_key_usage(
+        session, Tournament, Tournament.ramp_id, ramp_id,
+        "Cannot delete ramp that is referenced by tournaments"
+    )
+
+@router.delete("/admin/ramps/{ramp_id}")
+async def delete_ramp(request: Request, ramp_id: int) -> Response:
+    return delete_entity(
+        request, ramp_id, Ramp,
+        success_message="Ramp deleted successfully",
+        error_message="Failed to delete ramp",
+        validation_check=_check_ramp_usage
+    )
+
+# Delete with cascade
+def _delete_poll_cascade(session: Session, poll_id: int) -> None:
+    bulk_delete(session, PollVote, [PollVote.poll_id == poll_id])
+    bulk_delete(session, PollOption, [PollOption.poll_id == poll_id])
+
+@router.delete("/admin/polls/{poll_id}")
+async def delete_poll(request: Request, poll_id: int) -> Response:
+    return delete_entity(
+        request, poll_id, Poll,
+        success_message="Poll deleted successfully",
+        error_message="Failed to delete poll",
+        pre_delete_hook=_delete_poll_cascade
+    )
+```
+
+See [docs/COMPONENTS.md](docs/COMPONENTS.md) for complete backend component documentation.
+
+#### Response Helpers
+
+```python
+from core.helpers.response import error_redirect, success_redirect, json_error, json_success
+
+# Form submissions (POST-Redirect-GET pattern)
+return success_redirect("/admin/users", "User created successfully")
+return error_redirect("/admin/users/new", "Failed to create user")
+
+# AJAX/API endpoints
+return json_success(data={"id": 123}, message="Created successfully")
+return json_error("Invalid input", status_code=400)
+```
+
+#### Form Helpers
+
+```python
+from core.helpers.forms import get_form_data, validate_required_fields
+
+data = await get_form_data(request)
+error = validate_required_fields(data, ['name', 'email'])
+if error:
+    return error_redirect("/form", error)
+```
+
+#### Security Helpers
+
+```python
+from core.helpers.sanitize import sanitize_text, sanitize_email
+from core.helpers.password_validator import validate_password, hash_password
+
+# Sanitize user input
+name = sanitize_text(data['name'], max_length=100)
+email = sanitize_email(data['email'])
+
+# Password validation and hashing
+valid, errors = validate_password(password)
+if not valid:
+    return error_redirect("/register", " ".join(errors))
+hashed = hash_password(password)
+```
+
+### Creating New Components
+
+**Only create new components if**:
+1. Code is duplicated 3+ times
+2. No similar component exists
+3. Component will be reused in multiple places
+
+**Component Creation Checklist**:
+- [ ] Check existing components thoroughly
+- [ ] Design clear interface with well-defined parameters
+- [ ] Add comprehensive type annotations (Python) or JSDoc (JavaScript)
+- [ ] Write detailed docstring with usage examples
+- [ ] Add to appropriate file (macros.html, utils.js, or core/helpers/)
+- [ ] Document in templates/components/README.md or docs/COMPONENTS.md
+- [ ] Refactor existing duplicate code to use new component
+- [ ] Write tests for new component
+
 ## 🛠️ Development Tips
 
 ### Common Patterns
