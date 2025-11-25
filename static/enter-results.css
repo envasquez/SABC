@@ -1,0 +1,73 @@
+/**
+ * Tournament Results Entry - Styles
+ * Styles for the autocomplete functionality and results entry page
+ */
+
+/* Autocomplete container */
+.autocomplete-wrapper {
+    position: relative;
+}
+
+.autocomplete-input {
+    width: 100%;
+}
+
+/* Autocomplete dropdown */
+.autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #303030;
+    border: 1px solid #444;
+    border-radius: 0.25rem;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.autocomplete-item {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    border-bottom: 1px solid #444;
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.active {
+    background: #375a7f;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-no-results {
+    padding: 0.5rem 0.75rem;
+    color: #888;
+    font-style: italic;
+}
+
+/* Selected angler indicator */
+.angler-selected {
+    background-color: #1e3a4f !important;
+    border-color: #375a7f;
+}
+
+/* Clear selection button */
+.clear-selection {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #888;
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 0 0.25rem;
+    z-index: 10;
+}
+
+.clear-selection:hover {
+    color: #fff;
+}
