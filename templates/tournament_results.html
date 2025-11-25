@@ -370,13 +370,6 @@
 
 <script>
 
-function getCsrfToken() {
-    return document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrf_token='))
-        ?.split('=')[1];
-}
-
 function deleteIndividualResult(tournamentId, resultId, anglerName) {
     if (confirm(`Are you sure you want to delete the result for ${anglerName}?\n\nThis will also delete any team results that include this angler.\n\nThis action cannot be undone.`)) {
         const csrfToken = getCsrfToken();
