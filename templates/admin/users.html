@@ -184,11 +184,7 @@ async function submitAddUser() {
         return;
     }
 
-    // Get CSRF token from cookie
-    const csrfToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrf_token='))
-        ?.split('=')[1];
+    const csrfToken = getCsrfToken();
 
     try {
         const response = await fetch('/admin/users', {
@@ -239,11 +235,7 @@ document.getElementById('deleteConfirmInput').addEventListener('input', function
 
 document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
     if (deleteUserId && document.getElementById('deleteConfirmInput').value === 'DELETE') {
-        // Get CSRF token from cookie
-        const csrfToken = document.cookie
-            .split('; ')
-            .find(row => row.startsWith('csrf_token='))
-            ?.split('=')[1];
+        const csrfToken = getCsrfToken();
 
         fetch(`/admin/users/${deleteUserId}`, {
             method: 'DELETE',
