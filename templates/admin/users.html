@@ -157,8 +157,6 @@
 </div>
 
 <script>
-let deleteUserId = null;
-
 /**
  * Show the Add User modal
  */
@@ -166,7 +164,7 @@ function showAddUserModal() {
     // Clear the form
     document.getElementById('addUserForm').reset();
     // Show the modal
-    new bootstrap.Modal(document.getElementById('addUserModal')).show();
+    showModal('addUserModal');
 }
 
 /**
@@ -222,51 +220,20 @@ async function submitAddUser() {
     }
 }
 
+// Initialize delete confirmation manager
+const userDeleteManager = new DeleteConfirmationManager({
+    modalId: 'deleteUserModal',
+    itemNameElementId: 'deleteUserName',
+    confirmInputId: 'deleteConfirmInput',
+    confirmButtonId: 'confirmDeleteBtn',
+    deleteUrlTemplate: (id) => `/admin/users/${id}`,
+    onSuccess: () => location.reload(),
+    onError: (error) => showToast(`Error deleting user: ${error}`, 'error')
+});
+
 function deleteUser(userId, userName) {
     console.log('deleteUser called with:', userId, userName);
-    deleteUserId = userId;
-    document.getElementById('deleteUserName').textContent = userName;
-    document.getElementById('deleteConfirmInput').value = ''; // Clear the input
-    document.getElementById('confirmDeleteBtn').disabled = true; // Disable button initially
-    new bootstrap.Modal(document.getElementById('deleteUserModal')).show();
+    userDeleteManager.confirm(userId, userName);
 }
-
-// Enable/disable delete button based on confirmation input
-document.getElementById('deleteConfirmInput').addEventListener('input', function(e) {
-    const btn = document.getElementById('confirmDeleteBtn');
-    btn.disabled = e.target.value !== 'DELETE';
-});
-
-document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-    if (deleteUserId && document.getElementById('deleteConfirmInput').value === 'DELETE') {
-        // Get CSRF token from cookie
-        const csrfToken = document.cookie
-            .split('; ')
-            .find(row => row.startsWith('csrf_token='))
-            ?.split('=')[1];
-
-        fetch(`/admin/users/${deleteUserId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-csrf-token': csrfToken,
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                showToast('Error deleting user: ' + (data.error || 'Unknown error'), 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error deleting user: ' + error.message, 'error');
-        });
-
-        bootstrap.Modal.getInstance(document.getElementById('deleteUserModal')).hide();
-    }
-});
 </script>
 {% endblock %}

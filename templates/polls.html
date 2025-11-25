@@ -1221,52 +1221,19 @@ window.validateProxyVote{{ poll.id }} = function() {
 {% endif %}
 {% endfor %}
 
-let deletePollId = null;
+// Initialize delete confirmation manager
+const pollDeleteManager = new DeleteConfirmationManager({
+    modalId: 'deletePollModal',
+    itemNameElementId: 'deletePollTitle',
+    confirmInputId: 'deletePollConfirmInput',
+    confirmButtonId: 'confirmDeletePollBtn',
+    deleteUrlTemplate: (id) => `/admin/polls/${id}`,
+    onSuccess: () => location.reload(),
+    onError: (error) => showToast(`Error deleting poll: ${error}`, 'error')
+});
 
 function deletePoll(pollId, pollTitle) {
-    deletePollId = pollId;
-    document.getElementById('deletePollTitle').textContent = pollTitle;
-    document.getElementById('deletePollConfirmInput').value = '';
-    document.getElementById('confirmDeletePollBtn').disabled = true;
-    new bootstrap.Modal(document.getElementById('deletePollModal')).show();
+    pollDeleteManager.confirm(pollId, pollTitle);
 }
-
-// Enable/disable delete button based on confirmation input
-document.getElementById('deletePollConfirmInput').addEventListener('input', function(e) {
-    const btn = document.getElementById('confirmDeletePollBtn');
-    btn.disabled = e.target.value !== 'DELETE';
-});
-
-document.getElementById('confirmDeletePollBtn').addEventListener('click', function() {
-    if (deletePollId && document.getElementById('deletePollConfirmInput').value === 'DELETE') {
-        // Get CSRF token from cookie
-        const csrfToken = document.cookie
-            .split('; ')
-            .find(row => row.startsWith('csrf_token='))
-            ?.split('=')[1];
-
-        fetch(`/admin/polls/${deletePollId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-csrf-token': csrfToken,
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                showToast('Error deleting poll: ' + (data.error || 'Unknown error'), 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error deleting poll: ' + error.message, 'error');
-        });
-
-        bootstrap.Modal.getInstance(document.getElementById('deletePollModal')).hide();
-    }
-});
 </script>
 {% endblock %}

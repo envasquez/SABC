@@ -201,8 +201,6 @@
 </div>
 
 <script>
-let deleteRampId = null;
-
 // Edit ramp buttons
 document.querySelectorAll('.edit-ramp-btn').forEach(button => {
     button.addEventListener('click', function() {
@@ -218,54 +216,28 @@ document.querySelectorAll('.edit-ramp-btn').forEach(button => {
         document.getElementById('edit_google_maps_iframe').value = map;
 
         // Show modal
-        new bootstrap.Modal(document.getElementById('editRampModal')).show();
+        showModal('editRampModal');
     });
+});
+
+// Initialize delete confirmation manager for ramps
+const rampDeleteManager = new DeleteConfirmationManager({
+    modalId: 'deleteRampModal',
+    itemNameElementId: 'delete-ramp-name',
+    confirmInputId: 'delete-ramp-confirmation',
+    confirmButtonId: 'confirmDeleteRampBtn',
+    deleteUrlTemplate: (id) => `/admin/ramps/${id}`,
+    onSuccess: () => location.reload(),
+    onError: (error) => showToast(`Error deleting ramp: ${error}`, 'error')
 });
 
 // Delete ramp buttons
 document.querySelectorAll('.delete-ramp-btn').forEach(button => {
     button.addEventListener('click', function() {
-        deleteRampId = this.dataset.id;
+        const id = this.dataset.id;
         const name = this.dataset.name;
-
-        document.getElementById('delete-ramp-name').textContent = name;
-        document.getElementById('delete-ramp-confirmation').value = '';
-        document.getElementById('confirmDeleteRampBtn').disabled = true;
-
-        new bootstrap.Modal(document.getElementById('deleteRampModal')).show();
+        rampDeleteManager.confirm(id, name);
     });
-});
-
-// Enable/disable delete button based on confirmation input
-document.getElementById('delete-ramp-confirmation').addEventListener('input', function(e) {
-    const btn = document.getElementById('confirmDeleteRampBtn');
-    btn.disabled = e.target.value !== 'DELETE';
-});
-
-// Confirm delete ramp
-document.getElementById('confirmDeleteRampBtn').addEventListener('click', function() {
-    if (deleteRampId && document.getElementById('delete-ramp-confirmation').value === 'DELETE') {
-        fetch(`/admin/ramps/${deleteRampId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                showToast('Error deleting ramp: ' + (data.error || 'Unknown error'), 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error deleting ramp: ' + error.message, 'error');
-        });
-
-        bootstrap.Modal.getInstance(document.getElementById('deleteRampModal')).hide();
-    }
 });
 </script>
 {% endblock %}
