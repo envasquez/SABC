@@ -1,51 +1,60 @@
-from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse
-from sqlalchemy import func
+from typing import Optional
 
-from core.db_schema import Lake, Ramp, Tournament, get_session
-from core.helpers.auth import require_admin
+from fastapi import APIRouter, Request, Response
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from core.db_schema import Lake, Ramp, Tournament
+from core.helpers.crud import check_foreign_key_usage, delete_entity
 
 router = APIRouter()
 
 
+def _check_ramp_usage(session: Session, ramp_id: int) -> Optional[str]:
+    """Check if ramp is referenced by tournaments."""
+    return check_foreign_key_usage(
+        session,
+        Tournament,
+        Tournament.ramp_id,
+        ramp_id,
+        "Cannot delete ramp that is referenced by tournaments",
+    )
+
+
+def _check_lake_usage(session: Session, lake_id: int) -> Optional[str]:
+    """Check if lake is referenced by tournaments via ramps."""
+    count = (
+        session.query(func.count(Tournament.id))
+        .join(Ramp, Tournament.ramp_id == Ramp.id)
+        .filter(Ramp.lake_id == lake_id)
+        .scalar()
+    )
+    if count and count > 0:
+        return "Cannot delete lake that is referenced by tournaments"
+    return None
+
+
 @router.delete("/admin/ramps/{ramp_id}")
-async def delete_ramp(request: Request, ramp_id: int):
-    _user = require_admin(request)
-    try:
-        with get_session() as session:
-            usage_count = (
-                session.query(func.count(Tournament.id))
-                .filter(Tournament.ramp_id == ramp_id)
-                .scalar()
-            )
-            if usage_count > 0:
-                return JSONResponse(
-                    {"error": "Cannot delete ramp that is referenced by tournaments"},
-                    status_code=400,
-                )
-            session.query(Ramp).filter(Ramp.id == ramp_id).delete()
-        return JSONResponse({"success": True})
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
+async def delete_ramp(request: Request, ramp_id: int) -> Response:
+    """Delete a ramp (cannot delete if referenced by tournaments)."""
+    return delete_entity(
+        request,
+        ramp_id,
+        Ramp,
+        success_message="Ramp deleted successfully",
+        error_message="Failed to delete ramp",
+        validation_check=_check_ramp_usage,
+    )
 
 
 @router.delete("/admin/lakes/{lake_id}")
-async def delete_lake(request: Request, lake_id: int):
-    _user = require_admin(request)
-    try:
-        with get_session() as session:
-            usage_count = (
-                session.query(func.count(Tournament.id))
-                .join(Ramp, Tournament.ramp_id == Ramp.id)
-                .filter(Ramp.lake_id == lake_id)
-                .scalar()
-            )
-            if usage_count > 0:
-                return JSONResponse(
-                    {"error": "Cannot delete lake that is referenced by tournaments or ramps"},
-                    status_code=400,
-                )
-            session.query(Lake).filter(Lake.id == lake_id).delete()
-        return JSONResponse({"success": True})
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
+async def delete_lake(request: Request, lake_id: int) -> Response:
+    """Delete a lake (cannot delete if referenced by tournaments)."""
+    return delete_entity(
+        request,
+        lake_id,
+        Lake,
+        success_message="Lake deleted successfully",
+        error_message="Failed to delete lake",
+        validation_check=_check_lake_usage,
+    )

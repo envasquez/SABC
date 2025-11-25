@@ -1,13 +1,14 @@
 from typing import List
 
-from fastapi import APIRouter, Form, HTTPException, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi import APIRouter, Form, HTTPException, Request, Response
+from fastapi.responses import RedirectResponse
 
 from core.db_schema import Angler, News, get_session, utc_now
 from core.email import send_news_notification
 from core.helpers.auth import require_admin
+from core.helpers.crud import delete_entity
 from core.helpers.logging import get_logger
-from core.helpers.response import error_redirect, sanitize_error_message
+from core.helpers.response import error_redirect
 from core.helpers.sanitize import sanitize_html
 from routes.dependencies import templates
 
@@ -192,33 +193,25 @@ async def test_news_email(request: Request, title: str = Form(...), content: str
 
 
 @router.post("/admin/news/{news_id}/delete")
-async def delete_news_post(request: Request, news_id: int):
+async def delete_news_post(request: Request, news_id: int) -> Response:
     """POST endpoint for deleting news (for form submissions)."""
-    _user = require_admin(request)
-    try:
-        with get_session() as session:
-            news_item = session.query(News).filter(News.id == news_id).first()
-            if news_item:
-                session.delete(news_item)
-                # Context manager will commit automatically on successful exit
-
-        return RedirectResponse("/admin/news?success=News deleted successfully", status_code=303)
-    except Exception as e:
-        return error_redirect("/admin/news", str(e))
+    return delete_entity(
+        request,
+        news_id,
+        News,
+        redirect_url="/admin/news",
+        success_message="News deleted successfully",
+        error_message="Failed to delete news",
+    )
 
 
 @router.delete("/admin/news/{news_id}")
-async def delete_news(request: Request, news_id: int):
-    _user = require_admin(request)
-    try:
-        with get_session() as session:
-            news_item = session.query(News).filter(News.id == news_id).first()
-            if news_item:
-                session.delete(news_item)
-                # Context manager will commit automatically on successful exit
-
-        return JSONResponse({"success": True})
-    except Exception as e:
-        return JSONResponse(
-            {"error": sanitize_error_message(e, "Operation failed")}, status_code=500
-        )
+async def delete_news(request: Request, news_id: int) -> Response:
+    """DELETE endpoint for deleting news (for AJAX requests)."""
+    return delete_entity(
+        request,
+        news_id,
+        News,
+        success_message="News deleted successfully",
+        error_message="Failed to delete news",
+    )
