@@ -177,11 +177,7 @@ function loadPreview() {
     formData.append('source_id', sourceId);
     formData.append('target_id', targetId);
 
-    // Get CSRF token from cookie
-    const csrfToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrf_token='))
-        ?.split('=')[1];
+    const csrfToken = getCsrfToken();
 
     fetch('/admin/users/merge/preview', {
         method: 'POST',
