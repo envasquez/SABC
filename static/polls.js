@@ -1,377 +1,311 @@
 /**
- * SABC Polls - Public Voting Interface
- * Handles tournament location voting with lake/ramp selection and time voting
+ * SABC Poll Voting Handler
+ * Centralized voting logic for all poll types
  */
-
-// Poll voting functionality
-function submitVote(pollId, canVote, userId) {
-    if (!canVote) {
-        if (!userId) {
-            showToast('Please log in to vote.', 'warning');
-            setTimeout(() => {
-                window.location.href = '/login?next=/polls';
-            }, 1500);
-        } else {
-            showToast('You must be a verified member to vote in polls.', 'warning');
-        }
-        return;
-    }
-
-    const form = document.getElementById(`vote-form-${pollId}`);
-    const formData = new FormData(form);
-
-    // Get selected lake and ramp
-    const lakeSelect = form.querySelector('select[name="lake"]');
-    const rampSelect = form.querySelector('select[name="ramp"]');
-
-    if (!lakeSelect || !lakeSelect.value) {
-        showToast('Please select a lake', 'warning');
-        return;
-    }
-
-    if (!rampSelect || !rampSelect.value) {
-        showToast('Please select a ramp', 'warning');
-        return;
-    }
-
-    // Submit the vote
-    fetch(`/polls/${pollId}/vote`, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showToast('Vote submitted successfully!', 'success');
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showToast(data.error || 'Error submitting vote', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showToast('Error submitting vote. Please try again.', 'error');
-    });
-}
 
 /**
- * Lake/ramp selection functionality using LakeRampSelector component
- * Updates ramp dropdown when lake selection changes
+ * PollVotingHandler - Manages poll voting interactions
+ * Eliminates per-poll generated JavaScript by using data attributes and generic handlers
  *
- * @param {string} pollId - ID of the poll form
- * @param {Object} lakesAndRamps - Lakes data object with ramps
+ * @class
+ *
+ * @example
+ * // Initialize with lakes data
+ * const votingHandler = new PollVotingHandler(lakesData);
+ * votingHandler.initialize();
  */
-function onLakeChange(pollId, lakesAndRamps) {
-    const lakeSelect = document.querySelector(`#vote-form-${pollId} select[name="lake"]`);
-    const rampSelect = document.querySelector(`#vote-form-${pollId} select[name="ramp"]`);
-
-    if (!lakeSelect || !rampSelect) return;
-
-    const lakeId = lakeSelect.value;
-
-    // Create selector instance for this poll form
-    const selector = new LakeRampSelector({
-        lakeSelectId: lakeSelect.id || `poll_${pollId}_lake`,
-        rampSelectId: rampSelect.id || `poll_${pollId}_ramp`,
-        lakesData: lakesAndRamps,
-        useApi: false
-    });
-
-    selector.loadRampsForLakeId(lakeId);
-}
-
-// Chart functionality for tournament polls
-function drawLakesChart(resultsData) {
-    const container = document.getElementById('lakesChart');
-    if (!container) return;
-
-    const data = resultsData.lakes;
-
-    if (!data || data.length === 0) {
-        container.innerHTML = '<div class="text-secondary text-center py-4"><i class="bi bi-inbox me-2"></i>No votes yet</div>';
-        return;
+class PollVotingHandler {
+    /**
+     * Create a PollVotingHandler instance
+     * @param {Array|Object} lakesData - Lakes and ramps data structure
+     */
+    constructor(lakesData) {
+        this.lakesData = lakesData;
     }
 
-    // Calculate max votes for percentage
-    const maxVotes = Math.max(...data.map(d => d.votes));
+    /**
+     * Initialize all poll voting handlers
+     * Sets up event listeners for all polls on the page
+     */
+    initialize() {
+        // Set up lake/ramp cascading dropdowns
+        this.setupLakeRampHandlers();
 
-    // Build HTML bar chart with clickable bars
-    container.innerHTML = data.map(lake => {
-        const percentage = (lake.votes / maxVotes) * 100;
-        const escapedName = escapeHtml(lake.name);
-        // Ensure lake.id is a safe integer to prevent XSS
-        const lakeId = parseInt(lake.id, 10);
-        if (isNaN(lakeId)) {
-            console.error('Invalid lake ID:', lake.id);
-            return '';
+        // Set up form validation
+        this.setupFormValidation();
+    }
+
+    /**
+     * Set up lake selection handlers that populate ramp dropdowns
+     * @private
+     */
+    setupLakeRampHandlers() {
+        // Find all lake selects with data-poll-id attribute
+        const lakeSelects = document.querySelectorAll('select[data-poll-lake]');
+
+        lakeSelects.forEach(lakeSelect => {
+            lakeSelect.addEventListener('change', (e) => {
+                this.handleLakeChange(e.target);
+            });
+        });
+    }
+
+    /**
+     * Handle lake selection change - populate corresponding ramp dropdown
+     * @param {HTMLSelectElement} lakeSelect - The lake select element that changed
+     * @private
+     */
+    handleLakeChange(lakeSelect) {
+        const pollId = lakeSelect.dataset.pollId;
+        const context = lakeSelect.dataset.context; // 'admin_own', 'admin_proxy', 'nonadmin'
+
+        // Find the corresponding ramp select
+        const rampSelectId = this.getRampSelectId(pollId, context);
+        const rampSelect = document.getElementById(rampSelectId);
+
+        if (!rampSelect) {
+            console.error(\`Ramp select not found: \${rampSelectId}\`);
+            return;
         }
-        return `
-            <div class="lake-card mb-2" data-lake-id="${lakeId}" style="cursor: pointer;" onclick="selectLake(${lakeId})">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="fw-semibold">${escapedName}</span>
-                    <span class="badge bg-primary">${lake.votes}</span>
-                </div>
-                <div class="progress" style="height: 25px;">
-                    <div class="progress-bar lake-bar bg-success" role="progressbar"
-                         style="width: ${percentage}%"
-                         aria-valuenow="${lake.votes}"
-                         aria-valuemin="0"
-                         aria-valuemax="${maxVotes}">
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
 
-function drawRampsChart(lakeId) {
-    const container = document.getElementById('rampsChart');
-    if (!container) return;
+        // Clear and disable ramp select
+        rampSelect.innerHTML = '<option value="">Select a ramp...</option>';
+        rampSelect.disabled = true;
 
-    // Get ramps data for selected lake from results
-    const resultsData = window.pollResultsData;
-    if (!resultsData || !resultsData.ramps) {
-        container.innerHTML = '<div class="text-secondary text-center py-4"><i class="bi bi-arrow-up me-2"></i>Select a lake above to see ramps</div>';
-        return;
-    }
+        const lakeId = parseInt(lakeSelect.value);
+        if (!lakeId) return;
 
-    const ramps = resultsData.ramps.filter(r => r.lake_id == lakeId);
-
-    if (ramps.length === 0) {
-        container.innerHTML = '<div class="text-secondary text-center py-4"><i class="bi bi-inbox me-2"></i>No votes for ramps at this lake</div>';
-        return;
-    }
-
-    // Calculate max votes for percentage
-    const maxVotes = Math.max(...ramps.map(r => r.votes));
-
-    // Build HTML bar chart
-    container.innerHTML = ramps.map(ramp => {
-        const percentage = (ramp.votes / maxVotes) * 100;
-        const escapedName = escapeHtml(ramp.name);
-        return `
-            <div class="mb-2">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="fw-semibold">${escapedName}</span>
-                    <span class="badge bg-primary">${ramp.votes}</span>
-                </div>
-                <div class="progress" style="height: 25px;">
-                    <div class="progress-bar bg-info" role="progressbar"
-                         style="width: ${percentage}%"
-                         aria-valuenow="${ramp.votes}"
-                         aria-valuemin="0"
-                         aria-valuemax="${maxVotes}">
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-function selectLake(lakeId) {
-    // Highlight selected lake
-    document.querySelectorAll('.lake-card').forEach(card => {
-        card.classList.remove('border', 'border-primary', 'border-2');
-        card.style.backgroundColor = '';
-    });
-
-    const selectedCard = document.querySelector(`[data-lake-id="${lakeId}"]`);
-    if (selectedCard) {
-        selectedCard.classList.add('border', 'border-primary', 'border-2');
-        selectedCard.style.backgroundColor = 'rgba(13, 110, 253, 0.05)';
-    }
-
-    // Update the selected lake label
-    const selectedLakeLabel = document.getElementById('selectedLake');
-    if (selectedLakeLabel) {
-        const lakeName = getLakeName(lakeId);
-        selectedLakeLabel.textContent = lakeName;
-    }
-
-    // Draw ramps chart for selected lake
-    drawRampsChart(lakeId);
-}
-
-// No filtering functionality needed - times are independent of lake/ramp choices
-
-// Helper functions
-function formatTime12Hour(time24) {
-    // Parse time in HH:MM format
-    const [hours, minutes] = time24.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    return `${hour12}:${minutes} ${ampm}`;
-}
-
-function getLakeName(lakeId) {
-    if (!lakeId) return 'Unknown Lake';
-
-    // Try to get from lakesData (array format)
-    if (typeof lakesData !== 'undefined' && Array.isArray(lakesData)) {
-        const lake = lakesData.find(l => l.id == lakeId);
-        if (lake) return lake.name;
-    }
-
-    // Try to get from lakesAndRamps (object format) - legacy support
-    if (typeof lakesAndRamps !== 'undefined' && lakesAndRamps[lakeId]) {
-        return lakesAndRamps[lakeId].name;
-    }
-
-    return `Lake ${lakeId}`;
-}
-
-function getRampName(rampId) {
-    if (!rampId) return 'Unknown Ramp';
-
-    // Try to get from lakesData (array format)
-    if (typeof lakesData !== 'undefined' && Array.isArray(lakesData)) {
-        for (const lake of lakesData) {
-            const ramp = lake.ramps.find(r => r.id == rampId);
-            if (ramp) {
-                // Apply title case
-                return ramp.name.split(' ').map(word =>
-                    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                ).join(' ');
-            }
+        // Find selected lake in data
+        const selectedLake = this.findLake(lakeId);
+        if (!selectedLake || !selectedLake.ramps) {
+            console.error(\`Lake not found or has no ramps: \${lakeId}\`);
+            return;
         }
-    }
 
-    // Try to get from lakesAndRamps (object format) - legacy support
-    if (typeof lakesAndRamps !== 'undefined') {
-        for (const lake of Object.values(lakesAndRamps)) {
-            const ramp = lake.ramps.find(r => r.id == rampId);
-            if (ramp) {
-                return ramp.name.split(' ').map(word =>
-                    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                ).join(' ');
-            }
-        }
-    }
-
-    return `Ramp ${rampId}`;
-}
-
-// Initialize charts when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    // Process tournament results containers
-    const resultsContainers = document.querySelectorAll('.tournament-results-container');
-
-    resultsContainers.forEach(container => {
-        const pollId = container.dataset.pollId;
-        const pollType = container.dataset.pollType;
-
-        if (pollType !== 'tournament_location') return;
-
-        // Parse option data from hidden elements
-        const optionElements = container.querySelectorAll('[data-option-id]');
-        const lakes = {};
-        const ramps = {};
-        const times = {};
-
-        optionElements.forEach(el => {
-            const optionData = el.dataset.optionData ? JSON.parse(el.dataset.optionData) : {};
-            const voteCount = parseInt(el.dataset.voteCount) || 0;
-
-            if (voteCount === 0) return; // Skip options with no votes
-
-            const lakeId = optionData.lake_id;
-            const rampId = optionData.ramp_id;
-            const startTime = optionData.start_time;
-            const endTime = optionData.end_time;
-
-            // Aggregate lake votes
-            if (lakeId) {
-                if (!lakes[lakeId]) {
-                    lakes[lakeId] = {
-                        id: lakeId,
-                        name: getLakeName(lakeId),
-                        votes: 0
-                    };
-                }
-                lakes[lakeId].votes += voteCount;
-            }
-
-            // Aggregate ramp votes
-            if (rampId) {
-                if (!ramps[rampId]) {
-                    ramps[rampId] = {
-                        id: rampId,
-                        lake_id: lakeId,
-                        name: getRampName(rampId),
-                        votes: 0
-                    };
-                }
-                ramps[rampId].votes += voteCount;
-            }
-
-            // Aggregate time votes
-            if (startTime && endTime) {
-                const timeKey = `${startTime}-${endTime}`;
-                if (!times[timeKey]) {
-                    times[timeKey] = {
-                        start_time: startTime,
-                        weigh_in_time: endTime,
-                        votes: 0
-                    };
-                }
-                times[timeKey].votes += voteCount;
-            }
+        // Populate ramps
+        selectedLake.ramps.forEach(ramp => {
+            const option = document.createElement('option');
+            option.value = ramp.id;
+            option.textContent = ramp.name;
+            rampSelect.appendChild(option);
         });
 
-        // Convert objects to sorted arrays
-        const lakesData = Object.values(lakes).sort((a, b) => b.votes - a.votes);
-        const rampsData = Object.values(ramps).sort((a, b) => b.votes - a.votes);
-        const timesData = Object.values(times).sort((a, b) => b.votes - a.votes);
+        if (selectedLake.ramps.length > 0) {
+            rampSelect.disabled = false;
+        }
+    }
 
-        // Create results data object
-        const resultsData = {
-            lakes: lakesData,
-            ramps: rampsData,
-            times: timesData
+    /**
+     * Find lake in lakes data by ID
+     * @param {number} lakeId - Lake ID to find
+     * @returns {Object|null} Lake object or null
+     * @private
+     */
+    findLake(lakeId) {
+        if (Array.isArray(this.lakesData)) {
+            return this.lakesData.find(lake => lake.id === lakeId);
+        }
+        // Handle object format: {1: {name: '...', ramps: [...]}, ...}
+        return this.lakesData[lakeId] || null;
+    }
+
+    /**
+     * Get ramp select ID based on poll ID and context
+     * @param {string|number} pollId - Poll ID
+     * @param {string} context - Context: 'admin_own', 'admin_proxy', 'nonadmin'
+     * @returns {string} Ramp select element ID
+     * @private
+     */
+    getRampSelectId(pollId, context) {
+        const prefixes = {
+            'admin_own': 'ramp_select_admin_own_',
+            'admin_proxy': 'admin_ramp_select_',
+            'nonadmin': 'ramp_select_nonadmin_'
+        };
+        return prefixes[context] + pollId;
+    }
+
+    /**
+     * Set up form validation handlers
+     * @private
+     */
+    setupFormValidation() {
+        // Find all poll voting forms
+        const voteForms = document.querySelectorAll('form[data-poll-vote]');
+
+        voteForms.forEach(form => {
+            form.addEventListener('submit', (e) => {
+                if (!this.validateVoteForm(form)) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        });
+    }
+
+    /**
+     * Validate a poll vote form
+     * @param {HTMLFormElement} form - Form to validate
+     * @returns {boolean} True if valid
+     * @private
+     */
+    validateVoteForm(form) {
+        const pollId = form.dataset.pollId;
+        const pollType = form.dataset.pollType;
+        const context = form.dataset.context;
+
+        if (pollType === 'tournament_location') {
+            return this.validateTournamentVote(pollId, context);
+        } else {
+            return this.validateSimpleVote(pollId, context);
+        }
+    }
+
+    /**
+     * Validate tournament location vote
+     * @param {string|number} pollId - Poll ID
+     * @param {string} context - Context: 'admin_own', 'admin_proxy', 'nonadmin'
+     * @returns {boolean} True if valid
+     * @private
+     */
+    validateTournamentVote(pollId, context) {
+        // Get element IDs based on context
+        const ids = this.getElementIds(pollId, context);
+
+        // Get elements
+        const lakeSelect = document.getElementById(ids.lake);
+        const rampSelect = document.getElementById(ids.ramp);
+        const startTimeSelect = document.getElementById(ids.startTime);
+        const endTimeSelect = document.getElementById(ids.endTime);
+        const voteDataInput = document.getElementById(ids.voteData);
+
+        // For proxy votes, also check member selection
+        if (context === 'admin_proxy') {
+            const memberSelect = document.getElementById(ids.member);
+            if (!memberSelect || !memberSelect.value) {
+                showToast('Please select a member to vote for', 'warning');
+                return false;
+            }
+        }
+
+        // Validate lake
+        if (!lakeSelect || !lakeSelect.value) {
+            showToast('Please select a lake', 'warning');
+            return false;
+        }
+
+        // Validate ramp
+        if (!rampSelect || !rampSelect.value) {
+            showToast('Please select a ramp', 'warning');
+            return false;
+        }
+
+        // Validate start time
+        if (!startTimeSelect || !startTimeSelect.value) {
+            showToast('Please select a start time', 'warning');
+            return false;
+        }
+
+        // Validate end time
+        if (!endTimeSelect || !endTimeSelect.value) {
+            showToast('Please select an end time', 'warning');
+            return false;
+        }
+
+        // Validate time order
+        if (startTimeSelect.value >= endTimeSelect.value) {
+            showToast('Start time must be before end time', 'warning');
+            return false;
+        }
+
+        // Validate reasonable tournament hours
+        const startHour = parseInt(startTimeSelect.value.split(':')[0]);
+        const endHour = parseInt(endTimeSelect.value.split(':')[0]);
+        if (startHour < 4 || endHour > 23) {
+            showToast('Tournament times must be between 4:00 AM and 11:00 PM', 'warning');
+            return false;
+        }
+
+        // Create and set vote data JSON
+        const voteData = {
+            lake_id: parseInt(lakeSelect.value),
+            ramp_id: parseInt(rampSelect.value),
+            start_time: startTimeSelect.value,
+            end_time: endTimeSelect.value
         };
 
-        // Store globally for drilldown functionality
-        window.pollResultsData = resultsData;
-
-        // Draw charts if we have data
-        if (lakesData.length > 0 || rampsData.length > 0 || timesData.length > 0) {
-            // Find canvas elements within this container
-            const lakesCanvas = container.querySelector('#lakesChart');
-            const rampsCanvas = container.querySelector('#rampsChart');
-            const timesCanvas = container.querySelector('#timeTable');
-
-            // Draw lakes chart
-            if (lakesCanvas && lakesData.length > 0) {
-                drawLakesChart(resultsData);
-            }
-
-            // Draw times table
-            if (timesCanvas && timesData.length > 0) {
-                const tbody = timesCanvas.querySelector('tbody');
-                if (tbody) {
-                    tbody.innerHTML = '';
-                    timesData.forEach(time => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td class="small">${formatTime12Hour(time.start_time)}</td>
-                            <td class="small">${formatTime12Hour(time.weigh_in_time)}</td>
-                            <td class="small text-center">
-                                <span class="badge bg-primary">${time.votes}</span>
-                            </td>
-                        `;
-                        tbody.appendChild(row);
-                    });
-                }
-            }
-
-            // Auto-expand ramps if only one lake has votes
-            if (lakesData.length === 1 && rampsData.length > 0) {
-                selectLake(lakesData[0].id);
-            }
-
-            // Show the results container
-            container.classList.remove('d-none');
+        if (voteDataInput) {
+            voteDataInput.value = JSON.stringify(voteData);
         }
-    });
-});
+
+        return true;
+    }
+
+    /**
+     * Validate simple poll vote
+     * @param {string|number} pollId - Poll ID
+     * @param {string} context - Context: 'admin_own', 'admin_proxy', 'nonadmin'
+     * @returns {boolean} True if valid
+     * @private
+     */
+    validateSimpleVote(pollId, context) {
+        // For simple polls, just check that an option is selected
+        const optionInputs = document.querySelectorAll(\`input[name="poll_option"][data-poll-id="\${pollId}"]\`);
+
+        const selected = Array.from(optionInputs).some(input => input.checked);
+        if (!selected) {
+            showToast('Please select an option to vote for', 'warning');
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Get element IDs for a poll based on context
+     * @param {string|number} pollId - Poll ID
+     * @param {string} context - Context: 'admin_own', 'admin_proxy', 'nonadmin'
+     * @returns {Object} Object with element ID keys
+     * @private
+     */
+    getElementIds(pollId, context) {
+        const prefixes = {
+            'admin_own': {
+                lake: 'lake_select_admin_own_',
+                ramp: 'ramp_select_admin_own_',
+                startTime: 'start_time_admin_own_',
+                endTime: 'end_time_admin_own_',
+                voteData: 'vote_option_id_admin_own_'
+            },
+            'admin_proxy': {
+                lake: 'admin_lake_select_',
+                ramp: 'admin_ramp_select_',
+                startTime: 'admin_start_time_',
+                endTime: 'admin_end_time_',
+                voteData: 'admin_vote_option_id_',
+                member: 'vote_as_angler_'
+            },
+            'nonadmin': {
+                lake: 'lake_select_nonadmin_',
+                ramp: 'ramp_select_nonadmin_',
+                startTime: 'start_time_nonadmin_',
+                endTime: 'end_time_nonadmin_',
+                voteData: 'vote_option_id_nonadmin_'
+            }
+        };
+
+        const prefix = prefixes[context];
+        const ids = {};
+
+        for (const [key, idPrefix] of Object.entries(prefix)) {
+            ids[key] = idPrefix + pollId;
+        }
+
+        return ids;
+    }
+}
+
+// Export for use in templates
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = PollVotingHandler;
+}
