@@ -296,22 +296,23 @@ function editNews(id, title, content, priority) {
     document.getElementById('edit_priority').value = priority;
 
     // Show modal
-    new bootstrap.Modal(document.getElementById('editModal')).show();
+    showModal('editModal');
 }
+
+let deleteNewsId = null;
 
 function deleteNews(id, title) {
     // Set the news info in the modal
+    deleteNewsId = id;
     document.getElementById('delete-news-title').textContent = title;
-    document.getElementById('delete-news-id').value = id;
     document.getElementById('delete-confirmation').value = '';
 
     // Show the modal
-    new bootstrap.Modal(document.getElementById('deleteNewsModal')).show();
+    showModal('deleteNewsModal');
 }
 
-function confirmDeleteNews() {
+async function confirmDeleteNews() {
     const confirmText = document.getElementById('delete-confirmation').value;
-    const newsId = document.getElementById('delete-news-id').value;
 
     if (confirmText.trim() !== 'DELETE') {
         showToast('Please type DELETE to confirm', 'warning');
@@ -319,26 +320,21 @@ function confirmDeleteNews() {
     }
 
     // Close the modal
-    bootstrap.Modal.getInstance(document.getElementById('deleteNewsModal')).hide();
+    hideModal('deleteNewsModal');
 
-    // Delete the news item
-    fetch(`/admin/news/${newsId}`, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
+    // Delete the news item using centralized deleteRequest
+    try {
+        const response = await deleteRequest(`/admin/news/${deleteNewsId}`);
+        const data = await response.json();
+
         if (data.success) {
             window.location.reload();
         } else {
-            showToast('Error deleting news: ' + (data.error || 'Unknown error'), 'error');
+            showToast(`Error deleting news: ${data.error || 'Unknown error'}`, 'error');
         }
-    })
-    .catch(error => {
-        showToast('Error deleting news: ' + error.message, 'error');
-    });
+    } catch (error) {
+        showToast(`Error deleting news: ${error.message}`, 'error');
+    }
 }
 </script>
 {% endblock %}

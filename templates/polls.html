@@ -468,7 +468,72 @@
                             <!-- Seasonal Tournament History for upcoming tournament polls -->
                             {% if poll.poll_type == 'tournament_location' and poll.seasonal_history and poll.seasonal_history|length > 0 %}
                             <div class="mt-4">
-                                {{ seasonal_history_card(poll.seasonal_history) }}
+                                <div class="card border-info">
+                                    <div class="card-header bg-info text-white py-2">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-calendar3 me-1"></i>
+                                            {{ poll.seasonal_history[0].month_name }} Tournament History
+                                        </h6>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div class="row g-2">
+                                            {% for hist in poll.seasonal_history %}
+                                            <div class="col-md-6">
+                                                <div class="card bg-dark border-secondary h-100">
+                                                    <div class="card-body p-3">
+                                                        <h6 class="card-title mb-2">
+                                                            <a href="/tournaments/{{ hist.tournament_id }}" class="text-info text-decoration-none">
+                                                                {{ hist.month_name }} {{ hist.year }}
+                                                                <small class="text-muted">({{ hist.date.strftime('%m/%d') }})</small>
+                                                                <i class="bi bi-box-arrow-up-right small ms-1"></i>
+                                                            </a>
+                                                        </h6>
+                                                        <p class="mb-2 small">
+                                                            <i class="bi bi-geo-alt text-success"></i>
+                                                            <strong>{{ hist.lake_name }}</strong>
+                                                            {% if hist.ramp_name != 'TBD' %}
+                                                                <br><span class="text-muted ms-3">{{ hist.ramp_name }}</span>
+                                                            {% endif %}
+                                                            {% if hist.start_time and hist.end_time %}
+                                                                <br><span class="text-muted ms-3">
+                                                                    <i class="bi bi-clock"></i>
+                                                                    {{ hist.start_time | time_format }} - {{ hist.end_time | time_format }}
+                                                                </span>
+                                                            {% endif %}
+                                                        </p>
+
+                                                        <div class="row g-2 small">
+                                                            <div class="col-4">
+                                                                <i class="bi bi-people text-primary"></i>
+                                                                {{ hist.num_anglers }} anglers
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <i class="bi bi-trophy text-warning"></i>
+                                                                {{ hist.num_limits }} limits
+                                                            </div>
+                                                            <div class="col-4 {% if hist.num_zeros > 0 %}text-danger{% else %}text-muted{% endif %}">
+                                                                <i class="bi bi-x-circle"></i>
+                                                                {{ hist.num_zeros }} zero{{ 's' if hist.num_zeros != 1 else '' }}
+                                                            </div>
+                                                            <div class="col-12">
+                                                                <i class="bi bi-graph-up text-success"></i>
+                                                                <strong>Top 3:</strong>
+                                                                {% if hist.top_3_weights|length > 0 %}
+                                                                    {% for weight in hist.top_3_weights %}
+                                                                        {{ "%.1f"|format(weight) }}{% if not loop.last %}, {% endif %}
+                                                                    {% endfor %} lbs
+                                                                {% else %}
+                                                                    N/A
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             {% endif %}
                         {% else %}
@@ -557,7 +622,72 @@
                                     <!-- Seasonal Tournament History -->
                                     {% if poll.seasonal_history and poll.seasonal_history|length > 0 %}
                                     <div class="mt-4">
-                                        {{ seasonal_history_card(poll.seasonal_history) }}
+                                        <div class="card border-info">
+                                            <div class="card-header bg-info text-white py-2">
+                                                <h6 class="mb-0">
+                                                    <i class="bi bi-calendar3 me-1"></i>
+                                                    {{ poll.seasonal_history[0].month_name }} Tournament History
+                                                </h6>
+                                            </div>
+                                            <div class="card-body p-3">
+                                                <div class="row g-2">
+                                                    {% for hist in poll.seasonal_history %}
+                                                    <div class="col-md-6">
+                                                        <div class="card bg-dark border-secondary h-100">
+                                                            <div class="card-body p-3">
+                                                                <h6 class="card-title mb-2">
+                                                                    <a href="/tournaments/{{ hist.tournament_id }}" class="text-info text-decoration-none">
+                                                                        {{ hist.month_name }} {{ hist.year }}
+                                                                        <small class="text-muted">({{ hist.date.strftime('%m/%d') }})</small>
+                                                                        <i class="bi bi-box-arrow-up-right small ms-1"></i>
+                                                                    </a>
+                                                                </h6>
+                                                                <p class="mb-2 small">
+                                                                    <i class="bi bi-geo-alt text-success"></i>
+                                                                    <strong>{{ hist.lake_name }}</strong>
+                                                                    {% if hist.ramp_name != 'TBD' %}
+                                                                        <br><span class="text-muted ms-3">{{ hist.ramp_name }}</span>
+                                                                    {% endif %}
+                                                                    {% if hist.start_time and hist.end_time %}
+                                                                        <br><span class="text-muted ms-3">
+                                                                            <i class="bi bi-clock"></i>
+                                                                            {{ hist.start_time | time_format }} - {{ hist.end_time | time_format }}
+                                                                        </span>
+                                                                    {% endif %}
+                                                                </p>
+
+                                                                <div class="row g-2 small">
+                                                                    <div class="col-4">
+                                                                        <i class="bi bi-people text-primary"></i>
+                                                                        {{ hist.num_anglers }} anglers
+                                                                    </div>
+                                                                    <div class="col-4">
+                                                                        <i class="bi bi-trophy text-warning"></i>
+                                                                        {{ hist.num_limits }} limits
+                                                                    </div>
+                                                                    <div class="col-4 {% if hist.num_zeros > 0 %}text-danger{% else %}text-muted{% endif %}">
+                                                                        <i class="bi bi-x-circle"></i>
+                                                                        {{ hist.num_zeros }} zero{{ 's' if hist.num_zeros != 1 else '' }}
+                                                                    </div>
+                                                                    <div class="col-12">
+                                                                        <i class="bi bi-graph-up text-success"></i>
+                                                                        <strong>Top 3:</strong>
+                                                                        {% if hist.top_3_weights|length > 0 %}
+                                                                            {% for weight in hist.top_3_weights %}
+                                                                                {{ "%.1f"|format(weight) }}{% if not loop.last %}, {% endif %}
+                                                                            {% endfor %} lbs
+                                                                        {% else %}
+                                                                            N/A
+                                                                        {% endif %}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                     {% endif %}
                                 </div>
@@ -1091,48 +1221,19 @@ window.validateProxyVote{{ poll.id }} = function() {
 {% endif %}
 {% endfor %}
 
-let deletePollId = null;
+// Initialize delete confirmation manager
+const pollDeleteManager = new DeleteConfirmationManager({
+    modalId: 'deletePollModal',
+    itemNameElementId: 'deletePollTitle',
+    confirmInputId: 'deletePollConfirmInput',
+    confirmButtonId: 'confirmDeletePollBtn',
+    deleteUrlTemplate: (id) => `/admin/polls/${id}`,
+    onSuccess: () => location.reload(),
+    onError: (error) => showToast(`Error deleting poll: ${error}`, 'error')
+});
 
 function deletePoll(pollId, pollTitle) {
-    deletePollId = pollId;
-    document.getElementById('deletePollTitle').textContent = pollTitle;
-    document.getElementById('deletePollConfirmInput').value = '';
-    document.getElementById('confirmDeletePollBtn').disabled = true;
-    new bootstrap.Modal(document.getElementById('deletePollModal')).show();
+    pollDeleteManager.confirm(pollId, pollTitle);
 }
-
-// Enable/disable delete button based on confirmation input
-document.getElementById('deletePollConfirmInput').addEventListener('input', function(e) {
-    const btn = document.getElementById('confirmDeletePollBtn');
-    btn.disabled = e.target.value !== 'DELETE';
-});
-
-document.getElementById('confirmDeletePollBtn').addEventListener('click', function() {
-    if (deletePollId && document.getElementById('deletePollConfirmInput').value === 'DELETE') {
-        const csrfToken = getCsrfToken();
-
-        fetch(`/admin/polls/${deletePollId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-csrf-token': csrfToken,
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                showToast('Error deleting poll: ' + (data.error || 'Unknown error'), 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Error deleting poll: ' + error.message, 'error');
-        });
-
-        bootstrap.Modal.getInstance(document.getElementById('deletePollModal')).hide();
-    }
-});
 </script>
 {% endblock %}

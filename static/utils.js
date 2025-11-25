@@ -471,3 +471,193 @@ class LakeRampSelector {
         });
     }
 }
+
+/**
+ * Show a Bootstrap modal
+ * Convenience function for displaying modals
+ *
+ * @param {string} modalId - ID of the modal element (without #)
+ *
+ * @example
+ * showModal('deleteConfirmModal');
+ */
+function showModal(modalId) {
+    const modalElement = document.getElementById(modalId);
+    if (!modalElement) {
+        console.error(`Modal with ID '${modalId}' not found`);
+        return;
+    }
+    new bootstrap.Modal(modalElement).show();
+}
+
+/**
+ * Hide a Bootstrap modal
+ * Convenience function for hiding modals
+ *
+ * @param {string} modalId - ID of the modal element (without #)
+ *
+ * @example
+ * hideModal('deleteConfirmModal');
+ */
+function hideModal(modalId) {
+    const modalElement = document.getElementById(modalId);
+    if (!modalElement) {
+        console.error(`Modal with ID '${modalId}' not found`);
+        return;
+    }
+    const modalInstance = bootstrap.Modal.getInstance(modalElement);
+    if (modalInstance) {
+        modalInstance.hide();
+    }
+}
+
+/**
+ * DeleteConfirmationManager - Reusable component for delete confirmation workflows
+ * Handles the common pattern of: show modal → require "DELETE" confirmation → execute delete
+ *
+ * @class
+ *
+ * @example
+ * const deleteManager = new DeleteConfirmationManager({
+ *     modalId: 'deleteUserModal',
+ *     itemNameElementId: 'deleteUserName',
+ *     confirmInputId: 'deleteConfirmInput',
+ *     confirmButtonId: 'confirmDeleteBtn',
+ *     deleteUrlTemplate: (id) => `/admin/users/${id}`,
+ *     onSuccess: () => location.reload(),
+ *     onError: (error) => showToast(`Failed to delete: ${error}`, 'error')
+ * });
+ *
+ * // Show confirmation modal
+ * deleteManager.confirm(123, 'John Doe');
+ */
+class DeleteConfirmationManager {
+    /**
+     * Create a DeleteConfirmationManager instance
+     * @param {Object} options - Configuration options
+     * @param {string} options.modalId - ID of the modal element
+     * @param {string} options.itemNameElementId - ID of element to display item name
+     * @param {string} options.confirmInputId - ID of confirmation input field
+     * @param {string} options.confirmButtonId - ID of confirm delete button
+     * @param {Function} options.deleteUrlTemplate - Function that takes ID and returns delete URL
+     * @param {Function} [options.onSuccess] - Callback after successful delete
+     * @param {Function} [options.onError] - Callback after failed delete
+     * @param {string} [options.confirmText='DELETE'] - Required confirmation text
+     */
+    constructor({
+        modalId,
+        itemNameElementId,
+        confirmInputId,
+        confirmButtonId,
+        deleteUrlTemplate,
+        onSuccess = () => location.reload(),
+        onError = (error) => showToast(`Delete failed: ${error}`, 'error'),
+        confirmText = 'DELETE'
+    }) {
+        this.modalId = modalId;
+        this.itemNameElementId = itemNameElementId;
+        this.confirmInputId = confirmInputId;
+        this.confirmButtonId = confirmButtonId;
+        this.deleteUrlTemplate = deleteUrlTemplate;
+        this.onSuccess = onSuccess;
+        this.onError = onError;
+        this.confirmText = confirmText;
+        this.itemId = null;
+
+        this.setupEventListeners();
+    }
+
+    /**
+     * Set up event listeners for confirmation input and button
+     * @private
+     */
+    setupEventListeners() {
+        // Enable/disable button based on confirmation text
+        const confirmInput = document.getElementById(this.confirmInputId);
+        if (confirmInput) {
+            confirmInput.addEventListener('input', (e) => {
+                const btn = document.getElementById(this.confirmButtonId);
+                if (btn) {
+                    btn.disabled = e.target.value !== this.confirmText;
+                }
+            });
+        }
+
+        // Handle delete button click
+        const confirmButton = document.getElementById(this.confirmButtonId);
+        if (confirmButton) {
+            confirmButton.addEventListener('click', () => this.executeDelete());
+        }
+    }
+
+    /**
+     * Show confirmation modal for deleting an item
+     * @param {number|string} itemId - ID of the item to delete
+     * @param {string} itemName - Name/description of item (shown in modal)
+     */
+    confirm(itemId, itemName) {
+        this.itemId = itemId;
+
+        // Set item name in modal
+        const itemNameElement = document.getElementById(this.itemNameElementId);
+        if (itemNameElement) {
+            itemNameElement.textContent = itemName;
+        }
+
+        // Clear confirmation input
+        const confirmInput = document.getElementById(this.confirmInputId);
+        if (confirmInput) {
+            confirmInput.value = '';
+        }
+
+        // Disable confirm button
+        const confirmButton = document.getElementById(this.confirmButtonId);
+        if (confirmButton) {
+            confirmButton.disabled = true;
+        }
+
+        // Show modal
+        showModal(this.modalId);
+    }
+
+    /**
+     * Execute the delete operation
+     * @private
+     */
+    async executeDelete() {
+        if (!this.itemId) {
+            console.error('No item ID set for deletion');
+            return;
+        }
+
+        // Verify confirmation text
+        const confirmInput = document.getElementById(this.confirmInputId);
+        if (confirmInput && confirmInput.value !== this.confirmText) {
+            showToast(`Please type ${this.confirmText} to confirm`, 'warning');
+            return;
+        }
+
+        // Close the modal
+        hideModal(this.modalId);
+
+        // Execute DELETE request
+        try {
+            const url = this.deleteUrlTemplate(this.itemId);
+            const response = await deleteRequest(url);
+
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.error || `HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.success) {
+                this.onSuccess(data);
+            } else {
+                throw new Error(data.error || 'Unknown error');
+            }
+        } catch (error) {
+            this.onError(error.message);
+        }
+    }
+}
