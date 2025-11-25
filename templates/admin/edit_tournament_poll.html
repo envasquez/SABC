@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert %}
+{% from 'macros.html' import alert, csrf_token %}
 
 {% block title %}Edit Tournament Poll - South Austin Bass Club{% endblock %}
 
@@ -31,7 +31,7 @@
 
             <!-- Poll Configuration Form -->
             <form method="POST" action="/admin/polls/{{ poll[0] }}/edit">
-                <input type="hidden" name="csrf_token" value="{{ request.cookies.get('csrf_token') }}">
+                {{ csrf_token(request) }}
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-primary text-white">
                         <h5 class="mb-0">

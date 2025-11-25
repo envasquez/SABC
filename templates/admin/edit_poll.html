@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert %}
+{% from 'macros.html' import alert, csrf_token %}
 
 {% block title %}Edit Poll - South Austin Bass Club{% endblock %}
 
@@ -36,7 +36,7 @@
         {% endif %}
 
         <form method="POST" action="/admin/polls/{{ poll[0] }}/edit" id="edit-poll-form">
-            <input type="hidden" name="csrf_token" value="{{ request.cookies.get('csrf_token') }}">
+            {{ csrf_token(request) }}
             <div class="mb-3">
                 <label for="title" class="form-label">Poll Title</label>
                 <input type="text" class="form-control" id="title" name="title"

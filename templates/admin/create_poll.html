@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert %}
+{% from 'macros.html' import alert, csrf_token %}
 
 {% block title %}Create Poll - South Austin Bass Club{% endblock %}
 
@@ -49,7 +49,7 @@
             <!-- Tournament Poll Tab -->
             <div class="tab-pane fade show active" id="tournament-poll" role="tabpanel" aria-labelledby="tournament-tab">
                 <form method="POST" action="/admin/polls/create" id="tournament-form">
-                    <input type="hidden" name="csrf_token" value="{{ request.cookies.get('csrf_token') }}">
+                    {{ csrf_token(request) }}
                     {% if selected_event %}
                     <input type="hidden" name="event_id" value="{{ selected_event[0] }}">
                     {% endif %}
@@ -132,7 +132,7 @@
             <!-- Generic Poll Tab -->
             <div class="tab-pane fade" id="generic-poll" role="tabpanel" aria-labelledby="generic-tab">
                 <form method="POST" action="/admin/polls/create" id="generic-form">
-                    <input type="hidden" name="csrf_token" value="{{ request.cookies.get('csrf_token') }}">
+                    {{ csrf_token(request) }}
                     <input type="hidden" name="event_id" value="{{ selected_event[0] }}">
                     <input type="hidden" name="poll_type" value="generic">
 
