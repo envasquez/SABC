@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Response
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 
 from core.db_schema import Angler, Poll, PollOption, PollVote, get_session
 from core.helpers.auth import require_admin
+from core.helpers.crud import bulk_delete, delete_entity
 from core.helpers.logging import get_logger
 from core.helpers.response import sanitize_error_message
 
@@ -10,26 +12,23 @@ router = APIRouter()
 logger = get_logger("admin.polls")
 
 
+def _delete_poll_cascade(session: Session, poll_id: int) -> None:
+    """Delete poll votes and options before deleting poll."""
+    bulk_delete(session, PollVote, [PollVote.poll_id == poll_id])
+    bulk_delete(session, PollOption, [PollOption.poll_id == poll_id])
+
+
 @router.delete("/admin/polls/{poll_id}")
-async def delete_poll(request: Request, poll_id: int):
-    _user = require_admin(request)
-    try:
-        with get_session() as session:
-            # Delete poll votes
-            session.query(PollVote).filter(PollVote.poll_id == poll_id).delete()
-
-            # Delete poll options
-            session.query(PollOption).filter(PollOption.poll_id == poll_id).delete()
-
-            # Delete poll
-            session.query(Poll).filter(Poll.id == poll_id).delete()
-
-            # Context manager will commit automatically on successful exit
-
-        return JSONResponse({"success": True})
-    except Exception as e:
-        error_msg = sanitize_error_message(e, "Failed to delete poll")
-        return JSONResponse({"error": error_msg}, status_code=500)
+async def delete_poll(request: Request, poll_id: int) -> Response:
+    """Delete a poll and all associated votes and options."""
+    return delete_entity(
+        request,
+        poll_id,
+        Poll,
+        success_message="Poll deleted successfully",
+        error_message="Failed to delete poll",
+        pre_delete_hook=_delete_poll_cascade,
+    )
 
 
 @router.delete("/admin/votes/{vote_id}")
