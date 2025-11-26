@@ -64,7 +64,7 @@ class PollVotingHandler {
         const rampSelect = document.getElementById(rampSelectId);
 
         if (!rampSelect) {
-            console.error(\`Ramp select not found: \${rampSelectId}\`);
+            console.error('Ramp select not found: ' + rampSelectId);
             return;
         }
 
@@ -78,7 +78,7 @@ class PollVotingHandler {
         // Find selected lake in data
         const selectedLake = this.findLake(lakeId);
         if (!selectedLake || !selectedLake.ramps) {
-            console.error(\`Lake not found or has no ramps: \${lakeId}\`);
+            console.error('Lake not found or has no ramps: ' + lakeId);
             return;
         }
 
@@ -250,7 +250,7 @@ class PollVotingHandler {
      */
     validateSimpleVote(pollId, context) {
         // For simple polls, just check that an option is selected
-        const optionInputs = document.querySelectorAll(\`input[name="poll_option"][data-poll-id="\${pollId}"]\`);
+        const optionInputs = document.querySelectorAll('input[name="poll_option"][data-poll-id="' + pollId + '"]');
 
         const selected = Array.from(optionInputs).some(input => input.checked);
         if (!selected) {
