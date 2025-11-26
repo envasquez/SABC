@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import csrf_token, alert %}
+{% from 'macros.html' import csrf_token, alert, form_field, delete_modal %}
 
 {% block title %}Manage News - Admin{% endblock %}
 
@@ -25,27 +25,14 @@
                 </div>
                 <div class="card-body">
                     <form method="POST" action="/admin/news/create">
-                    {{ csrf_token(request) }}
-                        <div class="mb-3">
-                            <label for="title" class="form-label">Title</label>
-                            <input type="text" class="form-control" id="title" name="title" required maxlength="200">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="content" class="form-label">Content</label>
-                            <textarea class="form-control" id="content" name="content" rows="4" required maxlength="1000"></textarea>
-                            <small class="text-secondary">Maximum 1000 characters</small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="priority" class="form-label">Priority</label>
-                            <select class="form-select" id="priority" name="priority">
-                                <option value="0">Normal</option>
-                                <option value="1">High</option>
-                                <option value="2">Urgent</option>
-                            </select>
-                            <small class="text-secondary">Higher priority items appear first</small>
-                        </div>
+                        {{ csrf_token(request) }}
+                        {{ form_field('Title', 'title', required=true, maxlength='200') }}
+                        {{ form_field('Content', 'content', type='textarea', required=true, maxlength='1000', help_text='Maximum 1000 characters') }}
+                        {% call form_field('Priority', 'priority', type='select', help_text='Higher priority items appear first') %}
+                            <option value="0">Normal</option>
+                            <option value="1">High</option>
+                            <option value="2">Urgent</option>
+                        {% endcall %}
 
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary">
@@ -161,27 +148,15 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="editForm" method="POST">
-                    {{ csrf_token(request) }}
+                {{ csrf_token(request) }}
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="edit_title" class="form-label">Title</label>
-                        <input type="text" class="form-control" id="edit_title" name="title" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="edit_content" class="form-label">Content</label>
-                        <textarea class="form-control" id="edit_content" name="content" rows="4" required></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="edit_priority" class="form-label">Priority</label>
-                        <select class="form-select" id="edit_priority" name="priority">
-                            <option value="0">Normal</option>
-                            <option value="1">High</option>
-                            <option value="2">Urgent</option>
-                        </select>
-                    </div>
-
+                    {{ form_field('Title', 'title', required=true, id='edit_title') }}
+                    {{ form_field('Content', 'content', type='textarea', required=true, id='edit_content') }}
+                    {% call form_field('Priority', 'priority', type='select', id='edit_priority') %}
+                        <option value="0">Normal</option>
+                        <option value="1">High</option>
+                        <option value="2">Urgent</option>
+                    {% endcall %}
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -193,60 +168,38 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteNewsModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-exclamation-triangle me-2"></i>Confirm News Deletion
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <strong>Warning:</strong> You are about to delete the news item "<span id="delete-news-title"></span>".
-                </div>
-                <p>This action cannot be undone.</p>
-                <p class="mt-3">To confirm deletion, please type <code>DELETE</code> in the field below:</p>
-                <input type="text" class="form-control" id="delete-confirmation" placeholder="Type DELETE to confirm">
-                <input type="hidden" id="delete-news-id">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" onclick="confirmDeleteNews()">
-                    <i class="bi bi-trash me-1"></i>Delete News
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+{% call delete_modal('deleteNewsModal', 'Delete News', 'delete-news-title', 'confirmDeleteNewsBtn', 'delete-confirmation') %}
+<input type="hidden" id="delete-news-id">
+{% endcall %}
 
 <script>
+let deleteNewsId = null;
+
 document.addEventListener('DOMContentLoaded', function() {
     // Edit button event listeners
     document.querySelectorAll('.edit-btn').forEach(button => {
         button.addEventListener('click', function() {
-            const id = this.dataset.id;
-            const title = this.dataset.title;
-            const content = this.dataset.content;
-            const priority = this.dataset.priority;
-
-            editNews(id, title, content, priority);
+            editNews(this.dataset.id, this.dataset.title, this.dataset.content, this.dataset.priority);
         });
     });
 
     // Delete button event listeners
     document.querySelectorAll('.delete-btn').forEach(button => {
         button.addEventListener('click', function() {
-            const id = this.dataset.id;
-            const title = this.dataset.title;
-
-            deleteNews(id, title);
+            deleteNews(this.dataset.id, this.dataset.title);
         });
     });
-});
 
+    // Enable/disable delete button based on confirmation input
+    const deleteConfirmInput = document.getElementById('delete-confirmation');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteNewsBtn');
+    if (deleteConfirmInput && confirmDeleteBtn) {
+        deleteConfirmInput.addEventListener('input', function() {
+            confirmDeleteBtn.disabled = this.value.trim() !== 'DELETE';
+        });
+        confirmDeleteBtn.addEventListener('click', confirmDeleteNews);
+    }
+});
 
 function sendTestEmail() {
     const title = document.getElementById('title').value;
@@ -299,34 +252,19 @@ function editNews(id, title, content, priority) {
     showModal('editModal');
 }
 
-let deleteNewsId = null;
-
 function deleteNews(id, title) {
-    // Set the news info in the modal
     deleteNewsId = id;
     document.getElementById('delete-news-title').textContent = title;
     document.getElementById('delete-confirmation').value = '';
-
-    // Show the modal
+    document.getElementById('confirmDeleteNewsBtn').disabled = true;
     showModal('deleteNewsModal');
 }
 
 async function confirmDeleteNews() {
-    const confirmText = document.getElementById('delete-confirmation').value;
-
-    if (confirmText.trim() !== 'DELETE') {
-        showToast('Please type DELETE to confirm', 'warning');
-        return;
-    }
-
-    // Close the modal
     hideModal('deleteNewsModal');
-
-    // Delete the news item using centralized deleteRequest
     try {
         const response = await deleteRequest(`/admin/news/${deleteNewsId}`);
         const data = await response.json();
-
         if (data.success) {
             window.location.reload();
         } else {

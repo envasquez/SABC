@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert, csrf_token %}
+{% from 'macros.html' import alert, csrf_token, form_field %}
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-4">
@@ -11,14 +11,8 @@
                 <form method="post" action="/login">
                     {{ csrf_token(request) }}
                     <input type="hidden" name="next_url" value="{{ next_url }}">
-                    <div class="mb-3">
-                        <label>Email</label>
-                        <input type="email" name="email" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label>Password</label>
-                        <input type="password" name="password" class="form-control" required>
-                    </div>
+                    {{ form_field('Email', 'email', type='email', required=true) }}
+                    {{ form_field('Password', 'password', type='password', required=true) }}
                     <button type="submit" class="btn btn-primary w-100">Login</button>
                 </form>
                 <div class="text-center mt-3">

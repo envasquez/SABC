@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert, stat_card %}
+{% from 'macros.html' import alert, stat_card, delete_modal %}
 {% block title %}Manage Anglers - South Austin Bass Club{% endblock %}
 {% block content %}
 <div class="mb-4">
@@ -129,32 +129,9 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteUserModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Delete User</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-danger">
-                    <strong>⚠️ Warning:</strong> This action cannot be undone.
-                </div>
-                <p>You are about to permanently delete the user:</p>
-                <p><strong id="deleteUserName"></strong></p>
-                <p class="text-secondary">This will remove all user data and cannot be reversed.</p>
-                <p><strong>Type "DELETE" to confirm:</strong></p>
-                <input type="text" class="form-control" id="deleteConfirmInput" placeholder="Type DELETE to confirm" autocomplete="off">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteBtn" disabled>
-                    <i class="bi bi-trash me-1"></i>Delete User
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+{% call delete_modal('deleteUserModal', 'Delete User', 'deleteUserName', 'confirmDeleteBtn', 'deleteConfirmInput') %}
+<p class="text-secondary">This will remove all user data and cannot be reversed.</p>
+{% endcall %}
 
 <script>
 /**

@@ -83,6 +83,30 @@ function escapeHtml(text) {
 }
 
 /**
+ * Format a date for datetime-local input fields
+ * Converts a Date object or date string to the format required by HTML datetime-local inputs
+ *
+ * @param {Date|string} date - The date to format
+ * @returns {string} Formatted date string (YYYY-MM-DDTHH:MM)
+ *
+ * @example
+ * formatDateTimeLocal(new Date())
+ * // Returns: '2024-01-15T14:30'
+ *
+ * formatDateTimeLocal('2024-01-15')
+ * // Returns: '2024-01-15T00:00'
+ */
+function formatDateTimeLocal(date) {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+/**
  * Get CSRF token from cookie
  * Extracts the CSRF token needed for state-changing requests
  *
