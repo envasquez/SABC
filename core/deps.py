@@ -135,6 +135,7 @@ def month_number_filter(date_str: Any) -> str:
 templates = Jinja2Templates(directory="templates")
 templates.env.filters["time_format"] = time_format_filter
 templates.env.filters["tojson_attr"] = tojson_attr_filter
+templates.env.filters["from_json"] = from_json_filter
 
 
 async def get_db() -> AsyncGenerator[Connection, None]:

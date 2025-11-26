@@ -3,7 +3,7 @@
  *
  * These tests verify JavaScript interactions that backend tests cannot catch:
  * - Lake/ramp dropdown population
- * - JavaScript function existence
+ * - PollVotingHandler class initialization
  * - Event handlers firing correctly
  * - Form validation
  *
@@ -40,15 +40,6 @@ async function login(page, email, password) {
 }
 
 /**
- * Helper: Get poll ID from lake select element
- */
-async function getPollId(page, selectorPrefix) {
-  const lakeSelect = await page.locator(`select[id^="${selectorPrefix}"]`).first();
-  const id = await lakeSelect.getAttribute('id');
-  return id.replace(selectorPrefix, '');
-}
-
-/**
  * TEST SUITE: Non-Admin Member Tournament Poll Voting
  */
 test.describe('Non-Admin Member Tournament Poll Voting', () => {
@@ -61,32 +52,30 @@ test.describe('Non-Admin Member Tournament Poll Voting', () => {
     await expect(page.locator('h1:has-text("Polls")')).toBeVisible();
   });
 
-  test('JavaScript function updateRampsNonAdmin exists', async ({ page }) => {
+  test('PollVotingHandler class is loaded', async ({ page }) => {
     await page.goto(`${BASE_URL}/polls?tab=tournament`);
 
-    // Check if the JavaScript function is defined
-    const functionExists = await page.evaluate(() => {
-      const lakeSelect = document.querySelector('select[id^="lake_select_nonadmin_"]');
-      if (!lakeSelect) return { found: false, reason: 'Lake select not found' };
-
-      const pollId = lakeSelect.id.replace('lake_select_nonadmin_', '');
-      const functionName = `updateRampsNonAdmin${pollId}`;
-
-      return {
-        found: typeof window[functionName] === 'function',
-        functionName: functionName,
-        pollId: pollId
-      };
+    // Check if the PollVotingHandler class is defined
+    const classExists = await page.evaluate(() => {
+      return typeof PollVotingHandler === 'function';
     });
 
-    expect(functionExists.found).toBe(true);
-    console.log(`✅ Function ${functionExists.functionName} exists for poll ${functionExists.pollId}`);
+    expect(classExists).toBe(true);
+    console.log('✅ PollVotingHandler class is loaded');
   });
 
   test('lake dropdown populates on page load', async ({ page }) => {
     await page.goto(`${BASE_URL}/polls?tab=tournament`);
 
     const lakeSelect = page.locator('select[id^="lake_select_nonadmin_"]').first();
+
+    // Check if lake select exists (may not exist if no active tournament polls)
+    if (await lakeSelect.count() === 0) {
+      console.log('⏭️  No tournament poll lake select found - skipping');
+      test.skip();
+      return;
+    }
+
     await expect(lakeSelect).toBeVisible();
 
     // Should have more than just the placeholder option
@@ -100,6 +89,13 @@ test.describe('Non-Admin Member Tournament Poll Voting', () => {
 
     const lakeSelect = page.locator('select[id^="lake_select_nonadmin_"]').first();
     const rampSelect = page.locator('select[id^="ramp_select_nonadmin_"]').first();
+
+    // Check if lake select exists
+    if (await lakeSelect.count() === 0) {
+      console.log('⏭️  No tournament poll found - skipping');
+      test.skip();
+      return;
+    }
 
     // Initially, ramp should be disabled
     await expect(rampSelect).toBeDisabled();
@@ -161,7 +157,7 @@ test.describe('Non-Admin Member Tournament Poll Voting', () => {
     console.log(`✅ Vote submitted successfully or user has already voted`);
   });
 
-  test('console shows correct debug messages', async ({ page }) => {
+  test('console shows correct initialization messages', async ({ page }) => {
     const consoleMessages = [];
 
     page.on('console', msg => {
@@ -175,17 +171,17 @@ test.describe('Non-Admin Member Tournament Poll Voting', () => {
     // Wait for DOMContentLoaded
     await page.waitForTimeout(1000);
 
-    // Select a lake
+    // Select a lake if available
     const lakeSelect = page.locator('select[id^="lake_select_nonadmin_"]').first();
     if (await lakeSelect.count() > 0) {
       await lakeSelect.selectOption({ index: 1 });
       await page.waitForTimeout(500);
     }
 
-    // Verify we got expected console messages
+    // Verify we got expected console messages from the new architecture
     expect(consoleMessages.some(msg => msg.includes('DOMContentLoaded fired'))).toBe(true);
     expect(consoleMessages.some(msg => msg.includes('Lakes data loaded'))).toBe(true);
-    expect(consoleMessages.some(msg => msg.includes('non-admin lake selects'))).toBe(true);
+    expect(consoleMessages.some(msg => msg.includes('Poll voting handler initialized'))).toBe(true);
 
     console.log('📋 Console messages:');
     consoleMessages.forEach(msg => console.log(`   ${msg}`));
@@ -200,53 +196,73 @@ test.describe('Admin Tournament Poll Voting', () => {
     await login(page, ADMIN_USER.email, ADMIN_USER.password);
   });
 
-  test('admin own vote: JavaScript function updateRampsAdminOwn exists', async ({ page }) => {
+  test('admin own vote: lake dropdown works', async ({ page }) => {
     await page.goto(`${BASE_URL}/polls?tab=tournament`);
 
-    const functionExists = await page.evaluate(() => {
-      const lakeSelect = document.querySelector('select[id^="lake_select_admin_own_"]');
-      if (!lakeSelect) return { found: false, reason: 'Admin lake select not found' };
+    const lakeSelect = page.locator('select[id^="lake_select_admin_own_"]').first();
 
-      const pollId = lakeSelect.id.replace('lake_select_admin_own_', '');
-      const functionName = `updateRampsAdminOwn${pollId}`;
+    // Check if admin own vote section exists
+    if (await lakeSelect.count() === 0) {
+      console.log('⏭️  No admin own vote section found - skipping');
+      test.skip();
+      return;
+    }
 
-      return {
-        found: typeof window[functionName] === 'function',
-        functionName: functionName,
-        pollId: pollId
-      };
-    });
+    const rampSelect = page.locator('select[id^="ramp_select_admin_own_"]').first();
 
-    expect(functionExists.found).toBe(true);
-    console.log(`✅ Admin function ${functionExists.functionName} exists`);
+    // Initially, ramp should be disabled
+    await expect(rampSelect).toBeDisabled();
+
+    // Select a lake
+    await lakeSelect.selectOption({ index: 1 });
+    await page.waitForTimeout(500);
+
+    // Ramp dropdown should now be enabled
+    await expect(rampSelect).toBeEnabled();
+
+    const rampOptions = await rampSelect.locator('option:not([value=""])').count();
+    expect(rampOptions).toBeGreaterThan(0);
+
+    console.log(`✅ Admin own vote: Lake/ramp selection works with ${rampOptions} ramp options`);
   });
 
-  test('admin proxy vote: JavaScript function updateAdminRamps exists', async ({ page }) => {
+  test('admin proxy vote: lake dropdown works', async ({ page }) => {
     await page.goto(`${BASE_URL}/polls?tab=tournament`);
 
     // Click "Cast Vote For Member" tab
     const proxyTab = page.locator('button:has-text("Cast Vote For Member")').first();
-    if (await proxyTab.count() > 0) {
-      await proxyTab.click();
-      await page.waitForTimeout(500);
+    if (await proxyTab.count() === 0) {
+      console.log('⏭️  No proxy vote tab found - skipping');
+      test.skip();
+      return;
     }
 
-    const functionExists = await page.evaluate(() => {
-      const lakeSelect = document.querySelector('select[id^="admin_lake_select_"]');
-      if (!lakeSelect) return { found: false, reason: 'Admin proxy lake select not found' };
+    await proxyTab.click();
+    await page.waitForTimeout(500);
 
-      const pollId = lakeSelect.id.replace('admin_lake_select_', '');
-      const functionName = `updateAdminRamps${pollId}`;
+    const lakeSelect = page.locator('select[id^="admin_lake_select_"]').first();
+    const rampSelect = page.locator('select[id^="admin_ramp_select_"]').first();
 
-      return {
-        found: typeof window[functionName] === 'function',
-        functionName: functionName,
-        pollId: pollId
-      };
-    });
+    if (await lakeSelect.count() === 0) {
+      console.log('⏭️  No admin proxy lake select found - skipping');
+      test.skip();
+      return;
+    }
 
-    expect(functionExists.found).toBe(true);
-    console.log(`✅ Admin proxy function ${functionExists.functionName} exists`);
+    // Initially, ramp should be disabled
+    await expect(rampSelect).toBeDisabled();
+
+    // Select a lake
+    await lakeSelect.selectOption({ index: 1 });
+    await page.waitForTimeout(500);
+
+    // Ramp dropdown should now be enabled
+    await expect(rampSelect).toBeEnabled();
+
+    const rampOptions = await rampSelect.locator('option:not([value=""])').count();
+    expect(rampOptions).toBeGreaterThan(0);
+
+    console.log(`✅ Admin proxy vote: Lake/ramp selection works with ${rampOptions} ramp options`);
   });
 });
 
@@ -270,6 +286,13 @@ test.describe('Mobile Browser Compatibility', () => {
     const lakeSelect = page.locator('select[id^="lake_select_nonadmin_"]').first();
     const rampSelect = page.locator('select[id^="ramp_select_nonadmin_"]').first();
 
+    // Check if lake select exists
+    if (await lakeSelect.count() === 0) {
+      console.log('⏭️  No tournament poll found - skipping mobile test');
+      test.skip();
+      return;
+    }
+
     // Select lake
     await lakeSelect.selectOption({ index: 1 });
     await page.waitForTimeout(500);
@@ -285,23 +308,50 @@ test.describe('Mobile Browser Compatibility', () => {
 });
 
 /**
- * TEST SUITE: Regression Tests for the Bug Fix
+ * TEST SUITE: Regression Tests - External JS Architecture
  */
-test.describe('Regression: Non-Admin Function Scope Bug', () => {
-  test('verifies non-admin functions are in correct Jinja2 block', async ({ page }) => {
+test.describe('Regression: External JS Architecture', () => {
+  test('verifies PollVotingHandler class is available globally', async ({ page }) => {
     await login(page, MEMBER_USER.email, MEMBER_USER.password);
     await page.goto(`${BASE_URL}/polls?tab=tournament`);
 
-    // Get the page source
-    const pageSource = await page.content();
+    // Check that PollVotingHandler class is available
+    const classAvailable = await page.evaluate(() => {
+      return typeof PollVotingHandler === 'function' &&
+             typeof PollVotingHandler.prototype.initialize === 'function' &&
+             typeof PollVotingHandler.prototype.handleLakeChange === 'function' &&
+             typeof PollVotingHandler.prototype.validateVoteForm === 'function';
+    });
 
-    // Check that non-admin functions are defined for tournament polls
-    const hasUpdateRampsNonAdmin = pageSource.includes('window.updateRampsNonAdmin');
-    const hasValidateVoteNonAdmin = pageSource.includes('window.validateVoteNonAdmin');
+    expect(classAvailable).toBe(true);
+    console.log('✅ PollVotingHandler class is available with all expected methods');
+  });
 
-    expect(hasUpdateRampsNonAdmin).toBe(true);
-    expect(hasValidateVoteNonAdmin).toBe(true);
+  test('verifies lakes-data element contains valid JSON', async ({ page }) => {
+    await login(page, MEMBER_USER.email, MEMBER_USER.password);
+    await page.goto(`${BASE_URL}/polls?tab=tournament`);
 
-    console.log('✅ Non-admin voting functions are defined in page source');
+    // Check that lakes-data element exists and contains valid JSON
+    const lakesDataValid = await page.evaluate(() => {
+      const lakesDataElement = document.getElementById('lakes-data');
+      if (!lakesDataElement) return { valid: false, reason: 'Element not found' };
+
+      const dataAttr = lakesDataElement.dataset.lakes;
+      if (!dataAttr) return { valid: false, reason: 'data-lakes attribute not found' };
+
+      try {
+        const lakes = JSON.parse(dataAttr);
+        return {
+          valid: Array.isArray(lakes),
+          count: lakes.length,
+          hasStructure: lakes.length > 0 ? ('id' in lakes[0] && 'name' in lakes[0] && 'ramps' in lakes[0]) : true
+        };
+      } catch (e) {
+        return { valid: false, reason: 'JSON parse error: ' + e.message };
+      }
+    });
+
+    expect(lakesDataValid.valid).toBe(true);
+    console.log(`✅ Lakes data is valid JSON with ${lakesDataValid.count} lakes`);
   });
 });

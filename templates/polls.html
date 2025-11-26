@@ -246,7 +246,7 @@
                                         </h6>
                                     </div>
                                     <div class="card-body">
-                                        <form method="POST" action="/polls/{{ poll.id }}/vote_for" data-poll-vote="true" data-poll-id="{{ poll.id }}" data-poll-type="{{ poll.poll_type }}" data-context="admin_proxy">
+                                        <form method="POST" action="/polls/{{ poll.id }}/vote" data-poll-vote="true" data-poll-id="{{ poll.id }}" data-poll-type="{{ poll.poll_type }}" data-context="admin_proxy">
                                             {{ csrf_token(request) }}
                                             <div class="mb-3">
                                                 <label for="vote_as_angler_{{ poll.id }}" class="form-label fw-bold">
@@ -550,15 +550,14 @@
                                 <!-- Tournament location polls - interactive bar chart -->
                                 <div class="tournament-results-container"
                                      data-poll-type="tournament_location"
-                                     data-poll-id="{{ poll.id }}"
-                                     class="d-none">
+                                     data-poll-id="{{ poll.id }}">
                                     <!-- Hidden data elements for JavaScript -->
                                     {% for option in poll.options %}
-                                    <div data-option-id="{{ option.id }}"
+                                    <div class="poll-option-data d-none"
+                                         data-option-id="{{ option.id }}"
                                          data-option-text="{{ option.option_text | escape }}"
-                                         data-option-data="{{ option.option_data | tojson_attr if option.option_data else '{}' }}"
-                                         data-vote-count="{{ option.vote_count }}"
-                                         class="d-none"></div>
+                                         data-option-data="{{ (option.option_data | from_json) | tojson_attr if option.option_data else '{}' }}"
+                                         data-vote-count="{{ option.vote_count }}"></div>
                                     {% endfor %}
                                     <div class="row">
                                         <!-- Two-Level Bar Chart (Left Panel) -->
@@ -569,7 +568,7 @@
                                                     <h6 class="mb-0"><i class="bi bi-geo-alt me-1"></i>Lakes</h6>
                                                 </div>
                                                 <div class="card-body p-3">
-                                                    <div class="lakes-chart-container" id="lakesChart">
+                                                    <div class="lakes-chart-container" id="lakesChart-{{ poll.id }}">
                                                         <!-- Lakes chart will be drawn here -->
                                                     </div>
                                                 </div>
@@ -579,10 +578,10 @@
                                             <div class="card border-0 shadow-sm">
                                                 <div class="card-header bg-success text-white py-2 d-flex justify-content-between align-items-center">
                                                     <h6 class="mb-0"><i class="bi bi-signpost me-1"></i>Ramps</h6>
-                                                    <small id="selectedLake" class="opacity-75">Click a lake above</small>
+                                                    <small id="selectedLake-{{ poll.id }}" class="opacity-75">Click a lake above</small>
                                                 </div>
                                                 <div class="card-body p-3">
-                                                    <div class="ramps-chart-container" id="rampsChart">
+                                                    <div class="ramps-chart-container" id="rampsChart-{{ poll.id }}">
                                                         <div class="text-secondary text-center py-4">
                                                             <i class="bi bi-arrow-up me-2"></i>Select a lake above to see ramp breakdown
                                                         </div>
@@ -599,12 +598,12 @@
                                                 </div>
                                                 <div class="card-body p-2">
                                                     <div class="time-table-container">
-                                                        <table class="table table-sm table-hover mb-0" id="timeTable">
+                                                        <table class="table table-sm table-hover mb-0" id="timeTable-{{ poll.id }}">
                                                             <thead class="table-light sticky-top">
                                                                 <tr>
-                                                                    <th class="text-dark fw-semibold" class="small">Start</th>
-                                                                    <th class="text-dark fw-semibold" class="small">End</th>
-                                                                    <th class="text-dark fw-semibold text-center" class="small">Votes</th>
+                                                                    <th class="text-dark fw-semibold small">Start</th>
+                                                                    <th class="text-dark fw-semibold small">End</th>
+                                                                    <th class="text-dark fw-semibold text-center small">Votes</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
