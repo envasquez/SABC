@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import csrf_token %}
+{% from 'macros.html' import csrf_token, form_field %}
 {% block title %}Edit User - South Austin Bass Club{% endblock %}
 {% block content %}
 <div class="container"><div class="row justify-content-center"><div class="col-md-6">
@@ -7,21 +7,10 @@
     <div class="card-header bg-warning text-white"><h4 class="mb-0"><i class="bi bi-person-gear me-2"></i>Edit User</h4></div>
     <div class="card-body">
         <form method="POST" action="/admin/users/{{ edit_user.id }}/edit">
-                    {{ csrf_token(request) }}
-            <div class="mb-3">
-                <label for="name" class="form-label">Name</label>
-                <input type="text" class="form-control" id="name" name="name" value="{{ edit_user.name }}" required>
-            </div>
-            <div class="mb-3">
-                <label for="email" class="form-label">Email <small class="text-secondary">(optional for guests)</small></label>
-                <input type="email" class="form-control" id="email" name="email" value="{{ edit_user.email or '' }}" placeholder="Leave empty or use first.last@sabc.com">
-                <div class="form-text">If left empty for guests, a default email will be generated (first.last@sabc.com)</div>
-            </div>
-            <div class="mb-3">
-                <label for="phone" class="form-label">Phone Number <small class="text-secondary">(optional)</small></label>
-                <input type="tel" class="form-control" id="phone" name="phone" value="{{ edit_user.phone or '' }}" placeholder="+1234567890">
-                <div class="form-text">Include country code (e.g., +1 for US)</div>
-            </div>
+            {{ csrf_token(request) }}
+            {{ form_field('Name', 'name', required=true, value=edit_user.name) }}
+            {{ form_field('Email <small class="text-secondary">(optional for guests)</small>', 'email', type='email', value=edit_user.email or '', placeholder='Leave empty or use first.last@sabc.com', help_text='If left empty for guests, a default email will be generated (first.last@sabc.com)') }}
+            {{ form_field('Phone Number <small class="text-secondary">(optional)</small>', 'phone', type='tel', value=edit_user.phone or '', placeholder='+1234567890', help_text='Include country code (e.g., +1 for US)') }}
             {% for field, label in [('member', 'Club Member'), ('is_admin', 'Administrator')] %}
             <div class="mb-3 form-check">
                 <input type="checkbox" class="form-check-input" id="{{ field }}" name="{{ field }}" {% if edit_user[field] %}checked{% endif %}>

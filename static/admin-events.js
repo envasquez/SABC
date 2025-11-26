@@ -180,14 +180,8 @@ function setupPollFields(eventType, hasPoll, pollClosesAt) {
     if (eventType === 'sabc_tournament' && hasPoll) {
         pollClosesContainer.style.display = 'block';
         if (pollClosesAt) {
-            // Format the datetime for the input
-            const date = new Date(pollClosesAt);
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            pollClosesInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+            // Use shared formatDateTimeLocal from utils.js
+            pollClosesInput.value = formatDateTimeLocal(pollClosesAt);
         }
     } else {
         pollClosesContainer.style.display = 'none';
