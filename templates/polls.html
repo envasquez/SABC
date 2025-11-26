@@ -12,7 +12,7 @@
 </div>
 
 <!-- Data passed to JavaScript -->
-<div id="lakes-data" data-lakes="{{ lakes_data | tojson | e }}"></div>
+<div id="lakes-data" data-lakes="{{ lakes_data | tojson_attr }}"></div>
 
 <!-- Error and Success Messages -->
 {{ alert('danger', request.query_params.get('error')) }}
@@ -556,7 +556,7 @@
                                     {% for option in poll.options %}
                                     <div data-option-id="{{ option.id }}"
                                          data-option-text="{{ option.option_text | escape }}"
-                                         data-option-data="{{ (option.option_data | tojson | e) if option.option_data else '{}' }}"
+                                         data-option-data="{{ option.option_data | tojson_attr if option.option_data else '{}' }}"
                                          data-vote-count="{{ option.vote_count }}"
                                          class="d-none"></div>
                                     {% endfor %}

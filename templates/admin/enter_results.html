@@ -13,8 +13,8 @@
 <div id="results-data"
      data-anglers="{{ anglers_json | e }}"
      data-existing-angler-ids="{{ existing_angler_ids_json | e }}"
-     data-edit-data="{{ (edit_data | tojson | e) if edit_data else '' }}"
-     data-edit-team-result-data="{{ (edit_team_result_data | tojson | e) if edit_team_result_data else '' }}"
+     data-edit-data="{{ edit_data | tojson_attr if edit_data else '' }}"
+     data-edit-team-result-data="{{ edit_team_result_data | tojson_attr if edit_team_result_data else '' }}"
      data-tournament-id="{{ tournament.id }}"></div>
 
 <div class="container">
