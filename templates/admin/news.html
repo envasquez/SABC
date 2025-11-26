@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import csrf_token, alert %}
+{% from 'macros.html' import csrf_token, alert, form_field %}
 
 {% block title %}Manage News - Admin{% endblock %}
 
@@ -25,27 +25,14 @@
                 </div>
                 <div class="card-body">
                     <form method="POST" action="/admin/news/create">
-                    {{ csrf_token(request) }}
-                        <div class="mb-3">
-                            <label for="title" class="form-label">Title</label>
-                            <input type="text" class="form-control" id="title" name="title" required maxlength="200">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="content" class="form-label">Content</label>
-                            <textarea class="form-control" id="content" name="content" rows="4" required maxlength="1000"></textarea>
-                            <small class="text-secondary">Maximum 1000 characters</small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="priority" class="form-label">Priority</label>
-                            <select class="form-select" id="priority" name="priority">
-                                <option value="0">Normal</option>
-                                <option value="1">High</option>
-                                <option value="2">Urgent</option>
-                            </select>
-                            <small class="text-secondary">Higher priority items appear first</small>
-                        </div>
+                        {{ csrf_token(request) }}
+                        {{ form_field('Title', 'title', required=true, maxlength='200') }}
+                        {{ form_field('Content', 'content', type='textarea', required=true, maxlength='1000', help_text='Maximum 1000 characters') }}
+                        {% call form_field('Priority', 'priority', type='select', help_text='Higher priority items appear first') %}
+                            <option value="0">Normal</option>
+                            <option value="1">High</option>
+                            <option value="2">Urgent</option>
+                        {% endcall %}
 
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary">
@@ -161,27 +148,15 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="editForm" method="POST">
-                    {{ csrf_token(request) }}
+                {{ csrf_token(request) }}
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="edit_title" class="form-label">Title</label>
-                        <input type="text" class="form-control" id="edit_title" name="title" required>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="edit_content" class="form-label">Content</label>
-                        <textarea class="form-control" id="edit_content" name="content" rows="4" required></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="edit_priority" class="form-label">Priority</label>
-                        <select class="form-select" id="edit_priority" name="priority">
-                            <option value="0">Normal</option>
-                            <option value="1">High</option>
-                            <option value="2">Urgent</option>
-                        </select>
-                    </div>
-
+                    {{ form_field('Title', 'title', required=true, id='edit_title') }}
+                    {{ form_field('Content', 'content', type='textarea', required=true, id='edit_content') }}
+                    {% call form_field('Priority', 'priority', type='select', id='edit_priority') %}
+                        <option value="0">Normal</option>
+                        <option value="1">High</option>
+                        <option value="2">Urgent</option>
+                    {% endcall %}
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
