@@ -4,6 +4,7 @@ from sqlalchemy import func
 
 from core.db_schema import Angler, get_session
 from core.email import create_password_reset_token, send_password_reset_email
+from core.helpers.forms import normalize_email
 from core.helpers.logging import get_logger
 from core.helpers.response import error_redirect
 from routes.dependencies import templates
@@ -28,7 +29,7 @@ async def request_password_reset(
     request: Request, email: str = Form(..., description="Your email address")
 ):
     try:
-        email = email.lower().strip()
+        email = normalize_email(email)
         if not email:
             return error_redirect("/forgot-password", "Please enter your email address.")
 

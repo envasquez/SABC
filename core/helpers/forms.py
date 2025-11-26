@@ -6,6 +6,25 @@ from fastapi import UploadFile
 from starlette.datastructures import FormData
 
 
+def normalize_email(email: Optional[str]) -> str:
+    """
+    Normalize email address for consistent storage and lookup.
+
+    Converts to lowercase and strips whitespace. This ensures email
+    comparisons are case-insensitive and leading/trailing spaces don't
+    cause matching issues.
+
+    Args:
+        email: Email address to normalize (can be None or empty)
+
+    Returns:
+        Normalized email string (lowercase, stripped), or empty string if None/empty
+    """
+    if not email:
+        return ""
+    return email.lower().strip()
+
+
 def get_form_string(form_data: Union[FormData, dict], key: str, default: str = "") -> str:
     """
     Safely extract string value from form data.
