@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert, csrf_token %}
+{% from 'macros.html' import alert, csrf_token, delete_modal %}
 
 {% block title %}Manage Lakes - Admin{% endblock %}
 
@@ -103,81 +103,53 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteLakeModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-exclamation-triangle me-2"></i>Confirm Lake Deletion
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <strong>Warning:</strong> You are about to delete the lake "<span id="delete-lake-name"></span>".
-                </div>
-                <p><strong>This action will permanently delete:</strong></p>
-                <ul>
-                    <li>The lake record</li>
-                    <li>All associated ramps</li>
-                    <li>Lake references in tournaments (may cause display issues)</li>
-                </ul>
-                <p class="mt-3">To confirm deletion, please type <code>DELETE</code> in the field below:</p>
-                <input type="text" class="form-control" id="delete-confirmation" placeholder="Type DELETE to confirm">
-                <input type="hidden" id="delete-lake-id">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" onclick="confirmDeleteLake()">
-                    <i class="bi bi-trash me-1"></i>Delete Lake
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+{% call delete_modal('deleteLakeModal', 'Delete Lake', 'delete-lake-name', 'confirmDeleteLakeBtn', 'delete-confirmation') %}
+<input type="hidden" id="delete-lake-id">
+<p><strong>This action will permanently delete:</strong></p>
+<ul>
+    <li>The lake record</li>
+    <li>All associated ramps</li>
+    <li>Lake references in tournaments (may cause display issues)</li>
+</ul>
+{% endcall %}
 
 <script>
+let deleteLakeId = null;
+
 document.addEventListener('DOMContentLoaded', function() {
     // Delete button event listeners
     document.querySelectorAll('.delete-btn').forEach(button => {
         button.addEventListener('click', function() {
             const id = this.dataset.id;
             const displayName = this.dataset.displayName;
-
             deleteLake(id, displayName);
         });
     });
+
+    // Enable/disable delete button based on confirmation input
+    const deleteConfirmInput = document.getElementById('delete-confirmation');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteLakeBtn');
+    if (deleteConfirmInput && confirmDeleteBtn) {
+        deleteConfirmInput.addEventListener('input', function() {
+            confirmDeleteBtn.disabled = this.value.trim() !== 'DELETE';
+        });
+        confirmDeleteBtn.addEventListener('click', confirmDeleteLake);
+    }
 });
 
-let deleteLakeId = null;
-
 function deleteLake(id, displayName) {
-    // Set the lake info in the modal
     deleteLakeId = id;
     document.getElementById('delete-lake-name').textContent = displayName;
     document.getElementById('delete-confirmation').value = '';
-
-    // Show the modal
+    document.getElementById('confirmDeleteLakeBtn').disabled = true;
     showModal('deleteLakeModal');
 }
 
 async function confirmDeleteLake() {
-    const confirmText = document.getElementById('delete-confirmation').value;
-
-    if (confirmText.trim() !== 'DELETE') {
-        showToast('Please type DELETE to confirm', 'warning');
-        return;
-    }
-
-    // Close the modal
     hideModal('deleteLakeModal');
-
-    // Delete the lake using centralized deleteRequest
     try {
         const response = await deleteRequest(`/admin/lakes/${deleteLakeId}`);
         const data = await response.json();
-
         if (data.success) {
             window.location.reload();
         } else {
