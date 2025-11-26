@@ -11,6 +11,9 @@
     <p class="lead text-secondary">Member voting and tournament location polls</p>
 </div>
 
+<!-- Data passed to JavaScript -->
+<div id="lakes-data" data-lakes='{{ lakes_data | tojson | safe }}'></div>
+
 <!-- Error and Success Messages -->
 {{ alert('danger', request.query_params.get('error')) }}
 {{ alert('success', request.query_params.get('success')) }}
@@ -854,55 +857,5 @@
 
 <script src="/static/polls.js"></script>
 <script src="/static/admin.js"></script>
-<script>
-// Populate lake dropdown on page load
-const lakesData = {{ lakes_data | tojson | safe }};
-
-// Initialize poll voting handler
-const pollVotingHandler = new PollVotingHandler(lakesData);
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('[SABC] Polls page: DOMContentLoaded fired');
-
-    if (!lakesData) {
-        console.error('[SABC] Lakes data not loaded!');
-        return;
-    }
-    console.log('[SABC] Lakes data loaded:', lakesData.length, 'lakes');
-
-    // Populate all lake dropdowns with options
-    const allLakeSelects = document.querySelectorAll('select[data-poll-lake]');
-    console.log('[SABC] Found', allLakeSelects.length, 'lake select dropdowns');
-
-    allLakeSelects.forEach(lakeSelect => {
-        lakesData.forEach(lake => {
-            const option = document.createElement('option');
-            option.value = lake.id;
-            option.textContent = lake.name;
-            lakeSelect.appendChild(option);
-        });
-    });
-
-    // Initialize the poll voting handler (sets up all event listeners)
-    pollVotingHandler.initialize();
-
-    console.log('[SABC] Poll voting handler initialized successfully');
-});
-
-
-// Initialize delete confirmation manager
-const pollDeleteManager = new DeleteConfirmationManager({
-    modalId: 'deletePollModal',
-    itemNameElementId: 'deletePollTitle',
-    confirmInputId: 'deletePollConfirmInput',
-    confirmButtonId: 'confirmDeletePollBtn',
-    deleteUrlTemplate: (id) => `/admin/polls/${id}`,
-    onSuccess: () => location.reload(),
-    onError: (error) => showToast(`Error deleting poll: ${error}`, 'error')
-});
-
-function deletePoll(pollId, pollTitle) {
-    pollDeleteManager.confirm(pollId, pollTitle);
-}
-</script>
+<script src="/static/polls-page.js"></script>
 {% endblock %}

@@ -167,20 +167,7 @@
 {% block extra_js %}
 <script src="/static/admin.js"></script>
 <script src="/static/poll-management.js"></script>
-<script>
-// Save reference to original addOption function
-const originalAddOption = addOption;
-
-// Override addOption to include hidden option_ids field for edit mode
-window.addOption = function() {
-    originalAddOption('poll-options-container', true);
-};
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    updateRemoveButtons();
-});
-</script>
+<script src="/static/admin-edit-poll.js"></script>
 {% endblock %}
 
 {% endblock %}
