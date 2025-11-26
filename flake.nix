@@ -63,11 +63,11 @@
 
           # Start PostgreSQL container
           echo "Starting PostgreSQL container..."
-          docker compose up -d postgres
+          docker compose -f docker-compose.dev.yml up -d postgres
 
           # Wait for PostgreSQL to be ready
           echo "Waiting for PostgreSQL to be ready..."
-          until docker compose exec postgres pg_isready -U postgres; do
+          until docker compose -f docker-compose.dev.yml exec postgres pg_isready -U postgres; do
             echo "PostgreSQL is unavailable - sleeping"
             sleep 1
           done
