@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: sabc
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: dev123
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
       - "5432:5432"
     volumes:
