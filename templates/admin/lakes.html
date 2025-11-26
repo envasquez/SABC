@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert, csrf_token %}
+{% from 'macros.html' import alert, csrf_token, delete_modal, data_table %}
 
 {% block title %}Manage Lakes - Admin{% endblock %}
 
@@ -53,43 +53,25 @@
                 </div>
                 <div class="card-body">
                     {% if lakes %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Display Name</th>
-                                    <th>Database Name</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for lake in lakes %}
-                                <tr>
-                                    <td>
-                                        <span class="text-secondary">{{ loop.index }}</span>
-                                    </td>
-                                    <td>
-                                        <strong>{{ lake.display_name }}</strong>
-                                    </td>
-                                    <td>
-                                        <code>{{ lake.yaml_key }}</code>
-                                    </td>
-                                    <td>
-                                        <a href="/admin/lakes/{{ lake.id }}/edit" class="btn btn-sm btn-warning">
-                                            <i class="bi bi-pencil"></i> Edit
-                                        </a>
-                                        <button class="btn btn-sm btn-danger delete-btn"
-                                                data-id="{{ lake.id }}"
-                                                data-display-name="{{ lake.display_name }}">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                    {% call data_table(['#', 'Display Name', 'Database Name', 'Actions']) %}
+                        {% for lake in lakes %}
+                        <tr>
+                            <td><span class="text-secondary">{{ loop.index }}</span></td>
+                            <td><strong>{{ lake.display_name }}</strong></td>
+                            <td><code>{{ lake.yaml_key }}</code></td>
+                            <td>
+                                <a href="/admin/lakes/{{ lake.id }}/edit" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                                <button class="btn btn-sm btn-danger delete-btn"
+                                        data-id="{{ lake.id }}"
+                                        data-display-name="{{ lake.display_name }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endcall %}
                     {% else %}
                     <div class="text-center py-4">
                         <i class="bi bi-water display-4 text-secondary"></i>

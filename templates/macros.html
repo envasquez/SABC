@@ -152,6 +152,24 @@
 </div>
 {% endmacro %}
 
+{# Data table macro - creates responsive table with header #}
+{% macro data_table(headers, table_class='table-hover', id='', responsive=true) %}
+{% if responsive %}<div class="table-responsive">{% endif %}
+<table class="table {{ table_class }}"{% if id %} id="{{ id }}"{% endif %}>
+    <thead>
+        <tr>
+            {% for header in headers %}
+            <th>{{ header }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {{ caller() }}
+    </tbody>
+</table>
+{% if responsive %}</div>{% endif %}
+{% endmacro %}
+
 {# Time select options macro - generates time options for dropdowns #}
 {% macro time_select_options(start_hour=5, end_hour=20, interval_minutes=30, selected_time='') %}
 {% for hour in range(start_hour, end_hour + 1) %}
