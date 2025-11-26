@@ -4,8 +4,8 @@
 
 <!-- Data passed to JavaScript -->
 <div id="calendar-data"
-     data-current-events='{{ current_event_details_json|safe }}'
-     data-next-events='{{ next_event_details_json|safe }}'
+     data-current-events="{{ current_event_details_json | e }}"
+     data-next-events="{{ next_event_details_json | e }}"
      data-current-year="{{ current_year }}"></div>
 
 <div class="mb-4">

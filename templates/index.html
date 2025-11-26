@@ -2,7 +2,7 @@
 {% block content %}
 
 <!-- Data passed to JavaScript -->
-<div id="home-data" data-lakes='{{ lakes_data | tojson | safe if lakes_data is defined else "[]" }}'></div>
+<div id="home-data" data-lakes="{{ (lakes_data | tojson | e) if lakes_data is defined else '[]' }}"></div>
 
 <div class="row">
     <!-- Main Content -->
@@ -496,7 +496,7 @@
 
                                 <!-- Hidden data for JavaScript -->
                                 {% for option in tournament.poll_data %}
-                                <div data-option-data='{{ option.option_data | tojson }}'
+                                <div data-option-data="{{ option.option_data | tojson | e }}"
                                      data-vote-count="{{ option.vote_count }}"
                                      class="d-none poll-option-data"></div>
                                 {% endfor %}

@@ -11,10 +11,10 @@
 
 <!-- Data passed to JavaScript -->
 <div id="results-data"
-     data-anglers='{{ anglers_json | safe }}'
-     data-existing-angler-ids='{{ existing_angler_ids_json | safe }}'
-     data-edit-data='{{ edit_data | tojson | safe if edit_data else "" }}'
-     data-edit-team-result-data='{{ edit_team_result_data | tojson | safe if edit_team_result_data else "" }}'
+     data-anglers="{{ anglers_json | e }}"
+     data-existing-angler-ids="{{ existing_angler_ids_json | e }}"
+     data-edit-data="{{ (edit_data | tojson | e) if edit_data else '' }}"
+     data-edit-team-result-data="{{ (edit_team_result_data | tojson | e) if edit_team_result_data else '' }}"
      data-tournament-id="{{ tournament.id }}"></div>
 
 <div class="container">
