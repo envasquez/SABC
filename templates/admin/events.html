@@ -122,8 +122,8 @@
                 <!-- Row 3: Description for Other Tournaments -->
                 <div id="other-tournament-description" class="row g-3 mt-2" style="display: none;">
                     <div class="col-md-12">
-                        <label for="other_description" class="form-label">Description <span class="text-secondary">(Optional)</span></label>
-                        <textarea class="form-control" id="other_description" name="description" rows="2" placeholder="Additional details about the tournament or event..."></textarea>
+                        <label for="other_description" class="form-label">Description <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="other_description" name="description" rows="2" placeholder="Additional details about the tournament or event..." required></textarea>
                     </div>
                 </div>
 
@@ -438,13 +438,13 @@
                         </div>
                     </div>
 
-                    {% set sabc_events = events|selectattr('event_type', 'equalto', 'other_tournament')|list %}
+                    {% set other_events = events|selectattr('event_type', 'equalto', 'other_tournament')|list %}
                     <div class="table-responsive">
                         <table class="table table-hover table-dark">
                             <thead><tr><th>Date</th><th>Event</th><th>Lake</th><th>Actions</th></tr></thead>
                             <tbody>
-                                {% for event in sabc_events %}
-                                <tr>
+                                {% for event in other_events %}
+                                <tr data-year="{{ event.date.year }}" data-event-type="{{ event.event_type }}">
                                     <td>{{ event.date }}</td>
                                     <td>{{ event.name }}</td>
                                     <td>{{ event.lake_name or '-' }}</td>

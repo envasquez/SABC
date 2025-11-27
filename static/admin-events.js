@@ -367,7 +367,7 @@ function setFieldDefaults(fieldValueMap) {
  * Utility: Clear all 'required' attributes from form fields
  */
 function clearAllRequirements() {
-    ['start_time', 'weigh_in_time', 'lake_name', 'ramp_name', 'other_description'].forEach(id => {
+    ['start_time', 'weigh_in_time', 'lake_name', 'ramp_name'].forEach(id => {
         const field = document.getElementById(id);
         if (field) field.removeAttribute('required');
     });
