@@ -625,6 +625,291 @@ function getRampName(lakesData, rampId) {
     return 'Ramp ' + rampId;
 }
 
+/**
+ * PollResultsRenderer - Reusable component for rendering poll results visualization
+ * Handles aggregating votes and rendering lakes, ramps, and times charts/tables
+ *
+ * @class
+ *
+ * @example
+ * const renderer = new PollResultsRenderer({
+ *     lakesData: lakesData,
+ *     containerSelector: '.tournament-results-container',
+ *     idAttribute: 'pollId',  // data-poll-id attribute
+ *     onLakeSelect: (id, lakeId) => console.log('Lake selected:', lakeId)
+ * });
+ * renderer.renderAll();
+ */
+class PollResultsRenderer {
+    /**
+     * Create a PollResultsRenderer instance
+     * @param {Object} options - Configuration options
+     * @param {Array} options.lakesData - Array of lake objects with id, name, and ramps
+     * @param {string} options.containerSelector - CSS selector for result containers
+     * @param {string} [options.idAttribute='pollId'] - Data attribute name for poll/tournament ID
+     * @param {Function} [options.onLakeSelect] - Callback when lake is selected
+     */
+    constructor({ lakesData, containerSelector, idAttribute = 'pollId', onLakeSelect = null }) {
+        this.lakesData = lakesData || [];
+        this.containerSelector = containerSelector;
+        this.idAttribute = idAttribute;
+        this.onLakeSelect = onLakeSelect;
+        this.resultsData = {};  // Store aggregated data by ID
+    }
+
+    /**
+     * Get lake name using instance's lakesData
+     * @param {number|string} lakeId - Lake ID
+     * @returns {string} Lake name
+     */
+    getLakeName(lakeId) {
+        return getLakeName(this.lakesData, lakeId);
+    }
+
+    /**
+     * Get ramp name using instance's lakesData
+     * @param {number|string} rampId - Ramp ID
+     * @returns {string} Ramp name
+     */
+    getRampName(rampId) {
+        return getRampName(this.lakesData, rampId);
+    }
+
+    /**
+     * Aggregate votes from poll option data elements
+     * @param {HTMLElement} container - Container element with poll option data
+     * @returns {Object} Aggregated data with lakes, ramps, and times arrays
+     */
+    aggregateVotes(container) {
+        const optionElements = container.querySelectorAll('.poll-option-data');
+        const lakes = {};
+        const ramps = {};
+        const times = {};
+
+        optionElements.forEach(el => {
+            let optionData = {};
+            try {
+                optionData = el.dataset.optionData ? JSON.parse(el.dataset.optionData) : {};
+            } catch (e) {
+                console.error('[SABC] Error parsing option data:', e);
+            }
+            const voteCount = parseInt(el.dataset.voteCount) || 0;
+
+            if (voteCount === 0) return;
+
+            const lakeId = optionData.lake_id;
+            const rampId = optionData.ramp_id;
+            const startTime = optionData.start_time;
+            const endTime = optionData.end_time;
+
+            // Aggregate lake votes
+            if (lakeId) {
+                if (!lakes[lakeId]) {
+                    lakes[lakeId] = { id: lakeId, name: this.getLakeName(lakeId), votes: 0 };
+                }
+                lakes[lakeId].votes += voteCount;
+            }
+
+            // Aggregate ramp votes
+            if (rampId) {
+                if (!ramps[rampId]) {
+                    ramps[rampId] = { id: rampId, lake_id: lakeId, name: this.getRampName(rampId), votes: 0 };
+                }
+                ramps[rampId].votes += voteCount;
+            }
+
+            // Aggregate time votes
+            if (startTime && endTime) {
+                const timeKey = startTime + '-' + endTime;
+                if (!times[timeKey]) {
+                    times[timeKey] = { start_time: startTime, end_time: endTime, votes: 0 };
+                }
+                times[timeKey].votes += voteCount;
+            }
+        });
+
+        // Sort by votes (descending)
+        return {
+            lakes: Object.values(lakes).sort((a, b) => b.votes - a.votes),
+            ramps: Object.values(ramps).sort((a, b) => b.votes - a.votes),
+            times: Object.values(times).sort((a, b) => b.votes - a.votes)
+        };
+    }
+
+    /**
+     * Draw lakes chart with clickable bars
+     * @param {string|number} id - Poll/tournament ID
+     * @param {Array} lakesArray - Array of lake vote data
+     */
+    drawLakesChart(id, lakesArray) {
+        const chartContainer = document.getElementById('lakesChart-' + id);
+        if (!chartContainer) return;
+
+        if (!lakesArray || lakesArray.length === 0) {
+            chartContainer.innerHTML = '<div class="text-secondary text-center py-4"><i class="bi bi-inbox me-2"></i>No votes yet</div>';
+            return;
+        }
+
+        const maxVotes = Math.max.apply(null, lakesArray.map(d => d.votes));
+        const self = this;
+        chartContainer.innerHTML = lakesArray.map(lake => {
+            const percentage = (lake.votes / maxVotes) * 100;
+            return '<div class="lake-card mb-2" data-lake-id="' + lake.id + '" style="cursor: pointer;">' +
+                '<div class="d-flex justify-content-between align-items-center mb-1">' +
+                    '<span class="fw-semibold">' + escapeHtml(lake.name) + '</span>' +
+                    '<span class="badge bg-primary">' + lake.votes + '</span>' +
+                '</div>' +
+                '<div class="progress" style="height: 25px;">' +
+                    '<div class="progress-bar lake-bar bg-success" role="progressbar" style="width: ' + percentage + '%"></div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+
+        // Add click handlers
+        chartContainer.querySelectorAll('.lake-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const lakeId = card.dataset.lakeId;
+                self.selectLake(id, parseInt(lakeId));
+            });
+        });
+    }
+
+    /**
+     * Draw ramps chart for selected lake
+     * @param {string|number} id - Poll/tournament ID
+     * @param {number} lakeId - Selected lake ID
+     */
+    drawRampsChart(id, lakeId) {
+        const container = document.getElementById('rampsChart-' + id);
+        if (!container) return;
+
+        const resultsData = this.resultsData[id];
+        if (!resultsData || !resultsData.ramps) {
+            container.innerHTML = '<div class="text-secondary text-center py-4"><i class="bi bi-arrow-up me-2"></i>Select a lake above to see ramps</div>';
+            return;
+        }
+
+        const ramps = resultsData.ramps.filter(r => r.lake_id == lakeId);
+        if (ramps.length === 0) {
+            container.innerHTML = '<div class="text-secondary text-center py-4"><i class="bi bi-inbox me-2"></i>No votes for ramps at this lake</div>';
+            return;
+        }
+
+        const maxVotes = Math.max.apply(null, ramps.map(r => r.votes));
+        container.innerHTML = ramps.map(ramp => {
+            const percentage = (ramp.votes / maxVotes) * 100;
+            return '<div class="mb-2">' +
+                '<div class="d-flex justify-content-between align-items-center mb-1">' +
+                    '<span class="fw-semibold">' + escapeHtml(ramp.name) + '</span>' +
+                    '<span class="badge bg-primary">' + ramp.votes + '</span>' +
+                '</div>' +
+                '<div class="progress" style="height: 25px;">' +
+                    '<div class="progress-bar bg-info" role="progressbar" style="width: ' + percentage + '%"></div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    /**
+     * Draw times table
+     * @param {string|number} id - Poll/tournament ID
+     * @param {Array} timesArray - Array of time vote data
+     */
+    drawTimesTable(id, timesArray) {
+        const tableBody = document.querySelector('#timeTable-' + id + ' tbody');
+        if (!tableBody) return;
+
+        if (!timesArray || timesArray.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="3" class="text-secondary text-center py-3"><i class="bi bi-inbox me-2"></i>No votes</td></tr>';
+            return;
+        }
+
+        tableBody.innerHTML = timesArray.map(time => {
+            return '<tr>' +
+                '<td class="small">' + formatTime12Hour(time.start_time) + '</td>' +
+                '<td class="small">' + formatTime12Hour(time.end_time) + '</td>' +
+                '<td class="small text-center"><span class="badge bg-primary">' + time.votes + '</span></td>' +
+            '</tr>';
+        }).join('');
+    }
+
+    /**
+     * Handle lake selection - update UI and draw ramps
+     * @param {string|number} id - Poll/tournament ID
+     * @param {number} lakeId - Selected lake ID
+     */
+    selectLake(id, lakeId) {
+        const container = document.querySelector('[data-' + this.idAttribute.replace(/([A-Z])/g, '-$1').toLowerCase() + '="' + id + '"].' + this.containerSelector.replace('.', ''));
+        if (!container) {
+            // Try alternate selector format
+            const altContainer = document.querySelector(this.containerSelector + '[data-' + this.idAttribute.replace(/([A-Z])/g, '-$1').toLowerCase() + '="' + id + '"]');
+            if (!altContainer) return;
+        }
+        const actualContainer = container || document.querySelector(this.containerSelector + '[data-' + this.idAttribute.replace(/([A-Z])/g, '-$1').toLowerCase() + '="' + id + '"]');
+        if (!actualContainer) return;
+
+        // Remove selection from all lake cards
+        actualContainer.querySelectorAll('.lake-card').forEach(card => {
+            card.classList.remove('border', 'border-primary', 'border-2');
+            card.style.backgroundColor = '';
+        });
+
+        // Add selection to clicked lake card
+        const selectedCard = actualContainer.querySelector('[data-lake-id="' + lakeId + '"]');
+        if (selectedCard) {
+            selectedCard.classList.add('border', 'border-primary', 'border-2');
+            selectedCard.style.backgroundColor = 'rgba(13, 110, 253, 0.05)';
+        }
+
+        // Update selected lake label
+        const selectedLakeLabel = document.getElementById('selectedLake-' + id);
+        if (selectedLakeLabel) {
+            selectedLakeLabel.textContent = this.getLakeName(lakeId);
+        }
+
+        // Draw ramps chart for selected lake
+        this.drawRampsChart(id, lakeId);
+
+        // Call custom callback if provided
+        if (this.onLakeSelect) {
+            this.onLakeSelect(id, lakeId);
+        }
+    }
+
+    /**
+     * Render results for a single container
+     * @param {HTMLElement} container - Container element
+     */
+    renderContainer(container) {
+        const id = container.dataset[this.idAttribute];
+        if (!id) return;
+
+        // Aggregate votes
+        const resultsData = this.aggregateVotes(container);
+        this.resultsData[id] = resultsData;
+
+        // Also store globally for backward compatibility
+        window['pollResultsData_' + id] = resultsData;
+
+        // Render charts
+        this.drawLakesChart(id, resultsData.lakes);
+        this.drawTimesTable(id, resultsData.times);
+
+        // Auto-select lake with most votes if there are ramp votes
+        if (resultsData.lakes.length > 0 && resultsData.ramps.length > 0) {
+            this.selectLake(id, resultsData.lakes[0].id);
+        }
+    }
+
+    /**
+     * Render all poll result containers on the page
+     */
+    renderAll() {
+        const containers = document.querySelectorAll(this.containerSelector);
+        containers.forEach(container => this.renderContainer(container));
+    }
+}
+
 class DeleteConfirmationManager {
     /**
      * Create a DeleteConfirmationManager instance
