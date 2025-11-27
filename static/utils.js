@@ -555,6 +555,76 @@ function hideModal(modalId) {
  * // Show confirmation modal
  * deleteManager.confirm(123, 'John Doe');
  */
+/**
+ * Format 24-hour time to 12-hour format with AM/PM
+ * Converts time strings like "14:30" to "2:30 PM"
+ *
+ * @param {string} time24 - Time in 24-hour format (HH:MM)
+ * @returns {string} Time in 12-hour format (H:MM AM/PM)
+ *
+ * @example
+ * formatTime12Hour('14:30')
+ * // Returns: '2:30 PM'
+ *
+ * formatTime12Hour('09:00')
+ * // Returns: '9:00 AM'
+ */
+function formatTime12Hour(time24) {
+    if (!time24) return '';
+    const parts = time24.split(':');
+    const hour = parseInt(parts[0]);
+    const minutes = parts[1];
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return hour12 + ':' + minutes + ' ' + ampm;
+}
+
+/**
+ * Get lake name by ID from lakes data array
+ * Used for poll result visualization to display lake names
+ *
+ * @param {Array} lakesData - Array of lake objects with id, name, and ramps
+ * @param {number|string} lakeId - Lake ID to find
+ * @returns {string} Lake name or fallback "Lake {id}"
+ *
+ * @example
+ * const lakes = [{id: 1, name: 'Lake Travis', ramps: [...]}, ...];
+ * getLakeName(lakes, 1)
+ * // Returns: 'Lake Travis'
+ */
+function getLakeName(lakesData, lakeId) {
+    if (!lakeId) return 'Unknown Lake';
+    if (lakesData && Array.isArray(lakesData)) {
+        const lake = lakesData.find(function(l) { return l.id == lakeId; });
+        if (lake) return lake.name;
+    }
+    return 'Lake ' + lakeId;
+}
+
+/**
+ * Get ramp name by ID from lakes data array
+ * Searches through all lakes to find the ramp with matching ID
+ *
+ * @param {Array} lakesData - Array of lake objects with id, name, and ramps
+ * @param {number|string} rampId - Ramp ID to find
+ * @returns {string} Ramp name or fallback "Ramp {id}"
+ *
+ * @example
+ * const lakes = [{id: 1, name: 'Lake Travis', ramps: [{id: 10, name: 'Mansfield Dam'}]}, ...];
+ * getRampName(lakes, 10)
+ * // Returns: 'Mansfield Dam'
+ */
+function getRampName(lakesData, rampId) {
+    if (!rampId) return 'Unknown Ramp';
+    if (lakesData && Array.isArray(lakesData)) {
+        for (let i = 0; i < lakesData.length; i++) {
+            const ramp = lakesData[i].ramps.find(function(r) { return r.id == rampId; });
+            if (ramp) return ramp.name;
+        }
+    }
+    return 'Ramp ' + rampId;
+}
+
 class DeleteConfirmationManager {
     /**
      * Create a DeleteConfirmationManager instance
