@@ -85,9 +85,9 @@ function editEvent(id, date, eventType, name, description, hasPoll) {
                 // Toggle visibility of event type-specific fields FIRST
                 toggleEditEventFields();
 
-                // Handle SABC tournament fields
-                if (data.event_type === 'sabc_tournament') {
-                    // Set tournament-specific fields
+                // Handle tournament fields (both SABC and Other tournaments)
+                if (data.event_type === 'sabc_tournament' || data.event_type === 'other_tournament') {
+                    // Set tournament-specific fields (times are optional for other_tournament)
                     const startTime = document.getElementById('edit_start_time');
                     if (startTime) {
                         startTime.value = data.start_time || '';
@@ -98,19 +98,22 @@ function editEvent(id, date, eventType, name, description, hasPoll) {
                         weighInTime.value = data.weigh_in_time || '';
                     }
 
-                    const entryFee = document.getElementById('edit_entry_fee');
-                    if (entryFee) {
-                        entryFee.value = data.entry_fee !== undefined ? data.entry_fee : '';
-                    }
+                    // SABC-specific fields
+                    if (data.event_type === 'sabc_tournament') {
+                        const entryFee = document.getElementById('edit_entry_fee');
+                        if (entryFee) {
+                            entryFee.value = data.entry_fee !== undefined ? data.entry_fee : '';
+                        }
 
-                    const fishLimit = document.getElementById('edit_fish_limit');
-                    if (fishLimit) {
-                        fishLimit.value = data.fish_limit !== undefined ? data.fish_limit : '';
-                    }
+                        const fishLimit = document.getElementById('edit_fish_limit');
+                        if (fishLimit) {
+                            fishLimit.value = data.fish_limit !== undefined ? data.fish_limit : '';
+                        }
 
-                    const aoyPoints = document.getElementById('edit_aoy_points');
-                    if (aoyPoints) {
-                        aoyPoints.value = data.aoy_points ? 'true' : 'false';
+                        const aoyPoints = document.getElementById('edit_aoy_points');
+                        if (aoyPoints) {
+                            aoyPoints.value = data.aoy_points ? 'true' : 'false';
+                        }
                     }
 
                     // Set lake - make sure the option exists in the dropdown
@@ -367,7 +370,7 @@ function setFieldDefaults(fieldValueMap) {
  * Utility: Clear all 'required' attributes from form fields
  */
 function clearAllRequirements() {
-    ['start_time', 'weigh_in_time', 'lake_name', 'ramp_name', 'other_description'].forEach(id => {
+    ['start_time', 'weigh_in_time', 'lake_name', 'ramp_name'].forEach(id => {
         const field = document.getElementById(id);
         if (field) field.removeAttribute('required');
     });

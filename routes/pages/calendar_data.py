@@ -16,6 +16,10 @@ def get_year_calendar_data(year: int) -> Tuple[List[Any], Dict[str, Any], Set[st
 
     with get_session() as session:
         # Fetch all events for the year with polls and tournaments
+        # Use COALESCE to fall back to Event fields when Tournament is null
+        # (Other Tournaments don't have Tournament records)
+        from sqlalchemy import func
+
         tournament_events = (
             session.query(
                 Event.id.label("event_id"),
@@ -30,10 +34,10 @@ def get_year_calendar_data(year: int) -> Tuple[List[Any], Dict[str, Any], Set[st
                 Poll.closed,
                 Tournament.id.label("tournament_id"),
                 Tournament.complete.label("tournament_complete"),
-                Tournament.lake_name,
-                Tournament.ramp_name,
-                Tournament.start_time,
-                Tournament.end_time,
+                func.coalesce(Tournament.lake_name, Event.lake_name).label("lake_name"),
+                func.coalesce(Tournament.ramp_name, Event.ramp_name).label("ramp_name"),
+                func.coalesce(Tournament.start_time, Event.start_time).label("start_time"),
+                func.coalesce(Tournament.end_time, Event.weigh_in_time).label("end_time"),
             )
             .outerjoin(Poll, Event.id == Poll.event_id)
             .outerjoin(Tournament, Event.id == Tournament.event_id)

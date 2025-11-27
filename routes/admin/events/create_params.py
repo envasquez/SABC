@@ -21,16 +21,30 @@ def prepare_create_event_params(
     date_obj = datetime.strptime(date, "%Y-%m-%d")
     year = date_obj.year
 
+    # Handle times based on event type:
+    # - SABC tournaments: use defaults (06:00 / 15:00) if not provided
+    # - Other tournaments: only store if actually provided (times are optional)
+    # - Other event types: no times
+    effective_start_time: str | None = None
+    effective_weigh_in_time: str | None = None
+
+    if event_type == "sabc_tournament":
+        # SABC tournaments have default times
+        effective_start_time = start_time if start_time else "06:00"
+        effective_weigh_in_time = weigh_in_time if weigh_in_time else "15:00"
+    elif event_type == "other_tournament":
+        # Other tournaments: times are optional, store None if not provided
+        effective_start_time = start_time if start_time else None
+        effective_weigh_in_time = weigh_in_time if weigh_in_time else None
+
     event_params = {
         "date": date,
         "year": year,
         "name": name,
         "event_type": event_type,
         "description": description,
-        "start_time": start_time if event_type in ["sabc_tournament", "other_tournament"] else None,
-        "weigh_in_time": weigh_in_time
-        if event_type in ["sabc_tournament", "other_tournament"]
-        else None,
+        "start_time": effective_start_time,
+        "weigh_in_time": effective_weigh_in_time,
         "lake_name": lake_name if lake_name else None,
         "ramp_name": ramp_name if ramp_name else None,
         "entry_fee": entry_fee if event_type == "sabc_tournament" else 0.00,
@@ -42,8 +56,8 @@ def prepare_create_event_params(
         "name": name,
         "lake_name": lake_name if lake_name else None,
         "ramp_name": ramp_name if ramp_name else None,
-        "start_time": start_time,
-        "end_time": weigh_in_time,
+        "start_time": effective_start_time,
+        "end_time": effective_weigh_in_time,
         "fish_limit": fish_limit,
         "entry_fee": entry_fee,
         "aoy_points": aoy_points.lower() == "true",
