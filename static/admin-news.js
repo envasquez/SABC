@@ -3,9 +3,21 @@
  * Handles news CRUD operations, edit modal, and delete confirmation
  */
 
-let deleteNewsId = null;
+// Initialize delete confirmation manager
+let newsDeleteManager;
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize delete confirmation manager
+    newsDeleteManager = new DeleteConfirmationManager({
+        modalId: 'deleteNewsModal',
+        itemNameElementId: 'delete-news-title',
+        confirmInputId: 'delete-confirmation',
+        confirmButtonId: 'confirmDeleteNewsBtn',
+        deleteUrlTemplate: (id) => `/admin/news/${id}`,
+        onSuccess: () => location.reload(),
+        onError: (error) => showToast(`Error deleting news: ${error}`, 'error')
+    });
+
     // Edit button event listeners
     document.querySelectorAll('.edit-btn').forEach(button => {
         button.addEventListener('click', function() {
@@ -79,37 +91,5 @@ function editNews(id, title, content, priority) {
 }
 
 function deleteNews(id, title) {
-    // Set the news info in the modal
-    deleteNewsId = id;
-    document.getElementById('delete-news-title').textContent = title;
-    document.getElementById('delete-confirmation').value = '';
-
-    // Show the modal
-    showModal('deleteNewsModal');
-}
-
-async function confirmDeleteNews() {
-    const confirmText = document.getElementById('delete-confirmation').value;
-
-    if (confirmText.trim() !== 'DELETE') {
-        showToast('Please type DELETE to confirm', 'warning');
-        return;
-    }
-
-    // Close the modal
-    hideModal('deleteNewsModal');
-
-    // Delete the news item using centralized deleteRequest
-    try {
-        const response = await deleteRequest(`/admin/news/${deleteNewsId}`);
-        const data = await response.json();
-
-        if (data.success) {
-            window.location.reload();
-        } else {
-            showToast(`Error deleting news: ${data.error || 'Unknown error'}`, 'error');
-        }
-    } catch (error) {
-        showToast(`Error deleting news: ${error.message}`, 'error');
-    }
+    newsDeleteManager.confirm(id, title);
 }
