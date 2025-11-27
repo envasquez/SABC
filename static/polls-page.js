@@ -138,30 +138,7 @@ function renderPollResults(lakesData) {
     });
 }
 
-function getLakeName(lakesData, lakeId) {
-    if (!lakeId || !lakesData) return 'Lake ' + lakeId;
-    var lake = lakesData.find(function(l) { return l.id == lakeId; });
-    return lake ? lake.name : 'Lake ' + lakeId;
-}
-
-function getRampName(lakesData, rampId) {
-    if (!rampId || !lakesData) return 'Ramp ' + rampId;
-    for (var i = 0; i < lakesData.length; i++) {
-        var ramp = lakesData[i].ramps.find(function(r) { return r.id == rampId; });
-        if (ramp) return ramp.name;
-    }
-    return 'Ramp ' + rampId;
-}
-
-function formatTime12Hour(time24) {
-    if (!time24) return '';
-    var parts = time24.split(':');
-    var hour = parseInt(parts[0]);
-    var minutes = parts[1];
-    var ampm = hour >= 12 ? 'PM' : 'AM';
-    var hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    return hour12 + ':' + minutes + ' ' + ampm;
-}
+// Note: getLakeName, getRampName, and formatTime12Hour are defined in utils.js
 
 function drawLakesChart(pollId, lakesArray) {
     var chartContainer = document.getElementById('lakesChart-' + pollId);

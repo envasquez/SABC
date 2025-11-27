@@ -23,51 +23,25 @@ function initializeHomePolls(config) {
     handleTabSwitching();
 }
 
-/**
- * Format 24-hour time to 12-hour format with AM/PM
- * @param {string} time24 - Time in 24-hour format (HH:MM)
- * @returns {string} Time in 12-hour format (H:MM AM/PM)
- */
-function formatTime12Hour(time24) {
-    const [hours, minutes] = time24.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    return `${hour12}:${minutes} ${ampm}`;
-}
+// Note: formatTime12Hour, getLakeName, and getRampName are defined in utils.js
+// Local wrapper functions that use the global lakesDataGlobal variable
 
 /**
- * Get lake name by ID from lakes data
+ * Get lake name by ID using global lakes data
  * @param {number} lakeId - Lake ID
  * @returns {string} Lake name or fallback
  */
-function getLakeName(lakeId) {
-    if (!lakeId) return 'Unknown Lake';
-    if (lakesDataGlobal && Array.isArray(lakesDataGlobal)) {
-        const lake = lakesDataGlobal.find(l => l.id == lakeId);
-        if (lake) return lake.name;
-    }
-    return `Lake ${lakeId}`;
+function getLakeNameHome(lakeId) {
+    return getLakeName(lakesDataGlobal, lakeId);
 }
 
 /**
- * Get ramp name by ID from lakes data
+ * Get ramp name by ID using global lakes data
  * @param {number} rampId - Ramp ID
  * @returns {string} Ramp name or fallback
  */
-function getRampName(rampId) {
-    if (!rampId) return 'Unknown Ramp';
-    if (lakesDataGlobal && Array.isArray(lakesDataGlobal)) {
-        for (const lake of lakesDataGlobal) {
-            const ramp = lake.ramps.find(r => r.id == rampId);
-            if (ramp) {
-                return ramp.name.split(' ').map(word =>
-                    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                ).join(' ');
-            }
-        }
-    }
-    return `Ramp ${rampId}`;
+function getRampNameHome(rampId) {
+    return getRampName(lakesDataGlobal, rampId);
 }
 
 /**
@@ -166,7 +140,7 @@ function selectLakeHome(lakeId, tournamentId) {
     // Update selected lake label
     const selectedLakeLabel = container.querySelector(`#selectedLake-${tournamentId}`);
     if (selectedLakeLabel) {
-        selectedLakeLabel.textContent = getLakeName(lakeId);
+        selectedLakeLabel.textContent = getLakeNameHome(lakeId);
     }
 
     // Draw ramps chart for selected lake
@@ -202,7 +176,7 @@ function renderAllPollResults() {
             // Aggregate lake votes
             if (lakeId) {
                 if (!lakes[lakeId]) {
-                    lakes[lakeId] = { id: lakeId, name: getLakeName(lakeId), votes: 0 };
+                    lakes[lakeId] = { id: lakeId, name: getLakeNameHome(lakeId), votes: 0 };
                 }
                 lakes[lakeId].votes += voteCount;
             }
@@ -210,7 +184,7 @@ function renderAllPollResults() {
             // Aggregate ramp votes
             if (rampId) {
                 if (!ramps[rampId]) {
-                    ramps[rampId] = { id: rampId, lake_id: lakeId, name: getRampName(rampId), votes: 0 };
+                    ramps[rampId] = { id: rampId, lake_id: lakeId, name: getRampNameHome(rampId), votes: 0 };
                 }
                 ramps[rampId].votes += voteCount;
             }
