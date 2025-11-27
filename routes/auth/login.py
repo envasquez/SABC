@@ -7,6 +7,7 @@ from slowapi.util import get_remote_address
 from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Angler, get_session
+from core.helpers.forms import normalize_email
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
 from core.helpers.response import get_client_ip, set_user_session
 from routes.dependencies import bcrypt, get_current_user, templates
@@ -47,7 +48,7 @@ async def login(
     password: str = Form(...),
     next_url: str = Form("/"),
 ) -> Response:
-    email = email.lower().strip()
+    email = normalize_email(email)
     ip_address = get_client_ip(request)
 
     # Validate next_url to prevent open redirect attacks

@@ -4,6 +4,7 @@ from fastapi import Request
 from fastapi.responses import RedirectResponse
 
 from core.db_schema import Angler, get_session
+from core.helpers.forms import normalize_email
 from core.helpers.logging import get_logger
 from routes.auth.profile_update.password import handle_password_change
 from routes.auth.validation import validate_phone_number
@@ -26,7 +27,7 @@ async def update_profile_fields(
         return RedirectResponse("/login")
 
     try:
-        email = email.lower().strip()
+        email = normalize_email(email)
 
         is_valid, formatted_phone, error_msg = validate_phone_number(phone)
         if not is_valid:

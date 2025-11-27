@@ -58,6 +58,40 @@ def safe_json_filter(value: Any) -> Markup:
     return Markup(json_str)  # nosec
 
 
+def tojson_attr_filter(value: Any) -> Markup:
+    """Convert value to JSON and escape for use in HTML data attributes.
+
+    This filter is specifically designed for embedding JSON in HTML data attributes
+    using double quotes. It escapes:
+    - " to &#34; (so JSON quotes don't break the attribute)
+    - ' to &#39; (for single quotes in data)
+    - < to &lt; (XSS prevention)
+    - > to &gt; (XSS prevention)
+    - & to &amp; (proper HTML entity encoding)
+
+    The browser automatically unescapes these when reading dataset attributes,
+    so JavaScript can use JSON.parse() directly on the result.
+
+    Example:
+        Template: <div data-foo="{{ data | tojson_attr }}">
+        Input: {"name": "Test's Lake"}
+        Output: {&#34;name&#34;: &#34;Test&#39;s Lake&#34;}
+
+    Use this instead of |tojson|e for data attributes.
+    """
+    from markupsafe import escape
+
+    # Convert to JSON string
+    json_str = json.dumps(value, cls=CustomJSONEncoder, ensure_ascii=False)
+
+    # Escape for HTML attribute context (this escapes ", <, >, &, ')
+    escaped = str(escape(json_str))
+
+    # Return as Markup to prevent Jinja2 from double-escaping
+    # nosec B703: We explicitly escape all dangerous characters above
+    return Markup(escaped)
+
+
 def date_format_filter(date_str: Any, format_type: str = "display") -> str:
     if not date_str:
         return ""
@@ -100,6 +134,8 @@ def month_number_filter(date_str: Any) -> str:
 
 templates = Jinja2Templates(directory="templates")
 templates.env.filters["time_format"] = time_format_filter
+templates.env.filters["tojson_attr"] = tojson_attr_filter
+templates.env.filters["from_json"] = from_json_filter
 
 
 async def get_db() -> AsyncGenerator[Connection, None]:

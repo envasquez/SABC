@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert, csrf_token, delete_modal %}
+{% from 'macros.html' import alert, csrf_token, delete_modal, data_table %}
 
 {% block title %}Manage Lakes - Admin{% endblock %}
 
@@ -53,43 +53,25 @@
                 </div>
                 <div class="card-body">
                     {% if lakes %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Display Name</th>
-                                    <th>Database Name</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for lake in lakes %}
-                                <tr>
-                                    <td>
-                                        <span class="text-secondary">{{ loop.index }}</span>
-                                    </td>
-                                    <td>
-                                        <strong>{{ lake.display_name }}</strong>
-                                    </td>
-                                    <td>
-                                        <code>{{ lake.yaml_key }}</code>
-                                    </td>
-                                    <td>
-                                        <a href="/admin/lakes/{{ lake.id }}/edit" class="btn btn-sm btn-warning">
-                                            <i class="bi bi-pencil"></i> Edit
-                                        </a>
-                                        <button class="btn btn-sm btn-danger delete-btn"
-                                                data-id="{{ lake.id }}"
-                                                data-display-name="{{ lake.display_name }}">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                    {% call data_table(['#', 'Display Name', 'Database Name', 'Actions']) %}
+                        {% for lake in lakes %}
+                        <tr>
+                            <td><span class="text-secondary">{{ loop.index }}</span></td>
+                            <td><strong>{{ lake.display_name }}</strong></td>
+                            <td><code>{{ lake.yaml_key }}</code></td>
+                            <td>
+                                <a href="/admin/lakes/{{ lake.id }}/edit" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                                <button class="btn btn-sm btn-danger delete-btn"
+                                        data-id="{{ lake.id }}"
+                                        data-display-name="{{ lake.display_name }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endcall %}
                     {% else %}
                     <div class="text-center py-4">
                         <i class="bi bi-water display-4 text-secondary"></i>
@@ -113,62 +95,5 @@
 </ul>
 {% endcall %}
 
-<script>
-let deleteLakeId = null;
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Delete button event listeners
-    document.querySelectorAll('.delete-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const id = this.dataset.id;
-            const displayName = this.dataset.displayName;
-            deleteLake(id, displayName);
-        });
-    });
-
-    // Enable/disable delete button based on confirmation input
-    const deleteConfirmInput = document.getElementById('delete-confirmation');
-    const confirmDeleteBtn = document.getElementById('confirmDeleteLakeBtn');
-    if (deleteConfirmInput && confirmDeleteBtn) {
-        deleteConfirmInput.addEventListener('input', function() {
-            confirmDeleteBtn.disabled = this.value.trim() !== 'DELETE';
-        });
-        confirmDeleteBtn.addEventListener('click', confirmDeleteLake);
-    }
-});
-
-function deleteLake(id, displayName) {
-    deleteLakeId = id;
-    document.getElementById('delete-lake-name').textContent = displayName;
-    document.getElementById('delete-confirmation').value = '';
-    document.getElementById('confirmDeleteLakeBtn').disabled = true;
-    showModal('deleteLakeModal');
-}
-
-async function confirmDeleteLake() {
-    hideModal('deleteLakeModal');
-    try {
-        const response = await deleteRequest(`/admin/lakes/${deleteLakeId}`);
-        const data = await response.json();
-        if (data.success) {
-            window.location.reload();
-        } else {
-            showToast(`Error deleting lake: ${data.error || 'Unknown error'}`, 'error');
-        }
-    } catch (error) {
-        showToast(`Error deleting lake: ${error.message}`, 'error');
-    }
-}
-
-// Auto-generate database name from display name
-document.getElementById('display_name').addEventListener('input', function() {
-    const displayName = this.value;
-    const dbName = displayName.toLowerCase()
-        .replace(/lake\s+/gi, '')  // Remove "Lake " prefix
-        .replace(/\s+/g, '_')       // Replace spaces with underscores
-        .replace(/[^a-z0-9_]/g, ''); // Remove non-alphanumeric chars except underscores
-
-    document.getElementById('name').value = dbName;
-});
-</script>
+<script src="/static/admin-lakes.js"></script>
 {% endblock %}

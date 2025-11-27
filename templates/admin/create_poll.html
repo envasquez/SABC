@@ -4,6 +4,10 @@
 {% block title %}Create Poll - South Austin Bass Club{% endblock %}
 
 {% block content %}
+
+<!-- Data passed to JavaScript -->
+<div id="poll-data" data-event-date="{{ selected_event[1] if selected_event else '' }}"></div>
+
 <div class="mb-4">
     <h1 class="display-5">
         <i class="bi bi-plus-circle me-2"></i>Create a New Poll
@@ -212,20 +216,6 @@
 {% block extra_js %}
 <script src="/static/admin.js"></script>
 <script src="/static/poll-management.js"></script>
-<script>
-// Set intelligent poll timing on page load
-document.addEventListener('DOMContentLoaded', function() {
-    const eventDate = '{{ selected_event[1] }}';
-
-    // Set dates for tournament poll
-    setOptimalPollTiming(eventDate, 'starts_at', 'closes_at');
-
-    // Set dates for generic poll
-    setOptimalPollTiming(eventDate, 'generic_starts_at', 'generic_closes_at');
-
-    // Initialize remove button states
-    updateRemoveButtons();
-});
-</script>
+<script src="/static/admin-create-poll.js"></script>
 {% endblock extra_js %}
 {% endblock %}

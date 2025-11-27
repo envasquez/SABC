@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 
+<!-- Data passed to JavaScript -->
+<div id="home-data" data-lakes="{{ lakes_data | tojson_attr if lakes_data is defined else '[]' }}"></div>
+
 <div class="row">
     <!-- Main Content -->
     <div class="col-lg-8">
@@ -493,7 +496,7 @@
 
                                 <!-- Hidden data for JavaScript -->
                                 {% for option in tournament.poll_data %}
-                                <div data-option-data='{{ option.option_data | tojson }}'
+                                <div data-option-data="{{ option.option_data | tojson_attr }}"
                                      data-vote-count="{{ option.vote_count }}"
                                      class="d-none poll-option-data"></div>
                                 {% endfor %}
@@ -614,15 +617,7 @@
 <!-- External JavaScript -->
 <script src="{{ url_for('static', path='/utils.js') }}"></script>
 <script src="{{ url_for('static', path='/home-polls.js') }}"></script>
-
-<!-- Initialize with server-side data -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    initializeHomePolls({
-        lakesData: {{ lakes_data | tojson | safe if lakes_data is defined else '[]' }}
-    });
-});
-</script>
+<script src="{{ url_for('static', path='/home-init.js') }}"></script>
 
 
 <!-- Ramp Location Modals -->

@@ -9,6 +9,14 @@
 
 {% block content %}
 
+<!-- Data passed to JavaScript -->
+<div id="results-data"
+     data-anglers="{{ anglers_json | e }}"
+     data-existing-angler-ids="{{ existing_angler_ids_json | e }}"
+     data-edit-data="{{ edit_data | tojson_attr if edit_data else '' }}"
+     data-edit-team-result-data="{{ edit_team_result_data | tojson_attr if edit_team_result_data else '' }}"
+     data-tournament-id="{{ tournament.id }}"></div>
+
 <div class="container">
     <div class="mb-4">
         <nav aria-label="breadcrumb">
@@ -115,17 +123,5 @@
 <!-- External JavaScript -->
 <script src="{{ url_for('static', path='/utils.js') }}"></script>
 <script src="{{ url_for('static', path='/enter-results.js') }}"></script>
-
-<!-- Initialize with server-side data -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    initializeResultsEntry({
-        anglers: {{ anglers_json | safe }},
-        existingAnglerIds: {{ existing_angler_ids_json | safe }},
-        editData: {{ edit_data | tojson | safe if edit_data else 'null' }},
-        editTeamResultData: {{ edit_team_result_data | tojson | safe if edit_team_result_data else 'null' }},
-        tournamentId: {{ tournament.id }}
-    });
-});
-</script>
+<script src="{{ url_for('static', path='/enter-results-init.js') }}"></script>
 {% endblock %}

@@ -6,6 +6,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from core.db_schema import Angler, get_session
+from core.helpers.forms import normalize_email
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
 from core.helpers.password_validator import validate_password_strength
 from routes.dependencies import bcrypt, get_current_user, templates
@@ -45,7 +46,7 @@ async def register(
     email: str = Form(...),
     password: str = Form(...),
 ) -> Response:
-    email = email.lower().strip()
+    email = normalize_email(email)
     first_name = first_name.strip()
     last_name = last_name.strip()
     name = f"{first_name} {last_name}".strip()
