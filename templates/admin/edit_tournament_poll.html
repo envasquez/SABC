@@ -77,10 +77,10 @@
                         </p>
 
                         <div class="mb-3">
-                            <button type="button" class="btn btn-outline-primary btn-sm me-2" onclick="selectAllLakes()">
+                            <button type="button" class="btn btn-outline-primary btn-sm me-2" onclick="selectAll('lake_ids')">
                                 <i class="bi bi-check-all me-1"></i>Select All
                             </button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="deselectAllLakes()">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="selectNone('lake_ids')">
                                 <i class="bi bi-x-square me-1"></i>Deselect All
                             </button>
                         </div>
@@ -171,6 +171,5 @@
 </div>
 
 <script src="/static/admin.js"></script>
-<script src="/static/admin-edit-tournament-poll.js"></script>
 
 {% endblock %}
