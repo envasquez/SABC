@@ -3,9 +3,21 @@
  * Handles lake CRUD operations and delete confirmation
  */
 
-let deleteLakeId = null;
+// Initialize delete confirmation manager
+let lakeDeleteManager;
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize delete confirmation manager
+    lakeDeleteManager = new DeleteConfirmationManager({
+        modalId: 'deleteLakeModal',
+        itemNameElementId: 'delete-lake-name',
+        confirmInputId: 'delete-confirmation',
+        confirmButtonId: 'confirmDeleteLakeBtn',
+        deleteUrlTemplate: (id) => `/admin/lakes/${id}`,
+        onSuccess: () => location.reload(),
+        onError: (error) => showToast(`Error deleting lake: ${error}`, 'error')
+    });
+
     // Delete button event listeners
     document.querySelectorAll('.delete-btn').forEach(button => {
         button.addEventListener('click', function() {
@@ -31,37 +43,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function deleteLake(id, displayName) {
-    // Set the lake info in the modal
-    deleteLakeId = id;
-    document.getElementById('delete-lake-name').textContent = displayName;
-    document.getElementById('delete-confirmation').value = '';
-
-    // Show the modal
-    showModal('deleteLakeModal');
-}
-
-async function confirmDeleteLake() {
-    const confirmText = document.getElementById('delete-confirmation').value;
-
-    if (confirmText.trim() !== 'DELETE') {
-        showToast('Please type DELETE to confirm', 'warning');
-        return;
-    }
-
-    // Close the modal
-    hideModal('deleteLakeModal');
-
-    // Delete the lake using centralized deleteRequest
-    try {
-        const response = await deleteRequest(`/admin/lakes/${deleteLakeId}`);
-        const data = await response.json();
-
-        if (data.success) {
-            window.location.reload();
-        } else {
-            showToast(`Error deleting lake: ${data.error || 'Unknown error'}`, 'error');
-        }
-    } catch (error) {
-        showToast(`Error deleting lake: ${error.message}`, 'error');
-    }
+    lakeDeleteManager.confirm(id, displayName);
 }
