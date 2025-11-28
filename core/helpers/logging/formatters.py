@@ -3,6 +3,16 @@ import logging
 from datetime import datetime, timezone
 
 
+def _get_correlation_id() -> str | None:
+    """Safely get correlation ID, returning None if not available."""
+    try:
+        from core.correlation_middleware import get_correlation_id
+
+        return get_correlation_id()
+    except ImportError:
+        return None
+
+
 class JSONFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         log_entry = {
@@ -14,6 +24,11 @@ class JSONFormatter(logging.Formatter):
             "function": record.funcName,
             "line": record.lineno,
         }
+
+        # Add correlation ID if available
+        correlation_id = _get_correlation_id()
+        if correlation_id:
+            log_entry["correlation_id"] = correlation_id
 
         if record.exc_info:
             log_entry["exception"] = self.formatException(record.exc_info)

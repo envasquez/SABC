@@ -11,6 +11,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from starlette.middleware.sessions import SessionMiddleware
 
+from core.correlation_middleware import CorrelationIDMiddleware, get_correlation_id
 from core.csrf_middleware import CSRFMiddleware
 from core.deps import (
     CustomJSONEncoder,
@@ -55,6 +56,9 @@ def create_app() -> FastAPI:
     limiter = Limiter(key_func=get_remote_address, enabled=not is_test_env)
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
+
+    # Correlation ID middleware (must be first to capture all requests)
+    app.add_middleware(CorrelationIDMiddleware)
 
     # Metrics middleware (should be early in the chain)
     app.add_middleware(MetricsMiddleware)
@@ -137,10 +141,12 @@ def create_app() -> FastAPI:
         )
 
         # Return sanitized error response (no body content, no internal details)
-        return JSONResponse(
-            status_code=422,
-            content={"detail": _sanitize_validation_errors(exc.errors())},
-        )
+        # Include correlation_id for client-side error tracking
+        correlation_id = get_correlation_id()
+        content: Dict[str, Any] = {"detail": _sanitize_validation_errors(exc.errors())}
+        if correlation_id:
+            content["correlation_id"] = correlation_id
+        return JSONResponse(status_code=422, content=content)
 
     @app.exception_handler(ValueError)
     async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse:
@@ -148,7 +154,11 @@ def create_app() -> FastAPI:
             "ValueError in request",
             extra={"path": request.url.path, "error": str(exc)},
         )
-        return JSONResponse(status_code=400, content={"error": "Invalid request data"})
+        correlation_id = get_correlation_id()
+        content: Dict[str, Any] = {"error": "Invalid request data"}
+        if correlation_id:
+            content["correlation_id"] = correlation_id
+        return JSONResponse(status_code=400, content=content)
 
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
@@ -168,9 +178,11 @@ def create_app() -> FastAPI:
         )
 
         # Return generic error message - never expose internal details
-        return JSONResponse(
-            status_code=500,
-            content={"error": "An internal error occurred. Please try again later."},
-        )
+        # Include correlation_id so users can report it for debugging
+        correlation_id = get_correlation_id()
+        content: Dict[str, Any] = {"error": "An internal error occurred. Please try again later."}
+        if correlation_id:
+            content["correlation_id"] = correlation_id
+        return JSONResponse(status_code=500, content=content)
 
     return app
