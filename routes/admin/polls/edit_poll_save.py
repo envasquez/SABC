@@ -127,13 +127,11 @@ async def update_poll(request: Request, poll_id: int) -> RedirectResponse:
                                     "vote_count": vote_count,
                                 },
                             )
-            else:
-                # Handle simple/generic polls - update options in place
-                # Note: This code runs outside the session context, should be moved inside
-                pass
+            # For non-tournament polls, options are handled after this session closes
+            # (the helper function manages its own session)
 
-        # For non-tournament polls, update options outside session context
-        # This maintains backward compatibility with existing behavior
+        # For non-tournament polls, update options using the helper function
+        # Note: update_or_create_poll_option manages its own session context
         if poll_type != "tournament_location":
             for i, option_text in enumerate(poll_options):
                 # Ensure we have a string value

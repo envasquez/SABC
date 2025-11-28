@@ -3,24 +3,26 @@
  * Handles autocomplete, team management, and result submission for tournament results entry page
  */
 
-// Global state
-let teamCount = 0;
-let anglers = [];
-let existingAnglerIds = new Set();
-let editData = null;
-let editTeamResultData = null;
-let tournamentId = null;
+// Module state - encapsulated to avoid global namespace pollution
+const ResultsEntryState = {
+    teamCount: 0,
+    anglers: [],
+    existingAnglerIds: new Set(),
+    editData: null,
+    editTeamResultData: null,
+    tournamentId: null
+};
 
 /**
  * Initialize the results entry page
  * @param {Object} config - Configuration object with anglers, existing IDs, edit data, and tournament ID
  */
 function initializeResultsEntry(config) {
-    anglers = config.anglers || [];
-    existingAnglerIds = new Set(config.existingAnglerIds || []);
-    editData = config.editData || null;
-    editTeamResultData = config.editTeamResultData || null;
-    tournamentId = config.tournamentId;
+    ResultsEntryState.anglers = config.anglers || [];
+    ResultsEntryState.existingAnglerIds = new Set(config.existingAnglerIds || []);
+    ResultsEntryState.editData = config.editData || null;
+    ResultsEntryState.editTeamResultData = config.editTeamResultData || null;
+    ResultsEntryState.tournamentId = config.tournamentId;
 
     // Initialize form submission handler
     const form = document.getElementById('resultsForm');
@@ -29,6 +31,8 @@ function initializeResultsEntry(config) {
     }
 
     // Add first team on page load
+    const editData = ResultsEntryState.editData;
+    const editTeamResultData = ResultsEntryState.editTeamResultData;
     if (editData) {
         if (editData.type === 'individual') {
             addTeamForEdit(editData.angler_id, editData.angler_name, null, null,
@@ -66,7 +70,7 @@ function initializeResultsEntry(config) {
         // Update the form action to edit instead of create
         const form = document.getElementById('resultsForm');
         if (form) {
-            form.action = `/admin/tournaments/${tournamentId}/team-results`;
+            form.action = `/admin/tournaments/${ResultsEntryState.tournamentId}/team-results`;
             // Add hidden field for team result ID
             const hiddenInput = document.createElement('input');
             hiddenInput.type = 'hidden';
@@ -110,7 +114,7 @@ function setupAutocomplete(input) {
         }
 
         // Filter anglers
-        const matches = anglers.filter(a =>
+        const matches = ResultsEntryState.anglers.filter(a =>
             a.name.toLowerCase().includes(query)
         );
 
@@ -205,7 +209,8 @@ function clearAnglerSelection(teamId, anglerNum) {
  * Add a new empty team to the form
  */
 function addTeam() {
-    teamCount++;
+    ResultsEntryState.teamCount++;
+    const teamCount = ResultsEntryState.teamCount;
     const container = document.getElementById('teams-container');
 
     const teamHtml = `
@@ -356,7 +361,8 @@ function removeTeam(teamNumber) {
 function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
                        angler1_fish, angler1_weight, angler1_big_bass, angler1_dead_penalty, angler1_disqualified, angler1_buy_in, angler1_was_member,
                        angler2_fish, angler2_weight, angler2_big_bass, angler2_dead_penalty, angler2_disqualified, angler2_buy_in, angler2_was_member) {
-    teamCount++;
+    ResultsEntryState.teamCount++;
+    const teamCount = ResultsEntryState.teamCount;
     const container = document.getElementById('teams-container');
 
     const teamHtml = `
@@ -581,6 +587,7 @@ function createGuest() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'x-csrf-token': getCsrfToken(),
         },
         body: JSON.stringify(guestData)
     })
@@ -588,7 +595,7 @@ function createGuest() {
     .then(data => {
         if (data.success) {
             // Add the new guest to the anglers array
-            anglers.push({
+            ResultsEntryState.anglers.push({
                 id: data.angler_id,
                 name: name
             });
@@ -646,7 +653,7 @@ async function handleFormSubmit(e) {
                 angler1Data.append('buy_in', formData.get(`angler1_buyIn_${teamId}`) ? 'on' : '');
                 angler1Data.append('was_member', formData.get(`angler1_was_member_${teamId}`) ? 'on' : '');
 
-                const response1 = await fetch(`/admin/tournaments/${tournamentId}/results`, {
+                const response1 = await fetch(`/admin/tournaments/${ResultsEntryState.tournamentId}/results`, {
                     method: 'POST',
                     body: angler1Data,
                     credentials: 'same-origin',
@@ -677,7 +684,7 @@ async function handleFormSubmit(e) {
                 angler2Data.append('buy_in', formData.get(`angler2_buyIn_${teamId}`) ? 'on' : '');
                 angler2Data.append('was_member', formData.get(`angler2_was_member_${teamId}`) ? 'on' : '');
 
-                const response2 = await fetch(`/admin/tournaments/${tournamentId}/results`, {
+                const response2 = await fetch(`/admin/tournaments/${ResultsEntryState.tournamentId}/results`, {
                     method: 'POST',
                     body: angler2Data,
                     credentials: 'same-origin',
@@ -702,7 +709,7 @@ async function handleFormSubmit(e) {
                     teamData.append('angler2_id', angler2Id);
                 }
 
-                const teamResponse = await fetch(`/admin/tournaments/${tournamentId}/team-results`, {
+                const teamResponse = await fetch(`/admin/tournaments/${ResultsEntryState.tournamentId}/team-results`, {
                     method: 'POST',
                     body: teamData,
                     credentials: 'same-origin',
@@ -720,7 +727,7 @@ async function handleFormSubmit(e) {
         }
 
         // Success - redirect to tournament view
-        window.location.href = `/tournaments/${tournamentId}`;
+        window.location.href = `/tournaments/${ResultsEntryState.tournamentId}`;
     } catch (error) {
         console.error('Error saving results:', error);
         showToast('Error saving results. Please try again.', 'error');

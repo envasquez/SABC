@@ -28,18 +28,12 @@ async function submitAddUser() {
         return;
     }
 
-    // Get CSRF token from cookie
-    const csrfToken = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('csrf_token='))
-        ?.split('=')[1];
-
     try {
         const response = await fetch('/admin/users', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'x-csrf-token': csrfToken,
+                'x-csrf-token': getCsrfToken(),
             },
             body: JSON.stringify({
                 name: name,
