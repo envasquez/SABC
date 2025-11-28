@@ -31,8 +31,9 @@
                         <tbody>
                             {% for member in members %}
                                 {% if member['member'] %}
-                                <tr>
+                                <tr class="member-row" data-bs-toggle="collapse" data-bs-target="#chart-row-{{ member['id'] }}" style="cursor: pointer;">
                                     <td>
+                                        <i class="bi bi-chevron-right me-2 expand-icon" style="transition: transform 0.2s;"></i>
                                         {{ member['name'] }}
                                         {% if member['officer_positions'] %}
                                             {% for position in member['officer_positions'].split(', ') %}
@@ -53,6 +54,24 @@
                                         {% endif %}
                                     </td>
                                     <td>{{ member['email'] }}</td>
+                                </tr>
+                                <!-- Expandable chart row -->
+                                <tr class="collapse chart-row" id="chart-row-{{ member['id'] }}">
+                                    <td colspan="3" class="p-0">
+                                        <div class="p-3 bg-dark">
+                                            <div class="card border-0 shadow-sm">
+                                                <div class="card-header bg-primary bg-opacity-25 py-2">
+                                                    <h6 class="mb-0"><i class="bi bi-graph-up me-2"></i>Weight per Tournament - {{ member['name'] }}</h6>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="chart-data d-none"
+                                                         data-member-id="{{ member['id'] }}"
+                                                         data-monthly-data="{{ member_weights.get(member['id'], {}) | tojson_attr }}"></div>
+                                                    <canvas class="member-weight-chart" id="chart-{{ member['id'] }}" style="max-height: 200px;"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
                                 </tr>
                                 {% endif %}
                             {% endfor %}
@@ -231,4 +250,7 @@
     </div>
 </div>
 
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/static/roster.js"></script>
 {% endblock %}
