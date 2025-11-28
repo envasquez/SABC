@@ -55,19 +55,131 @@
                                     </td>
                                     <td>{{ member['email'] }}</td>
                                 </tr>
-                                <!-- Expandable chart row -->
+                                <!-- Expandable stats row -->
+                                {% set stats = member_stats.get(member['id'], {}) %}
                                 <tr class="collapse chart-row" id="chart-row-{{ member['id'] }}">
                                     <td colspan="3" class="p-0">
                                         <div class="p-3 bg-dark">
-                                            <div class="card border-0 shadow-sm">
-                                                <div class="card-header bg-primary bg-opacity-25 py-2">
-                                                    <h6 class="mb-0"><i class="bi bi-graph-up me-2"></i>Weight per Tournament - {{ member['name'] }}</h6>
+                                            <div class="row g-3">
+                                                <!-- Stats Card -->
+                                                <div class="col-lg-4">
+                                                    <div class="card border-0 shadow-sm h-100">
+                                                        <div class="card-header bg-success bg-opacity-25 py-2">
+                                                            <h6 class="mb-0"><i class="bi bi-trophy me-2"></i>Team Stats</h6>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <!-- Team Totals -->
+                                                            <div class="row text-center g-2 mb-3">
+                                                                <div class="col-4">
+                                                                    <div class="h4 text-primary mb-0">{{ stats.get('team_tournaments', 0) }}</div>
+                                                                    <small class="text-muted">Tournaments</small>
+                                                                </div>
+                                                                <div class="col-4">
+                                                                    <div class="h4 text-info mb-0">{{ "%.1f"|format(stats.get('best_team_weight', 0)) if stats.get('best_team_weight', 0) > 0 else "0" }}</div>
+                                                                    <small class="text-muted">Best Weight</small>
+                                                                </div>
+                                                                <div class="col-4">
+                                                                    <div class="h4 text-success mb-0">{{ "%.1f"|format(stats.get('big_bass', 0)) }}</div>
+                                                                    <small class="text-muted">Big Bass</small>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Year Tabs for Finishes -->
+                                                            <h6 class="text-success mb-2 mt-3"><i class="bi bi-people me-1"></i>Team Finishes</h6>
+                                                            <ul class="nav nav-pills nav-sm mb-2 justify-content-center" role="tablist">
+                                                                {% for year in stats.get('year_finishes', {}).keys()|sort(reverse=True) %}
+                                                                <li class="nav-item" role="presentation">
+                                                                    <button class="nav-link py-1 px-2 {% if loop.first %}active{% endif %}"
+                                                                            data-bs-toggle="pill"
+                                                                            data-bs-target="#finishes-{{ member['id'] }}-{{ year }}"
+                                                                            type="button" role="tab">{{ year }}</button>
+                                                                </li>
+                                                                {% endfor %}
+                                                                <li class="nav-item" role="presentation">
+                                                                    <button class="nav-link py-1 px-2"
+                                                                            data-bs-toggle="pill"
+                                                                            data-bs-target="#finishes-{{ member['id'] }}-alltime"
+                                                                            type="button" role="tab">All</button>
+                                                                </li>
+                                                            </ul>
+
+                                                            <!-- Tab Content -->
+                                                            <div class="tab-content">
+                                                                {% for year, finishes in stats.get('year_finishes', {}).items()|sort(reverse=True) %}
+                                                                <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
+                                                                     id="finishes-{{ member['id'] }}-{{ year }}" role="tabpanel">
+                                                                    <div class="row text-center g-1">
+                                                                        <div class="col-4">
+                                                                            <div class="p-2 rounded" style="background-color: #fff8dc; border: 1px solid #ffd700;">
+                                                                                <div class="h5 mb-0" style="color: #ffd700;"><i class="bi bi-trophy"></i></div>
+                                                                                <div class="h6 mb-0" style="color: #b8860b;">{{ finishes.get('first', 0) }}</div>
+                                                                                <small style="color: #b8860b;">1st</small>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-4">
+                                                                            <div class="p-2 rounded" style="background-color: #f5f5f5; border: 1px solid #c0c0c0;">
+                                                                                <div class="h5 mb-0" style="color: #a8a8a8;"><i class="bi bi-award"></i></div>
+                                                                                <div class="h6 mb-0" style="color: #2c2c2c;">{{ finishes.get('second', 0) }}</div>
+                                                                                <small style="color: #2c2c2c;">2nd</small>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-4">
+                                                                            <div class="p-2 bg-warning bg-opacity-25 rounded">
+                                                                                <div class="h5 mb-0" style="color:#cd7f32"><i class="bi bi-award"></i></div>
+                                                                                <div class="h6 mb-0" style="color:#cd7f32">{{ finishes.get('third', 0) }}</div>
+                                                                                <small>3rd</small>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="text-center mt-2">
+                                                                        <small class="text-muted">Fished: <strong>{{ finishes.get('tournaments', 0) }}</strong></small>
+                                                                    </div>
+                                                                </div>
+                                                                {% endfor %}
+                                                                <!-- All Time Tab -->
+                                                                <div class="tab-pane fade" id="finishes-{{ member['id'] }}-alltime" role="tabpanel">
+                                                                    <div class="row text-center g-1">
+                                                                        <div class="col-4">
+                                                                            <div class="p-2 rounded" style="background-color: #fff8dc; border: 1px solid #ffd700;">
+                                                                                <div class="h5 mb-0" style="color: #ffd700;"><i class="bi bi-trophy"></i></div>
+                                                                                <div class="h6 mb-0" style="color: #b8860b;">{{ stats.get('all_time_first', 0) }}</div>
+                                                                                <small style="color: #b8860b;">1st</small>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-4">
+                                                                            <div class="p-2 rounded" style="background-color: #f5f5f5; border: 1px solid #c0c0c0;">
+                                                                                <div class="h5 mb-0" style="color: #a8a8a8;"><i class="bi bi-award"></i></div>
+                                                                                <div class="h6 mb-0" style="color: #2c2c2c;">{{ stats.get('all_time_second', 0) }}</div>
+                                                                                <small style="color: #2c2c2c;">2nd</small>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-4">
+                                                                            <div class="p-2 bg-warning bg-opacity-25 rounded">
+                                                                                <div class="h5 mb-0" style="color:#cd7f32"><i class="bi bi-award"></i></div>
+                                                                                <div class="h6 mb-0" style="color:#cd7f32">{{ stats.get('all_time_third', 0) }}</div>
+                                                                                <small>3rd</small>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div class="card-body">
-                                                    <div class="chart-data d-none"
-                                                         data-member-id="{{ member['id'] }}"
-                                                         data-monthly-data="{{ member_weights.get(member['id'], {}) | tojson_attr }}"></div>
-                                                    <canvas class="member-weight-chart" id="chart-{{ member['id'] }}" style="max-height: 200px;"></canvas>
+
+                                                <!-- Chart Card -->
+                                                <div class="col-lg-8">
+                                                    <div class="card border-0 shadow-sm h-100">
+                                                        <div class="card-header bg-primary bg-opacity-25 py-2">
+                                                            <h6 class="mb-0"><i class="bi bi-graph-up me-2"></i>Weight per Tournament</h6>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <div class="chart-data d-none"
+                                                                 data-member-id="{{ member['id'] }}"
+                                                                 data-monthly-data="{{ member_weights.get(member['id'], {}) | tojson_attr }}"></div>
+                                                            <canvas class="member-weight-chart" id="chart-{{ member['id'] }}" style="max-height: 200px;"></canvas>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
