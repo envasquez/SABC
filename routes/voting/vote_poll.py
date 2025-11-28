@@ -39,6 +39,7 @@ async def vote_in_poll(
     else:
         voting_for_angler_id = int(user_id_val) if isinstance(user_id_val, (int, str)) else 0
     target_angler_name = None
+    redirect_tab = "club"  # Default tab, will be updated based on poll type
 
     try:
         with get_session() as session:
@@ -126,6 +127,10 @@ async def vote_in_poll(
                 )
 
             poll_type = poll.poll_type
+
+            # Update redirect tab based on poll type (variable defined outside with block)
+            if poll_type == "tournament_location":
+                redirect_tab = "tournament"
 
             # Process vote data based on poll type
             if poll_type == "tournament_location":
@@ -221,7 +226,10 @@ async def vote_in_poll(
                     "/polls?error=You have already voted in this poll", status_code=303
                 )
 
-        return RedirectResponse("/polls?success=Vote cast successfully", status_code=303)
+        return RedirectResponse(
+            f"/polls?tab={redirect_tab}&success=Vote cast successfully#poll-{poll_id}",
+            status_code=303,
+        )
 
     except IntegrityError as e:
         # Handle any other integrity errors at outer level
