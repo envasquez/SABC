@@ -3,6 +3,171 @@
  * Common functions used across the application
  */
 
+// ============================================================================
+// CHART STYLING UTILITIES
+// Beautiful, modern chart styling with gradients, shadows, and animations
+// ============================================================================
+
+/**
+ * Outdoor/fishing-themed color palette
+ * Deep blues, teals, and earth tones inspired by lakes and nature
+ */
+const CHART_COLORS = {
+    // Primary palette - water/nature inspired
+    palette: [
+        { base: '#0077B6', light: '#00B4D8', name: 'Ocean Blue' },
+        { base: '#2A9D8F', light: '#40C9A2', name: 'Teal' },
+        { base: '#E76F51', light: '#F4A261', name: 'Sunset Orange' },
+        { base: '#264653', light: '#3D5A6C', name: 'Deep Sea' },
+        { base: '#8338EC', light: '#A855F7', name: 'Purple' },
+        { base: '#06D6A0', light: '#34D399', name: 'Emerald' },
+        { base: '#EF476F', light: '#F472B6', name: 'Coral' },
+        { base: '#118AB2', light: '#38BDF8', name: 'Sky Blue' },
+        { base: '#FFD166', light: '#FDE68A', name: 'Gold' },
+        { base: '#073B4C', light: '#1E5A6E', name: 'Midnight' }
+    ],
+    // Get color at index with fallback
+    get: function(index) {
+        return this.palette[index % this.palette.length];
+    }
+};
+
+/**
+ * Create a horizontal gradient for chart bars
+ * @param {CanvasRenderingContext2D} ctx - Canvas context
+ * @param {Object} chartArea - Chart area dimensions
+ * @param {string} colorStart - Start color (left)
+ * @param {string} colorEnd - End color (right)
+ * @returns {CanvasGradient} Gradient object
+ */
+function createBarGradient(ctx, chartArea, colorStart, colorEnd) {
+    const gradient = ctx.createLinearGradient(
+        chartArea.left, 0,
+        chartArea.right, 0
+    );
+    gradient.addColorStop(0, colorStart);
+    gradient.addColorStop(1, colorEnd);
+    return gradient;
+}
+
+/**
+ * Shared Chart.js configuration for beautiful charts
+ */
+const CHART_CONFIG = {
+    // Animation settings
+    animation: {
+        duration: 800,
+        easing: 'easeOutQuart',
+        delay: function(context) {
+            // Stagger animation by bar index
+            return context.dataIndex * 100;
+        }
+    },
+
+    // Common tooltip styling
+    tooltip: {
+        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+        titleColor: '#fff',
+        bodyColor: '#e2e8f0',
+        titleFont: { size: 14, weight: 'bold' },
+        bodyFont: { size: 13 },
+        padding: 12,
+        cornerRadius: 8,
+        displayColors: true,
+        boxPadding: 6,
+        caretSize: 8,
+        caretPadding: 10
+    },
+
+    // Common scale styling
+    scales: {
+        x: {
+            grid: {
+                display: true,
+                color: 'rgba(148, 163, 184, 0.1)',
+                drawBorder: false
+            },
+            ticks: {
+                font: { size: 11, weight: '500' },
+                color: '#64748b'
+            }
+        },
+        y: {
+            grid: {
+                display: false,
+                drawBorder: false
+            },
+            ticks: {
+                font: { size: 12, weight: '600' },
+                color: '#334155'
+            }
+        }
+    },
+
+    // Bar styling
+    bar: {
+        borderRadius: 6,
+        borderSkipped: false,
+        barThickness: 28,
+        maxBarThickness: 35
+    }
+};
+
+/**
+ * Custom Chart.js plugin for drawing vote labels on bars
+ */
+const voteLabelsPlugin = {
+    id: 'voteLabels',
+    afterDatasetsDraw: function(chart, args, options) {
+        if (!options.enabled) return;
+
+        const ctx = chart.ctx;
+        const meta = chart.getDatasetMeta(0);
+
+        ctx.save();
+        ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
+        ctx.textBaseline = 'middle';
+
+        meta.data.forEach((bar, index) => {
+            const data = options.data[index];
+            if (!data || data.votes === 0) return;
+
+            const votes = data.votes;
+            const percentage = options.totalVotes > 0
+                ? Math.round((votes / options.totalVotes) * 100)
+                : 0;
+
+            const text = votes + ' (' + percentage + '%)';
+            const textWidth = ctx.measureText(text).width;
+
+            // Position: inside bar if fits, otherwise outside
+            const barWidth = bar.width;
+            const insideBar = barWidth > textWidth + 20;
+
+            if (insideBar) {
+                ctx.textAlign = 'right';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                ctx.fillText(text, bar.x - 8, bar.y);
+            } else {
+                ctx.textAlign = 'left';
+                ctx.fillStyle = '#334155';
+                ctx.fillText(text, bar.x + 8, bar.y);
+            }
+        });
+
+        ctx.restore();
+    }
+};
+
+// Register the plugin globally
+if (typeof Chart !== 'undefined') {
+    Chart.register(voteLabelsPlugin);
+}
+
+// ============================================================================
+// END CHART STYLING UTILITIES
+// ============================================================================
+
 /**
  * Check if browser supports required features
  * Shows warning banner for incompatible browsers
@@ -657,19 +822,8 @@ class PollResultsRenderer {
         this.resultsData = {};  // Store aggregated data by ID
         this.charts = {};  // Store Chart.js instances for cleanup
 
-        // Color palette for ramp segments (mobile-friendly, high contrast)
-        this.rampColors = [
-            '#2E86AB',  // Steel blue
-            '#A23B72',  // Raspberry
-            '#F18F01',  // Orange
-            '#C73E1D',  // Red
-            '#3B1F2B',  // Dark purple
-            '#95C623',  // Lime green
-            '#5C4D7D',  // Purple
-            '#E94F37',  // Coral
-            '#1B998B',  // Teal
-            '#FF6B6B'   // Salmon
-        ];
+        // Use shared color palette
+        this.colors = CHART_COLORS;
     }
 
     /**
@@ -771,6 +925,7 @@ class PollResultsRenderer {
 
     /**
      * Build unique ramp list across all lakes for consistent coloring
+     * Uses gradient colors from the shared palette
      * @param {Object} rampsByLake - Ramps grouped by lake ID
      * @returns {Array} Array of unique ramp objects with assigned colors
      */
@@ -792,17 +947,19 @@ class PollResultsRenderer {
             a.name.localeCompare(b.name)
         );
 
-        // Assign colors
+        // Assign colors from the beautiful palette
         sortedRamps.forEach((ramp, index) => {
-            ramp.color = this.rampColors[index % this.rampColors.length];
+            const colorSet = this.colors.get(index);
+            ramp.baseColor = colorSet.base;
+            ramp.lightColor = colorSet.light;
         });
 
         return sortedRamps;
     }
 
     /**
-     * Draw stacked bar chart using Chart.js
-     * Each bar represents a lake, segments represent ramps
+     * Draw beautiful stacked bar chart using Chart.js
+     * Features: gradients, rounded corners, smooth animations, styled tooltips
      * @param {string|number} id - Poll/tournament ID
      * @param {Array} lakesArray - Array of lake vote data
      * @param {Object} rampsByLake - Ramps grouped by lake ID
@@ -817,11 +974,15 @@ class PollResultsRenderer {
         }
 
         if (!lakesArray || lakesArray.length === 0) {
-            canvasContainer.innerHTML = '<div class="text-secondary text-center py-4"><i class="bi bi-inbox me-2"></i>No votes yet</div>';
+            canvasContainer.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox text-muted" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                    <p class="text-muted mt-2 mb-0">No votes yet</p>
+                </div>`;
             return;
         }
 
-        // Create canvas element
+        // Create canvas element with proper container
         canvasContainer.innerHTML = '<canvas id="chartCanvas-' + id + '"></canvas>';
         const canvas = document.getElementById('chartCanvas-' + id);
         const ctx = canvas.getContext('2d');
@@ -832,8 +993,8 @@ class PollResultsRenderer {
         // Prepare data for Chart.js stacked bar
         const labels = lakesArray.map(lake => lake.name);
 
-        // Create datasets - one per unique ramp
-        const datasets = rampColorMap.map(ramp => {
+        // Create datasets with gradient colors - one per unique ramp
+        const datasets = rampColorMap.map((ramp) => {
             const data = lakesArray.map(lake => {
                 const lakeRamps = rampsByLake[lake.id] || {};
                 const rampData = lakeRamps[ramp.id];
@@ -843,10 +1004,12 @@ class PollResultsRenderer {
             return {
                 label: ramp.name,
                 data: data,
-                backgroundColor: ramp.color,
-                borderColor: ramp.color,
+                backgroundColor: ramp.baseColor,
+                hoverBackgroundColor: ramp.lightColor,
+                borderColor: 'rgba(255, 255, 255, 0.3)',
                 borderWidth: 1,
-                borderRadius: 2
+                borderRadius: 4,
+                borderSkipped: false
             };
         });
 
@@ -855,14 +1018,24 @@ class PollResultsRenderer {
             ds.data.some(v => v > 0)
         );
 
-        // Calculate dynamic height based on number of lakes
-        const barHeight = 50;
-        const minHeight = 150;
-        const calculatedHeight = Math.max(minHeight, lakesArray.length * barHeight + 80);
-        canvas.style.height = calculatedHeight + 'px';
-        canvas.parentElement.style.height = calculatedHeight + 'px';
+        // Calculate total votes for percentage display
+        let totalVotes = 0;
+        lakesArray.forEach(lake => {
+            const lakeRamps = rampsByLake[lake.id] || {};
+            Object.values(lakeRamps).forEach(ramp => {
+                totalVotes += ramp.votes;
+            });
+        });
 
-        // Create the chart
+        // Calculate dynamic height based on number of lakes
+        const barHeight = 55;
+        const minHeight = 180;
+        const legendHeight = Math.ceil(rampColorMap.length / 3) * 25 + 20;
+        const calculatedHeight = Math.max(minHeight, lakesArray.length * barHeight + legendHeight + 40);
+        canvas.style.height = calculatedHeight + 'px';
+        canvasContainer.style.height = calculatedHeight + 'px';
+
+        // Create the chart with beautiful styling
         this.charts[id] = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -870,43 +1043,52 @@ class PollResultsRenderer {
                 datasets: activeDatasets
             },
             options: {
-                indexAxis: 'y',  // Horizontal bars
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
+                layout: {
+                    padding: { right: 15, left: 5, top: 10, bottom: 10 }
+                },
                 plugins: {
                     legend: {
                         display: true,
                         position: 'bottom',
                         labels: {
-                            boxWidth: 12,
-                            padding: 8,
+                            boxWidth: 14,
+                            boxHeight: 14,
+                            padding: 15,
                             font: {
-                                size: 11
+                                size: 12,
+                                family: 'system-ui, -apple-system, sans-serif',
+                                weight: '500'
                             },
+                            color: '#475569',
                             usePointStyle: true,
-                            pointStyle: 'rect'
+                            pointStyle: 'rectRounded'
                         }
                     },
                     tooltip: {
+                        ...CHART_CONFIG.tooltip,
                         mode: 'point',
                         callbacks: {
                             title: function(context) {
-                                return context[0].label;
+                                return '📍 ' + context[0].label;
                             },
                             label: function(context) {
                                 const rampName = context.dataset.label;
                                 const votes = context.raw;
                                 if (votes === 0) return null;
-                                return rampName + ': ' + votes + ' vote' + (votes !== 1 ? 's' : '');
+                                const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+                                return rampName + ': ' + votes + ' vote' + (votes !== 1 ? 's' : '') + ' (' + pct + '%)';
                             },
                             afterBody: function(context) {
-                                // Calculate total for this lake
                                 const lakeIndex = context[0].dataIndex;
-                                let total = 0;
+                                let lakeTotal = 0;
                                 activeDatasets.forEach(ds => {
-                                    total += ds.data[lakeIndex];
+                                    lakeTotal += ds.data[lakeIndex];
                                 });
-                                return '\nTotal: ' + total + ' votes';
+                                const lakePct = totalVotes > 0 ? Math.round((lakeTotal / totalVotes) * 100) : 0;
+                                return '\n━━━━━━━━━━━━━━━\nLake Total: ' + lakeTotal + ' votes (' + lakePct + '%)';
                             }
                         }
                     }
@@ -915,48 +1097,40 @@ class PollResultsRenderer {
                     x: {
                         stacked: true,
                         beginAtZero: true,
+                        ...CHART_CONFIG.scales.x,
                         ticks: {
-                            stepSize: 1,
-                            font: {
-                                size: 11
-                            }
+                            ...CHART_CONFIG.scales.x.ticks,
+                            stepSize: 1
                         },
                         title: {
                             display: true,
                             text: 'Votes',
-                            font: {
-                                size: 12,
-                                weight: 'bold'
-                            }
-                        },
-                        grid: {
-                            display: true,
-                            color: 'rgba(0,0,0,0.05)'
+                            font: { size: 12, weight: '600' },
+                            color: '#64748b',
+                            padding: { top: 10 }
                         }
                     },
                     y: {
                         stacked: true,
+                        ...CHART_CONFIG.scales.y,
                         ticks: {
-                            font: {
-                                size: 12,
-                                weight: 'bold'
-                            }
-                        },
-                        grid: {
-                            display: false
+                            ...CHART_CONFIG.scales.y.ticks,
+                            padding: 8
                         }
                     }
                 },
-                // Mobile-friendly touch interactions
                 interaction: {
                     mode: 'nearest',
                     axis: 'y',
                     intersect: false
                 },
-                // Animation
                 animation: {
-                    duration: 500,
+                    duration: 800,
                     easing: 'easeOutQuart'
+                },
+                // Hover effects
+                onHover: function(event, elements) {
+                    event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
                 }
             }
         });

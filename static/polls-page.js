@@ -8,22 +8,9 @@ let pollDeleteManager;
 let pollResultsRenderer;
 let clubPollCharts = {};  // Store Chart.js instances for club polls
 
-// Color palette for club poll bars (matches tournament chart colors)
-const CLUB_POLL_COLORS = [
-    '#2E86AB',  // Steel blue
-    '#A23B72',  // Raspberry
-    '#F18F01',  // Orange
-    '#C73E1D',  // Red
-    '#3B1F2B',  // Dark purple
-    '#95C623',  // Lime green
-    '#5C4D7D',  // Purple
-    '#E94F37',  // Coral
-    '#1B998B',  // Teal
-    '#FF6B6B'   // Salmon
-];
-
 /**
- * Render horizontal bar chart for a club poll
+ * Render beautiful horizontal bar chart for a club poll
+ * Features: gradients, rounded corners, smooth animations, vote labels
  * @param {HTMLElement} dataElement - Element containing poll data attributes
  */
 function renderClubPollChart(dataElement) {
@@ -47,7 +34,11 @@ function renderClubPollChart(dataElement) {
     })).filter(d => d.votes > 0);
 
     if (filteredData.length === 0) {
-        chartContainer.innerHTML = '<div class="text-secondary text-center py-4"><i class="bi bi-inbox me-2"></i>No votes yet</div>';
+        chartContainer.innerHTML = `
+            <div class="text-center py-5">
+                <i class="bi bi-inbox text-muted" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                <p class="text-muted mt-2 mb-0">No votes yet</p>
+            </div>`;
         return;
     }
 
@@ -60,16 +51,17 @@ function renderClubPollChart(dataElement) {
     const ctx = canvas.getContext('2d');
 
     // Calculate dynamic height based on number of options
-    const barHeight = 45;
-    const minHeight = 120;
-    const calculatedHeight = Math.max(minHeight, filteredData.length * barHeight + 60);
+    const barHeight = 50;
+    const minHeight = 150;
+    const calculatedHeight = Math.max(minHeight, filteredData.length * barHeight + 50);
     canvas.style.height = calculatedHeight + 'px';
     chartContainer.style.height = calculatedHeight + 'px';
 
-    // Assign colors to each option
-    const backgroundColors = filteredData.map((_, i) => CLUB_POLL_COLORS[i % CLUB_POLL_COLORS.length]);
+    // Assign beautiful colors from shared palette
+    const backgroundColors = filteredData.map((_, i) => CHART_COLORS.get(i).base);
+    const hoverColors = filteredData.map((_, i) => CHART_COLORS.get(i).light);
 
-    // Create the chart
+    // Create the chart with beautiful styling
     clubPollCharts[pollId] = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -77,117 +69,91 @@ function renderClubPollChart(dataElement) {
             datasets: [{
                 data: filteredData.map(d => d.votes),
                 backgroundColor: backgroundColors,
-                borderColor: backgroundColors,
+                hoverBackgroundColor: hoverColors,
+                borderColor: 'rgba(255, 255, 255, 0.2)',
                 borderWidth: 1,
-                borderRadius: 4
+                borderRadius: 6,
+                borderSkipped: false,
+                barThickness: 32,
+                maxBarThickness: 40
             }]
         },
         options: {
-            indexAxis: 'y',  // Horizontal bars
+            indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
+            layout: {
+                padding: { right: 70, left: 5, top: 10, bottom: 10 }
+            },
             plugins: {
                 legend: {
-                    display: false  // No legend needed for single dataset
+                    display: false
                 },
                 tooltip: {
+                    ...CHART_CONFIG.tooltip,
                     callbacks: {
+                        title: function(context) {
+                            return '🗳️ ' + context[0].label;
+                        },
                         label: function(context) {
                             const votes = context.raw;
                             const percentage = totalVotes > 0 ? ((votes / totalVotes) * 100).toFixed(1) : 0;
                             return votes + ' vote' + (votes !== 1 ? 's' : '') + ' (' + percentage + '%)';
+                        },
+                        afterBody: function() {
+                            return '\n━━━━━━━━━━━━━━━\nTotal: ' + totalVotes + ' votes';
                         }
                     }
                 },
-                // Custom plugin to draw vote count at end of bars
-                datalabels: false  // Disable if plugin exists
+                // Use our custom vote labels plugin
+                voteLabels: {
+                    enabled: true,
+                    data: filteredData,
+                    totalVotes: totalVotes
+                }
             },
             scales: {
                 x: {
                     beginAtZero: true,
+                    ...CHART_CONFIG.scales.x,
                     ticks: {
-                        stepSize: 1,
-                        font: {
-                            size: 11
-                        }
+                        ...CHART_CONFIG.scales.x.ticks,
+                        stepSize: 1
                     },
                     title: {
                         display: true,
                         text: 'Votes',
-                        font: {
-                            size: 12,
-                            weight: 'bold'
-                        }
-                    },
-                    grid: {
-                        display: true,
-                        color: 'rgba(0,0,0,0.05)'
+                        font: { size: 12, weight: '600' },
+                        color: '#64748b',
+                        padding: { top: 10 }
                     }
                 },
                 y: {
+                    ...CHART_CONFIG.scales.y,
                     ticks: {
-                        font: {
-                            size: 12
-                        },
-                        // Truncate long labels
-                        callback: function(value, index) {
+                        ...CHART_CONFIG.scales.y.ticks,
+                        padding: 8,
+                        callback: function(value) {
                             const label = this.getLabelForValue(value);
-                            return label.length > 30 ? label.substring(0, 27) + '...' : label;
+                            return label.length > 25 ? label.substring(0, 22) + '...' : label;
                         }
-                    },
-                    grid: {
-                        display: false
                     }
                 }
             },
-            // Mobile-friendly touch interactions
             interaction: {
                 mode: 'nearest',
                 axis: 'y',
                 intersect: false
             },
             animation: {
-                duration: 500,
-                easing: 'easeOutQuart',
-                // Draw vote counts after animation completes
-                onComplete: function() {
-                    drawVoteCounts(this, filteredData, totalVotes);
-                }
+                duration: 800,
+                easing: 'easeOutQuart'
+            },
+            onHover: function(event, elements) {
+                event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
             }
         }
     });
-}
-
-/**
- * Draw vote counts at the end of each bar
- * @param {Chart} chart - Chart.js instance
- * @param {Array} data - Filtered poll data
- * @param {number} totalVotes - Total votes in poll
- */
-function drawVoteCounts(chart, data, totalVotes) {
-    const ctx = chart.ctx;
-    const meta = chart.getDatasetMeta(0);
-
-    ctx.save();
-    ctx.font = 'bold 11px sans-serif';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-
-    meta.data.forEach((bar, index) => {
-        const votes = data[index].votes;
-        const percentage = totalVotes > 0 ? ((votes / totalVotes) * 100).toFixed(0) : 0;
-        const text = votes + ' (' + percentage + '%)';
-
-        // Position text at end of bar with small padding
-        const x = bar.x + 5;
-        const y = bar.y;
-
-        // Draw text with shadow for readability
-        ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        ctx.fillText(text, x, y);
-    });
-
-    ctx.restore();
 }
 
 /**
