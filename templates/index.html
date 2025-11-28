@@ -435,34 +435,21 @@
                         <!-- No location set yet - show poll results if user voted, otherwise show TBD -->
                         {% if tournament.poll_data and (tournament.poll_data | length > 0) %}
                         <div class="mb-3">
-                            <!-- Tournament Poll Results -->
+                            <!-- Tournament Poll Results - Stacked Bar Chart -->
                             <div class="tournament-results-container-home" data-tournament-id="{{ tournament.id }}">
                                 <div class="row">
-                                    <!-- Two-Level Bar Chart (Left Panel) -->
+                                    <!-- Stacked Bar Chart (Lakes with Ramps) -->
                                     <div class="col-lg-8">
-                                        <!-- Lake Level Chart -->
-                                        <div class="card border-0 shadow-sm mb-3">
-                                            <div class="card-header bg-success text-white py-2">
-                                                <h6 class="mb-0"><i class="bi bi-geo-alt me-1"></i>Lakes</h6>
-                                            </div>
-                                            <div class="card-body p-3">
-                                                <div class="lakes-chart-container" id="lakesChart-{{ tournament.id }}">
-                                                    <!-- Lakes chart will be drawn here -->
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Ramp Level Chart -->
                                         <div class="card border-0 shadow-sm">
-                                            <div class="card-header bg-success text-white py-2 d-flex justify-content-between align-items-center">
-                                                <h6 class="mb-0"><i class="bi bi-signpost me-1"></i>Ramps</h6>
-                                                <small id="selectedLake-{{ tournament.id }}" class="opacity-75">Click a lake above</small>
+                                            <div class="card-header bg-success text-white py-2">
+                                                <h6 class="mb-0"><i class="bi bi-bar-chart-fill me-1"></i>Location Votes</h6>
                                             </div>
                                             <div class="card-body p-3">
-                                                <div class="ramps-chart-container" id="rampsChart-{{ tournament.id }}">
-                                                    <div class="text-secondary text-center py-4">
-                                                        <i class="bi bi-arrow-up me-2"></i>Select a lake above to see ramp breakdown
-                                                    </div>
+                                                <div class="stacked-chart-container" id="stackedChart-{{ tournament.id }}" style="min-height: 150px;">
+                                                    <!-- Stacked bar chart will be drawn here -->
+                                                </div>
+                                                <div class="text-center mt-2">
+                                                    <small class="text-muted"><i class="bi bi-hand-index me-1"></i>Tap bars for details</small>
                                                 </div>
                                             </div>
                                         </div>

@@ -64,10 +64,3 @@ document.addEventListener('DOMContentLoaded', function() {
 function deletePoll(pollId, pollTitle) {
     pollDeleteManager.confirm(pollId, pollTitle);
 }
-
-// Expose selectLakePoll to global scope for backward compatibility
-window.selectLakePoll = function(pollId, lakeId) {
-    if (pollResultsRenderer) {
-        pollResultsRenderer.selectLake(pollId, lakeId);
-    }
-};

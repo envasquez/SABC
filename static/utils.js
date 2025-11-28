@@ -627,7 +627,7 @@ function getRampName(lakesData, rampId) {
 
 /**
  * PollResultsRenderer - Reusable component for rendering poll results visualization
- * Handles aggregating votes and rendering lakes, ramps, and times charts/tables
+ * Handles aggregating votes and rendering lakes with stacked ramp bars and times tables
  *
  * @class
  *
@@ -655,6 +655,21 @@ class PollResultsRenderer {
         this.idAttribute = idAttribute;
         this.onLakeSelect = onLakeSelect;
         this.resultsData = {};  // Store aggregated data by ID
+        this.charts = {};  // Store Chart.js instances for cleanup
+
+        // Color palette for ramp segments (mobile-friendly, high contrast)
+        this.rampColors = [
+            '#2E86AB',  // Steel blue
+            '#A23B72',  // Raspberry
+            '#F18F01',  // Orange
+            '#C73E1D',  // Red
+            '#3B1F2B',  // Dark purple
+            '#95C623',  // Lime green
+            '#5C4D7D',  // Purple
+            '#E94F37',  // Coral
+            '#1B998B',  // Teal
+            '#FF6B6B'   // Salmon
+        ];
     }
 
     /**
@@ -677,13 +692,15 @@ class PollResultsRenderer {
 
     /**
      * Aggregate votes from poll option data elements
+     * Groups ramps by lake for stacked bar visualization
      * @param {HTMLElement} container - Container element with poll option data
-     * @returns {Object} Aggregated data with lakes, ramps, and times arrays
+     * @returns {Object} Aggregated data with lakes, ramps, rampsByLake, and times
      */
     aggregateVotes(container) {
         const optionElements = container.querySelectorAll('.poll-option-data');
         const lakes = {};
         const ramps = {};
+        const rampsByLake = {};  // For stacked bar chart
         const times = {};
 
         optionElements.forEach(el => {
@@ -708,14 +725,29 @@ class PollResultsRenderer {
                     lakes[lakeId] = { id: lakeId, name: this.getLakeName(lakeId), votes: 0 };
                 }
                 lakes[lakeId].votes += voteCount;
+
+                // Initialize rampsByLake for this lake
+                if (!rampsByLake[lakeId]) {
+                    rampsByLake[lakeId] = {};
+                }
             }
 
-            // Aggregate ramp votes
-            if (rampId) {
+            // Aggregate ramp votes (grouped by lake)
+            if (rampId && lakeId) {
                 if (!ramps[rampId]) {
                     ramps[rampId] = { id: rampId, lake_id: lakeId, name: this.getRampName(rampId), votes: 0 };
                 }
                 ramps[rampId].votes += voteCount;
+
+                // Add to rampsByLake for stacked bar
+                if (!rampsByLake[lakeId][rampId]) {
+                    rampsByLake[lakeId][rampId] = {
+                        id: rampId,
+                        name: this.getRampName(rampId),
+                        votes: 0
+                    };
+                }
+                rampsByLake[lakeId][rampId].votes += voteCount;
             }
 
             // Aggregate time votes
@@ -732,82 +764,202 @@ class PollResultsRenderer {
         return {
             lakes: Object.values(lakes).sort((a, b) => b.votes - a.votes),
             ramps: Object.values(ramps).sort((a, b) => b.votes - a.votes),
+            rampsByLake: rampsByLake,
             times: Object.values(times).sort((a, b) => b.votes - a.votes)
         };
     }
 
     /**
-     * Draw lakes chart with clickable bars
-     * @param {string|number} id - Poll/tournament ID
-     * @param {Array} lakesArray - Array of lake vote data
+     * Build unique ramp list across all lakes for consistent coloring
+     * @param {Object} rampsByLake - Ramps grouped by lake ID
+     * @returns {Array} Array of unique ramp objects with assigned colors
      */
-    drawLakesChart(id, lakesArray) {
-        const chartContainer = document.getElementById('lakesChart-' + id);
-        if (!chartContainer) return;
-
-        if (!lakesArray || lakesArray.length === 0) {
-            chartContainer.innerHTML = '<div class="text-secondary text-center py-4"><i class="bi bi-inbox me-2"></i>No votes yet</div>';
-            return;
-        }
-
-        const maxVotes = Math.max.apply(null, lakesArray.map(d => d.votes));
-        const self = this;
-        chartContainer.innerHTML = lakesArray.map(lake => {
-            const percentage = (lake.votes / maxVotes) * 100;
-            return '<div class="lake-card mb-2" data-lake-id="' + lake.id + '" style="cursor: pointer;">' +
-                '<div class="d-flex justify-content-between align-items-center mb-1">' +
-                    '<span class="fw-semibold">' + escapeHtml(lake.name) + '</span>' +
-                    '<span class="badge bg-primary">' + lake.votes + '</span>' +
-                '</div>' +
-                '<div class="progress" style="height: 25px;">' +
-                    '<div class="progress-bar lake-bar bg-success" role="progressbar" style="width: ' + percentage + '%"></div>' +
-                '</div>' +
-            '</div>';
-        }).join('');
-
-        // Add click handlers
-        chartContainer.querySelectorAll('.lake-card').forEach(card => {
-            card.addEventListener('click', () => {
-                const lakeId = card.dataset.lakeId;
-                self.selectLake(id, parseInt(lakeId));
+    buildRampColorMap(rampsByLake) {
+        const uniqueRamps = {};
+        Object.values(rampsByLake).forEach(lakeRamps => {
+            Object.values(lakeRamps).forEach(ramp => {
+                if (!uniqueRamps[ramp.id]) {
+                    uniqueRamps[ramp.id] = {
+                        id: ramp.id,
+                        name: ramp.name
+                    };
+                }
             });
         });
+
+        // Sort by name for consistent ordering
+        const sortedRamps = Object.values(uniqueRamps).sort((a, b) =>
+            a.name.localeCompare(b.name)
+        );
+
+        // Assign colors
+        sortedRamps.forEach((ramp, index) => {
+            ramp.color = this.rampColors[index % this.rampColors.length];
+        });
+
+        return sortedRamps;
     }
 
     /**
-     * Draw ramps chart for selected lake
+     * Draw stacked bar chart using Chart.js
+     * Each bar represents a lake, segments represent ramps
      * @param {string|number} id - Poll/tournament ID
-     * @param {number} lakeId - Selected lake ID
+     * @param {Array} lakesArray - Array of lake vote data
+     * @param {Object} rampsByLake - Ramps grouped by lake ID
      */
-    drawRampsChart(id, lakeId) {
-        const container = document.getElementById('rampsChart-' + id);
-        if (!container) return;
+    drawStackedBarChart(id, lakesArray, rampsByLake) {
+        const canvasContainer = document.getElementById('stackedChart-' + id);
+        if (!canvasContainer) return;
 
-        const resultsData = this.resultsData[id];
-        if (!resultsData || !resultsData.ramps) {
-            container.innerHTML = '<div class="text-secondary text-center py-4"><i class="bi bi-arrow-up me-2"></i>Select a lake above to see ramps</div>';
+        // Destroy existing chart if any
+        if (this.charts[id]) {
+            this.charts[id].destroy();
+        }
+
+        if (!lakesArray || lakesArray.length === 0) {
+            canvasContainer.innerHTML = '<div class="text-secondary text-center py-4"><i class="bi bi-inbox me-2"></i>No votes yet</div>';
             return;
         }
 
-        const ramps = resultsData.ramps.filter(r => r.lake_id == lakeId);
-        if (ramps.length === 0) {
-            container.innerHTML = '<div class="text-secondary text-center py-4"><i class="bi bi-inbox me-2"></i>No votes for ramps at this lake</div>';
-            return;
-        }
+        // Create canvas element
+        canvasContainer.innerHTML = '<canvas id="chartCanvas-' + id + '"></canvas>';
+        const canvas = document.getElementById('chartCanvas-' + id);
+        const ctx = canvas.getContext('2d');
 
-        const maxVotes = Math.max.apply(null, ramps.map(r => r.votes));
-        container.innerHTML = ramps.map(ramp => {
-            const percentage = (ramp.votes / maxVotes) * 100;
-            return '<div class="mb-2">' +
-                '<div class="d-flex justify-content-between align-items-center mb-1">' +
-                    '<span class="fw-semibold">' + escapeHtml(ramp.name) + '</span>' +
-                    '<span class="badge bg-primary">' + ramp.votes + '</span>' +
-                '</div>' +
-                '<div class="progress" style="height: 25px;">' +
-                    '<div class="progress-bar bg-info" role="progressbar" style="width: ' + percentage + '%"></div>' +
-                '</div>' +
-            '</div>';
-        }).join('');
+        // Build color map for ramps
+        const rampColorMap = this.buildRampColorMap(rampsByLake);
+
+        // Prepare data for Chart.js stacked bar
+        const labels = lakesArray.map(lake => lake.name);
+
+        // Create datasets - one per unique ramp
+        const datasets = rampColorMap.map(ramp => {
+            const data = lakesArray.map(lake => {
+                const lakeRamps = rampsByLake[lake.id] || {};
+                const rampData = lakeRamps[ramp.id];
+                return rampData ? rampData.votes : 0;
+            });
+
+            return {
+                label: ramp.name,
+                data: data,
+                backgroundColor: ramp.color,
+                borderColor: ramp.color,
+                borderWidth: 1,
+                borderRadius: 2
+            };
+        });
+
+        // Filter out datasets with all zeros
+        const activeDatasets = datasets.filter(ds =>
+            ds.data.some(v => v > 0)
+        );
+
+        // Calculate dynamic height based on number of lakes
+        const barHeight = 50;
+        const minHeight = 150;
+        const calculatedHeight = Math.max(minHeight, lakesArray.length * barHeight + 80);
+        canvas.style.height = calculatedHeight + 'px';
+        canvas.parentElement.style.height = calculatedHeight + 'px';
+
+        // Create the chart
+        this.charts[id] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: activeDatasets
+            },
+            options: {
+                indexAxis: 'y',  // Horizontal bars
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 8,
+                            font: {
+                                size: 11
+                            },
+                            usePointStyle: true,
+                            pointStyle: 'rect'
+                        }
+                    },
+                    tooltip: {
+                        mode: 'point',
+                        callbacks: {
+                            title: function(context) {
+                                return context[0].label;
+                            },
+                            label: function(context) {
+                                const rampName = context.dataset.label;
+                                const votes = context.raw;
+                                if (votes === 0) return null;
+                                return rampName + ': ' + votes + ' vote' + (votes !== 1 ? 's' : '');
+                            },
+                            afterBody: function(context) {
+                                // Calculate total for this lake
+                                const lakeIndex = context[0].dataIndex;
+                                let total = 0;
+                                activeDatasets.forEach(ds => {
+                                    total += ds.data[lakeIndex];
+                                });
+                                return '\nTotal: ' + total + ' votes';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            font: {
+                                size: 11
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Votes',
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        },
+                        grid: {
+                            display: true,
+                            color: 'rgba(0,0,0,0.05)'
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                        ticks: {
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                // Mobile-friendly touch interactions
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'y',
+                    intersect: false
+                },
+                // Animation
+                animation: {
+                    duration: 500,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
     }
 
     /**
@@ -834,49 +986,6 @@ class PollResultsRenderer {
     }
 
     /**
-     * Handle lake selection - update UI and draw ramps
-     * @param {string|number} id - Poll/tournament ID
-     * @param {number} lakeId - Selected lake ID
-     */
-    selectLake(id, lakeId) {
-        const container = document.querySelector('[data-' + this.idAttribute.replace(/([A-Z])/g, '-$1').toLowerCase() + '="' + id + '"].' + this.containerSelector.replace('.', ''));
-        if (!container) {
-            // Try alternate selector format
-            const altContainer = document.querySelector(this.containerSelector + '[data-' + this.idAttribute.replace(/([A-Z])/g, '-$1').toLowerCase() + '="' + id + '"]');
-            if (!altContainer) return;
-        }
-        const actualContainer = container || document.querySelector(this.containerSelector + '[data-' + this.idAttribute.replace(/([A-Z])/g, '-$1').toLowerCase() + '="' + id + '"]');
-        if (!actualContainer) return;
-
-        // Remove selection from all lake cards
-        actualContainer.querySelectorAll('.lake-card').forEach(card => {
-            card.classList.remove('border', 'border-primary', 'border-2');
-            card.style.backgroundColor = '';
-        });
-
-        // Add selection to clicked lake card
-        const selectedCard = actualContainer.querySelector('[data-lake-id="' + lakeId + '"]');
-        if (selectedCard) {
-            selectedCard.classList.add('border', 'border-primary', 'border-2');
-            selectedCard.style.backgroundColor = 'rgba(13, 110, 253, 0.05)';
-        }
-
-        // Update selected lake label
-        const selectedLakeLabel = document.getElementById('selectedLake-' + id);
-        if (selectedLakeLabel) {
-            selectedLakeLabel.textContent = this.getLakeName(lakeId);
-        }
-
-        // Draw ramps chart for selected lake
-        this.drawRampsChart(id, lakeId);
-
-        // Call custom callback if provided
-        if (this.onLakeSelect) {
-            this.onLakeSelect(id, lakeId);
-        }
-    }
-
-    /**
      * Render results for a single container
      * @param {HTMLElement} container - Container element
      */
@@ -891,14 +1000,11 @@ class PollResultsRenderer {
         // Also store globally for backward compatibility
         window['pollResultsData_' + id] = resultsData;
 
-        // Render charts
-        this.drawLakesChart(id, resultsData.lakes);
-        this.drawTimesTable(id, resultsData.times);
+        // Render stacked bar chart (lakes with ramps)
+        this.drawStackedBarChart(id, resultsData.lakes, resultsData.rampsByLake);
 
-        // Auto-select lake with most votes if there are ramp votes
-        if (resultsData.lakes.length > 0 && resultsData.ramps.length > 0) {
-            this.selectLake(id, resultsData.lakes[0].id);
-        }
+        // Render times table
+        this.drawTimesTable(id, resultsData.times);
     }
 
     /**
@@ -907,6 +1013,16 @@ class PollResultsRenderer {
     renderAll() {
         const containers = document.querySelectorAll(this.containerSelector);
         containers.forEach(container => this.renderContainer(container));
+    }
+
+    /**
+     * Cleanup all chart instances (call when navigating away)
+     */
+    destroy() {
+        Object.values(this.charts).forEach(chart => {
+            if (chart) chart.destroy();
+        });
+        this.charts = {};
     }
 }
 

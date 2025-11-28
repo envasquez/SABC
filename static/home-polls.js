@@ -2,7 +2,7 @@
  * Home Page Poll Results Visualization
  *
  * This module handles the visualization of poll results for upcoming tournaments
- * on the home page, including lakes, ramps, and tournament times voting results.
+ * on the home page using stacked bar charts showing lakes with ramp breakdown.
  */
 
 // Global state for home page poll renderer
@@ -26,17 +26,6 @@ function initializeHomePolls(config) {
 
     // Handle tab switching for pagination
     handleTabSwitching();
-}
-
-/**
- * Handle lake selection for a tournament (wrapper for backward compatibility)
- * @param {number} lakeId - Lake ID
- * @param {number} tournamentId - Tournament ID
- */
-function selectLakeHome(lakeId, tournamentId) {
-    if (homeResultsRenderer) {
-        homeResultsRenderer.selectLake(tournamentId, lakeId);
-    }
 }
 
 /**
@@ -69,4 +58,3 @@ function handleTabSwitching() {
 
 // Export functions to global scope for onclick handlers
 window.initializeHomePolls = initializeHomePolls;
-window.selectLakeHome = selectLakeHome;
