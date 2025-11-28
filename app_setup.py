@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Any
+from typing import Any, Dict, List, Sequence
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -21,7 +21,7 @@ from core.deps import (
     templates,
     time_format_filter,
 )
-from core.helpers.logging import configure_logging
+from core.helpers.logging import configure_logging, get_logger
 from core.monitoring import init_sentry
 from core.monitoring.middleware import MetricsMiddleware
 from core.security_middleware import SecurityHeadersMiddleware
@@ -103,27 +103,74 @@ def create_app() -> FastAPI:
     # Add CSRF token to global template context
     templates.env.globals["get_csrf_token"] = get_csrf_token
 
+    # Logger for exception handlers
+    error_logger = get_logger("exception_handler")
+
+    def _sanitize_validation_errors(errors: Sequence[Any]) -> List[Dict[str, Any]]:
+        """
+        Sanitize validation errors to prevent information disclosure.
+        Returns only field names and error types, not internal details.
+        """
+        sanitized = []
+        for error in errors:
+            sanitized.append(
+                {
+                    "loc": error.get("loc", []),
+                    "type": error.get("type", "validation_error"),
+                    "msg": error.get("msg", "Invalid value"),
+                }
+            )
+        return sanitized
+
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(
         request: Request, exc: RequestValidationError
     ) -> JSONResponse:
-        # Handle FormData which is not JSON serializable
-        try:
-            body = (
-                exc.body
-                if isinstance(exc.body, (dict, list, str, int, float, bool, type(None)))
-                else str(exc.body)
-            )
-        except Exception:
-            body = None
+        # Log full error details for debugging (not exposed to user)
+        error_logger.warning(
+            "Validation error",
+            extra={
+                "path": request.url.path,
+                "method": request.method,
+                "errors": exc.errors(),
+            },
+        )
 
+        # Return sanitized error response (no body content, no internal details)
         return JSONResponse(
             status_code=422,
-            content={"detail": exc.errors(), "body": body},
+            content={"detail": _sanitize_validation_errors(exc.errors())},
         )
 
     @app.exception_handler(ValueError)
     async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse:
-        return JSONResponse(status_code=400, content={"error": str(exc)})
+        error_logger.warning(
+            "ValueError in request",
+            extra={"path": request.url.path, "error": str(exc)},
+        )
+        return JSONResponse(status_code=400, content={"error": "Invalid request data"})
+
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        """
+        Global exception handler for unhandled exceptions.
+        Logs full error details but returns a generic message to prevent info disclosure.
+        """
+        error_logger.error(
+            "Unhandled exception",
+            extra={
+                "path": request.url.path,
+                "method": request.method,
+                "error_type": type(exc).__name__,
+                "error": str(exc),
+            },
+            exc_info=True,
+        )
+
+        # Return generic error message - never expose internal details
+        return JSONResponse(
+            status_code=500,
+            content={"error": "An internal error occurred. Please try again later."},
+        )
 
     return app
