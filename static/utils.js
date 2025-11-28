@@ -79,17 +79,17 @@ const CHART_CONFIG = {
         caretPadding: 10
     },
 
-    // Common scale styling
+    // Common scale styling (designed for dark backgrounds)
     scales: {
         x: {
             grid: {
                 display: true,
-                color: 'rgba(148, 163, 184, 0.1)',
+                color: 'rgba(148, 163, 184, 0.15)',
                 drawBorder: false
             },
             ticks: {
                 font: { size: 11, weight: '500' },
-                color: '#64748b'
+                color: '#94a3b8'  // Light gray for dark backgrounds
             }
         },
         y: {
@@ -98,8 +98,8 @@ const CHART_CONFIG = {
                 drawBorder: false
             },
             ticks: {
-                font: { size: 12, weight: '600' },
-                color: '#334155'
+                font: { size: 13, weight: '600' },
+                color: '#e2e8f0'  // Light text for dark backgrounds
             }
         }
     },
@@ -150,7 +150,7 @@ const voteLabelsPlugin = {
                 ctx.fillText(text, bar.x - 8, bar.y);
             } else {
                 ctx.textAlign = 'left';
-                ctx.fillStyle = '#334155';
+                ctx.fillStyle = '#e2e8f0';  // Light color for dark backgrounds
                 ctx.fillText(text, bar.x + 8, bar.y);
             }
         });
@@ -159,9 +159,57 @@ const voteLabelsPlugin = {
     }
 };
 
-// Register the plugin globally
+/**
+ * Custom Chart.js plugin for drawing total vote labels on stacked bar charts
+ * Shows the total votes for each bar (sum of all segments) at the end
+ */
+const stackedTotalsPlugin = {
+    id: 'stackedTotals',
+    afterDatasetsDraw: function(chart, args, options) {
+        if (!options.enabled) return;
+
+        const ctx = chart.ctx;
+        const datasets = chart.data.datasets;
+        const meta = chart.getDatasetMeta(datasets.length - 1);  // Use last dataset for bar positions
+
+        ctx.save();
+        ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#e2e8f0';  // Light color for dark backgrounds
+
+        // Calculate totals for each bar (each lake)
+        const barTotals = [];
+        const numBars = datasets[0]?.data?.length || 0;
+        for (let i = 0; i < numBars; i++) {
+            let total = 0;
+            datasets.forEach(ds => {
+                total += ds.data[i] || 0;
+            });
+            barTotals.push(total);
+        }
+
+        // Draw total at the end of each stacked bar
+        meta.data.forEach((bar, index) => {
+            const total = barTotals[index];
+            if (total === 0) return;
+
+            const percentage = options.totalVotes > 0
+                ? Math.round((total / options.totalVotes) * 100)
+                : 0;
+
+            const text = total + ' (' + percentage + '%)';
+            ctx.fillText(text, bar.x + 8, bar.y);
+        });
+
+        ctx.restore();
+    }
+};
+
+// Register the plugins globally
 if (typeof Chart !== 'undefined') {
     Chart.register(voteLabelsPlugin);
+    Chart.register(stackedTotalsPlugin);
 }
 
 // ============================================================================
@@ -982,13 +1030,35 @@ class PollResultsRenderer {
             return;
         }
 
-        // Create canvas element with proper container
-        canvasContainer.innerHTML = '<canvas id="chartCanvas-' + id + '"></canvas>';
-        const canvas = document.getElementById('chartCanvas-' + id);
-        const ctx = canvas.getContext('2d');
-
         // Build color map for ramps
         const rampColorMap = this.buildRampColorMap(rampsByLake);
+
+        // Calculate total votes per ramp for legend display
+        const rampTotals = {};
+        Object.values(rampsByLake).forEach(lakeRamps => {
+            Object.values(lakeRamps).forEach(ramp => {
+                rampTotals[ramp.id] = (rampTotals[ramp.id] || 0) + ramp.votes;
+            });
+        });
+
+        // Create container with canvas and custom legend
+        canvasContainer.innerHTML = `
+            <canvas id="chartCanvas-${id}"></canvas>
+            <div id="chartLegend-${id}" class="chart-legend-pills"></div>
+        `;
+        const canvas = document.getElementById('chartCanvas-' + id);
+        const ctx = canvas.getContext('2d');
+        const legendContainer = document.getElementById('chartLegend-' + id);
+
+        // Build custom pill legend - only show ramps with votes
+        const activeRamps = rampColorMap.filter(ramp => rampTotals[ramp.id] > 0);
+        legendContainer.innerHTML = activeRamps.map(ramp => {
+            const votes = rampTotals[ramp.id] || 0;
+            return `<span class="legend-pill" style="background: ${ramp.baseColor};">
+                <span class="legend-pill-name">${ramp.name}</span>
+                <span class="legend-pill-votes">${votes}</span>
+            </span>`;
+        }).join('');
 
         // Prepare data for Chart.js stacked bar
         const labels = lakesArray.map(lake => lake.name);
@@ -1027,13 +1097,11 @@ class PollResultsRenderer {
             });
         });
 
-        // Calculate dynamic height based on number of lakes
+        // Calculate dynamic height based on number of lakes (no legend height needed - using custom legend)
         const barHeight = 55;
         const minHeight = 180;
-        const legendHeight = Math.ceil(rampColorMap.length / 3) * 25 + 20;
-        const calculatedHeight = Math.max(minHeight, lakesArray.length * barHeight + legendHeight + 40);
+        const calculatedHeight = Math.max(minHeight, lakesArray.length * barHeight + 40);
         canvas.style.height = calculatedHeight + 'px';
-        canvasContainer.style.height = calculatedHeight + 'px';
 
         // Create the chart with beautiful styling
         this.charts[id] = new Chart(ctx, {
@@ -1047,25 +1115,11 @@ class PollResultsRenderer {
                 responsive: true,
                 maintainAspectRatio: false,
                 layout: {
-                    padding: { right: 15, left: 5, top: 10, bottom: 10 }
+                    padding: { right: 70, left: 5, top: 10, bottom: 10 }  // Extra right padding for vote labels
                 },
                 plugins: {
                     legend: {
-                        display: true,
-                        position: 'bottom',
-                        labels: {
-                            boxWidth: 14,
-                            boxHeight: 14,
-                            padding: 15,
-                            font: {
-                                size: 12,
-                                family: 'system-ui, -apple-system, sans-serif',
-                                weight: '500'
-                            },
-                            color: '#475569',
-                            usePointStyle: true,
-                            pointStyle: 'rectRounded'
-                        }
+                        display: false  // Using custom HTML pill legend instead
                     },
                     tooltip: {
                         ...CHART_CONFIG.tooltip,
@@ -1091,6 +1145,11 @@ class PollResultsRenderer {
                                 return '\n━━━━━━━━━━━━━━━\nLake Total: ' + lakeTotal + ' votes (' + lakePct + '%)';
                             }
                         }
+                    },
+                    // Show total vote counts at end of stacked bars
+                    stackedTotals: {
+                        enabled: true,
+                        totalVotes: totalVotes
                     }
                 },
                 scales: {
@@ -1106,7 +1165,7 @@ class PollResultsRenderer {
                             display: true,
                             text: 'Votes',
                             font: { size: 12, weight: '600' },
-                            color: '#64748b',
+                            color: '#94a3b8',
                             padding: { top: 10 }
                         }
                     },

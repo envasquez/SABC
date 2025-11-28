@@ -124,7 +124,7 @@ function renderClubPollChart(dataElement) {
                         display: true,
                         text: 'Votes',
                         font: { size: 12, weight: '600' },
-                        color: '#64748b',
+                        color: '#94a3b8',
                         padding: { top: 10 }
                     }
                 },

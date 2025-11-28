@@ -227,3 +227,42 @@ html {
     font-size: 1rem !important;
   }
 }
+
+/* Chart Legend Pills - Custom styled legend for stacked bar charts */
+.chart-legend-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 0;
+  justify-content: center;
+}
+
+.legend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.legend-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.legend-pill-name {
+  white-space: nowrap;
+}
+
+.legend-pill-votes {
+  background: rgba(255, 255, 255, 0.25);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
