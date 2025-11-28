@@ -1030,35 +1030,13 @@ class PollResultsRenderer {
             return;
         }
 
-        // Build color map for ramps
-        const rampColorMap = this.buildRampColorMap(rampsByLake);
-
-        // Calculate total votes per ramp for legend display
-        const rampTotals = {};
-        Object.values(rampsByLake).forEach(lakeRamps => {
-            Object.values(lakeRamps).forEach(ramp => {
-                rampTotals[ramp.id] = (rampTotals[ramp.id] || 0) + ramp.votes;
-            });
-        });
-
-        // Create container with canvas and custom legend
-        canvasContainer.innerHTML = `
-            <canvas id="chartCanvas-${id}"></canvas>
-            <div id="chartLegend-${id}" class="chart-legend-pills"></div>
-        `;
+        // Create canvas element with proper container
+        canvasContainer.innerHTML = '<canvas id="chartCanvas-' + id + '"></canvas>';
         const canvas = document.getElementById('chartCanvas-' + id);
         const ctx = canvas.getContext('2d');
-        const legendContainer = document.getElementById('chartLegend-' + id);
 
-        // Build custom pill legend - only show ramps with votes
-        const activeRamps = rampColorMap.filter(ramp => rampTotals[ramp.id] > 0);
-        legendContainer.innerHTML = activeRamps.map(ramp => {
-            const votes = rampTotals[ramp.id] || 0;
-            return `<span class="legend-pill" style="background: ${ramp.baseColor};">
-                <span class="legend-pill-name">${ramp.name}</span>
-                <span class="legend-pill-votes">${votes}</span>
-            </span>`;
-        }).join('');
+        // Build color map for ramps
+        const rampColorMap = this.buildRampColorMap(rampsByLake);
 
         // Prepare data for Chart.js stacked bar
         const labels = lakesArray.map(lake => lake.name);
@@ -1097,11 +1075,13 @@ class PollResultsRenderer {
             });
         });
 
-        // Calculate dynamic height based on number of lakes (no legend height needed - using custom legend)
+        // Calculate dynamic height based on number of lakes
         const barHeight = 55;
         const minHeight = 180;
-        const calculatedHeight = Math.max(minHeight, lakesArray.length * barHeight + 40);
+        const legendHeight = Math.ceil(rampColorMap.length / 3) * 25 + 20;
+        const calculatedHeight = Math.max(minHeight, lakesArray.length * barHeight + legendHeight + 40);
         canvas.style.height = calculatedHeight + 'px';
+        canvasContainer.style.height = calculatedHeight + 'px';
 
         // Create the chart with beautiful styling
         this.charts[id] = new Chart(ctx, {
@@ -1119,7 +1099,21 @@ class PollResultsRenderer {
                 },
                 plugins: {
                     legend: {
-                        display: false  // Using custom HTML pill legend instead
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 14,
+                            boxHeight: 14,
+                            padding: 15,
+                            font: {
+                                size: 12,
+                                family: 'system-ui, -apple-system, sans-serif',
+                                weight: '500'
+                            },
+                            color: '#cbd5e1',
+                            usePointStyle: true,
+                            pointStyle: 'rectRounded'
+                        }
                     },
                     tooltip: {
                         ...CHART_CONFIG.tooltip,
