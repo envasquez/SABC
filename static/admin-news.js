@@ -64,12 +64,14 @@ function sendTestEmail() {
         body: formData
     })
     .then(response => {
+        if (!response.ok && !response.redirected) {
+            throw new Error(`Server error: ${response.status}`);
+        }
         if (response.redirected) {
             window.location.href = response.url;
         } else {
-            return response.text().then(text => {
-                throw new Error('Failed to send test email');
-            });
+            // Success without redirect - show success message
+            showToast('Test email sent successfully!', 'success');
         }
     })
     .catch(error => {

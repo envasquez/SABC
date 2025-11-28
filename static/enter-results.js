@@ -581,6 +581,7 @@ function createGuest() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'x-csrf-token': getCsrfToken(),
         },
         body: JSON.stringify(guestData)
     })
