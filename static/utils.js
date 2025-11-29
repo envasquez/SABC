@@ -3,29 +3,30 @@
  * Common functions used across the application
  */
 
-// Guard against duplicate script loading
-// On subsequent loads, just re-register Chart plugins if Chart is now available
+// Guard against duplicate script loading - use early return pattern
+// This keeps all definitions at global scope while preventing duplicate execution
 if (typeof window.SABC_UTILS_LOADED !== 'undefined') {
     // Re-register chart plugins if Chart.js is now available but plugins weren't registered
-    if (typeof Chart !== 'undefined' && typeof voteLabelsPlugin !== 'undefined') {
+    if (typeof Chart !== 'undefined' && typeof window.voteLabelsPlugin !== 'undefined') {
         try {
-            // Check if plugins are already registered by looking for them
+            // Check if plugins are already registered
             const registeredPlugins = Chart.registry?.plugins?.items || [];
             const hasVoteLabels = registeredPlugins.some(p => p.id === 'voteLabels');
             const hasStackedTotals = registeredPlugins.some(p => p.id === 'stackedTotals');
 
-            if (!hasVoteLabels && typeof voteLabelsPlugin !== 'undefined') {
-                Chart.register(voteLabelsPlugin);
+            if (!hasVoteLabels) {
+                Chart.register(window.voteLabelsPlugin);
             }
-            if (!hasStackedTotals && typeof stackedTotalsPlugin !== 'undefined') {
-                Chart.register(stackedTotalsPlugin);
+            if (!hasStackedTotals) {
+                Chart.register(window.stackedTotalsPlugin);
             }
         } catch (e) {
             // Ignore registration errors on reload
         }
     }
-    // Skip rest of file - already loaded
-} else {
+    // Throw to stop script execution - classes are already defined globally
+    throw new Error('SABC_UTILS_ALREADY_LOADED');
+}
 window.SABC_UTILS_LOADED = true;
 
 // ============================================================================
@@ -1409,4 +1410,6 @@ class DeleteConfirmationManager {
     }
 }
 
-} // End of SABC_UTILS_LOADED guard
+// Store plugins on window for re-registration on duplicate loads
+window.voteLabelsPlugin = voteLabelsPlugin;
+window.stackedTotalsPlugin = stackedTotalsPlugin;
