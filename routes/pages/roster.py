@@ -342,13 +342,32 @@ async def roster(request: Request) -> Any:
                     FROM results r
                     JOIN tournaments t ON r.tournament_id = t.id
                     JOIN events e ON t.event_id = e.id
-                    WHERE r.angler_id = a.id) as last_tournament_date
+                    WHERE r.angler_id = a.id) as last_tournament_date,
+                   (SELECT MIN(CASE position
+                        WHEN 'President' THEN 1
+                        WHEN 'Vice President' THEN 2
+                        WHEN 'Secretary' THEN 3
+                        WHEN 'Treasurer' THEN 4
+                        WHEN 'Tournament Director' THEN 5
+                        WHEN 'Assistant Tournament Director' THEN 6
+                        WHEN 'Technology Director' THEN 7
+                        ELSE 99 END)
+                    FROM officer_positions
+                    WHERE angler_id = a.id AND year = :year) as position_rank
                    FROM anglers a
                    WHERE a.name != 'Admin User' AND a.email != 'admin@sabc.com'
                    ORDER BY member DESC,
-                            CASE WHEN (SELECT GROUP_CONCAT(position)
-                                       FROM (SELECT DISTINCT position FROM officer_positions
-                                             WHERE angler_id = a.id AND year = :year)) IS NOT NULL THEN 0 ELSE 1 END,
+                            COALESCE((SELECT MIN(CASE position
+                                WHEN 'President' THEN 1
+                                WHEN 'Vice President' THEN 2
+                                WHEN 'Secretary' THEN 3
+                                WHEN 'Treasurer' THEN 4
+                                WHEN 'Tournament Director' THEN 5
+                                WHEN 'Assistant Tournament Director' THEN 6
+                                WHEN 'Technology Director' THEN 7
+                                ELSE 99 END)
+                            FROM officer_positions
+                            WHERE angler_id = a.id AND year = :year), 100),
                             a.name""",
                 {"year": current_year},
             )
@@ -373,13 +392,32 @@ async def roster(request: Request) -> Any:
                     FROM results r
                     JOIN tournaments t ON r.tournament_id = t.id
                     JOIN events e ON t.event_id = e.id
-                    WHERE r.angler_id = a.id) as last_tournament_date
+                    WHERE r.angler_id = a.id) as last_tournament_date,
+                   (SELECT MIN(CASE position
+                        WHEN 'President' THEN 1
+                        WHEN 'Vice President' THEN 2
+                        WHEN 'Secretary' THEN 3
+                        WHEN 'Treasurer' THEN 4
+                        WHEN 'Tournament Director' THEN 5
+                        WHEN 'Assistant Tournament Director' THEN 6
+                        WHEN 'Technology Director' THEN 7
+                        ELSE 99 END)
+                    FROM officer_positions
+                    WHERE angler_id = a.id AND year = :year) as position_rank
                    FROM anglers a
                    WHERE a.name != 'Admin User' AND a.email != 'admin@sabc.com'
                    ORDER BY member DESC,
-                            CASE WHEN (SELECT STRING_AGG(DISTINCT position, ', ' ORDER BY position)
-                                       FROM officer_positions
-                                       WHERE angler_id = a.id AND year = :year) IS NOT NULL THEN 0 ELSE 1 END,
+                            COALESCE((SELECT MIN(CASE position
+                                WHEN 'President' THEN 1
+                                WHEN 'Vice President' THEN 2
+                                WHEN 'Secretary' THEN 3
+                                WHEN 'Treasurer' THEN 4
+                                WHEN 'Tournament Director' THEN 5
+                                WHEN 'Assistant Tournament Director' THEN 6
+                                WHEN 'Technology Director' THEN 7
+                                ELSE 99 END)
+                            FROM officer_positions
+                            WHERE angler_id = a.id AND year = :year), 100),
                             a.name""",
                 {"year": current_year},
             )

@@ -49,13 +49,16 @@ def send_password_reset_email(email: str, name: str, token: str) -> bool:
         return False
 
 
-def send_news_notification(emails: List[str], title: str, content: str) -> bool:
+def send_news_notification(
+    emails: List[str], title: str, content: str, author_name: str | None = None
+) -> bool:
     """Send news notification to multiple members.
 
     Args:
         emails: List of email addresses to send to
         title: News post title
         content: News post content
+        author_name: Optional name of the author who posted the news
 
     Returns:
         True if emails sent successfully, False otherwise
@@ -77,7 +80,7 @@ def send_news_notification(emails: List[str], title: str, content: str) -> bool:
         )
 
     try:
-        subject, text_body, html_body = generate_news_email_content(title, content)
+        subject, text_body, html_body = generate_news_email_content(title, content, author_name)
 
         msg = MIMEMultipart("alternative")
         msg["From"] = FROM_EMAIL

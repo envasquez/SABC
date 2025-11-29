@@ -38,12 +38,25 @@ The {CLUB_NAME} Team
     return subject, text_body, html_body
 
 
-def generate_news_email_content(title: str, content: str) -> tuple[str, str, str]:
+def _format_author_name(author_name: str | None) -> str:
+    """Format author name as first initial + last name (e.g., 'J. Smith')."""
+    if not author_name:
+        return ""
+    parts = author_name.split()
+    if len(parts) >= 2:
+        return f"{parts[0][0]}. {parts[-1]}"
+    return author_name
+
+
+def generate_news_email_content(
+    title: str, content: str, author_name: str | None = None
+) -> tuple[str, str, str]:
     """Generate email content for news notifications.
 
     Args:
         title: News post title
         content: Full news content
+        author_name: Optional name of the author who posted the news
 
     Returns:
         Tuple of (subject, text_body, html_body)
@@ -53,6 +66,11 @@ def generate_news_email_content(title: str, content: str) -> tuple[str, str, str
     # Create excerpt (first 200 chars of content)
     excerpt = content[:200] + ("..." if len(content) > 200 else "")
     news_url = f"{WEBSITE_URL}/#news"
+
+    # Format author signature
+    formatted_author = _format_author_name(author_name)
+    author_line = f"\n- {formatted_author}" if formatted_author else ""
+    author_html = f"<br>- {formatted_author}" if formatted_author else ""
 
     text_body = f"""
 Hello,
@@ -66,7 +84,7 @@ Hello,
 Read the full update at: {news_url}
 
 Thanks,
-The {CLUB_NAME} Team
+The {CLUB_NAME} Team{author_line}
 """
 
     html_body = f"""
@@ -77,7 +95,7 @@ The {CLUB_NAME} Team
 <h2>{title}</h2>
 <p>{excerpt}</p>
 <p><a href="{news_url}">Read the full update</a></p>
-<p>Thanks,<br>The {CLUB_NAME} Team</p>
+<p>Thanks,<br>The {CLUB_NAME} Team{author_html}</p>
 </body>
 </html>
 """

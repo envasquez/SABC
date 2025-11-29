@@ -88,7 +88,9 @@ async def create_news(
                 ]
 
             if member_emails:
-                send_news_notification(member_emails, title_safe, content_safe)
+                send_news_notification(
+                    member_emails, title_safe, content_safe, author_name=user.get("name")
+                )
             else:
                 logger.info("No member emails found - skipping news notification")
 
@@ -176,7 +178,9 @@ async def test_news_email(request: Request, title: str = Form(...), content: str
 
     try:
         # Send test email only to the admin
-        success = send_news_notification([admin_email], title.strip(), content.strip())
+        success = send_news_notification(
+            [admin_email], title.strip(), content.strip(), author_name=user.get("name")
+        )
 
         if success:
             return RedirectResponse(
