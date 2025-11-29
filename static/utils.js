@@ -3,6 +3,31 @@
  * Common functions used across the application
  */
 
+// Guard against duplicate script loading
+// On subsequent loads, just re-register Chart plugins if Chart is now available
+if (typeof window.SABC_UTILS_LOADED !== 'undefined') {
+    // Re-register chart plugins if Chart.js is now available but plugins weren't registered
+    if (typeof Chart !== 'undefined' && typeof voteLabelsPlugin !== 'undefined') {
+        try {
+            // Check if plugins are already registered by looking for them
+            const registeredPlugins = Chart.registry?.plugins?.items || [];
+            const hasVoteLabels = registeredPlugins.some(p => p.id === 'voteLabels');
+            const hasStackedTotals = registeredPlugins.some(p => p.id === 'stackedTotals');
+
+            if (!hasVoteLabels && typeof voteLabelsPlugin !== 'undefined') {
+                Chart.register(voteLabelsPlugin);
+            }
+            if (!hasStackedTotals && typeof stackedTotalsPlugin !== 'undefined') {
+                Chart.register(stackedTotalsPlugin);
+            }
+        } catch (e) {
+            // Ignore registration errors on reload
+        }
+    }
+    // Skip rest of file - already loaded
+} else {
+window.SABC_UTILS_LOADED = true;
+
 // ============================================================================
 // CHART STYLING UTILITIES
 // Beautiful, modern chart styling with gradients, shadows, and animations
@@ -12,7 +37,7 @@
  * Outdoor/fishing-themed color palette
  * Deep blues, teals, and earth tones inspired by lakes and nature
  */
-const CHART_COLORS = {
+var CHART_COLORS = {
     // Primary palette - water/nature inspired
     palette: [
         { base: '#0077B6', light: '#00B4D8', name: 'Ocean Blue' },
@@ -1383,3 +1408,5 @@ class DeleteConfirmationManager {
         }
     }
 }
+
+} // End of SABC_UTILS_LOADED guard
