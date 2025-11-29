@@ -1,0 +1,97 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: sabc-web
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://sabc_user:${DB_PASSWORD:-secure_password}@postgres:5432/sabc
+      SECRET_KEY: ${SECRET_KEY}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      DEBUG: ${DEBUG:-false}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      FROM_EMAIL: ${FROM_EMAIL}
+      WEBSITE_URL: ${WEBSITE_URL:-https://saustinbc.com}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      RELEASE_VERSION: ${RELEASE_VERSION:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./static:/app/static:ro
+    networks:
+      - sabc-network
+    command: >
+      sh -c "
+        echo 'Waiting for database...';
+        sleep 15;
+        echo 'Applying database migrations...';
+        alembic upgrade head;
+        echo 'Starting server...';
+        uvicorn app:app --host 0.0.0.0 --port 8000
+      "
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: sabc-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: sabc
+      POSTGRES_USER: sabc_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secure_password}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.utf8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_postgres.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sabc_user -d sabc"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sabc-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: sabc-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx-https.conf:/etc/nginx/nginx.conf:ro
+      - ./static:/usr/share/nginx/html/static:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx_cache:/var/cache/nginx
+      - certbot_webroot:/var/www/certbot:ro
+    depends_on:
+      - web
+    networks:
+      - sabc-network
+
+  certbot:
+    image: certbot/certbot
+    container_name: sabc-certbot
+    volumes:
+      - ./ssl:/etc/letsencrypt
+      - certbot_webroot:/var/www/certbot
+    command: echo "Certbot container for certificate renewal"
+
+volumes:
+  postgres_data:
+    driver: local
+  nginx_cache:
+    driver: local
+  certbot_webroot:
+    driver: local
+
+networks:
+  sabc-network:
+    driver: bridge
