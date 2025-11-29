@@ -51,7 +51,8 @@ function renderClubPollChart(dataElement) {
     const ctx = canvas.getContext('2d');
 
     // Calculate dynamic height based on number of options
-    const barHeight = 50;
+    // Use larger bar height to accommodate multi-line labels
+    const barHeight = 65;
     const minHeight = 150;
     const calculatedHeight = Math.max(minHeight, filteredData.length * barHeight + 50);
     canvas.style.height = calculatedHeight + 'px';
@@ -61,11 +62,29 @@ function renderClubPollChart(dataElement) {
     const backgroundColors = filteredData.map((_, i) => CHART_COLORS.get(i).base);
     const hoverColors = filteredData.map((_, i) => CHART_COLORS.get(i).light);
 
+    // Helper function to wrap long labels into multiple lines
+    function wrapLabel(label, maxChars) {
+        if (!label || label.length <= maxChars) return label;
+        const words = label.split(' ');
+        const lines = [];
+        let currentLine = '';
+        for (const word of words) {
+            if ((currentLine + ' ' + word).trim().length <= maxChars) {
+                currentLine = (currentLine + ' ' + word).trim();
+            } else {
+                if (currentLine) lines.push(currentLine);
+                currentLine = word;
+            }
+        }
+        if (currentLine) lines.push(currentLine);
+        return lines;
+    }
+
     // Create the chart with beautiful styling
     clubPollCharts[pollId] = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: filteredData.map(d => d.label),
+            labels: filteredData.map(d => wrapLabel(d.label, 35)),
             datasets: [{
                 data: filteredData.map(d => d.votes),
                 backgroundColor: backgroundColors,
@@ -132,11 +151,8 @@ function renderClubPollChart(dataElement) {
                     ...CHART_CONFIG.scales.y,
                     ticks: {
                         ...CHART_CONFIG.scales.y.ticks,
-                        padding: 8,
-                        callback: function(value) {
-                            const label = this.getLabelForValue(value);
-                            return label.length > 25 ? label.substring(0, 22) + '...' : label;
-                        }
+                        padding: 8
+                        // Labels now wrap via wrapLabel() - no truncation needed
                     }
                 }
             },

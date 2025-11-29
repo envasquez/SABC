@@ -3,31 +3,29 @@
  * Common functions used across the application
  */
 
-// Guard against duplicate script loading - use early return pattern
-// This keeps all definitions at global scope while preventing duplicate execution
-if (typeof window.SABC_UTILS_LOADED !== 'undefined') {
-    // Re-register chart plugins if Chart.js is now available but plugins weren't registered
-    if (typeof Chart !== 'undefined' && typeof window.voteLabelsPlugin !== 'undefined') {
-        try {
-            // Check if plugins are already registered
-            const registeredPlugins = Chart.registry?.plugins?.items || [];
-            const hasVoteLabels = registeredPlugins.some(p => p.id === 'voteLabels');
-            const hasStackedTotals = registeredPlugins.some(p => p.id === 'stackedTotals');
+// Wrap everything in an IIFE to allow early return and prevent duplicate variable declarations
+(function() {
+    'use strict';
 
-            if (!hasVoteLabels) {
-                Chart.register(window.voteLabelsPlugin);
+    // Guard against duplicate script loading
+    if (window.SABC_UTILS_LOADED) {
+        // Re-register chart plugins if Chart.js is now available
+        if (typeof Chart !== 'undefined' && window.voteLabelsPlugin) {
+            try {
+                const registeredPlugins = Chart.registry?.plugins?.items || [];
+                if (!registeredPlugins.some(p => p.id === 'voteLabels')) {
+                    Chart.register(window.voteLabelsPlugin);
+                }
+                if (!registeredPlugins.some(p => p.id === 'stackedTotals')) {
+                    Chart.register(window.stackedTotalsPlugin);
+                }
+            } catch (e) {
+                // Ignore registration errors
             }
-            if (!hasStackedTotals) {
-                Chart.register(window.stackedTotalsPlugin);
-            }
-        } catch (e) {
-            // Ignore registration errors on reload
         }
+        return; // Exit early - everything already defined
     }
-    // Throw to stop script execution - classes are already defined globally
-    throw new Error('SABC_UTILS_ALREADY_LOADED');
-}
-window.SABC_UTILS_LOADED = true;
+    window.SABC_UTILS_LOADED = true;
 
 // ============================================================================
 // CHART STYLING UTILITIES
@@ -1410,6 +1408,26 @@ class DeleteConfirmationManager {
     }
 }
 
-// Store plugins on window for re-registration on duplicate loads
+// Export everything to window for global access
 window.voteLabelsPlugin = voteLabelsPlugin;
 window.stackedTotalsPlugin = stackedTotalsPlugin;
+window.CHART_COLORS = CHART_COLORS;
+window.CHART_CONFIG = CHART_CONFIG;
+window.escapeHtml = escapeHtml;
+window.formatDateTimeLocal = formatDateTimeLocal;
+window.getCsrfToken = getCsrfToken;
+window.showToast = showToast;
+window.fetchWithRetry = fetchWithRetry;
+window.deleteRequest = deleteRequest;
+window.handleApiError = handleApiError;
+window.LakeRampSelector = LakeRampSelector;
+window.showModal = showModal;
+window.hideModal = hideModal;
+window.formatTime12Hour = formatTime12Hour;
+window.getLakeName = getLakeName;
+window.getRampName = getRampName;
+window.PollResultsRenderer = PollResultsRenderer;
+window.DeleteConfirmationManager = DeleteConfirmationManager;
+window.checkBrowserCompatibility = checkBrowserCompatibility;
+
+})(); // End IIFE
