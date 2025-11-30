@@ -244,21 +244,24 @@ def get_member_stats(
 
 def get_member_monthly_weights(
     qs: QueryService, member_ids: List[int], current_year: int, dialect_name: str
-) -> Dict[int, Dict[str, List[float]]]:
+) -> Dict[int, Dict[str, List[Dict[str, Any]]]]:
     """
     Fetch monthly weight data for all members in a single query.
-    Returns a dict mapping member_id -> {year: [12 monthly weights]}
+    Returns a dict mapping member_id -> {year: [12 monthly data objects]}
+    Each data object contains: {weight: float, buy_in: bool}
     """
     if not member_ids:
         return {}
 
     # Query to get all monthly weights for all members at once
+    # Include buy_in flag for zero-weight detection
     if dialect_name == "sqlite":
         monthly_query = """
             SELECT r.angler_id,
                    CAST(strftime('%Y', e.date) AS INTEGER) as year,
                    CAST(strftime('%m', e.date) AS INTEGER) as month,
-                   SUM(r.total_weight - COALESCE(r.dead_fish_penalty, 0)) as total_weight
+                   SUM(r.total_weight - COALESCE(r.dead_fish_penalty, 0)) as total_weight,
+                   MAX(CASE WHEN r.buy_in = 1 THEN 1 ELSE 0 END) as has_buy_in
             FROM results r
             JOIN tournaments t ON r.tournament_id = t.id
             JOIN events e ON t.event_id = e.id
@@ -276,7 +279,8 @@ def get_member_monthly_weights(
             SELECT r.angler_id,
                    EXTRACT(YEAR FROM e.date)::INTEGER as year,
                    EXTRACT(MONTH FROM e.date)::INTEGER as month,
-                   SUM(r.total_weight - COALESCE(r.dead_fish_penalty, 0)) as total_weight
+                   SUM(r.total_weight - COALESCE(r.dead_fish_penalty, 0)) as total_weight,
+                   BOOL_OR(r.buy_in) as has_buy_in
             FROM results r
             JOIN tournaments t ON r.tournament_id = t.id
             JOIN events e ON t.event_id = e.id
@@ -289,22 +293,29 @@ def get_member_monthly_weights(
         results = qs.fetch_all(monthly_query, {"member_ids": member_ids})
 
     # Initialize empty data structure for all members
-    member_weights: Dict[int, Dict[str, List[float]]] = {}
+    # Each month is now an object with weight and buy_in flag
+    member_weights: Dict[int, Dict[str, List[Dict[str, Any]]]] = {}
     for member_id in member_ids:
         member_weights[member_id] = {}
         for year in range(2023, current_year + 1):
-            member_weights[member_id][str(year)] = [0.0] * 12
+            member_weights[member_id][str(year)] = [
+                {"weight": 0.0, "buy_in": False} for _ in range(12)
+            ]
 
-    # Fill in the actual weights
+    # Fill in the actual weights and buy_in flags
     for row in results:
         angler_id = row["angler_id"]
         year_str = str(row["year"])
         month_idx = int(row["month"]) - 1  # Convert to 0-indexed
         weight = float(row["total_weight"] or 0)
+        has_buy_in = bool(row["has_buy_in"])
 
         if angler_id in member_weights and year_str in member_weights[angler_id]:
             if 0 <= month_idx < 12:
-                member_weights[angler_id][year_str][month_idx] = weight
+                member_weights[angler_id][year_str][month_idx] = {
+                    "weight": weight,
+                    "buy_in": has_buy_in,
+                }
 
     return member_weights
 

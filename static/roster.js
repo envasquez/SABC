@@ -7,6 +7,39 @@
 const memberCharts = {};
 
 /**
+ * Custom plugin to draw dollar signs for buy-in points
+ */
+const dollarSignPlugin = {
+    id: 'dollarSignPlugin',
+    afterDatasetsDraw: function(chart) {
+        const ctx = chart.ctx;
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+            if (!dataset.buyInData) return;
+
+            const meta = chart.getDatasetMeta(datasetIndex);
+            meta.data.forEach((point, index) => {
+                const buyIn = dataset.buyInData[index];
+                const weight = dataset.data[index];
+
+                // Show $ for zero weight with buy-in
+                if (buyIn && weight === 0) {
+                    ctx.save();
+                    ctx.font = 'bold 14px Arial';
+                    ctx.fillStyle = '#ffc107'; // Bootstrap warning yellow
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('$', point.x, point.y - 12);
+                    ctx.restore();
+                }
+            });
+        });
+    }
+};
+
+// Register the plugin
+Chart.register(dollarSignPlugin);
+
+/**
  * Initialize a weight chart for a specific member
  * @param {string} memberId - The member's ID
  */
@@ -26,9 +59,14 @@ function initMemberChart(memberId) {
 
     const monthlyData = JSON.parse(dataElement.dataset.monthlyData || '{}');
 
-    // Check if there's any data
+    // Check if there's any data - handle both old format (numbers) and new format (objects)
     const hasData = Object.values(monthlyData).some(yearData =>
-        yearData.some(val => val > 0)
+        yearData.some(val => {
+            if (typeof val === 'object' && val !== null) {
+                return val.weight > 0 || val.buy_in;
+            }
+            return val > 0;
+        })
     );
 
     if (!hasData) {
@@ -47,9 +85,27 @@ function initMemberChart(memberId) {
     const years = Object.keys(monthlyData).sort();
     years.forEach((year, index) => {
         const color = CHART_LINE_COLORS[index % CHART_LINE_COLORS.length];
+        const yearData = monthlyData[year];
+
+        // Extract weights and buy_in flags from the new format
+        const weights = yearData.map(item => {
+            if (typeof item === 'object' && item !== null) {
+                return item.weight || 0;
+            }
+            return item || 0;
+        });
+
+        const buyInFlags = yearData.map(item => {
+            if (typeof item === 'object' && item !== null) {
+                return item.buy_in || false;
+            }
+            return false;
+        });
+
         datasets.push({
             label: year,
-            data: monthlyData[year],
+            data: weights,
+            buyInData: buyInFlags, // Custom property for the plugin
             borderColor: color.border,
             backgroundColor: color.bg,
             tension: 0.3,
@@ -94,8 +150,11 @@ function initMemberChart(memberId) {
                             if (label) {
                                 label += ': ';
                             }
+                            const buyIn = context.dataset.buyInData && context.dataset.buyInData[context.dataIndex];
                             if (context.parsed.y !== null && context.parsed.y > 0) {
                                 label += context.parsed.y.toFixed(2) + ' lbs';
+                            } else if (buyIn) {
+                                label += '0 lbs (buy-in)';
                             } else {
                                 label += '0 lbs';
                             }

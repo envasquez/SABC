@@ -47,14 +47,12 @@
 
         <!-- Year-over-Year Trend Cards (Compact Superset-style) -->
         {% if year_comparison.current_year %}
-        {% set month_names = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] %}
-        {% set through_month = year_comparison.through_month|int if year_comparison.through_month else 12 %}
         <div class="row row-cols-2 row-cols-lg-4 g-2 mb-4">
             <!-- Unique Anglers YTD -->
             <div class="col">
-                <div class="card h-100 trend-card">
+                <div class="card trend-card">
                     <div class="card-body text-center py-2">
-                        <p class="text-muted small mb-0" style="font-size: 0.7rem;">Anglers (thru {{ month_names[through_month] }})</p>
+                        <p class="text-muted small mb-0" style="font-size: 0.7rem;">Anglers YTD</p>
                         <h3 class="fw-bold mb-0 text-success">{{ year_comparison.current_anglers or 0 }}</h3>
                         {% set prev = year_comparison.prev_anglers or 0 %}
                         {% set curr = year_comparison.current_anglers or 0 %}
@@ -71,15 +69,14 @@
                                 <span class="text-muted">vs {{ prev }}</span>
                             </div>
                         {% endif %}
-                        <canvas id="anglersSparkline" height="25" class="mt-1"></canvas>
                     </div>
                 </div>
             </div>
             <!-- Total Fish YTD -->
             <div class="col">
-                <div class="card h-100 trend-card">
+                <div class="card trend-card">
                     <div class="card-body text-center py-2">
-                        <p class="text-muted small mb-0" style="font-size: 0.7rem;">Fish (thru {{ month_names[through_month] }})</p>
+                        <p class="text-muted small mb-0" style="font-size: 0.7rem;">Fish YTD</p>
                         <h3 class="fw-bold mb-0 text-info">{{ year_comparison.current_fish or 0 }}</h3>
                         {% set prev = year_comparison.prev_fish or 0 %}
                         {% set curr = year_comparison.current_fish or 0 %}
@@ -96,15 +93,14 @@
                                 <span class="text-muted">vs {{ prev }}</span>
                             </div>
                         {% endif %}
-                        <canvas id="fishSparkline" height="25" class="mt-1"></canvas>
                     </div>
                 </div>
             </div>
             <!-- Total Weight YTD -->
             <div class="col">
-                <div class="card h-100 trend-card">
+                <div class="card trend-card">
                     <div class="card-body text-center py-2">
-                        <p class="text-muted small mb-0" style="font-size: 0.7rem;">Weight (thru {{ month_names[through_month] }})</p>
+                        <p class="text-muted small mb-0" style="font-size: 0.7rem;">Weight YTD</p>
                         <h3 class="fw-bold mb-0 text-warning">{{ "%.0f"|format(year_comparison.current_weight or 0) }}<small style="font-size: 0.6em;"> lbs</small></h3>
                         {% set prev = year_comparison.prev_weight or 0 %}
                         {% set curr = year_comparison.current_weight or 0 %}
@@ -121,15 +117,14 @@
                                 <span class="text-muted">vs {{ "%.0f"|format(prev) }}</span>
                             </div>
                         {% endif %}
-                        <canvas id="weightSparkline" height="25" class="mt-1"></canvas>
                     </div>
                 </div>
             </div>
             <!-- Avg Weight/Angler YTD -->
             <div class="col">
-                <div class="card h-100 trend-card">
+                <div class="card trend-card">
                     <div class="card-body text-center py-2">
-                        <p class="text-muted small mb-0" style="font-size: 0.7rem;">Avg/Angler (thru {{ month_names[through_month] }})</p>
+                        <p class="text-muted small mb-0" style="font-size: 0.7rem;">Avg/Angler YTD</p>
                         <h3 class="fw-bold mb-0 text-danger">{{ "%.2f"|format(year_comparison.current_avg_weight or 0) }}<small style="font-size: 0.6em;"> lbs</small></h3>
                         {% set prev = year_comparison.prev_avg_weight or 0 %}
                         {% set curr = year_comparison.current_avg_weight or 0 %}
@@ -146,7 +141,6 @@
                                 <span class="text-muted">vs {{ "%.2f"|format(prev) }}</span>
                             </div>
                         {% endif %}
-                        <canvas id="avgWeightSparkline" height="25" class="mt-1"></canvas>
                     </div>
                 </div>
             </div>
@@ -729,109 +723,9 @@ function initLakeChart(yearOrAll) {
     });
 }
 
-// Initialize sparkline charts for trend cards
-function initSparklines(ytdData) {
-    if (!ytdData || ytdData.length < 2) return;
-
-    const sparklineConfig = {
-        type: 'line',
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: { enabled: false }
-            },
-            scales: {
-                x: { display: false },
-                y: { display: false }
-            },
-            elements: {
-                point: { radius: 0 },
-                line: { borderWidth: 2 }
-            }
-        }
-    };
-
-    const years = ytdData.map(d => d.year);
-
-    // Anglers sparkline
-    const anglersCanvas = document.getElementById('anglersSparkline');
-    if (anglersCanvas) {
-        new Chart(anglersCanvas, {
-            ...sparklineConfig,
-            data: {
-                labels: years,
-                datasets: [{
-                    data: ytdData.map(d => d.unique_anglers),
-                    borderColor: '#198754',
-                    fill: true,
-                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                    tension: 0.4
-                }]
-            }
-        });
-    }
-
-    // Fish sparkline
-    const fishCanvas = document.getElementById('fishSparkline');
-    if (fishCanvas) {
-        new Chart(fishCanvas, {
-            ...sparklineConfig,
-            data: {
-                labels: years,
-                datasets: [{
-                    data: ytdData.map(d => d.total_fish),
-                    borderColor: '#0dcaf0',
-                    fill: true,
-                    backgroundColor: 'rgba(13, 202, 240, 0.1)',
-                    tension: 0.4
-                }]
-            }
-        });
-    }
-
-    // Weight sparkline
-    const weightCanvas = document.getElementById('weightSparkline');
-    if (weightCanvas) {
-        new Chart(weightCanvas, {
-            ...sparklineConfig,
-            data: {
-                labels: years,
-                datasets: [{
-                    data: ytdData.map(d => d.total_weight),
-                    borderColor: '#ffc107',
-                    fill: true,
-                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                    tension: 0.4
-                }]
-            }
-        });
-    }
-
-    // Avg weight sparkline
-    const avgWeightCanvas = document.getElementById('avgWeightSparkline');
-    if (avgWeightCanvas) {
-        new Chart(avgWeightCanvas, {
-            ...sparklineConfig,
-            data: {
-                labels: years,
-                datasets: [{
-                    data: ytdData.map(d => d.avg_weight_per_angler),
-                    borderColor: '#dc3545',
-                    fill: true,
-                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                    tension: 0.4
-                }]
-            }
-        });
-    }
-}
-
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initCharts(originalData);
-    initSparklines(originalData.ytdTrends);
 
     // Set up lake year tab click handlers
     document.querySelectorAll('.lake-year-btn').forEach(btn => {
