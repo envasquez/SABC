@@ -252,3 +252,123 @@ class DataQueries(QueryServiceBase):
             ORDER BY e.year ASC
         """
         return self._fetch_all_converted(query, {})
+
+    def get_winning_weights_by_year(self) -> List[Dict[str, Any]]:
+        """Get average 1st, 2nd, 3rd place weights by year."""
+        query = """
+            WITH ranked_results AS (
+                SELECT
+                    e.year,
+                    t.id as tournament_id,
+                    r.total_weight,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY t.id
+                        ORDER BY r.total_weight DESC
+                    ) as place
+                FROM results r
+                JOIN tournaments t ON r.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                WHERE t.complete = true
+                    AND r.disqualified = false
+                    AND r.total_weight > 0
+            )
+            SELECT
+                year,
+                AVG(CASE WHEN place = 1 THEN total_weight END) as avg_1st,
+                AVG(CASE WHEN place = 2 THEN total_weight END) as avg_2nd,
+                AVG(CASE WHEN place = 3 THEN total_weight END) as avg_3rd
+            FROM ranked_results
+            WHERE place <= 3
+            GROUP BY year
+            ORDER BY year ASC
+        """
+        return self._fetch_all_converted(query, {})
+
+    def get_winning_weights_by_lake(self) -> List[Dict[str, Any]]:
+        """Get avg 1st, 2nd, 3rd place weights and tournament count per lake."""
+        query = """
+            WITH ranked_results AS (
+                SELECT
+                    l.id as lake_id,
+                    l.display_name as lake_name,
+                    t.id as tournament_id,
+                    r.total_weight,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY t.id
+                        ORDER BY r.total_weight DESC
+                    ) as place
+                FROM results r
+                JOIN tournaments t ON r.tournament_id = t.id
+                JOIN lakes l ON t.lake_id = l.id
+                WHERE t.complete = true
+                    AND r.disqualified = false
+                    AND r.total_weight > 0
+            )
+            SELECT
+                lake_name,
+                AVG(CASE WHEN place = 1 THEN total_weight END) as avg_1st,
+                AVG(CASE WHEN place = 2 THEN total_weight END) as avg_2nd,
+                AVG(CASE WHEN place = 3 THEN total_weight END) as avg_3rd,
+                COUNT(DISTINCT tournament_id) as tournament_count
+            FROM ranked_results
+            WHERE place <= 3
+            GROUP BY lake_id, lake_name
+            ORDER BY avg_1st DESC
+        """
+        return self._fetch_all_converted(query, {})
+
+    def get_tournament_participation(self) -> List[Dict[str, Any]]:
+        """Get participation counts per tournament with member counts."""
+        query = """
+            SELECT
+                t.id as tournament_id,
+                e.year,
+                TO_CHAR(e.date, 'YYYY-MM-DD') as tournament_date,
+                l.display_name as lake_name,
+                COUNT(r.id) as participants,
+                COUNT(DISTINCT CASE WHEN r.was_member = true THEN r.angler_id END) as members,
+                COUNT(DISTINCT CASE WHEN r.was_member = false THEN r.angler_id END) as guests
+            FROM tournaments t
+            JOIN events e ON t.event_id = e.id
+            JOIN lakes l ON t.lake_id = l.id
+            LEFT JOIN results r ON r.tournament_id = t.id
+            WHERE t.complete = true
+            GROUP BY t.id, e.year, e.date, l.display_name
+            ORDER BY e.date ASC
+        """
+        return self._fetch_all_converted(query, {})
+
+    def get_winning_weights_by_lake_year(self) -> List[Dict[str, Any]]:
+        """Get 1st, 2nd, 3rd place weights by lake for each year."""
+        query = """
+            WITH ranked_results AS (
+                SELECT
+                    e.year,
+                    l.display_name as lake_name,
+                    t.id as tournament_id,
+                    r.total_weight,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY t.id
+                        ORDER BY r.total_weight DESC
+                    ) as place
+                FROM results r
+                JOIN tournaments t ON r.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                JOIN lakes l ON t.lake_id = l.id
+                WHERE t.complete = true
+                    AND r.disqualified = false
+                    AND r.total_weight > 0
+            )
+            SELECT
+                year,
+                lake_name,
+                AVG(CASE WHEN place = 1 THEN total_weight END) as avg_1st,
+                AVG(CASE WHEN place = 2 THEN total_weight END) as avg_2nd,
+                AVG(CASE WHEN place = 3 THEN total_weight END) as avg_3rd,
+                COUNT(DISTINCT tournament_id) as tournament_count
+            FROM ranked_results
+            WHERE place <= 3
+            GROUP BY year, lake_name
+            ORDER BY year DESC, avg_1st DESC
+        """
+        return self._fetch_all_converted(query, {})

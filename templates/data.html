@@ -75,7 +75,7 @@
                 <div class="card text-center h-100">
                     <div class="card-body">
                         <h4 class="card-title text-danger mb-1">{{ overview_stats.current_members }}</h4>
-                        <p class="card-text small mb-0">Active Members</p>
+                        <p class="card-text small mb-0">Current Members</p>
                     </div>
                 </div>
             </div>
@@ -89,42 +89,44 @@
             </div>
         </div>
 
-        <!-- Section 2: Tournament Trends Charts -->
+        <!-- Section 2: Participation Chart -->
         <div class="row mb-4">
-            <div class="col-lg-6 mb-4">
-                <div class="card h-100">
+            <div class="col-12 mb-4">
+                <div class="card">
                     <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="bi bi-trophy me-2"></i>Tournaments Per Year</h5>
+                        <h5 class="mb-0">
+                            <i class="bi bi-people me-2"></i>Tournament Participation by Year
+                        </h5>
                     </div>
                     <div class="card-body">
-                        <canvas id="tournamentsChart"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="mb-0"><i class="bi bi-people me-2"></i>Avg Participants Per Tournament</h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="participationChart"></canvas>
+                        <canvas id="membershipParticipationChart" height="80"></canvas>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="row mb-4">
-            <div class="col-lg-6 mb-4">
+            <div class="col-lg-4 mb-4">
                 <div class="card h-100">
                     <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Avg Weight Per Angler (lbs)</h5>
+                        <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Avg Weight Per Angler</h5>
                     </div>
                     <div class="card-body">
                         <canvas id="weightTrendsChart"></canvas>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-6 mb-4">
+            <div class="col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0"><i class="bi bi-trophy me-2"></i>Avg Winning Weight</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="winningWeightsByYearChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
                 <div class="card h-100">
                     <div class="card-header bg-info text-white">
                         <h5 class="mb-0"><i class="bi bi-person-check me-2"></i>Membership Trends</h5>
@@ -136,7 +138,42 @@
             </div>
         </div>
 
-        <!-- Section 3: Lake Analytics -->
+        <!-- Limits vs Zeros by Year -->
+        <div class="card mb-4">
+            <div class="card-header bg-purple text-white" style="background-color: #6f42c1;">
+                <h5 class="mb-0"><i class="bi bi-check2-circle me-2"></i>Limits vs Zeros by Year</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="limitsZerosChart" height="80"></canvas>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-water me-2"></i>Winning Weights by Lake
+                            <span class="badge bg-light text-dark ms-2" id="selectedYearBadge"></span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Year tabs for this chart -->
+                        <div class="mb-3 overflow-auto">
+                            <div class="btn-group flex-wrap" role="group" id="lakeYearTabs">
+                                <button type="button" class="btn btn-outline-secondary lake-year-btn active" data-year="all">All Years</button>
+                                {% for year in available_years %}
+                                <button type="button" class="btn btn-outline-secondary lake-year-btn" data-year="{{ year }}">{{ year }}</button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <canvas id="winningWeightsByLakeChart" height="100"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Lake Analytics -->
         <div class="card mb-4">
             <div class="card-header bg-secondary text-white">
                 <h5 class="mb-0"><i class="bi bi-water me-2"></i>Lake Statistics</h5>
@@ -169,40 +206,6 @@
                             {% endfor %}
                         </tbody>
                     </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Lake Usage by Year Chart -->
-        <div class="card mb-4">
-            <div class="card-header bg-dark text-white">
-                <h5 class="mb-0"><i class="bi bi-bar-chart-stacked me-2"></i>Lake Distribution by Year</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="lakeUsageChart" height="100"></canvas>
-            </div>
-        </div>
-
-        <!-- Section 4: Catch Statistics -->
-        <div class="row mb-4">
-            <div class="col-lg-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-danger text-white">
-                        <h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i>Fish Count Distribution</h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="catchDistributionChart"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-purple text-white" style="background-color: #6f42c1;">
-                        <h5 class="mb-0"><i class="bi bi-check2-circle me-2"></i>Limits vs Zeros by Year</h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="limitsZerosChart"></canvas>
-                    </div>
                 </div>
             </div>
         </div>
@@ -245,6 +248,7 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script>
 // Store original data for filtering
 const originalData = {
@@ -253,8 +257,10 @@ const originalData = {
     weightTrends: {{ weight_trends | tojson }},
     membershipByYear: {{ membership_by_year | tojson }},
     limitsZerosByYear: {{ limits_zeros_by_year | tojson }},
-    lakeChartData: {{ lake_chart_data | tojson }},
-    catchDistribution: {{ catch_distribution | tojson }}
+    winningWeightsByYear: {{ winning_weights_by_year | tojson }},
+    winningWeightsByLake: {{ winning_weights_by_lake | tojson }},
+    winningWeightsByLakeYear: {{ winning_weights_by_lake_year | tojson }},
+    tournamentParticipation: {{ tournament_participation | tojson }}
 };
 
 // Chart instances
@@ -271,55 +277,8 @@ function initCharts(data) {
     const filteredMembership = data.membershipByYear.filter(d => selectedYears.includes(d.year));
     const filteredLimitsZeros = data.limitsZerosByYear.filter(d => selectedYears.includes(d.year));
 
-    // Filter lake chart data
-    const filteredLakeData = {
-        labels: data.lakeChartData.labels.filter(y => selectedYears.includes(y)),
-        datasets: data.lakeChartData.datasets.map(ds => ({
-            ...ds,
-            data: ds.data.filter((_, i) => selectedYears.includes(data.lakeChartData.labels[i]))
-        }))
-    };
-
-    // Tournaments Per Year
-    if (charts.tournaments) charts.tournaments.destroy();
-    charts.tournaments = new Chart(document.getElementById('tournamentsChart'), {
-        type: 'bar',
-        data: {
-            labels: filteredTournaments.map(d => d.year),
-            datasets: [{
-                label: 'Tournaments',
-                data: filteredTournaments.map(d => d.tournament_count),
-                backgroundColor: '#0d6efd'
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true } }
-        }
-    });
-
-    // Participation Trends
-    if (charts.participation) charts.participation.destroy();
-    charts.participation = new Chart(document.getElementById('participationChart'), {
-        type: 'line',
-        data: {
-            labels: filteredParticipation.map(d => d.year),
-            datasets: [{
-                label: 'Avg Participants',
-                data: filteredParticipation.map(d => d.avg_participants.toFixed(1)),
-                borderColor: '#198754',
-                backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                fill: true,
-                tension: 0.3
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true } }
-        }
-    });
+    // Initialize participation chart (stacked by year)
+    initParticipationChart();
 
     // Weight Trends
     if (charts.weight) charts.weight.destroy();
@@ -347,6 +306,7 @@ function initCharts(data) {
     if (charts.membership) charts.membership.destroy();
     charts.membership = new Chart(document.getElementById('membershipChart'), {
         type: 'bar',
+        plugins: [ChartDataLabels],
         data: {
             labels: filteredMembership.map(d => d.year),
             datasets: [
@@ -364,37 +324,24 @@ function initCharts(data) {
         },
         options: {
             responsive: true,
-            plugins: { legend: { position: 'top' } },
+            plugins: {
+                legend: { position: 'top' },
+                datalabels: {
+                    display: function(context) {
+                        // Only show label on top segment (guests if > 0, else members)
+                        if (context.datasetIndex === 1) return context.dataset.data[context.dataIndex] > 0;
+                        return filteredMembership[context.dataIndex].guest_count === 0;
+                    },
+                    anchor: 'end',
+                    align: 'top',
+                    color: '#fff',
+                    font: { weight: 'bold', size: 10 },
+                    formatter: function(value, context) {
+                        return filteredMembership[context.dataIndex].total_anglers;
+                    }
+                }
+            },
             scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
-        }
-    });
-
-    // Lake Usage Stacked Bar
-    if (charts.lakeUsage) charts.lakeUsage.destroy();
-    charts.lakeUsage = new Chart(document.getElementById('lakeUsageChart'), {
-        type: 'bar',
-        data: filteredLakeData,
-        options: {
-            responsive: true,
-            plugins: { legend: { position: 'top' } },
-            scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
-        }
-    });
-
-    // Catch Distribution (Doughnut)
-    if (charts.catchDist) charts.catchDist.destroy();
-    charts.catchDist = new Chart(document.getElementById('catchDistributionChart'), {
-        type: 'doughnut',
-        data: {
-            labels: data.catchDistribution.map(d => d.fish_count + ' fish'),
-            datasets: [{
-                data: data.catchDistribution.map(d => d.angler_count),
-                backgroundColor: ['#dc3545', '#fd7e14', '#ffc107', '#198754', '#0dcaf0', '#0d6efd', '#6f42c1', '#d63384']
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { position: 'right' } }
         }
     });
 
@@ -402,6 +349,7 @@ function initCharts(data) {
     if (charts.limitsZeros) charts.limitsZeros.destroy();
     charts.limitsZeros = new Chart(document.getElementById('limitsZerosChart'), {
         type: 'bar',
+        plugins: [ChartDataLabels],
         data: {
             labels: filteredLimitsZeros.map(d => d.year),
             datasets: [
@@ -419,10 +367,85 @@ function initCharts(data) {
         },
         options: {
             responsive: true,
-            plugins: { legend: { position: 'top' } },
+            plugins: {
+                legend: { position: 'top' },
+                datalabels: {
+                    display: function(context) {
+                        return context.dataset.data[context.dataIndex] > 0;
+                    },
+                    anchor: 'center',
+                    align: 'center',
+                    color: '#fff',
+                    font: { weight: 'bold', size: 10 }
+                }
+            },
             scales: { y: { beginAtZero: true } }
         }
     });
+
+    // Winning Weights by Year (Stacked bar: 3rd on bottom, 1st on top)
+    const filteredWinningByYear = data.winningWeightsByYear.filter(d => selectedYears.includes(d.year));
+    if (charts.winningByYear) charts.winningByYear.destroy();
+    charts.winningByYear = new Chart(document.getElementById('winningWeightsByYearChart'), {
+        type: 'bar',
+        plugins: [ChartDataLabels],
+        data: {
+            labels: filteredWinningByYear.map(d => d.year),
+            datasets: [
+                {
+                    label: '3rd Place',
+                    data: filteredWinningByYear.map(d => d.avg_3rd ? d.avg_3rd.toFixed(2) : 0),
+                    backgroundColor: '#cd7f32'
+                },
+                {
+                    label: '2nd Place',
+                    data: filteredWinningByYear.map(d => d.avg_2nd ? d.avg_2nd.toFixed(2) : 0),
+                    backgroundColor: '#6c757d'
+                },
+                {
+                    label: '1st Place',
+                    data: filteredWinningByYear.map(d => d.avg_1st ? d.avg_1st.toFixed(2) : 0),
+                    backgroundColor: '#ffc107'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top', reverse: true },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.parsed.y + ' lbs';
+                        }
+                    }
+                },
+                datalabels: {
+                    display: function(context) {
+                        // Show label if value > 0
+                        return parseFloat(context.dataset.data[context.dataIndex]) > 0;
+                    },
+                    anchor: 'center',
+                    align: 'center',
+                    color: function(context) {
+                        // Use dark text on yellow (1st place), white on others
+                        return context.datasetIndex === 2 ? '#000' : '#fff';
+                    },
+                    font: { weight: 'bold', size: 9 },
+                    formatter: function(value) {
+                        return parseFloat(value).toFixed(1);
+                    }
+                }
+            },
+            scales: {
+                x: { stacked: true },
+                y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Weight (lbs)' } }
+            }
+        }
+    });
+
+    // Initialize the combined lake chart starting with "All Years"
+    initLakeChart('all');
 
     // Update summary stats based on filtered data
     updateSummaryStats(filteredTournaments);
@@ -462,9 +485,302 @@ document.getElementById('selectAllYears').addEventListener('change', function() 
     checkboxes.forEach(cb => cb.checked = this.checked);
 });
 
+// Store participation data grouped by year for tooltip access
+let participationByYear = {};
+
+// Initialize Participation chart as stacked area by year
+function initParticipationChart() {
+    const data = originalData.tournamentParticipation;
+
+    // Get unique years and sort them
+    const years = [...new Set(data.map(d => d.year))].sort();
+
+    // Find max tournaments in any year to determine x-axis labels
+    const tournamentsByYear = {};
+    years.forEach(year => {
+        tournamentsByYear[year] = data.filter(d => d.year === year);
+    });
+    const maxTournaments = Math.max(...years.map(y => tournamentsByYear[y].length));
+
+    // Create labels (Tournament 1, Tournament 2, etc.)
+    const labels = Array.from({length: maxTournaments}, (_, i) => `T${i + 1}`);
+
+    // Store for tooltip access
+    participationByYear = tournamentsByYear;
+
+    // Color palette for years
+    const colors = [
+        { border: '#0d6efd', bg: 'rgba(13, 110, 253, 0.5)' },   // blue
+        { border: '#198754', bg: 'rgba(25, 135, 84, 0.5)' },    // green
+        { border: '#ffc107', bg: 'rgba(255, 193, 7, 0.5)' },    // yellow
+        { border: '#dc3545', bg: 'rgba(220, 53, 69, 0.5)' },    // red
+        { border: '#6f42c1', bg: 'rgba(111, 66, 193, 0.5)' },   // purple
+        { border: '#20c997', bg: 'rgba(32, 201, 151, 0.5)' },   // teal
+        { border: '#fd7e14', bg: 'rgba(253, 126, 20, 0.5)' },   // orange
+        { border: '#6c757d', bg: 'rgba(108, 117, 125, 0.5)' },  // gray
+        { border: '#0dcaf0', bg: 'rgba(13, 202, 240, 0.5)' },   // cyan
+        { border: '#d63384', bg: 'rgba(214, 51, 132, 0.5)' }    // pink
+    ];
+
+    // Create datasets for each year
+    const datasets = years.map((year, idx) => {
+        const yearData = tournamentsByYear[year];
+        const participantCounts = yearData.map(d => d.participants);
+        // Pad with nulls if this year has fewer tournaments
+        while (participantCounts.length < maxTournaments) {
+            participantCounts.push(null);
+        }
+        const color = colors[idx % colors.length];
+        return {
+            label: year.toString(),
+            data: participantCounts,
+            borderColor: color.border,
+            backgroundColor: color.bg,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            spanGaps: false
+        };
+    });
+
+    if (charts.membershipParticipation) charts.membershipParticipation.destroy();
+    charts.membershipParticipation = new Chart(document.getElementById('membershipParticipationChart'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            return 'Tournament ' + (context[0].dataIndex + 1);
+                        },
+                        label: function(context) {
+                            const year = parseInt(context.dataset.label);
+                            const idx = context.dataIndex;
+                            const yearData = participationByYear[year];
+                            if (!yearData || !yearData[idx]) return null;
+                            const t = yearData[idx];
+                            return `${year}: ${t.participants} (${t.lake_name})`;
+                        },
+                        afterLabel: function(context) {
+                            const year = parseInt(context.dataset.label);
+                            const idx = context.dataIndex;
+                            const yearData = participationByYear[year];
+                            if (!yearData || !yearData[idx]) return null;
+                            const t = yearData[idx];
+                            return `  Members: ${t.members}, Guests: ${t.guests}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: { display: true, text: 'Tournament Number' }
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    title: { display: true, text: 'Participants' }
+                }
+            }
+        }
+    });
+}
+
+// Initialize combined Lake chart (All Years or specific year)
+function initLakeChart(yearOrAll) {
+    const isAllYears = yearOrAll === 'all';
+
+    // Update the badge
+    document.getElementById('selectedYearBadge').textContent = isAllYears ? 'All Years' : yearOrAll;
+
+    let chartData, datasets;
+
+    if (isAllYears) {
+        // All Years: Show 1st/2nd/3rd stacked bars + tournament count (line)
+        chartData = originalData.winningWeightsByLake;
+        // Sort by avg_1st descending
+        chartData.sort((a, b) => (b.avg_1st || 0) - (a.avg_1st || 0));
+
+        datasets = [
+            {
+                label: '3rd Place',
+                data: chartData.map(d => d.avg_3rd ? d.avg_3rd.toFixed(2) : 0),
+                backgroundColor: '#cd7f32',
+                yAxisID: 'y',
+                stack: 'Stack 0',
+                order: 2
+            },
+            {
+                label: '2nd Place',
+                data: chartData.map(d => d.avg_2nd ? d.avg_2nd.toFixed(2) : 0),
+                backgroundColor: '#6c757d',
+                yAxisID: 'y',
+                stack: 'Stack 0',
+                order: 2
+            },
+            {
+                label: '1st Place',
+                data: chartData.map(d => d.avg_1st ? d.avg_1st.toFixed(2) : 0),
+                backgroundColor: '#ffc107',
+                yAxisID: 'y',
+                stack: 'Stack 0',
+                order: 2
+            },
+            {
+                label: 'Tournament Count',
+                data: chartData.map(d => d.tournament_count),
+                type: 'line',
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                borderWidth: 3,
+                pointRadius: 5,
+                pointBackgroundColor: '#dc3545',
+                yAxisID: 'y1',
+                fill: false,
+                tension: 0.4,
+                order: 0
+            }
+        ];
+    } else {
+        // Specific year: Show 1st/2nd/3rd stacked bars + tournament count (line)
+        chartData = originalData.winningWeightsByLakeYear.filter(d => d.year === yearOrAll);
+        // Sort by avg_1st descending
+        chartData.sort((a, b) => (b.avg_1st || 0) - (a.avg_1st || 0));
+
+        datasets = [
+            {
+                label: '3rd Place',
+                data: chartData.map(d => d.avg_3rd ? d.avg_3rd.toFixed(2) : 0),
+                backgroundColor: '#cd7f32',
+                yAxisID: 'y',
+                stack: 'Stack 0',
+                order: 2
+            },
+            {
+                label: '2nd Place',
+                data: chartData.map(d => d.avg_2nd ? d.avg_2nd.toFixed(2) : 0),
+                backgroundColor: '#6c757d',
+                yAxisID: 'y',
+                stack: 'Stack 0',
+                order: 2
+            },
+            {
+                label: '1st Place',
+                data: chartData.map(d => d.avg_1st ? d.avg_1st.toFixed(2) : 0),
+                backgroundColor: '#ffc107',
+                yAxisID: 'y',
+                stack: 'Stack 0',
+                order: 2
+            },
+            {
+                label: 'Tournament Count',
+                data: chartData.map(d => d.tournament_count),
+                type: 'line',
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                borderWidth: 3,
+                pointRadius: 5,
+                pointBackgroundColor: '#dc3545',
+                yAxisID: 'y1',
+                fill: false,
+                tension: 0.4,
+                order: 0
+            }
+        ];
+    }
+
+    if (charts.winningByLake) charts.winningByLake.destroy();
+    charts.winningByLake = new Chart(document.getElementById('winningWeightsByLakeChart'), {
+        type: 'bar',
+        plugins: [ChartDataLabels],
+        data: {
+            labels: chartData.map(d => d.lake_name),
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    reverse: true
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            if (context.dataset.label.includes('Count')) {
+                                return context.dataset.label + ': ' + context.parsed.y;
+                            }
+                            return context.dataset.label + ': ' + context.parsed.y + ' lbs';
+                        }
+                    }
+                },
+                datalabels: {
+                    display: function(context) {
+                        // Only show labels for bar datasets (not the line), and only if value > 0
+                        return context.dataset.type !== 'line' && parseFloat(context.dataset.data[context.dataIndex]) > 0;
+                    },
+                    anchor: 'center',
+                    align: 'center',
+                    color: function(context) {
+                        // Dark text on yellow (1st place), white on others
+                        return context.dataset.label === '1st Place' ? '#000' : '#fff';
+                    },
+                    font: { weight: 'bold', size: 9 },
+                    formatter: function(value) {
+                        return parseFloat(value).toFixed(1);
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    stacked: true
+                },
+                y: {
+                    type: 'linear',
+                    position: 'left',
+                    stacked: true,
+                    beginAtZero: true,
+                    title: { display: true, text: 'Weight (lbs)' }
+                },
+                y1: {
+                    type: 'linear',
+                    position: 'right',
+                    beginAtZero: true,
+                    title: { display: true, text: 'Tournament Count' },
+                    grid: { drawOnChartArea: false }
+                }
+            }
+        }
+    });
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initCharts(originalData);
+
+    // Set up lake year tab click handlers
+    document.querySelectorAll('.lake-year-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Update active state
+            document.querySelectorAll('.lake-year-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            // Render chart for selected year or all years
+            const yearValue = this.dataset.year;
+            initLakeChart(yearValue === 'all' ? 'all' : parseInt(yearValue));
+        });
+    });
 });
 </script>
 {% endblock %}
