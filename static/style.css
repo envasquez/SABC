@@ -276,6 +276,18 @@ html {
    Mobile Chart Improvements
    ======================================== */
 
+/* Data dashboard container - prevent horizontal page scroll */
+.data-dashboard-container {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* Trend cards row should NEVER scroll horizontally */
+.trend-cards-row {
+  overflow-x: visible !important;
+  max-width: 100%;
+}
+
 /* Base: Charts are responsive on desktop */
 .chart-scroll-container {
   width: 100%;
