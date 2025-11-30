@@ -70,6 +70,113 @@ class DataQueries(QueryServiceBase):
             "last_year": None,
         }
 
+    def get_year_comparison_stats(self) -> Dict[str, Any]:
+        """Get YTD stats comparing same months across years.
+
+        Compares current year's stats (through current month) against the same
+        period in previous years. For example, if it's March, compare Jan-Mar
+        of current year against Jan-Mar of all previous years.
+        """
+        query = """
+            WITH current_period AS (
+                -- Get the latest tournament month in the most recent year
+                SELECT
+                    MAX(e.year) as current_year,
+                    MAX(EXTRACT(MONTH FROM e.date)) as current_month
+                FROM tournaments t
+                JOIN events e ON t.event_id = e.id
+                WHERE t.complete = true
+                    AND e.year = (SELECT MAX(e2.year) FROM events e2
+                                  JOIN tournaments t2 ON t2.event_id = e2.id
+                                  WHERE t2.complete = true)
+            ),
+            ytd_stats AS (
+                -- Calculate YTD stats for each year (same month range)
+                SELECT
+                    e.year,
+                    COUNT(DISTINCT r.angler_id) as unique_anglers,
+                    COALESCE(SUM(r.num_fish), 0) as total_fish,
+                    COALESCE(SUM(r.total_weight), 0) as total_weight,
+                    CASE
+                        WHEN COUNT(r.id) > 0
+                        THEN COALESCE(SUM(r.total_weight), 0) / COUNT(r.id)
+                        ELSE 0
+                    END as avg_weight_per_angler
+                FROM tournaments t
+                JOIN events e ON t.event_id = e.id
+                LEFT JOIN results r ON r.tournament_id = t.id
+                CROSS JOIN current_period cp
+                WHERE t.complete = true
+                    AND EXTRACT(MONTH FROM e.date) <= cp.current_month
+                GROUP BY e.year
+                ORDER BY e.year DESC
+            )
+            SELECT
+                (SELECT unique_anglers FROM ytd_stats ORDER BY year DESC LIMIT 1) as current_anglers,
+                (SELECT unique_anglers FROM ytd_stats ORDER BY year DESC LIMIT 1 OFFSET 1) as prev_anglers,
+                (SELECT total_fish FROM ytd_stats ORDER BY year DESC LIMIT 1) as current_fish,
+                (SELECT total_fish FROM ytd_stats ORDER BY year DESC LIMIT 1 OFFSET 1) as prev_fish,
+                (SELECT total_weight FROM ytd_stats ORDER BY year DESC LIMIT 1) as current_weight,
+                (SELECT total_weight FROM ytd_stats ORDER BY year DESC LIMIT 1 OFFSET 1) as prev_weight,
+                (SELECT avg_weight_per_angler FROM ytd_stats ORDER BY year DESC LIMIT 1) as current_avg_weight,
+                (SELECT avg_weight_per_angler FROM ytd_stats ORDER BY year DESC LIMIT 1 OFFSET 1) as prev_avg_weight,
+                (SELECT year FROM ytd_stats ORDER BY year DESC LIMIT 1) as current_year,
+                (SELECT year FROM ytd_stats ORDER BY year DESC LIMIT 1 OFFSET 1) as prev_year,
+                (SELECT current_month FROM current_period) as through_month
+        """
+        return self._fetch_one_converted(query, {}) or {
+            "current_anglers": 0,
+            "prev_anglers": 0,
+            "current_fish": 0,
+            "prev_fish": 0,
+            "current_weight": 0.0,
+            "prev_weight": 0.0,
+            "current_avg_weight": 0.0,
+            "prev_avg_weight": 0.0,
+            "current_year": None,
+            "prev_year": None,
+            "through_month": None,
+        }
+
+    def get_ytd_trends_by_year(self) -> List[Dict[str, Any]]:
+        """Get YTD stats for each year (same month range as current year).
+
+        Returns historical YTD data for sparkline charts, comparing each year's
+        performance through the same months as the current year's latest data.
+        """
+        query = """
+            WITH current_period AS (
+                SELECT
+                    MAX(e.year) as current_year,
+                    MAX(EXTRACT(MONTH FROM e.date)) as current_month
+                FROM tournaments t
+                JOIN events e ON t.event_id = e.id
+                WHERE t.complete = true
+                    AND e.year = (SELECT MAX(e2.year) FROM events e2
+                                  JOIN tournaments t2 ON t2.event_id = e2.id
+                                  WHERE t2.complete = true)
+            )
+            SELECT
+                e.year,
+                COUNT(DISTINCT r.angler_id) as unique_anglers,
+                COALESCE(SUM(r.num_fish), 0) as total_fish,
+                COALESCE(SUM(r.total_weight), 0) as total_weight,
+                CASE
+                    WHEN COUNT(r.id) > 0
+                    THEN COALESCE(SUM(r.total_weight), 0) / COUNT(r.id)
+                    ELSE 0
+                END as avg_weight_per_angler
+            FROM tournaments t
+            JOIN events e ON t.event_id = e.id
+            LEFT JOIN results r ON r.tournament_id = t.id
+            CROSS JOIN current_period cp
+            WHERE t.complete = true
+                AND EXTRACT(MONTH FROM e.date) <= cp.current_month
+            GROUP BY e.year
+            ORDER BY e.year ASC
+        """
+        return self._fetch_all_converted(query, {})
+
     def get_tournaments_by_year(self) -> List[Dict[str, Any]]:
         """Get tournament counts and stats per year."""
         query = """

@@ -10,7 +10,7 @@
         </div>
 
         <!-- Section 1: Club Overview Stats -->
-        <div class="row row-cols-2 row-cols-md-5 g-3 mb-4">
+        <div class="row row-cols-2 row-cols-md-4 g-3 mb-4">
             <div class="col">
                 <div class="card text-center h-100">
                     <div class="card-body">
@@ -43,15 +43,115 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Year-over-Year Trend Cards (Compact Superset-style) -->
+        {% if year_comparison.current_year %}
+        {% set month_names = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] %}
+        {% set through_month = year_comparison.through_month|int if year_comparison.through_month else 12 %}
+        <div class="row row-cols-2 row-cols-lg-4 g-2 mb-4">
+            <!-- Unique Anglers YTD -->
             <div class="col">
-                <div class="card text-center h-100">
-                    <div class="card-body">
-                        <h4 class="card-title text-danger mb-1">{{ overview_stats.current_members }}</h4>
-                        <p class="card-text small mb-0">Current Members</p>
+                <div class="card h-100 trend-card">
+                    <div class="card-body text-center py-2">
+                        <p class="text-muted small mb-0" style="font-size: 0.7rem;">Anglers (thru {{ month_names[through_month] }})</p>
+                        <h3 class="fw-bold mb-0 text-success">{{ year_comparison.current_anglers or 0 }}</h3>
+                        {% set prev = year_comparison.prev_anglers or 0 %}
+                        {% set curr = year_comparison.current_anglers or 0 %}
+                        {% if prev > 0 %}
+                            {% set change = ((curr - prev) / prev * 100)|round(1) %}
+                            <div class="d-flex justify-content-center align-items-center gap-1" style="font-size: 0.75rem;">
+                                {% if change > 0 %}
+                                    <span class="text-success"><i class="bi bi-caret-up-fill"></i>{{ change }}%</span>
+                                {% elif change < 0 %}
+                                    <span class="text-danger"><i class="bi bi-caret-down-fill"></i>{{ change|abs }}%</span>
+                                {% else %}
+                                    <span class="text-secondary">0%</span>
+                                {% endif %}
+                                <span class="text-muted">vs {{ prev }}</span>
+                            </div>
+                        {% endif %}
+                        <canvas id="anglersSparkline" height="25" class="mt-1"></canvas>
+                    </div>
+                </div>
+            </div>
+            <!-- Total Fish YTD -->
+            <div class="col">
+                <div class="card h-100 trend-card">
+                    <div class="card-body text-center py-2">
+                        <p class="text-muted small mb-0" style="font-size: 0.7rem;">Fish (thru {{ month_names[through_month] }})</p>
+                        <h3 class="fw-bold mb-0 text-info">{{ year_comparison.current_fish or 0 }}</h3>
+                        {% set prev = year_comparison.prev_fish or 0 %}
+                        {% set curr = year_comparison.current_fish or 0 %}
+                        {% if prev > 0 %}
+                            {% set change = ((curr - prev) / prev * 100)|round(1) %}
+                            <div class="d-flex justify-content-center align-items-center gap-1" style="font-size: 0.75rem;">
+                                {% if change > 0 %}
+                                    <span class="text-success"><i class="bi bi-caret-up-fill"></i>{{ change }}%</span>
+                                {% elif change < 0 %}
+                                    <span class="text-danger"><i class="bi bi-caret-down-fill"></i>{{ change|abs }}%</span>
+                                {% else %}
+                                    <span class="text-secondary">0%</span>
+                                {% endif %}
+                                <span class="text-muted">vs {{ prev }}</span>
+                            </div>
+                        {% endif %}
+                        <canvas id="fishSparkline" height="25" class="mt-1"></canvas>
+                    </div>
+                </div>
+            </div>
+            <!-- Total Weight YTD -->
+            <div class="col">
+                <div class="card h-100 trend-card">
+                    <div class="card-body text-center py-2">
+                        <p class="text-muted small mb-0" style="font-size: 0.7rem;">Weight (thru {{ month_names[through_month] }})</p>
+                        <h3 class="fw-bold mb-0 text-warning">{{ "%.0f"|format(year_comparison.current_weight or 0) }}<small style="font-size: 0.6em;"> lbs</small></h3>
+                        {% set prev = year_comparison.prev_weight or 0 %}
+                        {% set curr = year_comparison.current_weight or 0 %}
+                        {% if prev > 0 %}
+                            {% set change = ((curr - prev) / prev * 100)|round(1) %}
+                            <div class="d-flex justify-content-center align-items-center gap-1" style="font-size: 0.75rem;">
+                                {% if change > 0 %}
+                                    <span class="text-success"><i class="bi bi-caret-up-fill"></i>{{ change }}%</span>
+                                {% elif change < 0 %}
+                                    <span class="text-danger"><i class="bi bi-caret-down-fill"></i>{{ change|abs }}%</span>
+                                {% else %}
+                                    <span class="text-secondary">0%</span>
+                                {% endif %}
+                                <span class="text-muted">vs {{ "%.0f"|format(prev) }}</span>
+                            </div>
+                        {% endif %}
+                        <canvas id="weightSparkline" height="25" class="mt-1"></canvas>
+                    </div>
+                </div>
+            </div>
+            <!-- Avg Weight/Angler YTD -->
+            <div class="col">
+                <div class="card h-100 trend-card">
+                    <div class="card-body text-center py-2">
+                        <p class="text-muted small mb-0" style="font-size: 0.7rem;">Avg/Angler (thru {{ month_names[through_month] }})</p>
+                        <h3 class="fw-bold mb-0 text-danger">{{ "%.2f"|format(year_comparison.current_avg_weight or 0) }}<small style="font-size: 0.6em;"> lbs</small></h3>
+                        {% set prev = year_comparison.prev_avg_weight or 0 %}
+                        {% set curr = year_comparison.current_avg_weight or 0 %}
+                        {% if prev > 0 %}
+                            {% set change = ((curr - prev) / prev * 100)|round(1) %}
+                            <div class="d-flex justify-content-center align-items-center gap-1" style="font-size: 0.75rem;">
+                                {% if change > 0 %}
+                                    <span class="text-success"><i class="bi bi-caret-up-fill"></i>{{ change }}%</span>
+                                {% elif change < 0 %}
+                                    <span class="text-danger"><i class="bi bi-caret-down-fill"></i>{{ change|abs }}%</span>
+                                {% else %}
+                                    <span class="text-secondary">0%</span>
+                                {% endif %}
+                                <span class="text-muted">vs {{ "%.2f"|format(prev) }}</span>
+                            </div>
+                        {% endif %}
+                        <canvas id="avgWeightSparkline" height="25" class="mt-1"></canvas>
                     </div>
                 </div>
             </div>
         </div>
+        {% endif %}
 
         <!-- Section 2: Participation Chart -->
         <div class="row mb-4">
@@ -63,50 +163,42 @@
                         </h5>
                     </div>
                     <div class="card-body">
-                        <canvas id="membershipParticipationChart" height="80"></canvas>
+                        <div class="chart-scroll-container">
+                            <div class="chart-scroll-inner chart-scroll-inner-wide">
+                                <canvas id="membershipParticipationChart" height="80" class="chart-mobile-tall"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- Membership Trends by Year -->
-        <div class="card mb-4">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="bi bi-person-check me-2"></i>Membership Trends by Year</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="membershipChart" height="80"></canvas>
             </div>
         </div>
 
         <div class="row mb-4">
-            <div class="col-lg-4 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Avg Weight Per Angler</h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="weightTrendsChart"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-4 mb-4">
+            <div class="col-lg-6 mb-4">
                 <div class="card h-100">
                     <div class="card-header bg-dark text-white">
                         <h5 class="mb-0"><i class="bi bi-trophy me-2"></i>Avg Winning Weight</h5>
                     </div>
                     <div class="card-body">
-                        <canvas id="winningWeightsByYearChart"></canvas>
+                        <div class="chart-scroll-container">
+                            <div class="chart-scroll-inner chart-scroll-inner-medium">
+                                <canvas id="winningWeightsByYearChart"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-4 mb-4">
+            <div class="col-lg-6 mb-4">
                 <div class="card h-100">
                     <div class="card-header bg-purple text-white" style="background-color: #6f42c1;">
                         <h5 class="mb-0"><i class="bi bi-check2-circle me-2"></i>Limits vs Zeros</h5>
                     </div>
                     <div class="card-body">
-                        <canvas id="limitsZerosChart"></canvas>
+                        <div class="chart-scroll-container">
+                            <div class="chart-scroll-inner chart-scroll-inner-medium">
+                                <canvas id="limitsZerosChart"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -131,7 +223,11 @@
                                 {% endfor %}
                             </div>
                         </div>
-                        <canvas id="winningWeightsByLakeChart" height="100"></canvas>
+                        <div class="chart-scroll-container">
+                            <div class="chart-scroll-inner chart-scroll-inner-wide">
+                                <canvas id="winningWeightsByLakeChart" height="100" class="chart-mobile-tall"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -214,6 +310,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script>
+// Mobile detection helper
+const isMobile = () => window.innerWidth < 768;
+
 // Store chart data
 const originalData = {
     weightTrends: {{ weight_trends | tojson }},
@@ -222,7 +321,8 @@ const originalData = {
     winningWeightsByYear: {{ winning_weights_by_year | tojson }},
     winningWeightsByLake: {{ winning_weights_by_lake | tojson }},
     winningWeightsByLakeYear: {{ winning_weights_by_lake_year | tojson }},
-    tournamentParticipation: {{ tournament_participation | tojson }}
+    tournamentParticipation: {{ tournament_participation | tojson }},
+    ytdTrends: {{ ytd_trends | tojson }}
 };
 
 // Chart instances
@@ -231,77 +331,10 @@ let charts = {};
 // Initialize all charts
 function initCharts(data) {
     // Use all data (no filtering)
-    const filteredWeight = data.weightTrends;
-    const filteredMembership = data.membershipByYear;
     const filteredLimitsZeros = data.limitsZerosByYear;
 
     // Initialize participation chart (stacked by year)
     initParticipationChart();
-
-    // Weight Trends
-    if (charts.weight) charts.weight.destroy();
-    charts.weight = new Chart(document.getElementById('weightTrendsChart'), {
-        type: 'line',
-        data: {
-            labels: filteredWeight.map(d => d.year),
-            datasets: [{
-                label: 'Avg Weight/Angler',
-                data: filteredWeight.map(d => d.avg_individual_weight.toFixed(2)),
-                borderColor: '#ffc107',
-                backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                fill: true,
-                tension: 0.3
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true } }
-        }
-    });
-
-    // Membership Trends
-    if (charts.membership) charts.membership.destroy();
-    charts.membership = new Chart(document.getElementById('membershipChart'), {
-        type: 'bar',
-        plugins: [ChartDataLabels],
-        data: {
-            labels: filteredMembership.map(d => d.year),
-            datasets: [
-                {
-                    label: 'Members',
-                    data: filteredMembership.map(d => d.member_count),
-                    backgroundColor: '#0dcaf0'
-                },
-                {
-                    label: 'Guests',
-                    data: filteredMembership.map(d => d.guest_count),
-                    backgroundColor: '#6c757d'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'top' },
-                datalabels: {
-                    display: function(context) {
-                        // Only show label on top segment (guests if > 0, else members)
-                        if (context.datasetIndex === 1) return context.dataset.data[context.dataIndex] > 0;
-                        return filteredMembership[context.dataIndex].guest_count === 0;
-                    },
-                    anchor: 'end',
-                    align: 'top',
-                    color: '#fff',
-                    font: { weight: 'bold', size: 10 },
-                    formatter: function(value, context) {
-                        return filteredMembership[context.dataIndex].total_anglers;
-                    }
-                }
-            },
-            scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
-        }
-    });
 
     // Limits vs Zeros
     if (charts.limitsZeros) charts.limitsZeros.destroy();
@@ -329,6 +362,8 @@ function initCharts(data) {
                 legend: { position: 'top' },
                 datalabels: {
                     display: function(context) {
+                        // Hide labels on mobile for readability
+                        if (isMobile()) return false;
                         return context.dataset.data[context.dataIndex] > 0;
                     },
                     anchor: 'center',
@@ -380,6 +415,8 @@ function initCharts(data) {
                 },
                 datalabels: {
                     display: function(context) {
+                        // Hide labels on mobile for readability
+                        if (isMobile()) return false;
                         // Show label if value > 0
                         return parseFloat(context.dataset.data[context.dataIndex]) > 0;
                     },
@@ -652,6 +689,8 @@ function initLakeChart(yearOrAll) {
                 },
                 datalabels: {
                     display: function(context) {
+                        // Hide labels on mobile for readability
+                        if (isMobile()) return false;
                         // Only show labels for bar datasets (not the line), and only if value > 0
                         return context.dataset.type !== 'line' && parseFloat(context.dataset.data[context.dataIndex]) > 0;
                     },
@@ -690,9 +729,109 @@ function initLakeChart(yearOrAll) {
     });
 }
 
+// Initialize sparkline charts for trend cards
+function initSparklines(ytdData) {
+    if (!ytdData || ytdData.length < 2) return;
+
+    const sparklineConfig = {
+        type: 'line',
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false }
+            },
+            scales: {
+                x: { display: false },
+                y: { display: false }
+            },
+            elements: {
+                point: { radius: 0 },
+                line: { borderWidth: 2 }
+            }
+        }
+    };
+
+    const years = ytdData.map(d => d.year);
+
+    // Anglers sparkline
+    const anglersCanvas = document.getElementById('anglersSparkline');
+    if (anglersCanvas) {
+        new Chart(anglersCanvas, {
+            ...sparklineConfig,
+            data: {
+                labels: years,
+                datasets: [{
+                    data: ytdData.map(d => d.unique_anglers),
+                    borderColor: '#198754',
+                    fill: true,
+                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                    tension: 0.4
+                }]
+            }
+        });
+    }
+
+    // Fish sparkline
+    const fishCanvas = document.getElementById('fishSparkline');
+    if (fishCanvas) {
+        new Chart(fishCanvas, {
+            ...sparklineConfig,
+            data: {
+                labels: years,
+                datasets: [{
+                    data: ytdData.map(d => d.total_fish),
+                    borderColor: '#0dcaf0',
+                    fill: true,
+                    backgroundColor: 'rgba(13, 202, 240, 0.1)',
+                    tension: 0.4
+                }]
+            }
+        });
+    }
+
+    // Weight sparkline
+    const weightCanvas = document.getElementById('weightSparkline');
+    if (weightCanvas) {
+        new Chart(weightCanvas, {
+            ...sparklineConfig,
+            data: {
+                labels: years,
+                datasets: [{
+                    data: ytdData.map(d => d.total_weight),
+                    borderColor: '#ffc107',
+                    fill: true,
+                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                    tension: 0.4
+                }]
+            }
+        });
+    }
+
+    // Avg weight sparkline
+    const avgWeightCanvas = document.getElementById('avgWeightSparkline');
+    if (avgWeightCanvas) {
+        new Chart(avgWeightCanvas, {
+            ...sparklineConfig,
+            data: {
+                labels: years,
+                datasets: [{
+                    data: ytdData.map(d => d.avg_weight_per_angler),
+                    borderColor: '#dc3545',
+                    fill: true,
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    tension: 0.4
+                }]
+            }
+        });
+    }
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initCharts(originalData);
+    initSparklines(originalData.ytdTrends);
 
     // Set up lake year tab click handlers
     document.querySelectorAll('.lake-year-btn').forEach(btn => {
@@ -704,6 +843,14 @@ document.addEventListener('DOMContentLoaded', function() {
             // Render chart for selected year or all years
             const yearValue = this.dataset.year;
             initLakeChart(yearValue === 'all' ? 'all' : parseInt(yearValue));
+        });
+    });
+
+    // Set up scroll indicator for chart containers on mobile
+    document.querySelectorAll('.chart-scroll-container').forEach(container => {
+        container.addEventListener('scroll', function() {
+            const isAtEnd = this.scrollLeft + this.clientWidth >= this.scrollWidth - 5;
+            this.classList.toggle('scrolled-end', isAtEnd);
         });
     });
 });

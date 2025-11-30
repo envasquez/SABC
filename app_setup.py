@@ -11,6 +11,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.responses import Response
 
 from core.correlation_middleware import CorrelationIDMiddleware, get_correlation_id
 from core.csrf_middleware import CSRFMiddleware
@@ -161,12 +162,22 @@ def create_app() -> FastAPI:
     @app.exception_handler(StarletteHTTPException)
     async def http_exception_handler(
         request: Request, exc: StarletteHTTPException
-    ) -> Union[HTMLResponse, JSONResponse]:
+    ) -> Union[HTMLResponse, JSONResponse, Response]:
         """
         Handle HTTP exceptions with custom error pages for browsers.
         Returns HTML for browser requests, JSON for API requests.
+        Handles redirects (3xx) by returning Response with Location header.
         """
         correlation_id = get_correlation_id()
+
+        # For redirect status codes (3xx), return Response with Location header
+        if 300 <= exc.status_code < 400 and exc.headers:
+            location = exc.headers.get("Location") or exc.headers.get("location")
+            if location:
+                return Response(
+                    status_code=exc.status_code,
+                    headers={"Location": location},
+                )
 
         # For 404 errors, return custom error page for browsers
         if exc.status_code == 404 and _wants_html(request):
