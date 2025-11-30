@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-12 data-dashboard-container">
+    <div class="col-12">
         <div class="mb-4">
             <h1 class="h2"><i class="bi bi-bar-chart-line me-2"></i>Club Data Dashboard</h1>
         </div>
@@ -49,7 +49,7 @@
         {% if year_comparison.current_year %}
         {% set month_names = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] %}
         {% set through_month = year_comparison.through_month|int if year_comparison.through_month else 12 %}
-        <div class="row row-cols-2 row-cols-lg-4 g-2 mb-4 trend-cards-row">
+        <div class="row row-cols-2 row-cols-lg-4 g-2 mb-4">
             <!-- Unique Anglers YTD -->
             <div class="col">
                 <div class="card h-100 trend-card">
@@ -164,8 +164,8 @@
                     </div>
                     <div class="card-body">
                         <div class="chart-scroll-container">
-                            <div class="chart-scroll-inner chart-scroll-inner-wide">
-                                <canvas id="membershipParticipationChart" height="80" class="chart-mobile-tall"></canvas>
+                            <div class="chart-scroll-inner">
+                                <canvas id="membershipParticipationChart" height="80"></canvas>
                             </div>
                         </div>
                     </div>
@@ -181,7 +181,7 @@
                     </div>
                     <div class="card-body">
                         <div class="chart-scroll-container">
-                            <div class="chart-scroll-inner chart-scroll-inner-medium">
+                            <div class="chart-scroll-inner">
                                 <canvas id="winningWeightsByYearChart"></canvas>
                             </div>
                         </div>
@@ -195,7 +195,7 @@
                     </div>
                     <div class="card-body">
                         <div class="chart-scroll-container">
-                            <div class="chart-scroll-inner chart-scroll-inner-medium">
+                            <div class="chart-scroll-inner">
                                 <canvas id="limitsZerosChart"></canvas>
                             </div>
                         </div>
@@ -224,8 +224,8 @@
                             </div>
                         </div>
                         <div class="chart-scroll-container">
-                            <div class="chart-scroll-inner chart-scroll-inner-wide">
-                                <canvas id="winningWeightsByLakeChart" height="100" class="chart-mobile-tall"></canvas>
+                            <div class="chart-scroll-inner">
+                                <canvas id="winningWeightsByLakeChart" height="100"></canvas>
                             </div>
                         </div>
                     </div>
@@ -846,13 +846,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Set up scroll indicator for chart containers on mobile
-    document.querySelectorAll('.chart-scroll-container').forEach(container => {
-        container.addEventListener('scroll', function() {
-            const isAtEnd = this.scrollLeft + this.clientWidth >= this.scrollWidth - 5;
-            this.classList.toggle('scrolled-end', isAtEnd);
-        });
-    });
 });
 </script>
 {% endblock %}

@@ -276,68 +276,11 @@ html {
    Mobile Chart Improvements
    ======================================== */
 
-/* Data dashboard container - prevent horizontal page scroll */
-.data-dashboard-container {
-  overflow-x: hidden;
-  max-width: 100%;
-}
-
-/* Trend cards row should NEVER scroll horizontally */
-.trend-cards-row {
-  overflow-x: visible !important;
-  max-width: 100%;
-}
-
-/* Base: Charts are responsive on desktop */
+/* Charts scale responsively - no horizontal scroll needed */
 .chart-scroll-container {
   width: 100%;
 }
 
 .chart-scroll-inner {
   width: 100%;
-}
-
-/* Mobile ONLY: Enable horizontal scroll for readability */
-@media (max-width: 767px) {
-  .chart-scroll-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    margin: 0 -0.5rem;
-    padding: 0 0.5rem;
-    position: relative;
-  }
-
-  /* Wide charts need more space on mobile */
-  .chart-scroll-inner-wide {
-    min-width: 600px;
-  }
-
-  /* Medium charts for the 2-column section */
-  .chart-scroll-inner-medium {
-    min-width: 350px;
-  }
-
-  /* Increase chart heights on mobile for better readability */
-  .chart-mobile-tall {
-    min-height: 250px !important;
-  }
-
-  /* Visual scroll indicator for horizontal scroll containers */
-  .chart-scroll-container::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 20px;
-    background: linear-gradient(to right, transparent, rgba(33, 37, 41, 0.8));
-    pointer-events: none;
-    opacity: 1;
-    transition: opacity 0.3s ease;
-  }
-
-  /* Hide gradient when scrolled to end */
-  .chart-scroll-container.scrolled-end::after {
-    opacity: 0;
-  }
 }
