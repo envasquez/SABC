@@ -5,6 +5,7 @@ Combines functionality from queries.py, common_queries.py, and other query modul
 
 from sqlalchemy import Connection
 
+from core.query_service.data_queries import DataQueries
 from core.query_service.event_queries import EventQueries
 from core.query_service.lake_queries import LakeQueries
 from core.query_service.member_queries import MemberQueries
@@ -20,6 +21,7 @@ class QueryService(
     TournamentQueries,
     EventQueries,
     MemberQueries,
+    DataQueries,
 ):
     """Centralized database query service combining all query categories."""
 

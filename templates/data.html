@@ -1,0 +1,470 @@
+{% extends "base.html" %}
+
+{% block title %}Club Data - SABC{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2"><i class="bi bi-bar-chart-line me-2"></i>Club Data Dashboard</h1>
+
+            <!-- Year Filter Dropdown -->
+            <div class="dropdown">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-funnel me-1"></i>Filter Years
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end p-3" style="min-width: 200px;">
+                    <li class="mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="selectAllYears" checked>
+                            <label class="form-check-label fw-bold" for="selectAllYears">Select All</label>
+                        </div>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    {% for year in available_years %}
+                    <li>
+                        <div class="form-check">
+                            <input class="form-check-input year-filter" type="checkbox" value="{{ year }}" id="year{{ year }}" checked>
+                            <label class="form-check-label" for="year{{ year }}">{{ year }}</label>
+                        </div>
+                    </li>
+                    {% endfor %}
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <button class="btn btn-primary btn-sm w-100" onclick="applyYearFilter()">Apply Filter</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 1: Club Overview Stats -->
+        <div class="row mb-4">
+            <div class="col-md-2 col-6 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <h4 class="card-title text-primary mb-1" id="statTournaments">{{ overview_stats.total_tournaments }}</h4>
+                        <p class="card-text small mb-0">Tournaments</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 col-6 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <h4 class="card-title text-success mb-1" id="statAnglers">{{ overview_stats.unique_anglers }}</h4>
+                        <p class="card-text small mb-0">Unique Anglers</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 col-6 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <h4 class="card-title text-info mb-1" id="statFish">{{ overview_stats.total_fish }}</h4>
+                        <p class="card-text small mb-0">Total Fish</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 col-6 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <h4 class="card-title text-warning mb-1" id="statWeight">{{ "%.1f"|format(overview_stats.total_weight) }}</h4>
+                        <p class="card-text small mb-0">Total lbs</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 col-6 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <h4 class="card-title text-danger mb-1">{{ overview_stats.current_members }}</h4>
+                        <p class="card-text small mb-0">Active Members</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 col-6 mb-3">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <h4 class="card-title text-secondary mb-1">{{ overview_stats.first_year or "N/A" }}-{{ overview_stats.last_year or "N/A" }}</h4>
+                        <p class="card-text small mb-0">Years of Data</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Tournament Trends Charts -->
+        <div class="row mb-4">
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-trophy me-2"></i>Tournaments Per Year</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="tournamentsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-people me-2"></i>Avg Participants Per Tournament</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="participationChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Avg Weight Per Angler (lbs)</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="weightTrendsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-person-check me-2"></i>Membership Trends</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="membershipChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Lake Analytics -->
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="bi bi-water me-2"></i>Lake Statistics</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="lakeTable">
+                        <thead>
+                            <tr>
+                                <th>Lake</th>
+                                <th class="text-center">Times Fished</th>
+                                <th class="text-center">Last Fished</th>
+                                <th class="text-center">Avg Weight/Angler</th>
+                                <th class="text-center">Limits</th>
+                                <th class="text-center">Zeros</th>
+                                <th class="text-center">Best Big Bass</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lake in lake_statistics %}
+                            <tr>
+                                <td class="fw-bold">{{ lake.lake_name }}</td>
+                                <td class="text-center">{{ lake.times_fished }}</td>
+                                <td class="text-center">{{ lake.last_fished.strftime('%b %Y') if lake.last_fished else 'N/A' }}</td>
+                                <td class="text-center">{{ "%.2f"|format(lake.avg_weight_per_angler) }} lbs</td>
+                                <td class="text-center text-success">{{ lake.total_limits }}</td>
+                                <td class="text-center text-danger">{{ lake.total_zeros }}</td>
+                                <td class="text-center text-info">{{ "%.2f"|format(lake.biggest_bass) if lake.biggest_bass else 'N/A' }} lbs</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lake Usage by Year Chart -->
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-bar-chart-stacked me-2"></i>Lake Distribution by Year</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="lakeUsageChart" height="100"></canvas>
+            </div>
+        </div>
+
+        <!-- Section 4: Catch Statistics -->
+        <div class="row mb-4">
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0"><i class="bi bi-pie-chart me-2"></i>Fish Count Distribution</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="catchDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-purple text-white" style="background-color: #6f42c1;">
+                        <h5 class="mb-0"><i class="bi bi-check2-circle me-2"></i>Limits vs Zeros by Year</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="limitsZerosChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5: Big Bass Records -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-award me-2"></i>Top 10 Big Bass All-Time</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Angler</th>
+                                <th>Weight</th>
+                                <th>Lake</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bass in big_bass_records %}
+                            <tr class="{% if loop.index <= 3 %}table-warning{% endif %}">
+                                <td class="fw-bold">{{ loop.index }}</td>
+                                <td>{{ bass.angler_name }}</td>
+                                <td class="fw-bold text-info">{{ "%.2f"|format(bass.big_bass_weight) }} lbs</td>
+                                <td>{{ bass.lake_name }}</td>
+                                <td>{{ bass.tournament_date.strftime('%b %d, %Y') if bass.tournament_date else 'N/A' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Store original data for filtering
+const originalData = {
+    tournamentsByYear: {{ tournaments_by_year | tojson }},
+    participationTrends: {{ participation_trends | tojson }},
+    weightTrends: {{ weight_trends | tojson }},
+    membershipByYear: {{ membership_by_year | tojson }},
+    limitsZerosByYear: {{ limits_zeros_by_year | tojson }},
+    lakeChartData: {{ lake_chart_data | tojson }},
+    catchDistribution: {{ catch_distribution | tojson }}
+};
+
+// Chart instances
+let charts = {};
+
+// Initialize all charts
+function initCharts(data) {
+    const selectedYears = getSelectedYears();
+
+    // Filter data by selected years
+    const filteredTournaments = data.tournamentsByYear.filter(d => selectedYears.includes(d.year));
+    const filteredParticipation = data.participationTrends.filter(d => selectedYears.includes(d.year));
+    const filteredWeight = data.weightTrends.filter(d => selectedYears.includes(d.year));
+    const filteredMembership = data.membershipByYear.filter(d => selectedYears.includes(d.year));
+    const filteredLimitsZeros = data.limitsZerosByYear.filter(d => selectedYears.includes(d.year));
+
+    // Filter lake chart data
+    const filteredLakeData = {
+        labels: data.lakeChartData.labels.filter(y => selectedYears.includes(y)),
+        datasets: data.lakeChartData.datasets.map(ds => ({
+            ...ds,
+            data: ds.data.filter((_, i) => selectedYears.includes(data.lakeChartData.labels[i]))
+        }))
+    };
+
+    // Tournaments Per Year
+    if (charts.tournaments) charts.tournaments.destroy();
+    charts.tournaments = new Chart(document.getElementById('tournamentsChart'), {
+        type: 'bar',
+        data: {
+            labels: filteredTournaments.map(d => d.year),
+            datasets: [{
+                label: 'Tournaments',
+                data: filteredTournaments.map(d => d.tournament_count),
+                backgroundColor: '#0d6efd'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+
+    // Participation Trends
+    if (charts.participation) charts.participation.destroy();
+    charts.participation = new Chart(document.getElementById('participationChart'), {
+        type: 'line',
+        data: {
+            labels: filteredParticipation.map(d => d.year),
+            datasets: [{
+                label: 'Avg Participants',
+                data: filteredParticipation.map(d => d.avg_participants.toFixed(1)),
+                borderColor: '#198754',
+                backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+
+    // Weight Trends
+    if (charts.weight) charts.weight.destroy();
+    charts.weight = new Chart(document.getElementById('weightTrendsChart'), {
+        type: 'line',
+        data: {
+            labels: filteredWeight.map(d => d.year),
+            datasets: [{
+                label: 'Avg Weight/Angler',
+                data: filteredWeight.map(d => d.avg_individual_weight.toFixed(2)),
+                borderColor: '#ffc107',
+                backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+
+    // Membership Trends
+    if (charts.membership) charts.membership.destroy();
+    charts.membership = new Chart(document.getElementById('membershipChart'), {
+        type: 'bar',
+        data: {
+            labels: filteredMembership.map(d => d.year),
+            datasets: [
+                {
+                    label: 'Members',
+                    data: filteredMembership.map(d => d.member_count),
+                    backgroundColor: '#0dcaf0'
+                },
+                {
+                    label: 'Guests',
+                    data: filteredMembership.map(d => d.guest_count),
+                    backgroundColor: '#6c757d'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'top' } },
+            scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
+        }
+    });
+
+    // Lake Usage Stacked Bar
+    if (charts.lakeUsage) charts.lakeUsage.destroy();
+    charts.lakeUsage = new Chart(document.getElementById('lakeUsageChart'), {
+        type: 'bar',
+        data: filteredLakeData,
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'top' } },
+            scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
+        }
+    });
+
+    // Catch Distribution (Doughnut)
+    if (charts.catchDist) charts.catchDist.destroy();
+    charts.catchDist = new Chart(document.getElementById('catchDistributionChart'), {
+        type: 'doughnut',
+        data: {
+            labels: data.catchDistribution.map(d => d.fish_count + ' fish'),
+            datasets: [{
+                data: data.catchDistribution.map(d => d.angler_count),
+                backgroundColor: ['#dc3545', '#fd7e14', '#ffc107', '#198754', '#0dcaf0', '#0d6efd', '#6f42c1', '#d63384']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'right' } }
+        }
+    });
+
+    // Limits vs Zeros
+    if (charts.limitsZeros) charts.limitsZeros.destroy();
+    charts.limitsZeros = new Chart(document.getElementById('limitsZerosChart'), {
+        type: 'bar',
+        data: {
+            labels: filteredLimitsZeros.map(d => d.year),
+            datasets: [
+                {
+                    label: 'Limits',
+                    data: filteredLimitsZeros.map(d => d.limits),
+                    backgroundColor: '#198754'
+                },
+                {
+                    label: 'Zeros',
+                    data: filteredLimitsZeros.map(d => d.zeros),
+                    backgroundColor: '#dc3545'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'top' } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+
+    // Update summary stats based on filtered data
+    updateSummaryStats(filteredTournaments);
+}
+
+function getSelectedYears() {
+    const checkboxes = document.querySelectorAll('.year-filter:checked');
+    return Array.from(checkboxes).map(cb => parseInt(cb.value));
+}
+
+function updateSummaryStats(filteredTournaments) {
+    let totalTournaments = 0;
+    let uniqueAnglers = 0;
+    let totalFish = 0;
+    let totalWeight = 0;
+
+    // Use a Set to track unique anglers across years
+    filteredTournaments.forEach(d => {
+        totalTournaments += d.tournament_count;
+        uniqueAnglers = Math.max(uniqueAnglers, d.unique_anglers); // Approximation
+        totalFish += d.total_fish;
+        totalWeight += parseFloat(d.total_weight);
+    });
+
+    document.getElementById('statTournaments').textContent = totalTournaments;
+    document.getElementById('statFish').textContent = totalFish;
+    document.getElementById('statWeight').textContent = totalWeight.toFixed(1);
+}
+
+function applyYearFilter() {
+    initCharts(originalData);
+}
+
+// Select All functionality
+document.getElementById('selectAllYears').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.year-filter');
+    checkboxes.forEach(cb => cb.checked = this.checked);
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initCharts(originalData);
+});
+</script>
+{% endblock %}
