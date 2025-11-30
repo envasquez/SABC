@@ -221,18 +221,37 @@ async function confirmDeleteEvent(context = 'current') {
 }
 
 // Wrapper functions for backward compatibility with existing HTML onclick handlers
+
+/**
+ * Delete a current event - wrapper for showDeleteEventModal
+ * @param {number} id - Event ID to delete
+ * @param {boolean} hasDependencies - Whether event has dependencies
+ * @param {string} [eventName='Event'] - Event name for display
+ */
 function deleteEvent(id, hasDependencies, eventName = 'Event') {
     showDeleteEventModal(id, hasDependencies, eventName, 'current');
 }
 
+/**
+ * Confirm deletion of current event - wrapper for confirmDeleteEvent
+ */
 function confirmDeleteCurrentEvent() {
     confirmDeleteEvent('current');
 }
 
+/**
+ * Delete a past event - wrapper for showDeleteEventModal
+ * @param {number} id - Event ID to delete
+ * @param {string} name - Event name for display
+ * @param {boolean} hasDependencies - Whether event has dependencies
+ */
 function deletePastEvent(id, name, hasDependencies) {
     showDeleteEventModal(id, hasDependencies, name, 'past');
 }
 
+/**
+ * Confirm deletion of past event - wrapper for confirmDeleteEvent
+ */
 function confirmDeletePastEvent() {
     confirmDeleteEvent('past');
 }

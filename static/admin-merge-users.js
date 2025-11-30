@@ -24,7 +24,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Load preview when both accounts are selected
+/**
+ * Load merge preview when both source and target accounts are selected
+ * Fetches preview data from server and displays migration information
+ * Shows loading indicator while fetching and handles errors appropriately
+ */
 function loadPreview() {
     const sourceId = document.getElementById('source_id').value;
     const targetId = document.getElementById('target_id').value;
@@ -91,6 +95,27 @@ function loadPreview() {
     });
 }
 
+/**
+ * Render the merge preview data into HTML
+ * Displays source/target accounts, duplicate vote warnings, and data counts
+ * @param {Object} preview - Preview data from server
+ * @param {Object} preview.source_angler - Source angler information
+ * @param {string} preview.source_angler.name - Source angler name
+ * @param {string} [preview.source_angler.email] - Source angler email
+ * @param {Object} preview.target_angler - Target angler information
+ * @param {string} preview.target_angler.name - Target angler name
+ * @param {string} [preview.target_angler.email] - Target angler email
+ * @param {Array<{poll_title: string}>} preview.duplicate_poll_votes - Polls where both accounts voted
+ * @param {number} preview.results_count - Number of tournament results to migrate
+ * @param {number} preview.team_results_angler1_count - Team results as angler 1
+ * @param {number} preview.team_results_angler2_count - Team results as angler 2
+ * @param {number} preview.poll_votes_count - Number of poll votes to migrate
+ * @param {number} preview.officer_positions_count - Number of officer positions to migrate
+ * @param {number} preview.polls_created_count - Number of polls created by source
+ * @param {number} preview.news_authored_count - Number of news articles authored
+ * @param {number} preview.tournaments_created_count - Number of tournaments created
+ * @param {number} preview.proxy_votes_cast_count - Number of proxy votes cast
+ */
 function renderPreview(preview) {
     const duplicateVotesHtml = preview.duplicate_poll_votes.length > 0 ? `
         <div class="alert alert-warning border-warning mt-3">

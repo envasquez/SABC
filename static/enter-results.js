@@ -3,7 +3,16 @@
  * Handles autocomplete, team management, and result submission for tournament results entry page
  */
 
-// Module state - encapsulated to avoid global namespace pollution
+/**
+ * Module state - encapsulated to avoid global namespace pollution
+ * @type {Object}
+ * @property {number} teamCount - Current number of teams in the form
+ * @property {Array<{id: number, name: string}>} anglers - List of available anglers
+ * @property {Set<number>} existingAnglerIds - IDs of anglers with existing results
+ * @property {Object|null} editData - Data for editing existing results
+ * @property {Object|null} editTeamResultData - Data for editing team results
+ * @property {number|null} tournamentId - Current tournament ID
+ */
 const ResultsEntryState = {
     teamCount: 0,
     anglers: [],
@@ -172,6 +181,11 @@ function setupAutocomplete(input) {
     });
 }
 
+/**
+ * Update visual selection state in dropdown
+ * @param {NodeList} items - List of autocomplete items
+ * @param {number} index - Currently selected index
+ */
 function updateSelection(items, index) {
     items.forEach((item, idx) => {
         item.classList.toggle('active', idx === index);
@@ -181,6 +195,15 @@ function updateSelection(items, index) {
     }
 }
 
+/**
+ * Select an angler from autocomplete dropdown
+ * @param {string} id - Angler ID
+ * @param {string} name - Angler name
+ * @param {HTMLInputElement} input - Text input element
+ * @param {HTMLInputElement} hiddenInput - Hidden input for ID
+ * @param {HTMLElement} dropdown - Dropdown container
+ * @param {HTMLElement} clearBtn - Clear selection button
+ */
 function selectAngler(id, name, input, hiddenInput, dropdown, clearBtn) {
     input.value = name;
     hiddenInput.value = id;
@@ -190,6 +213,11 @@ function selectAngler(id, name, input, hiddenInput, dropdown, clearBtn) {
     onAnglerChange();
 }
 
+/**
+ * Clear angler selection for a specific team/angler slot
+ * @param {number} teamId - Team number
+ * @param {number} anglerNum - Angler position (1 or 2)
+ */
 function clearAnglerSelection(teamId, anglerNum) {
     const wrapper = document.querySelector(`[data-team="${teamId}"][data-angler="${anglerNum}"]`).closest('.autocomplete-wrapper');
     const input = wrapper.querySelector('.autocomplete-input');
@@ -357,6 +385,24 @@ function removeTeam(teamNumber) {
 
 /**
  * Add a team with pre-filled data (for edit mode)
+ * @param {number} angler1_id - Boater's angler ID
+ * @param {string} angler1_name - Boater's name
+ * @param {number|null} angler2_id - Non-boater's angler ID (null if solo)
+ * @param {string|null} angler2_name - Non-boater's name (null if solo)
+ * @param {number} angler1_fish - Boater's fish count
+ * @param {number} angler1_weight - Boater's total weight
+ * @param {number} angler1_big_bass - Boater's big bass weight
+ * @param {number} angler1_dead_penalty - Boater's dead fish penalty
+ * @param {boolean} angler1_disqualified - Boater disqualified flag
+ * @param {boolean} angler1_buy_in - Boater buy-in flag
+ * @param {boolean} angler1_was_member - Boater membership status at time of tournament
+ * @param {number} angler2_fish - Non-boater's fish count
+ * @param {number} angler2_weight - Non-boater's total weight
+ * @param {number} angler2_big_bass - Non-boater's big bass weight
+ * @param {number} angler2_dead_penalty - Non-boater's dead fish penalty
+ * @param {boolean} angler2_disqualified - Non-boater disqualified flag
+ * @param {boolean} angler2_buy_in - Non-boater buy-in flag
+ * @param {boolean} angler2_was_member - Non-boater membership status at time of tournament
  */
 function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
                        angler1_fish, angler1_weight, angler1_big_bass, angler1_dead_penalty, angler1_disqualified, angler1_buy_in, angler1_was_member,
@@ -492,7 +538,13 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
     });
 }
 
-// Handle Buy-in checkbox changes - zero out results when Buy-in is checked
+/**
+ * Handle Buy-in checkbox changes - zero out results when Buy-in is checked
+ * Disables result inputs when buy-in is selected since buy-in anglers don't fish
+ * @param {HTMLInputElement} checkbox - The buy-in checkbox element
+ * @param {number} teamNumber - Team number
+ * @param {string} anglerType - 'angler1' or 'angler2'
+ */
 function handleBuyInChange(checkbox, teamNumber, anglerType) {
     const isChecked = checkbox.checked;
 

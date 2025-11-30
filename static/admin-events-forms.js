@@ -3,20 +3,33 @@
  * Handles event type-specific form field visibility and validation
  */
 
-// Configuration-driven event form management
-// Base configurations for reuse
+/**
+ * Base configuration for tournament events
+ * Provides default times and field clearing for tournament-type events
+ * @type {{clearFields: string[], defaults: {start_time: string, weigh_in_time: string}, requiredFields: string[]}}
+ */
 const BASE_TOURNAMENT_CONFIG = {
     clearFields: ['start_time', 'weigh_in_time'],
     defaults: { start_time: '06:00', weigh_in_time: '15:00' },
     requiredFields: []
 };
 
+/**
+ * Empty configuration for non-tournament events
+ * Used as base for holidays and other event types without tournament-specific fields
+ * @type {{clearFields: string[], defaults: Object, requiredFields: string[]}}
+ */
 const EMPTY_CONFIG = {
     clearFields: [],
     defaults: {},
     requiredFields: []
 };
 
+/**
+ * Event form configuration by event type
+ * Defines which sections to show, fields to manage, and description handling for each event type
+ * @type {Object.<string, {visibleSections: string[], editSections: string[], descriptionField: string|null, clearFields?: string[], defaults?: Object, requiredFields?: string[]}>}
+ */
 const EVENT_FORM_CONFIG = {
     sabc_tournament: {
         ...BASE_TOURNAMENT_CONFIG,
@@ -39,7 +52,9 @@ const EVENT_FORM_CONFIG = {
 };
 
 /**
- * Utility: Hide all specified sections and disable their inputs
+ * Hide all specified sections and disable their inputs
+ * Used to toggle form sections based on event type selection
+ * @param {string[]} sectionIds - Array of section element IDs to hide
  */
 function hideAllSections(sectionIds) {
     sectionIds.forEach(id => {
@@ -55,7 +70,10 @@ function hideAllSections(sectionIds) {
 }
 
 /**
- * Utility: Show specified sections and enable their inputs
+ * Show specified sections and enable their inputs
+ * Enables inputs except ramp selects which are controlled by lake selection
+ * @param {string[]} sectionIds - Array of section element IDs to show
+ * @param {string} [displayType='flex'] - CSS display value to apply
  */
 function showSections(sectionIds, displayType = 'flex') {
     sectionIds.forEach(id => {
@@ -74,7 +92,8 @@ function showSections(sectionIds, displayType = 'flex') {
 }
 
 /**
- * Utility: Clear specified form field values
+ * Clear specified form field values
+ * @param {string[]} fieldIds - Array of field element IDs to clear
  */
 function clearFieldValues(fieldIds) {
     fieldIds.forEach(id => {
@@ -84,7 +103,8 @@ function clearFieldValues(fieldIds) {
 }
 
 /**
- * Utility: Set default values for specified fields
+ * Set default values for specified fields
+ * @param {Object.<string, string>} fieldValueMap - Map of field IDs to default values
  */
 function setFieldDefaults(fieldValueMap) {
     Object.entries(fieldValueMap).forEach(([fieldId, value]) => {
@@ -94,7 +114,8 @@ function setFieldDefaults(fieldValueMap) {
 }
 
 /**
- * Utility: Clear all 'required' attributes from form fields
+ * Clear all 'required' attributes from form fields
+ * Removes required constraint from time, lake, ramp, and description fields
  */
 function clearAllRequirements() {
     ['start_time', 'weigh_in_time', 'lake_name', 'ramp_name', 'other_description'].forEach(id => {
@@ -104,7 +125,8 @@ function clearAllRequirements() {
 }
 
 /**
- * Utility: Set 'required' attribute on specified fields
+ * Set 'required' attribute on specified fields
+ * @param {string[]} requiredIds - Array of field element IDs to mark as required
  */
 function setFieldRequirements(requiredIds) {
     requiredIds.forEach(id => {
@@ -115,6 +137,8 @@ function setFieldRequirements(requiredIds) {
 
 /**
  * Manage description fields based on event type
+ * Shows either the general description or other_description field based on event type
+ * @param {string|null} activeFieldId - ID of description field to show ('description', 'other_description', or null)
  */
 function manageDescriptionFields(activeFieldId) {
     const descriptionField = document.getElementById('description');
@@ -152,7 +176,9 @@ function manageDescriptionFields(activeFieldId) {
 }
 
 /**
- * Get selected event type (create or edit mode)
+ * Get selected event type from create or edit form
+ * @param {boolean} [isEdit=false] - Whether to get from edit form (true) or create form (false)
+ * @returns {string|undefined} Selected event type value
  */
 function getSelectedEventType(isEdit = false) {
     const selectId = isEdit ? 'edit_event_type' : 'event_type';

@@ -1,14 +1,15 @@
 import os
 import re
-from typing import Any, Dict, List, Sequence
+from typing import Any, Dict, List, Sequence, Union
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
 from core.correlation_middleware import CorrelationIDMiddleware, get_correlation_id
@@ -110,6 +111,15 @@ def create_app() -> FastAPI:
     # Logger for exception handlers
     error_logger = get_logger("exception_handler")
 
+    def _wants_html(request: Request) -> bool:
+        """Check if the request expects an HTML response (browser request)."""
+        accept = request.headers.get("accept", "")
+        # Check if it's an AJAX/API request
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return False
+        # Check if HTML is preferred over JSON
+        return "text/html" in accept or "*/*" in accept
+
     def _sanitize_validation_errors(errors: Sequence[Any]) -> List[Dict[str, Any]]:
         """
         Sanitize validation errors to prevent information disclosure.
@@ -148,6 +158,40 @@ def create_app() -> FastAPI:
             content["correlation_id"] = correlation_id
         return JSONResponse(status_code=422, content=content)
 
+    @app.exception_handler(StarletteHTTPException)
+    async def http_exception_handler(
+        request: Request, exc: StarletteHTTPException
+    ) -> Union[HTMLResponse, JSONResponse]:
+        """
+        Handle HTTP exceptions with custom error pages for browsers.
+        Returns HTML for browser requests, JSON for API requests.
+        """
+        correlation_id = get_correlation_id()
+
+        # For 404 errors, return custom error page for browsers
+        if exc.status_code == 404 and _wants_html(request):
+            return templates.TemplateResponse(
+                request=request,
+                name="errors/404.html",
+                context={"request": request, "correlation_id": correlation_id},
+                status_code=404,
+            )
+
+        # For 500 errors, return custom error page for browsers
+        if exc.status_code == 500 and _wants_html(request):
+            return templates.TemplateResponse(
+                request=request,
+                name="errors/500.html",
+                context={"request": request, "correlation_id": correlation_id},
+                status_code=500,
+            )
+
+        # For other HTTP errors or API requests, return JSON
+        content: Dict[str, Any] = {"error": exc.detail or "An error occurred"}
+        if correlation_id:
+            content["correlation_id"] = correlation_id
+        return JSONResponse(status_code=exc.status_code, content=content)
+
     @app.exception_handler(ValueError)
     async def value_error_handler(request: Request, exc: ValueError) -> JSONResponse:
         error_logger.warning(
@@ -161,7 +205,9 @@ def create_app() -> FastAPI:
         return JSONResponse(status_code=400, content=content)
 
     @app.exception_handler(Exception)
-    async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    async def global_exception_handler(
+        request: Request, exc: Exception
+    ) -> Union[HTMLResponse, JSONResponse]:
         """
         Global exception handler for unhandled exceptions.
         Logs full error details but returns a generic message to prevent info disclosure.
@@ -180,6 +226,17 @@ def create_app() -> FastAPI:
         # Return generic error message - never expose internal details
         # Include correlation_id so users can report it for debugging
         correlation_id = get_correlation_id()
+
+        # Return custom error page for browser requests
+        if _wants_html(request):
+            return templates.TemplateResponse(
+                request=request,
+                name="errors/500.html",
+                context={"request": request, "correlation_id": correlation_id},
+                status_code=500,
+            )
+
+        # Return JSON for API requests
         content: Dict[str, Any] = {"error": "An internal error occurred. Please try again later."}
         if correlation_id:
             content["correlation_id"] = correlation_id

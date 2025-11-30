@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found - SABC{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 60vh;">
+    <div class="text-center">
+        <div class="mb-4">
+            <i class="bi bi-water text-primary" style="font-size: 5rem; opacity: 0.7;"></i>
+        </div>
+        <h1 class="display-1 fw-bold text-primary">404</h1>
+        <h2 class="mb-4 text-muted">Page Not Found</h2>
+        <p class="lead text-secondary mb-4">
+            Looks like this fish got away!<br>
+            The page you're looking for doesn't exist or has been moved.
+        </p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a href="/" class="btn btn-primary btn-lg">
+                <i class="bi bi-house me-2"></i>Return Home
+            </a>
+            <a href="/calendar" class="btn btn-outline-secondary btn-lg">
+                <i class="bi bi-calendar3 me-2"></i>View Calendar
+            </a>
+        </div>
+        {% if correlation_id %}
+        <p class="text-muted mt-4 small">
+            Reference ID: <code>{{ correlation_id }}</code>
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -3,10 +3,23 @@
  * Initializes poll voting handler, chart renderers, and delete confirmation manager
  */
 
-// Global state
+/**
+ * Global state for poll page
+ * @type {DeleteConfirmationManager|undefined}
+ */
 let pollDeleteManager;
+
+/**
+ * Poll results renderer instance
+ * @type {PollResultsRenderer|undefined}
+ */
 let pollResultsRenderer;
-let clubPollCharts = {};  // Store Chart.js instances for club polls
+
+/**
+ * Store Chart.js instances for club polls, keyed by poll ID
+ * @type {Object.<string, Chart>}
+ */
+let clubPollCharts = {};
 
 /**
  * Render beautiful horizontal bar chart for a club poll
@@ -237,6 +250,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+/**
+ * Trigger poll deletion confirmation modal
+ * @param {number|string} pollId - Poll ID to delete
+ * @param {string} pollTitle - Poll title for display in modal
+ */
 function deletePoll(pollId, pollTitle) {
     pollDeleteManager.confirm(pollId, pollTitle);
 }
