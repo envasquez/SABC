@@ -27,8 +27,6 @@ async def data_dashboard(request: Request):
         # Get all the data
         available_years = qs.get_available_years()
         overview_stats = qs.get_club_overview_stats()
-        tournaments_by_year = qs.get_tournaments_by_year()
-        participation_trends = qs.get_participation_trends()
         lake_statistics = qs.get_lake_statistics()
         limits_zeros_by_year = qs.get_limits_zeros_by_year()
         big_bass_records = qs.get_big_bass_records(limit=10)
@@ -46,8 +44,6 @@ async def data_dashboard(request: Request):
                 "user": user,
                 "available_years": available_years,
                 "overview_stats": overview_stats,
-                "tournaments_by_year": tournaments_by_year,
-                "participation_trends": participation_trends,
                 "lake_statistics": lake_statistics,
                 "limits_zeros_by_year": limits_zeros_by_year,
                 "big_bass_records": big_bass_records,
