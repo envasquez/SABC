@@ -492,30 +492,6 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
     });
 }
 
-// Get all currently selected anglers across all teams
-function getAllSelectedAnglers() {
-    const selectedAnglers = new Set();
-
-    // Get all angler selects on the page
-    document.querySelectorAll('select.angler1-select, select.angler2-select').forEach(select => {
-        if (select.value) {
-            selectedAnglers.add(select.value);
-        }
-    });
-
-    return selectedAnglers;
-}
-
-// Update all angler dropdowns to remove already-selected anglers
-function updateAllAnglerDropdowns() {
-    // No longer needed with autocomplete - kept for compatibility
-}
-
-// Called when any angler dropdown changes
-function onAnglerChange() {
-    updateAllAnglerDropdowns();
-}
-
 // Handle Buy-in checkbox changes - zero out results when Buy-in is checked
 function handleBuyInChange(checkbox, teamNumber, anglerType) {
     const isChecked = checkbox.checked;

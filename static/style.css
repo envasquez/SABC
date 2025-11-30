@@ -136,6 +136,11 @@ body .text-secondary {
   color: #2c2c2c;
 }
 
+.medal-bronze {
+  background-color: rgba(205, 127, 50, 0.15);
+  border: 1px solid #cd7f32;
+}
+
 .color-bronze {
   color: #cd7f32;
 }

@@ -5,9 +5,7 @@ all dependencies from the routes.dependencies package.
 """
 
 from routes.dependencies import (
-    admin,
     bcrypt,
-    db,
     engine,
     find_lake_by_id,
     find_ramp_name_by_id,
@@ -17,6 +15,7 @@ from routes.dependencies import (
     get_current_user,
     get_federal_holidays,
     get_lakes_list,
+    get_query_service,
     get_ramps_for_lake,
     templates,
     time_format_filter,
@@ -25,9 +24,8 @@ from routes.dependencies import (
 )
 
 __all__ = [
-    "admin",
     "get_current_user",
-    "db",
+    "get_query_service",
     "templates",
     "engine",
     "bcrypt",

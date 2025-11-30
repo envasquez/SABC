@@ -1,6 +1,7 @@
 """Authentication and authorization helper functions with full type safety."""
 
 from typing import Annotated, Dict, Optional, Union
+from urllib.parse import quote
 
 from fastapi import Depends, HTTPException, Request
 
@@ -8,6 +9,23 @@ from core.db_schema import engine
 from core.query_service import QueryService
 
 UserDict = Dict[str, Union[int, str, bool, None]]
+
+
+def _build_login_redirect_url(request: Request) -> str:
+    """
+    Build login URL with 'next' parameter for post-login redirect.
+
+    Args:
+        request: FastAPI Request object
+
+    Returns:
+        Login URL with encoded next parameter
+    """
+    current_path = str(request.url.path)
+    if request.url.query:
+        current_path += f"?{request.url.query}"
+    next_param = quote(current_path, safe="/?&=")
+    return f"/login?next={next_param}"
 
 
 def get_current_user(request: Request) -> Optional[UserDict]:
@@ -42,14 +60,9 @@ def require_auth(request: Request) -> UserDict:
     """
     user = get_current_user(request)
     if not user:
-        # Include the current URL as 'next' parameter for post-login redirect
-        from urllib.parse import quote
-
-        current_path = str(request.url.path)
-        if request.url.query:
-            current_path += f"?{request.url.query}"
-        next_param = quote(current_path, safe="/?&=")
-        raise HTTPException(status_code=303, headers={"Location": f"/login?next={next_param}"})
+        raise HTTPException(
+            status_code=303, headers={"Location": _build_login_redirect_url(request)}
+        )
     return user
 
 
@@ -68,14 +81,9 @@ def require_admin(request: Request) -> UserDict:
     """
     user = get_current_user(request)
     if not user:
-        # Include the current URL as 'next' parameter for post-login redirect
-        from urllib.parse import quote
-
-        current_path = str(request.url.path)
-        if request.url.query:
-            current_path += f"?{request.url.query}"
-        next_param = quote(current_path, safe="/?&=")
-        raise HTTPException(status_code=302, headers={"Location": f"/login?next={next_param}"})
+        raise HTTPException(
+            status_code=302, headers={"Location": _build_login_redirect_url(request)}
+        )
     if not user.get("is_admin"):
         raise HTTPException(status_code=302, headers={"Location": "/"})
     return user
@@ -96,14 +104,9 @@ def require_member(request: Request) -> UserDict:
     """
     user = get_current_user(request)
     if not user:
-        # Include the current URL as 'next' parameter for post-login redirect
-        from urllib.parse import quote
-
-        current_path = str(request.url.path)
-        if request.url.query:
-            current_path += f"?{request.url.query}"
-        next_param = quote(current_path, safe="/?&=")
-        raise HTTPException(status_code=303, headers={"Location": f"/login?next={next_param}"})
+        raise HTTPException(
+            status_code=303, headers={"Location": _build_login_redirect_url(request)}
+        )
     if not user.get("member"):
         raise HTTPException(status_code=403)
     return user

@@ -57,6 +57,18 @@ var CHART_COLORS = {
 };
 
 /**
+ * Line chart color palette for multi-year data visualization
+ * Used in profile.js and roster.js for consistent line chart styling
+ */
+var CHART_LINE_COLORS = [
+    { border: 'rgb(54, 162, 235)', bg: 'rgba(54, 162, 235, 0.1)' },    // Blue
+    { border: 'rgb(75, 192, 192)', bg: 'rgba(75, 192, 192, 0.1)' },    // Teal
+    { border: 'rgb(255, 205, 86)', bg: 'rgba(255, 205, 86, 0.1)' },    // Gold
+    { border: 'rgb(255, 99, 132)', bg: 'rgba(255, 99, 132, 0.1)' },    // Red
+    { border: 'rgb(153, 102, 255)', bg: 'rgba(153, 102, 255, 0.1)' },  // Purple
+];
+
+/**
  * Create a horizontal gradient for chart bars
  * @param {CanvasRenderingContext2D} ctx - Canvas context
  * @param {Object} chartArea - Chart area dimensions
@@ -1412,6 +1424,7 @@ class DeleteConfirmationManager {
 window.voteLabelsPlugin = voteLabelsPlugin;
 window.stackedTotalsPlugin = stackedTotalsPlugin;
 window.CHART_COLORS = CHART_COLORS;
+window.CHART_LINE_COLORS = CHART_LINE_COLORS;
 window.CHART_CONFIG = CHART_CONFIG;
 window.escapeHtml = escapeHtml;
 window.formatDateTimeLocal = formatDateTimeLocal;

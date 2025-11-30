@@ -130,9 +130,9 @@
 <!-- {{year}} Tab -->
 <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="year-{{year}}" role="tabpanel" aria-labelledby="year-{{year}}-tab">
 <div class="row text-center g-2 mb-3">
-<div class="col-4"><div class="p-2 rounded" style="background-color: #fff8dc; border: 1px solid #ffd700;"><div class="h4" style="color: #ffd700;"><i class="bi bi-trophy"></i></div><div class="h5" style="color: #b8860b;">{{finishes.first}}</div><small style="color: #b8860b;">1st</small></div></div>
-<div class="col-4"><div class="p-2 rounded" style="background-color: #f5f5f5; border: 1px solid #c0c0c0; background-image: linear-gradient(135deg, #e8e8e8 0%, #f5f5f5 50%, #e8e8e8 100%);"><div class="h4" style="color: #a8a8a8;"><i class="bi bi-award"></i></div><div class="h5" style="color: #2c2c2c;">{{finishes.second}}</div><small style="color: #2c2c2c;">2nd</small></div></div>
-<div class="col-4"><div class="p-2 bg-warning bg-opacity-25 rounded"><div class="h4" style="color:#cd7f32"><i class="bi bi-award"></i></div><div class="h5" style="color:#cd7f32">{{finishes.third}}</div><small>3rd</small></div></div>
+<div class="col-4"><div class="p-2 rounded medal-gold"><div class="h4 color-gold"><i class="bi bi-trophy"></i></div><div class="h5 color-gold-dark">{{finishes.first}}</div><small class="color-gold-dark">1st</small></div></div>
+<div class="col-4"><div class="p-2 rounded medal-silver"><div class="h4 color-silver"><i class="bi bi-award"></i></div><div class="h5 color-silver-dark">{{finishes.second}}</div><small class="color-silver-dark">2nd</small></div></div>
+<div class="col-4"><div class="p-2 rounded medal-bronze"><div class="h4 color-bronze"><i class="bi bi-award"></i></div><div class="h5 color-bronze">{{finishes.third}}</div><small class="color-bronze">3rd</small></div></div>
 </div>
 <div class="text-center mt-2">
 <div class="text-muted"><small>Tournaments Fished: <strong>{{finishes.tournaments}}</strong></small></div>
@@ -143,9 +143,9 @@
 <!-- All Time Tab -->
 <div class="tab-pane fade" id="all-time" role="tabpanel" aria-labelledby="all-time-tab">
 <div class="row text-center g-2 mb-3">
-<div class="col-4"><div class="p-2 rounded" style="background-color: #fff8dc; border: 1px solid #ffd700;"><div class="h4" style="color: #ffd700;"><i class="bi bi-trophy"></i></div><div class="h5" style="color: #b8860b;">{{stats.all_time_first}}</div><small style="color: #b8860b;">1st</small></div></div>
-<div class="col-4"><div class="p-2 rounded" style="background-color: #f5f5f5; border: 1px solid #c0c0c0; background-image: linear-gradient(135deg, #e8e8e8 0%, #f5f5f5 50%, #e8e8e8 100%);"><div class="h4" style="color: #a8a8a8;"><i class="bi bi-award"></i></div><div class="h5" style="color: #2c2c2c;">{{stats.all_time_second}}</div><small style="color: #2c2c2c;">2nd</small></div></div>
-<div class="col-4"><div class="p-2 bg-warning bg-opacity-25 rounded"><div class="h4" style="color:#cd7f32"><i class="bi bi-award"></i></div><div class="h5" style="color:#cd7f32">{{stats.all_time_third}}</div><small>3rd</small></div></div>
+<div class="col-4"><div class="p-2 rounded medal-gold"><div class="h4 color-gold"><i class="bi bi-trophy"></i></div><div class="h5 color-gold-dark">{{stats.all_time_first}}</div><small class="color-gold-dark">1st</small></div></div>
+<div class="col-4"><div class="p-2 rounded medal-silver"><div class="h4 color-silver"><i class="bi bi-award"></i></div><div class="h5 color-silver-dark">{{stats.all_time_second}}</div><small class="color-silver-dark">2nd</small></div></div>
+<div class="col-4"><div class="p-2 rounded medal-bronze"><div class="h4 color-bronze"><i class="bi bi-award"></i></div><div class="h5 color-bronze">{{stats.all_time_third}}</div><small class="color-bronze">3rd</small></div></div>
 </div>
 </div>
 </div>

@@ -93,24 +93,16 @@ function initMonthlyWeightChart() {
 
     const monthlyData = JSON.parse(dataElement.dataset.monthlyData || '{}');
 
-    // Generate dynamic datasets for each year
+    // Generate dynamic datasets for each year using shared color palette
     const datasets = [];
-    const colors = [
-        { border: 'rgb(54, 162, 235)', bg: 'rgba(54, 162, 235, 0.1)' },    // Blue
-        { border: 'rgb(75, 192, 192)', bg: 'rgba(75, 192, 192, 0.1)' },    // Teal
-        { border: 'rgb(255, 205, 86)', bg: 'rgba(255, 205, 86, 0.1)' },    // Gold
-        { border: 'rgb(255, 99, 132)', bg: 'rgba(255, 99, 132, 0.1)' },    // Red
-        { border: 'rgb(153, 102, 255)', bg: 'rgba(153, 102, 255, 0.1)' },  // Purple
-    ];
-
     const years = Object.keys(monthlyData).sort();
     years.forEach((year, index) => {
-        const colorIndex = index % colors.length;
+        const color = CHART_LINE_COLORS[index % CHART_LINE_COLORS.length];
         datasets.push({
             label: year,
             data: monthlyData[year],
-            borderColor: colors[colorIndex].border,
-            backgroundColor: colors[colorIndex].bg,
+            borderColor: color.border,
+            backgroundColor: color.bg,
             tension: 0.3,
             fill: true
         });

@@ -114,24 +114,24 @@
                                                                      id="finishes-{{ member['id'] }}-{{ year }}" role="tabpanel">
                                                                     <div class="row text-center g-1">
                                                                         <div class="col-4">
-                                                                            <div class="p-2 rounded" style="background-color: #fff8dc; border: 1px solid #ffd700;">
-                                                                                <div class="h5 mb-0" style="color: #ffd700;"><i class="bi bi-trophy"></i></div>
-                                                                                <div class="h6 mb-0" style="color: #b8860b;">{{ finishes.get('first', 0) }}</div>
-                                                                                <small style="color: #b8860b;">1st</small>
+                                                                            <div class="p-2 rounded medal-gold">
+                                                                                <div class="h5 mb-0 color-gold"><i class="bi bi-trophy"></i></div>
+                                                                                <div class="h6 mb-0 color-gold-dark">{{ finishes.get('first', 0) }}</div>
+                                                                                <small class="color-gold-dark">1st</small>
                                                                             </div>
                                                                         </div>
                                                                         <div class="col-4">
-                                                                            <div class="p-2 rounded" style="background-color: #f5f5f5; border: 1px solid #c0c0c0;">
-                                                                                <div class="h5 mb-0" style="color: #a8a8a8;"><i class="bi bi-award"></i></div>
-                                                                                <div class="h6 mb-0" style="color: #2c2c2c;">{{ finishes.get('second', 0) }}</div>
-                                                                                <small style="color: #2c2c2c;">2nd</small>
+                                                                            <div class="p-2 rounded medal-silver">
+                                                                                <div class="h5 mb-0 color-silver"><i class="bi bi-award"></i></div>
+                                                                                <div class="h6 mb-0 color-silver-dark">{{ finishes.get('second', 0) }}</div>
+                                                                                <small class="color-silver-dark">2nd</small>
                                                                             </div>
                                                                         </div>
                                                                         <div class="col-4">
-                                                                            <div class="p-2 bg-warning bg-opacity-25 rounded">
-                                                                                <div class="h5 mb-0" style="color:#cd7f32"><i class="bi bi-award"></i></div>
-                                                                                <div class="h6 mb-0" style="color:#cd7f32">{{ finishes.get('third', 0) }}</div>
-                                                                                <small>3rd</small>
+                                                                            <div class="p-2 rounded medal-bronze">
+                                                                                <div class="h5 mb-0 color-bronze"><i class="bi bi-award"></i></div>
+                                                                                <div class="h6 mb-0 color-bronze">{{ finishes.get('third', 0) }}</div>
+                                                                                <small class="color-bronze">3rd</small>
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -144,24 +144,24 @@
                                                                 <div class="tab-pane fade" id="finishes-{{ member['id'] }}-alltime" role="tabpanel">
                                                                     <div class="row text-center g-1">
                                                                         <div class="col-4">
-                                                                            <div class="p-2 rounded" style="background-color: #fff8dc; border: 1px solid #ffd700;">
-                                                                                <div class="h5 mb-0" style="color: #ffd700;"><i class="bi bi-trophy"></i></div>
-                                                                                <div class="h6 mb-0" style="color: #b8860b;">{{ stats.get('all_time_first', 0) }}</div>
-                                                                                <small style="color: #b8860b;">1st</small>
+                                                                            <div class="p-2 rounded medal-gold">
+                                                                                <div class="h5 mb-0 color-gold"><i class="bi bi-trophy"></i></div>
+                                                                                <div class="h6 mb-0 color-gold-dark">{{ stats.get('all_time_first', 0) }}</div>
+                                                                                <small class="color-gold-dark">1st</small>
                                                                             </div>
                                                                         </div>
                                                                         <div class="col-4">
-                                                                            <div class="p-2 rounded" style="background-color: #f5f5f5; border: 1px solid #c0c0c0;">
-                                                                                <div class="h5 mb-0" style="color: #a8a8a8;"><i class="bi bi-award"></i></div>
-                                                                                <div class="h6 mb-0" style="color: #2c2c2c;">{{ stats.get('all_time_second', 0) }}</div>
-                                                                                <small style="color: #2c2c2c;">2nd</small>
+                                                                            <div class="p-2 rounded medal-silver">
+                                                                                <div class="h5 mb-0 color-silver"><i class="bi bi-award"></i></div>
+                                                                                <div class="h6 mb-0 color-silver-dark">{{ stats.get('all_time_second', 0) }}</div>
+                                                                                <small class="color-silver-dark">2nd</small>
                                                                             </div>
                                                                         </div>
                                                                         <div class="col-4">
-                                                                            <div class="p-2 bg-warning bg-opacity-25 rounded">
-                                                                                <div class="h5 mb-0" style="color:#cd7f32"><i class="bi bi-award"></i></div>
-                                                                                <div class="h6 mb-0" style="color:#cd7f32">{{ stats.get('all_time_third', 0) }}</div>
-                                                                                <small>3rd</small>
+                                                                            <div class="p-2 rounded medal-bronze">
+                                                                                <div class="h5 mb-0 color-bronze"><i class="bi bi-award"></i></div>
+                                                                                <div class="h6 mb-0 color-bronze">{{ stats.get('all_time_third', 0) }}</div>
+                                                                                <small class="color-bronze">3rd</small>
                                                                             </div>
                                                                         </div>
                                                                     </div>

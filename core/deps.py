@@ -1,13 +1,14 @@
 import json
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, AsyncGenerator
+from typing import Any, Generator
 
 from fastapi.templating import Jinja2Templates
 from markupsafe import Markup
 from sqlalchemy import Connection
 
 from core.db_schema import engine
+from core.query_service import QueryService
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -138,6 +139,20 @@ templates.env.filters["tojson_attr"] = tojson_attr_filter
 templates.env.filters["from_json"] = from_json_filter
 
 
-async def get_db() -> AsyncGenerator[Connection, None]:
+def get_db() -> Generator[Connection, None, None]:
+    """Get database connection as a dependency."""
     with engine.connect() as conn:
         yield conn
+
+
+def get_query_service() -> Generator[QueryService, None, None]:
+    """
+    Get QueryService instance as a FastAPI dependency.
+
+    Usage:
+        @router.get("/example")
+        def example(qs: QueryService = Depends(get_query_service)):
+            return qs.get_some_data()
+    """
+    with engine.connect() as conn:
+        yield QueryService(conn)

@@ -10,8 +10,8 @@
         </div>
 
         <!-- Section 1: Club Overview Stats -->
-        <div class="row mb-4">
-            <div class="col-md-2 col-6 mb-3">
+        <div class="row row-cols-2 row-cols-md-5 g-3 mb-4">
+            <div class="col">
                 <div class="card text-center h-100">
                     <div class="card-body">
                         <h4 class="card-title text-primary mb-1" id="statTournaments">{{ overview_stats.total_tournaments }}</h4>
@@ -19,7 +19,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-2 col-6 mb-3">
+            <div class="col">
                 <div class="card text-center h-100">
                     <div class="card-body">
                         <h4 class="card-title text-success mb-1" id="statAnglers">{{ overview_stats.unique_anglers }}</h4>
@@ -27,7 +27,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-2 col-6 mb-3">
+            <div class="col">
                 <div class="card text-center h-100">
                     <div class="card-body">
                         <h4 class="card-title text-info mb-1" id="statFish">{{ overview_stats.total_fish }}</h4>
@@ -35,7 +35,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-2 col-6 mb-3">
+            <div class="col">
                 <div class="card text-center h-100">
                     <div class="card-body">
                         <h4 class="card-title text-warning mb-1" id="statWeight">{{ "%.1f"|format(overview_stats.total_weight) }}</h4>
@@ -43,19 +43,11 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-2 col-6 mb-3">
+            <div class="col">
                 <div class="card text-center h-100">
                     <div class="card-body">
                         <h4 class="card-title text-danger mb-1">{{ overview_stats.current_members }}</h4>
                         <p class="card-text small mb-0">Current Members</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2 col-6 mb-3">
-                <div class="card text-center h-100">
-                    <div class="card-body">
-                        <h4 class="card-title text-secondary mb-1">{{ overview_stats.first_year or "N/A" }}-{{ overview_stats.last_year or "N/A" }}</h4>
-                        <p class="card-text small mb-0">Years of Data</p>
                     </div>
                 </div>
             </div>
@@ -452,6 +444,7 @@ function initParticipationChart() {
     ];
 
     // Create datasets for each year
+    const currentYear = new Date().getFullYear();
     const datasets = years.map((year, idx) => {
         const yearData = tournamentsByYear[year];
         const participantCounts = yearData.map(d => d.participants);
@@ -460,15 +453,17 @@ function initParticipationChart() {
             participantCounts.push(null);
         }
         const color = colors[idx % colors.length];
+        const isCurrentYear = year === currentYear;
         return {
             label: year.toString(),
             data: participantCounts,
             borderColor: color.border,
             backgroundColor: color.bg,
-            fill: true,
+            fill: isCurrentYear,
             tension: 0.3,
-            pointRadius: 3,
-            pointHoverRadius: 5,
+            pointRadius: isCurrentYear ? 5 : 4,
+            pointHoverRadius: 6,
+            borderWidth: isCurrentYear ? 3 : 2,
             spanGaps: false
         };
     });
@@ -514,10 +509,11 @@ function initParticipationChart() {
             },
             scales: {
                 x: {
+                    stacked: false,
                     title: { display: true, text: 'Tournament Number' }
                 },
                 y: {
-                    stacked: true,
+                    stacked: false,
                     beginAtZero: true,
                     title: { display: true, text: 'Participants' }
                 }
