@@ -31,15 +31,19 @@
                         <tbody>
                             {% for member in members %}
                                 {% if member['member'] %}
-                                <tr class="member-row" data-bs-toggle="collapse" data-bs-target="#chart-row-{{ member['id'] }}" style="cursor: pointer;">
+                                <tr class="member-row" data-bs-toggle="collapse" data-bs-target="#chart-row-{{ member['id'] }}" style="cursor: pointer;" title="Click to view stats">
                                     <td>
-                                        <i class="bi bi-chevron-right me-2 expand-icon" style="transition: transform 0.2s;"></i>
-                                        {{ member['name'] }}
-                                        {% if member['officer_positions'] %}
-                                            {% for position in member['officer_positions'].split(', ') %}
-                                                <span class="badge bg-info text-dark mb-1 me-1"><i class="bi bi-star-fill me-1"></i>{{ position }}</span>
-                                            {% endfor %}
-                                        {% endif %}
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-bar-chart-line me-2 expand-icon text-primary" style="transition: transform 0.2s; font-size: 1rem;"></i>
+                                            <span>
+                                                {{ member['name'] }}
+                                                {% if member['officer_positions'] %}
+                                                    {% for position in member['officer_positions'].split(', ') %}
+                                                        <span class="badge bg-info text-dark mb-1 me-1"><i class="bi bi-star-fill me-1"></i>{{ position }}</span>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </span>
+                                        </div>
                                     </td>
                                     <td>
                                         {% if member['phone'] %}
