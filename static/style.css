@@ -276,11 +276,30 @@ html {
    Mobile Chart Improvements
    ======================================== */
 
-/* Charts scale responsively - no horizontal scroll needed */
+/* Chart containers - ensure minimum height on mobile */
 .chart-scroll-container {
   width: 100%;
+  position: relative;
 }
 
 .chart-scroll-inner {
   width: 100%;
+  min-height: 250px;
+}
+
+/* Mobile: Charts with many categories need horizontal scroll */
+@media (max-width: 767px) {
+  .chart-scroll-inner {
+    min-height: 280px;
+  }
+
+  /* For charts with many x-axis labels, enable horizontal scroll */
+  .chart-scroll-container.chart-scrollable {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .chart-scroll-container.chart-scrollable .chart-scroll-inner {
+    min-width: 600px;
+  }
 }

@@ -159,7 +159,7 @@
                     <div class="card-body">
                         <div class="chart-scroll-container">
                             <div class="chart-scroll-inner">
-                                <canvas id="membershipParticipationChart" height="80"></canvas>
+                                <canvas id="membershipParticipationChart"></canvas>
                             </div>
                         </div>
                     </div>
@@ -217,9 +217,9 @@
                                 {% endfor %}
                             </div>
                         </div>
-                        <div class="chart-scroll-container">
+                        <div class="chart-scroll-container chart-scrollable">
                             <div class="chart-scroll-inner">
-                                <canvas id="winningWeightsByLakeChart" height="100"></canvas>
+                                <canvas id="winningWeightsByLakeChart"></canvas>
                             </div>
                         </div>
                     </div>
@@ -352,6 +352,7 @@ function initCharts(data) {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'top' },
                 datalabels: {
@@ -398,6 +399,7 @@ function initCharts(data) {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: { position: 'top', reverse: true },
                 tooltip: {
@@ -508,6 +510,7 @@ function initParticipationChart() {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             interaction: {
                 mode: 'index',
                 intersect: false
@@ -666,6 +669,7 @@ function initLakeChart(yearOrAll) {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     position: 'top',
