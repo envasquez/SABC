@@ -273,10 +273,9 @@ html {
 }
 
 /* ========================================
-   Mobile Chart Improvements
+   Chart Container Styling
    ======================================== */
 
-/* Chart containers - ensure minimum height on mobile */
 .chart-scroll-container {
   width: 100%;
   position: relative;
@@ -284,10 +283,10 @@ html {
 
 .chart-scroll-inner {
   width: 100%;
-  min-height: 250px;
+  min-height: 350px;
 }
 
-/* Mobile: Charts with many categories need horizontal scroll */
+/* Mobile: Adjust chart heights and enable scroll for wide charts */
 @media (max-width: 767px) {
   .chart-scroll-inner {
     min-height: 280px;

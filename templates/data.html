@@ -304,9 +304,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script>
-// Mobile detection helper
-const isMobile = () => window.innerWidth < 768;
-
 // Store chart data
 const originalData = {
     weightTrends: {{ weight_trends | tojson }},
@@ -357,8 +354,6 @@ function initCharts(data) {
                 legend: { position: 'top' },
                 datalabels: {
                     display: function(context) {
-                        // Hide labels on mobile for readability
-                        if (isMobile()) return false;
                         return context.dataset.data[context.dataIndex] > 0;
                     },
                     anchor: 'center',
@@ -411,9 +406,6 @@ function initCharts(data) {
                 },
                 datalabels: {
                     display: function(context) {
-                        // Hide labels on mobile for readability
-                        if (isMobile()) return false;
-                        // Show label if value > 0
                         return parseFloat(context.dataset.data[context.dataIndex]) > 0;
                     },
                     anchor: 'center',
@@ -687,8 +679,6 @@ function initLakeChart(yearOrAll) {
                 },
                 datalabels: {
                     display: function(context) {
-                        // Hide labels on mobile for readability
-                        if (isMobile()) return false;
                         // Only show labels for bar datasets (not the line), and only if value > 0
                         return context.dataset.type !== 'line' && parseFloat(context.dataset.data[context.dataIndex]) > 0;
                     },
