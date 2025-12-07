@@ -1,5 +1,7 @@
 """Tournament-related Pydantic models."""
 
+from decimal import Decimal
+
 from core.models.base import BaseModel, ConfigDict, Optional, date, time
 
 
@@ -33,3 +35,4 @@ class TournamentWithEvent(Tournament):
     event_name: str
     event_description: Optional[str] = None
     event_type: str
+    big_bass_carryover: Decimal = Decimal("0.00")
