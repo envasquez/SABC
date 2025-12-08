@@ -37,6 +37,7 @@ async def manage_results_page(
             buy_in_place,
             buy_in_results,
             disqualified_results,
+            _payouts,
         ) = fetch_tournament_data(qs, tournament_id)
 
         # Build fake request object for template
@@ -164,12 +165,16 @@ async def toggle_tournament_complete(
     user=Depends(require_admin),
     conn: Connection = Depends(get_db),
 ):
+    """Toggle tournament complete status (legacy endpoint - complete status is mostly informational now)."""
     if isinstance(user, RedirectResponse):
         return JSONResponse({"error": "Unauthorized"}, status_code=403)
 
     qs = QueryService(conn)
 
-    current = qs.fetch_one("SELECT complete FROM tournaments WHERE id = :id", {"id": tournament_id})
+    current = qs.fetch_one(
+        "SELECT complete FROM tournaments WHERE id = :id",
+        {"id": tournament_id},
+    )
 
     if not current:
         return JSONResponse({"error": "Tournament not found"}, status_code=404)
@@ -179,11 +184,12 @@ async def toggle_tournament_complete(
         "UPDATE tournaments SET complete = :status WHERE id = :id",
         {"status": new_status, "id": tournament_id},
     )
+    conn.commit()
 
     return JSONResponse(
         {
             "success": True,
             "new_status": new_status,
-            "message": f"Tournament marked as {'complete' if new_status else 'upcoming'}",
+            "message": f"Tournament marked as {'complete' if new_status else 'upcoming'}.",
         }
     )

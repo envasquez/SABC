@@ -38,6 +38,7 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
                 buy_in_place,
                 buy_in_results,
                 disqualified_results,
+                payouts,
             ) = fetch_tournament_data(qs, tournament_id)
             tournament_tuple = (
                 tournament.id,
@@ -77,6 +78,7 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
                     "buy_in_place": buy_in_place,
                     "buy_in_results": buy_in_results,
                     "disqualified_results": disqualified_results,
+                    "payouts": payouts,
                     "next_tournament_id": next_tournament_id,
                     "prev_tournament_id": prev_tournament_id,
                     "year_links": year_links,

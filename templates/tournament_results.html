@@ -102,13 +102,75 @@
                                     --
                                 {% endif %}
                             </div>
-                            <small class="text-light">Big Bass</small>
+                            <small class="text-light">
+                                Big Bass
+                                {% if payouts.big_bass_caught_by_guest %}
+                                    <span class="badge bg-info text-dark ms-1">Guest</span>
+                                {% endif %}
+                            </small>
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
                         <div class="bg-secondary border rounded p-3">
                             <div class="h3 text-white mb-1">{{ "%.2f"|format(tournament_stats[7] or 0) }} <small>lbs</small></div>
                             <small class="text-light">Heavy Stringer</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tournament Payouts Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-cash-stack me-2"></i>Tournament Payouts</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center g-3">
+                    <div class="col-6 col-md">
+                        <div class="bg-secondary border rounded p-3 h-100">
+                            <div class="h4 text-white mb-1">${{ "%.2f"|format(payouts.total_entry) }}</div>
+                            <small class="text-light">Total Entries</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md">
+                        <div class="rounded p-3 h-100 medal-gold">
+                            <div class="h4 color-gold-dark mb-1">${{ "%.2f"|format(payouts.first_place) }}</div>
+                            <small class="color-gold-dark">1st Place</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md">
+                        <div class="rounded p-3 h-100 medal-silver">
+                            <div class="h4 color-silver-dark mb-1">${{ "%.2f"|format(payouts.second_place) }}</div>
+                            <small class="color-silver-dark">2nd Place</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md">
+                        <div class="rounded p-3 h-100 medal-bronze">
+                            <div class="h4 color-bronze mb-1">${{ "%.2f"|format(payouts.third_place) }}</div>
+                            <small class="color-bronze">3rd Place</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md">
+                        <div class="bg-success border rounded p-3 h-100">
+                            <div class="h4 text-white mb-1">
+                                ${{ "%.2f"|format(payouts.big_bass_total) }}
+                                {% if payouts.big_bass_won %}
+                                    <i class="bi bi-check-circle-fill text-warning" title="Won!"></i>
+                                {% endif %}
+                            </div>
+                            <small class="text-white">
+                                Big Bass Pot
+                                {% if payouts.big_bass_won %}
+                                    <span class="badge bg-warning text-dark ms-1" title="Big bass was caught and pot was paid out">
+                                        <i class="bi bi-trophy-fill"></i> Paid
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger text-white ms-1" title="No member caught bass > 5lbs - pot rolls over to next tournament">
+                                        <i class="bi bi-arrow-repeat"></i> Rolls Over
+                                    </span>
+                                {% endif %}
+                            </small>
                         </div>
                     </div>
                 </div>
