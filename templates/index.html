@@ -9,18 +9,21 @@
     <div class="col-lg-8">
         <h1 class="h2 mb-4">Events 🎣</h1>
 
-        {% set completed_tournaments = all_tournaments | selectattr('complete', 'equalto', True) | list %}
-        {% set upcoming_tournaments = all_tournaments | selectattr('complete', 'equalto', False) | sort(attribute='date') | list %}
+        {# A tournament is "completed" if it has results (complete=True) OR its date has passed (is_past=True) #}
+        {% set completed_tournaments = all_tournaments | selectattr('is_past', 'equalto', True) | list %}
+        {% set upcoming_tournaments = all_tournaments | rejectattr('is_past', 'equalto', True) | sort(attribute='date') | list %}
 
         <!-- Bootstrap Tabs -->
         <ul class="nav nav-tabs mb-4" id="tournamentTabs" role="tablist">
+            {% if upcoming_tournaments %}
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming-pane" type="button" role="tab" aria-controls="upcoming-pane" aria-selected="true">
-                    <i class="bi bi-calendar-plus me-1"></i>Upcoming Tournaments ({{ total_upcoming_tournaments }})
+                    <i class="bi bi-calendar-plus me-1"></i>Upcoming Tournaments ({{ upcoming_tournaments|length }})
                 </button>
             </li>
+            {% endif %}
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed-pane" type="button" role="tab" aria-controls="completed-pane" aria-selected="false">
+                <button class="nav-link{% if not upcoming_tournaments %} active{% endif %}" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed-pane" type="button" role="tab" aria-controls="completed-pane" aria-selected="{% if not upcoming_tournaments %}true{% else %}false{% endif %}">
                     <i class="bi bi-trophy me-1"></i>Completed Tournaments
                 </button>
             </li>
@@ -29,7 +32,7 @@
         <!-- Tab Content -->
         <div class="tab-content" id="tournamentTabsContent">
             <!-- Completed Tournaments Tab -->
-            <div class="tab-pane fade" id="completed-pane" role="tabpanel" aria-labelledby="completed-tab">
+            <div class="tab-pane fade{% if not upcoming_tournaments %} show active{% endif %}" id="completed-pane" role="tabpanel" aria-labelledby="completed-tab">
                 {% for tournament in completed_tournaments %}
                 <div class="card mb-4">
                     <div class="card-header bg-success text-white">
@@ -55,9 +58,15 @@
                                     </small>
                                 {% endif %}
                             </div>
+                            {% if tournament.complete %}
                             <span class="badge bg-warning text-dark">
                                 Complete
                             </span>
+                            {% else %}
+                            <span class="badge bg-secondary">
+                                Awaiting Results
+                            </span>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -236,9 +245,15 @@
                         {% endif %}
 
                         <div class="d-flex justify-content-end">
+                            {% if tournament.complete %}
                             <a href="/tournaments/{{ tournament.id }}" class="btn btn-primary">
                                 <i class="bi bi-eye me-1"></i>View Results
                             </a>
+                            {% else %}
+                            <span class="btn btn-outline-secondary disabled">
+                                <i class="bi bi-hourglass-split me-1"></i>Results Pending
+                            </span>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -317,7 +332,7 @@
             </div>
 
             <!-- Upcoming Tournaments Tab -->
-            <div class="tab-pane fade show active" id="upcoming-pane" role="tabpanel" aria-labelledby="upcoming-tab">
+            <div class="tab-pane fade{% if upcoming_tournaments %} show active{% endif %}" id="upcoming-pane" role="tabpanel" aria-labelledby="upcoming-tab">
                 {% for tournament in upcoming_tournaments %}
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">
