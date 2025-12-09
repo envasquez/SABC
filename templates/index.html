@@ -58,15 +58,9 @@
                                     </small>
                                 {% endif %}
                             </div>
-                            {% if tournament.complete %}
                             <span class="badge bg-warning text-dark">
                                 Complete
                             </span>
-                            {% else %}
-                            <span class="badge bg-secondary">
-                                Awaiting Results
-                            </span>
-                            {% endif %}
                         </div>
                     </div>
 
@@ -245,15 +239,9 @@
                         {% endif %}
 
                         <div class="d-flex justify-content-end">
-                            {% if tournament.complete %}
                             <a href="/tournaments/{{ tournament.id }}" class="btn btn-primary">
                                 <i class="bi bi-eye me-1"></i>View Results
                             </a>
-                            {% else %}
-                            <span class="btn btn-outline-secondary disabled">
-                                <i class="bi bi-hourglass-split me-1"></i>Results Pending
-                            </span>
-                            {% endif %}
                         </div>
                     </div>
                 </div>
