@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, HTTPException, Request
@@ -230,9 +231,13 @@ async def home_paginated(request: Request, page: int = 1):
                             }
                         )
 
+            # Check if tournament date has passed (for display purposes)
+            tournament_date = tournament[1]
+            is_past = tournament_date < date.today() if tournament_date else False
+
             tournament_dict = {
                 "id": tournament[0],
-                "date": tournament[1],
+                "date": tournament_date,
                 "name": tournament[2],
                 "description": tournament[3],
                 "lake_display_name": tournament[4],
@@ -249,6 +254,7 @@ async def home_paginated(request: Request, page: int = 1):
                 "is_team": tournament[14],
                 "is_paper": tournament[15],
                 "complete": tournament[16],
+                "is_past": is_past,  # True if date has passed, regardless of complete status
                 "poll_id": poll_id,
                 "total_anglers": tournament[18] or 0,
                 "total_fish": tournament[19] or 0,
