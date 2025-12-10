@@ -16,6 +16,7 @@
 const ResultsEntryState = {
     teamCount: 0,
     anglers: [],
+    filteredAnglers: [],  // Anglers not yet selected in this form
     existingAnglerIds: new Set(),
     editData: null,
     editTeamResultData: null,
@@ -122,10 +123,17 @@ function setupAutocomplete(input) {
             return;
         }
 
-        // Filter anglers
-        const matches = ResultsEntryState.anglers.filter(a =>
-            a.name.toLowerCase().includes(query)
-        );
+        // Filter anglers from the filtered list (excludes already-selected anglers)
+        // But always include the currently selected angler for this input
+        const currentId = parseInt(hiddenInput.value) || null;
+        const availableAnglers = ResultsEntryState.filteredAnglers || ResultsEntryState.anglers;
+        const matches = ResultsEntryState.anglers.filter(a => {
+            // Include if matches search AND (is available OR is the current selection)
+            const matchesQuery = a.name.toLowerCase().includes(query);
+            const isAvailable = availableAnglers.some(fa => fa.id === a.id);
+            const isCurrentSelection = currentId && a.id === currentId;
+            return matchesQuery && (isAvailable || isCurrentSelection);
+        });
 
         if (matches.length === 0) {
             dropdown.innerHTML = '<div class="autocomplete-no-results">No anglers found</div>';
@@ -765,12 +773,26 @@ async function handleFormSubmit(e) {
 // ===== Dropdown Update Functions =====
 
 /**
- * Update all angler dropdowns (placeholder for future filtering logic)
- * Called after anglers are selected/deselected to potentially filter out already-selected anglers
+ * Update all angler dropdowns to filter out already-selected anglers
+ * Prevents the same angler from being entered multiple times in a tournament
  */
 function updateAllAnglerDropdowns() {
-    // Currently a no-op placeholder
-    // Could be enhanced to filter already-selected anglers from dropdowns
+    // Collect all currently selected angler IDs
+    const selectedIds = new Set();
+    document.querySelectorAll('.team-card').forEach(teamCard => {
+        const angler1Id = teamCard.querySelector('.angler1-id')?.value;
+        const angler2Id = teamCard.querySelector('.angler2-id')?.value;
+        if (angler1Id) selectedIds.add(parseInt(angler1Id));
+        if (angler2Id) selectedIds.add(parseInt(angler2Id));
+    });
+
+    // Also include anglers who already have results in this tournament
+    ResultsEntryState.existingAnglerIds.forEach(id => selectedIds.add(id));
+
+    // Update the filtered anglers list (excluding selected ones)
+    ResultsEntryState.filteredAnglers = ResultsEntryState.anglers.filter(
+        angler => !selectedIds.has(angler.id)
+    );
 }
 
 /**
