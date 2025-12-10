@@ -762,6 +762,25 @@ async function handleFormSubmit(e) {
     }
 }
 
+// ===== Dropdown Update Functions =====
+
+/**
+ * Update all angler dropdowns (placeholder for future filtering logic)
+ * Called after anglers are selected/deselected to potentially filter out already-selected anglers
+ */
+function updateAllAnglerDropdowns() {
+    // Currently a no-op placeholder
+    // Could be enhanced to filter already-selected anglers from dropdowns
+}
+
+/**
+ * Handler called when an angler is selected or deselected
+ * Updates dropdowns to reflect the change
+ */
+function onAnglerChange() {
+    updateAllAnglerDropdowns();
+}
+
 // Make functions available globally for onclick handlers
 window.addTeam = addTeam;
 window.removeTeam = removeTeam;
@@ -770,3 +789,5 @@ window.handleBuyInChange = handleBuyInChange;
 window.showCreateGuestModal = showCreateGuestModal;
 window.createGuest = createGuest;
 window.initializeResultsEntry = initializeResultsEntry;
+window.updateAllAnglerDropdowns = updateAllAnglerDropdowns;
+window.onAnglerChange = onAnglerChange;
