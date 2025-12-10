@@ -85,6 +85,7 @@ async def enter_results_page(
             "edit_result_id": request.query_params.get("edit_result_id"),
             "edit_team_result": edit_team_result_id,
             "edit_team_result_data": edit_team_result_data,
+            "edit_data": None,  # Required by template, None when not editing
         },
     )
     # Prevent browser caching so edit parameters are always fresh
