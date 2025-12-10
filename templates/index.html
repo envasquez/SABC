@@ -11,7 +11,7 @@
 
         {# A tournament is "completed" if it has results (complete=True) OR its date has passed (is_past=True) #}
         {% set completed_tournaments = all_tournaments | selectattr('is_past', 'equalto', True) | sort(attribute='date', reverse=True) | list %}
-        {% set upcoming_tournaments = all_tournaments | rejectattr('is_past', 'equalto', True) | sort(attribute='date') | list %}
+        {% set upcoming_tournaments = all_tournaments | rejectattr('is_past', 'equalto', True) | selectattr('event_type', 'equalto', 'sabc_tournament') | sort(attribute='date') | list %}
 
         <!-- Bootstrap Tabs -->
         <ul class="nav nav-tabs mb-4" id="tournamentTabs" role="tablist">

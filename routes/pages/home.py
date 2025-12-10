@@ -84,6 +84,7 @@ async def home_paginated(request: Request, page: int = 1):
                     func.sum(Result.num_fish).label("total_fish"),
                     func.sum(Result.total_weight - Result.dead_fish_penalty).label("total_weight"),
                     Tournament.aoy_points,
+                    Event.event_type,
                 )
                 .join(Event, Tournament.event_id == Event.id)
                 .outerjoin(Lake, Tournament.lake_id == Lake.id)
@@ -116,6 +117,7 @@ async def home_paginated(request: Request, page: int = 1):
                     Tournament.complete,
                     Tournament.poll_id,
                     Tournament.aoy_points,
+                    Event.event_type,
                 )
             )
             if complete_filter is not None:
@@ -260,6 +262,7 @@ async def home_paginated(request: Request, page: int = 1):
                 "total_fish": tournament[19] or 0,
                 "total_weight": tournament[20] or 0.0,
                 "aoy_points": tournament[21] if tournament[21] is not None else True,
+                "event_type": tournament[22],
                 "top_results": top_results_query,
                 "poll_data": poll_data,
                 "user_has_voted": user_has_voted,
