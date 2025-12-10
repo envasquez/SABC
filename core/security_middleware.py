@@ -15,15 +15,18 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         if request.url.scheme == "https":
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
-        response.headers["Content-Security-Policy"] = (
+        csp = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
             "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; "
             "img-src 'self' data: https:; "
             "frame-src https://www.google.com https://maps.google.com; "
-            "connect-src 'self'; "
-            "upgrade-insecure-requests"
+            "connect-src 'self'"
         )
+        # Only upgrade insecure requests in production (HTTPS)
+        if request.url.scheme == "https":
+            csp += "; upgrade-insecure-requests"
+        response.headers["Content-Security-Policy"] = csp
 
         return response

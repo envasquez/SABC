@@ -1,6 +1,6 @@
 # BYLAWS OF South Austin Bass Club
 
-**Established 1981**
+**Established 1983**
 
 *Draft - 2025 Team Format Revision*
 
@@ -74,8 +74,6 @@ F. There is no limit to how many times a lake can be fished during a tournament 
 G. All tournaments are team tournaments with a "pick your own partner" format.
 
 H. The tournament limit is 5 (five) fish per boat.
-   1. Both team members fish into a shared limit.
-   2. There is no separation of fish between team members.
 
 ---
 
