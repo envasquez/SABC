@@ -223,7 +223,7 @@ def fetch_tournament_data(
     big_bass_caught_by_guest = (
         overall_big_bass is not None
         and overall_big_bass["big_bass_weight"] > 0
-        and overall_big_bass["was_member"] is False
+        and not overall_big_bass["was_member"]
     )
 
     # Calculate payouts based on bylaws
