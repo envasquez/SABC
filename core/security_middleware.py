@@ -8,8 +8,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # Check if request is HTTPS (directly or via reverse proxy)
         is_https = (
-            request.url.scheme == "https"
-            or request.headers.get("x-forwarded-proto") == "https"
+            request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https"
         )
 
         response.headers["X-Content-Type-Options"] = "nosniff"

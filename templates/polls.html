@@ -89,7 +89,7 @@
                 <div class="card-body">
                     {% if poll.description %}
                     <div class="mb-3">
-                        <p class="text-secondary">{{ poll.description }}</p>
+                        <p class="text-secondary">{{ poll.description | nl2br }}</p>
                     </div>
                     {% endif %}
 

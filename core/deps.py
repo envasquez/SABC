@@ -133,6 +133,29 @@ def month_number_filter(date_str: Any) -> str:
         return "00"
 
 
+def nl2br_filter(value: Any) -> Markup:
+    """Convert newlines to HTML <br> tags.
+
+    This filter is useful for displaying user-entered text that contains
+    newline characters in HTML where whitespace is normally collapsed.
+
+    Example:
+        Input: "Line 1\nLine 2\nLine 3"
+        Output: "Line 1<br>\nLine 2<br>\nLine 3"
+
+    The input is escaped first to prevent XSS, then newlines are converted
+    to <br> tags.
+    """
+    from markupsafe import escape
+
+    if not value:
+        return Markup("")
+    # First escape the value to prevent XSS, then replace newlines with <br>
+    escaped = escape(str(value))
+    # nosec B703: We explicitly escape the input above before adding <br> tags
+    return Markup(str(escaped).replace("\n", "<br>\n"))
+
+
 templates = Jinja2Templates(directory="templates")
 templates.env.filters["time_format"] = time_format_filter
 templates.env.filters["tojson_attr"] = tojson_attr_filter

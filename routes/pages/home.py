@@ -276,6 +276,7 @@ async def home_paginated(request: Request, page: int = 1):
         )
 
         # Get latest news
+        # Note: We exclude admin@sabc.com from author display (default admin user)
         Author = aliased(Angler)
         Editor = aliased(Angler)
         latest_news = (
@@ -287,8 +288,14 @@ async def home_paginated(request: Request, page: int = 1):
                 News.updated_at,
                 News.priority,
                 func.coalesce(Editor.name, Author.name).label("display_author_name"),
-                Author.name.label("original_author_name"),
-                Editor.name.label("editor_name"),
+                case(
+                    (Author.email == "admin@sabc.com", None),
+                    else_=Author.name,
+                ).label("original_author_name"),
+                case(
+                    (Editor.email == "admin@sabc.com", None),
+                    else_=Editor.name,
+                ).label("editor_name"),
             )
             .outerjoin(Author, News.author_id == Author.id)
             .outerjoin(Editor, News.last_edited_by == Editor.id)

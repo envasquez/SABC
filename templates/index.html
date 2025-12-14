@@ -66,7 +66,7 @@
 
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="text-secondary mb-0">{{ tournament.name }} | {{ tournament.description[:200] }} - {{ tournament.date|date_format("mm-dd-yyyy") }}</h6>
+                            <h6 class="text-secondary mb-0">{{ tournament.name }} | {{ tournament.description[:200] | nl2br }} - {{ tournament.date|date_format("mm-dd-yyyy") }}</h6>
                             <div>
                                 <span class="badge bg-secondary me-2">{{ tournament.fish_limit }} fish/{{ tournament.limit_type }}</span>
                                 {% if tournament.aoy_points %}
@@ -354,7 +354,7 @@
 
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="text-secondary mb-0">{{ tournament.name }} | {{ tournament.description[:200] }} - {{ tournament.date|date_format("mm-dd-yyyy") }}</h6>
+                            <h6 class="text-secondary mb-0">{{ tournament.name }} | {{ tournament.description[:200] | nl2br }} - {{ tournament.date|date_format("mm-dd-yyyy") }}</h6>
                             <div>
                                 <span class="badge bg-secondary me-2">{{ tournament.fish_limit }} fish/{{ tournament.limit_type }}</span>
                                 {% if tournament.aoy_points %}
@@ -555,7 +555,7 @@
                                 <span class="badge bg-success ms-2 small">Normal</span>
                             {% endif %}
                         </div>
-                        <p class="small mb-1">{{ news_item[2] }}</p>
+                        <p class="small mb-1">{{ news_item[2] | nl2br }}</p>
                         <small class="text-secondary">
                             {% set display_date = news_item[4] if news_item[8] else news_item[3] %}
                             {% set original_author = news_item[7] %}
