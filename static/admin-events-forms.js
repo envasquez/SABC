@@ -235,3 +235,62 @@ function toggleEditEventFields() {
     // Show relevant edit sections using 'block' display
     showSections(config.editSections, 'block');
 }
+
+/**
+ * Update form defaults based on selected year (2026+ uses new team format)
+ * Called when the date field changes
+ */
+function updateYearBasedDefaults() {
+    const dateField = document.getElementById('date');
+    if (!dateField || !dateField.value) return;
+
+    const selectedYear = new Date(dateField.value).getFullYear();
+    const isNewFormat = selectedYear >= 2026;
+
+    // Update entry fee default
+    const entryFeeField = document.getElementById('entry_fee');
+    if (entryFeeField && !entryFeeField.dataset.userModified) {
+        entryFeeField.value = isNewFormat ? '50.00' : '25.00';
+    }
+
+    // Update AoY points default
+    const aoyPointsField = document.getElementById('aoy_points');
+    if (aoyPointsField && !aoyPointsField.dataset.userModified) {
+        aoyPointsField.value = isNewFormat ? 'false' : 'true';
+    }
+
+    // Update Create Poll default (no auto-poll for 2026+)
+    const createPollField = document.getElementById('create_poll');
+    if (createPollField && !createPollField.dataset.userModified) {
+        createPollField.value = isNewFormat ? 'false' : 'true';
+    }
+}
+
+/**
+ * Mark a field as user-modified to prevent automatic default updates
+ * @param {Event} event - The change event
+ */
+function markAsUserModified(event) {
+    event.target.dataset.userModified = 'true';
+}
+
+/**
+ * Initialize year-based defaults event listeners
+ */
+function initYearBasedDefaults() {
+    const dateField = document.getElementById('date');
+    if (dateField) {
+        dateField.addEventListener('change', updateYearBasedDefaults);
+    }
+
+    // Mark fields as user-modified when changed
+    ['entry_fee', 'aoy_points', 'create_poll'].forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('change', markAsUserModified);
+        }
+    });
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', initYearBasedDefaults);

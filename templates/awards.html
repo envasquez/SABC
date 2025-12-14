@@ -57,7 +57,49 @@
 
         <!-- Awards Sections -->
 
-        <!-- Angler of the Year -->
+        {% if is_team_format %}
+        <!-- Team Format (2026+) - Most Wins -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="mb-0">
+                    <i class="bi bi-trophy-fill me-2"></i>Most Wins
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if team_wins %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Team</th>
+                                <th>Wins</th>
+                                <th>Tournaments</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for team in team_wins %}
+                            <tr class="{% if loop.index == 1 %}table-warning{% elif loop.index <= 3 %}table-secondary{% endif %}">
+                                <td class="fw-bold">{{ loop.index }}</td>
+                                <td>{{ team['team_name'] }}</td>
+                                <td class="fw-bold">{{ team['wins'] }}</td>
+                                <td>{{ team['tournaments_fished'] }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-trophy text-secondary display-1"></i>
+                    <h5 class="text-secondary">No wins recorded yet</h5>
+                    <p class="text-secondary">Team wins will be tracked as tournaments are completed</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <!-- Individual Format (Pre-2026) - Angler of the Year -->
         <div class="card mb-4">
             <div class="card-header bg-warning text-dark">
                 <h4 class="mb-0">
@@ -101,25 +143,26 @@
                 {% endif %}
             </div>
         </div>
+        {% endif %}
 
         <!-- Heavy Stringer -->
         <div class="card mb-4">
             <div class="card-header bg-success text-white">
                 <h4 class="mb-0">
-                    <i class="bi bi-award-fill me-2"></i>Heavy Stringer
+                    <i class="bi bi-award-fill me-2"></i>{% if is_team_format %}Big Stringer of the Year{% else %}Heavy Stringer{% endif %}
                 </h4>
-                <small>Best single tournament weight</small>
+                <small>Best single tournament weight{% if is_team_format %} (5-fish team limit){% endif %}</small>
             </div>
             <div class="card-body">
                 {% if heavy_stringer %}
                 <div class="row align-items-center">
                     <div class="col-md-8">
-                        <h5 class="mb-1">{{ heavy_stringer['name'] }}</h5>
+                        <h5 class="mb-1">{{ heavy_stringer['team_name'] if is_team_format else heavy_stringer['name'] }}</h5>
                         <p class="mb-0 text-secondary">{{ heavy_stringer['tournament_name'] or "Tournament" }}</p>
                     </div>
                     <div class="col-md-4 text-end">
                         <h3 class="mb-0 text-success">{{ "%.2f"|format(heavy_stringer['total_weight']) }} lbs</h3>
-                        <small class="text-secondary">{{ heavy_stringer['num_fish'] }} fish</small>
+                        {% if not is_team_format %}<small class="text-secondary">{{ heavy_stringer['num_fish'] }} fish</small>{% endif %}
                     </div>
                 </div>
                 {% else %}
@@ -143,7 +186,7 @@
                 {% if big_bass %}
                 <div class="row align-items-center">
                     <div class="col-md-8">
-                        <h5 class="mb-1">{{ big_bass['name'] }}</h5>
+                        <h5 class="mb-1">{{ big_bass['team_name'] if is_team_format else big_bass['name'] }}</h5>
                         <p class="mb-0 text-secondary">{{ big_bass['tournament_name'] or "Tournament" }}</p>
                     </div>
                     <div class="col-md-4 text-end">
@@ -168,6 +211,47 @@
                 </h4>
             </div>
             <div class="card-body">
+                {% if is_team_format %}
+                <!-- 2026+ Team Format Criteria -->
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <h6 class="text-warning">🏆 Most Wins</h6>
+                        <ul class="small">
+                            <li>Team with most 1st place finishes</li>
+                            <li>Tracks team combinations</li>
+                            <li>At least one member on the team</li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <h6 class="text-success">🎣 Big Stringer of the Year</h6>
+                        <ul class="small">
+                            <li>Heaviest 5-fish team bag</li>
+                            <li>Any tournament during the year</li>
+                            <li>At least one member on the team</li>
+                        </ul>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <h6 class="text-info">🐟 Big Bass of the Year</h6>
+                        <ul class="small">
+                            <li>Largest bass during any tournament</li>
+                            <li>Minimum weight: 5.00 pounds</li>
+                            <li>At least one member on the team</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <h6 class="text-light">💰 Payout Structure (per $50 boat entry)</h6>
+                        <ul class="small d-flex flex-wrap gap-4 mb-0">
+                            <li>1st Place: $20</li>
+                            <li>2nd Place: $14</li>
+                            <li>3rd Place: $8</li>
+                            <li>Big Bass: $8</li>
+                        </ul>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Pre-2026 Individual Format Criteria -->
                 <div class="row">
                     <div class="col-lg-3 col-md-6 mb-3">
                         <h6 class="text-warning">🏆 Angler of the Year</h6>
@@ -204,6 +288,7 @@
                         </ul>
                     </div>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>

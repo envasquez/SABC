@@ -52,6 +52,7 @@ async def create_event(
     entry_fee: float = Form(default=25.00),
     fish_limit: int = Form(default=5),
     aoy_points: str = Form(default="true"),
+    create_poll: str = Form(default="true"),
 ):
     user = require_admin(request)
     try:
@@ -83,7 +84,7 @@ async def create_event(
         event_id = create_event_record(event_params)
         if event_type in ["sabc_tournament", "other_tournament"]:
             create_tournament_record(event_id, tournament_params)
-        if event_type == "sabc_tournament":
+        if event_type == "sabc_tournament" and create_poll.lower() == "true":
             poll_id = create_tournament_poll(event_id, name, description, date_obj, user["id"])  # type: ignore[arg-type]
             create_poll_options(poll_id)
         return RedirectResponse(

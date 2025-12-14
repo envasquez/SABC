@@ -82,11 +82,11 @@ H. The tournament limit is 5 (five) fish per boat.
 A. Entry fee is $50.00 per boat, due no later than weigh-in.
 
 B. Breakdown of $50.00 Entry Fee:
-   1. Tournament Pot: $40.00
-      - 1st Place: $18.00 (45% of pot)
-      - 2nd Place: $12.00 (30% of pot)
-      - 3rd Place: $10.00 (25% of pot)
-   2. Big Bass Pot: $10.00
+   1. Tournament Pot: $42.00
+      - 1st Place: $20.00
+      - 2nd Place: $14.00
+      - 3rd Place: $8.00
+   2. Big Bass Pot: $8.00
 
 C. 100% of entry fees are paid back to tournament winners.
 

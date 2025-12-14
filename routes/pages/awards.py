@@ -11,6 +11,9 @@ from routes.pages.awards_helpers import (
     get_big_bass_query,
     get_heavy_stringer_query,
     get_stats_query,
+    get_team_big_bass_query,
+    get_team_heavy_stringer_query,
+    get_team_wins_query,
     get_tournament_results_query,
     get_years_query,
 )
@@ -92,8 +95,24 @@ async def awards(request: Request, year: Optional[int] = None):
 
         aoy_standings = list(angler_totals_members_only.values())
         aoy_standings.sort(key=lambda x: (x["total_points"], x["total_weight"]), reverse=True)
-        heavy_stringer = qs.fetch_all(get_heavy_stringer_query(), {"year": year})
-        big_bass = qs.fetch_all(get_big_bass_query(), {"year": year})
+
+        # Determine if this is the new team format (2026+)
+        # Note: year is guaranteed to be set at this point (line 31 or 40 above)
+        assert year is not None
+        is_team_format = year >= 2026
+
+        # Get awards data based on format
+        if is_team_format:
+            # 2026+ team format - use team queries
+            heavy_stringer = qs.fetch_all(get_team_heavy_stringer_query(), {"year": year})
+            big_bass = qs.fetch_all(get_team_big_bass_query(), {"year": year})
+            team_wins = qs.fetch_all(get_team_wins_query(), {"year": year})
+        else:
+            # Pre-2026 individual format
+            heavy_stringer = qs.fetch_all(get_heavy_stringer_query(), {"year": year})
+            big_bass = qs.fetch_all(get_big_bass_query(), {"year": year})
+            team_wins = []
+
         return templates.TemplateResponse(
             "awards.html",
             {
@@ -105,5 +124,7 @@ async def awards(request: Request, year: Optional[int] = None):
                 "heavy_stringer": heavy_stringer[0] if heavy_stringer else None,
                 "big_bass": big_bass[0] if big_bass else None,
                 "year_stats": stats,
+                "is_team_format": is_team_format,
+                "team_wins": team_wins,
             },
         )
