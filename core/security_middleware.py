@@ -6,13 +6,19 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
 
+        # Check if request is HTTPS (directly or via reverse proxy)
+        is_https = (
+            request.url.scheme == "https"
+            or request.headers.get("x-forwarded-proto") == "https"
+        )
+
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
 
-        if request.url.scheme == "https":
+        if is_https:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
         csp = (
@@ -25,7 +31,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "connect-src 'self'"
         )
         # Only upgrade insecure requests in production (HTTPS)
-        if request.url.scheme == "https":
+        if is_https:
             csp += "; upgrade-insecure-requests"
         response.headers["Content-Security-Policy"] = csp
 
