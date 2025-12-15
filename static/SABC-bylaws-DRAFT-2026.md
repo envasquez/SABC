@@ -26,6 +26,7 @@ D. Annual dues fund club infrastructure including scales, the website (saustinbc
 ### Member Benefits
 
 E. Members are entitled to:
+
    1. Vote on club polls (bylaw changes, officer elections, tournament locations, and other club matters)
    2. Collect Big Bass pot winnings if on the boat that weighs in the tournament big bass
 
@@ -34,6 +35,7 @@ E. Members are entitled to:
 ## ARTICLE III: Officers
 
 A. Officers will consist of:
+
    1. President/Secretary
    2. Treasurer
    3. Weighmaster
@@ -54,8 +56,10 @@ E. Cancellation of a tournament due to severe weather or unforeseen circumstance
 ### Schedule
 
 A. The club will fish on the 4th Sunday of each month.
+
    1. Exceptions may be made for conflicts with holidays or other bass tournaments.
    2. Changes will be posted on the club website as early as possible.
+   3. There is a club calendar that will show when tournament events are, and the upcoming tournaments will be posted on the site.
 
 ### Tournament Waters
 
@@ -82,7 +86,8 @@ H. The tournament limit is 5 (five) fish per boat.
 A. Entry fee is $50.00 per boat, due no later than weigh-in.
 
 B. Breakdown of $50.00 Entry Fee:
-   1. Tournament Pot: $42.00
+
+   1. Tournament Pot:
       - 1st Place: $20.00
       - 2nd Place: $14.00
       - 3rd Place: $8.00
@@ -91,10 +96,11 @@ B. Breakdown of $50.00 Entry Fee:
 C. 100% of entry fees are paid back to tournament winners.
 
 D. Big Bass Pot is paid to the boat with the heaviest bass caught at the tournament over 5 (five) pounds.
+
    1. If no bass over 5 pounds is weighed in, the Big Bass pot rolls over to the next tournament.
    2. Only members are eligible for the Big Bass pot. At least one angler on the boat must be a member to collect.
 
-E. Teams fishing tournament waters during tournament hours are responsible for entry fees whether they show up for weigh-in or not.
+E. Members fishing tournament waters during tournament hours are responsible for entry fees whether they show up for weigh-in or not.
 
 ---
 
@@ -116,7 +122,7 @@ A. All federal, state, and local laws must be observed. Illegal acts may result 
 
 B. A team member who violates Texas Game or Boating Laws will be disqualified and their fish will not be counted.
 
-C. Protests must be presented to an officer within 30 minutes of the weigh-in.
+C. Protests must be presented to an officer within 30 minutes of the tournament end time.
 
 ### Team Rules
 
@@ -135,15 +141,19 @@ H. Boats must have a properly aerated livewell to maintain fish health.
 I. Only artificial baits may be used. Pork rind is permitted.
 
 J. Only legal-sized Largemouth, Smallmouth, or Spotted Bass are eligible for weigh-in.
+
    1. Spotted/Guadalupe Bass must be 12 inches in length.
    2. Anglers are responsible for knowing individual lake regulations.
 
 K. Fish must be measured on a flat board with a perpendicular end.
+
    1. Fish must be placed flat on the board with mouth closed and pressed against the perpendicular end.
    2. Tail may be manipulated to determine maximum length.
    3. Tip of tail must touch the line for the minimum length.
+   4. A photo of each fish measured must be taken
 
 L. Any fish at weigh-in short of legal limit makes the team subject to disqualification.
+
    1. If unsure of a fish's measurement, ask an officer to check the fish prior to weigh-in.
 
 M. Tournament lake is off limits for fishing 12 hours prior to tournament start time.
@@ -160,6 +170,8 @@ Q. Weigh-ins will be held lakeside when possible for live release of fish.
 
 R. Tournament anglers must be inside the buoys at the weigh-in location by the end time of the tournament. Teams not at idle speed inside the buoys by end time or trailered into the parking area will be disqualified.
 
+   1. The boat(s) with the Weighmaster & Assistant Weighmaster may start 15 minutes prior to the tournament start time, and MUST stop 15 minutes before the scheduled tournament end time, to allow them to setup the scales for weigh-in.
+
 S. Weigh-in will begin 15 minutes (or as soon as practically possible) after the tournament end time.
 
 T. Fish must be presented in a water-holding bag (no nets).
@@ -175,6 +187,7 @@ W. Club members are expected to conduct themselves with proper respect to other 
 ### Tiebreakers
 
 X. In case of a tie, the following tiebreakers will be used:
+
    1. The team with the largest single fish.
    2. If a tie remains, a coin flip will determine the winner.
 
@@ -199,6 +212,7 @@ B. All voting (bylaw changes, officer elections, tournament locations, and other
 C. Only members in good standing (dues paid) may vote.
 
 D. Voting procedures:
+
    1. Polls will be posted on the club website with clear open and close dates.
    2. Results will be determined by majority vote of participating members.
    3. In case of a tie, the President will cast the deciding vote.
@@ -208,6 +222,7 @@ D. Voting procedures:
 ## ARTICLE X: Amendment to Bylaws
 
 A. To revise any rules or bylaws:
+
    1. A proposal is submitted to the President (email, text or post-tournament in-person).
    2. The proposal will be posted on the club website for member review.
    3. After a review period of at least 7 days, the proposal will be put to a vote on the club website.
