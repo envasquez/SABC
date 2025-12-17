@@ -79,6 +79,20 @@ G. All tournaments are team tournaments with a "pick your own partner" format.
 
 H. The tournament limit is 5 (five) fish per boat.
 
+### Paper Tournaments
+
+I. Paper Tournaments are tournaments where fish are measured instead of weighed.
+
+   1. Fish are measured and recorded on a chart, verified by the non-boater.
+   2. At weigh-in the total stringer weight is determined from a length to weight conversion chart for your longest 5 (five) fish.
+   3. The club will provide paper charts when paper tournaments are fished.
+   4. The actual weighed weight will be used to determine Big Bass and the paper weight will be used for the stringer weight and does not count for the Heavy Stringer of the Year Award.
+   5. Boater must have an accurate measuring board in the boat.
+   6. The club chart has ½ (one-half) inch increments. Fish must be at least 12 (twelve) inches to record on the chart.
+   7. Fish must be measured on a flat board with a perpendicular end. Fish must be placed flat on the board with mouth closed and pressed against the perpendicular end. Tail may be manipulated to determine maximum length. Tip of tail must touch the line for the minimum length. If a fish measures anywhere between the ½ (one-half) inch mark you must record the shorter length.
+   8. Only fish shorter or longer than the slot limit can be kept and brought to weigh-in. Only 1 (one) fish over the slot limit may be brought to weigh-in for the Big Bass Award.
+   9. If an angler fishes a paper tournament solo, they can opt to Catch, Photo, Release (CPR) - where the photo of the fish must be measured according to the rules above, and contain an identifier for each fish (i.e. a number, color or something to differentiate fish).
+
 ---
 
 ## ARTICLE V: Tournament Fees
@@ -145,48 +159,41 @@ J. Only legal-sized Largemouth, Smallmouth, or Spotted Bass are eligible for wei
    1. Spotted/Guadalupe Bass must be 12 inches in length.
    2. Anglers are responsible for knowing individual lake regulations.
 
-K. Fish must be measured on a flat board with a perpendicular end.
-
-   1. Fish must be placed flat on the board with mouth closed and pressed against the perpendicular end.
-   2. Tail may be manipulated to determine maximum length.
-   3. Tip of tail must touch the line for the minimum length.
-   4. A photo of each fish measured must be taken
-
-L. Any fish at weigh-in short of legal limit makes the team subject to disqualification.
+K. Any fish at weigh-in short of legal limit makes the team subject to disqualification.
 
    1. If unsure of a fish's measurement, ask an officer to check the fish prior to weigh-in.
 
-M. Tournament lake is off limits for fishing 12 hours prior to tournament start time.
+L. Tournament lake is off limits for fishing 12 hours prior to tournament start time.
 
-N. Dead fish penalty is 1/4 (one-quarter) pound per dead fish.
+M. Dead fish penalty is 1/4 (one-quarter) pound per dead fish.
 
-O. No trolling with gas engine is allowed.
+N. No trolling with gas engine is allowed.
 
-P. You may not make your first cast until the designated start time.
+O. You may not make your first cast until the designated start time.
 
 ### Weigh-In Rules
 
-Q. Weigh-ins will be held lakeside when possible for live release of fish.
+P. Weigh-ins will be held lakeside when possible for live release of fish.
 
-R. Tournament anglers must be inside the buoys at the weigh-in location by the end time of the tournament. Teams not at idle speed inside the buoys by end time or trailered into the parking area will be disqualified.
+Q. Tournament anglers must be inside the buoys at the weigh-in location by the end time of the tournament. Teams not at idle speed inside the buoys by end time or trailered into the parking area will be disqualified.
 
    1. The boat(s) with the Weighmaster & Assistant Weighmaster may start 15 minutes prior to the tournament start time, and MUST stop 15 minutes before the scheduled tournament end time, to allow them to setup the scales for weigh-in.
 
-S. Weigh-in will begin 15 minutes (or as soon as practically possible) after the tournament end time.
+R. Weigh-in will begin 15 minutes (or as soon as practically possible) after the tournament end time.
 
-T. Fish must be presented in a water-holding bag (no nets).
+S. Fish must be presented in a water-holding bag (no nets).
 
-U. Hard Luck Clause: If a team experiences mechanical issues or circumstances outside their control, they may call an officer before the tournament end time for a grace period or assistance.
+T. Hard Luck Clause: If a team experiences mechanical issues or circumstances outside their control, they may call an officer before the tournament end time for a grace period or assistance.
 
 ### Conduct
 
-V. Any team may be disqualified for a violation of rules or unsportsmanlike conduct by a vote of the officers present.
+U. Any team may be disqualified for a violation of rules or unsportsmanlike conduct by a vote of the officers present.
 
-W. Club members are expected to conduct themselves with proper respect to other members and abide by principles of honesty and fair play. Disciplinary matters will be reported to the President, who will confer with officers. Their decision is final.
+V. Club members are expected to conduct themselves with proper respect to other members and abide by principles of honesty and fair play. Disciplinary matters will be reported to the President, who will confer with officers. Their decision is final.
 
 ### Tiebreakers
 
-X. In case of a tie, the following tiebreakers will be used:
+W. In case of a tie, the following tiebreakers will be used:
 
    1. The team with the largest single fish.
    2. If a tie remains, a coin flip will determine the winner.
