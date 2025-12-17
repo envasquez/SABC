@@ -63,14 +63,15 @@ def generate_news_email_content(
     """
     subject = f"{CLUB_NAME} - {title}"
 
-    # Create excerpt (first 200 chars of content)
-    excerpt = content[:200] + ("..." if len(content) > 200 else "")
     news_url = f"{WEBSITE_URL}/#news"
 
     # Format author signature
     formatted_author = _format_author_name(author_name)
     author_line = f"\n- {formatted_author}" if formatted_author else ""
     author_html = f"<br>- {formatted_author}" if formatted_author else ""
+
+    # Convert content to HTML paragraphs (preserve line breaks)
+    html_content = "".join(f"<p>{line}</p>" for line in content.split("\n") if line.strip())
 
     text_body = f"""
 Hello,
@@ -79,9 +80,9 @@ Hello,
 
 {title}
 
-{excerpt}
+{content}
 
-Read the full update at: {news_url}
+View this post on our website: {news_url}
 
 Thanks,
 The {CLUB_NAME} Team{author_line}
@@ -93,8 +94,8 @@ The {CLUB_NAME} Team{author_line}
 <p>Hello,</p>
 <p>{CLUB_NAME} has posted a new update:</p>
 <h2>{title}</h2>
-<p>{excerpt}</p>
-<p><a href="{news_url}">Read the full update</a></p>
+{html_content}
+<p><a href="{news_url}">View this post on our website</a></p>
 <p>Thanks,<br>The {CLUB_NAME} Team{author_html}</p>
 </body>
 </html>
