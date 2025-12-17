@@ -49,6 +49,8 @@ D. Changes and special provisions regarding tournaments may be made by a majorit
 
 E. Cancellation of a tournament due to severe weather or unforeseen circumstances may be instituted by a decision of 3 or more officers.
 
+F. In the event of an officer vacancy, a replacement will be nominated and confirmed by member vote via the club website.
+
 ---
 
 ## ARTICLE IV: Tournaments
@@ -162,7 +164,7 @@ J. Only legal-sized Largemouth, Smallmouth, or Spotted Bass are eligible for wei
 K. Any fish at weigh-in short of legal limit makes the team subject to disqualification.
 
    1. Fish must be measured on a flat board with a perpendicular end. Fish must be placed flat on the board with mouth closed and pressed against the perpendicular end. Tail may be manipulated to determine maximum length. Tip of tail must touch the line for the minimum length. If a fish measures anywhere between the ½ (one-half) inch mark you must record the shorter length.
-   2. If unsure of a fish's measurement, an officer can be asked to coutousy check (measure) the fish prior to weigh-in. If the fish is short, it may be released and not counted.
+   2. If unsure of a fish's measurement, an officer can be asked to courtesy check (measure) the fish prior to weigh-in. If the fish is short, it may be released and not counted.
 
 L. Tournament lake is off limits for fishing 12 hours prior to tournament start time.
 
