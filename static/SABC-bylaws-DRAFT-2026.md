@@ -89,7 +89,7 @@ I. Paper Tournaments are tournaments where fish are measured instead of weighed.
    4. The actual weighed weight will be used to determine Big Bass and the paper weight will be used for the stringer weight and does not count for the Heavy Stringer of the Year Award.
    5. Boater must have an accurate measuring board in the boat.
    6. The club chart has ½ (one-half) inch increments. Fish must be at least 12 (twelve) inches to record on the chart.
-   7. Fish must be measured on a flat board with a perpendicular end. Fish must be placed flat on the board with mouth closed and pressed against the perpendicular end. Tail may be manipulated to determine maximum length. Tip of tail must touch the line for the minimum length. If a fish measures anywhere between the ½ (one-half) inch mark you must record the shorter length.
+   7. Fish must be measured in accordance with ARTICLE VII: Section K - Item 1
    8. Only fish shorter or longer than the slot limit can be kept and brought to weigh-in. Only 1 (one) fish over the slot limit may be brought to weigh-in for the Big Bass Award.
    9. If an angler fishes a paper tournament solo, they can opt to Catch, Photo, Release (CPR) - where the photo of the fish must be measured according to the rules above, and contain an identifier for each fish (i.e. a number, color or something to differentiate fish).
 
@@ -161,7 +161,8 @@ J. Only legal-sized Largemouth, Smallmouth, or Spotted Bass are eligible for wei
 
 K. Any fish at weigh-in short of legal limit makes the team subject to disqualification.
 
-   1. If unsure of a fish's measurement, ask an officer to check the fish prior to weigh-in.
+   1. Fish must be measured on a flat board with a perpendicular end. Fish must be placed flat on the board with mouth closed and pressed against the perpendicular end. Tail may be manipulated to determine maximum length. Tip of tail must touch the line for the minimum length. If a fish measures anywhere between the ½ (one-half) inch mark you must record the shorter length.
+   2. If unsure of a fish's measurement, an officer can be asked to coutousy check (measure) the fish prior to weigh-in. If the fish is short, it may be released and not counted.
 
 L. Tournament lake is off limits for fishing 12 hours prior to tournament start time.
 
@@ -206,7 +207,7 @@ A. End of year awards will be presented for:
 
    1. **Big Bass of the Year** - Awarded to the team that weighed the heaviest single bass of all tournaments during the year (must be over 5 pounds).
 
-   2. **Big Stringer of the Year** - Awarded to the team that weighed the heaviest 5-fish limit during the year.
+   2. **Heavy Stringer of the Year** - Awarded to the team that weighed the heaviest 5-fish limit during the year.
 
 ---
 
