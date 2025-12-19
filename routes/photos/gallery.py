@@ -52,6 +52,11 @@ def can_delete_photo(user: Dict[str, Any], photo: Photo) -> bool:
     return user.get("is_admin") or photo.angler_id == user["id"]
 
 
+def can_edit_photo(user: Dict[str, Any], photo: Photo) -> bool:
+    """Check if user can edit a photo."""
+    return user.get("is_admin") or photo.angler_id == user["id"]
+
+
 @router.get("/photos")
 async def gallery(
     request: Request,
@@ -92,6 +97,7 @@ async def gallery(
                     "tournament_id": tournament.id if tournament else None,
                     "tournament_name": tournament.name if tournament else None,
                     "can_delete": can_delete_photo(user, photo) if user else False,
+                    "can_edit": can_edit_photo(user, photo) if user else False,
                 }
             )
 
@@ -248,3 +254,72 @@ async def delete_photo(request: Request, photo_id: int) -> RedirectResponse:
         session.commit()
 
     return success_redirect("/photos", "Photo deleted successfully!")
+
+
+@router.get("/photos/{photo_id}/edit")
+async def edit_photo_form(request: Request, photo_id: int) -> Any:
+    """Display the photo edit form."""
+    user = require_member(request)
+
+    with get_session() as session:
+        photo = session.query(Photo).filter(Photo.id == photo_id).first()
+        if not photo:
+            return error_redirect("/photos", "Photo not found.")
+
+        if not can_edit_photo(user, photo):
+            return error_redirect("/photos", "You don't have permission to edit this photo.")
+
+        tournaments = (
+            session.query(Tournament)
+            .filter(Tournament.complete.is_(True))
+            .order_by(Tournament.name.desc())
+            .all()
+        )
+        tournament_options = [{"id": t.id, "name": t.name} for t in tournaments]
+
+        photo_data = {
+            "id": photo.id,
+            "url": get_photo_url(photo.filename),
+            "caption": photo.caption or "",
+            "tournament_id": photo.tournament_id,
+            "is_big_bass": photo.is_big_bass,
+        }
+
+    return templates.TemplateResponse(
+        "photos/edit.html",
+        {
+            "request": request,
+            "user": user,
+            "photo": photo_data,
+            "tournament_options": tournament_options,
+        },
+    )
+
+
+@router.post("/photos/{photo_id}/edit")
+async def edit_photo(
+    request: Request,
+    photo_id: int,
+    caption: str = Form(default=""),
+    tournament_id: Optional[int] = Form(default=None),
+    is_big_bass: bool = Form(default=False),
+) -> RedirectResponse:
+    """Handle photo edit."""
+    user = require_member(request)
+
+    with get_session() as session:
+        photo = session.query(Photo).filter(Photo.id == photo_id).first()
+        if not photo:
+            return error_redirect("/photos", "Photo not found.")
+
+        if not can_edit_photo(user, photo):
+            return error_redirect("/photos", "You don't have permission to edit this photo.")
+
+        # Update photo fields
+        photo.caption = caption[:200] if caption else None
+        photo.tournament_id = tournament_id if tournament_id else None
+        photo.is_big_bass = is_big_bass
+
+        session.commit()
+
+    return success_redirect("/photos", "Photo updated successfully!")

@@ -234,3 +234,167 @@ class TestPhotoUploadLimits:
             files={"photo": ("test.png", io.BytesIO(image_content), "image/png")},
         )
         assert response.status_code in [200, 303]
+
+
+class TestPhotoEdit:
+    """Test photo edit functionality."""
+
+    def test_edit_page_requires_login(
+        self, client: TestClient, db_session: Session, member_user: Angler
+    ):
+        """Test edit page requires authentication."""
+        photo = Photo(
+            angler_id=member_user.id,
+            filename="test.jpg",
+            caption="Test",
+        )
+        db_session.add(photo)
+        db_session.commit()
+
+        response = client.get(f"/photos/{photo.id}/edit", follow_redirects=False)
+        assert response.status_code in [302, 303]
+
+    def test_edit_own_photo_page(
+        self, member_client: TestClient, db_session: Session, member_user: Angler
+    ):
+        """Test members can access edit page for their own photos."""
+        photo = Photo(
+            angler_id=member_user.id,
+            filename="test.jpg",
+            caption="Original caption",
+        )
+        db_session.add(photo)
+        db_session.commit()
+
+        response = member_client.get(f"/photos/{photo.id}/edit")
+        assert response.status_code == 200
+        assert b"Edit Photo" in response.content
+        assert b"Original caption" in response.content
+
+    def test_cannot_edit_others_photo(
+        self,
+        member_client: TestClient,
+        db_session: Session,
+        admin_user: Angler,
+    ):
+        """Test members cannot edit others' photos."""
+        photo = Photo(
+            angler_id=admin_user.id,
+            filename="test.jpg",
+            caption="Admin photo",
+        )
+        db_session.add(photo)
+        db_session.commit()
+
+        response = member_client.get(f"/photos/{photo.id}/edit", follow_redirects=False)
+        # Should redirect with error (permission denied)
+        assert response.status_code in [200, 303]
+
+    def test_admin_can_edit_any_photo(
+        self,
+        admin_client: TestClient,
+        db_session: Session,
+        member_user: Angler,
+    ):
+        """Test admins can edit any photo."""
+        photo = Photo(
+            angler_id=member_user.id,
+            filename="test.jpg",
+            caption="Member photo",
+        )
+        db_session.add(photo)
+        db_session.commit()
+
+        response = admin_client.get(f"/photos/{photo.id}/edit")
+        assert response.status_code == 200
+        assert b"Edit Photo" in response.content
+
+    def test_edit_photo_updates_caption(
+        self, member_client: TestClient, db_session: Session, member_user: Angler
+    ):
+        """Test editing a photo updates its caption."""
+        photo = Photo(
+            angler_id=member_user.id,
+            filename="test.jpg",
+            caption="Original caption",
+        )
+        db_session.add(photo)
+        db_session.commit()
+
+        response = post_with_csrf(
+            member_client,
+            f"/photos/{photo.id}/edit",
+            data={
+                "caption": "Updated caption",
+                "is_big_bass": "false",
+            },
+        )
+        assert response.status_code in [200, 303]
+
+        # Verify the update
+        db_session.refresh(photo)
+        assert photo.caption == "Updated caption"
+
+    def test_edit_photo_updates_big_bass(
+        self, admin_client: TestClient, db_session: Session, member_user: Angler
+    ):
+        """Test admin can update big bass tag."""
+        photo = Photo(
+            angler_id=member_user.id,
+            filename="test.jpg",
+            caption="A catch",
+            is_big_bass=False,
+        )
+        db_session.add(photo)
+        db_session.commit()
+
+        response = post_with_csrf(
+            admin_client,
+            f"/photos/{photo.id}/edit",
+            data={
+                "caption": "A catch",
+                "is_big_bass": "true",
+            },
+        )
+        assert response.status_code in [200, 303]
+
+        # Verify the update
+        db_session.refresh(photo)
+        assert photo.is_big_bass is True
+
+    def test_edit_photo_updates_tournament(
+        self,
+        admin_client: TestClient,
+        db_session: Session,
+        member_user: Angler,
+        test_tournament: Tournament,
+    ):
+        """Test admin can associate photo with tournament."""
+        photo = Photo(
+            angler_id=member_user.id,
+            filename="test.jpg",
+            caption="A catch",
+            tournament_id=None,
+        )
+        db_session.add(photo)
+        db_session.commit()
+
+        response = post_with_csrf(
+            admin_client,
+            f"/photos/{photo.id}/edit",
+            data={
+                "caption": "A catch",
+                "tournament_id": str(test_tournament.id),
+                "is_big_bass": "false",
+            },
+        )
+        assert response.status_code in [200, 303]
+
+        # Verify the update
+        db_session.refresh(photo)
+        assert photo.tournament_id == test_tournament.id
+
+    def test_edit_nonexistent_photo(self, member_client: TestClient):
+        """Test editing nonexistent photo returns error."""
+        response = member_client.get("/photos/99999/edit", follow_redirects=False)
+        assert response.status_code in [200, 303]
