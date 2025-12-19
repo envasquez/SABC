@@ -290,3 +290,23 @@ class OfficerPosition(Base):
     position: Mapped[str] = mapped_column(Text, nullable=False)
     year: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
     elected_date: Mapped[Optional[date]] = mapped_column(Date)
+
+
+class Photo(Base):
+    """Photo gallery model."""
+
+    __tablename__ = "photos"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    angler_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("anglers.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    tournament_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("tournaments.id", ondelete="SET NULL"), index=True
+    )
+    filename: Mapped[str] = mapped_column(Text, nullable=False)
+    caption: Mapped[Optional[str]] = mapped_column(String(200))
+    is_big_bass: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
+    uploaded_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), default=utc_now
+    )

@@ -99,6 +99,7 @@ def create_app() -> FastAPI:
         )
 
     app.mount("/static", StaticFiles(directory="static"), name="static")
+    app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
     templates.env.filters["from_json"] = from_json_filter
     templates.env.filters["date_format"] = date_format_filter
