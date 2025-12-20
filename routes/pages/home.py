@@ -301,6 +301,7 @@ async def home_paginated(request: Request, page: int = 1):
             .outerjoin(Editor, News.last_edited_by == Editor.id)
             .filter(
                 News.published.is_(True),
+                News.archived.isnot(True),
                 (News.expires_at.is_(None)) | (News.expires_at > func.current_timestamp()),
             )
             .order_by(News.priority.desc(), News.created_at.desc())

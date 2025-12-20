@@ -50,8 +50,19 @@
         <!-- Existing News List -->
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Existing News Items</h5>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> {% if show_archived %}Archived{% else %}Active{% endif %} News Items</h5>
+                    <div>
+                        {% if show_archived %}
+                        <a href="/admin/news" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-newspaper"></i> Active News
+                        </a>
+                        {% else %}
+                        <a href="/admin/news?show_archived=true" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-archive"></i> View Archived
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="card-body">
                     {% if news_items %}
@@ -109,6 +120,7 @@
                                         <small>{{ item[3].strftime('%Y-%m-%d') if item[3] else '' }}</small>
                                     </td>
                                     <td>
+                                        {% if not show_archived %}
                                         <button class="btn btn-sm btn-warning edit-btn"
                                                 data-id="{{ item[0] }}"
                                                 data-title="{{ item[1] }}"
@@ -116,6 +128,20 @@
                                                 data-priority="{{ item[5] }}">
                                             <i class="bi bi-pencil"></i>
                                         </button>
+                                        <form method="POST" action="/admin/news/{{ item[0] }}/archive" class="d-inline">
+                                            {{ csrf_token(request) }}
+                                            <button type="submit" class="btn btn-sm btn-secondary" title="Archive">
+                                                <i class="bi bi-archive"></i>
+                                            </button>
+                                        </form>
+                                        {% else %}
+                                        <form method="POST" action="/admin/news/{{ item[0] }}/unarchive" class="d-inline">
+                                            {{ csrf_token(request) }}
+                                            <button type="submit" class="btn btn-sm btn-success" title="Restore">
+                                                <i class="bi bi-arrow-counterclockwise"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
                                         <button class="btn btn-sm btn-danger delete-btn"
                                                 data-id="{{ item[0] }}"
                                                 data-title="{{ item[1] }}">
@@ -129,8 +155,13 @@
                     </div>
                     {% else %}
                     <div class="text-center py-4">
+                        {% if show_archived %}
+                        <i class="bi bi-archive display-4 text-secondary"></i>
+                        <p class="text-secondary mt-2">No archived news items.</p>
+                        {% else %}
                         <i class="bi bi-newspaper display-4 text-secondary"></i>
                         <p class="text-secondary mt-2">No news items yet. Create your first announcement!</p>
+                        {% endif %}
                     </div>
                     {% endif %}
                 </div>

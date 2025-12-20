@@ -164,6 +164,7 @@ class News(Base):
     priority: Mapped[Optional[int]] = mapped_column(Integer, default=0)
     expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     last_edited_by: Mapped[Optional[int]] = mapped_column(Integer)
+    archived: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
 
 
 class Lake(Base):
