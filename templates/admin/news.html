@@ -65,19 +65,19 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> {% if show_archived %}Archived{% else %}Active{% endif %} News Items</h5>
-                    <div>
-                        {% if show_archived %}
-                        <a href="/admin/news" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-newspaper"></i> Active News
-                        </a>
-                        {% else %}
-                        <a href="/admin/news?show_archived=true" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-archive"></i> View Archived
-                        </a>
-                        {% endif %}
-                    </div>
+                <div class="card-header p-0">
+                    <ul class="nav nav-tabs card-header-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link {% if not show_archived %}active{% endif %}" href="/admin/news">
+                                <i class="bi bi-newspaper me-1"></i> Active News
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if show_archived %}active{% endif %}" href="/admin/news?show_archived=true">
+                                <i class="bi bi-archive me-1"></i> Archived
+                            </a>
+                        </li>
+                    </ul>
                 </div>
                 <div class="card-body">
                     {% if news_items %}
