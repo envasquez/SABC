@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from routes import api, auth, monitoring, pages, password_reset, static, tournaments, voting
+from routes import api, auth, monitoring, pages, password_reset, photos, static, tournaments, voting
 from routes.admin import core as admin_core
 from routes.admin import events as admin_events
 from routes.admin import lakes as admin_lakes
@@ -26,4 +26,5 @@ def register_routes(app: FastAPI) -> None:
     app.include_router(static.router)
     app.include_router(voting.router)
     app.include_router(tournaments.router)
+    app.include_router(photos.router)
     app.include_router(pages.router)

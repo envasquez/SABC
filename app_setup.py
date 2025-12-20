@@ -100,6 +100,10 @@ def create_app() -> FastAPI:
 
     app.mount("/static", StaticFiles(directory="static"), name="static")
 
+    # Create uploads directory if it doesn't exist (for photo gallery)
+    os.makedirs("uploads/photos", exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
     templates.env.filters["from_json"] = from_json_filter
     templates.env.filters["date_format"] = date_format_filter
     templates.env.filters["time_format"] = time_format_filter
