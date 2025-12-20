@@ -1,38 +1,60 @@
 {% extends "base.html" %}
 {% block title %}About - South Austin Bass Club{% endblock %}
 {% block content %}
-<div class="mb-4"><h1 class="display-5"><i class="bi bi-people-fill me-2"></i>About</h1><p class="lead text-secondary">SABC - South Austin Bass Club - Established in 1983</p></div>
+<div class="mb-4">
+<h1 class="display-5"><i class="bi bi-people-fill me-2"></i>About</h1>
+<p class="lead text-secondary">South Austin Bass Club - Established 1983</p>
+</div>
+
+<!-- Hero Introduction -->
 <div class="row g-4">
 <div class="col-12">
-<div class="card shadow-sm">
-<div class="card-header bg-primary text-white"><h4 class="mb-0"><i class="bi bi-fish me-2"></i></h4></div>
-<div class="card-body">
-<p class="lead">South Austin Bass Club is a close group of fishermen who fish Central Texas lakes primarily within a 1-2 hour drive from Austin. We fish the last Sunday of each month except in November and December.</p>
-<p>Our goal is to have monthly tournaments that are friendly yet competitive. We have a cumulative points system and offer annual awards for achievement and recognition.</p>
+<div class="card shadow-sm border-0 bg-primary bg-gradient text-white">
+<div class="card-body py-4">
+<div class="row align-items-center">
+<div class="col-lg-8">
+<h2 class="mb-3"><i class="bi bi-fish me-2"></i>South Austin Bass Club</h2>
+<p class="lead mb-2">A close group of fishermen fishing Central Texas lakes within a 1.5 hour drive from Austin.</p>
+<p class="mb-0">We hold team tournaments on the last Sunday of each month (except November and December). Our focus is friendly yet competitive fishing at a low cost, where every member has a voice in club decisions.</p>
+</div>
+<div class="col-lg-4 text-center d-none d-lg-block">
+<img src="/static/sabc_logo.png" alt="South Austin Bass Club Logo" class="img-fluid" style="max-height: 150px;">
 </div>
 </div>
 </div>
+</div>
+</div>
+
+<!-- Three Feature Cards -->
 <div class="col-12 col-lg-4">
 <div class="card shadow-sm h-100">
-<div class="card-header bg-warning text-dark"><h5 class="mb-0"><i class="bi bi-trophy-fill me-2"></i>Annual Awards</h5></div>
+<div class="card-header bg-success text-white"><h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Tournaments</h5></div>
 <div class="card-body">
-<div class="list-group list-group-flush">
-{% for award in [['bi-star-fill text-warning','Angler of the Year'],['bi-award-fill text-info','Top Six Anglers'],['bi-trophy text-primary','Big Bass for the Year'],['bi-bag text-success','Heaviest Individual Stringer'],['bi-heart-fill text-danger','O\'Dell Woolley Annual Remembrance Award']] %}<div class="list-group-item d-flex align-items-center border-0 px-0"><i class="bi {{award[0]}} ms-3 me-3"></i><span>{{award[1]}}</span></div>{% endfor %}
+<ul class="list-unstyled mb-0">
+<li class="mb-3 d-flex"><i class="bi bi-geo-alt-fill text-danger me-3 fs-5"></i><div><strong>Local Lakes</strong><br><small class="text-secondary">Within 1.5 hours of Austin</small></div></li>
+<li class="mb-3 d-flex"><i class="bi bi-calendar-check text-primary me-3 fs-5"></i><div><strong>Last Sunday Monthly</strong><br><small class="text-secondary">Except November & December</small></div></li>
+<li class="mb-3 d-flex"><i class="bi bi-cash-coin text-success me-3 fs-5"></i><div><strong>Low Cost Entry</strong><br><small class="text-secondary">$50/boat (includes Big Bass)</small></div></li>
+<li class="d-flex"><i class="bi bi-trophy-fill text-warning me-3 fs-5"></i><div><strong>100% Payback</strong><br><small class="text-secondary">All entry fees paid out to 1st, 2nd, 3rd + Big Bass</small></div></li>
+</ul>
 </div>
 </div>
 </div>
-</div>
+
 <div class="col-12 col-lg-4">
 <div class="card shadow-sm h-100">
-<div class="card-header bg-success text-white"><h5 class="mb-0"><i class="bi bi-info-circle-fill me-2"></i>Highlights</h5></div>
+<div class="card-header bg-info text-white"><h5 class="mb-0"><i class="bi bi-person-check-fill me-2"></i>Membership</h5></div>
 <div class="card-body">
-<div class="row g-3">
-{% for item in [['bi-cash-coin text-success','Membership Dues','$25 per year'],['bi-calendar-event text-primary','Monthly Meetings','Discuss old, new business & Bass fishing.'],['bi-currency-dollar text-warning','Tournament Entry','$25 per angler (includes Big Bass for members)'],['bi-graph-up text-info','Point System','Individual performance tracking'],['bi-people-fill text-primary','Team Payouts','Based on number of participating anglers']] %}<div class="col-12"><div class="d-flex align-items-center"><i class="bi {{item[0]}} me-3 fs-5"></i><div><div class="fw-semibold">{{item[1]}}</div><small class="text-secondary">{{item[2]}}</small></div></div></div>{% endfor %}
+<ul class="list-unstyled mb-0">
+<li class="mb-3 d-flex"><i class="bi bi-globe text-primary me-3 fs-5"></i><div><strong>100% Online</strong><br><small class="text-secondary">Modern, accessible club management</small></div></li>
+<li class="mb-3 d-flex"><i class="bi bi-check2-square text-success me-3 fs-5"></i><div><strong>Online Polls</strong><br><small class="text-secondary">Club issues, officers, and decisions</small></div></li>
+<li class="mb-3 d-flex"><i class="bi bi-wallet2 text-warning me-3 fs-5"></i><div><strong>$25 Annual Dues</strong><br><small class="text-secondary">Membership runs January to December</small></div></li>
+<li class="d-flex"><i class="bi bi-cash-stack text-success me-3 fs-5"></i><div><strong>Payouts</strong><br><small class="text-secondary">Distributed at each tournament</small></div></li>
+</ul>
 </div>
 </div>
-<div class="card-footer bg-light text-center"><small class="text-white fw-bold">For detailed information, see our <a href="/bylaws" class="text-decoration-none fw-semibold text-primary"><i class="bi bi-file-text me-1"></i>bylaws</a></small></div>
 </div>
-</div>
+
+<!-- Payment Card -->
 <div class="col-12 col-lg-4">
 <div class="card shadow-sm h-100">
 <div class="card-header text-white" style="background-color: #3D95CE;"><h5 class="mb-0"><i class="bi bi-credit-card me-2"></i>Payment Information</h5></div>
