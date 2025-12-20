@@ -18,28 +18,39 @@ router = APIRouter()
 
 
 @router.get("/admin/news")
-async def admin_news(request: Request):
+async def admin_news(request: Request, show_archived: bool = False):
     user = require_admin(request)
 
     with get_session() as session:
-        news_query = (
-            session.query(
-                News.id,
-                News.title,
-                News.content,
-                News.created_at,
-                News.published,
-                News.priority,
-                News.updated_at,
-                Angler.name.label("author_name"),
-            )
-            .outerjoin(Angler, News.author_id == Angler.id)
-            .order_by(News.priority.desc(), News.created_at.desc())
-        )
+        news_query = session.query(
+            News.id,
+            News.title,
+            News.content,
+            News.created_at,
+            News.published,
+            News.priority,
+            News.updated_at,
+            Angler.name.label("author_name"),
+            News.archived,
+        ).outerjoin(Angler, News.author_id == Angler.id)
+
+        # Filter based on archived status
+        if show_archived:
+            news_query = news_query.filter(News.archived.is_(True))
+        else:
+            news_query = news_query.filter(News.archived.isnot(True))
+
+        news_query = news_query.order_by(News.priority.desc(), News.created_at.desc())
         news_items = news_query.all()
 
     return templates.TemplateResponse(
-        "admin/news.html", {"request": request, "user": user, "news_items": news_items}
+        "admin/news.html",
+        {
+            "request": request,
+            "user": user,
+            "news_items": news_items,
+            "show_archived": show_archived,
+        },
     )
 
 
@@ -227,3 +238,42 @@ async def delete_news(request: Request, news_id: int) -> Response:
         success_message="News deleted successfully",
         error_message="Failed to delete news",
     )
+
+
+@router.post("/admin/news/{news_id}/archive")
+async def archive_news(request: Request, news_id: int) -> RedirectResponse:
+    """Archive a news item (soft delete)."""
+    require_admin(request)
+
+    try:
+        with get_session() as session:
+            news_item = session.query(News).filter(News.id == news_id).first()
+            if news_item:
+                news_item.archived = True
+                news_item.updated_at = utc_now()
+
+        return RedirectResponse("/admin/news?success=News archived successfully", status_code=302)
+    except Exception as e:
+        logger.error(f"Failed to archive news: {e}")
+        return error_redirect("/admin/news", "Failed to archive news")
+
+
+@router.post("/admin/news/{news_id}/unarchive")
+async def unarchive_news(request: Request, news_id: int) -> RedirectResponse:
+    """Unarchive a news item (restore from archive)."""
+    require_admin(request)
+
+    try:
+        with get_session() as session:
+            news_item = session.query(News).filter(News.id == news_id).first()
+            if news_item:
+                news_item.archived = False
+                news_item.updated_at = utc_now()
+
+        return RedirectResponse(
+            "/admin/news?show_archived=true&success=News restored successfully",
+            status_code=302,
+        )
+    except Exception as e:
+        logger.error(f"Failed to unarchive news: {e}")
+        return error_redirect("/admin/news?show_archived=true", "Failed to restore news")
