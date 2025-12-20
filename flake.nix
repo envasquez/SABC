@@ -39,6 +39,9 @@
           requests  # HTTP client for API/web requests
           beautifulsoup4  # HTML parsing for tournament data import
 
+          # Markdown rendering
+          markdown  # For rendering markdown content as HTML
+
           # Testing
           pytest
           pytest-cov
@@ -272,6 +275,7 @@ print('Database reset complete!')
             email-validator
             requests
             beautifulsoup4
+            markdown
           ];
 
           # Skip tests for package build

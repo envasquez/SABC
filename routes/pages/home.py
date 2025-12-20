@@ -376,6 +376,36 @@ async def page(request: Request, p: int = 1):
     return await home_paginated(request, p)
 
 
+@router.get("/bylaws/draft")
+async def draft_bylaws(request: Request) -> Any:
+    """Display the draft 2026 bylaws rendered from markdown."""
+    import markdown  # type: ignore[import-untyped]
+
+    user = get_user_optional(request)
+
+    # Read the markdown file
+    try:
+        with open("static/SABC-bylaws-DRAFT-2026.md", "r") as f:
+            md_content = f.read()
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Draft bylaws not found")
+
+    # Convert markdown to HTML with extensions for tables and TOC
+    html_content = markdown.markdown(
+        md_content,
+        extensions=["tables", "toc", "fenced_code"],
+    )
+
+    return templates.TemplateResponse(
+        "bylaws_draft.html",
+        {
+            "request": request,
+            "user": user,
+            "content": html_content,
+        },
+    )
+
+
 @router.get("/{page:path}")
 async def static_page(request: Request, page: str):
     user = get_user_optional(request)
