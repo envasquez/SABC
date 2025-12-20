@@ -16,39 +16,54 @@
         </div>
     </div>
 
-    <div class="row">
-        <!-- Create New News Form -->
-        <div class="col-md-4">
-            <div class="card mb-4">
+    <!-- Create New News Form -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Create News</h5>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="/admin/news/create">
                         {{ csrf_token(request) }}
-                        {{ form_field('Title', 'title', required=true, maxlength='200') }}
-                        {{ form_field('Content', 'content', type='textarea', required=true, maxlength='1000', help_text='Maximum 1000 characters') }}
-                        {% call form_field('Priority', 'priority', type='select', help_text='Higher priority items appear first') %}
-                            <option value="0">Normal</option>
-                            <option value="1">High</option>
-                            <option value="2">Urgent</option>
-                        {% endcall %}
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-plus-circle"></i> Create News
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary" onclick="sendTestEmail()">
-                                <i class="bi bi-envelope-check"></i> Send Test Email
-                            </button>
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form_field('Title', 'title', required=true, maxlength='200') }}
+                            </div>
+                            <div class="col-md-4">
+                                {% call form_field('Priority', 'priority', type='select', help_text='Higher priority items appear first') %}
+                                    <option value="0">Normal</option>
+                                    <option value="1">High</option>
+                                    <option value="2">Urgent</option>
+                                {% endcall %}
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end pb-3">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-plus-circle"></i> Create
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                {{ form_field('Content', 'content', type='textarea', required=true, maxlength='1000', help_text='Maximum 1000 characters') }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-outline-secondary" onclick="sendTestEmail()">
+                                    <i class="bi bi-envelope-check"></i> Send Test Email
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Existing News List -->
-        <div class="col-md-8">
+    <!-- Existing News List -->
+    <div class="row">
+        <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-list-ul"></i> {% if show_archived %}Archived{% else %}Active{% endif %} News Items</h5>
