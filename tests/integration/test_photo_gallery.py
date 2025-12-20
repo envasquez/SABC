@@ -71,8 +71,11 @@ class TestPhotoGallery:
         self, member_client: TestClient, db_session: Session, member_user: Angler
     ):
         """Test members can delete their own photos."""
+        # Save ID before any operations
+        angler_id = member_user.id
+
         photo = Photo(
-            angler_id=member_user.id,
+            angler_id=angler_id,
             filename="test.jpg",
             caption="Test",
         )
@@ -93,8 +96,11 @@ class TestPhotoGallery:
         admin_user: Angler,
     ):
         """Test members cannot delete others' photos."""
+        # Save ID before any operations
+        admin_id = admin_user.id
+
         photo = Photo(
-            angler_id=admin_user.id,
+            angler_id=admin_id,
             filename="test.jpg",
             caption="Admin photo",
         )
@@ -116,8 +122,11 @@ class TestPhotoGallery:
         member_user: Angler,
     ):
         """Test admins can delete any photo."""
+        # Save ID before any operations
+        angler_id = member_user.id
+
         photo = Photo(
-            angler_id=member_user.id,
+            angler_id=angler_id,
             filename="test.jpg",
             caption="Member photo",
         )
@@ -131,23 +140,27 @@ class TestPhotoGallery:
         )
         assert response.status_code in [200, 303]
 
-    def test_gallery_filters(
+    def test_gallery_filters_with_client(
         self,
-        member_client: TestClient,
+        client: TestClient,
         db_session: Session,
         member_user: Angler,
         test_tournament: Tournament,
     ):
-        """Test gallery filters work."""
+        """Test gallery filters work for anonymous users."""
+        # Save IDs before using client
+        angler_id = member_user.id
+        tournament_id = test_tournament.id
+
         # Create test photos
         photo1 = Photo(
-            angler_id=member_user.id,
-            tournament_id=test_tournament.id,
+            angler_id=angler_id,
+            tournament_id=tournament_id,
             filename="tournament.jpg",
             is_big_bass=True,
         )
         photo2 = Photo(
-            angler_id=member_user.id,
+            angler_id=angler_id,
             filename="general.jpg",
             is_big_bass=False,
         )
@@ -155,15 +168,19 @@ class TestPhotoGallery:
         db_session.commit()
 
         # Test tournament filter
-        response = member_client.get(f"/photos?tournament_id={test_tournament.id}")
+        response = client.get(f"/photos?tournament_id={tournament_id}")
         assert response.status_code == 200
 
         # Test big bass filter
-        response = member_client.get("/photos?big_bass=true")
+        response = client.get("/photos?big_bass=true")
         assert response.status_code == 200
 
         # Test angler filter
-        response = member_client.get(f"/photos?angler_id={member_user.id}")
+        response = client.get(f"/photos?angler_id={angler_id}")
+        assert response.status_code == 200
+
+        # Test empty filter (empty string should not cause error)
+        response = client.get("/photos?tournament_id=&angler_id=")
         assert response.status_code == 200
 
 
@@ -179,11 +196,15 @@ class TestPhotoUploadLimits:
         test_tournament: Tournament,
     ):
         """Test members are limited to 2 photos per tournament."""
+        # Save IDs before any operations
+        angler_id = member_user.id
+        tournament_id = test_tournament.id
+
         # Create 2 existing photos for the tournament
         for i in range(2):
             photo = Photo(
-                angler_id=member_user.id,
-                tournament_id=test_tournament.id,
+                angler_id=angler_id,
+                tournament_id=tournament_id,
                 filename=f"existing{i}.jpg",
             )
             db_session.add(photo)
@@ -196,7 +217,7 @@ class TestPhotoUploadLimits:
             "/photos/upload",
             data={
                 "caption": "Third photo",
-                "tournament_id": str(test_tournament.id),
+                "tournament_id": str(tournament_id),
             },
             files={"photo": ("test.png", io.BytesIO(image_content), "image/png")},
         )
@@ -212,11 +233,15 @@ class TestPhotoUploadLimits:
         test_tournament: Tournament,
     ):
         """Test admins have no upload limit."""
+        # Save IDs before using client
+        angler_id = admin_user.id
+        tournament_id = test_tournament.id
+
         # Create 2 existing photos for the tournament
         for i in range(2):
             photo = Photo(
-                angler_id=admin_user.id,
-                tournament_id=test_tournament.id,
+                angler_id=angler_id,
+                tournament_id=tournament_id,
                 filename=f"existing{i}.jpg",
             )
             db_session.add(photo)
@@ -229,7 +254,7 @@ class TestPhotoUploadLimits:
             "/photos/upload",
             data={
                 "caption": "Admin third photo",
-                "tournament_id": str(test_tournament.id),
+                "tournament_id": str(tournament_id),
             },
             files={"photo": ("test.png", io.BytesIO(image_content), "image/png")},
         )
@@ -243,8 +268,10 @@ class TestPhotoEdit:
         self, client: TestClient, db_session: Session, member_user: Angler
     ):
         """Test edit page requires authentication."""
+        angler_id = member_user.id
+
         photo = Photo(
-            angler_id=member_user.id,
+            angler_id=angler_id,
             filename="test.jpg",
             caption="Test",
         )
@@ -258,8 +285,10 @@ class TestPhotoEdit:
         self, member_client: TestClient, db_session: Session, member_user: Angler
     ):
         """Test members can access edit page for their own photos."""
+        angler_id = member_user.id
+
         photo = Photo(
-            angler_id=member_user.id,
+            angler_id=angler_id,
             filename="test.jpg",
             caption="Original caption",
         )
@@ -278,8 +307,10 @@ class TestPhotoEdit:
         admin_user: Angler,
     ):
         """Test members cannot edit others' photos."""
+        admin_id = admin_user.id
+
         photo = Photo(
-            angler_id=admin_user.id,
+            angler_id=admin_id,
             filename="test.jpg",
             caption="Admin photo",
         )
@@ -297,8 +328,10 @@ class TestPhotoEdit:
         member_user: Angler,
     ):
         """Test admins can edit any photo."""
+        angler_id = member_user.id
+
         photo = Photo(
-            angler_id=member_user.id,
+            angler_id=angler_id,
             filename="test.jpg",
             caption="Member photo",
         )
@@ -313,17 +346,20 @@ class TestPhotoEdit:
         self, member_client: TestClient, db_session: Session, member_user: Angler
     ):
         """Test editing a photo updates its caption."""
+        angler_id = member_user.id
+
         photo = Photo(
-            angler_id=member_user.id,
+            angler_id=angler_id,
             filename="test.jpg",
             caption="Original caption",
         )
         db_session.add(photo)
         db_session.commit()
+        photo_id = photo.id
 
         response = post_with_csrf(
             member_client,
-            f"/photos/{photo.id}/edit",
+            f"/photos/{photo_id}/edit",
             data={
                 "caption": "Updated caption",
                 "is_big_bass": "false",
@@ -332,25 +368,30 @@ class TestPhotoEdit:
         assert response.status_code in [200, 303]
 
         # Verify the update
-        db_session.refresh(photo)
-        assert photo.caption == "Updated caption"
+        db_session.expire_all()
+        updated_photo = db_session.query(Photo).filter(Photo.id == photo_id).first()
+        assert updated_photo is not None
+        assert updated_photo.caption == "Updated caption"
 
     def test_edit_photo_updates_big_bass(
         self, admin_client: TestClient, db_session: Session, member_user: Angler
     ):
         """Test admin can update big bass tag."""
+        angler_id = member_user.id
+
         photo = Photo(
-            angler_id=member_user.id,
+            angler_id=angler_id,
             filename="test.jpg",
             caption="A catch",
             is_big_bass=False,
         )
         db_session.add(photo)
         db_session.commit()
+        photo_id = photo.id
 
         response = post_with_csrf(
             admin_client,
-            f"/photos/{photo.id}/edit",
+            f"/photos/{photo_id}/edit",
             data={
                 "caption": "A catch",
                 "is_big_bass": "true",
@@ -359,8 +400,10 @@ class TestPhotoEdit:
         assert response.status_code in [200, 303]
 
         # Verify the update
-        db_session.refresh(photo)
-        assert photo.is_big_bass is True
+        db_session.expire_all()
+        updated_photo = db_session.query(Photo).filter(Photo.id == photo_id).first()
+        assert updated_photo is not None
+        assert updated_photo.is_big_bass is True
 
     def test_edit_photo_updates_tournament(
         self,
@@ -370,29 +413,35 @@ class TestPhotoEdit:
         test_tournament: Tournament,
     ):
         """Test admin can associate photo with tournament."""
+        angler_id = member_user.id
+        tournament_id = test_tournament.id
+
         photo = Photo(
-            angler_id=member_user.id,
+            angler_id=angler_id,
             filename="test.jpg",
             caption="A catch",
             tournament_id=None,
         )
         db_session.add(photo)
         db_session.commit()
+        photo_id = photo.id
 
         response = post_with_csrf(
             admin_client,
-            f"/photos/{photo.id}/edit",
+            f"/photos/{photo_id}/edit",
             data={
                 "caption": "A catch",
-                "tournament_id": str(test_tournament.id),
+                "tournament_id": str(tournament_id),
                 "is_big_bass": "false",
             },
         )
         assert response.status_code in [200, 303]
 
         # Verify the update
-        db_session.refresh(photo)
-        assert photo.tournament_id == test_tournament.id
+        db_session.expire_all()
+        updated_photo = db_session.query(Photo).filter(Photo.id == photo_id).first()
+        assert updated_photo is not None
+        assert updated_photo.tournament_id == tournament_id
 
     def test_edit_nonexistent_photo(self, member_client: TestClient):
         """Test editing nonexistent photo returns error."""

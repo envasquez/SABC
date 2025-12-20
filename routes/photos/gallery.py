@@ -60,12 +60,32 @@ def can_edit_photo(user: Dict[str, Any], photo: Photo) -> bool:
 @router.get("/photos")
 async def gallery(
     request: Request,
-    tournament_id: Optional[int] = None,
-    angler_id: Optional[int] = None,
-    big_bass: Optional[bool] = None,
+    tournament_id: Optional[str] = None,
+    angler_id: Optional[str] = None,
+    big_bass: Optional[str] = None,
 ) -> Any:
     """Display the photo gallery with optional filters."""
     user = get_current_user(request)
+
+    # Parse filter parameters (empty strings become None)
+    tournament_id_int: Optional[int] = None
+    angler_id_int: Optional[int] = None
+    big_bass_bool: Optional[bool] = None
+
+    if tournament_id and tournament_id.strip():
+        try:
+            tournament_id_int = int(tournament_id)
+        except ValueError:
+            pass
+
+    if angler_id and angler_id.strip():
+        try:
+            angler_id_int = int(angler_id)
+        except ValueError:
+            pass
+
+    if big_bass and big_bass.strip().lower() == "true":
+        big_bass_bool = True
 
     with get_session() as session:
         query = (
@@ -74,11 +94,11 @@ async def gallery(
             .outerjoin(Tournament, Photo.tournament_id == Tournament.id)
         )
 
-        if tournament_id:
-            query = query.filter(Photo.tournament_id == tournament_id)
-        if angler_id:
-            query = query.filter(Photo.angler_id == angler_id)
-        if big_bass:
+        if tournament_id_int:
+            query = query.filter(Photo.tournament_id == tournament_id_int)
+        if angler_id_int:
+            query = query.filter(Photo.angler_id == angler_id_int)
+        if big_bass_bool:
             query = query.filter(Photo.is_big_bass.is_(True))
 
         results = query.order_by(Photo.uploaded_at.desc()).all()
@@ -128,9 +148,9 @@ async def gallery(
             "photos": photos,
             "tournament_options": tournament_options,
             "angler_options": angler_options,
-            "selected_tournament": tournament_id,
-            "selected_angler": angler_id,
-            "selected_big_bass": big_bass,
+            "selected_tournament": tournament_id_int,
+            "selected_angler": angler_id_int,
+            "selected_big_bass": big_bass_bool,
         },
     )
 
