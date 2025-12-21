@@ -2,40 +2,411 @@
 {% from 'macros.html' import alert %}
 {% block title %}Bylaws - South Austin Bass Club{% endblock %}
 {% block content %}
-<div class="mb-4"><h1 class="display-5"><i class="bi bi-file-text me-2"></i>Club Bylaws</h1><p class="lead text-secondary">South Austin Bass Club governance and tournament rules</p></div>
+<div class="mb-4"><h1 class="display-5"><i class="bi bi-file-text me-2"></i>Club Bylaws</h1><p class="lead text-secondary">South Austin Bass Club - Established 1981</p></div>
 <div class="row">
 <div class="col-lg-3 d-none d-lg-block">
 <div class="card shadow-sm position-sticky" style="top:2rem;">
 <div class="card-header bg-primary text-white"><h6 class="mb-0"><i class="bi bi-list me-2"></i>Table of Contents</h6></div>
 <div class="card-body p-0">
 <nav class="nav nav-pills nav-flush flex-column">
-{% for item in [['article-1','Article 1: Name and Purpose'],['article-2','Article 2: Membership'],['article-3','Article 3: Officers'],['article-4','Article 4: Meetings'],['article-5','Article 5: Tournament Rules'],['article-6','Article 6: Annual Awards'],['article-7','Article 7: Conduct'],['article-8','Article 8: Safety']] %}<a class="nav-link" href="#{{item[0]}}">{{item[1]}}</a>{% endfor %}
+<a class="nav-link" href="#article-1">Article I: Purpose</a>
+<a class="nav-link" href="#article-2">Article II: Membership</a>
+<a class="nav-link" href="#article-3">Article III: Officers</a>
+<a class="nav-link" href="#article-4">Article IV: Tournaments</a>
+<a class="nav-link" href="#article-5">Article V: Tournament Fees</a>
+<a class="nav-link" href="#article-6">Article VI: Tournament Rules</a>
+<a class="nav-link" href="#article-7">Article VII: Amendment to Bylaws</a>
+<a class="nav-link" href="#article-8">Article VIII: End of Year Awards</a>
+<a class="nav-link" href="#article-9">Article IX: Points System</a>
+<a class="nav-link" href="#appendix-a">Appendix A</a>
 </nav>
 </div>
 </div>
 </div>
 <div class="col-lg-9">
 <div class="card shadow-sm">
-<div class="card-header bg-gradient text-white d-flex justify-content-between align-items-center" style="background:linear-gradient(135deg,#007bff 0%,#0056b3 100%);"><div><h4 class="mb-0"><i class="bi bi-file-text me-2"></i><strong>South Austin Bass Club Bylaws</strong></h4><small>Revised December 2024</small></div><a href="/static/SABC-bylaws-Rev-Dec-2024.pdf" class="btn btn-outline-light btn-sm" target="_blank"><i class="bi bi-file-pdf me-1"></i>PDF</a></div>
+<div class="card-header bg-gradient text-white d-flex justify-content-between align-items-center" style="background:linear-gradient(135deg,#007bff 0%,#0056b3 100%);"><div><h4 class="mb-0"><i class="bi bi-file-text me-2"></i><strong>South Austin Bass Club Bylaws</strong></h4><small>Last Update December 2024</small></div><a href="/static/SABC-bylaws-Rev-Dec-2024.pdf" class="btn btn-outline-light btn-sm" target="_blank"><i class="bi bi-file-pdf me-1"></i>PDF</a></div>
 <div class="card-body">
-{% for article in [
-['article-1','1','Name and Purpose',['1.1 Name','The name of this organization shall be the <strong>South Austin Bass Club</strong> (SABC).','1.2 Purpose','The purpose of this club is to:<ul><li>Promote bass fishing in the Austin area</li><li>Provide fellowship among bass fishing enthusiasts</li><li>Conduct organized bass fishing tournaments</li><li>Support conservation of bass fishing resources</li><li>Foster sportsmanship and ethical fishing practices</li></ul>']],
-['article-2','2','Membership',['2.1 Eligibility','Membership is open to all persons interested in bass fishing who agree to abide by these bylaws and club rules.','2.2 Types of Membership','<div class="row"><div class="col-md-6"><h5>2.2.1 Regular Members</h5><ul><li>Full voting rights</li><li>Eligible for all club tournaments and activities</li><li>Eligible for annual awards</li><li>Required to pay annual dues</li></ul></div><div class="col-md-6"><h5>2.2.2 Guest Anglers</h5><ul><li>May participate in tournaments on a per-event basis</li><li>No voting rights</li><li>Not eligible for annual awards</li><li>Pay tournament entry fees only</li></ul></div></div>','2.3 Dues','<ul><li>Annual dues are set by the club membership</li><li>Dues must be paid by March 31st of each year</li><li>Non-payment of dues results in loss of membership privileges</li></ul>']],
-['article-3','3','Officers and Duties',['3.1 Officers','The club shall have the following officers:<div class="row"><div class="col-md-6"><ul><li><i class="bi bi-person-badge me-1 text-primary"></i><strong>President</strong></li><li><i class="bi bi-person-check me-1 text-primary"></i><strong>Vice President</strong></li><li><i class="bi bi-journal-text me-1 text-primary"></i><strong>Secretary</strong></li></ul></div><div class="col-md-6"><ul><li><i class="bi bi-cash-stack me-1 text-primary"></i><strong>Treasurer</strong></li><li><i class="bi bi-trophy me-1 text-primary"></i><strong>Tournament Director</strong></li><li><i class="bi bi-laptop me-1 text-primary"></i><strong>Technology Director</strong></li></ul></div></div>','3.2 Elections','<ul><li>Officers are elected annually by club membership</li><li>Terms begin January 1st and end December 31st</li><li>Nominations accepted from the floor at December meeting</li><li>Elections held by secret ballot</li></ul>']],
-['article-4','4','Meetings',['<div class="alert alert-info"><h5 class="alert-heading"><i class="bi bi-calendar-event me-2"></i>Regular Meetings</h5><ul class="mb-0"><li>Club meetings are held monthly</li><li>Meetings are held immediately after weigh-in of the current month\'s tournament</li></ul></div>']],
-['article-5','5','Tournament Rules',['5.1 Tournament Schedule','<ul><li>Regular tournament season runs from January through October</li><li>Monthly tournaments held on scheduled Sundays</li><li>Tournament dates set by Tournament Director with officer approval</li></ul>','5.2 Tournament Format','<div class="row"><div class="col-md-6"><div class="card bg-light border-success"><div class="card-body"><h5 class="card-title"><i class="bi bi-person-fill text-success me-2"></i>Individual Tournaments</h5><ul class="card-text small mb-0"><li>Solo competition format</li><li>Individual results determine placement</li><li>Individual points awarded for Angler of the Year</li></ul></div></div></div><div class="col-md-6"><div class="card bg-light border-primary"><div class="card-body"><h5 class="card-title"><i class="bi bi-people-fill text-primary me-2"></i>Team Tournaments</h5><ul class="card-text small mb-0"><li>Two-person team format</li><li>Combined team weight determines team placement</li><li>Individual results still recorded for annual awards</li><li>Team members may be any combination of members/guests</li></ul></div></div></div></div>','5.3 Tournament Rules','<div class="alert alert-primary"><h5 class="alert-heading"><i class="bi bi-info-circle me-2"></i>General Rules</h5><ul class="mb-0"><li><strong>5 fish limit</strong> per angler (live or dead)</li><li><strong>Safe boating practices</strong> required at all times</li><li><strong>Tournament hours</strong>: Typically 6:00 AM to 3:00 PM</li><li><strong>Species</strong>: Largemouth bass, smallmouth bass, spotted bass</li><li><strong>Minimum length</strong>: As per lake regulations or 14 inches, whichever is greater</li></ul></div><div class="alert alert-warning"><h5 class="alert-heading"><i class="bi bi-exclamation-triangle me-2"></i>Dead Fish Penalty</h5><p class="mb-0"><strong>0.25 pounds</strong> penalty per dead fish will be deducted from total weight</p></div>','5.4 Entry Fees and Payouts','<div class="row"><div class="col-md-8"><p><strong>Payout structure:</strong></p><ul><li>1st Place: 40% of entry fee pot</li><li>2nd Place: 30% of entry fee pot</li><li>3rd Place: 20% of entry fee pot</li><li>Club fund: 10% of entry fee pot</li></ul></div><div class="col-md-4"><div class="card bg-success text-white"><div class="card-body text-center"><i class="bi bi-award display-4"></i><h6 class="card-title">Big Bass</h6><p class="card-text small">Separate entry<br>Winner takes all</p></div></div></div></div>']],
-['article-6','6','Annual Awards',['<div class="row"><div class="col-md-4"><div class="card border-warning h-100"><div class="card-body text-center"><i class="bi bi-trophy-fill text-warning display-4"></i><h5 class="card-title mt-2">Angler of the Year</h5><ul class="card-text small text-start"><li>Must fish minimum 6 tournaments</li><li>Total points from all tournaments</li><li>Tiebreaker: Total weight for year</li></ul></div></div></div><div class="col-md-4"><div class="card border-info h-100"><div class="card-body text-center"><i class="bi bi-award-fill text-info display-4"></i><h5 class="card-title mt-2">Heavy Stringer</h5><ul class="card-text small text-start"><li>Heaviest single tournament bag</li><li>Open to members and guests</li><li>Annual award recognition</li></ul></div></div></div><div class="col-md-4"><div class="card border-success h-100"><div class="card-body text-center"><i class="bi bi-award text-success display-4"></i><h5 class="card-title mt-2">Big Bass</h5><ul class="card-text small text-start"><li>Largest bass during any tournament</li><li>Minimum weight: 5.00 pounds</li><li>Open to members and guests</li></ul></div></div></div></div>']],
-['article-7','7','Conduct and Sportsmanship',['<div class="alert alert-success"><h5 class="alert-heading"><i class="bi bi-hand-thumbs-up me-2"></i>Expected Conduct</h5><ul class="mb-0"><li>Members and guests must demonstrate good sportsmanship</li><li>Honest and ethical behavior required at all times</li><li>Respect for fellow anglers, tournament officials, and property</li><li>Compliance with all fishing regulations and club rules</li></ul></div>']],
-['article-8','8','Safety',['<div class="alert alert-danger"><h5 class="alert-heading"><i class="bi bi-shield-exclamation me-2"></i>Safety Requirements</h5><ul class="mb-0"><li><strong>Life jackets</strong> required when boat engine is running</li><li><strong>Kill switch</strong> must be used when boat is in motion</li><li><strong>Emergency equipment</strong> recommended: first aid kit, emergency radio</li><li><strong>Weather awareness</strong>: Tournament may be cancelled for severe weather</li></ul></div>']]
-] %}
-<section id="{{article[0]}}" class="mb-5">
-<h2 class="text-primary border-bottom border-2 pb-2"><i class="bi bi-{{article[1]}}-circle me-2"></i>Article {{article[1]}}: {{article[2]}}</h2>
-{% for content in article[3] %}
-{% if content.startswith('<') %}<div class="mt-4">{{content|safe}}</div>{% elif content.count('.') == 1 and content[0].isdigit() %}<h4 class="mt-4 text-info">{{content}}</h4>{% else %}<p>{{content|safe}}</p>{% endif %}
-{% endfor %}
+
+<!-- Article I: Purpose -->
+<section id="article-1" class="mb-5">
+<h2 class="text-primary border-bottom border-2 pb-2"><i class="bi bi-1-circle me-2"></i>Article I: Purpose</h2>
+<p><strong>A.</strong> To have a simple organization dedicated to the enjoyment of bass fishing, to learn different fishing techniques of lakes in Central Texas, and to compete for prize money in tournament fishing.</p>
 </section>
-{% endfor %}
-<div class="text-center mt-5 pt-4 border-top"><p class="text-secondary"><i class="bi bi-calendar3 me-1"></i>Approved by South Austin Bass Club membership - December 2024</p><div class="mt-3"><a href="/static/SABC-bylaws-DRAFT-2026.pdf" class="btn btn-outline-secondary" target="_blank"><i class="bi bi-file-pdf me-1"></i>DRAFT - Bylaws for 2026</a></div></div>
+
+<!-- Article II: Membership -->
+<section id="article-2" class="mb-5">
+<h2 class="text-primary border-bottom border-2 pb-2"><i class="bi bi-2-circle me-2"></i>Article II: Membership</h2>
+<p><strong>A.</strong> Dues will be $25.00 per year (annually), renewable each January.</p>
+<p><strong>B.</strong> Dues paid for new members joining the club in October will count for Dues Paid for the following Membership Year.</p>
+<p><strong>C.</strong> The club will meet monthly on the 1st Monday of each month at 7:00 p.m. A monthly newsletter will be sent in an e-mail after the meeting to keep membership informed of club activities and tournaments.</p>
+<p><strong>D.</strong> A person must be 18 or older to join the club, except with a signed parental release.</p>
+<div class="ms-4">
+<p><strong>a.</strong> Minor release from liability</p>
+<div class="ms-4">
+<p><strong>i.</strong> Guests younger than 18 years old fishing with a non-family member will be required to provide a "Release from Liability Statement" signed by a parent or legal guardian. The release from liability statement will be kept on file by the club Secretary for a period not less than 12 months.</p>
+</div>
+</div>
+</section>
+
+<!-- Article III: Officers -->
+<section id="article-3" class="mb-5">
+<h2 class="text-primary border-bottom border-2 pb-2"><i class="bi bi-3-circle me-2"></i>Article III: Officers</h2>
+<p><strong>A.</strong> Officers will consist of:</p>
+<div class="ms-4">
+<div class="row">
+<div class="col-md-6">
+<p><strong>a.</strong> President</p>
+<p><strong>b.</strong> Vice-President</p>
+<p><strong>c.</strong> Secretary</p>
+<p><strong>d.</strong> Treasurer</p>
+</div>
+<div class="col-md-6">
+<p><strong>e.</strong> Media Director</p>
+<p><strong>f.</strong> Tournament Director</p>
+<p><strong>g.</strong> Assistant Tournament Director</p>
+<p><strong>h.</strong> Technology Director</p>
+</div>
+</div>
+</div>
+<p><strong>B.</strong> All positions will be nominated at the year's November meeting and confirmed by vote during the year's December meeting by those in attendance.</p>
+<p><strong>C.</strong> Officer terms are 1 (one) year (annual).</p>
+</section>
+
+<!-- Article IV: Tournaments -->
+<section id="article-4" class="mb-5">
+<h2 class="text-primary border-bottom border-2 pb-2"><i class="bi bi-4-circle me-2"></i>Article IV: Tournaments</h2>
+
+<h4 class="mt-4 text-info">A. Tournament Types</h4>
+<div class="ms-4">
+<p><strong>a.</strong> Our <em>normal</em> tournament format is a "pick your own partner" type tournament, but variations may be nominated and approved at monthly meetings by vote.</p>
+<p><strong>b.</strong> As of January 2021 – All tournaments are team tournaments.</p>
+<p><strong>c.</strong> Paper Tournaments are tournaments where fish are measured instead of weighed.</p>
+<div class="ms-4">
+<p><strong>i.</strong> Fish are measured and recorded on a chart, verified by the non-boater.</p>
+<p><strong>ii.</strong> At weigh-in the total stringer weight is determined from a length to weight conversion chart for your longest 5 (five) fish.</p>
+<p><strong>iii.</strong> The club will provide paper charts when paper tournaments are fished.</p>
+<p><strong>iv.</strong> The actual weighed weight will be used to determine Big Bass and the paper weight will be used for the stringer weight and does not count for the: Heavy Stringer of the Year Award.</p>
+<p><strong>v.</strong> Boater <em>must</em> have an accurate measuring board in the boat.</p>
+<p><strong>vi.</strong> The club chart has ½ (one-half) inch increments. Fish must be at least 12 (twelve) inches to record on the chart.</p>
+<p><strong>vii.</strong> Measure fish according to Article VI: Item G. If a fish measures anywhere between the ½ (one-half) inch mark you <em>must</em> record the shorter length.</p>
+<p><strong>viii.</strong> Only fish shorter or longer than the slot limit can be kept and brought to weigh-in. Only 1 (one) fish over the slot limit may be brought to weigh-in for Big Bass Award.</p>
+</div>
+<p><strong>d.</strong> Draw Tournament are tournaments where all anglers travel to the tournament in pairs (boater and non-boater).</p>
+<div class="ms-4">
+<p><strong>i.</strong> At a meeting prior to the tournament, boaters and non-boaters will be paired by draw from a hat. They will weigh-in as a team for that day's creel.</p>
+<p><strong>ii.</strong> No one shall be forced to fish with anyone if reason is approved by the club officers.</p>
+<p><strong>iii.</strong> Younger than 14 (fourteen) years of age <em>must</em> fish with a parent. Under 18 (eighteen) years of age but older than 14 (fourteen) must have a parental release signed/on-file (see Article II: item D).</p>
+</div>
+<p><strong>e.</strong> Road Runner Tournaments allow teams to fish any legal water (lake) they choose, but must be at a predetermined weigh-in site by the prescribed time, and must comply with any special rules for that lake (i.e., slot limits, catch limits)</p>
+</div>
+
+<h4 class="mt-4 text-info">B. The club will fish Sunday tournaments only.</h4>
+<div class="ms-4">
+<p><strong>a.</strong> The club tries to follow a schedule of fishing on the 4th Sunday of each month.</p>
+<p><strong>b.</strong> Exceptions to this guidance are:</p>
+<div class="ms-4">
+<p><strong>i.</strong> 2 (two) day tournaments and night tournaments.</p>
+<p><strong>ii.</strong> Conflicts with a holiday date.</p>
+<p><strong>iii.</strong> Conflict with other bass tournaments.</p>
+</div>
+<p><strong>c.</strong> If possible, changes will be posted near the start of the year.</p>
+</div>
+
+<h4 class="mt-4 text-info">C. The regulations regarding tournament waters are:</h4>
+<div class="ms-4">
+<p><strong>a.</strong> The club will only fish lakes and rivers that are open to the public.</p>
+<p><strong>b.</strong> The club may elect to fish any public water within a 150 (one hundred fifty) mile radius. If the club elects to fish waters exceeding the 150 mile radius, then the tournament must be a 2 (two) day (Sat. &amp; Sun) tournament.</p>
+<p><strong>c.</strong> Tournament lakes will be chosen at the prior monthly meeting. <em>(See Appendix A)</em></p>
+<p><strong>d.</strong> There is no limit to how many times a lake can be fished during a tournament year starting in 2025.</p>
+<p><strong>e.</strong> Tournament hours and weigh-in site/ramp will be voted on at club meetings.</p>
+<p><strong>f.</strong> Teams may launch at any legal ramp and trailer to weigh-in.</p>
+</div>
+
+<h4 class="mt-4 text-info">D. Changes and special provisions</h4>
+<p>Changes and special provisions in lakes, times or weigh-in sites may be made by 3 (three) officers, if necessary. The officers will communicate those changes or special provisions to the members in a timely manner.</p>
+
+<h4 class="mt-4 text-info">E. Cancellation of a tournament</h4>
+<p>Cancellation of a tournament due to severe weather, or circumstances (seen or unforeseen) may be instituted by a decision of 3 (three) or more Officers.</p>
+<div class="ms-4">
+<p><strong>a.</strong> It will be the responsibility of the member to check with officers on possible cancellations.</p>
+<p><strong>b.</strong> Officers phone numbers are listed on each newsletter (or website).</p>
+<p><strong>c.</strong> Should severe weather occur shortly before tournament start, members should check at weigh-in site for a determination by the officers.</p>
+</div>
+</section>
+
+<!-- Article V: Tournament Fees -->
+<section id="article-5" class="mb-5">
+<h2 class="text-primary border-bottom border-2 pb-2"><i class="bi bi-5-circle me-2"></i>Article V: Tournament Fees</h2>
+
+<p><strong>A.</strong> Entry fee shall be $25.00 per member, due no later than weigh-in.</p>
+<div class="ms-4">
+<p><strong>a.</strong> Cash only. <em>(Sometimes Venmo is an option)</em></p>
+<p><strong>b.</strong> This fee is due if you fish at any time during the tournament.</p>
+</div>
+
+<p><strong>B.</strong> Breakdown of $25.00 Entry Fee:</p>
+<div class="ms-4">
+<p><strong>a.</strong> Tournament Pot $16.00</p>
+<div class="ms-4">
+<p><strong>i.</strong> First Place $7.00</p>
+<p><strong>ii.</strong> Second Place $5.00</p>
+<p><strong>iii.</strong> Third Place $4.00</p>
+</div>
+<p><strong>b.</strong> $4.00 to the tournament big bass pot over 5 (five) lbs.</p>
+<p><strong>c.</strong> $3.00 will go towards club funds.</p>
+<p><strong>d.</strong> $2.00 Club Charity – Charity donation amount will be decided by a vote of club members present at the December club meeting.</p>
+</div>
+
+<p><strong>C.</strong> Big Bass Pot is paid to the heaviest bass caught at the tournament <em>OVER</em> 5 (five) pounds.</p>
+<div class="ms-4">
+<p><strong>a.</strong> If fishing a slot limit lake or a paper tournament and no bass is brought in over the slot limit, this pot will be carried over to the next tournament.</p>
+<p><strong>b.</strong> Only members are eligible for Big Bass Award.</p>
+</div>
+
+<p><strong>D.</strong> Teams/members fishing tournament waters, during tournament hours, will be responsible for entry fees whether you show up for weigh-in or not as you will be considered fishing the tournament.</p>
+
+<p><strong>E.</strong> If you have an adult guest fishing in the boat, they will be considered fishing the tournament and will be required to pay the tournament fee.</p>
+<div class="ms-4">
+<p><strong>a.</strong> A guest can fish up to two tournaments within the same calendar year without having to become an SABC member.</p>
+<p><strong>b.</strong> After fishing as a guest 2 (two) times, they will be required to pay the annual membership fee prior to fishing any more club tournaments within the same year.</p>
+</div>
+
+<p><strong>F.</strong> If special provisions or requests are required by a member, they must be brought up before the tournament and voted on and approved by at least 3 (three) officers.</p>
+</section>
+
+<!-- Article VI: Tournament Rules -->
+<section id="article-6" class="mb-5">
+<h2 class="text-primary border-bottom border-2 pb-2"><i class="bi bi-6-circle me-2"></i>Article VI: Tournament Rules</h2>
+
+<p><strong>A.</strong> All federal, state, and local laws must be observed. Illegal acts may result in disqualification.</p>
+
+<p><strong>B.</strong> This will clarify our present rule concerning Tournament Disqualification for Game/Boating Law violations.</p>
+<div class="ms-4">
+<p><strong>a.</strong> A member or guest who violates Texas Game or Boating Laws will be disqualified and his fish will not be counted. At the discretion of the Club Officers the disqualified angler may receive "points" to be added to his running total towards end of year placing equal to 1 less point than someone who fished and zeroed</p>
+</div>
+
+<p><strong>C.</strong> Protests must be presented to a club officer within 30 minutes of the weigh-in.</p>
+
+<p><strong>D.</strong> Team stipulations are:</p>
+<div class="ms-4">
+<p><strong>a.</strong> Team members must fish from the same boat.</p>
+<p><strong>b.</strong> A team consists of up to 2 anglers.</p>
+<p><strong>c.</strong> A guest must fish with a paid member.</p>
+<p><strong>d.</strong> A team may consist of 1 member, but they may weigh-in only 5 (five) fish.</p>
+</div>
+
+<p><strong>E.</strong> Only artificial baits may be used.</p>
+<div class="ms-4">
+<p><strong>a.</strong> Exception: Pork rind may be used.</p>
+</div>
+
+<p><strong>F.</strong> Only legal-sized Black, Smallmouth, or Spotted Bass are eligible for weigh-in.</p>
+<div class="ms-4">
+<p><strong>a.</strong> Exception: Spotted/Guadalupe Bass must be 12 inches in length.</p>
+<p><strong>b.</strong> Members are responsible for knowing individual lake rules.</p>
+</div>
+
+<p><strong>G.</strong> Fish must be measured on a flat board with a perpendicular end.</p>
+<div class="ms-4">
+<p><strong>a.</strong> Fish must be placed flat on the board, with mouth closed and jammed against perpendicular end.</p>
+<p><strong>b.</strong> You may manipulate tail to determine maximum length.</p>
+<p><strong>c.</strong> Tip of tail must touch the line for 14 inches, etc.</p>
+</div>
+
+<p><strong>H.</strong> Any fish at weigh-in short of legal limit makes team/individual subject to disqualification.</p>
+<div class="ms-4">
+<p><strong>a.</strong> If you are unsure of a fish's measurement, ask a club officer to check the fish <em>prior</em> to presentation at weigh-in.</p>
+</div>
+
+<p><strong>I.</strong> Tournament Lake is off limits for Fishing 12 hours prior to tournament start time.</p>
+
+<p><strong>J.</strong> The dead fish penalty is ¼ (one-quarter) pound for every fish that is not alive and presented for weigh-in.</p>
+
+<p><strong>K.</strong> There is a 5 (five) fish limit per person.</p>
+<div class="ms-4">
+<p><strong>a.</strong> Each person may weigh-in only those five fish that they caught.</p>
+<div class="ms-4">
+<p><strong>i.</strong> No exchange of fish between team members!</p>
+<p><strong>ii.</strong> Keep your fish separated or mark when caught.</p>
+</div>
+<p><strong>b.</strong> Exceptions</p>
+<div class="ms-4">
+<p><strong>i.</strong> 2 (two) day tournaments--5 fish per day</p>
+<p><strong>ii.</strong> Local lake law allows less than five fish stringers.</p>
+<p><strong>iii.</strong> The Club has the option of imposing a 3 (three) fish per angler limit during peak summer months. This will be decided at the monthly meeting before the tournament. The chosen lake's water temp will be the deciding factor.</p>
+</div>
+</div>
+
+<p><strong>L.</strong> No trolling with gas engine will be allowed.</p>
+
+<p><strong>M.</strong> Weigh-ins will be held lakeside, when possible, for live release of fish.</p>
+<div class="ms-4">
+<p><strong>a.</strong> As a courtesy, when a <em>large fish</em> is caught early in the tournament hours, especially during peak summer months, it is permissible for the angler and the weigh-in committee to meet lakeside to officially weigh the fish, record the weight and immediately return the fish to the lake. This is an emergency measure in the event the fish shows signs of distress. Nothing in this measure mandates the weigh-in committee to halt their fishing time to weigh a distressed fish. <em>This is a courtesy measure only.</em></p>
+<p><strong>b.</strong> Each contestant should identify his/her largest fish for consideration in Big Bass competition. Courtesy check is allowed if request is made before submission of creel for weigh-in.</p>
+</div>
+
+<p><strong>N.</strong> Tournament anglers must be inside of the buoys, where weigh-in is to be held by the end time of the tournament. If an angler or a team is not at an idle speed, inside the buoys by the end time of the tournament they will be disqualified.</p>
+
+<p><strong>O.</strong> The weigh-in will begin 15 min after the end time of the tournament. This time is for people to trailer their boats and for the weigh-in committee to get set up to receive fish. For fish care reasons please wait for scales to officially open before placing your fish in a weigh in bag.</p>
+
+<p><strong>P.</strong> Hard Luck Clause:</p>
+<div class="ms-4">
+<p><strong>a.</strong> If a Team experiences mechanical issues or any issues outside their power, they can call an officer before the end of the tournament for a grace period or assistance. The team's creel will be weighed in once they can get back to weigh-in site.</p>
+</div>
+
+<p><strong>Q.</strong> Fish must be presented in a water holding bag. (i.e., no nets)</p>
+
+<p><strong>R.</strong> Any team or individual may be disqualified for a violation of rules or un-sportsman like conduct, by a vote of the club officers present.</p>
+
+<p><strong>S.</strong> Club members will be expected to conduct themselves in a manner that will always display proper respect to other members and will abide by the principles of honesty and fair play.</p>
+<div class="ms-4">
+<p><strong>a.</strong> In the unlikely event that a situation arises that might result in disciplinary action, a report (oral or written) must be made to the club president. The club president will then confer with the other club officers and their decision on what (if any) action to be taken on the matter will be final.</p>
+</div>
+
+<p><strong>T.</strong> Persons at the weigh-in site are required to follow local and State guidelines concerning wearing of proper face coverings and maintaining "social distancing".</p>
+
+<p><strong>U.</strong> Start time - You may not make your first cast until the designated start time.</p>
+
+<p><strong>V.</strong> Monies paid to winners will be based on total weight of combined stringers of both team members.</p>
+
+<p><strong>W.</strong> Individual stringer weights are recorded to determine the points awarded for the year-end awards for tournaments that count for points.</p>
+
+<p><strong>X.</strong> In case of a tie, the following tiebreakers will be used:</p>
+<div class="ms-4">
+<p><strong>a.</strong> The individual with the greatest number of fish weighed in.</p>
+<p><strong>b.</strong> The individual with the largest single fish.</p>
+<p><strong>c.</strong> If a tie remains, the flip of a coin will determine the winner.</p>
+</div>
+</section>
+
+<!-- Article VII: Amendment to Bylaws -->
+<section id="article-7" class="mb-5">
+<h2 class="text-primary border-bottom border-2 pb-2"><i class="bi bi-7-circle me-2"></i>Article VII: Amendment to Bylaws</h2>
+
+<p><strong>A.</strong> To revise any rules or Bylaws,</p>
+<div class="ms-4">
+<p><strong>a.</strong> A proposal is made at a regular monthly meeting, discussed and a motion is made and seconded.</p>
+<p><strong>b.</strong> The motion will then be documented and sent out to all club members for review.</p>
+<p><strong>c.</strong> The motion will then be voted on by all club members attending the next scheduled meeting.</p>
+<p><strong>d.</strong> If passed, the updates will be made to the Bylaws and sent out to the club members.</p>
+</div>
+</section>
+
+<!-- Article VIII: End of Year Awards -->
+<section id="article-8" class="mb-5">
+<h2 class="text-primary border-bottom border-2 pb-2"><i class="bi bi-8-circle me-2"></i>Article VIII: End of Year Awards</h2>
+
+<p><strong>A.</strong> End of the year awards (jackets, jerseys, prizes, etc.) will be presented at year's end to:</p>
+<div class="ms-4">
+<p><strong>a.</strong> Angler of the Year (1st place of the Top 6 (six) Anglers)</p>
+<div class="ms-4">
+<p><strong>i.</strong> Awarded to the angler with the most points at the end of the tournament year.</p>
+<p><strong>ii.</strong> Only one award is given (just Angler of the Year – not AoY + Top 6 (six))</p>
+</div>
+<p><strong>b.</strong> Top 6 (six) Anglers</p>
+<div class="ms-4">
+<p><strong>i.</strong> Awarded based on total cumulative points for the year.</p>
+<p><strong>ii.</strong> Each Top 6 (six) Angler receives a minimum of $100.</p>
+<p><strong>iii.</strong> Additional monies may be presented as determined by the club officers based on club funds at the end of the year.</p>
+</div>
+<p><strong>c.</strong> Big Bass of the Year</p>
+<div class="ms-4">
+<p><strong>i.</strong> Awarded for the heaviest fish of all year's tournaments over 5 (five) pounds.</p>
+</div>
+<p><strong>d.</strong> Heavy Stringer of the Year</p>
+<div class="ms-4">
+<p><strong>i.</strong> Awarded to the heaviest limit weighed in during the tournament year.</p>
+</div>
+<p><strong>e.</strong> O'Dell Woolley Award for: "Conservation, Sponsorship, Participation"</p>
+<div class="ms-4">
+<p><strong>i.</strong> The club officers will choose the recipient based on standards that those officers establish.</p>
+</div>
+</div>
+</section>
+
+<!-- Article IX: Points System -->
+<section id="article-9" class="mb-5">
+<h2 class="text-primary border-bottom border-2 pb-2"><i class="bi bi-9-circle me-2"></i>Article IX: Points System</h2>
+
+<p><strong>A.</strong> Total points will be 100 points per tournament being awarded in descending order:</p>
+<div class="ms-4">
+<p><strong>a.</strong> At each tournament each angler will be ranked according to their individual stringer weight. Points are awarded based on this weight.</p>
+<p><strong>b.</strong> A buy-in option will be available to club members who cannot participate in the tournament.</p>
+<p><strong>c.</strong> First place will receive 100 points, second place will receive 99 points, etc.</p>
+<p><strong>d.</strong> Tournament participants, who do not weigh in fish, will receive 2 points less than the last place participant that weighed in fish.</p>
+<p><strong>e.</strong> The buy-in points awarded will be 4 points less than the last place participant that weighed in fish.</p>
+<div class="ms-4">
+<p><strong>i.</strong> The buy-in will cost the same amount as the tournament entry fee.</p>
+<p><strong>ii.</strong> Buy-in requests must be made verbally to a club officer before the start of the tournament.</p>
+<p><strong>iii.</strong> Buy-in monies must be submitted to a club officer no later than the following Friday.</p>
+<p><strong>iv.</strong> If a member verbally agrees to buy-in and does not submit payment, they will not be allowed to participate in the following tournament and will forfeit their privilege to buy-in for the remainder of the year.</p>
+</div>
+</div>
+</section>
+
+<!-- Appendix A -->
+<section id="appendix-a" class="mb-5">
+<h2 class="text-primary border-bottom border-2 pb-2"><i class="bi bi-paperclip me-2"></i>Appendix A</h2>
+
+<p><strong>A.</strong> In 2023, the goal is to establish an official SABC website that will give members an opportunity to vote on the upcoming tournament lake without having to attend a meeting.</p>
+<div class="ms-4">
+<p><strong>a.</strong> A notice will go out to club members approximately 5-7 days before the monthly meeting.</p>
+<p><strong>b.</strong> Starting in July 2023, the Lake with the most votes on the SABC Website will be the Primary Lake to be fished. The Start/End Times and Ramp will be voted on at the meeting. If there is a tie for a back-up lake (2nd most Votes) then a coin flip will decide the back-up Lake.</p>
+<p><strong>c.</strong> This process may evolve over time with the goal of increasing the number of members voting for the upcoming tournament lake.</p>
+<p><strong>d.</strong> The Bylaws will be updated accordingly.</p>
+<p><strong>e.</strong> Should a roadrunner tournament be nominated, it will be voted on first.</p>
+<div class="ms-4">
+<p><strong>i.</strong> President has voting rights like other members</p>
+<p><strong>ii.</strong> President will flip a coin for the tiebreaker</p>
+</div>
+</div>
+</section>
+
+<!-- Revision History -->
+<section id="revision-history" class="mb-4">
+<h2 class="text-primary border-bottom border-2 pb-2"><i class="bi bi-clock-history me-2"></i>Revision History</h2>
+<div class="table-responsive">
+<table class="table table-striped table-sm">
+<thead class="table-dark">
+<tr>
+<th>Revision</th>
+<th>Action Taken</th>
+<th>Reviewers/Approvers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>December 2022</td>
+<td>Changed Bylaws to new format and added approved bylaw changes</td>
+<td>R. Bunce, E. Vasquez, H. Fleming, E. Cole, J. Rumsey</td>
+</tr>
+<tr>
+<td>March 2023</td>
+<td>Updated Article VII to add a review period for any Bylaw changes</td>
+<td>Updated by R. Bunce, Voted and passed at 3/6/23 Club meeting</td>
+</tr>
+<tr>
+<td>July 2023</td>
+<td>Updated Appendix A regarding lake voting process and determining primary lake</td>
+<td>Updated by R. Bunce, Voted and passed at 6/5/23 Club meeting</td>
+</tr>
+<tr>
+<td>December 2024</td>
+<td>Updated Article IV.C.d to remove limit on # of times a lake can be fished in a Calendar year</td>
+<td>Updated by R. Bunce, Voted and passed at 12/16/24 Club meeting</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<div class="text-center mt-5 pt-4 border-top">
+<p class="text-secondary"><i class="bi bi-calendar3 me-1"></i>Last Update December 2024</p>
+<div class="mt-3">
+<a href="/static/SABC-bylaws-DRAFT-2026.pdf" class="btn btn-outline-secondary" target="_blank"><i class="bi bi-file-pdf me-1"></i>DRAFT - Bylaws for 2026</a>
+</div>
+</div>
 </div>
 </div>
 </div>
