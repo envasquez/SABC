@@ -156,6 +156,25 @@ def nl2br_filter(value: Any) -> Markup:
     return Markup(str(escaped).replace("\n", "<br>\n"))
 
 
+def nl2br_safe_filter(value: Any) -> Markup:
+    """Convert newlines to HTML <br> tags, preserving existing HTML.
+
+    This filter allows HTML tags (like <a>) to render while converting
+    newlines to <br> tags. Use this only for trusted admin-entered content
+    like poll descriptions where HTML links are intentional.
+
+    WARNING: This does NOT escape HTML, so only use for trusted content.
+
+    Example:
+        Input: "Line 1\n<a href='/link'>Click</a>"
+        Output: "Line 1<br>\n<a href='/link'>Click</a>"
+    """
+    if not value:
+        return Markup("")
+    # nosec B703: This filter intentionally preserves HTML for trusted admin content
+    return Markup(str(value).replace("\n", "<br>\n"))
+
+
 templates = Jinja2Templates(directory="templates")
 templates.env.filters["time_format"] = time_format_filter
 templates.env.filters["tojson_attr"] = tojson_attr_filter

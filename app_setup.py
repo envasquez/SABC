@@ -21,6 +21,7 @@ from core.deps import (
     from_json_filter,
     month_number_filter,
     nl2br_filter,
+    nl2br_safe_filter,
     safe_json_filter,
     templates,
     time_format_filter,
@@ -111,6 +112,7 @@ def create_app() -> FastAPI:
     templates.env.filters["month_number"] = month_number_filter
     templates.env.filters["safe_json"] = safe_json_filter
     templates.env.filters["nl2br"] = nl2br_filter
+    templates.env.filters["nl2br_safe"] = nl2br_safe_filter
 
     # Add CSRF token to global template context
     templates.env.globals["get_csrf_token"] = get_csrf_token
