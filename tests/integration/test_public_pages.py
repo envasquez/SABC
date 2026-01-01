@@ -15,6 +15,7 @@ from datetime import date, datetime, time, timezone
 from sqlalchemy.orm import Session
 
 from core.db_schema import Angler, Event, Lake, News, Poll, Ramp, Result, Tournament
+from core.helpers.timezone import now_local
 from tests.conftest import TestClient
 
 
@@ -32,7 +33,8 @@ class TestCalendarPage:
         response = client.get("/calendar")
         assert response.status_code == 200
 
-        current_year = datetime.now(tz=timezone.utc).year
+        # Use same timezone as the calendar page (local time, not UTC)
+        current_year = now_local().year
         next_year = current_year + 1
 
         content = response.text
@@ -47,7 +49,7 @@ class TestCalendarPage:
         test_ramp: Ramp,
     ):
         """Calendar should display events with proper formatting."""
-        current_year = datetime.now(tz=timezone.utc).year
+        current_year = now_local().year
 
         # Create event in current year
         event = Event(
@@ -75,7 +77,7 @@ class TestCalendarPage:
         db_session: Session,
     ):
         """Calendar should handle different event types."""
-        current_year = datetime.now(tz=timezone.utc).year
+        current_year = now_local().year
 
         # Create different event types
         events = [
@@ -123,7 +125,7 @@ class TestAwardsPage:
         response = client.get("/awards")
         assert response.status_code == 200
 
-        current_year = datetime.now(tz=timezone.utc).year
+        current_year = now_local().year
         assert str(current_year) in response.text
 
     def test_awards_page_with_specific_year(
@@ -153,7 +155,7 @@ class TestAwardsPage:
     ):
         """Awards page should calculate and display AOY standings."""
         # Set to current year
-        current_year = datetime.now(tz=timezone.utc).year
+        current_year = now_local().year
         test_event.year = current_year
         test_event.date = date(current_year, 6, 15)
         db_session.commit()
@@ -196,7 +198,7 @@ class TestAwardsPage:
         member_user: Angler,
     ):
         """Awards page should show heavy stringer award."""
-        current_year = datetime.now(tz=timezone.utc).year
+        current_year = now_local().year
         test_event.year = current_year
         test_event.date = date(current_year, 6, 15)
         db_session.commit()
@@ -226,7 +228,7 @@ class TestAwardsPage:
         member_user: Angler,
     ):
         """Awards page should show big bass award (>=5.0 lbs)."""
-        current_year = datetime.now(tz=timezone.utc).year
+        current_year = now_local().year
         test_event.year = current_year
         test_event.date = date(current_year, 6, 15)
         db_session.commit()
@@ -249,7 +251,7 @@ class TestAwardsPage:
 
     def test_awards_page_with_no_data(self, client: TestClient):
         """Awards page should handle year with no data gracefully."""
-        current_year = datetime.now(tz=timezone.utc).year
+        current_year = now_local().year
         response = client.get(f"/awards/{current_year}")
         assert response.status_code == 200
         # Should show page even with no data
@@ -264,7 +266,7 @@ class TestAwardsPage:
         regular_user: Angler,
     ):
         """Awards page AOY standings should only include current members."""
-        current_year = datetime.now(tz=timezone.utc).year
+        current_year = now_local().year
         test_event.year = current_year
         test_event.date = date(current_year, 6, 15)
         db_session.commit()
@@ -520,7 +522,7 @@ class TestCalendarDataFunctions:
         test_ramp: Ramp,
     ):
         """Calendar data should properly process events."""
-        current_year = datetime.now(tz=timezone.utc).year
+        current_year = now_local().year
 
         # Create event with tournament
         event = Event(
@@ -556,7 +558,7 @@ class TestCalendarDataFunctions:
         test_poll: Poll,
     ):
         """Calendar data should include poll information."""
-        current_year = datetime.now(tz=timezone.utc).year
+        current_year = now_local().year
         test_event.year = current_year
         test_event.date = date(current_year, 6, 15)
         db_session.commit()
@@ -608,7 +610,7 @@ class TestCalendarStructure:
         db_session: Session,
     ):
         """Calendar should add event markers to days with events."""
-        current_year = datetime.now(tz=timezone.utc).year
+        current_year = now_local().year
 
         # Create SABC tournament (should get † marker)
         event = Event(
