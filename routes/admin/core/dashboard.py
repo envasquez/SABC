@@ -122,11 +122,12 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
             )
             past_tournament_lakes = [row[0] for row in past_tournament_lakes_query if row[0]]
 
-            # Get all tournament location polls for the poll dropdown
+            # Get tournament polls for the poll dropdown (exclude generic/club polls)
+            # Show all tournament polls, not just unclosed ones
             available_polls_query = (
                 session.query(Poll.id, Poll.title, Event.date, Event.name)
                 .join(Event, Poll.event_id == Event.id)
-                .filter(Poll.poll_type == "tournament_location")
+                .filter(Poll.poll_type != "generic")
                 .order_by(Event.date.desc())
                 .all()
             )
