@@ -9,6 +9,7 @@ from routes.admin.events.create_db_ops import (
     create_poll_options,
     create_tournament_poll,
     create_tournament_record,
+    link_tournament_to_poll,
 )
 from routes.admin.events.create_helpers import handle_create_error
 from routes.admin.events.create_params import prepare_create_event_params
@@ -87,6 +88,7 @@ async def create_event(
         if event_type == "sabc_tournament" and create_poll.lower() == "true":
             poll_id = create_tournament_poll(event_id, name, description, date_obj, user["id"])  # type: ignore[arg-type]
             create_poll_options(poll_id)
+            link_tournament_to_poll(event_id, poll_id)
         return RedirectResponse(
             f"/admin/events?success=Event created successfully{warning_msg}", status_code=302
         )

@@ -61,6 +61,7 @@ async def get_event_info(request: Request, event_id: int):
                         if poll and poll.closed is not None
                         else None,
                         "tournament_id": tournament.id if tournament else None,
+                        "tournament_poll_id": tournament.poll_id if tournament else None,
                         "aoy_points": bool(tournament.aoy_points)
                         if tournament and tournament.aoy_points is not None
                         else True,

@@ -69,6 +69,14 @@ function editEvent(id, date, eventType, name, description, hasPoll) {
                         if (aoyPoints) {
                             aoyPoints.value = data.aoy_points ? 'true' : 'false';
                         }
+
+                        // Set the associated poll dropdown
+                        const pollIdSelect = document.getElementById('edit_poll_id');
+                        if (pollIdSelect) {
+                            // Use tournament_poll_id (the poll linked to tournament) or fall back to poll_id (poll for event)
+                            const pollId = data.tournament_poll_id || data.poll_id || '';
+                            pollIdSelect.value = pollId ? pollId.toString() : '';
+                        }
                     }
 
                     // Set lake - make sure the option exists in the dropdown

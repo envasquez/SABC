@@ -122,9 +122,23 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
             )
             past_tournament_lakes = [row[0] for row in past_tournament_lakes_query if row[0]]
 
+            # Get all tournament location polls for the poll dropdown
+            available_polls_query = (
+                session.query(Poll.id, Poll.title, Event.date, Event.name)
+                .join(Event, Poll.event_id == Event.id)
+                .filter(Poll.poll_type == "tournament_location")
+                .order_by(Event.date.desc())
+                .all()
+            )
+            available_polls = [
+                {"id": p[0], "title": p[1], "event_date": p[2], "event_name": p[3]}
+                for p in available_polls_query
+            ]
+
         ctx["past_tournaments"] = past_tournaments
         ctx["past_tournament_years"] = past_tournament_years
         ctx["past_tournament_lakes"] = past_tournament_lakes
+        ctx["available_polls"] = available_polls
 
         upcoming_total_pages = (total_upcoming + per_page - 1) // per_page
         # Past tournaments don't use pagination - all loaded for client-side filtering

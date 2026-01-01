@@ -8,6 +8,7 @@ from routes.admin.events.update_helpers import (
     prepare_event_params,
     update_event_record,
     update_poll_closing_date,
+    update_tournament_poll_id,
     update_tournament_record,
 )
 from routes.dependencies import templates, validate_event_data
@@ -120,6 +121,7 @@ async def edit_event(
     fish_limit: int = Form(default=5),
     aoy_points: str = Form(default="true"),
     poll_closes_date: str = Form(default=""),
+    poll_id: str = Form(default=""),
 ):
     _user = require_admin(request)
     try:
@@ -165,6 +167,9 @@ async def edit_event(
             # Context manager will commit automatically on successful exit
         if event_type == "sabc_tournament":
             update_poll_closing_date(event_id, poll_closes_date)
+            # Update tournament poll_id if provided
+            if poll_id:
+                update_tournament_poll_id(event_id, int(poll_id))
         return RedirectResponse("/admin/events?success=Event updated successfully", status_code=302)
     except Exception as e:
         return handle_update_error(e, date)

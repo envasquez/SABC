@@ -205,3 +205,16 @@ def create_poll_options(poll_id: int, session: Optional[Session] = None) -> None
         with get_session() as sess:
             _create(sess)
             # Context manager will commit
+
+
+def link_tournament_to_poll(event_id: int, poll_id: int) -> None:
+    """Link a tournament to a poll by setting the tournament's poll_id.
+
+    Args:
+        event_id: Event ID to find the tournament
+        poll_id: Poll ID to link to the tournament
+    """
+    with get_session() as session:
+        tournament = session.query(Tournament).filter(Tournament.event_id == event_id).first()
+        if tournament:
+            tournament.poll_id = poll_id

@@ -568,6 +568,18 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label for="edit_poll_id" class="form-label">Associated Poll</label>
+                                <select class="form-select" id="edit_poll_id" name="poll_id">
+                                    <option value="">-- No Poll Associated --</option>
+                                    {% for poll in available_polls|default([]) %}
+                                    <option value="{{ poll.id }}">{{ poll.event_date }} - {{ poll.title }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Link this tournament to a location poll for display on the home page</div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Holiday-specific fields -->

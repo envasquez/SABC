@@ -156,3 +156,17 @@ def update_poll_closing_date(event_id: int, poll_closes_date: str) -> None:
             f"Expected ISO format (YYYY-MM-DD HH:MM:SS). Error: {e}. "
             f"Poll closing date not updated."
         )
+
+
+def update_tournament_poll_id(event_id: int, poll_id: int | None) -> None:
+    """Update the poll_id on a tournament to associate it with a poll.
+
+    Args:
+        event_id: Event ID to find the tournament
+        poll_id: Poll ID to associate (or None to clear)
+    """
+    with get_session() as session:
+        tournament = session.query(Tournament).filter(Tournament.event_id == event_id).first()
+        if tournament:
+            tournament.poll_id = poll_id
+            logger.info(f"Updated tournament poll_id to {poll_id} for event {event_id}")
