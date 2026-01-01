@@ -574,7 +574,7 @@
                                 <select class="form-select" id="edit_poll_id" name="poll_id">
                                     <option value="">-- No Poll Associated --</option>
                                     {% for poll in available_polls|default([]) %}
-                                    <option value="{{ poll.id }}">{{ poll.event_date }} - {{ poll.title }}</option>
+                                    <option value="{{ poll.id }}">{% if poll.event_date %}{{ poll.event_date }} - {% endif %}{{ poll.title }}</option>
                                     {% endfor %}
                                 </select>
                                 <div class="form-text">Link this tournament to a location poll for display on the home page</div>
