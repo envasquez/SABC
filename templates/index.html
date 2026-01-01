@@ -12,25 +12,238 @@
         {# A tournament is "completed" if it has results (complete=True) OR its date has passed (is_past=True) #}
         {% set completed_tournaments = all_tournaments | selectattr('is_past', 'equalto', True) | sort(attribute='date', reverse=True) | list %}
         {% set upcoming_tournaments = all_tournaments | rejectattr('is_past', 'equalto', True) | selectattr('event_type', 'equalto', 'sabc_tournament') | sort(attribute='date') | list %}
+        {% set next_tournament = upcoming_tournaments[0] if upcoming_tournaments else none %}
 
         <!-- Bootstrap Tabs -->
         <ul class="nav nav-tabs mb-4" id="tournamentTabs" role="tablist">
+            {% if next_tournament %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="next-tab" data-bs-toggle="tab" data-bs-target="#next-pane" type="button" role="tab" aria-controls="next-pane" aria-selected="true">
+                    <i class="bi bi-calendar-event me-1"></i>Next Tournament
+                </button>
+            </li>
+            {% endif %}
             {% if upcoming_tournaments %}
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming-pane" type="button" role="tab" aria-controls="upcoming-pane" aria-selected="true">
-                    <i class="bi bi-calendar-plus me-1"></i>Upcoming Tournaments ({{ upcoming_tournaments|length }})
+                <button class="nav-link" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming-pane" type="button" role="tab" aria-controls="upcoming-pane" aria-selected="false">
+                    <i class="bi bi-calendar-plus me-1"></i>Upcoming ({{ upcoming_tournaments|length }})
                 </button>
             </li>
             {% endif %}
             <li class="nav-item" role="presentation">
                 <button class="nav-link{% if not upcoming_tournaments %} active{% endif %}" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed-pane" type="button" role="tab" aria-controls="completed-pane" aria-selected="{% if not upcoming_tournaments %}true{% else %}false{% endif %}">
-                    <i class="bi bi-trophy me-1"></i>Completed Tournaments
+                    <i class="bi bi-trophy me-1"></i>Completed
                 </button>
             </li>
         </ul>
 
         <!-- Tab Content -->
         <div class="tab-content" id="tournamentTabsContent">
+            <!-- Next Tournament Tab -->
+            {% if next_tournament %}
+            <div class="tab-pane fade show active" id="next-pane" role="tabpanel" aria-labelledby="next-tab">
+                {% set tournament = next_tournament %}
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">
+                                    {% if tournament.lake_display_name %}
+                                        {{ tournament.lake_display_name|upper }}
+                                    {% else %}
+                                        Location TBD
+                                    {% endif %}
+                                </h5>
+                                {% if tournament.ramp_name %}
+                                    <small class="text-white-50">
+                                        {% if tournament.ramp_google_maps %}
+                                            <a href="#" class="text-white-50 text-decoration-none"
+                                               data-bs-toggle="modal" data-bs-target="#rampModal{{ tournament.id }}">
+                                                <i class="bi bi-geo-alt me-1"></i>{{ tournament.ramp_name|title }}
+                                            </a>
+                                        {% else %}
+                                            {{ tournament.ramp_name|title }}
+                                        {% endif %}
+                                    </small>
+                                {% endif %}
+                            </div>
+                            <span class="badge bg-warning text-dark">
+                                Next Up
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="text-secondary mb-0">{{ tournament.name }} | {{ tournament.description[:200] | nl2br }} - {{ tournament.date|date_format("mm-dd-yyyy") }}</h6>
+                            <div>
+                                <span class="badge bg-secondary me-2">{{ tournament.fish_limit }} fish/{{ tournament.limit_type }}</span>
+                                {% if tournament.aoy_points %}
+                                    <span class="badge bg-info">AoY Points</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-6 col-md-3">
+                                <div class="text-center">
+                                    {% if tournament.lake_display_name and tournament.start_time %}
+                                        <i class="bi bi-sunrise text-warning mb-1 fs-4"></i>
+                                        <div class="small text-secondary">Start</div>
+                                        <div class="fw-semibold">{{ tournament.start_time | time_format }}</div>
+                                    {% else %}
+                                        <i class="bi bi-sunrise text-secondary mb-1 fs-4"></i>
+                                        <div class="small text-secondary">Start</div>
+                                        <div class="fw-semibold text-secondary">
+                                            TBD <i class="bi bi-question-circle-fill ms-1"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="text-center">
+                                    {% if tournament.lake_display_name and tournament.end_time %}
+                                        <i class="bi bi-clipboard-data text-primary mb-1 fs-4"></i>
+                                        <div class="small text-secondary">Weigh-in</div>
+                                        <div class="fw-semibold">{{ tournament.end_time | time_format }}</div>
+                                    {% else %}
+                                        <i class="bi bi-clipboard-data text-secondary mb-1 fs-4"></i>
+                                        <div class="small text-secondary">Weigh-in</div>
+                                        <div class="fw-semibold text-secondary">
+                                            TBD <i class="bi bi-question-circle-fill ms-1"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="text-center">
+                                    <i class="bi bi-cash-coin text-success mb-1 fs-4"></i>
+                                    <div class="small text-secondary">Entry Fee</div>
+                                    <div class="fw-semibold">${{ "%.0f"|format(tournament.entry_fee) }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="text-center">
+                                    {% if tournament.is_team %}
+                                        <i class="bi bi-people-fill text-info mb-1 fs-4"></i>
+                                        <div class="small text-secondary">Type</div>
+                                        <div class="fw-semibold">Team</div>
+                                    {% else %}
+                                        <i class="bi bi-person-fill text-secondary mb-1 fs-4"></i>
+                                        <div class="small text-secondary">Type</div>
+                                        <div class="fw-semibold">Individual</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Google Maps or Poll Charts for next tournament -->
+                        {% if tournament.google_maps_iframe %}
+                        <div class="mb-3">
+                            <div class="rounded overflow-hidden position-relative w-100" style="height: 180px;">
+                                <style>
+                                    .map-container-next iframe {
+                                        position: absolute;
+                                        top: 0;
+                                        left: 0;
+                                        width: 100% !important;
+                                        height: 100% !important;
+                                        border: 0;
+                                    }
+                                </style>
+                                <div class="w-100 h-100 map-container-next">
+                                    {{ tournament.google_maps_iframe|safe }}
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <!-- No location set yet - show poll results if user voted, otherwise show TBD -->
+                        {% if tournament.poll_data and (tournament.poll_data | length > 0) %}
+                        <div class="mb-3">
+                            <!-- Tournament Poll Results - Stacked Bar Chart -->
+                            <div class="tournament-results-container-home" data-tournament-id="{{ tournament.id }}">
+                                <div class="row">
+                                    <!-- Stacked Bar Chart (Lakes with Ramps) -->
+                                    <div class="col-lg-8">
+                                        <div class="card border-0 shadow-sm">
+                                            <div class="card-header bg-success text-white py-2">
+                                                <h6 class="mb-0"><i class="bi bi-bar-chart-fill me-1"></i>Location Votes</h6>
+                                            </div>
+                                            <div class="card-body p-3">
+                                                <div class="stacked-chart-container" id="stackedChart-next-{{ tournament.id }}" style="min-height: 150px;">
+                                                    <!-- Stacked bar chart will be drawn here -->
+                                                </div>
+                                                <div class="text-center mt-2">
+                                                    <small class="text-muted"><i class="bi bi-hand-index me-1"></i>Tap bars for details</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Time Slots Table (Right Panel) -->
+                                    <div class="col-lg-4">
+                                        <div class="card border-0 shadow-sm h-100">
+                                            <div class="card-header bg-dark text-white py-2">
+                                                <h6 class="mb-0"><i class="bi bi-clock me-1"></i>Time Slots</h6>
+                                            </div>
+                                            <div class="card-body p-2">
+                                                <div class="time-table-container">
+                                                    <table class="table table-sm table-hover mb-0" id="timeTable-next-{{ tournament.id }}">
+                                                        <thead class="table-light sticky-top">
+                                                            <tr>
+                                                                <th class="text-dark fw-semibold small">Start</th>
+                                                                <th class="text-dark fw-semibold small">End</th>
+                                                                <th class="text-dark fw-semibold text-center small">Votes</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <!-- Time slots will be populated by JavaScript -->
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Hidden data for JavaScript -->
+                                {% for option in tournament.poll_data %}
+                                <div data-option-data="{{ option.option_data | tojson_attr }}"
+                                     data-vote-count="{{ option.vote_count }}"
+                                     class="d-none poll-option-data"></div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="mb-3">
+                            <div class="bg-white border border-2 border-dark rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <div class="text-center">
+                                    <i class="bi bi-geo-alt fs-1 text-dark"></i>
+                                    <div class="fw-bold fs-4 text-dark">Location TBD</div>
+                                    <div class="mt-2 text-dark">Will be determined by poll vote</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endif %}
+
+                        {% if tournament.poll_id and tournament.poll_is_open and not tournament.user_has_voted %}
+                        <div class="d-flex justify-content-end">
+                            <a href="/polls?tab=tournament#poll-{{ tournament.poll_id }}" class="btn btn-success btn-lg">
+                                <i class="bi bi-hand-index me-2"></i>Vote on Location
+                            </a>
+                        </div>
+                        {% elif tournament.poll_id and (not tournament.poll_is_open or tournament.user_has_voted) %}
+                        <div class="d-flex justify-content-end">
+                            <a href="/polls?tab=tournament#poll-{{ tournament.poll_id }}" class="btn btn-outline-info">
+                                <i class="bi bi-bar-chart-fill me-2"></i>View Poll Results
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Completed Tournaments Tab -->
             <div class="tab-pane fade{% if not upcoming_tournaments %} show active{% endif %}" id="completed-pane" role="tabpanel" aria-labelledby="completed-tab">
                 {% for tournament in completed_tournaments %}
@@ -320,7 +533,7 @@
             </div>
 
             <!-- Upcoming Tournaments Tab -->
-            <div class="tab-pane fade{% if upcoming_tournaments %} show active{% endif %}" id="upcoming-pane" role="tabpanel" aria-labelledby="upcoming-tab">
+            <div class="tab-pane fade" id="upcoming-pane" role="tabpanel" aria-labelledby="upcoming-tab">
                 {% for tournament in upcoming_tournaments %}
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">
