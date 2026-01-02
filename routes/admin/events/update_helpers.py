@@ -159,7 +159,11 @@ def update_poll_closing_date(event_id: int, poll_closes_date: str) -> None:
 
 
 def update_tournament_poll_id(event_id: int, poll_id: int | None) -> None:
-    """Update the poll_id on a tournament to associate it with a poll.
+    """Update the poll_id on a tournament and the event_id on the poll.
+
+    This creates a bidirectional link:
+    - Tournament.poll_id -> Poll
+    - Poll.event_id -> Event
 
     Args:
         event_id: Event ID to find the tournament
@@ -170,3 +174,10 @@ def update_tournament_poll_id(event_id: int, poll_id: int | None) -> None:
         if tournament:
             tournament.poll_id = poll_id
             logger.info(f"Updated tournament poll_id to {poll_id} for event {event_id}")
+
+        # Also update the poll's event_id to enable seasonal history
+        if poll_id:
+            poll = session.query(Poll).filter(Poll.id == poll_id).first()
+            if poll:
+                poll.event_id = event_id
+                logger.info(f"Updated poll {poll_id} event_id to {event_id}")
