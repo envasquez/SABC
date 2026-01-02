@@ -986,6 +986,18 @@ class PollResultsRenderer {
                     };
                 }
                 rampsByLake[lakeId][rampId].votes += voteCount;
+            } else if (lakeId && !rampId) {
+                // Handle lake-only votes (no specific ramp selected)
+                // Use a synthetic "Any Ramp" entry for display
+                const syntheticRampId = 'any_' + lakeId;
+                if (!rampsByLake[lakeId][syntheticRampId]) {
+                    rampsByLake[lakeId][syntheticRampId] = {
+                        id: syntheticRampId,
+                        name: 'Any Ramp',
+                        votes: 0
+                    };
+                }
+                rampsByLake[lakeId][syntheticRampId].votes += voteCount;
             }
 
             // Aggregate time votes
