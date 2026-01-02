@@ -214,8 +214,8 @@ async def home_paginated(request: Request, page: int = 1):
                     )
                     user_has_voted = user_vote is not None
 
-                # Only show poll data if user has voted
-                if user_has_voted and poll_options:
+                # Show poll data if user has voted OR if poll is closed (results are public)
+                if (user_has_voted or not poll_is_open) and poll_options:
                     poll_data = []
                     for opt in poll_options:
                         try:
@@ -375,36 +375,6 @@ async def home_paginated(request: Request, page: int = 1):
 @router.get("/")
 async def page(request: Request, p: int = 1):
     return await home_paginated(request, p)
-
-
-@router.get("/bylaws/draft")
-async def draft_bylaws(request: Request) -> Any:
-    """Display the draft 2026 bylaws rendered from markdown."""
-    import markdown  # type: ignore[import-untyped]
-
-    user = get_user_optional(request)
-
-    # Read the markdown file
-    try:
-        with open("static/SABC-bylaws-DRAFT-2026.md", "r") as f:
-            md_content = f.read()
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="Draft bylaws not found")
-
-    # Convert markdown to HTML with extensions for tables and TOC
-    html_content = markdown.markdown(
-        md_content,
-        extensions=["tables", "toc", "fenced_code"],
-    )
-
-    return templates.TemplateResponse(
-        "bylaws_draft.html",
-        {
-            "request": request,
-            "user": user,
-            "content": html_content,
-        },
-    )
 
 
 @router.get("/{page:path}")
