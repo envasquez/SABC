@@ -55,7 +55,7 @@
 <div class="row g-4">
     {% if polls %}
         {% for poll in polls %}
-        <div class="col-12">
+        <div class="col-12" id="poll-{{ poll.id }}">
             <div class="card shadow-sm">
                 <div class="card-header {{ 'bg-success' if poll.status == 'closed' else ('bg-warning' if poll.status == 'active' else 'bg-secondary') }} text-white d-flex justify-content-between align-items-center">
                     <div>

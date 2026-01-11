@@ -196,6 +196,22 @@ function initializeClubPollCharts() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('[SABC] Polls page: DOMContentLoaded fired');
 
+    // Handle scroll to specific poll when URL has hash (e.g., #poll-123)
+    if (window.location.hash) {
+        const pollElement = document.querySelector(window.location.hash);
+        if (pollElement) {
+            // Small delay to ensure page is fully rendered
+            setTimeout(function() {
+                pollElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Add highlight effect
+                pollElement.classList.add('poll-highlight');
+                setTimeout(function() {
+                    pollElement.classList.remove('poll-highlight');
+                }, 2000);
+            }, 100);
+        }
+    }
+
     // Get lakes data from data attribute
     const lakesDataElement = document.getElementById('lakes-data');
     const lakesData = lakesDataElement ? JSON.parse(lakesDataElement.dataset.lakes || '[]') : [];

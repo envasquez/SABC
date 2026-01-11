@@ -29,6 +29,7 @@ def get_year_calendar_data(year: int) -> Tuple[List[Any], Dict[str, Any], Set[st
                 Event.description,
                 Poll.id.label("poll_id"),
                 Poll.title.label("poll_title"),
+                Poll.poll_type.label("poll_type"),
                 Poll.starts_at,
                 Poll.closes_at,
                 Poll.closed,
@@ -75,11 +76,13 @@ def get_year_calendar_data(year: int) -> Tuple[List[Any], Dict[str, Any], Set[st
             poll_status, poll_link, tournament_link = None, None, None
 
             if poll_id:
+                # Determine poll tab based on poll type
+                poll_tab = "tournament" if event.poll_type == "tournament_location" else "club"
                 if event_date > now:
                     poll_status = "active" if not poll_closed else "closed"
-                    poll_link = f"/polls#{poll_id}"
+                    poll_link = f"/polls?tab={poll_tab}#poll-{poll_id}"
                 else:
-                    poll_status, poll_link = "results", f"/polls#{poll_id}"
+                    poll_status, poll_link = "results", f"/polls?tab={poll_tab}#poll-{poll_id}"
 
             if tournament_id and tournament_complete:
                 tournament_link = f"/tournaments/{tournament_id}"

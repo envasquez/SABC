@@ -302,3 +302,20 @@ html {
     min-width: 600px;
   }
 }
+
+/* ========================================
+   Poll Highlight Animation (for deep linking)
+   ======================================== */
+
+.poll-highlight {
+  animation: poll-pulse 0.5s ease-in-out 2;
+}
+
+@keyframes poll-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(13, 110, 253, 0.4);
+  }
+}
