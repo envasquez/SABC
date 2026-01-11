@@ -23,7 +23,7 @@ async def polls(
     request: Request,
     background_tasks: BackgroundTasks,
     user: Dict[str, Any] = Depends(require_auth),
-    tab: str = "club",
+    tab: str = "tournament",
     p: int = 1,
 ):
     # Only members can view polls
