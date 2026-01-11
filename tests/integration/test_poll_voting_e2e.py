@@ -20,7 +20,8 @@ class TestPollVotingEndToEnd:
         self, member_client: TestClient, test_poll: Poll, test_poll_option: PollOption
     ):
         """Test that members can view the polls list page with active polls."""
-        response = member_client.get("/polls")
+        # test_poll is a club poll (generic type), so we need to request the club tab
+        response = member_client.get("/polls?tab=club")
 
         assert response.status_code == 200
         assert "Test Poll" in response.text

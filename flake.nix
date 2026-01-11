@@ -138,12 +138,6 @@ print('Database reset complete!')
 "
         '';
 
-        checkLineLimit = pkgs.writeShellScriptBin "check-line-limit" ''
-          echo "📏 Checking Python File Line Limits"
-          echo "==================================="
-          python scripts/check_line_limit.py
-        '';
-
         deployApp = pkgs.writeShellScriptBin "deploy-app" ''
           echo "🚀 Deploying SABC Application"
           echo "============================"
@@ -210,7 +204,6 @@ print('Database reset complete!')
             formatCode
             setupDb
             resetDb
-            checkLineLimit
             deployApp
             runTests
           ];
@@ -236,7 +229,6 @@ print('Database reset complete!')
             echo "🔧 Development commands:"
             echo "  check-code       - Run linting and type checking"
             echo "  format-code      - Auto-format Python code with ruff"
-            echo "  check-line-limit - Enforce 100-line limit on Python files"
             echo "  run-tests        - Run test suite (--coverage for coverage report)"
             echo "  deploy-app       - Run all checks for deployment"
             echo ""
