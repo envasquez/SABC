@@ -4,6 +4,7 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
 
 from core.helpers.auth import require_admin
+from core.helpers.timezone import now_local
 from routes.admin.events.create_db_ops import (
     create_event_record,
     create_poll_options,
@@ -35,6 +36,7 @@ async def create_event_page(request: Request):
             "user": user,
             "events": [],  # Empty list for create mode
             "create_mode": True,
+            "current_year": now_local().year,
         },
     )
 

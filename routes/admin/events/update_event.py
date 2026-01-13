@@ -3,6 +3,7 @@ from fastapi.responses import RedirectResponse
 
 from core.db_schema import Event, get_session
 from core.helpers.auth import require_admin
+from core.helpers.timezone import now_local
 from routes.admin.events.update_errors import handle_update_error
 from routes.admin.events.update_helpers import (
     prepare_event_params,
@@ -35,6 +36,7 @@ async def get_edit_event(request: Request, event_id: int):
             "request": request,
             "user": user,
             "edit_event_id": event_id,
+            "current_year": now_local().year,
         },
     )
 
