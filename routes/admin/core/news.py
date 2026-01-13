@@ -89,13 +89,13 @@ async def create_news(
         # Send email notifications to all members (non-blocking)
         try:
             with get_session() as session:
-                # Get all member emails (members only, exclude null emails)
+                # Get all member emails (members only, exclude null emails and system admin)
                 member_emails: List[str] = [
                     email
                     for (email,) in session.query(Angler.email)
                     .filter(Angler.member == True, Angler.email.isnot(None))  # noqa: E712
                     .all()
-                    if email
+                    if email and email.lower() != "admin@sabc.com"
                 ]
 
             if member_emails:
