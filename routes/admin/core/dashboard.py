@@ -1,5 +1,6 @@
 from typing import Any, Dict
 
+from core.helpers.time import now_local
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import Date, Integer, cast, exists, func, select
@@ -30,7 +31,8 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
     if page not in VALID_ADMIN_PAGES:
         raise HTTPException(status_code=404, detail=f"Admin page '{page}' not found")
 
-    ctx: Dict[str, Any] = {"request": request, "user": user}
+    current_year = now_local().year
+    ctx: Dict[str, Any] = {"request": request, "user": user, "current_year": current_year}
     if page == "events":
         per_page = 20
         events, total_upcoming = get_upcoming_events_data(upcoming_page, per_page)

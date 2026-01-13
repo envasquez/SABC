@@ -213,8 +213,8 @@
                             <div class="col-md-2">
                                 <select class="form-select form-select-sm" id="sabc-year-filter" onchange="filterEvents('sabc')">
                                     <option value="">All Years</option>
-                                    {% for year in range(2023, 2027) %}
-                                    <option value="{{ year }}" {% if year == 2025 %}selected{% endif %}>{{ year }}</option>
+                                    {% for year in range(2023, current_year + 2) %}
+                                    <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -368,8 +368,8 @@
                             <div class="col-md-3">
                                 <select class="form-select form-select-sm" id="holidays-year-filter" onchange="filterEvents('holidays')">
                                     <option value="">All Years</option>
-                                    {% for year in range(2025, 2030) %}
-                                    <option value="{{ year }}" {% if year == 2025 %}selected{% endif %}>{{ year }}</option>
+                                    {% for year in range(current_year, current_year + 5) %}
+                                    <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -426,8 +426,8 @@
                             <div class="col-md-2">
                                 <select class="form-select form-select-sm" id="other-year-filter" onchange="filterEvents('other')">
                                     <option value="">All Years</option>
-                                    {% for year in range(2023, 2027) %}
-                                    <option value="{{ year }}" {% if year == 2025 %}selected{% endif %}>{{ year }}</option>
+                                    {% for year in range(2023, current_year + 2) %}
+                                    <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
