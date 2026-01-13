@@ -1,12 +1,12 @@
 from typing import Any, Dict
 
-from core.helpers.time import now_local
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import Date, Integer, cast, exists, func, select
 
 from core.db_schema import Event, Poll, Result, Tournament, get_session
 from core.helpers.auth import require_admin
+from core.helpers.timezone import now_local
 from routes.admin.core.dashboard_data import get_tournaments_data, get_users_data
 from routes.admin.core.event_queries import get_upcoming_events_data
 from routes.dependencies import templates
