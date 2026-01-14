@@ -96,6 +96,63 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
                 for e in past_tournaments_query
             ]
 
+            # Get ALL upcoming SABC tournaments (no pagination for client-side filtering)
+            upcoming_sabc_query = (
+                session.query(
+                    Event.id,
+                    Event.date,
+                    Event.name,
+                    Event.description,
+                    Event.event_type,
+                    Event.entry_fee,
+                    Event.lake_name,
+                    Event.start_time,
+                    Event.weigh_in_time,
+                    Event.holiday_name,
+                    exists(select(1).where(Poll.event_id == Event.id).correlate_except(Poll)).label(
+                        "has_poll"
+                    ),
+                    exists(
+                        select(1)
+                        .where(Tournament.event_id == Event.id)
+                        .correlate_except(Tournament)
+                    ).label("has_tournament"),
+                    func.coalesce(Tournament.complete, False).label("tournament_complete"),
+                    exists(
+                        select(1)
+                        .where((Poll.event_id == Event.id) & (Poll.closed.is_(False)))
+                        .correlate_except(Poll)
+                    ).label("poll_active"),
+                )
+                .outerjoin(Tournament, Event.id == Tournament.event_id)
+                .filter(
+                    Event.date >= cast(func.current_date(), Date),
+                    Event.event_type == "sabc_tournament",
+                )
+                .order_by(Event.date)
+                .all()
+            )
+
+            upcoming_sabc_tournaments = [
+                {
+                    "id": e[0],
+                    "date": e[1],
+                    "name": e[2] or "",
+                    "description": e[3] or "",
+                    "event_type": e[4] or "sabc_tournament",
+                    "entry_fee": e[5],
+                    "lake_name": e[6],
+                    "start_time": e[7],
+                    "weigh_in_time": e[8],
+                    "holiday_name": e[9],
+                    "has_poll": bool(e[10]),
+                    "has_tournament": bool(e[11]),
+                    "tournament_complete": bool(e[12]),
+                    "poll_active": bool(e[13]),
+                }
+                for e in upcoming_sabc_query
+            ]
+
             # Get years for Past Tournaments tab filter
             year_col = func.extract("year", Event.date).cast(Integer)
             past_tournament_years_query = (
@@ -144,6 +201,7 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
             ]
 
         ctx["past_tournaments"] = past_tournaments
+        ctx["upcoming_sabc_tournaments"] = upcoming_sabc_tournaments
         ctx["past_tournament_years"] = past_tournament_years
         ctx["past_tournament_lakes"] = past_tournament_lakes
         ctx["available_polls"] = available_polls
