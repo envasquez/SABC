@@ -34,11 +34,12 @@ async def home_paginated(request: Request, page: int = 1):
     items_per_page = 4
 
     with get_session() as session:
-        # Get total COMPLETED tournament count (for pagination)
+        # Get total COMPLETED SABC tournament count (for pagination)
         total_completed_tournaments = (
             session.query(func.count(Tournament.id))
             .join(Event, Tournament.event_id == Event.id)
             .filter(Tournament.complete.is_(True))
+            .filter(Event.event_type == "sabc_tournament")
             .scalar()
             or 0
         )
@@ -124,9 +125,10 @@ async def home_paginated(request: Request, page: int = 1):
                 query = query.filter(Tournament.complete.is_(complete_filter))
             return query
 
-        # Get COMPLETED tournaments with pagination
+        # Get COMPLETED SABC tournaments with pagination
         completed_tournaments_query = (
             build_tournament_query(complete_filter=True)
+            .filter(Event.event_type == "sabc_tournament")
             .order_by(Event.date.desc())
             .limit(items_per_page)
             .offset(offset)
