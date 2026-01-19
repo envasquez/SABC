@@ -213,6 +213,7 @@ class TournamentQueries(QueryServiceBase):
                 FROM tournaments t
                 JOIN events e ON t.event_id = e.id
                 WHERE t.complete = TRUE
+                  AND e.event_type = 'sabc_tournament'
             )
             SELECT year,
                    id as first_tournament_id,
