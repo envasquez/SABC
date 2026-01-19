@@ -10,7 +10,7 @@
  */
 const BASE_TOURNAMENT_CONFIG = {
     clearFields: ['start_time', 'weigh_in_time'],
-    defaults: { start_time: '06:00', weigh_in_time: '15:00' },
+    defaults: {},  // No defaults - times show as TBD until set via poll or manual edit
     requiredFields: []
 };
 

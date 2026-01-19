@@ -22,18 +22,13 @@ def prepare_create_event_params(
     year = date_obj.year
 
     # Handle times based on event type:
-    # - SABC tournaments: use defaults (06:00 / 15:00) if not provided
-    # - Other tournaments: only store if actually provided (times are optional)
+    # - Tournaments: only store if actually provided (times show as TBD until set)
     # - Other event types: no times
     effective_start_time: str | None = None
     effective_weigh_in_time: str | None = None
 
-    if event_type == "sabc_tournament":
-        # SABC tournaments have default times
-        effective_start_time = start_time if start_time else "06:00"
-        effective_weigh_in_time = weigh_in_time if weigh_in_time else "15:00"
-    elif event_type == "other_tournament":
-        # Other tournaments: times are optional, store None if not provided
+    if event_type in ("sabc_tournament", "other_tournament"):
+        # Times are optional - leave as None until set via poll or manual edit
         effective_start_time = start_time if start_time else None
         effective_weigh_in_time = weigh_in_time if weigh_in_time else None
 
