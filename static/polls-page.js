@@ -64,8 +64,9 @@ function renderClubPollChart(dataElement) {
     const ctx = canvas.getContext('2d');
 
     // Calculate dynamic height based on number of options
-    // Use larger bar height to accommodate multi-line labels
-    const barHeight = 65;
+    // Use larger bar height on mobile to accommodate more wrapped lines
+    const isMobile = window.innerWidth < 576;
+    const barHeight = isMobile ? 75 : 65;
     const minHeight = 150;
     const calculatedHeight = Math.max(minHeight, filteredData.length * barHeight + 50);
     canvas.style.height = calculatedHeight + 'px';
@@ -93,11 +94,23 @@ function renderClubPollChart(dataElement) {
         return lines;
     }
 
+    // Determine responsive wrap limit based on screen width
+    // On narrow mobile screens, wrap at shorter lengths to prevent cutoff
+    const screenWidth = window.innerWidth;
+    let wrapLimit = 35; // Default for larger screens
+    if (screenWidth < 400) {
+        wrapLimit = 18; // Very small phones (iPhone SE, etc.)
+    } else if (screenWidth < 576) {
+        wrapLimit = 22; // Small phones
+    } else if (screenWidth < 768) {
+        wrapLimit = 28; // Larger phones / small tablets
+    }
+
     // Create the chart with beautiful styling
     clubPollCharts[pollId] = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: filteredData.map(d => wrapLabel(d.label, 35)),
+            labels: filteredData.map(d => wrapLabel(d.label, wrapLimit)),
             datasets: [{
                 data: filteredData.map(d => d.votes),
                 backgroundColor: backgroundColors,
@@ -164,8 +177,12 @@ function renderClubPollChart(dataElement) {
                     ...CHART_CONFIG.scales.y,
                     ticks: {
                         ...CHART_CONFIG.scales.y.ticks,
-                        padding: 8
-                        // Labels now wrap via wrapLabel() - no truncation needed
+                        padding: 8,
+                        // Use smaller font on mobile for better fit
+                        font: {
+                            size: isMobile ? 11 : 13,
+                            weight: '600'
+                        }
                     }
                 }
             },
@@ -253,6 +270,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize club poll horizontal bar charts
     initializeClubPollCharts();
+
+    // Re-render club poll charts on significant window resize (e.g., device rotation)
+    // Use debounce to avoid excessive re-renders
+    let resizeTimeout;
+    let lastWidth = window.innerWidth;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(function() {
+            const newWidth = window.innerWidth;
+            // Only re-render if width changed significantly (crossing breakpoints)
+            if ((lastWidth < 576 && newWidth >= 576) ||
+                (lastWidth >= 576 && newWidth < 576) ||
+                (lastWidth < 400 && newWidth >= 400) ||
+                (lastWidth >= 400 && newWidth < 400) ||
+                (lastWidth < 768 && newWidth >= 768) ||
+                (lastWidth >= 768 && newWidth < 768)) {
+                lastWidth = newWidth;
+                initializeClubPollCharts();
+            }
+        }, 250);
+    });
 
     // Initialize delete confirmation manager
     pollDeleteManager = new DeleteConfirmationManager({
