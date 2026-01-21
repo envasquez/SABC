@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from fastapi.responses import RedirectResponse
@@ -23,7 +23,7 @@ async def polls(
     request: Request,
     background_tasks: BackgroundTasks,
     user: Dict[str, Any] = Depends(require_auth),
-    tab: str = "tournament",
+    tab: Optional[str] = None,
     p: int = 1,
 ):
     # Only members can view polls
@@ -85,6 +85,13 @@ async def polls(
             .scalar()
             or 0
         )
+
+        # Auto-select tab based on most active polls if no explicit tab provided
+        if tab is None:
+            if active_club_polls > active_tournament_polls:
+                tab = "club"
+            else:
+                tab = "tournament"  # Default when tied or tournament has more
 
         # Count upcoming polls for each tab (for tab labels)
         upcoming_club_polls = (
