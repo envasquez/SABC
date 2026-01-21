@@ -86,6 +86,7 @@ async def home_paginated(request: Request, page: int = 1):
                     func.sum(Result.total_weight - Result.dead_fish_penalty).label("total_weight"),
                     Tournament.aoy_points,
                     Event.event_type,
+                    Event.is_cancelled,
                 )
                 .join(Event, Tournament.event_id == Event.id)
                 .outerjoin(Lake, Tournament.lake_id == Lake.id)
@@ -119,6 +120,7 @@ async def home_paginated(request: Request, page: int = 1):
                     Tournament.poll_id,
                     Tournament.aoy_points,
                     Event.event_type,
+                    Event.is_cancelled,
                 )
             )
             if complete_filter is not None:
@@ -135,7 +137,7 @@ async def home_paginated(request: Request, page: int = 1):
             .all()
         )
 
-        # Get ALL UPCOMING tournaments (no pagination)
+        # Get ALL UPCOMING tournaments (no pagination), including cancelled ones
         upcoming_tournaments_query = (
             build_tournament_query(complete_filter=False).order_by(Event.date.asc()).all()
         )
@@ -265,6 +267,7 @@ async def home_paginated(request: Request, page: int = 1):
                 "total_weight": tournament[20] or 0.0,
                 "aoy_points": tournament[21] if tournament[21] is not None else True,
                 "event_type": tournament[22],
+                "is_cancelled": tournament[23] or False,
                 "top_results": top_results_query,
                 "poll_data": poll_data,
                 "user_has_voted": user_has_voted,
@@ -276,6 +279,36 @@ async def home_paginated(request: Request, page: int = 1):
         member_count = (
             session.query(func.count(Angler.id)).filter(Angler.member.is_(True)).scalar() or 0
         )
+
+        # Get cancelled upcoming tournaments for alert banner
+        cancelled_tournaments_query = (
+            session.query(
+                Event.id,
+                Event.date,
+                Event.name,
+                Event.description,
+                Lake.display_name.label("lake_name"),
+            )
+            .join(Tournament, Tournament.event_id == Event.id)
+            .outerjoin(Lake, Tournament.lake_id == Lake.id)
+            .filter(
+                Event.is_cancelled.is_(True),
+                Event.event_type == "sabc_tournament",
+                Event.date >= date.today(),  # Only show upcoming cancelled tournaments
+            )
+            .order_by(Event.date.asc())
+            .all()
+        )
+        cancelled_tournaments = [
+            {
+                "id": ct[0],
+                "date": ct[1],
+                "name": ct[2],
+                "description": ct[3],
+                "lake_name": ct[4],
+            }
+            for ct in cancelled_tournaments_query
+        ]
 
         # Get latest news
         # Note: We exclude admin@sabc.com from author display (default admin user)
@@ -370,6 +403,7 @@ async def home_paginated(request: Request, page: int = 1):
             "member_count": member_count,
             "year_links": year_links,
             "lakes_data": lakes_data,
+            "cancelled_tournaments": cancelled_tournaments,
         },
     )
 
