@@ -57,6 +57,7 @@ async def update_event_by_id(
     fish_limit: int = Form(default=5),
     aoy_points: str = Form(default="true"),
     poll_closes_date: str = Form(default=""),
+    is_cancelled: str = Form(default=""),
 ):
     """POST endpoint for updating an event by ID."""
     _user = require_admin(request)
@@ -83,6 +84,8 @@ async def update_event_by_id(
             fish_limit,
             aoy_points,
         )
+        # Add is_cancelled flag (checkbox sends "true" when checked, empty when not)
+        event_params["is_cancelled"] = is_cancelled.lower() == "true"
 
         with get_session() as session:
             rowcount = update_event_record(session, event_params)
@@ -124,6 +127,7 @@ async def edit_event(
     aoy_points: str = Form(default="true"),
     poll_closes_date: str = Form(default=""),
     poll_id: str = Form(default=""),
+    is_cancelled: str = Form(default=""),
 ):
     _user = require_admin(request)
     try:
@@ -149,6 +153,9 @@ async def edit_event(
             fish_limit,
             aoy_points,
         )
+        # Add is_cancelled flag (checkbox sends "true" when checked, empty when not)
+        event_params["is_cancelled"] = is_cancelled.lower() == "true"
+
         from core.db_schema import get_session
 
         with get_session() as session:

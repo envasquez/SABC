@@ -4,6 +4,27 @@
 <!-- Data passed to JavaScript -->
 <div id="home-data" data-lakes="{{ lakes_data | tojson_attr if lakes_data is defined else '[]' }}"></div>
 
+<!-- Cancelled Tournament Alert Banner -->
+{% if cancelled_tournaments %}
+<div class="row mb-3">
+    <div class="col-12">
+        {% for cancelled in cancelled_tournaments %}
+        <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center" role="alert" id="cancelled-alert-{{ cancelled.id }}">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <div class="flex-grow-1">
+                <strong>Tournament Cancelled:</strong>
+                The {{ cancelled.date|date_format("mm-dd-yyyy") }} tournament
+                {% if cancelled.lake_name %}at <strong>{{ cancelled.lake_name }}</strong>{% endif %}
+                has been cancelled.
+                {% if cancelled.description %}<span class="text-muted ms-1">({{ cancelled.name }})</span>{% endif %}
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissCancelledAlert({{ cancelled.id }})"></button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
 <div class="row">
     <!-- Main Content -->
     <div class="col-lg-8">
@@ -12,7 +33,9 @@
         {# A tournament is "completed" if it has results (complete=True) OR its date has passed (is_past=True) #}
         {% set completed_tournaments = all_tournaments | selectattr('is_past', 'equalto', True) | selectattr('event_type', 'equalto', 'sabc_tournament') | sort(attribute='date', reverse=True) | list %}
         {% set upcoming_tournaments = all_tournaments | rejectattr('is_past', 'equalto', True) | selectattr('event_type', 'equalto', 'sabc_tournament') | sort(attribute='date') | list %}
-        {% set next_tournament = upcoming_tournaments[0] if upcoming_tournaments else none %}
+        {# For "Next Tournament" tab, exclude cancelled tournaments #}
+        {% set active_upcoming = upcoming_tournaments | rejectattr('is_cancelled', 'equalto', true) | list %}
+        {% set next_tournament = active_upcoming[0] if active_upcoming else none %}
         {% set show_completed_tab = current_page > 1 or not upcoming_tournaments %}
 
         <!-- Bootstrap Tabs -->
@@ -453,9 +476,15 @@
                         {% endif %}
 
                         <div class="d-flex justify-content-end">
+                            {% if tournament.is_cancelled %}
+                            <span class="badge bg-danger fs-6 py-2 px-3">
+                                <i class="bi bi-slash-circle me-1"></i>Cancelled
+                            </span>
+                            {% else %}
                             <a href="/tournaments/{{ tournament.id }}" class="btn btn-primary">
                                 <i class="bi bi-eye me-1"></i>View Results
                             </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -536,11 +565,11 @@
             <!-- Upcoming Tournaments Tab -->
             <div class="tab-pane fade" id="upcoming-pane" role="tabpanel" aria-labelledby="upcoming-tab">
                 {% for tournament in upcoming_tournaments %}
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
+                <div class="card mb-4{% if tournament.is_cancelled %}" style="opacity: 0.6;{% endif %}">
+                    <div class="card-header {% if tournament.is_cancelled %}bg-danger{% else %}bg-primary{% endif %} text-white">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h5 class="mb-0">
+                                <h5 class="mb-0{% if tournament.is_cancelled %} text-decoration-line-through{% endif %}">
                                     {% if tournament.lake_display_name %}
                                         {{ tournament.lake_display_name|upper }}
                                     {% else %}
@@ -560,9 +589,15 @@
                                     </small>
                                 {% endif %}
                             </div>
+                            {% if tournament.is_cancelled %}
+                            <span class="badge bg-light text-danger">
+                                <i class="bi bi-slash-circle me-1"></i>Cancelled
+                            </span>
+                            {% else %}
                             <span class="badge bg-warning text-dark">
                                 Upcoming
                             </span>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -945,5 +980,31 @@
         </div>
     {% endif %}
 {% endfor %}
+
+<!-- Cancelled Tournament Alert Dismissal Script -->
+<script>
+/**
+ * Dismiss a cancelled tournament alert and remember the dismissal in localStorage
+ * @param {number} eventId - The event ID of the cancelled tournament
+ */
+function dismissCancelledAlert(eventId) {
+    const dismissed = JSON.parse(localStorage.getItem('dismissedCancelledAlerts') || '[]');
+    if (!dismissed.includes(eventId)) {
+        dismissed.push(eventId);
+        localStorage.setItem('dismissedCancelledAlerts', JSON.stringify(dismissed));
+    }
+}
+
+// On page load, hide previously dismissed alerts
+document.addEventListener('DOMContentLoaded', function() {
+    const dismissed = JSON.parse(localStorage.getItem('dismissedCancelledAlerts') || '[]');
+    dismissed.forEach(function(eventId) {
+        const alert = document.getElementById('cancelled-alert-' + eventId);
+        if (alert) {
+            alert.remove();
+        }
+    });
+});
+</script>
 
 {% endblock content %}

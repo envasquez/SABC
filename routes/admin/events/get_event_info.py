@@ -65,6 +65,9 @@ async def get_event_info(request: Request, event_id: int):
                         "aoy_points": bool(tournament.aoy_points)
                         if tournament and tournament.aoy_points is not None
                         else True,
+                        "is_cancelled": bool(event.is_cancelled)
+                        if event.is_cancelled is not None
+                        else False,
                     }
                 )
             else:

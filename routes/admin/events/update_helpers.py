@@ -77,6 +77,9 @@ def update_event_record(session: Session, event_params: Dict[str, Any]) -> int:
         event.ramp_name = event_params["ramp_name"]
         event.entry_fee = event_params["entry_fee"]
         event.holiday_name = event_params["holiday_name"]
+        # Update is_cancelled if provided
+        if "is_cancelled" in event_params:
+            event.is_cancelled = event_params["is_cancelled"]
         return 1
     return 0
 

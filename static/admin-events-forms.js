@@ -234,6 +234,12 @@ function toggleEditEventFields() {
 
     // Show relevant edit sections using 'block' display
     showSections(config.editSections, 'block');
+
+    // Show/hide cancel field for tournaments only
+    const cancelField = document.getElementById('edit-cancel-field');
+    if (cancelField) {
+        cancelField.style.display = (eventType === 'sabc_tournament' || eventType === 'other_tournament') ? 'block' : 'none';
+    }
 }
 
 /**

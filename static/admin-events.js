@@ -40,6 +40,12 @@ function editEvent(id, date, eventType, name, description, hasPoll) {
                 // Toggle visibility of event type-specific fields FIRST
                 toggleEditEventFields();
 
+                // Set the cancelled checkbox for tournaments
+                const isCancelledCheckbox = document.getElementById('edit_is_cancelled');
+                if (isCancelledCheckbox) {
+                    isCancelledCheckbox.checked = data.is_cancelled === true;
+                }
+
                 // Handle tournament fields (both SABC and Other tournaments)
                 if (data.event_type === 'sabc_tournament' || data.event_type === 'other_tournament') {
                     // Set tournament-specific fields (times are optional for other_tournament)
