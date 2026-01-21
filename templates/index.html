@@ -757,8 +757,9 @@
             <div class="card-body">
 
                 {% if latest_news %}
+                    <div id="news-list">
                     {% for news_item in latest_news %}
-                    <div class="mb-3 border-bottom pb-2">
+                    <div class="news-item mb-3 border-bottom pb-2">
                         <div class="d-flex align-items-start justify-content-between mb-1">
                             <h6 class="small fw-bold mb-0">{{ news_item[1] }}</h6>
                             {% if news_item[5] == 2 %}
@@ -793,6 +794,20 @@
                         </small>
                     </div>
                     {% endfor %}
+                    </div>
+
+                    <!-- News Pagination Controls -->
+                    <div id="news-pagination" class="d-flex justify-content-between align-items-center mt-3 mb-3" style="display: none !important;">
+                        <small class="text-muted" id="news-page-info">Showing 1-3 of 5</small>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary" id="news-prev" disabled>
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary ms-1" id="news-next">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
                 {% else %}
                     <div class="text-secondary border-bottom pb-2">
                         <p>No Current News</p>
@@ -823,6 +838,86 @@
 <script src="{{ url_for('static', path='/home-polls.js') }}"></script>
 <script src="{{ url_for('static', path='/home-init.js') }}"></script>
 
+<!-- News Pagination JavaScript -->
+<script>
+(function() {
+    const NEWS_PER_PAGE = 3;
+    let currentPage = 1;
+
+    const items = document.querySelectorAll('.news-item');
+    const totalItems = items.length;
+    const totalPages = Math.ceil(totalItems / NEWS_PER_PAGE);
+
+    const paginationContainer = document.getElementById('news-pagination');
+    const pageInfo = document.getElementById('news-page-info');
+    const prevBtn = document.getElementById('news-prev');
+    const nextBtn = document.getElementById('news-next');
+
+    // Only show pagination if there are more than NEWS_PER_PAGE items
+    if (totalItems <= NEWS_PER_PAGE) {
+        if (paginationContainer) {
+            paginationContainer.style.display = 'none';
+        }
+        return;
+    }
+
+    // Show pagination controls
+    if (paginationContainer) {
+        paginationContainer.style.display = 'flex';
+        paginationContainer.style.cssText = 'display: flex !important;';
+    }
+
+    function showPage(page) {
+        currentPage = page;
+
+        // Calculate start and end indices
+        const startIdx = (page - 1) * NEWS_PER_PAGE;
+        const endIdx = Math.min(startIdx + NEWS_PER_PAGE, totalItems);
+
+        // Show/hide items based on current page
+        items.forEach(function(item, index) {
+            if (index >= startIdx && index < endIdx) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+
+        // Update page info text
+        if (pageInfo) {
+            pageInfo.textContent = 'Showing ' + (startIdx + 1) + '-' + endIdx + ' of ' + totalItems;
+        }
+
+        // Update button states
+        if (prevBtn) {
+            prevBtn.disabled = (page === 1);
+        }
+        if (nextBtn) {
+            nextBtn.disabled = (page === totalPages);
+        }
+    }
+
+    // Event listeners for navigation buttons
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function() {
+            if (currentPage > 1) {
+                showPage(currentPage - 1);
+            }
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function() {
+            if (currentPage < totalPages) {
+                showPage(currentPage + 1);
+            }
+        });
+    }
+
+    // Initialize with first page
+    showPage(1);
+})();
+</script>
 
 <!-- Ramp Location Modals -->
 {% for tournament in all_tournaments %}
