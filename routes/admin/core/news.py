@@ -1,4 +1,5 @@
-from typing import List
+from datetime import datetime, timedelta, timezone
+from typing import List, Optional
 
 from fastapi import APIRouter, Form, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
@@ -32,6 +33,7 @@ async def admin_news(request: Request, show_archived: bool = False):
             News.updated_at,
             Angler.name.label("author_name"),
             News.archived,
+            News.expires_at,
         ).outerjoin(Angler, News.author_id == Angler.id)
 
         # Filter based on archived status
@@ -56,7 +58,11 @@ async def admin_news(request: Request, show_archived: bool = False):
 
 @router.post("/admin/news/create")
 async def create_news(
-    request: Request, title: str = Form(...), content: str = Form(...), priority: int = Form(0)
+    request: Request,
+    title: str = Form(...),
+    content: str = Form(...),
+    priority: int = Form(0),
+    auto_archive_at: Optional[str] = Form(default=None),
 ):
     user = require_admin(request)
 
@@ -73,6 +79,20 @@ async def create_news(
     title_safe = sanitize_html(title_clean)
     content_safe = sanitize_html(content_clean)
 
+    # Parse auto_archive_at date or default to 30 days from now
+    expires_at: Optional[datetime] = None
+    if auto_archive_at and auto_archive_at.strip():
+        try:
+            # Parse date string (YYYY-MM-DD) and set to end of day
+            parsed_date = datetime.strptime(auto_archive_at.strip(), "%Y-%m-%d")
+            expires_at = parsed_date.replace(hour=23, minute=59, second=59, tzinfo=timezone.utc)
+        except ValueError:
+            pass  # Invalid date format, use default
+    if expires_at is None:
+        # Default to 30 days from now
+        expires_at = datetime.now(timezone.utc) + timedelta(days=30)
+        expires_at = expires_at.replace(hour=23, minute=59, second=59)
+
     try:
         # Create the news post
         with get_session() as session:
@@ -82,6 +102,7 @@ async def create_news(
                 author_id=user["id"],
                 published=True,
                 priority=priority,
+                expires_at=expires_at,
             )
             session.add(news_item)
             # Context manager will commit automatically on successful exit
@@ -148,6 +169,7 @@ async def update_news(
     title: str = Form(...),
     content: str = Form(...),
     priority: int = Form(0),
+    auto_archive_at: Optional[str] = Form(default=None),
 ):
     user = require_admin(request)
 
@@ -164,6 +186,16 @@ async def update_news(
     title_safe = sanitize_html(title_clean)
     content_safe = sanitize_html(content_clean)
 
+    # Parse auto_archive_at date
+    expires_at: Optional[datetime] = None
+    if auto_archive_at and auto_archive_at.strip():
+        try:
+            # Parse date string (YYYY-MM-DD) and set to end of day
+            parsed_date = datetime.strptime(auto_archive_at.strip(), "%Y-%m-%d")
+            expires_at = parsed_date.replace(hour=23, minute=59, second=59, tzinfo=timezone.utc)
+        except ValueError:
+            pass  # Invalid date format, keep existing value
+
     try:
         with get_session() as session:
             news_item = session.query(News).filter(News.id == news_id).first()
@@ -174,6 +206,8 @@ async def update_news(
                 news_item.priority = priority
                 news_item.last_edited_by = user["id"]  # type: ignore[assignment]
                 news_item.updated_at = utc_now()
+                if expires_at is not None:
+                    news_item.expires_at = expires_at
                 # Context manager will commit automatically on successful exit
 
         return RedirectResponse("/admin/news?success=News updated successfully", status_code=302)
