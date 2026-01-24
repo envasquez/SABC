@@ -35,10 +35,11 @@ async def home_paginated(request: Request, page: int = 1):
 
     with get_session() as session:
         # Get total COMPLETED SABC tournament count (for pagination)
+        # Includes cancelled tournaments since they appear in the completed tab
         total_completed_tournaments = (
             session.query(func.count(Tournament.id))
             .join(Event, Tournament.event_id == Event.id)
-            .filter(Tournament.complete.is_(True))
+            .filter((Tournament.complete.is_(True)) | (Event.is_cancelled.is_(True)))
             .filter(Event.event_type == "sabc_tournament")
             .scalar()
             or 0
@@ -127,19 +128,23 @@ async def home_paginated(request: Request, page: int = 1):
                 query = query.filter(Tournament.complete.is_(complete_filter))
             return query
 
-        # Get COMPLETED SABC tournaments with pagination
+        # Get COMPLETED SABC tournaments with pagination (includes cancelled tournaments)
         completed_tournaments_query = (
-            build_tournament_query(complete_filter=True)
+            build_tournament_query()
             .filter(Event.event_type == "sabc_tournament")
+            .filter((Tournament.complete.is_(True)) | (Event.is_cancelled.is_(True)))
             .order_by(Event.date.desc())
             .limit(items_per_page)
             .offset(offset)
             .all()
         )
 
-        # Get ALL UPCOMING tournaments (no pagination), including cancelled ones
+        # Get ALL UPCOMING tournaments (no pagination), excludes cancelled ones
         upcoming_tournaments_query = (
-            build_tournament_query(complete_filter=False).order_by(Event.date.asc()).all()
+            build_tournament_query(complete_filter=False)
+            .filter(Event.is_cancelled.isnot(True))
+            .order_by(Event.date.asc())
+            .all()
         )
 
         # Count upcoming tournaments
