@@ -25,9 +25,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const title = this.dataset.title;
             const content = this.dataset.content;
             const priority = this.dataset.priority;
-            editNews(id, title, content, priority);
+            const autoArchiveAt = this.dataset.autoArchiveAt;
+            editNews(id, title, content, priority, autoArchiveAt);
         });
     });
+
+    // Set default auto-archive date for create form (30 days from now)
+    const createAutoArchiveInput = document.getElementById('create_auto_archive_at');
+    if (createAutoArchiveInput && !createAutoArchiveInput.value) {
+        const defaultDate = new Date();
+        defaultDate.setDate(defaultDate.getDate() + 30);
+        createAutoArchiveInput.value = defaultDate.toISOString().split('T')[0];
+    }
 
     // Delete button event listeners
     document.querySelectorAll('.delete-btn').forEach(button => {
@@ -79,7 +88,7 @@ function sendTestEmail() {
     });
 }
 
-function editNews(id, title, content, priority) {
+function editNews(id, title, content, priority, autoArchiveAt) {
     // Set form action
     document.getElementById('editForm').action = `/admin/news/${id}/update`;
 
@@ -87,6 +96,7 @@ function editNews(id, title, content, priority) {
     document.getElementById('edit_title').value = title;
     document.getElementById('edit_content').value = content;
     document.getElementById('edit_priority').value = priority;
+    document.getElementById('edit_auto_archive_at').value = autoArchiveAt || '';
 
     // Show modal
     showModal('editModal');

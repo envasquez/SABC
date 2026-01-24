@@ -27,15 +27,18 @@
                     <form method="POST" action="/admin/news/create">
                         {{ csrf_token(request) }}
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-5">
                                 {{ form_field('Title', 'title', required=true, maxlength='200') }}
                             </div>
-                            <div class="col-md-4">
-                                {% call form_field('Priority', 'priority', type='select', help_text='Higher priority items appear first') %}
+                            <div class="col-md-2">
+                                {% call form_field('Priority', 'priority', type='select', help_text='Higher = first') %}
                                     <option value="0">Normal</option>
                                     <option value="1">High</option>
                                     <option value="2">Urgent</option>
                                 {% endcall %}
+                            </div>
+                            <div class="col-md-3">
+                                {{ form_field('Auto Archive Date', 'auto_archive_at', type='date', id='create_auto_archive_at', help_text='News hidden after this date') }}
                             </div>
                             <div class="col-md-2 d-flex align-items-end pb-3">
                                 <button type="submit" class="btn btn-primary w-100">
@@ -91,6 +94,7 @@
                                     <th>Status</th>
                                     <th>Priority</th>
                                     <th>Created</th>
+                                    <th>Auto Archive</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -135,12 +139,20 @@
                                         <small>{{ item[3].strftime('%Y-%m-%d') if item[3] else '' }}</small>
                                     </td>
                                     <td>
+                                        {% if item[9] %}
+                                        <small>{{ item[9].strftime('%Y-%m-%d') }}</small>
+                                        {% else %}
+                                        <small class="text-secondary">-</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
                                         {% if not show_archived %}
                                         <button class="btn btn-sm btn-warning edit-btn"
                                                 data-id="{{ item[0] }}"
                                                 data-title="{{ item[1] }}"
                                                 data-content="{{ item[2] }}"
-                                                data-priority="{{ item[5] }}">
+                                                data-priority="{{ item[5] }}"
+                                                data-auto-archive-at="{{ item[9].strftime('%Y-%m-%d') if item[9] else '' }}">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         <form method="POST" action="/admin/news/{{ item[0] }}/archive" class="d-inline">
@@ -198,11 +210,18 @@
                 <div class="modal-body">
                     {{ form_field('Title', 'title', required=true, id='edit_title') }}
                     {{ form_field('Content', 'content', type='textarea', required=true, id='edit_content') }}
-                    {% call form_field('Priority', 'priority', type='select', id='edit_priority') %}
-                        <option value="0">Normal</option>
-                        <option value="1">High</option>
-                        <option value="2">Urgent</option>
-                    {% endcall %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% call form_field('Priority', 'priority', type='select', id='edit_priority') %}
+                                <option value="0">Normal</option>
+                                <option value="1">High</option>
+                                <option value="2">Urgent</option>
+                            {% endcall %}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_field('Auto Archive Date', 'auto_archive_at', type='date', id='edit_auto_archive_at', help_text='News hidden after this date') }}
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
