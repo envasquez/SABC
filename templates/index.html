@@ -983,28 +983,13 @@
 
 <!-- Cancelled Tournament Alert Dismissal Script -->
 <script>
-/**
- * Dismiss a cancelled tournament alert and remember the dismissal in localStorage
- * @param {number} eventId - The event ID of the cancelled tournament
- */
 function dismissCancelledAlert(eventId) {
-    const dismissed = JSON.parse(localStorage.getItem('dismissedCancelledAlerts') || '[]');
-    if (!dismissed.includes(eventId)) {
+    var dismissed = JSON.parse(localStorage.getItem('dismissedCancelledAlerts') || '[]');
+    if (dismissed.indexOf(eventId) === -1) {
         dismissed.push(eventId);
         localStorage.setItem('dismissedCancelledAlerts', JSON.stringify(dismissed));
     }
 }
-
-// On page load, hide previously dismissed alerts
-document.addEventListener('DOMContentLoaded', function() {
-    const dismissed = JSON.parse(localStorage.getItem('dismissedCancelledAlerts') || '[]');
-    dismissed.forEach(function(eventId) {
-        const alert = document.getElementById('cancelled-alert-' + eventId);
-        if (alert) {
-            alert.remove();
-        }
-    });
-});
 </script>
 
 {% endblock content %}

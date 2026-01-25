@@ -9,6 +9,18 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/static/style.css">
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <!-- Hide previously dismissed cancelled tournament alerts immediately to prevent flash -->
+    <script>
+    (function() {
+        var dismissed = JSON.parse(localStorage.getItem('dismissedCancelledAlerts') || '[]');
+        if (dismissed.length > 0) {
+            var css = dismissed.map(function(id) {
+                return '#cancelled-alert-' + id + '{display:none!important}';
+            }).join('');
+            document.write('<style>' + css + '</style>');
+        }
+    })();
+    </script>
 </head>
 <body>
     <!-- Navigation Bar -->
