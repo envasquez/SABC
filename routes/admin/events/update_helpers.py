@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from core.db_schema import Event, Poll, Tournament, get_session
 from core.helpers.logging import get_logger
+from core.helpers.timezone import make_aware
 
 logger = get_logger(__name__)
 
@@ -148,7 +149,8 @@ def update_poll_closing_date(event_id: int, poll_closes_date: str) -> None:
     if not poll_closes_date:
         return
     try:
-        closes_dt = datetime.fromisoformat(poll_closes_date)
+        # Interpret form datetime as Central Time (club timezone)
+        closes_dt = make_aware(datetime.fromisoformat(poll_closes_date))
         with get_session() as session:
             poll = session.query(Poll).filter(Poll.event_id == event_id).first()
             if poll:

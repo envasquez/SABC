@@ -9,6 +9,7 @@ from core.helpers.auth import require_admin
 from core.helpers.forms import get_form_string
 from core.helpers.logging import get_logger
 from core.helpers.response import error_redirect
+from core.helpers.timezone import make_aware
 from routes.admin.polls.create_poll.helpers import (
     generate_description,
     generate_poll_title,
@@ -58,9 +59,9 @@ async def create_poll(request: Request) -> RedirectResponse:
         starts_at_str = generate_starts_at(starts_at, event)
         description = generate_description(description, event)
 
-        # Parse datetime strings to datetime objects
-        starts_at_dt = datetime.fromisoformat(starts_at_str)
-        closes_at_dt = datetime.fromisoformat(closes_at)
+        # Parse datetime strings to datetime objects - interpret as Central Time (club timezone)
+        starts_at_dt = make_aware(datetime.fromisoformat(starts_at_str))
+        closes_at_dt = make_aware(datetime.fromisoformat(closes_at))
 
         # Create poll in database
         with get_session() as session:

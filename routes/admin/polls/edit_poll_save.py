@@ -9,6 +9,7 @@ from core.db_schema import Poll, PollOption, PollVote, get_session
 from core.helpers.auth import require_admin
 from core.helpers.forms import get_form_string
 from core.helpers.logging import get_logger
+from core.helpers.timezone import make_aware
 from routes.admin.polls.poll_option_helpers import update_or_create_poll_option
 from routes.dependencies import find_lake_by_id, get_lakes_list
 
@@ -35,13 +36,13 @@ async def update_poll(request: Request, poll_id: int) -> RedirectResponse:
                 f"/admin/polls/{poll_id}/edit?error=Title is required", status_code=302
             )
 
-        # Parse datetime strings
+        # Parse datetime strings - interpret as Central Time (club timezone)
         starts_at: Optional[datetime] = None
         closes_at: Optional[datetime] = None
         if starts_at_str:
-            starts_at = datetime.fromisoformat(starts_at_str)
+            starts_at = make_aware(datetime.fromisoformat(starts_at_str))
         if closes_at_str:
-            closes_at = datetime.fromisoformat(closes_at_str)
+            closes_at = make_aware(datetime.fromisoformat(closes_at_str))
 
         with get_session() as session:
             poll = session.query(Poll).filter(Poll.id == poll_id).first()
