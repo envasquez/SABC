@@ -12,8 +12,8 @@ from routes.admin.events.create_db_ops import (
     create_tournament_record,
     link_tournament_to_poll,
 )
-from routes.admin.events.create_helpers import handle_create_error
-from routes.admin.events.create_params import prepare_create_event_params
+from routes.admin.events.error_handlers import handle_event_error
+from routes.admin.events.param_builders import prepare_event_params
 from routes.dependencies import validate_event_data
 
 router = APIRouter()
@@ -71,18 +71,18 @@ async def create_event(
         if validation["warnings"]:
             warning_msg = f"&warnings={'; '.join(validation['warnings'])}"
         date_obj = datetime.strptime(date, "%Y-%m-%d")
-        event_params, tournament_params = prepare_create_event_params(
-            date,
-            name,
-            event_type,
-            description,
-            start_time,
-            weigh_in_time,
-            lake_name,
-            ramp_name,
-            entry_fee,
-            fish_limit,
-            aoy_points,
+        event_params, tournament_params = prepare_event_params(
+            date=date,
+            name=name,
+            event_type=event_type,
+            description=description,
+            start_time=start_time,
+            weigh_in_time=weigh_in_time,
+            lake_name=lake_name,
+            ramp_name=ramp_name,
+            entry_fee=entry_fee,
+            fish_limit=fish_limit,
+            aoy_points=aoy_points,
         )
         event_id = create_event_record(event_params)
         if event_type in ["sabc_tournament", "other_tournament"]:
@@ -95,4 +95,4 @@ async def create_event(
             f"/admin/events?success=Event created successfully{warning_msg}", status_code=302
         )
     except Exception as e:
-        return handle_create_error(e, date)
+        return handle_event_error(e, date, "create")

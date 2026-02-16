@@ -10,13 +10,13 @@
 {% if message %}
 <div class="alert alert-{{ type }}{% if dismissible %} alert-dismissible fade show{% endif %}" role="alert">
     {% if type == 'success' %}
-        <i class="bi bi-check-circle-fill me-2"></i>
+        <i class="bi bi-check-circle-fill me-2" aria-hidden="true"></i>
     {% elif type == 'danger' %}
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <i class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></i>
     {% elif type == 'warning' %}
-        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <i class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></i>
     {% elif type == 'info' %}
-        <i class="bi bi-info-circle-fill me-2"></i>
+        <i class="bi bi-info-circle-fill me-2" aria-hidden="true"></i>
     {% endif %}
     {{ message }}
     {% if dismissible %}
@@ -94,7 +94,7 @@
 {# Badge macro #}
 {% macro badge(text, color='primary', icon='') %}
 <span class="badge bg-{{ color }}">
-    {% if icon %}<i class="bi bi-{{ icon }} me-1"></i>{% endif %}
+    {% if icon %}<i class="bi bi-{{ icon }} me-1" aria-hidden="true"></i>{% endif %}
     {{ text }}
 </span>
 {% endmacro %}
@@ -102,7 +102,7 @@
 {# Officer badge macro #}
 {% macro officer_badge(position) %}
 <span class="badge bg-info text-dark mb-1 me-1">
-    <i class="bi bi-star-fill me-1"></i>{{ position }}
+    <i class="bi bi-star-fill me-1" aria-hidden="true"></i>{{ position }}
 </span>
 {% endmacro %}
 
@@ -120,7 +120,7 @@
 <div class="card bg-{{ color }} text-white">
     <div class="card-body">
         <div class="d-flex align-items-center">
-            <i class="bi bi-{{ icon }} fs-1 me-3"></i>
+            <i class="bi bi-{{ icon }} fs-1 me-3" aria-hidden="true"></i>
             <div>
                 <h5 class="card-title mb-0" style="color: white;">{{ title }}</h5>
                 <h3 class="mb-0" style="color: white; font-weight: bold;">{{ value }}</h3>
@@ -188,6 +188,114 @@
         <option value="{{ time_24 }}" {% if time_24 == selected_time %}selected{% endif %}>{{ time_display }}</option>
     {% endfor %}
 {% endfor %}
+{% endmacro %}
+
+{# Tournament info row - reusable time/fee/type display #}
+{% macro tournament_info_row(tournament) %}
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+        <div class="text-center">
+            {% if tournament.lake_display_name and tournament.start_time %}
+                <i class="bi bi-sunrise text-warning mb-1 fs-4" aria-hidden="true"></i>
+                <div class="small text-secondary">Start</div>
+                <div class="fw-semibold">{{ tournament.start_time | time_format }}</div>
+            {% else %}
+                <i class="bi bi-sunrise text-secondary mb-1 fs-4" aria-hidden="true"></i>
+                <div class="small text-secondary">Start</div>
+                <div class="fw-semibold text-secondary">TBD <i class="bi bi-question-circle-fill ms-1" aria-hidden="true"></i></div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="text-center">
+            {% if tournament.lake_display_name and tournament.end_time %}
+                <i class="bi bi-clipboard-data text-primary mb-1 fs-4" aria-hidden="true"></i>
+                <div class="small text-secondary">Weigh-in</div>
+                <div class="fw-semibold">{{ tournament.end_time | time_format }}</div>
+            {% else %}
+                <i class="bi bi-clipboard-data text-secondary mb-1 fs-4" aria-hidden="true"></i>
+                <div class="small text-secondary">Weigh-in</div>
+                <div class="fw-semibold text-secondary">TBD <i class="bi bi-question-circle-fill ms-1" aria-hidden="true"></i></div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="text-center">
+            <i class="bi bi-cash-coin text-success mb-1 fs-4" aria-hidden="true"></i>
+            <div class="small text-secondary">Entry Fee</div>
+            <div class="fw-semibold">${{ "%.0f"|format(tournament.entry_fee) }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="text-center">
+            {% if tournament.is_team %}
+                <i class="bi bi-people-fill text-info mb-1 fs-4" aria-hidden="true"></i>
+                <div class="small text-secondary">Type</div>
+                <div class="fw-semibold">Team</div>
+            {% else %}
+                <i class="bi bi-person-fill text-secondary mb-1 fs-4" aria-hidden="true"></i>
+                <div class="small text-secondary">Type</div>
+                <div class="fw-semibold">Individual</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{# Tournament card header - reusable header with location #}
+{% macro tournament_card_header(tournament, header_class, badge_text, badge_class='bg-warning text-dark') %}
+<div class="card-header {{ header_class }} text-white">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="mb-0{% if tournament.is_cancelled %} text-decoration-line-through{% endif %}">
+                {% if tournament.lake_display_name %}
+                    {{ tournament.lake_display_name|upper }}
+                {% else %}
+                    Location TBD
+                {% endif %}
+            </h5>
+            {% if tournament.ramp_name %}
+                <small class="text-white-50">
+                    {% if tournament.ramp_google_maps %}
+                        <a href="#" class="text-white-50 text-decoration-none"
+                           data-bs-toggle="modal" data-bs-target="#rampModal{{ tournament.id }}">
+                            <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>{{ tournament.ramp_name|title }}
+                        </a>
+                    {% else %}
+                        {{ tournament.ramp_name|title }}
+                    {% endif %}
+                </small>
+            {% endif %}
+        </div>
+        <span class="badge {{ badge_class }}">{{ badge_text }}</span>
+    </div>
+</div>
+{% endmacro %}
+
+{# Tournament description row #}
+{% macro tournament_description_row(tournament) %}
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h6 class="text-secondary mb-0">{{ tournament.name }} | {{ tournament.description[:200] | nl2br }} - {{ tournament.date|date_format("mm-dd-yyyy") }}</h6>
+    <div>
+        <span class="badge bg-secondary me-2">{{ tournament.fish_limit }} fish/{{ tournament.limit_type }}</span>
+        {% if tournament.aoy_points %}
+            <span class="badge bg-info">AoY Points</span>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
+
+{# Location TBD placeholder #}
+{% macro location_tbd_placeholder() %}
+<div class="mb-3">
+    <div class="bg-white border border-2 border-dark rounded d-flex align-items-center justify-content-center h-200">
+        <div class="text-center">
+            <i class="bi bi-geo-alt fs-1 text-dark" aria-hidden="true"></i>
+            <div class="fw-bold fs-4 text-dark">Location TBD</div>
+            <div class="mt-2 text-dark">Will be determined by poll vote</div>
+        </div>
+    </div>
+</div>
 {% endmacro %}
 
 {# Seasonal tournament history card macro - detailed version #}

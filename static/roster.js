@@ -241,6 +241,5 @@ function setupExpandIcons() {
 
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('[SABC] Roster page: Initializing weight charts');
     setupExpandIcons();
 });

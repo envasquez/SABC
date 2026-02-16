@@ -3,28 +3,28 @@
  * Handles event list filtering, search, and tab badge updates
  */
 
+// Table selector mapping for different tab types
+var TABLE_SELECTORS = {
+    'past': '#past-events-tab table tbody tr',
+    'past-tournaments': '#past-tournaments-events table tbody tr'
+};
+
+function getTableSelector(tabType) {
+    return TABLE_SELECTORS[tabType] || '#' + tabType + '-events table tbody tr';
+}
+
 /**
  * Filter events in a specific tab
  */
 function filterEvents(tabType) {
-    const searchInput = document.getElementById(`${tabType}-search`).value.toLowerCase();
-    const yearFilter = document.getElementById(`${tabType}-year-filter`)?.value;
-    const statusFilter = document.getElementById(`${tabType}-status-filter`)?.value;
-    const lakeFilter = document.getElementById(`${tabType}-lake-filter`)?.value.toLowerCase();
-    const typeFilter = document.getElementById(`${tabType}-type-filter`)?.value;
-    const resultsFilter = document.getElementById(`${tabType}-results-filter`)?.value;
+    var searchInput = document.getElementById(tabType + '-search').value.toLowerCase();
+    var yearFilter = document.getElementById(tabType + '-year-filter')?.value;
+    var statusFilter = document.getElementById(tabType + '-status-filter')?.value;
+    var lakeFilter = document.getElementById(tabType + '-lake-filter')?.value.toLowerCase();
+    var typeFilter = document.getElementById(tabType + '-type-filter')?.value;
+    var resultsFilter = document.getElementById(tabType + '-results-filter')?.value;
 
-    // Determine the correct table selector based on tab type
-    let tableSelector;
-    if (tabType === 'past') {
-        tableSelector = '#past-events-tab table tbody tr';
-    } else if (tabType === 'past-tournaments') {
-        tableSelector = '#past-tournaments-events table tbody tr';
-    } else {
-        tableSelector = `#${tabType}-events table tbody tr`;
-    }
-
-    const rows = document.querySelectorAll(tableSelector);
+    var rows = document.querySelectorAll(getTableSelector(tabType));
     let visibleCount = 0;
 
     rows.forEach(row => {
@@ -110,16 +110,7 @@ function clearFilters(tabType) {
     if (resultsFilter) resultsFilter.value = '';
 
     // Show all rows
-    let tableSelector;
-    if (tabType === 'past') {
-        tableSelector = '#past-events-tab table tbody tr';
-    } else if (tabType === 'past-tournaments') {
-        tableSelector = '#past-tournaments-events table tbody tr';
-    } else {
-        tableSelector = `#${tabType}-events table tbody tr`;
-    }
-
-    const rows = document.querySelectorAll(tableSelector);
+    var rows = document.querySelectorAll(getTableSelector(tabType));
     let visibleCount = 0;
 
     rows.forEach(row => {

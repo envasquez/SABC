@@ -80,7 +80,7 @@ function loadPreview() {
             document.getElementById('preview_content').innerHTML = `
                 <div class="alert alert-danger">
                     <h5 class="alert-heading"><i class="bi bi-x-circle me-2"></i>Error</h5>
-                    <p class="mb-0">${data.error}</p>
+                    <p class="mb-0">${escapeHtml(data.error || 'Unknown error')}</p>
                 </div>
             `;
         }
@@ -89,7 +89,7 @@ function loadPreview() {
         document.getElementById('preview_content').innerHTML = `
             <div class="alert alert-danger">
                 <h5 class="alert-heading"><i class="bi bi-x-circle me-2"></i>Error</h5>
-                <p class="mb-0">Failed to load preview: ${error.message}</p>
+                <p class="mb-0">Failed to load preview: ${escapeHtml(error.message || 'Unknown error')}</p>
             </div>
         `;
     });
@@ -122,7 +122,7 @@ function renderPreview(preview) {
             <h6 class="alert-heading"><i class="bi bi-exclamation-triangle-fill me-2"></i>Duplicate Poll Votes Detected</h6>
             <p class="mb-2">Both accounts have voted on the following polls. The source account's votes will be <strong>deleted</strong>:</p>
             <ul class="mb-0">
-                ${preview.duplicate_poll_votes.map(dv => `<li>${dv.poll_title}</li>`).join('')}
+                ${preview.duplicate_poll_votes.map(dv => `<li>${escapeHtml(dv.poll_title || '')}</li>`).join('')}
             </ul>
         </div>
     ` : '';
@@ -133,8 +133,8 @@ function renderPreview(preview) {
                 <div class="card bg-secondary h-100">
                     <div class="card-body">
                         <h6 class="card-title text-danger"><i class="bi bi-database-dash me-2"></i>Data Moving FROM</h6>
-                        <p class="mb-1"><strong>${preview.source_angler.name}</strong></p>
-                        <p class="text-muted small mb-0">${preview.source_angler.email || 'No email'}</p>
+                        <p class="mb-1"><strong>${escapeHtml(preview.source_angler.name || '')}</strong></p>
+                        <p class="text-muted small mb-0">${escapeHtml(preview.source_angler.email || 'No email')}</p>
                     </div>
                 </div>
             </div>
@@ -142,8 +142,8 @@ function renderPreview(preview) {
                 <div class="card bg-secondary h-100">
                     <div class="card-body">
                         <h6 class="card-title text-success"><i class="bi bi-database-add me-2"></i>Data Moving TO</h6>
-                        <p class="mb-1"><strong>${preview.target_angler.name}</strong></p>
-                        <p class="text-muted small mb-0">${preview.target_angler.email || 'No email'}</p>
+                        <p class="mb-1"><strong>${escapeHtml(preview.target_angler.name || '')}</strong></p>
+                        <p class="text-muted small mb-0">${escapeHtml(preview.target_angler.email || 'No email')}</p>
                     </div>
                 </div>
             </div>

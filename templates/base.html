@@ -68,14 +68,14 @@
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
                                     <a class="dropdown-item" href="/profile">
-                                        <i class="bi bi-person me-2"></i>Profile
+                                        <i class="bi bi-person me-2" aria-hidden="true"></i>Profile
                                     </a>
                                 </li>
                                 {% if user.is_admin %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <h6 class="dropdown-header text-warning">
-                                        <i class="bi bi-shield-lock me-1"></i>Admin
+                                        <i class="bi bi-shield-lock me-1" aria-hidden="true"></i>Admin
                                     </h6>
                                 </li>
                                 {% for a,n in [('events','Events'),('users','Anglers'),('lakes','Lakes'),('news','News'),('polls/create','New Poll')] %}
@@ -90,7 +90,7 @@
                                 <li>
                                     <form method="post" action="/logout" class="d-inline">
                                         <button type="submit" class="dropdown-item">
-                                            <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                            <i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>Logout
                                         </button>
                                     </form>
                                 </li>
@@ -99,10 +99,10 @@
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="/register"><i class="bi bi-person-plus me-1"></i>Register</a>
+                        <a class="nav-link" href="/register"><i class="bi bi-person-plus me-1" aria-hidden="true"></i>Register</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/login"><i class="bi bi-box-arrow-in-right me-1"></i>Login</a>
+                        <a class="nav-link" href="/login"><i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i>Login</a>
                     </li>
                     {% endif %}
                 </ul>

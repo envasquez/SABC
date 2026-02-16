@@ -319,3 +319,28 @@ html {
     box-shadow: 0 0 0 8px rgba(13, 110, 253, 0.4);
   }
 }
+
+/* ========================================
+   Utility Classes (to replace inline styles)
+   ======================================== */
+
+/* Height utilities */
+.h-150 { height: 150px; }
+.h-180 { height: 180px; }
+.h-200 { height: 200px; }
+.h-400 { height: 400px; }
+
+/* Max-height utilities */
+.max-h-200 { max-height: 200px; }
+.max-h-400 { max-height: 400px; }
+
+/* Min-height utilities */
+.min-h-150 { min-height: 150px; }
+.min-h-280 { min-height: 280px; }
+.min-h-350 { min-height: 350px; }
+
+/* Font size utilities */
+.fs-07em { font-size: 0.7em; }
+
+/* Opacity utilities */
+.opacity-60 { opacity: 0.6; }

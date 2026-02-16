@@ -2,6 +2,7 @@ import json
 from datetime import date, datetime
 
 from fastapi import APIRouter, Request
+from fastapi.responses import Response
 
 from core.helpers.auth import get_user_optional
 from core.helpers.timezone import now_local
@@ -14,14 +15,14 @@ router = APIRouter()
 class DateTimeEncoder(json.JSONEncoder):
     """Custom JSON encoder for datetime objects."""
 
-    def default(self, obj):
+    def default(self, obj: object) -> str:
         if isinstance(obj, (datetime, date)):
             return obj.isoformat()
-        return super().default(obj)
+        return super().default(obj)  # type: ignore[return-value]
 
 
 @router.get("/calendar")
-async def calendar_page(request: Request):
+async def calendar_page(request: Request) -> Response:
     """Display calendar page with current and next year events."""
     user = get_user_optional(request)
     current_year = now_local().year

@@ -211,8 +211,6 @@ function initializeClubPollCharts() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('[SABC] Polls page: DOMContentLoaded fired');
-
     // Handle scroll to specific poll when URL has hash (e.g., #poll-123)
     if (window.location.hash) {
         const pollElement = document.querySelector(window.location.hash);
@@ -233,18 +231,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const lakesDataElement = document.getElementById('lakes-data');
     const lakesData = lakesDataElement ? JSON.parse(lakesDataElement.dataset.lakes || '[]') : [];
 
-    if (!lakesData || lakesData.length === 0) {
-        console.warn('[SABC] Lakes data not loaded or empty');
-    } else {
-        console.log('[SABC] Lakes data loaded:', lakesData.length, 'lakes');
-    }
-
     // Initialize poll voting handler
     const pollVotingHandler = new PollVotingHandler(lakesData);
 
     // Populate all lake dropdowns with options
     const allLakeSelects = document.querySelectorAll('select[data-poll-lake]');
-    console.log('[SABC] Found', allLakeSelects.length, 'lake select dropdowns');
 
     allLakeSelects.forEach(lakeSelect => {
         lakesData.forEach(lake => {
@@ -257,8 +248,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize the poll voting handler (sets up all event listeners)
     pollVotingHandler.initialize();
-
-    console.log('[SABC] Poll voting handler initialized successfully');
 
     // Initialize tournament poll results renderer using shared PollResultsRenderer class
     pollResultsRenderer = new PollResultsRenderer({
@@ -275,7 +264,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Use debounce to avoid excessive re-renders
     let resizeTimeout;
     let lastWidth = window.innerWidth;
-    window.addEventListener('resize', function() {
+    function handlePollsResize() {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(function() {
             const newWidth = window.innerWidth;
@@ -290,6 +279,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 initializeClubPollCharts();
             }
         }, 250);
+    }
+    window.addEventListener('resize', handlePollsResize);
+
+    // Cleanup on page unload to prevent memory leaks
+    window.addEventListener('beforeunload', function() {
+        window.removeEventListener('resize', handlePollsResize);
+        // Destroy all charts to free memory
+        Object.values(clubPollCharts).forEach(function(chart) {
+            if (chart && typeof chart.destroy === 'function') {
+                chart.destroy();
+            }
+        });
+        clubPollCharts = {};
     });
 
     // Initialize delete confirmation manager

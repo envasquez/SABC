@@ -38,8 +38,8 @@ function showEventDetails(element) {
             day: 'numeric'
         });
 
-        // Set modal title
-        document.getElementById('eventModalTitle').innerHTML = formattedDate;
+        // Set modal title (using textContent for safe text)
+        document.getElementById('eventModalTitle').textContent = formattedDate;
 
         // Build modal body content
         let modalContent = '';
@@ -74,9 +74,9 @@ function showEventDetails(element) {
             modalContent += '<div class="d-flex align-items-center mb-2">';
             modalContent += '<span class="badge ' + eventTypeClass + ' me-2">' + eventTypeIcon + eventTypeName + '</span>';
             modalContent += '</div>';
-            modalContent += '<h6 class="mb-2">' + event.title + '</h6>';
+            modalContent += '<h6 class="mb-2">' + escapeHtml(event.title || '') + '</h6>';
             if (event.description) {
-                modalContent += '<p class="text-secondary mb-0">' + event.description + '</p>';
+                modalContent += '<p class="text-secondary mb-0">' + escapeHtml(event.description) + '</p>';
             }
 
             // Add tournament details if available (for sabc_tournament and other_tournament)
@@ -87,17 +87,17 @@ function showEventDetails(element) {
                 if (event.lake_name || (showTimes && (event.start_time || event.end_time))) {
                     modalContent += '<div class="mt-2 small text-muted">';
                     if (event.lake_name) {
-                        modalContent += '<div><i class="bi bi-geo-alt me-1"></i><strong>Lake:</strong> ' + event.lake_name;
+                        modalContent += '<div><i class="bi bi-geo-alt me-1" aria-hidden="true"></i><strong>Lake:</strong> ' + escapeHtml(event.lake_name);
                         if (event.ramp_name) {
-                            modalContent += ' - ' + event.ramp_name;
+                            modalContent += ' - ' + escapeHtml(event.ramp_name);
                         }
                         modalContent += '</div>';
                     }
                     if (showTimes && event.start_time) {
-                        modalContent += '<div><i class="bi bi-clock me-1"></i><strong>Start:</strong> ' + event.start_time + '</div>';
+                        modalContent += '<div><i class="bi bi-clock me-1" aria-hidden="true"></i><strong>Start:</strong> ' + escapeHtml(event.start_time) + '</div>';
                     }
                     if (showTimes && event.end_time) {
-                        modalContent += '<div><i class="bi bi-clock-fill me-1"></i><strong>Weigh-in:</strong> ' + event.end_time + '</div>';
+                        modalContent += '<div><i class="bi bi-clock-fill me-1" aria-hidden="true"></i><strong>Weigh-in:</strong> ' + escapeHtml(event.end_time) + '</div>';
                     }
                     modalContent += '</div>';
                 }
