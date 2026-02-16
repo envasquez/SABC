@@ -207,7 +207,7 @@ sabc/
 │   └── env.py              # Migration environment
 ├── templates/              # Jinja2 templates
 ├── static/                 # CSS and assets
-├── tests/                  # Test suite (219 tests)
+├── tests/                  # Test suite (909 tests)
 │   ├── unit/               # Unit tests
 │   ├── integration/        # Integration tests
 │   ├── routes/             # Route/HTTP endpoint tests
@@ -358,7 +358,7 @@ The codebase includes comprehensive automated security checks that run before ev
 
 **Automated Testing:**
 
-- **219 automated tests** (219 passing, 2 skipped) covering:
+- **909 automated tests** (909 passing, 1 skipped) covering:
   - **SQL Injection Protection** - Tests parameterized queries and ORM safety
   - **CSRF Protection** - Validates token generation and verification
   - **XSS Prevention** - Tests template escaping and output sanitization
@@ -666,9 +666,9 @@ SABC maintains a comprehensive automated test suite ensuring code quality, secur
 ### Test Suite Status
 
 **Current Test Coverage:**
-- **219 passing tests**
-- **2 skipped tests**
-- **>90% coverage** for critical paths
+- **909 passing tests**
+- **1 skipped test** (rate limiting test, production-only)
+- **78%+ coverage** overall, >90% for critical paths
 
 ### Test Categories
 
@@ -753,7 +753,7 @@ pytest --cov=core --cov-report=html  # Coverage report
 
 **GitHub Actions Workflow:**
 - Runs on every pull request and push to main
-- Executes full test suite (219 tests)
+- Executes full test suite (909 tests)
 - Generates coverage reports
 - Fails build on test failures or coverage drops
 - Automatically runs code quality checks (Ruff, MyPy, Bandit)
