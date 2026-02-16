@@ -130,9 +130,20 @@ async def update_event_by_id(
     _user = require_admin(request)
     try:
         return _do_event_update(
-            event_id, date, name, event_type, description, start_time,
-            weigh_in_time, lake_name, ramp_name, entry_fee, fish_limit,
-            aoy_points, poll_closes_date, is_cancelled
+            event_id,
+            date,
+            name,
+            event_type,
+            description,
+            start_time,
+            weigh_in_time,
+            lake_name,
+            ramp_name,
+            entry_fee,
+            fish_limit,
+            aoy_points,
+            poll_closes_date,
+            is_cancelled,
         )
     except Exception as e:
         return handle_event_error(e, date)
@@ -161,9 +172,21 @@ async def edit_event(
     _user = require_admin(request)
     try:
         return _do_event_update(
-            event_id, date, name, event_type, description, start_time,
-            weigh_in_time, lake_name, ramp_name, entry_fee, fish_limit,
-            aoy_points, poll_closes_date, is_cancelled, poll_id
+            event_id,
+            date,
+            name,
+            event_type,
+            description,
+            start_time,
+            weigh_in_time,
+            lake_name,
+            ramp_name,
+            entry_fee,
+            fish_limit,
+            aoy_points,
+            poll_closes_date,
+            is_cancelled,
+            poll_id,
         )
     except Exception as e:
         return handle_event_error(e, date)
