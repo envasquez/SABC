@@ -18,6 +18,19 @@
 {{ alert('danger', request.query_params.get('error')) }}
 {{ alert('success', request.query_params.get('success')) }}
 
+<!-- Dues Reminder Banner -->
+{% if show_dues_banner %}
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <strong>Dues Required:</strong> Your club dues have expired.
+    Please pay your annual dues to vote in polls.
+    <form method="POST" action="/dismiss-dues-banner" class="d-inline float-end">
+        {{ csrf_token(request) }}
+        <button type="submit" class="btn-close" aria-label="Dismiss"></button>
+    </form>
+</div>
+{% endif %}
+
 <!-- Bootstrap Tabs -->
 <ul class="nav nav-tabs mb-4" id="pollTabs" role="tablist">
     <li class="nav-item" role="presentation">
