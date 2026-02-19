@@ -1,6 +1,7 @@
 """Authentication and authorization helper functions with full type safety."""
 
-from typing import Annotated, Dict, Optional, Union
+from datetime import date
+from typing import Annotated, Any, Dict, Optional, Union
 from urllib.parse import quote
 
 from fastapi import Depends, HTTPException, Request
@@ -9,6 +10,25 @@ from core.db_schema import engine
 from core.query_service import QueryService
 
 UserDict = Dict[str, Union[int, str, bool, None]]
+
+
+def is_dues_current(user: Dict[str, Any]) -> bool:
+    """
+    Check if user's dues are paid through today or later.
+
+    Args:
+        user: User dictionary with dues_paid_through field
+
+    Returns:
+        True if dues are current (paid through today or later), False otherwise
+    """
+    dues_paid_through = user.get("dues_paid_through")
+    if dues_paid_through is None:
+        return False
+    # Handle case where value comes as string from some query results
+    if isinstance(dues_paid_through, str):
+        dues_paid_through = date.fromisoformat(dues_paid_through)
+    return dues_paid_through >= date.today()
 
 
 def _build_login_redirect_url(request: Request) -> str:

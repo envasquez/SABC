@@ -6,7 +6,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from core.db_schema import Poll, PollOption, PollVote, get_session
-from core.helpers.auth import require_auth
+from core.helpers.auth import is_dues_current, require_auth
 from core.helpers.logging import get_logger
 from core.helpers.response import sanitize_error_message
 from core.helpers.timezone import now_local
@@ -30,6 +30,13 @@ async def vote_in_poll(
 ) -> RedirectResponse:
     if not user.get("member"):
         return RedirectResponse("/polls?error=Only members can vote", status_code=303)
+
+    # Check dues status - admins can always vote, regular members need current dues
+    if not user.get("is_admin") and not is_dues_current(user):
+        return RedirectResponse(
+            "/polls?error=Your dues have expired. Please pay your annual dues, in order to vote.",
+            status_code=303,
+        )
 
     # Determine if this is a proxy vote (admin voting on behalf of someone)
     is_proxy_vote = vote_as_angler_id is not None and user.get("is_admin", False)
