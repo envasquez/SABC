@@ -48,6 +48,8 @@ class Angler(Base):
     year_joined: Mapped[Optional[int]] = mapped_column(Integer)
     phone: Mapped[Optional[str]] = mapped_column(Text)
     created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=utc_now)
+    dues_paid_through: Mapped[Optional[date]] = mapped_column(Date)
+    dues_banner_dismissed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
 
 
 class PasswordResetToken(Base):

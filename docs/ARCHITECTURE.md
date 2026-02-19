@@ -125,13 +125,16 @@ SABC/
 │   │
 │   ├── query_service/              # Centralized query service
 │   │   ├── __init__.py
-│   │   ├── anglers.py              # Angler queries
-│   │   ├── events.py               # Event queries
-│   │   ├── tournaments.py          # Tournament queries
-│   │   ├── polls.py                # Poll queries
-│   │   ├── lakes.py                # Lake/ramp queries
-│   │   ├── standings.py            # AoY standings calculations
-│   │   └── statistics.py           # Club statistics
+│   │   ├── base.py                 # Base query service class
+│   │   ├── dialect_helpers.py      # PostgreSQL/SQLite compatibility
+│   │   ├── event_queries.py        # Event queries
+│   │   ├── event_queries_admin.py  # Admin event queries
+│   │   ├── tournament_queries.py   # Tournament queries
+│   │   ├── poll_queries.py         # Poll queries
+│   │   ├── lake_queries.py         # Lake/ramp queries
+│   │   ├── member_queries.py       # Member queries
+│   │   ├── user_queries.py         # User queries
+│   │   └── data_queries.py         # Data/statistics queries
 │   │
 │   ├── helpers/                    # Utility modules
 │   │   ├── __init__.py
@@ -190,8 +193,12 @@ SABC/
 │   │
 │   ├── admin/                      # Admin-only routes
 │   │   ├── __init__.py
-│   │   ├── core/                   # Admin dashboard
+│   │   ├── core/                   # Admin dashboard and news
 │   │   ├── events/                 # Event management
+│   │   │   ├── create_event.py     # Event creation
+│   │   │   ├── update_event.py     # Event updates
+│   │   │   ├── error_handlers.py   # Shared error handling
+│   │   │   └── param_builders.py   # Shared parameter builders
 │   │   ├── tournaments/            # Tournament management
 │   │   ├── polls/                  # Poll creation
 │   │   ├── lakes/                  # Lake/ramp management
@@ -655,4 +662,4 @@ services:
 
 ---
 
-**Last Updated**: 2024-11-30
+**Last Updated**: 2026-02-16

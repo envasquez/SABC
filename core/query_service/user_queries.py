@@ -12,6 +12,8 @@ ALLOWED_UPDATE_COLUMNS = {
     "password",
     "member",
     "is_admin",
+    "dues_paid_through",
+    "dues_banner_dismissed_at",
 }
 
 
