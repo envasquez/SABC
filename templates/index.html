@@ -396,23 +396,6 @@
                     <div class="card-body">
                         {{ tournament_description_row(tournament) }}
                         {{ tournament_info_row(tournament) }}
-                                    <div class="fw-semibold">${{ "%.0f"|format(tournament.entry_fee) }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="text-center">
-                                    {% if tournament.is_team %}
-                                        <i class="bi bi-people-fill text-info mb-1 fs-4"></i>
-                                        <div class="small text-secondary">Type</div>
-                                        <div class="fw-semibold">Team</div>
-                                    {% else %}
-                                        <i class="bi bi-person-fill text-secondary mb-1 fs-4"></i>
-                                        <div class="small text-secondary">Type</div>
-                                        <div class="fw-semibold">Individual</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- Google Maps or Poll Charts for upcoming tournaments -->
                         {% if tournament.google_maps_iframe %}
