@@ -4,10 +4,11 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import case, exists, false, func, select, true
 
-from core.db_schema import Angler, Poll, PollVote, get_session
+from core.db_schema import Angler, Poll, PollVote, engine, get_session
 from core.deps import templates
-from core.helpers.auth import require_auth
+from core.helpers.auth import is_dues_current, require_auth
 from core.helpers.timezone import now_local
+from core.query_service import QueryService
 from routes.dependencies import get_lakes_list, get_ramps_for_lake
 from routes.voting.helpers import (
     get_poll_options,
@@ -33,6 +34,24 @@ async def polls(
         raise HTTPException(status_code=403, detail="Only members can view polls")
 
     background_tasks.add_task(process_closed_polls)
+
+    # Calculate dues banner visibility (admins never see banner - they can always vote)
+    show_dues_banner = False
+    if user.get("member") and not user.get("is_admin") and not is_dues_current(user):
+        # User is a member but dues have expired
+        dismissed_at = user.get("dues_banner_dismissed_at")
+
+        # Get latest poll creation time to check if a new poll was created since dismissal
+        with engine.connect() as conn:
+            qs = QueryService(conn)
+            latest_poll_created = qs.get_latest_poll_created_at()
+
+        if dismissed_at is None:
+            # Never dismissed - show banner
+            show_dues_banner = True
+        elif latest_poll_created and latest_poll_created > dismissed_at:
+            # New poll created since dismissal - show banner again
+            show_dues_banner = True
 
     # Pagination settings
     items_per_page = 4
@@ -269,5 +288,6 @@ async def polls(
             "active_tournament_polls": active_tournament_polls,
             "upcoming_club_polls": upcoming_club_polls,
             "upcoming_tournament_polls": upcoming_tournament_polls,
+            "show_dues_banner": show_dues_banner,
         },
     )

@@ -1,5 +1,6 @@
 """Poll-related database queries with full type safety."""
 
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from core.query_service.base import QueryServiceBase
@@ -105,3 +106,16 @@ class PollQueries(QueryServiceBase):
                 option["votes"] = votes
                 option["voters"] = [v["voter_name"] for v in votes]
         return options
+
+    def get_latest_poll_created_at(self) -> Optional[datetime]:
+        """
+        Get the created_at timestamp of the most recently created poll.
+
+        Used for the "smart" dues banner dismissal logic - banner reappears
+        when a new poll is created after the user dismissed it.
+
+        Returns:
+            Datetime of most recent poll creation, or None if no polls exist
+        """
+        result = self.fetch_one("SELECT created_at FROM polls ORDER BY created_at DESC LIMIT 1")
+        return result["created_at"] if result else None

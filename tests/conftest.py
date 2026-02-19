@@ -13,7 +13,7 @@ os.environ["DEBUG"] = "false"
 os.environ["LOG_LEVEL"] = "ERROR"
 
 # ruff: noqa: E402 - Must set env vars before imports
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Dict, Generator, Optional
 
 import bcrypt
@@ -157,7 +157,7 @@ def regular_user(db_session: Session, password_hash: str) -> Angler:
 
 @pytest.fixture
 def member_user(db_session: Session, password_hash: str) -> Angler:
-    """Create a member (non-admin) user for testing."""
+    """Create a member (non-admin) user for testing with current dues."""
     user = Angler(
         name="Test Member",
         email="member@example.com",
@@ -165,6 +165,7 @@ def member_user(db_session: Session, password_hash: str) -> Angler:
         member=True,
         is_admin=False,
         created_at=datetime.now(tz=timezone.utc),
+        dues_paid_through=date.today() + timedelta(days=365),  # Dues valid for a year
     )
     db_session.add(user)
     db_session.commit()
