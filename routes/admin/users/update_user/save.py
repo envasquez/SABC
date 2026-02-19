@@ -1,5 +1,8 @@
 """User update save operations."""
 
+from datetime import date
+from typing import Optional
+
 from fastapi import Form, Request
 from fastapi.responses import RedirectResponse
 
@@ -25,6 +28,7 @@ async def update_user(
     member: bool = Form(False),
     is_admin: bool = Form(False),
     officer_positions: list[str] = Form([]),
+    dues_paid_through: Optional[str] = Form(None),
 ) -> RedirectResponse:
     """Handle user update form submission."""
     user = require_admin(request)
@@ -48,6 +52,19 @@ async def update_user(
             angler.phone = update_params["phone"]
             angler.member = update_params["member"]
             angler.is_admin = update_params["is_admin"]
+
+            # Parse and update dues_paid_through (only if explicitly provided in form)
+            # None means field wasn't in form - don't change existing value
+            # Empty string means user cleared the field - set to None
+            if dues_paid_through is not None:
+                if dues_paid_through:
+                    try:
+                        angler.dues_paid_through = date.fromisoformat(dues_paid_through)
+                    except ValueError:
+                        pass  # Invalid date format, keep existing value
+                else:
+                    # Empty string means clear the date
+                    angler.dues_paid_through = None
 
             # Update officer positions in same transaction
             from core.helpers.timezone import now_local

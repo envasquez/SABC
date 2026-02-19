@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
 
@@ -20,9 +22,10 @@ async def post_update_user(
     member: bool = Form(False),
     is_admin: bool = Form(False),
     officer_positions: list[str] = Form([]),
+    dues_paid_through: Optional[str] = Form(None),
 ) -> RedirectResponse:
     return await update_user(
-        request, user_id, name, email, phone, member, is_admin, officer_positions
+        request, user_id, name, email, phone, member, is_admin, officer_positions, dues_paid_through
     )
 
 

@@ -26,6 +26,7 @@ async def edit_user_page(request: Request, user_id: int):
             "phone": edit_angler.phone,
             "member": edit_angler.member,
             "is_admin": edit_angler.is_admin,
+            "dues_paid_through": edit_angler.dues_paid_through,
         }
 
         # Get officer positions for current year
