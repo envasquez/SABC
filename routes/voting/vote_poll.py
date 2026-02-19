@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
-from core.db_schema import Poll, PollOption, PollVote, get_session
+from core.db_schema import Angler, Poll, PollOption, PollVote, get_session
 from core.helpers.auth import is_dues_current, require_auth
 from core.helpers.logging import get_logger
 from core.helpers.response import sanitize_error_message
@@ -272,3 +272,37 @@ async def vote_in_poll(
             exc_info=True,
         )
         return RedirectResponse(f"/polls?error={error_msg}", status_code=303)
+
+
+@router.post("/dismiss-dues-banner")
+async def dismiss_dues_banner(
+    request: Request,
+    user: Dict[str, Any] = Depends(require_auth),
+) -> RedirectResponse:
+    """
+    Dismiss the dues reminder banner for the current user.
+
+    Sets dues_banner_dismissed_at to current timestamp. The banner will
+    reappear when a new poll is created (smart dismiss logic).
+    """
+    user_id = user.get("id")
+    if user_id:
+        try:
+            with get_session() as session:
+                angler = session.query(Angler).filter(Angler.id == user_id).first()
+                if angler:
+                    angler.dues_banner_dismissed_at = now_local()
+                    session.commit()
+                    logger.info(
+                        "Dues banner dismissed",
+                        extra={"user_id": user_id},
+                    )
+        except SQLAlchemyError as e:
+            logger.error(
+                "Failed to dismiss dues banner",
+                extra={"user_id": user_id, "error": str(e)},
+            )
+
+    # Return to previous page or polls
+    referer = request.headers.get("referer", "/polls")
+    return RedirectResponse(referer, status_code=303)
