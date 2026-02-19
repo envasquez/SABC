@@ -32,18 +32,20 @@
 
 **A.** Officers will consist of:
 
-   a. President
-   b. Vice-President
-   c. Secretary
-   d. Treasurer
-   e. Media Director
-   f. Tournament Director
-   g. Assistant Tournament Director
-   h. Technology Director
+   a. President/Secretary
+   b. Treasurer
+   c. Weighmaster
+   d. Assistant Weighmaster
 
-**B.** All positions will be nominated at the year's November meeting and confirmed by vote during the year's December meeting by those in attendance.
+**B.** All positions will be nominated and confirmed by member vote via the club website in December of each year.
 
-**C.** Officer terms are 1 (one) year (annual).
+**C.** Officer terms are 1 (one) year.
+
+**D.** Changes and special provisions regarding tournaments may be made by a majority of officers (3 of 4) if necessary. Officers will communicate changes to members in a timely manner via the club website.
+
+**E.** Cancellation of a tournament due to severe weather or unforeseen circumstances may be instituted by a decision of 3 or more officers.
+
+**F.** In the event of an officer vacancy, a replacement will be nominated and confirmed by member vote via the club website.
 
 ---
 
