@@ -8,6 +8,7 @@ from markupsafe import Markup
 from sqlalchemy import Connection
 
 from core.db_schema import engine
+from core.helpers.timezone import now_local
 from core.query_service import QueryService
 
 
@@ -179,6 +180,9 @@ templates = Jinja2Templates(directory="templates")
 templates.env.filters["time_format"] = time_format_filter
 templates.env.filters["tojson_attr"] = tojson_attr_filter
 templates.env.filters["from_json"] = from_json_filter
+
+# Add now_local as a global function for templates
+templates.env.globals["now_local"] = now_local
 
 
 def get_db() -> Generator[Connection, None, None]:

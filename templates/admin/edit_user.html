@@ -18,6 +18,27 @@
             </div>
             {% endfor %}
 
+            <!-- Dues Management Section -->
+            <div class="mb-3">
+                <label for="dues_paid_through" class="form-label">
+                    <i class="bi bi-calendar-check me-1"></i>Dues Paid Through
+                </label>
+                <input type="date" class="form-control" id="dues_paid_through" name="dues_paid_through"
+                       value="{{ edit_user.dues_paid_through.isoformat() if edit_user.dues_paid_through else '' }}">
+                <div class="form-text">
+                    {% if edit_user.dues_paid_through %}
+                        {% set today = now_local().date() %}
+                        {% if edit_user.dues_paid_through >= today %}
+                            <span class="text-success"><i class="bi bi-check-circle me-1"></i>Dues are current (expires {{ edit_user.dues_paid_through.strftime('%B %d, %Y') }})</span>
+                        {% else %}
+                            <span class="text-danger"><i class="bi bi-x-circle me-1"></i>Dues have expired ({{ edit_user.dues_paid_through.strftime('%B %d, %Y') }})</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="text-muted">No dues payment recorded</span>
+                    {% endif %}
+                </div>
+            </div>
+
             <div class="mb-3">
                 <label class="form-label">Officer Positions <small class="text-secondary">(optional - select all that apply)</small></label>
                 <div class="form-text mb-2">Officer positions are tracked per year. Changes will apply to the current year ({{ current_year }}).</div>
