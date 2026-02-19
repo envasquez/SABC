@@ -84,14 +84,14 @@ class TestUserDeletion:
 
         assert response.status_code in [302, 303, 403]
 
-    def test_delete_user_with_results_succeeds(
+    def test_delete_user_with_results_fails(
         self,
         admin_client: TestClient,
         member_user: Angler,
         test_tournament: Tournament,
         db_session: Session,
     ):
-        """Test that deleting user with tournament results succeeds (cascade or allow deletion)."""
+        """Test that deleting user with tournament results fails (protects data integrity)."""
         # Add a result for the member
         result = Result(
             tournament_id=test_tournament.id,
@@ -104,10 +104,11 @@ class TestUserDeletion:
 
         response = admin_client.delete(f"/admin/users/{member_user.id}")
 
-        # Deletion succeeds (either cascades or is allowed despite results)
-        assert response.status_code == 200
+        # Deletion fails to protect tournament history
+        assert response.status_code == 400
         data = response.json()
-        assert data.get("success") is True
+        assert "error" in data
+        assert "tournament history" in data.get("error", "").lower()
 
 
 class TestUserEditing:
