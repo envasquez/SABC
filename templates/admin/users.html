@@ -18,13 +18,16 @@
         </div>
     </div>
     <div class="row mb-3">
-        <div class="col-md-3">
-            {{ stat_card('person-check', 'Members', member_count, 'success') }}
+        <div class="col-6 col-md-3">
+            {{ stat_card('person-check', 'Active Members', active_member_count, 'success') }}
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
+            {{ stat_card('exclamation-triangle', 'Dues Overdue', overdue_member_count, 'danger') }}
+        </div>
+        <div class="col-6 col-md-3">
             {{ stat_card('person', 'Guests', guest_count, 'secondary') }}
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-md-3">
             {{ stat_card('people-fill', 'Total', total_count, 'primary') }}
         </div>
     </div>
