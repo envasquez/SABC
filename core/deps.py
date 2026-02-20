@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Generator
 
@@ -142,6 +142,29 @@ def to_local_datetime_filter(dt: Any) -> Any:
     if not hasattr(dt, "strftime"):
         return dt
     return to_local(dt)
+
+
+def is_dues_current_filter(dues_paid_through: Any) -> bool:
+    """Check if member dues are current (paid through today or later).
+
+    This filter handles both date objects and string representations
+    of dates from database query results.
+
+    Args:
+        dues_paid_through: Date when dues expire (date object or ISO string)
+
+    Returns:
+        True if dues are current, False otherwise
+    """
+    if dues_paid_through is None:
+        return False
+    # Handle string representations from raw SQL queries
+    if isinstance(dues_paid_through, str):
+        try:
+            dues_paid_through = date.fromisoformat(dues_paid_through)
+        except ValueError:
+            return False
+    return dues_paid_through >= date.today()
 
 
 def month_number_filter(date_str: Any) -> str:

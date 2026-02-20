@@ -19,6 +19,7 @@ from core.deps import (
     CustomJSONEncoder,
     date_format_filter,
     from_json_filter,
+    is_dues_current_filter,
     month_number_filter,
     nl2br_filter,
     nl2br_safe_filter,
@@ -115,6 +116,7 @@ def create_app() -> FastAPI:
     templates.env.filters["nl2br"] = nl2br_filter
     templates.env.filters["nl2br_safe"] = nl2br_safe_filter
     templates.env.filters["to_local"] = to_local_datetime_filter
+    templates.env.filters["is_dues_current"] = is_dues_current_filter
 
     # Add CSRF token to global template context
     templates.env.globals["get_csrf_token"] = get_csrf_token

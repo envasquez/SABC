@@ -38,10 +38,11 @@ class MemberQueries(QueryServiceBase):
         return self.fetch_all(
             """
             SELECT a.id, a.name, a.email, a.phone, a.member, a.is_admin,
+                   a.dues_paid_through,
                    STRING_AGG(op.position, ', ' ORDER BY op.position) as officer_positions
             FROM anglers a
             LEFT JOIN officer_positions op ON a.id = op.angler_id AND op.year = :year
-            GROUP BY a.id, a.name, a.email, a.phone, a.member, a.is_admin
+            GROUP BY a.id, a.name, a.email, a.phone, a.member, a.is_admin, a.dues_paid_through
             ORDER BY a.is_admin DESC, a.member DESC, a.name
             """,
             {"year": current_year},

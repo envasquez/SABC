@@ -39,11 +39,15 @@
             <td>{{ u.phone or '-' }}</td>
             <td>
                 {% if u.member %}
-                    <span class="badge bg-success">Member</span>
+                    {% if u.dues_paid_through | is_dues_current %}
+                        <span class="badge bg-success">Member</span>
+                    {% else %}
+                        <span class="badge bg-danger" title="Dues overdue"><i class="bi bi-exclamation-triangle me-1"></i>Member</span>
+                    {% endif %}
                 {% else %}
                     <span class="badge bg-secondary">Guest</span>
                 {% endif %}
-                {% if u.is_admin %}<span class="badge bg-danger ms-1">Admin</span>{% endif %}
+                {% if u.is_admin %}<span class="badge bg-warning text-dark ms-1">Admin</span>{% endif %}
             </td>
             <td>
                 {% if u.officer_positions %}
