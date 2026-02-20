@@ -25,6 +25,7 @@ from core.deps import (
     safe_json_filter,
     templates,
     time_format_filter,
+    to_local_datetime_filter,
 )
 from core.helpers.logging import configure_logging, get_logger
 from core.monitoring import init_sentry
@@ -113,6 +114,7 @@ def create_app() -> FastAPI:
     templates.env.filters["safe_json"] = safe_json_filter
     templates.env.filters["nl2br"] = nl2br_filter
     templates.env.filters["nl2br_safe"] = nl2br_safe_filter
+    templates.env.filters["to_local"] = to_local_datetime_filter
 
     # Add CSRF token to global template context
     templates.env.globals["get_csrf_token"] = get_csrf_token
