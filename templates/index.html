@@ -48,6 +48,11 @@
                 </button>
             </li>
             {% endif %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link{% if show_completed_tab %} active{% endif %}" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed-pane" type="button" role="tab" aria-controls="completed-pane" aria-selected="{% if show_completed_tab %}true{% else %}false{% endif %}">
+                    <i class="bi bi-trophy me-1"></i>Completed
+                </button>
+            </li>
             {% if upcoming_tournaments %}
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming-pane" type="button" role="tab" aria-controls="upcoming-pane" aria-selected="false">
@@ -55,11 +60,6 @@
                 </button>
             </li>
             {% endif %}
-            <li class="nav-item" role="presentation">
-                <button class="nav-link{% if show_completed_tab %} active{% endif %}" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed-pane" type="button" role="tab" aria-controls="completed-pane" aria-selected="{% if show_completed_tab %}true{% else %}false{% endif %}">
-                    <i class="bi bi-trophy me-1"></i>Completed
-                </button>
-            </li>
         </ul>
 
         <!-- Tab Content -->
