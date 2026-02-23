@@ -34,7 +34,7 @@
                         <td class="text-end"><strong>Entry Fee:</strong></td>
                         <td>${{ "%.2f"|format(tournament[7] or 25.00) }}/angler</td>
                         <td class="text-end"><strong>AoY Points:</strong></td>
-                        <td>Yes</td>
+                        <td>{% if tournament[11] %}Yes{% else %}No (Team Format){% endif %}</td>
                     </tr>
                     <tr>
                         <td class="text-end"><strong>Limit:</strong></td>
@@ -249,7 +249,8 @@
         </div>
         {% endif %}
 
-        <!-- Individual Results Card -->
+        <!-- Individual Results Card - Only show for AoY tournaments -->
+        {% if tournament[11] %}
         <div class="card mb-4">
             <div class="card-header bg-warning text-dark">
                 <h5 class="mb-0"><i class="bi bi-person me-2"></i>Individual Results</h5>
@@ -304,8 +305,9 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
-        {% if not individual_results %}
+        {% if not team_results and (not tournament[11] or not individual_results) %}
         <div class="card mb-4">
             <div class="card-header bg-secondary text-white">
                 <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>No Results Available</h5>

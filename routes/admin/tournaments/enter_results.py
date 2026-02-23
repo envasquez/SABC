@@ -70,6 +70,9 @@ async def enter_results_page(
     existing_angler_ids = list(results_by_angler.keys())
     existing_angler_ids_json = json.dumps(existing_angler_ids)
 
+    # Team format = no individual AoY points tracking
+    is_team_format = not tournament.get("aoy_points", True)
+
     response = templates.TemplateResponse(
         "admin/enter_results.html",
         {
@@ -86,6 +89,7 @@ async def enter_results_page(
             "edit_team_result": edit_team_result_id,
             "edit_team_result_data": edit_team_result_data,
             "edit_data": None,  # Required by template, None when not editing
+            "is_team_format": is_team_format,
         },
     )
     # Prevent browser caching so edit parameters are always fresh

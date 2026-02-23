@@ -15,7 +15,8 @@
      data-existing-angler-ids="{{ existing_angler_ids_json | e }}"
      data-edit-data="{{ edit_data | tojson_attr if edit_data else '' }}"
      data-edit-team-result-data="{{ edit_team_result_data | tojson_attr if edit_team_result_data else '' }}"
-     data-tournament-id="{{ tournament.id }}"></div>
+     data-tournament-id="{{ tournament.id }}"
+     data-is-team-format="{{ 'true' if is_team_format else 'false' }}"></div>
 
 <div class="container">
     <div class="mb-4">
@@ -30,8 +31,10 @@
             <i class="bi bi-pencil-square me-2"></i>Enter Tournament Results
         </h1>
         <p class="lead text-secondary">{{ tournament.name }} - {{ tournament.date }}</p>
-    {% if tournament.aoy_points %}
+        {% if tournament.aoy_points %}
             <span class="badge bg-info">AoY Points</span>
+        {% else %}
+            <span class="badge bg-success">Team Format</span>
         {% endif %}
     </div>
 
@@ -58,7 +61,11 @@
             <div class="card-body">
                 {% if not edit_data %}
                 <div class="mb-3">
+                    {% if is_team_format %}
+                    <p class="text-secondary">Enter team results. Only one combined weight per team is needed.</p>
+                    {% else %}
                     <p class="text-secondary">Enter results for each team. Both anglers' individual results will be recorded, and team totals will be calculated automatically.</p>
+                    {% endif %}
                 </div>
                 {% endif %}
 

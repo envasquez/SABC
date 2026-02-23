@@ -52,6 +52,7 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
                 tournament.fish_limit,
                 tournament.complete,
                 tournament.event_type,
+                tournament.aoy_points,
             )
             stats_tuple = (
                 stats.total_anglers,

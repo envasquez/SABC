@@ -6,7 +6,7 @@ from sqlalchemy import Connection
 
 from core.deps import get_db
 from core.helpers.auth import require_admin
-from core.helpers.forms import get_form_int
+from core.helpers.forms import get_form_float, get_form_int
 from core.query_service import QueryService
 
 router = APIRouter()
@@ -33,20 +33,34 @@ async def save_team_result(
             return JSONResponse({"error": "Angler 1 ID is required"}, status_code=400)
 
         angler1_id = angler1_id_val
-        total_weight = Decimal("0")
-        angler1_weight = qs.fetch_value(
-            "SELECT total_weight FROM results WHERE tournament_id = :tid AND angler_id = :aid",
-            {"tid": tournament_id, "aid": angler1_id},
-        )
-        if angler1_weight:
-            total_weight += Decimal(str(angler1_weight))
-        if angler2_id:
-            angler2_weight = qs.fetch_value(
-                "SELECT total_weight FROM results WHERE tournament_id = :tid AND angler_id = :aid",
-                {"tid": tournament_id, "aid": angler2_id},
+
+        # Check if this is team format (direct weight entry)
+        is_team_format = form_data.get("is_team_format") == "true"
+        num_fish = 0
+
+        if is_team_format:
+            # Team format: use direct weight and fish count from form
+            direct_weight = get_form_float(form_data, "total_weight", 0.0)
+            total_weight = Decimal(str(direct_weight))
+            num_fish = get_form_int(form_data, "num_fish") or 0
+        else:
+            # Standard format: calculate from individual results
+            total_weight = Decimal("0")
+            angler1_data = qs.fetch_one(
+                "SELECT total_weight, num_fish FROM results WHERE tournament_id = :tid AND angler_id = :aid",
+                {"tid": tournament_id, "aid": angler1_id},
             )
-            if angler2_weight:
-                total_weight += Decimal(str(angler2_weight))
+            if angler1_data:
+                total_weight += Decimal(str(angler1_data["total_weight"] or 0))
+                num_fish += angler1_data["num_fish"] or 0
+            if angler2_id:
+                angler2_data = qs.fetch_one(
+                    "SELECT total_weight, num_fish FROM results WHERE tournament_id = :tid AND angler_id = :aid",
+                    {"tid": tournament_id, "aid": angler2_id},
+                )
+                if angler2_data:
+                    total_weight += Decimal(str(angler2_data["total_weight"] or 0))
+                    num_fish += angler2_data["num_fish"] or 0
         # Check if team_result_id was provided (edit mode)
         team_result_id = get_form_int(form_data, "team_result_id")
         if team_result_id:
@@ -76,48 +90,67 @@ async def save_team_result(
         if existing:
             qs.execute(
                 """UPDATE team_results
-                   SET total_weight = :total_weight
+                   SET total_weight = :total_weight, num_fish = :num_fish
                    WHERE id = :id""",
-                {"total_weight": total_weight, "id": existing["id"]},
+                {"total_weight": total_weight, "num_fish": num_fish, "id": existing["id"]},
             )
         else:
             qs.execute(
                 """INSERT INTO team_results
-                   (tournament_id, angler1_id, angler2_id, total_weight)
-                   VALUES (:tid, :a1, :a2, :total_weight)""",
+                   (tournament_id, angler1_id, angler2_id, total_weight, num_fish)
+                   VALUES (:tid, :a1, :a2, :total_weight, :num_fish)""",
                 {
                     "tid": tournament_id,
                     "a1": angler1_id,
                     "a2": angler2_id,
                     "total_weight": total_weight,
+                    "num_fish": num_fish,
                 },
             )
         conn.commit()
-        # Recalculate place_finish using actual weights from results table
-        # SQLite-compatible version using subquery instead of FROM clause
-        qs.execute(
-            """UPDATE team_results
-               SET place_finish = (
-                   SELECT place FROM (
-                       WITH calculated_weights AS (
-                           SELECT tr.id,
-                                  COALESCE(r1.total_weight, 0) + COALESCE(r2.total_weight, 0) as weight
-                           FROM team_results tr
-                           LEFT JOIN results r1 ON tr.angler1_id = r1.angler_id
-                               AND tr.tournament_id = r1.tournament_id
-                           LEFT JOIN results r2 ON tr.angler2_id = r2.angler_id
-                               AND tr.tournament_id = r2.tournament_id
-                           WHERE tr.tournament_id = :tid
-                       )
-                       SELECT id,
-                              RANK() OVER (ORDER BY weight DESC) as place
-                       FROM calculated_weights
-                   ) ranked_teams
-                   WHERE ranked_teams.id = team_results.id
-               )
-               WHERE tournament_id = :tid""",
-            {"tid": tournament_id},
-        )
+
+        # Recalculate place_finish
+        if is_team_format:
+            # Team format: use stored total_weight directly
+            qs.execute(
+                """UPDATE team_results
+                   SET place_finish = (
+                       SELECT place FROM (
+                           SELECT id,
+                                  RANK() OVER (ORDER BY total_weight DESC) as place
+                           FROM team_results
+                           WHERE tournament_id = :tid
+                       ) ranked_teams
+                       WHERE ranked_teams.id = team_results.id
+                   )
+                   WHERE tournament_id = :tid""",
+                {"tid": tournament_id},
+            )
+        else:
+            # Standard format: calculate weights from individual results
+            qs.execute(
+                """UPDATE team_results
+                   SET place_finish = (
+                       SELECT place FROM (
+                           WITH calculated_weights AS (
+                               SELECT tr.id,
+                                      COALESCE(r1.total_weight, 0) + COALESCE(r2.total_weight, 0) as weight
+                               FROM team_results tr
+                               LEFT JOIN results r1 ON tr.angler1_id = r1.angler_id
+                                   AND tr.tournament_id = r1.tournament_id
+                               LEFT JOIN results r2 ON tr.angler2_id = r2.angler_id
+                                   AND tr.tournament_id = r2.tournament_id
+                               WHERE tr.tournament_id = :tid
+                           )
+                           SELECT id,
+                                  RANK() OVER (ORDER BY weight DESC) as place
+                           FROM calculated_weights
+                       ) ranked_teams
+                       WHERE ranked_teams.id = team_results.id
+                   )
+                   WHERE tournament_id = :tid""",
+                {"tid": tournament_id},
+            )
         conn.commit()
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JSONResponse({"success": True, "message": "Team result saved successfully"})

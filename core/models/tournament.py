@@ -36,3 +36,4 @@ class TournamentWithEvent(Tournament):
     event_description: Optional[str] = None
     event_type: str
     big_bass_carryover: Decimal = Decimal("0.00")
+    aoy_points: bool = True
