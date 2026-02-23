@@ -23,6 +23,10 @@ PAYOUT_THIRD_PLACE_PER_BOAT = Decimal("8.00")
 PAYOUT_BIG_BASS_PER_BOAT = Decimal("8.00")
 BIG_BASS_MINIMUM_WEIGHT = Decimal("5.0")  # Must be over 5 lbs to qualify
 
+# Legacy rate for calculating carryover from old individual-format tournaments
+# Old format was $25/angler with $4 to big bass pot
+LEGACY_BIG_BASS_PER_ANGLER = Decimal("4.00")
+
 
 def calculate_big_bass_carryover(qs: QueryService, tournament_id: int, event_date: str) -> Decimal:
     """Calculate the big bass carryover for a tournament by looking at previous tournaments.
@@ -68,7 +72,8 @@ def calculate_big_bass_carryover(qs: QueryService, tournament_id: int, event_dat
             break
 
         # No member won big bass - add this tournament's contribution to carryover
-        pot_contribution = PAYOUT_BIG_BASS_PER_BOAT * Decimal(angler_count)
+        # Use legacy rate since we're calculating from individual results (old format)
+        pot_contribution = LEGACY_BIG_BASS_PER_ANGLER * Decimal(angler_count)
         carryover += pot_contribution
 
     return carryover
