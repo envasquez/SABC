@@ -77,15 +77,19 @@ def calculate_big_bass_carryover(qs: QueryService, tournament_id: int, event_dat
             break
 
         # No member won big bass - add this tournament's contribution to carryover
-        is_individual = t["is_individual_format"]
-        if is_individual:
-            # Old format: $4/angler from results table
-            angler_count = t["angler_count"] or 0
+        # Determine format by which table has data, not just aoy_points flag
+        angler_count = t["angler_count"] or 0
+        boat_count = t["boat_count"] or 0
+
+        if angler_count > 0:
+            # Has individual results - use $4/angler rate
             pot_contribution = LEGACY_BIG_BASS_PER_ANGLER * Decimal(angler_count)
-        else:
-            # Team format: $8/boat from team_results table
-            boat_count = t["boat_count"] or 0
+        elif boat_count > 0:
+            # Has team results only - use $8/boat rate
             pot_contribution = PAYOUT_BIG_BASS_PER_BOAT * Decimal(boat_count)
+        else:
+            # No results at all - skip
+            pot_contribution = Decimal("0")
 
         carryover += pot_contribution
 
