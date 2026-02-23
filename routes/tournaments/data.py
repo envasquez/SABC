@@ -164,6 +164,7 @@ def fetch_tournament_data(
                    UNION
                    SELECT angler2_id as angler_id FROM team_results WHERE tournament_id = :id AND angler2_id IS NOT NULL
                ) anglers) as total_anglers,
+               COUNT(tr.id) as total_boats,
                COALESCE(SUM(tr.num_fish), 0) as total_fish,
                COALESCE(SUM(tr.total_weight), 0) as total_weight,
                0 as limits,
@@ -177,9 +178,11 @@ def fetch_tournament_data(
         )
     else:
         # Standard format: calculate stats from individual results
+        # total_boats = total_anglers for standard format (each angler pays entry)
         stats_data = qs.fetch_one(
             """SELECT
                COUNT(DISTINCT CASE WHEN r.disqualified = FALSE THEN r.angler_id END) as total_anglers,
+               COUNT(DISTINCT CASE WHEN r.disqualified = FALSE THEN r.angler_id END) as total_boats,
                COALESCE(SUM(CASE WHEN r.disqualified = FALSE THEN r.num_fish ELSE 0 END), 0) as total_fish,
                COALESCE(SUM(CASE WHEN r.disqualified = FALSE THEN r.total_weight ELSE 0 END), 0) as total_weight,
                COUNT(DISTINCT CASE WHEN r.disqualified = FALSE AND r.num_fish >= :fish_limit THEN r.id END) as limits,
@@ -253,8 +256,9 @@ def fetch_tournament_data(
     entry_fee = Decimal(str(tournament.entry_fee)) if tournament.entry_fee else Decimal("25.00")
     # Dynamically calculate carryover from previous tournaments
     carryover = calculate_big_bass_carryover(qs, tournament_id, str(tournament.event_date))
+    # Use total_boats for payout calculation (team format = boats, standard = anglers)
     payouts = calculate_tournament_payouts(
-        total_anglers=stats.total_anglers,
+        total_anglers=stats.total_boats,
         biggest_bass=stats.biggest_bass,
         entry_fee=entry_fee,
         big_bass_carryover=carryover,
