@@ -44,19 +44,23 @@ def calculate_big_bass_carryover(qs: QueryService, tournament_id: int, event_dat
         The accumulated carryover amount from previous tournaments
     """
     # Get all previous tournaments that have been fished (have results or team_results)
+    # Exclude Admin User entries from both individual and team results
     previous_tournaments = qs.fetch_all(
         """SELECT t.id, e.date,
-                  COUNT(DISTINCT r.angler_id) as angler_count,
-                  COUNT(DISTINCT tr.id) as boat_count,
+                  COUNT(DISTINCT CASE WHEN a.name != 'Admin User' THEN r.angler_id END) as angler_count,
+                  COUNT(DISTINCT CASE WHEN a1.name != 'Admin User' THEN tr.id END) as boat_count,
                   MAX(CASE WHEN r.was_member = TRUE AND r.big_bass_weight > :min_weight
-                           AND r.disqualified = FALSE THEN 1 ELSE 0 END) as member_won_big_bass
+                           AND r.disqualified = FALSE AND a.name != 'Admin User' THEN 1 ELSE 0 END) as member_won_big_bass
            FROM tournaments t
            JOIN events e ON t.event_id = e.id
            LEFT JOIN results r ON r.tournament_id = t.id
+           LEFT JOIN anglers a ON r.angler_id = a.id
            LEFT JOIN team_results tr ON tr.tournament_id = t.id
+           LEFT JOIN anglers a1 ON tr.angler1_id = a1.id
            WHERE e.date < :event_date
            GROUP BY t.id, e.date
-           HAVING COUNT(r.id) > 0 OR COUNT(tr.id) > 0
+           HAVING COUNT(CASE WHEN a.name != 'Admin User' THEN r.id END) > 0
+               OR COUNT(CASE WHEN a1.name != 'Admin User' THEN tr.id END) > 0
            ORDER BY e.date DESC""",
         {"event_date": event_date, "min_weight": float(BIG_BASS_MINIMUM_WEIGHT)},
     )
@@ -167,13 +171,17 @@ def fetch_tournament_data(
 
     # Get tournament statistics - use team_results for team format, results for standard
     if not tournament.aoy_points:
-        # Team format: calculate stats from team_results
+        # Team format: calculate stats from team_results (excluding Admin User)
         stats_data = qs.fetch_one(
             """SELECT
                (SELECT COUNT(DISTINCT angler_id) FROM (
-                   SELECT angler1_id as angler_id FROM team_results WHERE tournament_id = :id
+                   SELECT tr2.angler1_id as angler_id FROM team_results tr2
+                   JOIN anglers a ON tr2.angler1_id = a.id
+                   WHERE tr2.tournament_id = :id AND a.name != 'Admin User'
                    UNION
-                   SELECT angler2_id as angler_id FROM team_results WHERE tournament_id = :id AND angler2_id IS NOT NULL
+                   SELECT tr2.angler2_id as angler_id FROM team_results tr2
+                   JOIN anglers a ON tr2.angler2_id = a.id
+                   WHERE tr2.tournament_id = :id AND tr2.angler2_id IS NOT NULL AND a.name != 'Admin User'
                ) anglers) as total_anglers,
                COUNT(tr.id) as total_boats,
                COALESCE(SUM(tr.num_fish), 0) as total_fish,
@@ -184,7 +192,8 @@ def fetch_tournament_data(
                0 as biggest_bass,
                COALESCE(MAX(tr.total_weight), 0) as heavy_stringer
                FROM team_results tr
-               WHERE tr.tournament_id = :id""",
+               JOIN anglers a1 ON tr.angler1_id = a1.id
+               WHERE tr.tournament_id = :id AND a1.name != 'Admin User'""",
             {"id": tournament_id},
         )
     else:
