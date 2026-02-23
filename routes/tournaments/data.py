@@ -23,10 +23,6 @@ PAYOUT_THIRD_PLACE_PER_BOAT = Decimal("8.00")
 PAYOUT_BIG_BASS_PER_BOAT = Decimal("8.00")
 BIG_BASS_MINIMUM_WEIGHT = Decimal("5.0")  # Must be over 5 lbs to qualify
 
-# Legacy rate for calculating carryover from old individual-format tournaments
-# Old format was $25/angler with $4 to big bass pot
-LEGACY_BIG_BASS_PER_ANGLER = Decimal("4.00")
-
 
 def calculate_big_bass_carryover(qs: QueryService, tournament_id: int, event_date: str) -> Decimal:
     """Calculate the big bass carryover for a tournament by looking at previous tournaments.
@@ -35,9 +31,9 @@ def calculate_big_bass_carryover(qs: QueryService, tournament_id: int, event_dat
     We scan backwards through tournaments until we find one where a member won,
     accumulating the pot from each tournament where it wasn't won.
 
-    Handles both formats:
-    - Individual format (old): Uses results table, $4/angler
-    - Team format (new): Uses team_results table, $8/boat
+    Handles both formats at $8 per entry:
+    - Individual format (2025): $8/angler from results table
+    - Team format (2026): $8/boat from team_results table
 
     Args:
         qs: QueryService instance
@@ -48,9 +44,8 @@ def calculate_big_bass_carryover(qs: QueryService, tournament_id: int, event_dat
         The accumulated carryover amount from previous tournaments
     """
     # Get all previous tournaments that have been fished (have results or team_results)
-    # Include both individual format (results) and team format (team_results)
     previous_tournaments = qs.fetch_all(
-        """SELECT t.id, e.date, COALESCE(t.aoy_points, TRUE) as is_individual_format,
+        """SELECT t.id, e.date,
                   COUNT(DISTINCT r.angler_id) as angler_count,
                   COUNT(DISTINCT tr.id) as boat_count,
                   MAX(CASE WHEN r.was_member = TRUE AND r.big_bass_weight > :min_weight
@@ -60,7 +55,7 @@ def calculate_big_bass_carryover(qs: QueryService, tournament_id: int, event_dat
            LEFT JOIN results r ON r.tournament_id = t.id
            LEFT JOIN team_results tr ON tr.tournament_id = t.id
            WHERE e.date < :event_date
-           GROUP BY t.id, e.date, t.aoy_points
+           GROUP BY t.id, e.date
            HAVING COUNT(r.id) > 0 OR COUNT(tr.id) > 0
            ORDER BY e.date DESC""",
         {"event_date": event_date, "min_weight": float(BIG_BASS_MINIMUM_WEIGHT)},
@@ -77,19 +72,13 @@ def calculate_big_bass_carryover(qs: QueryService, tournament_id: int, event_dat
             break
 
         # No member won big bass - add this tournament's contribution to carryover
-        # Determine format by which table has data, not just aoy_points flag
+        # Both formats use $8 per entry (angler or boat)
         angler_count = t["angler_count"] or 0
         boat_count = t["boat_count"] or 0
 
-        if angler_count > 0:
-            # Has individual results - use $4/angler rate
-            pot_contribution = LEGACY_BIG_BASS_PER_ANGLER * Decimal(angler_count)
-        elif boat_count > 0:
-            # Has team results only - use $8/boat rate
-            pot_contribution = PAYOUT_BIG_BASS_PER_BOAT * Decimal(boat_count)
-        else:
-            # No results at all - skip
-            pot_contribution = Decimal("0")
+        # Use whichever has data - $8 per entry either way
+        entry_count = angler_count if angler_count > 0 else boat_count
+        pot_contribution = PAYOUT_BIG_BASS_PER_BOAT * Decimal(entry_count)
 
         carryover += pot_contribution
 
