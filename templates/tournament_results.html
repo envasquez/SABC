@@ -32,13 +32,13 @@
                         <td class="text-end"><strong>Date:</strong></td>
                         <td>{{ tournament[2] | date_format }}</td>
                         <td class="text-end"><strong>Entry Fee:</strong></td>
-                        <td>${{ "%.2f"|format(tournament[7] or 25.00) }}/angler</td>
+                        <td>${{ "%.2f"|format(tournament[7] or 25.00) }}/{% if tournament[11] %}angler{% else %}boat{% endif %}</td>
                         <td class="text-end"><strong>AoY Points:</strong></td>
                         <td>{% if tournament[11] %}Yes{% else %}No (Team Format){% endif %}</td>
                     </tr>
                     <tr>
                         <td class="text-end"><strong>Limit:</strong></td>
-                        <td>{{ tournament[8] or 5 }} fish/angler</td>
+                        <td>{{ tournament[8] or 5 }} fish/{% if tournament[11] %}angler{% else %}boat{% endif %}</td>
                         <td class="text-end"><strong>Team Payout:</strong></td>
                         <td>Yes</td>
                         <td class="text-end"><strong>Location:</strong></td>
