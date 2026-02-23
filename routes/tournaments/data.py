@@ -12,15 +12,15 @@ from routes.tournaments.formatters import (
 )
 
 # Payout ratios per angler based on SABC bylaws (Article V)
-# Entry fee: $25.00 breakdown:
-#   - Tournament Pot: $16.00 (1st: $7, 2nd: $5, 3rd: $4)
-#   - Big Bass Pot: $4.00 (only if bass > 5 lbs)
-#   - Club funds: $3.00
-#   - Charity: $2.00
-PAYOUT_FIRST_PLACE_PER_ANGLER = Decimal("7.00")
-PAYOUT_SECOND_PLACE_PER_ANGLER = Decimal("5.00")
-PAYOUT_THIRD_PLACE_PER_ANGLER = Decimal("4.00")
-PAYOUT_BIG_BASS_PER_ANGLER = Decimal("4.00")
+# Entry fee: $50.00 per boat breakdown (100% payout per bylaws):
+#   - First Place: $20.00
+#   - Second Place: $14.00
+#   - Third Place: $8.00
+#   - Big Bass Pot: $8.00 (only if bass > 5 lbs, member only)
+PAYOUT_FIRST_PLACE_PER_BOAT = Decimal("20.00")
+PAYOUT_SECOND_PLACE_PER_BOAT = Decimal("14.00")
+PAYOUT_THIRD_PLACE_PER_BOAT = Decimal("8.00")
+PAYOUT_BIG_BASS_PER_BOAT = Decimal("8.00")
 BIG_BASS_MINIMUM_WEIGHT = Decimal("5.0")  # Must be over 5 lbs to qualify
 
 
@@ -68,14 +68,14 @@ def calculate_big_bass_carryover(qs: QueryService, tournament_id: int, event_dat
             break
 
         # No member won big bass - add this tournament's contribution to carryover
-        pot_contribution = PAYOUT_BIG_BASS_PER_ANGLER * Decimal(angler_count)
+        pot_contribution = PAYOUT_BIG_BASS_PER_BOAT * Decimal(angler_count)
         carryover += pot_contribution
 
     return carryover
 
 
 def calculate_tournament_payouts(
-    total_anglers: int,
+    total_boats: int,
     biggest_bass: Decimal,
     entry_fee: Decimal,
     big_bass_carryover: Decimal = Decimal("0.00"),
@@ -84,9 +84,9 @@ def calculate_tournament_payouts(
     """Calculate tournament payouts based on SABC bylaws.
 
     Args:
-        total_anglers: Number of anglers who paid entry fee
+        total_boats: Number of boats who paid entry fee ($50/boat)
         biggest_bass: Weight of the biggest bass caught (in lbs)
-        entry_fee: Entry fee per angler (default $25.00)
+        entry_fee: Entry fee per boat (default $50.00)
         big_bass_carryover: Accumulated big bass pot from previous tournaments
         member_caught_big_bass: True if a member caught a bass > 5 lbs
 
@@ -94,15 +94,15 @@ def calculate_tournament_payouts(
         Dictionary with payout amounts for total_entry, first, second, third,
         big_bass_contribution, big_bass_carryover, big_bass_total, big_bass_won
     """
-    anglers = Decimal(total_anglers)
-    total_entry = entry_fee * anglers
+    boats = Decimal(total_boats)
+    total_entry = entry_fee * boats
 
-    first_place = PAYOUT_FIRST_PLACE_PER_ANGLER * anglers
-    second_place = PAYOUT_SECOND_PLACE_PER_ANGLER * anglers
-    third_place = PAYOUT_THIRD_PLACE_PER_ANGLER * anglers
+    first_place = PAYOUT_FIRST_PLACE_PER_BOAT * boats
+    second_place = PAYOUT_SECOND_PLACE_PER_BOAT * boats
+    third_place = PAYOUT_THIRD_PLACE_PER_BOAT * boats
 
     # This tournament's contribution to the big bass pot
-    big_bass_contribution = PAYOUT_BIG_BASS_PER_ANGLER * anglers
+    big_bass_contribution = PAYOUT_BIG_BASS_PER_BOAT * boats
 
     # Total pot available (this tournament + carryover from previous)
     big_bass_total = big_bass_contribution + big_bass_carryover
@@ -258,7 +258,7 @@ def fetch_tournament_data(
     carryover = calculate_big_bass_carryover(qs, tournament_id, str(tournament.event_date))
     # Use total_boats for payout calculation (team format = boats, standard = anglers)
     payouts = calculate_tournament_payouts(
-        total_anglers=stats.total_boats,
+        total_boats=stats.total_boats,
         biggest_bass=stats.biggest_bass,
         entry_fee=entry_fee,
         big_bass_carryover=carryover,
