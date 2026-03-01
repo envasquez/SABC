@@ -228,7 +228,7 @@ class Tournament(Base):
         Integer, ForeignKey("anglers.id", ondelete="SET NULL"), index=True
     )
     limit_type: Mapped[Optional[str]] = mapped_column(Text, default="angler")
-    aoy_points: Mapped[Optional[bool]] = mapped_column(Boolean, default=True)
+    aoy_points: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
 
 
 class Result(Base):
@@ -265,6 +265,7 @@ class TeamResult(Base):
     __tablename__ = "team_results"
     __table_args__ = (
         CheckConstraint("total_weight >= 0", name="ck_team_result_total_weight_positive"),
+        CheckConstraint("num_fish >= 0", name="ck_team_result_num_fish_positive"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -277,6 +278,7 @@ class TeamResult(Base):
     angler2_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("anglers.id", ondelete="RESTRICT"), index=True
     )
+    num_fish: Mapped[Optional[int]] = mapped_column(Integer, default=0)
     total_weight: Mapped[Optional[Decimal]] = mapped_column(Numeric, default=0.0)
     place_finish: Mapped[Optional[int]] = mapped_column(Integer)
 

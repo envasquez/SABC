@@ -286,13 +286,10 @@ async def roster(request: Request) -> Any:
 
         # Position ranking subquery (shared across dialects)
         position_rank_case = """CASE position
-            WHEN 'President' THEN 1
-            WHEN 'Vice President' THEN 2
-            WHEN 'Secretary' THEN 3
-            WHEN 'Treasurer' THEN 4
-            WHEN 'Tournament Director' THEN 5
-            WHEN 'Assistant Tournament Director' THEN 6
-            WHEN 'Technology Director' THEN 7
+            WHEN 'President/Secretary' THEN 1
+            WHEN 'Treasurer' THEN 2
+            WHEN 'Weighmaster' THEN 3
+            WHEN 'Assistant Weighmaster' THEN 4
             ELSE 99 END"""
 
         # SQLite needs subquery for DISTINCT GROUP_CONCAT

@@ -17,6 +17,7 @@ from routes.admin.users.update_user.logging import (
 )
 from routes.admin.users.update_user.prepare import prepare_update_data
 from routes.admin.users.update_user.validation import update_officer_positions
+from routes.auth.validation import validate_phone_number
 
 
 async def update_user(
@@ -42,8 +43,19 @@ async def update_user(
             # Capture before state
             before = (angler.name, angler.email, angler.phone, angler.member, angler.is_admin)
 
+            # Validate and format phone number
+            formatted_phone = None
+            if phone:
+                is_valid, formatted_phone, error_msg = validate_phone_number(phone)
+                if not is_valid:
+                    return error_redirect(
+                        f"/admin/users/{user_id}/edit", error_msg or "Invalid phone number"
+                    )
+
             # Prepare update data
-            update_params = prepare_update_data(user_id, name, email, phone, member, is_admin)
+            update_params = prepare_update_data(
+                user_id, name, email, formatted_phone or "", member, is_admin
+            )
             log_update_initiated(user, user_id, update_params, before)
 
             # Update angler fields

@@ -83,7 +83,7 @@
                             {% endif %}
                         </h5>
                         <small>
-                            Poll Opens on {{ poll.starts_at.strftime('%m-%d-%Y at %H:%M') }} | Closes on {{ poll.closes_at.strftime('%m-%d-%Y at %H:%M') }}
+                            Poll Opens on {{ (poll.starts_at | to_local).strftime('%m-%d-%Y at %H:%M') }} | Closes on {{ (poll.closes_at | to_local).strftime('%m-%d-%Y at %H:%M') }}
                         </small>
                     </div>
                     {% if user and user.is_admin %}
@@ -461,7 +461,7 @@
                             <!-- Poll not yet open -->
                             <div class="alert alert-info">
                                 <i class="bi bi-clock me-2"></i>
-                                This poll will open for voting on {{ poll.starts_at.strftime('%Y-%m-%d') }} at {{ poll.starts_at.strftime('%H:%M') }}.
+                                This poll will open for voting on {{ (poll.starts_at | to_local).strftime('%Y-%m-%d') }} at {{ (poll.starts_at | to_local).strftime('%H:%M') }}.
                             </div>
 
                             <!-- Show options for upcoming generic polls -->

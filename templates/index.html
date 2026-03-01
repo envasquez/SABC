@@ -48,6 +48,11 @@
                 </button>
             </li>
             {% endif %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link{% if show_completed_tab %} active{% endif %}" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed-pane" type="button" role="tab" aria-controls="completed-pane" aria-selected="{% if show_completed_tab %}true{% else %}false{% endif %}">
+                    <i class="bi bi-trophy me-1"></i>Completed
+                </button>
+            </li>
             {% if upcoming_tournaments %}
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming-pane" type="button" role="tab" aria-controls="upcoming-pane" aria-selected="false">
@@ -55,11 +60,6 @@
                 </button>
             </li>
             {% endif %}
-            <li class="nav-item" role="presentation">
-                <button class="nav-link{% if show_completed_tab %} active{% endif %}" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed-pane" type="button" role="tab" aria-controls="completed-pane" aria-selected="{% if show_completed_tab %}true{% else %}false{% endif %}">
-                    <i class="bi bi-trophy me-1"></i>Completed
-                </button>
-            </li>
         </ul>
 
         <!-- Tab Content -->
@@ -396,23 +396,6 @@
                     <div class="card-body">
                         {{ tournament_description_row(tournament) }}
                         {{ tournament_info_row(tournament) }}
-                                    <div class="fw-semibold">${{ "%.0f"|format(tournament.entry_fee) }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="text-center">
-                                    {% if tournament.is_team %}
-                                        <i class="bi bi-people-fill text-info mb-1 fs-4"></i>
-                                        <div class="small text-secondary">Type</div>
-                                        <div class="fw-semibold">Team</div>
-                                    {% else %}
-                                        <i class="bi bi-person-fill text-secondary mb-1 fs-4"></i>
-                                        <div class="small text-secondary">Type</div>
-                                        <div class="fw-semibold">Individual</div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- Google Maps or Poll Charts for upcoming tournaments -->
                         {% if tournament.google_maps_iframe %}

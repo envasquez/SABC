@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Generator
 
@@ -8,7 +8,7 @@ from markupsafe import Markup
 from sqlalchemy import Connection
 
 from core.db_schema import engine
-from core.helpers.timezone import now_local
+from core.helpers.timezone import now_local, to_local
 from core.query_service import QueryService
 
 
@@ -122,6 +122,49 @@ def time_format_filter(time_str: Any) -> str:
         return time_obj.strftime("%I:%M %p").lstrip("0")
     except Exception:
         return str(time_str)
+
+
+def to_local_datetime_filter(dt: Any) -> Any:
+    """Convert a datetime to the club's local timezone (Central Time).
+
+    This filter is used to convert UTC datetimes from the database
+    to Central Time for display to users.
+
+    Args:
+        dt: A datetime object (can be naive or timezone-aware)
+
+    Returns:
+        Timezone-aware datetime in America/Chicago timezone,
+        or the original value if not a datetime
+    """
+    if dt is None:
+        return dt
+    if not hasattr(dt, "strftime"):
+        return dt
+    return to_local(dt)
+
+
+def is_dues_current_filter(dues_paid_through: Any) -> bool:
+    """Check if member dues are current (paid through today or later).
+
+    This filter handles both date objects and string representations
+    of dates from database query results.
+
+    Args:
+        dues_paid_through: Date when dues expire (date object or ISO string)
+
+    Returns:
+        True if dues are current, False otherwise
+    """
+    if dues_paid_through is None:
+        return False
+    # Handle string representations from raw SQL queries
+    if isinstance(dues_paid_through, str):
+        try:
+            dues_paid_through = date.fromisoformat(dues_paid_through)
+        except ValueError:
+            return False
+    return dues_paid_through >= date.today()
 
 
 def month_number_filter(date_str: Any) -> str:

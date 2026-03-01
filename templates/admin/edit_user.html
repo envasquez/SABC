@@ -43,14 +43,10 @@
                 <label class="form-label">Officer Positions <small class="text-secondary">(optional - select all that apply)</small></label>
                 <div class="form-text mb-2">Officer positions are tracked per year. Changes will apply to the current year ({{ current_year }}).</div>
                 {% set positions = [
-                    'President',
-                    'Vice-President',
-                    'Secretary',
+                    'President/Secretary',
                     'Treasurer',
-                    'Media Director',
-                    'Tournament Director',
-                    'Assistant Tournament Director',
-                    'Technology Director'
+                    'Weighmaster',
+                    'Assistant Weighmaster'
                 ] %}
                 {% for position in positions %}
                 <div class="form-check">

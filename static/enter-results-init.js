@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const editTeamResultData = resultsDataElement.dataset.editTeamResultData ?
         JSON.parse(resultsDataElement.dataset.editTeamResultData) : null;
     const tournamentId = parseInt(resultsDataElement.dataset.tournamentId, 10);
+    const isTeamFormat = resultsDataElement.dataset.isTeamFormat === 'true';
 
     // Initialize results entry with the data
     initializeResultsEntry({
@@ -25,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
         existingAnglerIds: existingAnglerIds,
         editData: editData,
         editTeamResultData: editTeamResultData,
-        tournamentId: tournamentId
+        tournamentId: tournamentId,
+        isTeamFormat: isTeamFormat
     });
 });

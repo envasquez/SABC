@@ -7,6 +7,7 @@ from core.db_schema import Angler, get_session
 from core.helpers.auth import require_admin
 from core.helpers.logging import get_logger
 from routes.admin.users.email_helpers import generate_guest_email
+from routes.auth.validation import validate_phone_number
 
 router = APIRouter()
 logger = get_logger("admin.users.create")
@@ -21,11 +22,19 @@ async def create_user(request: Request):
 
         name = data.get("name", "").strip()
         email = data.get("email", "").strip() if data.get("email") else None
-        phone = data.get("phone", "").strip() if data.get("phone") else None
+        raw_phone = data.get("phone", "").strip() if data.get("phone") else None
         member = data.get("member", False)
 
         if not name:
             return JSONResponse({"success": False, "message": "Name is required"}, status_code=400)
+
+        # Validate and format phone number
+        phone = None
+        if raw_phone:
+            is_valid, formatted_phone, error_msg = validate_phone_number(raw_phone)
+            if not is_valid:
+                return JSONResponse({"success": False, "message": error_msg}, status_code=400)
+            phone = formatted_phone
 
         final_email = None
         if email:
