@@ -164,25 +164,60 @@ async def profile_page(request: Request) -> Response:
         all_time_third = all_time_finishes[2] or 0 if all_time_finishes else 0
 
         # Monthly weight aggregation for chart (2023-current year)
-        monthly_weights = (
-            session.query(
-                Event.year,
-                func.extract("month", Event.date).label("month"),
-                func.sum(Result.total_weight - func.coalesce(Result.dead_fish_penalty, 0)).label(
-                    "total_weight"
-                ),
-            )
-            .join(Tournament, Tournament.event_id == Event.id)
-            .join(Result, Result.tournament_id == Tournament.id)
-            .filter(
-                Result.angler_id == user["id"],
-                Result.disqualified.is_(False),
-                Event.year >= 2023,
-            )
-            .group_by(Event.year, func.extract("month", Event.date))
-            .order_by(Event.year, func.extract("month", Event.date))
-            .all()
+        # Combines both individual results and team_results for complete stats
+        from sqlalchemy import text
+
+        from core.query_service.dialect_helpers import DialectName, month_extract, year_extract
+
+        # Detect database dialect for compatibility
+        bind = session.bind
+        dialect_name: DialectName = (
+            "sqlite" if bind is not None and bind.dialect.name == "sqlite" else "postgresql"
         )
+        year_col = year_extract("e.date", dialect_name)
+        month_col = month_extract("e.date", dialect_name)
+
+        # Use raw SQL for the union query to avoid type compatibility issues
+        monthly_weights_query = text(f"""
+            WITH all_weights AS (
+                -- Individual format results
+                SELECT {year_col} as year,
+                       {month_col} as month,
+                       r.total_weight - COALESCE(r.dead_fish_penalty, 0) as weight
+                FROM results r
+                JOIN tournaments t ON r.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                WHERE r.angler_id = :user_id
+                  AND r.disqualified = FALSE
+                  AND {year_col} >= 2023
+                UNION ALL
+                -- Team format results (angler1 gets the weight)
+                SELECT {year_col} as year,
+                       {month_col} as month,
+                       tr.total_weight as weight
+                FROM team_results tr
+                JOIN tournaments t ON tr.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                WHERE tr.angler1_id = :user_id
+                  AND {year_col} >= 2023
+                UNION ALL
+                -- Team format results (angler2 participates, weight already counted)
+                SELECT {year_col} as year,
+                       {month_col} as month,
+                       0 as weight
+                FROM team_results tr
+                JOIN tournaments t ON tr.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                WHERE tr.angler2_id = :user_id
+                  AND {year_col} >= 2023
+            )
+            SELECT year, month, SUM(weight) as total_weight
+            FROM all_weights
+            GROUP BY year, month
+            ORDER BY year, month
+        """)
+
+        monthly_weights = session.execute(monthly_weights_query, {"user_id": user["id"]}).fetchall()
 
         # Format monthly data for Chart.js
         monthly_data: Dict[str, Any] = {}
