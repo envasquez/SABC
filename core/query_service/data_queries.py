@@ -638,6 +638,7 @@ class DataQueries(QueryServiceBase):
     def get_tournament_participation(self) -> List[Dict[str, Any]]:
         """Get participation counts per tournament with member counts."""
         # Combines both individual results and team_results
+        # Also includes cancelled tournaments with 0 participants
         # For team format, we join to anglers to get current member status
         query = """
             WITH all_participants AS (
@@ -669,18 +670,49 @@ class DataQueries(QueryServiceBase):
                 JOIN team_results tr ON tr.tournament_id = t.id
                 JOIN anglers a ON tr.angler2_id = a.id
                 WHERE t.complete = true AND tr.angler2_id IS NOT NULL
+            ),
+            cancelled_tournaments AS (
+                -- Cancelled tournaments show as 0 participants
+                SELECT e.id as event_id, e.year, e.date,
+                       COALESCE(e.lake_name, 'Cancelled') as lake_name
+                FROM events e
+                WHERE e.is_cancelled = true
+                  AND e.event_type IN ('sabc_tournament', 'other_tournament')
+            ),
+            combined AS (
+                -- Completed tournaments with participants
+                SELECT
+                    ap.tournament_id,
+                    ap.year,
+                    ap.date,
+                    ap.lake_name,
+                    COUNT(*) as participants,
+                    COUNT(DISTINCT CASE WHEN ap.was_member = true THEN ap.angler_id END) as members,
+                    COUNT(DISTINCT CASE WHEN ap.was_member = false THEN ap.angler_id END) as guests
+                FROM all_participants ap
+                GROUP BY ap.tournament_id, ap.year, ap.date, ap.lake_name
+                UNION ALL
+                -- Cancelled tournaments with 0 participants
+                SELECT
+                    NULL as tournament_id,
+                    ct.year,
+                    ct.date,
+                    ct.lake_name,
+                    0 as participants,
+                    0 as members,
+                    0 as guests
+                FROM cancelled_tournaments ct
             )
             SELECT
-                ap.tournament_id,
-                ap.year,
-                TO_CHAR(ap.date, 'YYYY-MM-DD') as tournament_date,
-                ap.lake_name,
-                COUNT(*) as participants,
-                COUNT(DISTINCT CASE WHEN ap.was_member = true THEN ap.angler_id END) as members,
-                COUNT(DISTINCT CASE WHEN ap.was_member = false THEN ap.angler_id END) as guests
-            FROM all_participants ap
-            GROUP BY ap.tournament_id, ap.year, ap.date, ap.lake_name
-            ORDER BY ap.date ASC
+                c.tournament_id,
+                c.year,
+                TO_CHAR(c.date, 'YYYY-MM-DD') as tournament_date,
+                c.lake_name,
+                c.participants,
+                c.members,
+                c.guests
+            FROM combined c
+            ORDER BY c.date ASC
         """
         return self._fetch_all_converted(query, {})
 
