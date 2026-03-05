@@ -21,6 +21,8 @@ class PollVotingHandler {
      */
     constructor(lakesData) {
         this.lakesData = lakesData;
+        this.pendingForm = null;  // Store form awaiting confirmation
+        this.confirmModal = null;  // Bootstrap modal instance
     }
 
     /**
@@ -33,6 +35,9 @@ class PollVotingHandler {
 
         // Set up form validation
         this.setupFormValidation();
+
+        // Set up confirmation modal
+        this.setupConfirmationModal();
     }
 
     /**
@@ -135,12 +140,223 @@ class PollVotingHandler {
 
         voteForms.forEach(form => {
             form.addEventListener('submit', (e) => {
+                // Always prevent default - we'll submit via confirmation modal
+                e.preventDefault();
+
                 if (!this.validateVoteForm(form)) {
-                    e.preventDefault();
                     return false;
                 }
+
+                // Show confirmation modal instead of submitting
+                this.showConfirmation(form);
             });
         });
+    }
+
+    /**
+     * Set up confirmation modal event handlers
+     * @private
+     */
+    setupConfirmationModal() {
+        const modalElement = document.getElementById('voteConfirmModal');
+        if (!modalElement) return;
+
+        // Initialize Bootstrap modal
+        this.confirmModal = new bootstrap.Modal(modalElement);
+
+        // Handle confirm button click
+        const confirmBtn = document.getElementById('confirmVoteBtn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', () => {
+                if (this.pendingForm) {
+                    // Hide modal first
+                    this.confirmModal.hide();
+                    // Submit the form programmatically (bypassing the event listener)
+                    this.submitPendingForm();
+                }
+            });
+        }
+
+        // Clear pending form when modal is closed
+        modalElement.addEventListener('hidden.bs.modal', () => {
+            // Only clear if we didn't submit
+            if (this.pendingForm && !this.pendingForm.dataset.submitting) {
+                this.pendingForm = null;
+            }
+        });
+    }
+
+    /**
+     * Submit the pending form directly
+     * @private
+     */
+    submitPendingForm() {
+        if (!this.pendingForm) return;
+
+        // Mark as submitting to prevent clearing
+        this.pendingForm.dataset.submitting = 'true';
+
+        // Create a hidden submit button and click it to submit the form
+        // This bypasses our event listener which calls preventDefault
+        const submitBtn = document.createElement('button');
+        submitBtn.type = 'submit';
+        submitBtn.style.display = 'none';
+        submitBtn.name = '_confirm_submit';
+        this.pendingForm.appendChild(submitBtn);
+
+        // Remove our submit handler temporarily
+        const form = this.pendingForm;
+        this.pendingForm = null;
+
+        // Use HTMLFormElement.submit() to bypass event listeners
+        form.submit();
+    }
+
+    /**
+     * Show vote confirmation modal with summary
+     * @param {HTMLFormElement} form - The form to confirm
+     * @private
+     */
+    showConfirmation(form) {
+        if (!this.confirmModal) {
+            // No modal available, just submit
+            form.submit();
+            return;
+        }
+
+        this.pendingForm = form;
+        const pollId = form.dataset.pollId;
+        const pollType = form.dataset.pollType;
+        const context = form.dataset.context;
+
+        // Get poll title from the page
+        const pollCard = form.closest('.card');
+        const pollTitle = pollCard ? pollCard.querySelector('.card-title, h5')?.textContent?.trim() : 'Poll';
+
+        // Set the poll title in the modal
+        const titleElement = document.getElementById('voteConfirmPollTitle');
+        if (titleElement) {
+            titleElement.textContent = pollTitle;
+        }
+
+        // Generate summary based on poll type
+        const summaryElement = document.getElementById('voteConfirmSummary');
+        if (summaryElement) {
+            summaryElement.innerHTML = this.generateVoteSummary(form, pollType, pollId, context);
+        }
+
+        // Show the modal
+        this.confirmModal.show();
+    }
+
+    /**
+     * Generate HTML summary of the vote
+     * @param {HTMLFormElement} form - The form
+     * @param {string} pollType - Type of poll
+     * @param {string|number} pollId - Poll ID
+     * @param {string} context - Context (admin_own, admin_proxy, nonadmin)
+     * @returns {string} HTML summary
+     * @private
+     */
+    generateVoteSummary(form, pollType, pollId, context) {
+        if (pollType === 'tournament_location') {
+            return this.generateTournamentSummary(pollId, context);
+        } else {
+            return this.generateSimpleSummary(form);
+        }
+    }
+
+    /**
+     * Generate summary for tournament location vote
+     * @param {string|number} pollId - Poll ID
+     * @param {string} context - Context
+     * @returns {string} HTML summary
+     * @private
+     */
+    generateTournamentSummary(pollId, context) {
+        const ids = this.getElementIds(pollId, context);
+
+        const lakeSelect = document.getElementById(ids.lake);
+        const rampSelect = document.getElementById(ids.ramp);
+        const startTimeSelect = document.getElementById(ids.startTime);
+        const endTimeSelect = document.getElementById(ids.endTime);
+
+        const lakeName = lakeSelect?.selectedOptions[0]?.text || 'Unknown';
+        const rampName = rampSelect?.selectedOptions[0]?.text || 'Unknown';
+        const startTime = this.formatTime(startTimeSelect?.value);
+        const endTime = this.formatTime(endTimeSelect?.value);
+
+        let summary = '<dl class="row mb-0">';
+        summary += '<dt class="col-sm-4"><i class="bi bi-geo-alt me-1"></i>Lake</dt>';
+        summary += '<dd class="col-sm-8 fw-bold">' + this.escapeHtml(lakeName) + '</dd>';
+        summary += '<dt class="col-sm-4"><i class="bi bi-signpost me-1"></i>Ramp</dt>';
+        summary += '<dd class="col-sm-8 fw-bold">' + this.escapeHtml(rampName) + '</dd>';
+        summary += '<dt class="col-sm-4"><i class="bi bi-clock me-1"></i>Start Time</dt>';
+        summary += '<dd class="col-sm-8 fw-bold">' + startTime + '</dd>';
+        summary += '<dt class="col-sm-4"><i class="bi bi-clock-history me-1"></i>End Time</dt>';
+        summary += '<dd class="col-sm-8 fw-bold">' + endTime + '</dd>';
+        summary += '</dl>';
+
+        // For proxy votes, show who we're voting for
+        if (context === 'admin_proxy') {
+            const memberSelect = document.getElementById(ids.member);
+            const memberName = memberSelect?.selectedOptions[0]?.text || 'Unknown';
+            summary += '<div class="mt-2 pt-2 border-top">';
+            summary += '<small class="text-warning"><i class="bi bi-person-badge me-1"></i>Voting on behalf of: <strong>' + this.escapeHtml(memberName) + '</strong></small>';
+            summary += '</div>';
+        }
+
+        return summary;
+    }
+
+    /**
+     * Generate summary for simple poll vote
+     * @param {HTMLFormElement} form - The form
+     * @returns {string} HTML summary
+     * @private
+     */
+    generateSimpleSummary(form) {
+        const selectedOption = form.querySelector('input[name="option_id"]:checked');
+        if (!selectedOption) {
+            return '<p class="text-warning">No option selected</p>';
+        }
+
+        const label = form.querySelector('label[for="' + selectedOption.id + '"]');
+        const optionText = label ? label.textContent.trim() : 'Unknown option';
+
+        let summary = '<div class="d-flex align-items-center">';
+        summary += '<i class="bi bi-check-circle-fill text-success me-2" style="font-size: 1.5rem;"></i>';
+        summary += '<span class="fw-bold">' + this.escapeHtml(optionText) + '</span>';
+        summary += '</div>';
+
+        return summary;
+    }
+
+    /**
+     * Format 24h time string to 12h format
+     * @param {string} time24 - Time in HH:MM format
+     * @returns {string} Formatted time
+     * @private
+     */
+    formatTime(time24) {
+        if (!time24) return 'Unknown';
+        const [hours, minutes] = time24.split(':');
+        const h = parseInt(hours);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const h12 = h % 12 || 12;
+        return h12 + ':' + minutes + ' ' + ampm;
+    }
+
+    /**
+     * Escape HTML to prevent XSS
+     * @param {string} text - Text to escape
+     * @returns {string} Escaped text
+     * @private
+     */
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     /**

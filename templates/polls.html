@@ -812,6 +812,43 @@
 <p class="text-secondary">This will remove the poll, all options, and all votes. This cannot be reversed.</p>
 {% endcall %}
 
+<!-- Vote Confirmation Modal -->
+<div class="modal fade" id="voteConfirmModal" tabindex="-1" aria-labelledby="voteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="voteConfirmModalLabel">
+                    <i class="bi bi-check-circle me-2"></i>Confirm Your Vote
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-secondary mb-3">Please review your vote before submitting:</p>
+                <div class="card bg-dark border-secondary">
+                    <div class="card-header">
+                        <h6 class="mb-0" id="voteConfirmPollTitle"></h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="voteConfirmSummary"></div>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <small>Once submitted, your vote cannot be changed.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-arrow-left me-1"></i>Go Back
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmVoteBtn">
+                    <i class="bi bi-check-square me-1"></i>Confirm Vote
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Chart.js for stacked bar charts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="/static/utils.js"></script>
