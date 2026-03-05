@@ -164,7 +164,8 @@ async def profile_page(request: Request) -> Response:
         all_time_third = all_time_finishes[2] or 0 if all_time_finishes else 0
 
         # Monthly weight aggregation for chart (2023-current year)
-        # Uses individual results only - team_results contains team totals which would double-count
+        # Uses individual results as primary source
+        # Falls back to team_results for tournaments without individual data
         from sqlalchemy import text
 
         from core.query_service.dialect_helpers import DialectName, month_extract, year_extract
@@ -177,19 +178,47 @@ async def profile_page(request: Request) -> Response:
         year_col = year_extract("e.date", dialect_name)
         month_col = month_extract("e.date", dialect_name)
 
-        # Query individual weights from results table only
-        # Note: team_results contains combined team weight, not individual weights
+        # Query individual weights, falling back to team_results when needed
+        # For team-only tournaments, attribute team weight to angler1
         monthly_weights_query = text(f"""
-            SELECT {year_col} as year,
-                   {month_col} as month,
-                   SUM(r.total_weight - COALESCE(r.dead_fish_penalty, 0)) as total_weight
-            FROM results r
-            JOIN tournaments t ON r.tournament_id = t.id
-            JOIN events e ON t.event_id = e.id
-            WHERE r.angler_id = :user_id
-              AND r.disqualified = FALSE
-              AND {year_col} >= 2023
-            GROUP BY {year_col}, {month_col}
+            WITH all_weights AS (
+                -- Individual results (primary source)
+                SELECT {year_col} as year,
+                       {month_col} as month,
+                       r.total_weight - COALESCE(r.dead_fish_penalty, 0) as weight
+                FROM results r
+                JOIN tournaments t ON r.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                WHERE r.angler_id = :user_id
+                  AND r.disqualified = FALSE
+                  AND {year_col} >= 2023
+                UNION ALL
+                -- Team results (only for tournaments without individual data)
+                -- Attribute team weight to angler1 to avoid double-counting
+                SELECT {year_col} as year,
+                       {month_col} as month,
+                       tr.total_weight as weight
+                FROM team_results tr
+                JOIN tournaments t ON tr.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                WHERE tr.angler1_id = :user_id
+                  AND {year_col} >= 2023
+                  AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
+                UNION ALL
+                -- Angler2 gets 0 weight for team-only tournaments (just for participation tracking)
+                SELECT {year_col} as year,
+                       {month_col} as month,
+                       0 as weight
+                FROM team_results tr
+                JOIN tournaments t ON tr.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                WHERE tr.angler2_id = :user_id
+                  AND {year_col} >= 2023
+                  AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
+            )
+            SELECT year, month, SUM(weight) as total_weight
+            FROM all_weights
+            GROUP BY year, month
             ORDER BY year, month
         """)
 

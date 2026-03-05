@@ -191,52 +191,123 @@ def get_member_monthly_weights(
 ) -> Dict[int, Dict[str, List[Dict[str, Any]]]]:
     """
     Fetch monthly weight data for all members in a single query.
-    Uses individual results only - team_results contains team totals which would double-count.
+    Uses individual results as primary source, falls back to team_results for team-only tournaments.
     Returns a dict mapping member_id -> {year: [12 monthly data objects]}
     Each data object contains: {weight: float, buy_in: bool}
     """
     if not member_ids:
         return {}
 
-    # Query individual weights from results table only
-    # Note: team_results contains combined team weight, not individual weights
+    # Query individual weights, falling back to team_results when needed
     year_col = year_extract("e.date", dialect_name)
     month_col = month_extract("e.date", dialect_name)
 
     if dialect_name == "sqlite":
         id_list = ",".join(str(id) for id in member_ids)
         monthly_query = f"""
-            SELECT r.angler_id,
-                   {year_col} as year,
-                   {month_col} as month,
-                   SUM(r.total_weight - COALESCE(r.dead_fish_penalty, 0)) as total_weight,
-                   MAX(r.buy_in) as has_buy_in
-            FROM results r
-            JOIN tournaments t ON r.tournament_id = t.id
-            JOIN events e ON t.event_id = e.id
-            WHERE r.angler_id IN ({id_list})
-              AND r.disqualified = FALSE
-              AND {year_col} >= 2023
-            GROUP BY r.angler_id, {year_col}, {month_col}
-            ORDER BY r.angler_id, year, month
+            WITH all_weights AS (
+                -- Individual results (primary source)
+                SELECT r.angler_id,
+                       {year_col} as year,
+                       {month_col} as month,
+                       r.total_weight - COALESCE(r.dead_fish_penalty, 0) as weight,
+                       r.buy_in
+                FROM results r
+                JOIN tournaments t ON r.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                WHERE r.angler_id IN ({id_list})
+                  AND r.disqualified = FALSE
+                  AND {year_col} >= 2023
+                UNION ALL
+                -- Team results angler1 (only for tournaments without individual data)
+                SELECT tr.angler1_id as angler_id,
+                       {year_col} as year,
+                       {month_col} as month,
+                       tr.total_weight as weight,
+                       0 as buy_in
+                FROM team_results tr
+                JOIN tournaments t ON tr.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                WHERE tr.angler1_id IN ({id_list})
+                  AND {year_col} >= 2023
+                  AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
+                UNION ALL
+                -- Team results angler2 (only for tournaments without individual data, 0 weight)
+                SELECT tr.angler2_id as angler_id,
+                       {year_col} as year,
+                       {month_col} as month,
+                       0 as weight,
+                       0 as buy_in
+                FROM team_results tr
+                JOIN tournaments t ON tr.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                WHERE tr.angler2_id IN ({id_list})
+                  AND tr.angler2_id IS NOT NULL
+                  AND {year_col} >= 2023
+                  AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
+            )
+            SELECT angler_id,
+                   year,
+                   month,
+                   SUM(weight) as total_weight,
+                   MAX(buy_in) as has_buy_in
+            FROM all_weights
+            GROUP BY angler_id, year, month
+            ORDER BY angler_id, year, month
         """
         results = qs.fetch_all(monthly_query, {})
     else:
         # PostgreSQL version using ANY for array (more efficient)
         monthly_query = f"""
-            SELECT r.angler_id,
-                   {year_col} as year,
-                   {month_col} as month,
-                   SUM(r.total_weight - COALESCE(r.dead_fish_penalty, 0)) as total_weight,
-                   BOOL_OR(r.buy_in) as has_buy_in
-            FROM results r
-            JOIN tournaments t ON r.tournament_id = t.id
-            JOIN events e ON t.event_id = e.id
-            WHERE r.angler_id = ANY(:member_ids)
-              AND r.disqualified = FALSE
-              AND {year_col} >= 2023
-            GROUP BY r.angler_id, {year_col}, {month_col}
-            ORDER BY r.angler_id, year, month
+            WITH all_weights AS (
+                -- Individual results (primary source)
+                SELECT r.angler_id,
+                       {year_col} as year,
+                       {month_col} as month,
+                       r.total_weight - COALESCE(r.dead_fish_penalty, 0) as weight,
+                       r.buy_in
+                FROM results r
+                JOIN tournaments t ON r.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                WHERE r.angler_id = ANY(:member_ids)
+                  AND r.disqualified = FALSE
+                  AND {year_col} >= 2023
+                UNION ALL
+                -- Team results angler1 (only for tournaments without individual data)
+                SELECT tr.angler1_id as angler_id,
+                       {year_col} as year,
+                       {month_col} as month,
+                       tr.total_weight as weight,
+                       false as buy_in
+                FROM team_results tr
+                JOIN tournaments t ON tr.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                WHERE tr.angler1_id = ANY(:member_ids)
+                  AND {year_col} >= 2023
+                  AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
+                UNION ALL
+                -- Team results angler2 (only for tournaments without individual data, 0 weight)
+                SELECT tr.angler2_id as angler_id,
+                       {year_col} as year,
+                       {month_col} as month,
+                       0 as weight,
+                       false as buy_in
+                FROM team_results tr
+                JOIN tournaments t ON tr.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                WHERE tr.angler2_id = ANY(:member_ids)
+                  AND tr.angler2_id IS NOT NULL
+                  AND {year_col} >= 2023
+                  AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
+            )
+            SELECT angler_id,
+                   year,
+                   month,
+                   SUM(weight) as total_weight,
+                   BOOL_OR(buy_in) as has_buy_in
+            FROM all_weights
+            GROUP BY angler_id, year, month
+            ORDER BY angler_id, year, month
         """
         results = qs.fetch_all(monthly_query, {"member_ids": member_ids})
 

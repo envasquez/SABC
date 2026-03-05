@@ -279,37 +279,41 @@ class DataQueries(QueryServiceBase):
 
     def get_participation_trends(self) -> List[Dict[str, Any]]:
         """Get average participation per tournament by year."""
-        # Combines both individual results and team_results
+        # Uses individual results as primary source
+        # Falls back to team_results only for tournaments without results data
         query = """
             WITH all_participants AS (
-                -- Individual format results
+                -- Individual results (primary source)
                 SELECT t.id as tournament_id, e.year, r.angler_id
                 FROM tournaments t
                 JOIN events e ON t.event_id = e.id
                 JOIN results r ON r.tournament_id = t.id
                 WHERE t.complete = true
                 UNION ALL
-                -- Team format results (angler1)
+                -- Team results angler1 (only for tournaments without individual data)
                 SELECT t.id as tournament_id, e.year, tr.angler1_id as angler_id
                 FROM tournaments t
                 JOIN events e ON t.event_id = e.id
                 JOIN team_results tr ON tr.tournament_id = t.id
                 WHERE t.complete = true
+                  AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
                 UNION ALL
-                -- Team format results (angler2, when present)
+                -- Team results angler2 (only for tournaments without individual data)
                 SELECT t.id as tournament_id, e.year, tr.angler2_id as angler_id
                 FROM tournaments t
                 JOIN events e ON t.event_id = e.id
                 JOIN team_results tr ON tr.tournament_id = t.id
-                WHERE t.complete = true AND tr.angler2_id IS NOT NULL
+                WHERE t.complete = true
+                  AND tr.angler2_id IS NOT NULL
+                  AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
             )
             SELECT
                 ap.year,
                 COUNT(DISTINCT ap.tournament_id) as tournament_count,
-                COUNT(*) as total_entries,
+                COUNT(DISTINCT (ap.tournament_id, ap.angler_id)) as total_entries,
                 CASE
                     WHEN COUNT(DISTINCT ap.tournament_id) > 0
-                    THEN CAST(COUNT(*) AS FLOAT) / COUNT(DISTINCT ap.tournament_id)
+                    THEN CAST(COUNT(DISTINCT (ap.tournament_id, ap.angler_id)) AS FLOAT) / COUNT(DISTINCT ap.tournament_id)
                     ELSE 0
                 END as avg_participants
             FROM all_participants ap
@@ -382,20 +386,31 @@ class DataQueries(QueryServiceBase):
 
     def get_catch_distribution(self) -> List[Dict[str, Any]]:
         """Get distribution of fish counts (0 fish, 1 fish, 2 fish, etc.)."""
-        # Combines both individual results and team_results
+        # Uses individual results for accurate per-angler fish counts
+        # Falls back to team_results only for tournaments without results data
         query = """
             WITH all_catches AS (
-                -- Individual format results
+                -- Individual results (primary source)
                 SELECT r.num_fish
                 FROM results r
                 JOIN tournaments t ON r.tournament_id = t.id
                 WHERE t.complete = true AND r.disqualified = false
                 UNION ALL
-                -- Team format results (per boat)
-                SELECT tr.num_fish
+                -- Team results only for tournaments without individual data
+                -- In this case, split team fish count between anglers
+                SELECT COALESCE(tr.num_fish / 2, 0) as num_fish
                 FROM team_results tr
                 JOIN tournaments t ON tr.tournament_id = t.id
                 WHERE t.complete = true
+                  AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
+                UNION ALL
+                -- Second angler from team (when present) for tournaments without individual data
+                SELECT COALESCE(tr.num_fish / 2, 0) as num_fish
+                FROM team_results tr
+                JOIN tournaments t ON tr.tournament_id = t.id
+                WHERE t.complete = true
+                  AND tr.angler2_id IS NOT NULL
+                  AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
             )
             SELECT
                 ac.num_fish as fish_count,
@@ -408,27 +423,30 @@ class DataQueries(QueryServiceBase):
 
     def get_limits_zeros_by_year(self) -> List[Dict[str, Any]]:
         """Get limits and zeros counts per year."""
-        # Combines both individual results and team_results
+        # Uses individual results for accurate per-angler stats
+        # Falls back to team_results only for tournaments without results data
         query = """
             WITH all_results AS (
-                -- Individual format results
+                -- Individual results (primary source)
                 SELECT e.year, r.num_fish, t.fish_limit, r.disqualified
                 FROM tournaments t
                 JOIN events e ON t.event_id = e.id
                 JOIN results r ON r.tournament_id = t.id
                 WHERE t.complete = true
                 UNION ALL
-                -- Team format results (per boat)
-                SELECT e.year, tr.num_fish, t.fish_limit, false as disqualified
+                -- Team results only for tournaments without individual data
+                -- For team format, check if team caught limit (fish_limit * 2)
+                SELECT e.year, tr.num_fish, t.fish_limit * 2 as fish_limit, false as disqualified
                 FROM tournaments t
                 JOIN events e ON t.event_id = e.id
                 JOIN team_results tr ON tr.tournament_id = t.id
                 WHERE t.complete = true
+                  AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
             )
             SELECT
                 ar.year,
                 COUNT(*) as total_entries,
-                SUM(CASE WHEN ar.num_fish = ar.fish_limit THEN 1 ELSE 0 END) as limits,
+                SUM(CASE WHEN ar.num_fish >= ar.fish_limit THEN 1 ELSE 0 END) as limits,
                 SUM(CASE WHEN ar.num_fish = 0 AND ar.disqualified = false THEN 1 ELSE 0 END) as zeros
             FROM all_results ar
             GROUP BY ar.year
@@ -637,12 +655,12 @@ class DataQueries(QueryServiceBase):
 
     def get_tournament_participation(self) -> List[Dict[str, Any]]:
         """Get participation counts per tournament with member counts."""
-        # Combines both individual results and team_results
+        # Uses individual results as primary source for accurate per-angler stats
+        # Falls back to team_results only for tournaments without results data
         # Also includes cancelled tournaments with 0 participants
-        # For team format, we join to anglers to get current member status
         query = """
             WITH all_participants AS (
-                -- Individual format results (has was_member flag)
+                -- Individual results (primary source with was_member flag)
                 SELECT t.id as tournament_id, e.year, e.date, l.display_name as lake_name,
                        r.angler_id, r.was_member
                 FROM tournaments t
@@ -651,7 +669,7 @@ class DataQueries(QueryServiceBase):
                 JOIN results r ON r.tournament_id = t.id
                 WHERE t.complete = true
                 UNION ALL
-                -- Team format results (angler1) - use current member status
+                -- Team results angler1 (only for tournaments without individual data)
                 SELECT t.id as tournament_id, e.year, e.date, l.display_name as lake_name,
                        tr.angler1_id as angler_id, a.member as was_member
                 FROM tournaments t
@@ -660,8 +678,9 @@ class DataQueries(QueryServiceBase):
                 JOIN team_results tr ON tr.tournament_id = t.id
                 JOIN anglers a ON tr.angler1_id = a.id
                 WHERE t.complete = true
+                  AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
                 UNION ALL
-                -- Team format results (angler2, when present)
+                -- Team results angler2 (only for tournaments without individual data)
                 SELECT t.id as tournament_id, e.year, e.date, l.display_name as lake_name,
                        tr.angler2_id as angler_id, a.member as was_member
                 FROM tournaments t
@@ -669,7 +688,9 @@ class DataQueries(QueryServiceBase):
                 JOIN lakes l ON t.lake_id = l.id
                 JOIN team_results tr ON tr.tournament_id = t.id
                 JOIN anglers a ON tr.angler2_id = a.id
-                WHERE t.complete = true AND tr.angler2_id IS NOT NULL
+                WHERE t.complete = true
+                  AND tr.angler2_id IS NOT NULL
+                  AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
             ),
             cancelled_tournaments AS (
                 -- Cancelled tournaments show as 0 participants
@@ -686,7 +707,7 @@ class DataQueries(QueryServiceBase):
                     ap.year,
                     ap.date,
                     ap.lake_name,
-                    COUNT(*) as participants,
+                    COUNT(DISTINCT ap.angler_id) as participants,
                     COUNT(DISTINCT CASE WHEN ap.was_member = true THEN ap.angler_id END) as members,
                     COUNT(DISTINCT CASE WHEN ap.was_member = false THEN ap.angler_id END) as guests
                 FROM all_participants ap
