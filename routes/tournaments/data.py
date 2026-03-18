@@ -20,8 +20,12 @@ from routes.tournaments.formatters import (
 PAYOUT_FIRST_PLACE_PER_BOAT = Decimal("20.00")
 PAYOUT_SECOND_PLACE_PER_BOAT = Decimal("14.00")
 PAYOUT_THIRD_PLACE_PER_BOAT = Decimal("8.00")
-PAYOUT_BIG_BASS_PER_BOAT = Decimal("8.00")
+PAYOUT_BIG_BASS_PER_BOAT = Decimal("8.00")  # 2026+ team format: $8/boat
+PAYOUT_BIG_BASS_PER_ANGLER_2025 = Decimal("4.00")  # 2025 and earlier: $4/angler
 BIG_BASS_MINIMUM_WEIGHT = Decimal("5.0")  # Must be over 5 lbs to qualify
+
+# Bylaws changed in 2026 - different big bass pot contribution rates
+TEAM_FORMAT_START_YEAR = 2026
 
 
 def calculate_big_bass_carryover(qs: QueryService, tournament_id: int, event_date: str) -> Decimal:
@@ -31,9 +35,9 @@ def calculate_big_bass_carryover(qs: QueryService, tournament_id: int, event_dat
     We scan backwards through tournaments until we find one where a member won,
     accumulating the pot from each tournament where it wasn't won.
 
-    Handles both formats at $8 per entry:
-    - Individual format (2025): $8/angler from results table
-    - Team format (2026): $8/boat from team_results table
+    Handles both formats with different rates based on bylaws:
+    - Individual format (2025 and earlier): $4/angler from results table
+    - Team format (2026+): $8/boat from team_results table
 
     Args:
         qs: QueryService instance
@@ -45,8 +49,9 @@ def calculate_big_bass_carryover(qs: QueryService, tournament_id: int, event_dat
     """
     # Get all previous tournaments that have been fished (have results or team_results)
     # Exclude Admin User entries from both individual and team results
+    # Include year for determining which bylaws apply
     previous_tournaments = qs.fetch_all(
-        """SELECT t.id, e.date,
+        """SELECT t.id, e.date, e.year,
                   COUNT(DISTINCT CASE WHEN a.name != 'Admin User' THEN r.angler_id END) as angler_count,
                   COUNT(DISTINCT CASE WHEN a1.name != 'Admin User' THEN tr.id END) as boat_count,
                   MAX(CASE WHEN r.was_member = TRUE AND r.big_bass_weight > :min_weight
@@ -58,7 +63,7 @@ def calculate_big_bass_carryover(qs: QueryService, tournament_id: int, event_dat
            LEFT JOIN team_results tr ON tr.tournament_id = t.id
            LEFT JOIN anglers a1 ON tr.angler1_id = a1.id
            WHERE e.date < :event_date
-           GROUP BY t.id, e.date
+           GROUP BY t.id, e.date, e.year
            HAVING COUNT(CASE WHEN a.name != 'Admin User' THEN r.id END) > 0
                OR COUNT(CASE WHEN a1.name != 'Admin User' THEN tr.id END) > 0
            ORDER BY e.date DESC""",
@@ -76,13 +81,19 @@ def calculate_big_bass_carryover(qs: QueryService, tournament_id: int, event_dat
             break
 
         # No member won big bass - add this tournament's contribution to carryover
-        # Both formats use $8 per entry (angler or boat)
+        # Use different rates based on bylaws year
         angler_count = t["angler_count"] or 0
         boat_count = t["boat_count"] or 0
+        tournament_year = t["year"]
 
-        # Use whichever has data - $8 per entry either way
-        entry_count = angler_count if angler_count > 0 else boat_count
-        pot_contribution = PAYOUT_BIG_BASS_PER_BOAT * Decimal(entry_count)
+        if tournament_year >= TEAM_FORMAT_START_YEAR:
+            # 2026+ team format: $8 per boat
+            entry_count = boat_count if boat_count > 0 else angler_count
+            pot_contribution = PAYOUT_BIG_BASS_PER_BOAT * Decimal(entry_count)
+        else:
+            # 2025 and earlier individual format: $4 per angler
+            entry_count = angler_count if angler_count > 0 else boat_count
+            pot_contribution = PAYOUT_BIG_BASS_PER_ANGLER_2025 * Decimal(entry_count)
 
         carryover += pot_contribution
 
