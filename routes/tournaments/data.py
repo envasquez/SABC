@@ -252,31 +252,61 @@ def fetch_tournament_data(
 
     # Check if biggest bass was caught by a member (guests can't win big bass pot)
     # Only members at the time of the tournament (was_member) can win
-    big_bass_winner = qs.fetch_one(
-        """SELECT r.big_bass_weight, r.was_member, a.name
-           FROM results r
-           JOIN anglers a ON r.angler_id = a.id
-           WHERE r.tournament_id = :id
-           AND r.disqualified = FALSE
-           AND r.big_bass_weight > :min_weight
-           AND r.was_member = TRUE
-           ORDER BY r.big_bass_weight DESC
-           LIMIT 1""",
-        {"id": tournament_id, "min_weight": float(BIG_BASS_MINIMUM_WEIGHT)},
-    )
+    # For team format: at least ONE angler on the team must be a member
+    if not tournament.aoy_points:
+        # Team format: check team_results for big bass
+        # Team is eligible if either angler1 OR angler2 is a member
+        big_bass_winner = qs.fetch_one(
+            """SELECT tr.big_bass_weight,
+                      (COALESCE(a1.member, FALSE) OR COALESCE(a2.member, FALSE)) as has_member,
+                      a1.name
+               FROM team_results tr
+               JOIN anglers a1 ON tr.angler1_id = a1.id
+               LEFT JOIN anglers a2 ON tr.angler2_id = a2.id
+               WHERE tr.tournament_id = :id
+               AND tr.big_bass_weight > :min_weight
+               AND (a1.member = TRUE OR a2.member = TRUE)
+               ORDER BY tr.big_bass_weight DESC
+               LIMIT 1""",
+            {"id": tournament_id, "min_weight": float(BIG_BASS_MINIMUM_WEIGHT)},
+        )
+        overall_big_bass = qs.fetch_one(
+            """SELECT tr.big_bass_weight,
+                      (COALESCE(a1.member, FALSE) OR COALESCE(a2.member, FALSE)) as was_member
+               FROM team_results tr
+               JOIN anglers a1 ON tr.angler1_id = a1.id
+               LEFT JOIN anglers a2 ON tr.angler2_id = a2.id
+               WHERE tr.tournament_id = :id
+               AND tr.big_bass_weight > 0
+               ORDER BY tr.big_bass_weight DESC
+               LIMIT 1""",
+            {"id": tournament_id},
+        )
+    else:
+        # Standard format: check results table
+        big_bass_winner = qs.fetch_one(
+            """SELECT r.big_bass_weight, r.was_member, a.name
+               FROM results r
+               JOIN anglers a ON r.angler_id = a.id
+               WHERE r.tournament_id = :id
+               AND r.disqualified = FALSE
+               AND r.big_bass_weight > :min_weight
+               AND r.was_member = TRUE
+               ORDER BY r.big_bass_weight DESC
+               LIMIT 1""",
+            {"id": tournament_id, "min_weight": float(BIG_BASS_MINIMUM_WEIGHT)},
+        )
+        overall_big_bass = qs.fetch_one(
+            """SELECT r.big_bass_weight, r.was_member
+               FROM results r
+               WHERE r.tournament_id = :id
+               AND r.disqualified = FALSE
+               AND r.big_bass_weight > 0
+               ORDER BY r.big_bass_weight DESC
+               LIMIT 1""",
+            {"id": tournament_id},
+        )
     member_has_qualifying_big_bass = big_bass_winner is not None
-
-    # Check if the overall big bass was caught by a guest (for display purposes)
-    overall_big_bass = qs.fetch_one(
-        """SELECT r.big_bass_weight, r.was_member
-           FROM results r
-           WHERE r.tournament_id = :id
-           AND r.disqualified = FALSE
-           AND r.big_bass_weight > 0
-           ORDER BY r.big_bass_weight DESC
-           LIMIT 1""",
-        {"id": tournament_id},
-    )
     big_bass_caught_by_guest = (
         overall_big_bass is not None
         and overall_big_bass["big_bass_weight"] > 0

@@ -1,4 +1,3 @@
-import logging
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, Request
@@ -11,7 +10,6 @@ from core.helpers.forms import get_form_float, get_form_int
 from core.query_service import QueryService
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
 
 
 @router.post("/admin/tournaments/{tournament_id}/team-results")
@@ -46,14 +44,7 @@ async def save_team_result(
             direct_weight = get_form_float(form_data, "total_weight", 0.0)
             total_weight = Decimal(str(direct_weight))
             num_fish = get_form_int(form_data, "num_fish") or 0
-            raw_big_bass = form_data.get("big_bass_weight")
-            parsed_big_bass = get_form_float(form_data, "big_bass_weight", 0.0)
-            big_bass_weight = Decimal(str(parsed_big_bass or 0.0))
-            logger.warning(
-                f"TEAM_RESULTS DEBUG: raw_big_bass={raw_big_bass!r}, "
-                f"parsed={parsed_big_bass}, final={big_bass_weight}, "
-                f"total_weight={total_weight}, num_fish={num_fish}"
-            )
+            big_bass_weight = Decimal(str(get_form_float(form_data, "big_bass_weight", 0.0) or 0.0))
         else:
             # Standard format: calculate from individual results
             total_weight = Decimal("0")
@@ -133,10 +124,6 @@ async def save_team_result(
                     "big_bass_weight": big_bass_weight,
                 },
             )
-        logger.warning(
-            f"TEAM_RESULTS SAVED: tournament_id={tournament_id}, "
-            f"angler1_id={angler1_id}, big_bass_weight={big_bass_weight}"
-        )
         conn.commit()
 
         # Recalculate place_finish
