@@ -200,7 +200,7 @@ def fetch_tournament_data(
                0 as limits,
                COUNT(CASE WHEN tr.num_fish = 0 THEN 1 END) as zeros,
                0 as buy_ins,
-               0 as biggest_bass,
+               COALESCE(MAX(tr.big_bass_weight), 0) as biggest_bass,
                COALESCE(MAX(tr.total_weight), 0) as heavy_stringer
                FROM team_results tr
                JOIN anglers a1 ON tr.angler1_id = a1.id
