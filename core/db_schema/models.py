@@ -266,6 +266,7 @@ class TeamResult(Base):
     __table_args__ = (
         CheckConstraint("total_weight >= 0", name="ck_team_result_total_weight_positive"),
         CheckConstraint("num_fish >= 0", name="ck_team_result_num_fish_positive"),
+        CheckConstraint("big_bass_weight >= 0", name="ck_team_result_big_bass_weight_positive"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -280,6 +281,7 @@ class TeamResult(Base):
     )
     num_fish: Mapped[Optional[int]] = mapped_column(Integer, default=0)
     total_weight: Mapped[Optional[Decimal]] = mapped_column(Numeric, default=0.0)
+    big_bass_weight: Mapped[Optional[Decimal]] = mapped_column(Numeric, default=0.0)
     place_finish: Mapped[Optional[int]] = mapped_column(Integer)
 
 

@@ -37,30 +37,40 @@ async def save_team_result(
         # Check if this is team format (direct weight entry)
         is_team_format = form_data.get("is_team_format") == "true"
         num_fish = 0
+        big_bass_weight = Decimal("0.0")
 
         if is_team_format:
             # Team format: use direct weight and fish count from form
             direct_weight = get_form_float(form_data, "total_weight", 0.0)
             total_weight = Decimal(str(direct_weight))
             num_fish = get_form_int(form_data, "num_fish") or 0
+            big_bass_weight = Decimal(str(get_form_float(form_data, "big_bass_weight", 0.0) or 0.0))
         else:
             # Standard format: calculate from individual results
             total_weight = Decimal("0")
             angler1_data = qs.fetch_one(
-                "SELECT total_weight, num_fish FROM results WHERE tournament_id = :tid AND angler_id = :aid",
+                """SELECT total_weight, num_fish, big_bass_weight
+                   FROM results WHERE tournament_id = :tid AND angler_id = :aid""",
                 {"tid": tournament_id, "aid": angler1_id},
             )
             if angler1_data:
                 total_weight += Decimal(str(angler1_data["total_weight"] or 0))
                 num_fish += angler1_data["num_fish"] or 0
+                angler1_bb = Decimal(str(angler1_data["big_bass_weight"] or 0))
+                if angler1_bb > big_bass_weight:
+                    big_bass_weight = angler1_bb
             if angler2_id:
                 angler2_data = qs.fetch_one(
-                    "SELECT total_weight, num_fish FROM results WHERE tournament_id = :tid AND angler_id = :aid",
+                    """SELECT total_weight, num_fish, big_bass_weight
+                       FROM results WHERE tournament_id = :tid AND angler_id = :aid""",
                     {"tid": tournament_id, "aid": angler2_id},
                 )
                 if angler2_data:
                     total_weight += Decimal(str(angler2_data["total_weight"] or 0))
                     num_fish += angler2_data["num_fish"] or 0
+                    angler2_bb = Decimal(str(angler2_data["big_bass_weight"] or 0))
+                    if angler2_bb > big_bass_weight:
+                        big_bass_weight = angler2_bb
         # Check if team_result_id was provided (edit mode)
         team_result_id = get_form_int(form_data, "team_result_id")
         if team_result_id:
@@ -90,21 +100,28 @@ async def save_team_result(
         if existing:
             qs.execute(
                 """UPDATE team_results
-                   SET total_weight = :total_weight, num_fish = :num_fish
+                   SET total_weight = :total_weight, num_fish = :num_fish,
+                       big_bass_weight = :big_bass_weight
                    WHERE id = :id""",
-                {"total_weight": total_weight, "num_fish": num_fish, "id": existing["id"]},
+                {
+                    "total_weight": total_weight,
+                    "num_fish": num_fish,
+                    "big_bass_weight": big_bass_weight,
+                    "id": existing["id"],
+                },
             )
         else:
             qs.execute(
                 """INSERT INTO team_results
-                   (tournament_id, angler1_id, angler2_id, total_weight, num_fish)
-                   VALUES (:tid, :a1, :a2, :total_weight, :num_fish)""",
+                   (tournament_id, angler1_id, angler2_id, total_weight, num_fish, big_bass_weight)
+                   VALUES (:tid, :a1, :a2, :total_weight, :num_fish, :big_bass_weight)""",
                 {
                     "tid": tournament_id,
                     "a1": angler1_id,
                     "a2": angler2_id,
                     "total_weight": total_weight,
                     "num_fish": num_fish,
+                    "big_bass_weight": big_bass_weight,
                 },
             )
         conn.commit()
