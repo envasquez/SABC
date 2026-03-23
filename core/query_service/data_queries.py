@@ -325,7 +325,6 @@ class DataQueries(QueryServiceBase):
     def get_lake_statistics(self) -> List[Dict[str, Any]]:
         """Get statistics for each lake fished."""
         # Combines both individual results and team_results
-        # Note: team_results doesn't have big_bass_weight or disqualified fields
         query = """
             WITH all_results AS (
                 -- Individual format results
@@ -341,7 +340,7 @@ class DataQueries(QueryServiceBase):
                 -- Team format results (count per boat, not per angler)
                 SELECT l.id as lake_id, l.display_name as lake_name, t.id as tournament_id,
                        e.date, tr.total_weight, tr.num_fish, t.fish_limit,
-                       false as disqualified, NULL as big_bass_weight
+                       false as disqualified, tr.big_bass_weight
                 FROM lakes l
                 JOIN tournaments t ON t.lake_id = l.id
                 JOIN events e ON t.event_id = e.id
