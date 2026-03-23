@@ -100,10 +100,13 @@ async def save_team_result(
         if existing:
             qs.execute(
                 """UPDATE team_results
-                   SET total_weight = :total_weight, num_fish = :num_fish,
+                   SET angler1_id = :a1, angler2_id = :a2,
+                       total_weight = :total_weight, num_fish = :num_fish,
                        big_bass_weight = :big_bass_weight
                    WHERE id = :id""",
                 {
+                    "a1": angler1_id,
+                    "a2": angler2_id,
                     "total_weight": total_weight,
                     "num_fish": num_fish,
                     "big_bass_weight": big_bass_weight,
