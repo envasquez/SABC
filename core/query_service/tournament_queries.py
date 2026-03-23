@@ -130,7 +130,9 @@ class TournamentQueries(QueryServiceBase):
                    END as total_weight,
                    CASE
                        WHEN r1.id IS NULL AND r2.id IS NULL THEN COALESCE(tr.big_bass_weight, 0)
-                       ELSE GREATEST(COALESCE(r1.big_bass_weight, 0), COALESCE(r2.big_bass_weight, 0))
+                       WHEN COALESCE(r1.big_bass_weight, 0) > COALESCE(r2.big_bass_weight, 0)
+                           THEN COALESCE(r1.big_bass_weight, 0)
+                       ELSE COALESCE(r2.big_bass_weight, 0)
                    END as big_bass_weight,
                    COALESCE(r1.was_member, TRUE) as angler1_was_member,
                    COALESCE(r2.was_member, TRUE) as angler2_was_member
