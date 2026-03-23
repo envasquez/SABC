@@ -197,7 +197,7 @@ def fetch_tournament_data(
                COUNT(tr.id) as total_boats,
                COALESCE(SUM(tr.num_fish), 0) as total_fish,
                COALESCE(SUM(tr.total_weight), 0) as total_weight,
-               0 as limits,
+               COUNT(CASE WHEN tr.num_fish = :fish_limit THEN 1 END) as limits,
                COUNT(CASE WHEN tr.num_fish = 0 THEN 1 END) as zeros,
                0 as buy_ins,
                COALESCE(MAX(tr.big_bass_weight), 0) as biggest_bass,
@@ -205,7 +205,7 @@ def fetch_tournament_data(
                FROM team_results tr
                JOIN anglers a1 ON tr.angler1_id = a1.id
                WHERE tr.tournament_id = :id AND a1.name != 'Admin User'""",
-            {"id": tournament_id},
+            {"id": tournament_id, "fish_limit": tournament.fish_limit or 5},
         )
     else:
         # Standard format: calculate stats from individual results
