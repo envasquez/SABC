@@ -71,7 +71,7 @@
         <div class="col">
             <div class="card h-100">
                 <a href="{{ photo.url }}" class="gallery-link" data-caption="{{ photo.caption or '' }}">
-                    <img src="{{ photo.url }}" class="card-img-top" alt="{{ photo.caption or 'Photo' }}"
+                    <img src="{{ photo.thumbnail_url }}" class="card-img-top" alt="{{ photo.caption or 'Photo' }}"
                          style="height: 200px; object-fit: cover;" loading="lazy">
                 </a>
                 <div class="card-body p-2">

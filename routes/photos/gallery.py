@@ -1,11 +1,13 @@
 """Photo gallery routes."""
 
+import io
 import os
 import uuid
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, File, Form, Request, UploadFile
 from fastapi.responses import RedirectResponse
+from PIL import Image
 from sqlalchemy import or_
 
 from core.db_schema import Angler, Event, Photo, TeamResult, Tournament, get_session
@@ -19,18 +21,64 @@ logger = get_logger(__name__)
 
 # Upload directory configuration
 UPLOAD_DIR = "uploads/photos"
+THUMBNAIL_DIR = "uploads/photos/thumbnails"
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
+THUMBNAIL_SIZE = (400, 400)  # Max dimensions for thumbnails
+JPEG_QUALITY = 85  # Quality for JPEG compression
 
 
 def ensure_upload_dir() -> None:
     """Create upload directory if it doesn't exist."""
     os.makedirs(UPLOAD_DIR, exist_ok=True)
+    os.makedirs(THUMBNAIL_DIR, exist_ok=True)
 
 
 def get_photo_url(filename: str) -> str:
     """Get the URL for a photo."""
     return f"/uploads/photos/{filename}"
+
+
+def get_thumbnail_url(filename: str) -> str:
+    """Get the URL for a photo thumbnail."""
+    return f"/uploads/photos/thumbnails/{filename}"
+
+
+def generate_thumbnail(contents: bytes, filename: str) -> Optional[str]:
+    """
+    Generate a thumbnail from image contents.
+
+    Args:
+        contents: Original image bytes
+        filename: Target filename for thumbnail
+
+    Returns:
+        Thumbnail filename if successful, None otherwise
+    """
+    try:
+        # Open image from bytes
+        img = Image.open(io.BytesIO(contents))
+
+        # Convert to RGB if necessary (for PNG with transparency, etc.)
+        if img.mode in ("RGBA", "P"):
+            rgb_img = img.convert("RGB")
+            img.close()
+            img = rgb_img
+
+        # Calculate thumbnail size maintaining aspect ratio
+        img.thumbnail(THUMBNAIL_SIZE, Image.Resampling.LANCZOS)
+
+        # Save thumbnail as JPEG for better compression
+        thumb_filename = os.path.splitext(filename)[0] + ".jpg"
+        thumb_path = os.path.join(THUMBNAIL_DIR, thumb_filename)
+
+        img.save(thumb_path, "JPEG", quality=JPEG_QUALITY, optimize=True)
+        logger.info(f"Thumbnail generated: {thumb_filename}")
+
+        return thumb_filename
+    except Exception as e:
+        logger.error(f"Failed to generate thumbnail: {e}")
+        return None
 
 
 def can_upload_photo(user: Dict[str, Any], tournament_id: Optional[int]) -> bool:
@@ -106,10 +154,18 @@ async def gallery(
 
         photos: List[Dict[str, Any]] = []
         for photo, angler, tournament in results:
+            # Use thumbnail if available, otherwise fall back to original
+            thumb_filename = photo.thumbnail_filename
+            if thumb_filename:
+                thumbnail_url = get_thumbnail_url(thumb_filename)
+            else:
+                thumbnail_url = get_photo_url(photo.filename)
+
             photos.append(
                 {
                     "id": photo.id,
                     "url": get_photo_url(photo.filename),
+                    "thumbnail_url": thumbnail_url,
                     "caption": photo.caption,
                     "is_big_bass": photo.is_big_bass,
                     "uploaded_at": photo.uploaded_at,
@@ -251,6 +307,10 @@ async def upload_photo(
         logger.error(f"Failed to save photo: {e}")
         return error_redirect("/photos/upload", "Failed to save photo. Please try again.")
 
+    # Generate thumbnail
+    logger.info("Photo upload: generating thumbnail...")
+    thumbnail_filename = generate_thumbnail(contents, filename)
+
     # Create database record
     logger.info("Photo upload: creating database record...")
     try:
@@ -259,17 +319,22 @@ async def upload_photo(
                 angler_id=user["id"],
                 tournament_id=tournament_id_int,
                 filename=filename,
+                thumbnail_filename=thumbnail_filename,
                 caption=caption[:200] if caption else None,
                 is_big_bass=is_big_bass,
             )
             session.add(photo_record)
             session.commit()
-        logger.info(f"Photo upload: success! filename={filename}")
+        logger.info(f"Photo upload: success! filename={filename}, thumbnail={thumbnail_filename}")
     except Exception as e:
         logger.error(f"Failed to create photo record: {e}")
-        # Clean up file if database insert fails
+        # Clean up files if database insert fails
         if os.path.exists(filepath):
             os.remove(filepath)
+        if thumbnail_filename:
+            thumb_path = os.path.join(THUMBNAIL_DIR, thumbnail_filename)
+            if os.path.exists(thumb_path):
+                os.remove(thumb_path)
         return error_redirect("/photos/upload", "Failed to save photo. Please try again.")
 
     return success_redirect("/photos", "Photo uploaded successfully!")
@@ -288,13 +353,22 @@ async def delete_photo(request: Request, photo_id: int) -> RedirectResponse:
         if not can_delete_photo(user, photo):
             return error_redirect("/photos", "You don't have permission to delete this photo.")
 
-        # Delete file
+        # Delete original file
         filepath = os.path.join(UPLOAD_DIR, photo.filename)
         if os.path.exists(filepath):
             try:
                 os.remove(filepath)
             except Exception as e:
                 logger.error(f"Failed to delete photo file: {e}")
+
+        # Delete thumbnail if exists
+        if photo.thumbnail_filename:
+            thumb_path = os.path.join(THUMBNAIL_DIR, photo.thumbnail_filename)
+            if os.path.exists(thumb_path):
+                try:
+                    os.remove(thumb_path)
+                except Exception as e:
+                    logger.error(f"Failed to delete thumbnail: {e}")
 
         # Delete database record
         session.delete(photo)
