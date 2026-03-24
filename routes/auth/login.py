@@ -93,7 +93,12 @@ async def login(
             )
             logger.info(
                 f"User login successful: {user_name}",
-                extra={"user_id": user_id, "user_name": user_name, "user_email": email, "ip_address": ip_address},
+                extra={
+                    "user_id": user_id,
+                    "user_name": user_name,
+                    "user_email": email,
+                    "ip_address": ip_address,
+                },
             )
             return RedirectResponse(safe_next_url, status_code=303)
 
