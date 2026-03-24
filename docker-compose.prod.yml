@@ -24,6 +24,7 @@ services:
         condition: service_healthy
     volumes:
       - ./static:/app/static:ro
+      - uploads_data:/app/uploads
     networks:
       - sabc-network
     command: >
@@ -71,6 +72,7 @@ services:
       - ./ssl:/etc/nginx/ssl:ro
       - nginx_cache:/var/cache/nginx
       - certbot_webroot:/var/www/certbot:ro
+      - uploads_data:/usr/share/nginx/html/uploads:ro
     depends_on:
       - web
     networks:
@@ -90,6 +92,8 @@ volumes:
   nginx_cache:
     driver: local
   certbot_webroot:
+    driver: local
+  uploads_data:
     driver: local
 
 networks:
