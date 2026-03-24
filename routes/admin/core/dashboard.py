@@ -2,13 +2,13 @@ from typing import Any, Dict
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy import Date, Integer, cast, exists, func, select
+from sqlalchemy import Date, Integer, cast, func
 
-from core.db_schema import Event, Poll, Result, Tournament, get_session
+from core.db_schema import Event, Poll, get_session
 from core.helpers.auth import require_admin
 from core.helpers.timezone import now_local
 from routes.admin.core.dashboard_data import get_tournaments_data, get_users_data
-from routes.admin.core.event_queries import get_upcoming_events_data
+from routes.admin.core.event_queries import get_sabc_tournaments, get_upcoming_events_data
 from routes.dependencies import templates
 
 router = APIRouter()
@@ -38,121 +38,11 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
         events, total_upcoming = get_upcoming_events_data(upcoming_page, per_page)
         ctx["events"] = events
 
+        # Get ALL past and upcoming SABC tournaments (no pagination for client-side filtering)
+        past_tournaments = get_sabc_tournaments("past")
+        upcoming_sabc_tournaments = get_sabc_tournaments("upcoming")
+
         with get_session() as session:
-            # Get ALL past tournaments for Past Tournaments tab (no pagination for client-side filtering)
-            past_tournaments_query = (
-                session.query(
-                    Event.id,
-                    Event.date,
-                    Event.name,
-                    Event.description,
-                    Event.event_type,
-                    Event.entry_fee,
-                    Event.lake_name,
-                    Event.start_time,
-                    Event.weigh_in_time,
-                    Event.holiday_name,
-                    exists(select(1).where(Poll.event_id == Event.id).correlate_except(Poll)).label(
-                        "has_poll"
-                    ),
-                    exists(
-                        select(1)
-                        .where(Tournament.event_id == Event.id)
-                        .correlate_except(Tournament)
-                    ).label("has_tournament"),
-                    func.coalesce(Tournament.complete, False).label("tournament_complete"),
-                    exists(
-                        select(1)
-                        .where(Result.tournament_id == Tournament.id)
-                        .correlate_except(Result)
-                    ).label("has_results"),
-                )
-                .outerjoin(Tournament, Event.id == Tournament.event_id)
-                .filter(
-                    Event.date < cast(func.current_date(), Date),
-                    Event.event_type == "sabc_tournament",
-                )
-                .order_by(Event.date.desc())
-                .all()
-            )
-
-            past_tournaments = [
-                {
-                    "id": e[0],
-                    "date": e[1],
-                    "name": e[2] or "",
-                    "description": e[3] or "",
-                    "event_type": e[4] or "sabc_tournament",
-                    "entry_fee": e[5],
-                    "lake_name": e[6],
-                    "start_time": e[7],
-                    "weigh_in_time": e[8],
-                    "holiday_name": e[9],
-                    "has_poll": bool(e[10]),
-                    "has_tournament": bool(e[11]),
-                    "tournament_complete": bool(e[12]),
-                    "has_results": bool(e[13]),
-                }
-                for e in past_tournaments_query
-            ]
-
-            # Get ALL upcoming SABC tournaments (no pagination for client-side filtering)
-            upcoming_sabc_query = (
-                session.query(
-                    Event.id,
-                    Event.date,
-                    Event.name,
-                    Event.description,
-                    Event.event_type,
-                    Event.entry_fee,
-                    Event.lake_name,
-                    Event.start_time,
-                    Event.weigh_in_time,
-                    Event.holiday_name,
-                    exists(select(1).where(Poll.event_id == Event.id).correlate_except(Poll)).label(
-                        "has_poll"
-                    ),
-                    exists(
-                        select(1)
-                        .where(Tournament.event_id == Event.id)
-                        .correlate_except(Tournament)
-                    ).label("has_tournament"),
-                    func.coalesce(Tournament.complete, False).label("tournament_complete"),
-                    exists(
-                        select(1)
-                        .where((Poll.event_id == Event.id) & (Poll.closed.is_(False)))
-                        .correlate_except(Poll)
-                    ).label("poll_active"),
-                )
-                .outerjoin(Tournament, Event.id == Tournament.event_id)
-                .filter(
-                    Event.date >= cast(func.current_date(), Date),
-                    Event.event_type == "sabc_tournament",
-                )
-                .order_by(Event.date)
-                .all()
-            )
-
-            upcoming_sabc_tournaments = [
-                {
-                    "id": e[0],
-                    "date": e[1],
-                    "name": e[2] or "",
-                    "description": e[3] or "",
-                    "event_type": e[4] or "sabc_tournament",
-                    "entry_fee": e[5],
-                    "lake_name": e[6],
-                    "start_time": e[7],
-                    "weigh_in_time": e[8],
-                    "holiday_name": e[9],
-                    "has_poll": bool(e[10]),
-                    "has_tournament": bool(e[11]),
-                    "tournament_complete": bool(e[12]),
-                    "poll_active": bool(e[13]),
-                }
-                for e in upcoming_sabc_query
-            ]
-
             # Get years for Past Tournaments tab filter
             year_col = func.extract("year", Event.date).cast(Integer)
             past_tournament_years_query = (
