@@ -71,10 +71,12 @@ async def login(
             if angler and angler.password_hash:
                 stored_hash = angler.password_hash.encode()
                 user_id = angler.id
+                user_name = angler.name
             else:
                 # User doesn't exist - perform dummy hash to prevent timing attack
                 stored_hash = bcrypt.hashpw(b"dummy_password", bcrypt.gensalt())
                 user_id = None
+                user_name = None
 
         # Always perform comparison (constant time regardless of user existence)
         password_valid = bcrypt.checkpw(password.encode(), stored_hash)
@@ -90,8 +92,8 @@ async def login(
                 details={"method": "password"},
             )
             logger.info(
-                "User login successful",
-                extra={"user_id": user_id, "user_email": email, "ip_address": ip_address},
+                f"User login successful: {user_name}",
+                extra={"user_id": user_id, "user_name": user_name, "user_email": email, "ip_address": ip_address},
             )
             return RedirectResponse(safe_next_url, status_code=303)
 

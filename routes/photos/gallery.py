@@ -195,11 +195,21 @@ async def upload_photo(
     request: Request,
     photo: UploadFile = File(...),
     caption: str = Form(default=""),
-    tournament_id: Optional[int] = Form(default=None),
+    tournament_id: str = Form(default=""),
     is_big_bass: bool = Form(default=False),
 ) -> RedirectResponse:
     """Handle photo upload."""
+    logger.info(f"Photo upload started: filename={photo.filename}, tournament_id={tournament_id}")
     user = require_member(request)
+    logger.info(f"Photo upload auth passed: user_id={user.get('id')}, user_name={user.get('name')}")
+
+    # Parse tournament_id (empty string from form select becomes None)
+    tournament_id_int: Optional[int] = None
+    if tournament_id and tournament_id.strip():
+        try:
+            tournament_id_int = int(tournament_id)
+        except ValueError:
+            return error_redirect("/photos/upload", "Invalid tournament selected.")
 
     # Validate file extension
     ext = os.path.splitext(photo.filename or "")[1].lower()
@@ -210,14 +220,16 @@ async def upload_photo(
         )
 
     # Check upload limit
-    if not can_upload_photo(user, tournament_id):
+    if not can_upload_photo(user, tournament_id_int):
         return error_redirect(
             "/photos/upload",
             "You have reached the upload limit (2 photos per tournament).",
         )
 
     # Read and validate file size
+    logger.info("Photo upload: reading file contents...")
     contents = await photo.read()
+    logger.info(f"Photo upload: file read complete, size={len(contents)} bytes")
     if len(contents) > MAX_FILE_SIZE:
         return error_redirect(
             "/photos/upload",
@@ -230,25 +242,29 @@ async def upload_photo(
     filepath = os.path.join(UPLOAD_DIR, filename)
 
     # Save file
+    logger.info(f"Photo upload: saving to {filepath}...")
     try:
         with open(filepath, "wb") as f:
             f.write(contents)
+        logger.info("Photo upload: file saved successfully")
     except Exception as e:
         logger.error(f"Failed to save photo: {e}")
         return error_redirect("/photos/upload", "Failed to save photo. Please try again.")
 
     # Create database record
+    logger.info("Photo upload: creating database record...")
     try:
         with get_session() as session:
             photo_record = Photo(
                 angler_id=user["id"],
-                tournament_id=tournament_id if tournament_id else None,
+                tournament_id=tournament_id_int,
                 filename=filename,
                 caption=caption[:200] if caption else None,
                 is_big_bass=is_big_bass,
             )
             session.add(photo_record)
             session.commit()
+        logger.info(f"Photo upload: success! filename={filename}")
     except Exception as e:
         logger.error(f"Failed to create photo record: {e}")
         # Clean up file if database insert fails
@@ -332,11 +348,19 @@ async def edit_photo(
     request: Request,
     photo_id: int,
     caption: str = Form(default=""),
-    tournament_id: Optional[int] = Form(default=None),
+    tournament_id: str = Form(default=""),
     is_big_bass: bool = Form(default=False),
 ) -> RedirectResponse:
     """Handle photo edit."""
     user = require_member(request)
+
+    # Parse tournament_id (empty string from form select becomes None)
+    tournament_id_int: Optional[int] = None
+    if tournament_id and tournament_id.strip():
+        try:
+            tournament_id_int = int(tournament_id)
+        except ValueError:
+            return error_redirect("/photos", "Invalid tournament selected.")
 
     with get_session() as session:
         photo = session.query(Photo).filter(Photo.id == photo_id).first()
@@ -348,7 +372,7 @@ async def edit_photo(
 
         # Update photo fields
         photo.caption = caption[:200] if caption else None
-        photo.tournament_id = tournament_id if tournament_id else None
+        photo.tournament_id = tournament_id_int
         photo.is_big_bass = is_big_bass
 
         session.commit()
