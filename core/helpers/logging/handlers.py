@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 from typing import Tuple
 
+from core.helpers.logging.filters import SensitiveDataFilter
 from core.helpers.logging.formatters import get_console_formatter, get_file_formatter
 
 
@@ -70,3 +71,10 @@ def configure_handler_formatters(
     app_handler.setFormatter(file_formatter)
     security_handler.setFormatter(file_formatter)
     error_handler.setFormatter(file_formatter)
+
+    # Add sensitive data filter to all handlers to prevent credential leakage
+    sensitive_filter = SensitiveDataFilter()
+    console_handler.addFilter(sensitive_filter)
+    app_handler.addFilter(sensitive_filter)
+    security_handler.addFilter(sensitive_filter)
+    error_handler.addFilter(sensitive_filter)
