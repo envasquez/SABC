@@ -2,6 +2,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from core.helpers.logging.config import SABCLogger
+from core.helpers.logging.filters import SensitiveDataFilter
 from core.helpers.logging.security import SecurityEvent
 
 sabc_logger = SABCLogger()
@@ -26,4 +27,10 @@ def configure_logging(log_level: str = "INFO", json_format: bool = True) -> None
     sabc_logger.configure_logging(log_level, json_format)
 
 
-__all__ = ["SecurityEvent", "get_logger", "log_security_event", "configure_logging"]
+__all__ = [
+    "SecurityEvent",
+    "SensitiveDataFilter",
+    "get_logger",
+    "log_security_event",
+    "configure_logging",
+]
