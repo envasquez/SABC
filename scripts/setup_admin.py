@@ -66,7 +66,7 @@ def create_admin_user(
                 logger.info(f"Created new admin user {email} with ID: {admin_id}")
 
         if not interactive:
-            print(f"Login: {email} / {password}")
+            print(f"Admin user created successfully for: {email}")
 
         logger.info("Admin user setup complete!")
         return 0
