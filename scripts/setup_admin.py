@@ -6,6 +6,7 @@ import sys
 from typing import Optional
 
 import bcrypt
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Angler, get_session
 
@@ -41,7 +42,8 @@ def create_admin_user(
                     break
                 print("Passwords do not match. Try again.")
 
-    password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    password_bytes = password.encode("utf-8")
+    password_hash = bcrypt.hashpw(password_bytes, bcrypt.gensalt()).decode("utf-8")
 
     try:
         with get_session() as session:
@@ -71,8 +73,8 @@ def create_admin_user(
         logger.info("Admin user setup complete!")
         return 0
 
-    except Exception as e:
-        logger.error(f"Failed to create admin user: {e}")
+    except SQLAlchemyError as db_error:
+        logger.error(f"Failed to create admin user: {db_error}")
         return 1
 
 
