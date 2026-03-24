@@ -28,8 +28,9 @@ def auto_complete_past_tournaments() -> int:
                     WHERE date < CURRENT_DATE
                 )
                 AND complete = FALSE
-                AND id IN (
-                    SELECT DISTINCT tournament_id FROM results
+                AND (
+                    id IN (SELECT DISTINCT tournament_id FROM results)
+                    OR id IN (SELECT DISTINCT tournament_id FROM team_results)
                 )
                 """
             )
