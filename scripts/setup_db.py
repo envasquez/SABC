@@ -2,6 +2,7 @@ import argparse
 import sys
 
 from common import ensure_database_url, setup_logging
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import create_all_tables, create_views, init_db
 
@@ -33,7 +34,7 @@ def setup_database(method: str = "full") -> int:
         logger.info("Database setup complete!")
         return 0
 
-    except Exception as e:
+    except SQLAlchemyError as e:
         logger.error(f"Database setup failed: {e}")
         return 1
 
