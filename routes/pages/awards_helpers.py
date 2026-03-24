@@ -87,8 +87,7 @@ def get_team_heavy_stringer_query() -> str:
 def get_team_big_bass_query() -> str:
     """Get teams with biggest bass for the year.
 
-    For 2026+ team format. Note: big_bass_weight is still tracked per individual result,
-    but we join to team_results to get the team name.
+    For 2026+ team format, big_bass_weight is stored directly in team_results.
     """
     return """
         SELECT
@@ -97,19 +96,17 @@ def get_team_big_bass_query() -> str:
                 WHEN a2.name IS NULL THEN a1.name
                 ELSE a2.name || ' & ' || a1.name
             END as team_name,
-            r.big_bass_weight,
+            tr.big_bass_weight,
             e.name as tournament_name,
             e.date
-        FROM results r
-        JOIN tournaments t ON r.tournament_id = t.id
+        FROM team_results tr
+        JOIN tournaments t ON tr.tournament_id = t.id
         JOIN events e ON t.event_id = e.id
-        JOIN team_results tr ON tr.tournament_id = t.id
-            AND (tr.angler1_id = r.angler_id OR tr.angler2_id = r.angler_id)
         JOIN anglers a1 ON tr.angler1_id = a1.id
         LEFT JOIN anglers a2 ON tr.angler2_id = a2.id
         WHERE e.year = :year
-          AND r.big_bass_weight >= 5.0
+          AND tr.big_bass_weight >= 5.0
           AND a1.name != 'Admin User'
-        ORDER BY r.big_bass_weight DESC
+        ORDER BY tr.big_bass_weight DESC
         LIMIT 10
     """
