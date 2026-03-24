@@ -138,9 +138,9 @@ async def save_result(
         ) == "XMLHttpRequest" or "application/json" in request.headers.get("Accept", ""):
             return JSONResponse({"success": True, "message": "Result saved successfully"})
 
-        return RedirectResponse(
-            f"/admin/tournaments/{tournament_id}/enter-results", status_code=303
-        )
+        # Construct safe redirect URL using validated integer ID
+        safe_redirect_url = f"/admin/tournaments/{int(tournament_id)}/enter-results"
+        return RedirectResponse(safe_redirect_url, status_code=303)
     except Exception as e:
         # Return JSON error for AJAX requests
         if request.headers.get(
@@ -176,9 +176,9 @@ async def delete_result(
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JSONResponse({"success": True, "message": "Result deleted successfully"})
 
-        return RedirectResponse(
-            f"/admin/tournaments/{tournament_id}/enter-results", status_code=303
-        )
+        # Construct safe redirect URL using validated integer ID
+        safe_redirect_url = f"/admin/tournaments/{int(tournament_id)}/enter-results"
+        return RedirectResponse(safe_redirect_url, status_code=303)
     except Exception as e:
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JSONResponse({"success": False, "error": str(e)}, status_code=400)

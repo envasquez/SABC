@@ -101,4 +101,10 @@ async def enter_results_page(
 
 @router.post("/admin/tournaments/{tournament_id}/enter-results")
 async def enter_results_redirect(tournament_id: int):
-    return RedirectResponse(f"/admin/tournaments/{tournament_id}/enter-results", status_code=303)
+    # Validate tournament_id is a positive integer to prevent redirect attacks
+    # FastAPI already validates this is an int, but we explicitly check for safety
+    if tournament_id <= 0:
+        return RedirectResponse("/admin/events", status_code=303)
+    # Construct safe redirect URL using validated integer ID
+    safe_redirect_url = f"/admin/tournaments/{int(tournament_id)}/enter-results"
+    return RedirectResponse(safe_redirect_url, status_code=303)

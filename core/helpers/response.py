@@ -22,6 +22,18 @@ def is_safe_redirect_url(url: str) -> bool:
         - Must start with "/"
         - Must not start with "//" (protocol-relative URLs)
         - Must not contain "://" (absolute URLs with schemes)
+
+    Examples:
+        >>> is_safe_redirect_url("/admin/events")
+        True
+        >>> is_safe_redirect_url("/profile?tab=settings")
+        True
+        >>> is_safe_redirect_url("//evil.com/path")
+        False
+        >>> is_safe_redirect_url("https://evil.com/path")
+        False
+        >>> is_safe_redirect_url("javascript:alert(1)")
+        False
     """
     if not url or not isinstance(url, str):
         return False
