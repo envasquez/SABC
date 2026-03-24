@@ -6,6 +6,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     postgresql-client \
     curl \
+    gosu \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
@@ -15,8 +16,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create non-root user
-RUN useradd -m -u 1000 sabc && chown -R sabc:sabc /app
+# Create non-root user and uploads directory with correct permissions
+RUN useradd -m -u 1000 sabc && \
+    mkdir -p /app/uploads/photos && \
+    chown -R sabc:sabc /app
 USER sabc
 
 # Health check

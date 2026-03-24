@@ -27,14 +27,18 @@ services:
       - uploads_data:/app/uploads
     networks:
       - sabc-network
+    user: root
     command: >
       sh -c "
+        echo 'Setting up uploads directory...';
+        mkdir -p /app/uploads/photos;
+        chown -R 1000:1000 /app/uploads;
         echo 'Waiting for database...';
         sleep 15;
         echo 'Applying database migrations...';
         alembic upgrade head;
         echo 'Starting server...';
-        uvicorn app:app --host 0.0.0.0 --port 8000
+        exec gosu sabc uvicorn app:app --host 0.0.0.0 --port 8000
       "
 
   postgres:
