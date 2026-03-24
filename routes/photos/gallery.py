@@ -57,13 +57,14 @@ def generate_thumbnail(contents: bytes, filename: str) -> Optional[str]:
     """
     try:
         # Open image from bytes
-        img = Image.open(io.BytesIO(contents))
+        original = Image.open(io.BytesIO(contents))
 
         # Convert to RGB if necessary (for PNG with transparency, etc.)
-        if img.mode in ("RGBA", "P"):
-            rgb_img = img.convert("RGB")
-            img.close()
-            img = rgb_img
+        if original.mode in ("RGBA", "P"):
+            img = original.convert("RGB")
+            original.close()
+        else:
+            img = original
 
         # Calculate thumbnail size maintaining aspect ratio
         img.thumbnail(THUMBNAIL_SIZE, Image.Resampling.LANCZOS)
