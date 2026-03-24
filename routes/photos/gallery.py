@@ -6,8 +6,9 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, File, Form, Request, UploadFile
 from fastapi.responses import RedirectResponse
+from sqlalchemy import or_
 
-from core.db_schema import Angler, Photo, Tournament, get_session
+from core.db_schema import Angler, Event, Photo, TeamResult, Tournament, get_session
 from core.helpers.auth import get_current_user, require_member
 from core.helpers.logging import get_logger
 from core.helpers.response import error_redirect, success_redirect
@@ -161,10 +162,20 @@ async def upload_form(request: Request) -> Any:
     user = require_member(request)
 
     with get_session() as session:
+        # Get tournament IDs that have team_results
+        team_result_tournament_ids = session.query(TeamResult.tournament_id).distinct().subquery()
+        # Show tournaments that are complete OR have team_results
+        # Sort by event date (most recent first)
         tournaments = (
             session.query(Tournament)
-            .filter(Tournament.complete.is_(True))
-            .order_by(Tournament.name.desc())
+            .join(Event, Tournament.event_id == Event.id)
+            .filter(
+                or_(
+                    Tournament.complete.is_(True),
+                    Tournament.id.in_(session.query(team_result_tournament_ids)),
+                )
+            )
+            .order_by(Event.date.desc())
             .all()
         )
         tournament_options = [{"id": t.id, "name": t.name} for t in tournaments]
