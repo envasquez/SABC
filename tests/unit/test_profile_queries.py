@@ -46,8 +46,9 @@ class TestProfileQueries:
         assert "SUM(CASE WHEN place = 1 THEN 1 ELSE 0 END) as first" in query
         assert "SUM(CASE WHEN place = 2 THEN 1 ELSE 0 END) as second" in query
         assert "SUM(CASE WHEN place = 3 THEN 1 ELSE 0 END) as third" in query
-        assert "ROW_NUMBER()" in query
-        assert "WHERE (tr.angler1_id = :user_id OR tr.angler2_id = :user_id)" in query
+        assert "DENSE_RANK()" in query
+        assert "PARTITION BY tr.tournament_id" in query
+        assert "ranked.angler1_id = :user_id OR ranked.angler2_id = :user_id" in query
         assert "e.year = :current_year" in query
 
     def test_all_time_finishes_query(self):
@@ -56,8 +57,9 @@ class TestProfileQueries:
         assert "SUM(CASE WHEN place = 1 THEN 1 ELSE 0 END) as first" in query
         assert "SUM(CASE WHEN place = 2 THEN 1 ELSE 0 END) as second" in query
         assert "SUM(CASE WHEN place = 3 THEN 1 ELSE 0 END) as third" in query
-        assert "ROW_NUMBER()" in query
-        assert "WHERE (tr.angler1_id = :user_id OR tr.angler2_id = :user_id)" in query
+        assert "DENSE_RANK()" in query
+        assert "PARTITION BY tr.tournament_id" in query
+        assert "ranked.angler1_id = :user_id OR ranked.angler2_id = :user_id" in query
         assert "e.year >= 2022" in query
 
     def test_aoy_position_query(self):
