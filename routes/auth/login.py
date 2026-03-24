@@ -9,7 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from core.db_schema import Angler, get_session
 from core.helpers.forms import normalize_email
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
-from core.helpers.response import get_client_ip, set_user_session
+from core.helpers.response import get_client_ip, get_safe_redirect_url, set_user_session
 from routes.dependencies import bcrypt, get_current_user, templates
 
 router = APIRouter()
@@ -52,16 +52,7 @@ async def login(
     ip_address = get_client_ip(request)
 
     # Validate next_url to prevent open redirect attacks
-    # Only allow relative URLs (must start with /) and reject external URLs
-    safe_next_url = "/"
-    if next_url and isinstance(next_url, str):
-        # Remove leading/trailing whitespace
-        next_url = next_url.strip()
-        # Only allow relative URLs starting with /
-        if next_url.startswith("/") and not next_url.startswith("//"):
-            # Reject URLs with schemes (http://, https://, etc.)
-            if "://" not in next_url:
-                safe_next_url = next_url
+    safe_next_url = get_safe_redirect_url(next_url, default="/")
 
     try:
         with get_session() as session:
