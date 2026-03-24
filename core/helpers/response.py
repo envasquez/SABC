@@ -5,6 +5,60 @@ from fastapi import Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 
+def is_safe_redirect_url(url: str) -> bool:
+    """
+    Validate that a URL is safe for redirection.
+
+    Prevents open redirect attacks by ensuring the URL is a relative path
+    that won't redirect to an external site.
+
+    Args:
+        url: The URL to validate
+
+    Returns:
+        True if the URL is safe for redirection, False otherwise
+
+    Safe URLs:
+        - Must start with "/"
+        - Must not start with "//" (protocol-relative URLs)
+        - Must not contain "://" (absolute URLs with schemes)
+    """
+    if not url or not isinstance(url, str):
+        return False
+
+    url = url.strip()
+
+    # Must start with /
+    if not url.startswith("/"):
+        return False
+
+    # Must not be a protocol-relative URL (//example.com)
+    if url.startswith("//"):
+        return False
+
+    # Must not contain a scheme (http://, https://, javascript:, etc.)
+    if "://" in url:
+        return False
+
+    return True
+
+
+def get_safe_redirect_url(url: str, default: str = "/") -> str:
+    """
+    Get a safe redirect URL, falling back to default if the URL is unsafe.
+
+    Args:
+        url: The URL to validate
+        default: The fallback URL if validation fails (must be a safe URL)
+
+    Returns:
+        The original URL if safe, otherwise the default URL
+    """
+    if is_safe_redirect_url(url):
+        return url
+    return default
+
+
 def sanitize_error_message(error: Exception, generic_message: str = "An error occurred") -> str:
     """
     Sanitize error messages to prevent information disclosure.
