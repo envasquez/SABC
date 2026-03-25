@@ -97,7 +97,7 @@ def generate_placeholder(original_path: str, filename: str) -> Optional[str]:
         return None
 
 
-def regenerate_thumbnails(dry_run: bool = False) -> int:
+def regenerate_thumbnails(dry_run: bool = False, force: bool = False) -> int:
     """Regenerate thumbnails for all photos."""
     if not os.environ.get("DATABASE_URL"):
         logger.error("DATABASE_URL environment variable not set")
@@ -122,11 +122,13 @@ def regenerate_thumbnails(dry_run: bool = False) -> int:
                 skipped += 1
                 continue
 
-            # Check if we need to regenerate
-            needs_thumbnail = not photo.thumbnail_filename or not photo.thumbnail_filename.endswith(
-                ".webp"
+            # Check if we need to regenerate (force flag overrides)
+            needs_thumbnail = (
+                force
+                or not photo.thumbnail_filename
+                or not photo.thumbnail_filename.endswith(".webp")
             )
-            needs_placeholder = not photo.placeholder_filename
+            needs_placeholder = force or not photo.placeholder_filename
 
             if not needs_thumbnail and not needs_placeholder:
                 logger.debug(f"[{i}/{total}] Skipping (already optimized): {photo.filename}")
@@ -186,6 +188,11 @@ def main() -> int:
         action="store_true",
         help="Show what would be done without making changes",
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force regeneration of all thumbnails (even if they already exist)",
+    )
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
 
     args = parser.parse_args()
@@ -193,7 +200,7 @@ def main() -> int:
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    return regenerate_thumbnails(dry_run=args.dry_run)
+    return regenerate_thumbnails(dry_run=args.dry_run, force=args.force)
 
 
 if __name__ == "__main__":
