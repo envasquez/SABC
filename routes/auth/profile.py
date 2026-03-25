@@ -114,14 +114,18 @@ async def profile_page(request: Request) -> Response:
             )
 
             # Then filter to user's results and count finishes
-            finishes = session.query(
-                func.sum(case((all_ranked_subquery.c.place == 1, 1), else_=0)).label("first"),
-                func.sum(case((all_ranked_subquery.c.place == 2, 1), else_=0)).label("second"),
-                func.sum(case((all_ranked_subquery.c.place == 3, 1), else_=0)).label("third"),
-            ).filter(
-                (all_ranked_subquery.c.angler1_id == user["id"])
-                | (all_ranked_subquery.c.angler2_id == user["id"])
-            ).first()
+            finishes = (
+                session.query(
+                    func.sum(case((all_ranked_subquery.c.place == 1, 1), else_=0)).label("first"),
+                    func.sum(case((all_ranked_subquery.c.place == 2, 1), else_=0)).label("second"),
+                    func.sum(case((all_ranked_subquery.c.place == 3, 1), else_=0)).label("third"),
+                )
+                .filter(
+                    (all_ranked_subquery.c.angler1_id == user["id"])
+                    | (all_ranked_subquery.c.angler2_id == user["id"])
+                )
+                .first()
+            )
 
             # Count tournaments for this year
             year_tournaments = (
@@ -170,14 +174,18 @@ async def profile_page(request: Request) -> Response:
         )
 
         # Then filter to user's results and count finishes
-        all_time_finishes = session.query(
-            func.sum(case((all_time_ranked_subquery.c.place == 1, 1), else_=0)).label("first"),
-            func.sum(case((all_time_ranked_subquery.c.place == 2, 1), else_=0)).label("second"),
-            func.sum(case((all_time_ranked_subquery.c.place == 3, 1), else_=0)).label("third"),
-        ).filter(
-            (all_time_ranked_subquery.c.angler1_id == user["id"])
-            | (all_time_ranked_subquery.c.angler2_id == user["id"])
-        ).first()
+        all_time_finishes = (
+            session.query(
+                func.sum(case((all_time_ranked_subquery.c.place == 1, 1), else_=0)).label("first"),
+                func.sum(case((all_time_ranked_subquery.c.place == 2, 1), else_=0)).label("second"),
+                func.sum(case((all_time_ranked_subquery.c.place == 3, 1), else_=0)).label("third"),
+            )
+            .filter(
+                (all_time_ranked_subquery.c.angler1_id == user["id"])
+                | (all_time_ranked_subquery.c.angler2_id == user["id"])
+            )
+            .first()
+        )
 
         all_time_first = all_time_finishes[0] or 0 if all_time_finishes else 0
         all_time_second = all_time_finishes[1] or 0 if all_time_finishes else 0
