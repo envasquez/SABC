@@ -68,14 +68,16 @@ def generate_placeholder(contents: bytes, filename: str) -> Optional[str]:
         original = Image.open(io.BytesIO(contents))
 
         # Apply EXIF orientation (fixes rotated phone photos)
-        original = ImageOps.exif_transpose(original)
+        transposed = ImageOps.exif_transpose(original)
+        if transposed is not original:
+            original.close()
 
         # Convert to RGB if necessary
-        if original.mode in ("RGBA", "P"):
-            img = original.convert("RGB")
-            original.close()
+        if transposed.mode in ("RGBA", "P"):
+            img = transposed.convert("RGB")
+            transposed.close()
         else:
-            img = original
+            img = transposed
 
         # Create tiny placeholder (will be scaled up with CSS blur)
         img.thumbnail(PLACEHOLDER_SIZE, Image.Resampling.LANCZOS)
@@ -112,14 +114,16 @@ def generate_thumbnail(contents: bytes, filename: str) -> tuple[Optional[str], O
         original = Image.open(io.BytesIO(contents))
 
         # Apply EXIF orientation (fixes rotated phone photos)
-        original = ImageOps.exif_transpose(original)
+        transposed = ImageOps.exif_transpose(original)
+        if transposed is not original:
+            original.close()
 
         # Convert to RGB if necessary (for PNG with transparency, etc.)
-        if original.mode in ("RGBA", "P"):
-            img = original.convert("RGB")
-            original.close()
+        if transposed.mode in ("RGBA", "P"):
+            img = transposed.convert("RGB")
+            transposed.close()
         else:
-            img = original
+            img = transposed
 
         # Calculate thumbnail size maintaining aspect ratio
         img.thumbnail(THUMBNAIL_SIZE, Image.Resampling.LANCZOS)
