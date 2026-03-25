@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from PIL import Image
+from PIL import Image, ImageOps
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -46,6 +46,9 @@ def generate_webp_thumbnail(original_path: str, filename: str) -> Optional[str]:
     try:
         original = Image.open(original_path)
 
+        # Apply EXIF orientation (fixes rotated phone photos)
+        original = ImageOps.exif_transpose(original)
+
         if original.mode in ("RGBA", "P"):
             img = original.convert("RGB")
             original.close()
@@ -70,6 +73,9 @@ def generate_placeholder(original_path: str, filename: str) -> Optional[str]:
     """Generate a tiny blur placeholder."""
     try:
         original = Image.open(original_path)
+
+        # Apply EXIF orientation (fixes rotated phone photos)
+        original = ImageOps.exif_transpose(original)
 
         if original.mode in ("RGBA", "P"):
             img = original.convert("RGB")

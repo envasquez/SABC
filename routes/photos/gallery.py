@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, File, Form, Request, UploadFile
 from fastapi.responses import RedirectResponse
-from PIL import Image
+from PIL import Image, ImageOps
 from sqlalchemy import or_
 
 from core.db_schema import Angler, Event, Photo, TeamResult, Tournament, get_session
@@ -67,6 +67,9 @@ def generate_placeholder(contents: bytes, filename: str) -> Optional[str]:
     try:
         original = Image.open(io.BytesIO(contents))
 
+        # Apply EXIF orientation (fixes rotated phone photos)
+        original = ImageOps.exif_transpose(original)
+
         # Convert to RGB if necessary
         if original.mode in ("RGBA", "P"):
             img = original.convert("RGB")
@@ -107,6 +110,9 @@ def generate_thumbnail(contents: bytes, filename: str) -> tuple[Optional[str], O
     try:
         # Open image from bytes
         original = Image.open(io.BytesIO(contents))
+
+        # Apply EXIF orientation (fixes rotated phone photos)
+        original = ImageOps.exif_transpose(original)
 
         # Convert to RGB if necessary (for PNG with transparency, etc.)
         if original.mode in ("RGBA", "P"):
