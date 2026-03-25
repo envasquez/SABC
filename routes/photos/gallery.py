@@ -22,16 +22,20 @@ logger = get_logger(__name__)
 # Upload directory configuration
 UPLOAD_DIR = "uploads/photos"
 THUMBNAIL_DIR = "uploads/photos/thumbnails"
+PLACEHOLDER_DIR = "uploads/photos/placeholders"
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
-THUMBNAIL_SIZE = (400, 400)  # Max dimensions for thumbnails
-JPEG_QUALITY = 85  # Quality for JPEG compression
+THUMBNAIL_SIZE = (200, 200)  # Match display size for optimal performance
+PLACEHOLDER_SIZE = (20, 20)  # Tiny blur placeholder for instant loading
+WEBP_QUALITY = 80  # Quality for WebP compression (smaller than JPEG at same quality)
+PHOTOS_PER_PAGE = 24  # Photos per page for pagination
 
 
 def ensure_upload_dir() -> None:
-    """Create upload directory if it doesn't exist."""
+    """Create upload directories if they don't exist."""
     os.makedirs(UPLOAD_DIR, exist_ok=True)
     os.makedirs(THUMBNAIL_DIR, exist_ok=True)
+    os.makedirs(PLACEHOLDER_DIR, exist_ok=True)
 
 
 def get_photo_url(filename: str) -> str:
@@ -44,17 +48,62 @@ def get_thumbnail_url(filename: str) -> str:
     return f"/uploads/photos/thumbnails/{filename}"
 
 
-def generate_thumbnail(contents: bytes, filename: str) -> Optional[str]:
+def get_placeholder_url(filename: str) -> str:
+    """Get the URL for a blur placeholder."""
+    return f"/uploads/photos/placeholders/{filename}"
+
+
+def generate_placeholder(contents: bytes, filename: str) -> Optional[str]:
     """
-    Generate a thumbnail from image contents.
+    Generate a tiny blur placeholder for instant loading.
+
+    Args:
+        contents: Original image bytes
+        filename: Target filename for placeholder
+
+    Returns:
+        Placeholder filename if successful, None otherwise
+    """
+    try:
+        original = Image.open(io.BytesIO(contents))
+
+        # Convert to RGB if necessary
+        if original.mode in ("RGBA", "P"):
+            img = original.convert("RGB")
+            original.close()
+        else:
+            img = original
+
+        # Create tiny placeholder (will be scaled up with CSS blur)
+        img.thumbnail(PLACEHOLDER_SIZE, Image.Resampling.LANCZOS)
+
+        # Save as WebP with low quality (tiny file, ~500 bytes)
+        placeholder_filename = os.path.splitext(filename)[0] + ".webp"
+        placeholder_path = os.path.join(PLACEHOLDER_DIR, placeholder_filename)
+
+        img.save(placeholder_path, "WEBP", quality=20, method=6)
+        logger.debug(f"Placeholder generated: {placeholder_filename}")
+
+        return placeholder_filename
+    except Exception as e:
+        logger.error(f"Failed to generate placeholder: {e}")
+        return None
+
+
+def generate_thumbnail(contents: bytes, filename: str) -> tuple[Optional[str], Optional[str]]:
+    """
+    Generate a WebP thumbnail and blur placeholder from image contents.
 
     Args:
         contents: Original image bytes
         filename: Target filename for thumbnail
 
     Returns:
-        Thumbnail filename if successful, None otherwise
+        Tuple of (thumbnail_filename, placeholder_filename) - either may be None
     """
+    thumb_filename = None
+    placeholder_filename = None
+
     try:
         # Open image from bytes
         original = Image.open(io.BytesIO(contents))
@@ -69,17 +118,20 @@ def generate_thumbnail(contents: bytes, filename: str) -> Optional[str]:
         # Calculate thumbnail size maintaining aspect ratio
         img.thumbnail(THUMBNAIL_SIZE, Image.Resampling.LANCZOS)
 
-        # Save thumbnail as JPEG for better compression
-        thumb_filename = os.path.splitext(filename)[0] + ".jpg"
+        # Save thumbnail as WebP (30% smaller than JPEG at same quality)
+        thumb_filename = os.path.splitext(filename)[0] + ".webp"
         thumb_path = os.path.join(THUMBNAIL_DIR, thumb_filename)
 
-        img.save(thumb_path, "JPEG", quality=JPEG_QUALITY, optimize=True)
+        img.save(thumb_path, "WEBP", quality=WEBP_QUALITY, method=4)
         logger.info(f"Thumbnail generated: {thumb_filename}")
 
-        return thumb_filename
+        # Generate blur placeholder
+        placeholder_filename = generate_placeholder(contents, filename)
+
     except Exception as e:
         logger.error(f"Failed to generate thumbnail: {e}")
-        return None
+
+    return thumb_filename, placeholder_filename
 
 
 def can_upload_photo(user: Dict[str, Any], tournament_id: Optional[int]) -> bool:
@@ -107,14 +159,74 @@ def can_edit_photo(user: Dict[str, Any], photo: Photo) -> bool:
     return user.get("is_admin") or photo.angler_id == user["id"]
 
 
+def build_photo_query(
+    session: Any,
+    tournament_id_int: Optional[int],
+    angler_id_int: Optional[int],
+    big_bass_bool: Optional[bool],
+) -> Any:
+    """Build the base query for photos with filters."""
+    query = (
+        session.query(Photo, Angler, Tournament)
+        .join(Angler, Photo.angler_id == Angler.id)
+        .outerjoin(Tournament, Photo.tournament_id == Tournament.id)
+    )
+
+    if tournament_id_int:
+        query = query.filter(Photo.tournament_id == tournament_id_int)
+    if angler_id_int:
+        query = query.filter(Photo.angler_id == angler_id_int)
+    if big_bass_bool:
+        query = query.filter(Photo.is_big_bass.is_(True))
+
+    return query.order_by(Photo.uploaded_at.desc())
+
+
+def photo_to_dict(
+    photo: Photo,
+    angler: Angler,
+    tournament: Optional[Tournament],
+    user: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """Convert photo model to dict for template."""
+    # Use thumbnail if available, otherwise fall back to original
+    thumb_filename = photo.thumbnail_filename
+    if thumb_filename:
+        thumbnail_url = get_thumbnail_url(thumb_filename)
+    else:
+        thumbnail_url = get_photo_url(photo.filename)
+
+    # Get placeholder URL for blur-up loading
+    placeholder_url = None
+    if photo.placeholder_filename:
+        placeholder_url = get_placeholder_url(photo.placeholder_filename)
+
+    return {
+        "id": photo.id,
+        "url": get_photo_url(photo.filename),
+        "thumbnail_url": thumbnail_url,
+        "placeholder_url": placeholder_url,
+        "caption": photo.caption,
+        "is_big_bass": photo.is_big_bass,
+        "uploaded_at": photo.uploaded_at,
+        "angler_id": angler.id,
+        "angler_name": angler.name,
+        "tournament_id": tournament.id if tournament else None,
+        "tournament_name": tournament.name if tournament else None,
+        "can_delete": can_delete_photo(user, photo) if user else False,
+        "can_edit": can_edit_photo(user, photo) if user else False,
+    }
+
+
 @router.get("/photos")
 async def gallery(
     request: Request,
     tournament_id: Optional[str] = None,
     angler_id: Optional[str] = None,
     big_bass: Optional[str] = None,
+    page: int = 1,
 ) -> Any:
-    """Display the photo gallery with optional filters."""
+    """Display the photo gallery with optional filters and pagination."""
     user = get_current_user(request)
 
     # Parse filter parameters (empty strings become None)
@@ -137,46 +249,44 @@ async def gallery(
     if big_bass and big_bass.strip().lower() == "true":
         big_bass_bool = True
 
+    # Ensure page is valid
+    if page < 1:
+        page = 1
+
+    offset = (page - 1) * PHOTOS_PER_PAGE
+
     with get_session() as session:
-        query = (
-            session.query(Photo, Angler, Tournament)
-            .join(Angler, Photo.angler_id == Angler.id)
-            .outerjoin(Tournament, Photo.tournament_id == Tournament.id)
-        )
+        query = build_photo_query(session, tournament_id_int, angler_id_int, big_bass_bool)
 
-        if tournament_id_int:
-            query = query.filter(Photo.tournament_id == tournament_id_int)
-        if angler_id_int:
-            query = query.filter(Photo.angler_id == angler_id_int)
-        if big_bass_bool:
-            query = query.filter(Photo.is_big_bass.is_(True))
+        # Get total count for pagination
+        total_photos = query.count()
+        total_pages = (total_photos + PHOTOS_PER_PAGE - 1) // PHOTOS_PER_PAGE
+        has_more = page < total_pages
 
-        results = query.order_by(Photo.uploaded_at.desc()).all()
+        # Get paginated results
+        results = query.limit(PHOTOS_PER_PAGE).offset(offset).all()
 
-        photos: List[Dict[str, Any]] = []
-        for photo, angler, tournament in results:
-            # Use thumbnail if available, otherwise fall back to original
-            thumb_filename = photo.thumbnail_filename
-            if thumb_filename:
-                thumbnail_url = get_thumbnail_url(thumb_filename)
-            else:
-                thumbnail_url = get_photo_url(photo.filename)
+        photos: List[Dict[str, Any]] = [
+            photo_to_dict(photo, angler, tournament, user) for photo, angler, tournament in results
+        ]
 
-            photos.append(
+        # Check if this is an HTMX request for infinite scroll
+        is_htmx = request.headers.get("HX-Request") == "true"
+
+        if is_htmx:
+            # Return just the photo grid items for infinite scroll
+            return templates.TemplateResponse(
+                "photos/_photo_grid.html",
                 {
-                    "id": photo.id,
-                    "url": get_photo_url(photo.filename),
-                    "thumbnail_url": thumbnail_url,
-                    "caption": photo.caption,
-                    "is_big_bass": photo.is_big_bass,
-                    "uploaded_at": photo.uploaded_at,
-                    "angler_id": angler.id,
-                    "angler_name": angler.name,
-                    "tournament_id": tournament.id if tournament else None,
-                    "tournament_name": tournament.name if tournament else None,
-                    "can_delete": can_delete_photo(user, photo) if user else False,
-                    "can_edit": can_edit_photo(user, photo) if user else False,
-                }
+                    "request": request,
+                    "user": user,
+                    "photos": photos,
+                    "page": page,
+                    "has_more": has_more,
+                    "tournament_id": tournament_id_int,
+                    "angler_id": angler_id_int,
+                    "big_bass": big_bass_bool,
+                },
             )
 
         # Get filter options
@@ -209,6 +319,9 @@ async def gallery(
             "selected_tournament": tournament_id_int,
             "selected_angler": angler_id_int,
             "selected_big_bass": big_bass_bool,
+            "page": page,
+            "has_more": has_more,
+            "total_photos": total_photos,
         },
     )
 
@@ -308,9 +421,9 @@ async def upload_photo(
         logger.error(f"Failed to save photo: {e}")
         return error_redirect("/photos/upload", "Failed to save photo. Please try again.")
 
-    # Generate thumbnail
-    logger.info("Photo upload: generating thumbnail...")
-    thumbnail_filename = generate_thumbnail(contents, filename)
+    # Generate thumbnail and blur placeholder
+    logger.info("Photo upload: generating thumbnail and placeholder...")
+    thumbnail_filename, placeholder_filename = generate_thumbnail(contents, filename)
 
     # Create database record
     logger.info("Photo upload: creating database record...")
@@ -321,12 +434,16 @@ async def upload_photo(
                 tournament_id=tournament_id_int,
                 filename=filename,
                 thumbnail_filename=thumbnail_filename,
+                placeholder_filename=placeholder_filename,
                 caption=caption[:200] if caption else None,
                 is_big_bass=is_big_bass,
             )
             session.add(photo_record)
             session.commit()
-        logger.info(f"Photo upload: success! filename={filename}, thumbnail={thumbnail_filename}")
+        logger.info(
+            f"Photo upload: success! filename={filename}, "
+            f"thumbnail={thumbnail_filename}, placeholder={placeholder_filename}"
+        )
     except Exception as e:
         logger.error(f"Failed to create photo record: {e}")
         # Clean up files if database insert fails
@@ -336,6 +453,10 @@ async def upload_photo(
             thumb_path = os.path.join(THUMBNAIL_DIR, thumbnail_filename)
             if os.path.exists(thumb_path):
                 os.remove(thumb_path)
+        if placeholder_filename:
+            placeholder_path = os.path.join(PLACEHOLDER_DIR, placeholder_filename)
+            if os.path.exists(placeholder_path):
+                os.remove(placeholder_path)
         return error_redirect("/photos/upload", "Failed to save photo. Please try again.")
 
     return success_redirect("/photos", "Photo uploaded successfully!")
@@ -370,6 +491,15 @@ async def delete_photo(request: Request, photo_id: int) -> RedirectResponse:
                     os.remove(thumb_path)
                 except Exception as e:
                     logger.error(f"Failed to delete thumbnail: {e}")
+
+        # Delete placeholder if exists
+        if photo.placeholder_filename:
+            placeholder_path = os.path.join(PLACEHOLDER_DIR, photo.placeholder_filename)
+            if os.path.exists(placeholder_path):
+                try:
+                    os.remove(placeholder_path)
+                except Exception as e:
+                    logger.error(f"Failed to delete placeholder: {e}")
 
         # Delete database record
         session.delete(photo)

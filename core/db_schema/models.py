@@ -313,6 +313,7 @@ class Photo(Base):
     )
     filename: Mapped[str] = mapped_column(Text, nullable=False)
     thumbnail_filename: Mapped[Optional[str]] = mapped_column(Text)
+    placeholder_filename: Mapped[Optional[str]] = mapped_column(Text)
     caption: Mapped[Optional[str]] = mapped_column(String(200))
     is_big_bass: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
     uploaded_at: Mapped[Optional[datetime]] = mapped_column(
