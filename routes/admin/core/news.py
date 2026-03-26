@@ -116,7 +116,9 @@ async def create_news(
                     for (email,) in session.query(Angler.email)
                     .filter(Angler.member == True, Angler.email.isnot(None))  # noqa: E712
                     .all()
-                    if email and not email.lower().endswith("@sabc.com")
+                    if email
+                    and not email.lower().endswith("@sabc.com")
+                    and not email.lower().endswith("@saustinbc.com")
                 ]
 
             if member_emails:
