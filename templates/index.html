@@ -616,7 +616,7 @@
     // Only show pagination if there are more than NEWS_PER_PAGE items
     if (totalItems <= NEWS_PER_PAGE) {
         if (paginationContainer) {
-            paginationContainer.style.display = 'none';
+            paginationContainer.style.setProperty('display', 'none', 'important');
         }
         return;
     }

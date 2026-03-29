@@ -39,6 +39,9 @@
           requests  # HTTP client for API/web requests
           beautifulsoup4  # HTML parsing for tournament data import
 
+          # Image processing
+          pillow  # For photo gallery thumbnails and EXIF handling
+
           # Markdown rendering
           markdown  # For rendering markdown content as HTML
 
@@ -160,9 +163,9 @@ print('Database reset complete!')
           # Check if PostgreSQL container is running
           if ! docker ps | grep -q sabc-postgres; then
               echo "⚠️  PostgreSQL container not running. Starting it..."
-              docker compose up -d postgres
+              docker compose -f docker-compose.dev.yml up -d postgres
               echo "Waiting for PostgreSQL to be ready..."
-              until docker compose exec postgres pg_isready -U postgres; do
+              until docker compose -f docker-compose.dev.yml exec postgres pg_isready -U postgres; do
                 sleep 1
               done
               echo "✓ PostgreSQL is ready!"
