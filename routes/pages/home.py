@@ -22,7 +22,10 @@ from core.db_schema import (
     get_session,
 )
 from core.deps import templates
+from core.email import send_contact_email
 from core.helpers.auth import get_user_optional
+from core.helpers.logging import get_logger
+from core.helpers.response import error_redirect, success_redirect
 from core.query_service import QueryService
 from routes.dependencies import get_lakes_list, get_ramps_for_lake
 
@@ -416,6 +419,51 @@ async def home_paginated(request: Request, page: int = 1):
 @router.get("/")
 async def page(request: Request, p: int = 1):
     return await home_paginated(request, p)
+
+
+logger = get_logger(__name__)
+
+EXCLUDED_EMAIL_DOMAINS = ("@sabc.com", "@saustinbc.com")
+
+
+@router.post("/about/contact")
+async def contact_form(request: Request) -> RedirectResponse:
+    """Handle contact form submission - sends email to all admins."""
+    form = await request.form()
+    sender_name = str(form.get("name", "")).strip()
+    sender_email = str(form.get("email", "")).strip()
+    subject_line = str(form.get("subject", "")).strip()
+    message = str(form.get("message", "")).strip()
+
+    if not all([sender_name, sender_email, subject_line, message]):
+        return error_redirect("/about", "All fields are required.")
+
+    # Get admin emails, excluding placeholder domains
+    with get_session() as session:
+        admin_emails: List[str] = [
+            email
+            for (email,) in session.query(Angler.email)
+            .filter(Angler.is_admin == True, Angler.email.isnot(None))  # noqa: E712
+            .all()
+            if email
+            and not any(email.lower().endswith(domain) for domain in EXCLUDED_EMAIL_DOMAINS)
+        ]
+
+    if not admin_emails:
+        logger.warning("No admin emails found for contact form submission")
+        return error_redirect("/about", "Unable to send message. Please try again later.")
+
+    success = send_contact_email(
+        admin_emails=admin_emails,
+        sender_name=sender_name,
+        sender_email=sender_email,
+        subject_line=subject_line,
+        message=message,
+    )
+
+    if success:
+        return success_redirect("/about", "Your message has been sent! We'll get back to you soon.")
+    return error_redirect("/about", "Failed to send message. Please try again later.")
 
 
 @router.get("/{page:path}")

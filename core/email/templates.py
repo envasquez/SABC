@@ -102,3 +102,60 @@ The {CLUB_NAME} Team{author_line}
 """
 
     return subject, text_body, html_body
+
+
+def generate_contact_email_content(
+    sender_name: str, sender_email: str, subject_line: str, message: str
+) -> tuple[str, str, str]:
+    """Generate email content for contact form submissions.
+
+    Args:
+        sender_name: Name of the person submitting the form
+        sender_email: Email of the person submitting the form
+        subject_line: Subject provided by the sender
+        message: Message body from the contact form
+
+    Returns:
+        Tuple of (subject, text_body, html_body)
+    """
+    subject = f"{CLUB_NAME} - Contact: {subject_line}"
+
+    text_body = f"""
+New contact form submission from {WEBSITE_URL}:
+
+From: {sender_name} ({sender_email})
+Subject: {subject_line}
+
+{message}
+
+---
+This message was sent via the {CLUB_NAME} website contact form.
+You can reply directly to {sender_email}.
+"""
+
+    # Convert message line breaks to HTML
+    html_message = "".join(
+        f"<p>{line}</p>" if line.strip() else "<br>" for line in message.split("\n")
+    )
+
+    html_body = f"""
+<html>
+<body>
+<p>New contact form submission from <a href="{WEBSITE_URL}">{CLUB_NAME}</a>:</p>
+<table style="border-collapse: collapse; margin: 16px 0;">
+<tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">From:</td><td>{sender_name} ({sender_email})</td></tr>
+<tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">Subject:</td><td>{subject_line}</td></tr>
+</table>
+<div style="padding: 12px; background-color: #f5f5f5; border-left: 4px solid #0d6efd; margin: 16px 0;">
+{html_message}
+</div>
+<hr>
+<p style="color: #6c757d; font-size: 0.875em;">
+This message was sent via the {CLUB_NAME} website contact form.
+You can reply directly to <a href="mailto:{sender_email}">{sender_email}</a>.
+</p>
+</body>
+</html>
+"""
+
+    return subject, text_body, html_body
