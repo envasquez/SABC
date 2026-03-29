@@ -1,6 +1,9 @@
 {% extends "base.html" %}
+{% from "macros.html" import csrf_token, alert, form_field %}
 {% block title %}About - South Austin Bass Club{% endblock %}
 {% block content %}
+{{ alert('success', request.query_params.get('success')) }}
+{{ alert('danger', request.query_params.get('error')) }}
 <div class="mb-4">
 <h1 class="display-5"><i class="bi bi-people-fill me-2"></i>About</h1>
 <p class="lead text-secondary">South Austin Bass Club - Established 1983</p>
@@ -61,6 +64,29 @@
 <p class="mb-3 text-dark">Send payments for tournament entry fees, buy-ins, and membership dues via Venmo:</p>
 <img src="/static/venmo.png" alt="Venmo QR Code - Chris Annoni @Chris-Annoni" class="img-fluid" style="max-width:200px">
 <p class="mt-3 text-dark"><strong>@Chris-Annoni</strong></p>
+</div>
+</div>
+</div>
+<!-- Contact Form -->
+<div class="col-12">
+<div class="card shadow-sm">
+<div class="card-header bg-secondary text-white"><h5 class="mb-0"><i class="bi bi-envelope-fill me-2"></i>Contact Us</h5></div>
+<div class="card-body">
+<p class="text-secondary mb-3">Have a question or want to learn more? Send us a message and we'll get back to you.</p>
+<form method="POST" action="/about/contact">
+    {{ csrf_token(request) }}
+    <div class="row">
+        <div class="col-md-6">
+            {{ form_field('Name', 'name', required=True, placeholder='Your name', maxlength='100') }}
+        </div>
+        <div class="col-md-6">
+            {{ form_field('Email', 'email', type='email', required=True, placeholder='your@email.com', maxlength='255') }}
+        </div>
+    </div>
+    {{ form_field('Subject', 'subject', required=True, placeholder='What is this about?', maxlength='200') }}
+    {{ form_field('Message', 'message', type='textarea', required=True, placeholder='Your message...', rows='5', maxlength='2000') }}
+    <button type="submit" class="btn btn-primary"><i class="bi bi-send me-2"></i>Send Message</button>
+</form>
 </div>
 </div>
 </div>
