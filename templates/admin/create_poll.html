@@ -1,17 +1,15 @@
-{% extends "base.html" %}
+{% extends "admin_base.html" %}
 {% from 'macros.html' import alert, csrf_token %}
 
 {% block title %}Create Poll - South Austin Bass Club{% endblock %}
 
-{% block content %}
+{% block admin_content %}
 
 <!-- Data passed to JavaScript -->
 <div id="poll-data" data-event-date="{{ selected_event[1] if selected_event else '' }}"></div>
 
 <div class="mb-4">
-    <h1 class="display-5">
-        <i class="bi bi-plus-circle me-2"></i>Create a New Poll
-    </h1>
+    <div class="sh"><div class="st"><i class="bi bi-plus-circle"></i> Create a New Poll</div></div>
     {% if selected_event %}
     <p class="lead text-secondary">Create a new poll for {% if selected_event[2] %}{{ selected_event[2] }}{% else %}tournament event{% endif %}</p>
     <small class="text-secondary">

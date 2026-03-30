@@ -4,13 +4,10 @@
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <div class="mb-4">
-            <div class="text-secondary mb-2">
-                {{ tournament[2] | date_format }}
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center">
-                <h1>{{ tournament[5] | upper if tournament[5] else "TOURNAMENT" }} - <small class="text-secondary">RESULTS</small></h1>
+        <div style="margin-bottom:1.4rem">
+            <div style="font-size:.86rem;color:var(--t3);margin-bottom:.5rem">{{ tournament[2] | date_format }}</div>
+            <div class="sh">
+                <div class="st">{{ tournament[5] | upper if tournament[5] else "TOURNAMENT" }} — Results</div>
                 {% if user and user.is_admin %}
                 <a href="/admin/tournaments/{{ tournament[0] }}/enter-results" class="btn btn-success">
                     <i class="bi bi-plus-circle me-2"></i>{{ "Add More Results" if team_results or individual_results else "Add Results" }}

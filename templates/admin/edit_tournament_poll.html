@@ -1,17 +1,14 @@
-{% extends "base.html" %}
+{% extends "admin_base.html" %}
 {% from 'macros.html' import alert, csrf_token %}
 
 {% block title %}Edit Tournament Poll - South Austin Bass Club{% endblock %}
 
-{% block content %}
+{% block admin_content %}
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="mb-4">
-                <h1 class="display-6">
-                    <i class="bi bi-trophy me-2"></i>Edit Tournament Lake Selection Poll
-                </h1>
-                <p class="lead text-secondary">Configure poll settings and available lakes</p>
+            <div class="sh">
+                <div class="st"><i class="bi bi-trophy"></i> Edit Tournament Poll</div>
             </div>
 
             <!-- Success/Error Messages -->

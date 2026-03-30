@@ -1,480 +1,371 @@
-{% extends "base.html" %}
-{% from 'macros.html' import csrf_token, alert, card %}
+{% extends "admin_base.html" %}
+{% from 'macros.html' import csrf_token, alert %}
 
 {% block title %}Manage Events - South Austin Bass Club{% endblock %}
 
-{% block content %}
-<div class="container">
-    <div class="mb-4">
-        <h1 class="display-5">
-            <i class="bi bi-calendar3 me-2"></i>Manage Events
-        </h1>
-        <p class="lead text-secondary">Create and manage tournament events</p>
-    </div>
+{% block admin_content %}
+<div class="sh">
+    <div class="st"><i class="bi bi-calendar3"></i> Manage Events</div>
+</div>
 
-    <!-- Add Event Form -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">
-                <i class="bi bi-plus-circle me-2"></i>Add New Event
-            </h5>
-        </div>
-        <div class="card-body">
-            {{ alert('success', success) }}
-            {{ alert('danger', error) }}
-            {{ alert('warning', warnings) }}
+<!-- Add Event Form -->
+<div class="cc" style="margin-bottom:1.4rem">
+    <div class="ci">
+        <div class="ct" style="margin-bottom:1rem"><i class="bi bi-plus-circle"></i> Add New Event</div>
+        {{ alert('success', success) }}
+        {{ alert('danger', error) }}
+        {{ alert('warning', warnings) }}
 
-            <form method="POST" action="/admin/events/create">
-                    {{ csrf_token(request) }}
-                <!-- Row 1: Event Date, Event Type, Event Name, Description -->
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <label for="date" class="form-label">Event Date <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" id="date" name="date" required>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="event_type" class="form-label">Event Type <span class="text-danger">*</span></label>
-                        <select class="form-select" id="event_type" name="event_type" required>
-                            <option value="sabc_tournament">SABC Tournament</option>
-                            <option value="holiday">Holiday</option>
-                            <option value="other_tournament">Other Tournament</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="name" class="form-label">Event Name <span id="name-required" class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="name" name="name"
-                               placeholder="e.g., August Tournament" required>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="description" class="form-label">Description <span class="text-secondary">(Optional)</span></label>
-                        <input type="text" class="form-control" id="description" name="description"
-                               placeholder="e.g., Location details or notes">
-                    </div>
+        <form method="POST" action="/admin/events/create">
+            {{ csrf_token(request) }}
+            <div style="display:grid;grid-template-columns:1.5fr 1fr 2fr 1.5fr;gap:1rem">
+                <div class="fg">
+                    <label class="fl" for="date">Event Date <span style="color:var(--err)">*</span></label>
+                    <input class="fi" type="date" id="date" name="date" required>
                 </div>
-
-                <!-- Row 2: SABC Tournament-specific fields -->
-                <div id="sabc-tournament-fields" class="row g-3 mt-2" style="display: none;">
-                    <div class="col-md-2">
-                        <label for="start_time" class="form-label">Start Time</label>
-                        <input type="time" class="form-control" id="start_time" name="start_time">
-                    </div>
-                    <div class="col-md-2">
-                        <label for="weigh_in_time" class="form-label">Weigh-in Time</label>
-                        <input type="time" class="form-control" id="weigh_in_time" name="weigh_in_time">
-                    </div>
-                    <div class="col-md-2">
-                        <label for="lake_name" class="form-label">Lake</label>
-                        <select class="form-select" id="lake_name" name="lake_name">
-                            <option value="">-- Select Lake --</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="ramp_name" class="form-label">Ramp</label>
-                        <select class="form-select" id="ramp_name" name="ramp_name" disabled>
-                            <option value="">-- Select Ramp --</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="entry_fee" class="form-label">Entry Fee</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="number" class="form-control" id="entry_fee" name="entry_fee" value="25.00" step="0.01" min="0">
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="fish_limit" class="form-label">Fish Limit</label>
-                        <input type="number" class="form-control" id="fish_limit" name="fish_limit" value="5" min="1" max="10">
-                    </div>
-                    <div class="col-md-2">
-                        <label for="aoy_points" class="form-label">AoY Points</label>
-                        <select class="form-select" id="aoy_points" name="aoy_points">
-                            <option value="true" selected>Yes</option>
-                            <option value="false">No</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label for="create_poll" class="form-label">Create Poll</label>
-                        <select class="form-select" id="create_poll" name="create_poll">
-                            <option value="true" selected>Yes</option>
-                            <option value="false">No</option>
-                        </select>
-                    </div>
+                <div class="fg">
+                    <label class="fl" for="event_type">Event Type <span style="color:var(--err)">*</span></label>
+                    <select class="fi" id="event_type" name="event_type" required>
+                        <option value="sabc_tournament">SABC Tournament</option>
+                        <option value="holiday">Holiday</option>
+                        <option value="other_tournament">Other Tournament</option>
+                    </select>
                 </div>
-
-
-                <!-- Row 2: Other Tournament fields -->
-                <div id="other-tournament-fields" class="row g-3 mt-2" style="display: none;">
-                    <div class="col-md-3">
-                        <label for="other_start_time" class="form-label">Start Time <span class="text-secondary">(Optional)</span></label>
-                        <input type="time" class="form-control" id="other_start_time" name="start_time">
-                    </div>
-                    <div class="col-md-3">
-                        <label for="other_weigh_in_time" class="form-label">Weigh-in Time <span class="text-secondary">(Optional)</span></label>
-                        <input type="time" class="form-control" id="other_weigh_in_time" name="weigh_in_time">
-                    </div>
-                    <div class="col-md-3">
-                        <label for="other_lake_name" class="form-label">Lake</label>
-                        <select class="form-select" id="other_lake_name" name="lake_name">
-                            <option value="">-- Select Lake --</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="other_ramp_name" class="form-label">Ramp <span class="text-secondary">(Optional)</span></label>
-                        <select class="form-select" id="other_ramp_name" name="ramp_name" disabled>
-                            <option value="">-- Select Ramp --</option>
-                        </select>
-                    </div>
+                <div class="fg">
+                    <label class="fl" for="name">Event Name <span id="name-required" style="color:var(--err)">*</span></label>
+                    <input class="fi" type="text" id="name" name="name" placeholder="e.g., August Tournament" required>
                 </div>
-
-                <!-- Row 3: Description for Other Tournaments -->
-                <div id="other-tournament-description" class="row g-3 mt-2" style="display: none;">
-                    <div class="col-md-12">
-                        <label for="other_description" class="form-label">Description <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="other_description" name="description" rows="2" placeholder="Additional details about the tournament or event..." required></textarea>
-                    </div>
+                <div class="fg">
+                    <label class="fl" for="description">Description <span style="color:var(--t4)">(Optional)</span></label>
+                    <input class="fi" type="text" id="description" name="description" placeholder="e.g., Location details or notes">
                 </div>
-
-                <!-- Other event types fields -->
-                <div id="other-fields" class="row g-3 mt-2" style="display: none;">
-                    <!-- No additional fields needed - description is in main row -->
-                </div>
-
-                <!-- SABC Tournament-only fields (hidden now, merged above) -->
-                <div id="sabc-fields" class="row g-3 mt-2" style="display: none;">
-                </div>
-
-                <!-- Holiday-specific fields -->
-                <div id="holiday-fields" class="row g-3 mt-2" style="display: none;">
-                </div>
-
-                <!-- General event options -->
-                <div class="row g-3 mt-2">
-                </div>
-
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-plus-circle me-1"></i>Add Event
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Event Tabs -->
-    <div class="card shadow-sm">
-        <div class="card-header bg-dark p-0">
-            <ul class="nav nav-tabs nav-fill" id="eventTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active text-light" id="sabc-tab" data-bs-toggle="tab" data-bs-target="#sabc-events" type="button" role="tab" aria-controls="sabc-events" aria-selected="true">
-                        <i class="bi bi-trophy me-2"></i>SABC Tournaments
-                        <span class="badge bg-primary ms-2" id="sabc-count">{{ upcoming_sabc_tournaments|default([])|length }}</span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link text-light" id="past-tournaments-tab" data-bs-toggle="tab" data-bs-target="#past-tournaments-events" type="button" role="tab" aria-controls="past-tournaments-events" aria-selected="false">
-                        <i class="bi bi-trophy-fill me-2"></i>Past Tournaments
-                        <span class="badge bg-secondary ms-2" id="past-tournaments-count">{{ past_tournaments|length if past_tournaments else 0 }}</span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link text-light" id="holidays-tab" data-bs-toggle="tab" data-bs-target="#holidays-events" type="button" role="tab" aria-controls="holidays-events" aria-selected="false">
-                        <i class="bi bi-calendar-heart me-2"></i>Holidays
-                        <span class="badge bg-info ms-2" id="holidays-count">{{ events|selectattr('event_type', 'equalto', 'holiday')|list|length }}</span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link text-light" id="other-tab" data-bs-toggle="tab" data-bs-target="#other-events" type="button" role="tab" aria-controls="other-events" aria-selected="false">
-                        <i class="bi bi-calendar-plus me-2"></i>Other Events
-                        <span class="badge bg-warning ms-2" id="other-count">{{ events|selectattr('event_type', 'equalto', 'other_tournament')|list|length }}</span>
-                    </button>
-                </li>
-            </ul>
-        </div>
-        <div class="card-body p-0">
-            <div class="tab-content" id="eventTabsContent">
-
-                <!-- SABC Tournaments Tab -->
-                <div class="tab-pane fade show active" id="sabc-events" role="tabpanel" aria-labelledby="sabc-tab">
-                    <div class="d-flex justify-content-between align-items-center p-3 bg-secondary text-white border-bottom">
-                        <h6 class="mb-0"><i class="bi bi-trophy me-2 text-primary"></i>SABC Tournament Management</h6>
-                    </div>
-
-                    <!-- Search and Filter for SABC -->
-                    <div class="p-3 border-bottom bg-dark">
-                        <div class="row g-2">
-                            <div class="col-md-4">
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                    <input type="text" class="form-control" id="sabc-search" placeholder="Search tournaments..." onkeyup="filterEvents('sabc')">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <select class="form-select form-select-sm" id="sabc-year-filter" onchange="filterEvents('sabc')">
-                                    <option value="">All Years</option>
-                                    {% for year in range(2023, current_year + 2) %}
-                                    <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <select class="form-select form-select-sm" id="sabc-status-filter" onchange="filterEvents('sabc')">
-                                    <option value="">All Status</option>
-                                    <option value="complete">Complete</option>
-                                    <option value="upcoming">Upcoming</option>
-                                    <option value="no-poll">No Poll</option>
-                                    <option value="poll-active">Poll Active</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <select class="form-select form-select-sm" id="sabc-lake-filter" onchange="filterEvents('sabc')">
-                                    <option value="">All Lakes</option>
-                                    {% for lake in past_tournament_lakes %}
-                                    <option value="{{ lake }}">{{ lake }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters('sabc')">
-                                    <i class="bi bi-x-circle me-1"></i>Clear
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {% set sabc_events = upcoming_sabc_tournaments|default(events|selectattr('event_type', 'equalto', 'sabc_tournament')|list) %}
-                    <div class="table-responsive">
-                        <table class="table table-hover table-dark">
-                            <thead><tr><th>Date</th><th>Event</th><th>Lake</th><th>Actions</th></tr></thead>
-                            <tbody>
-                                {% for event in sabc_events %}
-                                <tr data-year="{{ event.date.year }}">
-                                    <td>{{ event.date }}</td>
-                                    <td>{{ event.name }}</td>
-                                    <td>{{ event.lake_name or '-' }}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-warning" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-danger"
-                                                data-event-id="{{ event.id }}"
-                                                data-event-name="{{ event.name }}"
-                                                data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
-                                                onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Past Tournaments Tab -->
-                <div class="tab-pane fade" id="past-tournaments-events" role="tabpanel" aria-labelledby="past-tournaments-tab">
-                    <div class="d-flex justify-content-between align-items-center p-3 bg-secondary text-white border-bottom">
-                        <h6 class="mb-0"><i class="bi bi-trophy-fill me-2"></i>Past Tournaments</h6>
-                    </div>
-
-                    <!-- Search and Filter for Past Tournaments -->
-                    <div class="p-3 border-bottom bg-dark">
-                        <div class="row g-2">
-                            <div class="col-md-3">
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                    <input type="text" class="form-control" id="past-tournaments-search" placeholder="Search past tournaments..." onkeyup="filterEvents('past-tournaments')">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <select class="form-select form-select-sm" id="past-tournaments-year-filter" onchange="filterEvents('past-tournaments')">
-                                    <option value="">All Years</option>
-                                    {% for year in past_tournament_years %}
-                                    <option value="{{ year }}">{{ year }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <select class="form-select form-select-sm" id="past-tournaments-type-filter" onchange="filterEvents('past-tournaments')">
-                                    <option value="">All Types</option>
-                                    <option value="sabc_tournament">SABC</option>
-                                    <option value="other_tournament">Other</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <select class="form-select form-select-sm" id="past-tournaments-lake-filter" onchange="filterEvents('past-tournaments')">
-                                    <option value="">All Lakes</option>
-                                    {% for lake in past_tournament_lakes %}
-                                    <option value="{{ lake }}">{{ lake }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <select class="form-select form-select-sm" id="past-tournaments-results-filter" onchange="filterEvents('past-tournaments')">
-                                    <option value="">All Results</option>
-                                    <option value="has-results">Has Results</option>
-                                    <option value="no-results">No Results</option>
-                                </select>
-                            </div>
-                            <div class="col-md-1">
-                                <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters('past-tournaments')">
-                                    <i class="bi bi-x-circle me-1"></i>Clear
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="table table-hover table-dark">
-                            <thead><tr><th>Date</th><th>Event</th><th>Type</th><th>Lake</th><th>Actions</th></tr></thead>
-                            <tbody>
-                                {% for event in past_tournaments %}
-                                <tr data-event-type="{{ event.event_type }}" data-year="{{ event.date.year }}" data-has-results="{{ 'yes' if event.has_results else 'no' }}" data-lake="{{ event.lake_name|lower if event.lake_name else '' }}">
-                                    <td>{{ event.date }}</td>
-                                    <td>{{ event.name }}</td>
-                                    <td>{{ event.event_type }}</td>
-                                    <td>{{ event.lake_name or '-' }}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-warning" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-danger"
-                                                data-event-id="{{ event.id }}"
-                                                data-event-name="{{ event.name }}"
-                                                data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
-                                                onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Federal Holidays Tab -->
-                <div class="tab-pane fade" id="holidays-events" role="tabpanel" aria-labelledby="holidays-tab">
-                    <div class="d-flex justify-content-between align-items-center p-3 bg-secondary text-white border-bottom">
-                        <h6 class="mb-0"><i class="bi bi-calendar-heart me-2 text-info"></i>Holiday Calendar</h6>
-                    </div>
-
-                    <!-- Search and Filter for Holidays -->
-                    <div class="p-3 border-bottom bg-dark">
-                        <div class="row g-2">
-                            <div class="col-md-6">
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                    <input type="text" class="form-control" id="holidays-search" placeholder="Search holidays..." onkeyup="filterEvents('holidays')">
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <select class="form-select form-select-sm" id="holidays-year-filter" onchange="filterEvents('holidays')">
-                                    <option value="">All Years</option>
-                                    {% for year in range(current_year, current_year + 5) %}
-                                    <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters('holidays')">
-                                    <i class="bi bi-x-circle me-1"></i>Clear
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {% set sabc_events = events|selectattr('event_type', 'equalto', 'holiday')|list %}
-                    <div class="table-responsive">
-                        <table class="table table-hover table-dark">
-                            <thead><tr><th>Date</th><th>Event</th><th>Lake</th><th>Actions</th></tr></thead>
-                            <tbody>
-                                {% for event in sabc_events %}
-                                <tr>
-                                    <td>{{ event.date }}</td>
-                                    <td>{{ event.name }}</td>
-                                    <td>{{ event.lake_name or '-' }}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-warning" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-danger"
-                                                data-event-id="{{ event.id }}"
-                                                data-event-name="{{ event.name }}"
-                                                data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
-                                                onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Other Events Tab -->
-                <div class="tab-pane fade" id="other-events" role="tabpanel" aria-labelledby="other-tab">
-                    <div class="d-flex justify-content-between align-items-center p-3 bg-secondary text-white border-bottom">
-                        <h6 class="mb-0"><i class="bi bi-calendar-plus me-2 text-warning"></i>Other Events & Tournaments</h6>
-                    </div>
-
-                    <!-- Search and Filter for Other Events -->
-                    <div class="p-3 border-bottom bg-dark">
-                        <div class="row g-2">
-                            <div class="col-md-4">
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                    <input type="text" class="form-control" id="other-search" placeholder="Search events..." onkeyup="filterEvents('other')">
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <select class="form-select form-select-sm" id="other-year-filter" onchange="filterEvents('other')">
-                                    <option value="">All Years</option>
-                                    {% for year in range(2023, current_year + 2) %}
-                                    <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <select class="form-select form-select-sm" id="other-type-filter" onchange="filterEvents('other')">
-                                    <option value="">All Types</option>
-                                    <option value="other_tournament">Other Tournaments</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <button class="btn btn-outline-secondary btn-sm w-100" onclick="clearFilters('other')">
-                                    <i class="bi bi-x-circle me-1"></i>Clear
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {% set other_events = events|selectattr('event_type', 'equalto', 'other_tournament')|list %}
-                    <div class="table-responsive">
-                        <table class="table table-hover table-dark">
-                            <thead><tr><th>Date</th><th>Event</th><th>Lake</th><th>Actions</th></tr></thead>
-                            <tbody>
-                                {% for event in other_events %}
-                                <tr data-year="{{ event.date.year }}" data-event-type="{{ event.event_type }}">
-                                    <td>{{ event.date }}</td>
-                                    <td>{{ event.name }}</td>
-                                    <td>{{ event.lake_name or '-' }}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-warning" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
-                                        <button class="btn btn-sm btn-danger"
-                                                data-event-id="{{ event.id }}"
-                                                data-event-name="{{ event.name }}"
-                                                data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
-                                                onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-
             </div>
+
+            <!-- SABC Tournament-specific fields -->
+            <div id="sabc-tournament-fields" style="display:none;margin-top:1rem">
+                <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:1rem">
+                    <div class="fg">
+                        <label class="fl" for="start_time">Start Time</label>
+                        <input class="fi" type="time" id="start_time" name="start_time">
+                    </div>
+                    <div class="fg">
+                        <label class="fl" for="weigh_in_time">Weigh-in</label>
+                        <input class="fi" type="time" id="weigh_in_time" name="weigh_in_time">
+                    </div>
+                    <div class="fg">
+                        <label class="fl" for="lake_name">Lake</label>
+                        <select class="fi" id="lake_name" name="lake_name">
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+                    <div class="fg">
+                        <label class="fl" for="ramp_name">Ramp</label>
+                        <select class="fi" id="ramp_name" name="ramp_name" disabled>
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+                    <div class="fg">
+                        <label class="fl" for="entry_fee">Entry Fee</label>
+                        <input class="fi" type="number" id="entry_fee" name="entry_fee" value="25.00" step="0.01" min="0">
+                    </div>
+                    <div class="fg">
+                        <label class="fl" for="fish_limit">Fish Limit</label>
+                        <input class="fi" type="number" id="fish_limit" name="fish_limit" value="5" min="1" max="10">
+                    </div>
+                    <div class="fg">
+                        <label class="fl" for="aoy_points">AoY Points</label>
+                        <select class="fi" id="aoy_points" name="aoy_points">
+                            <option value="false" selected>No</option>
+                            <option value="true">Yes</option>
+                        </select>
+                    </div>
+                    <div class="fg">
+                        <label class="fl" for="create_poll">Create Poll</label>
+                        <select class="fi" id="create_poll" name="create_poll">
+                            <option value="true" selected>Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other Tournament fields -->
+            <div id="other-tournament-fields" style="display:none;margin-top:1rem">
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem">
+                    <div class="fg">
+                        <label class="fl" for="other_start_time">Start Time <span style="color:var(--t4)">(Optional)</span></label>
+                        <input class="fi" type="time" id="other_start_time" name="start_time">
+                    </div>
+                    <div class="fg">
+                        <label class="fl" for="other_weigh_in_time">Weigh-in <span style="color:var(--t4)">(Optional)</span></label>
+                        <input class="fi" type="time" id="other_weigh_in_time" name="weigh_in_time">
+                    </div>
+                    <div class="fg">
+                        <label class="fl" for="other_lake_name">Lake</label>
+                        <select class="fi" id="other_lake_name" name="lake_name">
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+                    <div class="fg">
+                        <label class="fl" for="other_ramp_name">Ramp <span style="color:var(--t4)">(Optional)</span></label>
+                        <select class="fi" id="other_ramp_name" name="ramp_name" disabled>
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description for Other Tournaments -->
+            <div id="other-tournament-description" style="display:none;margin-top:1rem">
+                <div class="fg">
+                    <label class="fl" for="other_description">Description <span style="color:var(--err)">*</span></label>
+                    <textarea class="fi" id="other_description" name="description" rows="2" placeholder="Additional details..." required></textarea>
+                </div>
+            </div>
+
+            <div id="other-fields" style="display:none"></div>
+            <div id="sabc-fields" style="display:none"></div>
+            <div id="holiday-fields" style="display:none"></div>
+
+            <div style="margin-top:1rem">
+                <button class="btn-m btn-p" type="submit"><i class="bi bi-plus-circle"></i> Add Event</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Event Tabs -->
+<div class="cc">
+    <div style="padding:0">
+        <!-- Tab Navigation -->
+        <div class="pt" style="width:100%;padding:.75rem 1.4rem;border-bottom:1px solid var(--b0);border-radius:0;background:transparent;display:flex;gap:.5rem">
+            <button class="ptb on" id="sabc-tab" data-bs-toggle="tab" data-bs-target="#sabc-events" type="button">
+                <i class="bi bi-trophy"></i> SABC Tournaments
+                <span class="tg tg-p" style="margin-left:.3rem">{{ upcoming_sabc_tournaments|default([])|length }}</span>
+            </button>
+            <button class="ptb" id="past-tournaments-tab" data-bs-toggle="tab" data-bs-target="#past-tournaments-events" type="button">
+                <i class="bi bi-trophy-fill"></i> Past Tournaments
+                <span class="tg tg-g" style="margin-left:.3rem">{{ past_tournaments|length if past_tournaments else 0 }}</span>
+            </button>
+            <button class="ptb" id="holidays-tab" data-bs-toggle="tab" data-bs-target="#holidays-events" type="button">
+                <i class="bi bi-calendar-heart"></i> Holidays
+                <span class="tg tg-i" style="margin-left:.3rem">{{ events|selectattr('event_type', 'equalto', 'holiday')|list|length }}</span>
+            </button>
+            <button class="ptb" id="other-tab" data-bs-toggle="tab" data-bs-target="#other-events" type="button">
+                <i class="bi bi-calendar-plus"></i> Other Events
+                <span class="tg tg-w" style="margin-left:.3rem">{{ events|selectattr('event_type', 'equalto', 'other_tournament')|list|length }}</span>
+            </button>
         </div>
+
+        <div class="tab-content" id="eventTabsContent">
+            <!-- SABC Tournaments Tab -->
+            <div class="tab-pane fade show active" id="sabc-events" role="tabpanel">
+                <div style="padding:.75rem 1.4rem;border-bottom:1px solid var(--b0)">
+                    <div class="ct"><i class="bi bi-trophy"></i> SABC Tournament Management</div>
+                </div>
+                <div style="padding:.75rem 1.4rem;border-bottom:1px solid var(--b0)">
+                    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:.5rem;align-items:center">
+                        <div class="sw"><i class="bi bi-search"></i><input class="si" id="sabc-search" placeholder="Search tournaments..." onkeyup="filterEvents('sabc')" style="width:100%"></div>
+                        <select class="fi" id="sabc-year-filter" onchange="filterEvents('sabc')" style="margin:0">
+                            <option value="">All Years</option>
+                            {% for year in range(2023, current_year + 2) %}
+                            <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                        <select class="fi" id="sabc-status-filter" onchange="filterEvents('sabc')" style="margin:0">
+                            <option value="">All Status</option>
+                            <option value="complete">Complete</option>
+                            <option value="upcoming">Upcoming</option>
+                            <option value="no-poll">No Poll</option>
+                            <option value="poll-active">Poll Active</option>
+                        </select>
+                        <select class="fi" id="sabc-lake-filter" onchange="filterEvents('sabc')" style="margin:0">
+                            <option value="">All Lakes</option>
+                            {% for lake in past_tournament_lakes %}
+                            <option value="{{ lake }}">{{ lake }}</option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" onclick="clearFilters('sabc')"><i class="bi bi-x-circle"></i> Clear</button>
+                    </div>
+                </div>
+                {% set sabc_events = upcoming_sabc_tournaments|default(events|selectattr('event_type', 'equalto', 'sabc_tournament')|list) %}
+                <table class="mt">
+                    <thead><tr><th>Date</th><th>Event</th><th>Lake</th><th style="text-align:right">Actions</th></tr></thead>
+                    <tbody>
+                        {% for event in sabc_events %}
+                        <tr data-year="{{ event.date.year }}">
+                            <td>{{ event.date }}</td>
+                            <td>{{ event.name }}</td>
+                            <td>{{ event.lake_name or '-' }}</td>
+                            <td style="text-align:right">
+                                <div style="display:flex;gap:.35rem;justify-content:flex-end">
+                                    <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn-icon btn-icon-danger"
+                                            data-event-id="{{ event.id }}"
+                                            data-event-name="{{ event.name }}"
+                                            data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
+                                            onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Past Tournaments Tab -->
+            <div class="tab-pane fade" id="past-tournaments-events" role="tabpanel">
+                <div style="padding:.75rem 1.4rem;border-bottom:1px solid var(--b0)">
+                    <div class="ct"><i class="bi bi-trophy-fill"></i> Past Tournaments</div>
+                </div>
+                <div style="padding:.75rem 1.4rem;border-bottom:1px solid var(--b0)">
+                    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:.5rem;align-items:center">
+                        <div class="sw"><i class="bi bi-search"></i><input class="si" id="past-tournaments-search" placeholder="Search..." onkeyup="filterEvents('past-tournaments')" style="width:100%"></div>
+                        <select class="fi" id="past-tournaments-year-filter" onchange="filterEvents('past-tournaments')" style="margin:0">
+                            <option value="">All Years</option>
+                            {% for year in past_tournament_years %}
+                            <option value="{{ year }}">{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                        <select class="fi" id="past-tournaments-type-filter" onchange="filterEvents('past-tournaments')" style="margin:0">
+                            <option value="">All Types</option>
+                            <option value="sabc_tournament">SABC</option>
+                            <option value="other_tournament">Other</option>
+                        </select>
+                        <select class="fi" id="past-tournaments-lake-filter" onchange="filterEvents('past-tournaments')" style="margin:0">
+                            <option value="">All Lakes</option>
+                            {% for lake in past_tournament_lakes %}
+                            <option value="{{ lake }}">{{ lake }}</option>
+                            {% endfor %}
+                        </select>
+                        <select class="fi" id="past-tournaments-results-filter" onchange="filterEvents('past-tournaments')" style="margin:0">
+                            <option value="">All Results</option>
+                            <option value="has-results">Has Results</option>
+                            <option value="no-results">No Results</option>
+                        </select>
+                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" onclick="clearFilters('past-tournaments')"><i class="bi bi-x-circle"></i> Clear</button>
+                    </div>
+                </div>
+                <table class="mt">
+                    <thead><tr><th>Date</th><th>Event</th><th>Type</th><th>Lake</th><th style="text-align:right">Actions</th></tr></thead>
+                    <tbody>
+                        {% for event in past_tournaments %}
+                        <tr data-event-type="{{ event.event_type }}" data-year="{{ event.date.year }}" data-has-results="{{ 'yes' if event.has_results else 'no' }}" data-lake="{{ event.lake_name|lower if event.lake_name else '' }}">
+                            <td>{{ event.date }}</td>
+                            <td>{{ event.name }}</td>
+                            <td>{{ event.event_type }}</td>
+                            <td>{{ event.lake_name or '-' }}</td>
+                            <td style="text-align:right">
+                                <div style="display:flex;gap:.35rem;justify-content:flex-end">
+                                    <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn-icon btn-icon-danger"
+                                            data-event-id="{{ event.id }}"
+                                            data-event-name="{{ event.name }}"
+                                            data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
+                                            onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Holidays Tab -->
+            <div class="tab-pane fade" id="holidays-events" role="tabpanel">
+                <div style="padding:.75rem 1.4rem;border-bottom:1px solid var(--b0)">
+                    <div class="ct"><i class="bi bi-calendar-heart"></i> Holiday Calendar</div>
+                </div>
+                <div style="padding:.75rem 1.4rem;border-bottom:1px solid var(--b0)">
+                    <div style="display:grid;grid-template-columns:3fr 1fr auto;gap:.5rem;align-items:center">
+                        <div class="sw"><i class="bi bi-search"></i><input class="si" id="holidays-search" placeholder="Search holidays..." onkeyup="filterEvents('holidays')" style="width:100%"></div>
+                        <select class="fi" id="holidays-year-filter" onchange="filterEvents('holidays')" style="margin:0">
+                            <option value="">All Years</option>
+                            {% for year in range(current_year, current_year + 5) %}
+                            <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" onclick="clearFilters('holidays')"><i class="bi bi-x-circle"></i> Clear</button>
+                    </div>
+                </div>
+                {% set holiday_events = events|selectattr('event_type', 'equalto', 'holiday')|list %}
+                <table class="mt">
+                    <thead><tr><th>Date</th><th>Event</th><th>Lake</th><th style="text-align:right">Actions</th></tr></thead>
+                    <tbody>
+                        {% for event in holiday_events %}
+                        <tr>
+                            <td>{{ event.date }}</td>
+                            <td>{{ event.name }}</td>
+                            <td>{{ event.lake_name or '-' }}</td>
+                            <td style="text-align:right">
+                                <div style="display:flex;gap:.35rem;justify-content:flex-end">
+                                    <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn-icon btn-icon-danger"
+                                            data-event-id="{{ event.id }}"
+                                            data-event-name="{{ event.name }}"
+                                            data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
+                                            onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Other Events Tab -->
+            <div class="tab-pane fade" id="other-events" role="tabpanel">
+                <div style="padding:.75rem 1.4rem;border-bottom:1px solid var(--b0)">
+                    <div class="ct"><i class="bi bi-calendar-plus"></i> Other Events & Tournaments</div>
+                </div>
+                <div style="padding:.75rem 1.4rem;border-bottom:1px solid var(--b0)">
+                    <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:.5rem;align-items:center">
+                        <div class="sw"><i class="bi bi-search"></i><input class="si" id="other-search" placeholder="Search events..." onkeyup="filterEvents('other')" style="width:100%"></div>
+                        <select class="fi" id="other-year-filter" onchange="filterEvents('other')" style="margin:0">
+                            <option value="">All Years</option>
+                            {% for year in range(2023, current_year + 2) %}
+                            <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                        <select class="fi" id="other-type-filter" onchange="filterEvents('other')" style="margin:0">
+                            <option value="">All Types</option>
+                            <option value="other_tournament">Other Tournaments</option>
+                        </select>
+                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" onclick="clearFilters('other')"><i class="bi bi-x-circle"></i> Clear</button>
+                    </div>
+                </div>
+                {% set other_events = events|selectattr('event_type', 'equalto', 'other_tournament')|list %}
+                <table class="mt">
+                    <thead><tr><th>Date</th><th>Event</th><th>Lake</th><th style="text-align:right">Actions</th></tr></thead>
+                    <tbody>
+                        {% for event in other_events %}
+                        <tr data-year="{{ event.date.year }}" data-event-type="{{ event.event_type }}">
+                            <td>{{ event.date }}</td>
+                            <td>{{ event.name }}</td>
+                            <td>{{ event.lake_name or '-' }}</td>
+                            <td style="text-align:right">
+                                <div style="display:flex;gap:.35rem;justify-content:flex-end">
+                                    <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn-icon btn-icon-danger"
+                                            data-event-id="{{ event.id }}"
+                                            data-event-name="{{ event.name }}"
+                                            data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
+                                            onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -488,119 +379,69 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="/admin/events/edit" id="editEventForm">
-                    {{ csrf_token(request) }}
+                {{ csrf_token(request) }}
                 <div class="modal-body">
                     <input type="hidden" id="edit_event_id" name="event_id">
-                    <div class="mb-3">
-                        <label for="edit_date" class="form-label">Event Date</label>
-                        <input type="date" class="form-control" id="edit_date" name="date" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_event_type" class="form-label">Event Type</label>
-                        <select class="form-select" id="edit_event_type" name="event_type" required>
+                    <div class="fg"><label class="fl" for="edit_date">Event Date</label><input class="fi" type="date" id="edit_date" name="date" required></div>
+                    <div class="fg"><label class="fl" for="edit_event_type">Event Type</label>
+                        <select class="fi" id="edit_event_type" name="event_type" required>
                             <option value="sabc_tournament">SABC Tournament</option>
                             <option value="holiday">Holiday</option>
                             <option value="other_tournament">Other Tournament</option>
                         </select>
                     </div>
-                    <div class="mb-3" id="edit_poll_closes_container" style="display: none;">
-                        <label for="edit_poll_closes_date" class="form-label">Poll Closes Date & Time</label>
-                        <input type="datetime-local" class="form-control" id="edit_poll_closes_date" name="poll_closes_date"
-                               title="Date and time when tournament location poll closes">
-                        <div class="form-text">Only shown for SABC tournaments with existing polls</div>
+                    <div class="fg" id="edit_poll_closes_container" style="display:none">
+                        <label class="fl" for="edit_poll_closes_date">Poll Closes Date & Time</label>
+                        <input class="fi" type="datetime-local" id="edit_poll_closes_date" name="poll_closes_date">
+                        <div style="font-size:.72rem;color:var(--t4);margin-top:.25rem">Only shown for SABC tournaments with existing polls</div>
                     </div>
-                    <div class="mb-3">
-                        <label for="edit_name" class="form-label">Event Name</label>
-                        <input type="text" class="form-control" id="edit_name" name="name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_description" class="form-label">Description</label>
-                        <input type="text" class="form-control" id="edit_description" name="description">
+                    <div class="fg"><label class="fl" for="edit_name">Event Name</label><input class="fi" type="text" id="edit_name" name="name" required></div>
+                    <div class="fg"><label class="fl" for="edit_description">Description</label><input class="fi" type="text" id="edit_description" name="description"></div>
+
+                    <div class="fg" id="edit-cancel-field" style="display:none">
+                        <label style="display:flex;align-items:center;gap:.5rem;color:var(--err);font-weight:600;cursor:pointer">
+                            <input type="checkbox" id="edit_is_cancelled" name="is_cancelled" value="true">
+                            <i class="bi bi-exclamation-triangle"></i> Cancel this tournament
+                        </label>
+                        <div style="font-size:.72rem;color:var(--t4);margin-top:.25rem">Cancelled tournaments display an alert banner and are removed from the list.</div>
                     </div>
 
-                    <!-- Cancel Tournament Checkbox (only for tournaments) -->
-                    <div class="mb-3" id="edit-cancel-field" style="display: none;">
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input" id="edit_is_cancelled" name="is_cancelled" value="true">
-                            <label class="form-check-label text-danger fw-bold" for="edit_is_cancelled">
-                                <i class="bi bi-exclamation-triangle me-1"></i>Cancel this tournament
-                            </label>
-                            <div class="form-text">Cancelled tournaments will display an alert banner on the home page and be removed from the tournament list.</div>
+                    <div id="edit-tournament-fields" style="display:none">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                            <div class="fg"><label class="fl" for="edit_start_time">Start Time</label><input class="fi" type="time" id="edit_start_time" name="start_time"></div>
+                            <div class="fg"><label class="fl" for="edit_weigh_in_time">Weigh-in Time</label><input class="fi" type="time" id="edit_weigh_in_time" name="weigh_in_time"></div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                            <div class="fg"><label class="fl" for="edit_lake_name">Lake</label><select class="fi" id="edit_lake_name" name="lake_name"><option value="">-- Select --</option></select></div>
+                            <div class="fg"><label class="fl" for="edit_ramp_name">Ramp</label><select class="fi" id="edit_ramp_name" name="ramp_name" disabled><option value="">-- Select --</option></select></div>
                         </div>
                     </div>
 
-                    <!-- Tournament-specific fields -->
-                    <div id="edit-tournament-fields" style="display: none;">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="edit_start_time" class="form-label">Start Time</label>
-                                <input type="time" class="form-control" id="edit_start_time" name="start_time">
-                            </div>
-                            <div class="col-md-6">
-                                <label for="edit_weigh_in_time" class="form-label">Weigh-in Time</label>
-                                <input type="time" class="form-control" id="edit_weigh_in_time" name="weigh_in_time">
+                    <div id="edit-sabc-fields" style="display:none">
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+                            <div class="fg"><label class="fl" for="edit_entry_fee">Entry Fee</label><input class="fi" type="number" id="edit_entry_fee" name="entry_fee" step="0.01" min="0"></div>
+                            <div class="fg"><label class="fl" for="edit_fish_limit">Fish Limit</label><input class="fi" type="number" id="edit_fish_limit" name="fish_limit" min="1" max="10"></div>
+                            <div class="fg"><label class="fl" for="edit_aoy_points">AoY Points</label>
+                                <select class="fi" id="edit_aoy_points" name="aoy_points"><option value="true">Yes</option><option value="false">No</option></select>
                             </div>
                         </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="edit_lake_name" class="form-label">Lake</label>
-                                <select class="form-select" id="edit_lake_name" name="lake_name">
-                                    <option value="">-- Select Lake --</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="edit_ramp_name" class="form-label">Ramp</label>
-                                <select class="form-select" id="edit_ramp_name" name="ramp_name" disabled>
-                                    <option value="">-- Select Ramp --</option>
-                                </select>
-                            </div>
+                        <div class="fg">
+                            <label class="fl" for="edit_poll_id">Associated Poll</label>
+                            <select class="fi" id="edit_poll_id" name="poll_id">
+                                <option value="">-- No Poll Associated --</option>
+                                {% for poll in available_polls|default([]) %}
+                                <option value="{{ poll.id }}">{% if poll.event_date %}{{ poll.event_date }} - {% endif %}{{ poll.title }}</option>
+                                {% endfor %}
+                            </select>
+                            <div style="font-size:.72rem;color:var(--t4);margin-top:.25rem">Link this tournament to a location poll</div>
                         </div>
                     </div>
 
-                    <!-- SABC Tournament-only fields -->
-                    <div id="edit-sabc-fields" style="display: none;">
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label for="edit_entry_fee" class="form-label">Entry Fee</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" id="edit_entry_fee" name="entry_fee" step="0.01" min="0">
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="edit_fish_limit" class="form-label">Fish Limit</label>
-                                <input type="number" class="form-control" id="edit_fish_limit" name="fish_limit" min="1" max="10">
-                            </div>
-                            <div class="col-md-4">
-                                <label for="edit_aoy_points" class="form-label">AoY Points</label>
-                                <select class="form-select" id="edit_aoy_points" name="aoy_points">
-                                    <option value="true">Yes</option>
-                                    <option value="false">No</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <label for="edit_poll_id" class="form-label">Associated Poll</label>
-                                <select class="form-select" id="edit_poll_id" name="poll_id">
-                                    <option value="">-- No Poll Associated --</option>
-                                    {% for poll in available_polls|default([]) %}
-                                    <option value="{{ poll.id }}">{% if poll.event_date %}{{ poll.event_date }} - {% endif %}{{ poll.title }}</option>
-                                    {% endfor %}
-                                </select>
-                                <div class="form-text">Link this tournament to a location poll for display on the home page</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Holiday-specific fields -->
-                    <div id="edit-holiday-fields" style="display: none;">
-                    </div>
-
+                    <div id="edit-holiday-fields" style="display:none"></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-m btn-p">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -611,32 +452,24 @@
 <div class="modal fade" id="deleteEventModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Delete Event</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="modal-header" style="border-bottom:1px solid rgba(239,68,68,.2)">
+                <h5 style="color:var(--err)"><i class="bi bi-exclamation-triangle me-2"></i>Delete Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <strong>Warning:</strong> You are about to delete an event. This action cannot be undone.
-                </div>
+                <div class="alert alert-danger"><strong>Warning:</strong> This action cannot be undone.</div>
                 <p>Event: <strong id="delete-current-event-name"></strong></p>
-                <p id="delete-current-dependencies-warning" class="text-warning" style="display: none;">
-                    <i class="bi bi-info-circle me-1"></i>This event has associated data that will also be removed:
-                    <ul class="mt-2">
-                        <li>Polls and poll votes (if any)</li>
-                        <li>Tournament setup (if not complete)</li>
-                    </ul>
+                <p id="delete-current-dependencies-warning" style="color:var(--warn);display:none">
+                    <i class="bi bi-info-circle me-1"></i>Associated data will also be removed:
+                    <ul style="margin-top:.5rem"><li>Polls and poll votes</li><li>Tournament setup (if not complete)</li></ul>
                 </p>
-                <p class="mt-3">To confirm deletion, please type <code>DELETE</code> in the field below:</p>
-                <input type="text" class="form-control" id="delete-current-confirmation" placeholder="Type DELETE to confirm">
+                <p style="margin-top:1rem">Type <code>DELETE</code> to confirm:</p>
+                <input class="fi" type="text" id="delete-current-confirmation" placeholder="Type DELETE to confirm">
                 <input type="hidden" id="delete-current-event-id">
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" onclick="confirmDeleteCurrentEvent()">
-                    <i class="bi bi-trash me-1"></i>Delete Event
-                </button>
+                <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-m btn-d" onclick="confirmDeleteCurrentEvent()"><i class="bi bi-trash me-1"></i>Delete Event</button>
             </div>
         </div>
     </div>
@@ -646,32 +479,24 @@
 <div class="modal fade" id="deletePastEventModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Delete Past Event</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="modal-header" style="border-bottom:1px solid rgba(239,68,68,.2)">
+                <h5 style="color:var(--err)"><i class="bi bi-exclamation-triangle me-2"></i>Delete Past Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <strong>Warning:</strong> You are about to delete a past event. This action cannot be undone.
-                </div>
+                <div class="alert alert-danger"><strong>Warning:</strong> This action cannot be undone.</div>
                 <p>Event: <strong id="delete-event-name"></strong></p>
-                <p id="delete-dependencies-warning" class="text-warning" style="display: none;">
-                    <i class="bi bi-info-circle me-1"></i>This event has associated data that will also be removed:
-                    <ul class="mt-2">
-                        <li>Polls and poll votes (if any)</li>
-                        <li>Tournament setup (if no results exist)</li>
-                    </ul>
+                <p id="delete-dependencies-warning" style="color:var(--warn);display:none">
+                    <i class="bi bi-info-circle me-1"></i>Associated data will also be removed:
+                    <ul style="margin-top:.5rem"><li>Polls and poll votes</li><li>Tournament setup (if no results)</li></ul>
                 </p>
-                <p class="mt-3">To confirm deletion, please type <code>DELETE</code> in the field below:</p>
-                <input type="text" class="form-control" id="delete-confirmation" placeholder="Type DELETE to confirm">
+                <p style="margin-top:1rem">Type <code>DELETE</code> to confirm:</p>
+                <input class="fi" type="text" id="delete-confirmation" placeholder="Type DELETE to confirm">
                 <input type="hidden" id="delete-event-id">
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" onclick="confirmDeletePastEvent()">
-                    <i class="bi bi-trash me-1"></i>Delete Event
-                </button>
+                <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-m btn-d" onclick="confirmDeletePastEvent()"><i class="bi bi-trash me-1"></i>Delete Event</button>
             </div>
         </div>
     </div>

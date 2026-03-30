@@ -1,199 +1,133 @@
-{% extends "base.html" %}
-{% from 'macros.html' import csrf_token, alert, form_field, delete_modal %}
+{% extends "admin_base.html" %}
+{% from 'macros.html' import csrf_token, alert, delete_modal %}
 
 {% block title %}Manage News - Admin{% endblock %}
 
-{% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-4">
-                <i class="bi bi-newspaper"></i> Manage Club News
-            </h1>
+{% block admin_content %}
+<div class="sh"><div class="st"><i class="bi bi-newspaper"></i> Manage Club News</div></div>
 
-            {{ alert('success', request.query_params.get('success')) }}
-            {{ alert('danger', request.query_params.get('error')) }}
-        </div>
-    </div>
+{{ alert('success', request.query_params.get('success')) }}
+{{ alert('danger', request.query_params.get('error')) }}
 
-    <!-- Create New News Form -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Create News</h5>
+<!-- Create New News Form -->
+<div class="cc" style="margin-bottom:1.4rem">
+    <div class="ci">
+        <div class="ct" style="margin-bottom:1rem"><i class="bi bi-plus-circle"></i> Create News</div>
+        <form method="POST" action="/admin/news/create">
+            {{ csrf_token(request) }}
+            <div style="display:grid;grid-template-columns:2.5fr 1fr 1.5fr auto;gap:1rem;align-items:end">
+                <div class="fg">
+                    <label class="fl" for="title">Title <span style="color:var(--err)">*</span></label>
+                    <input class="fi" type="text" id="title" name="title" required maxlength="200">
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="/admin/news/create">
-                        {{ csrf_token(request) }}
-                        <div class="row">
-                            <div class="col-md-5">
-                                {{ form_field('Title', 'title', required=true, maxlength='200') }}
-                            </div>
-                            <div class="col-md-2">
-                                {% call form_field('Priority', 'priority', type='select', help_text='Higher = first') %}
-                                    <option value="0">Normal</option>
-                                    <option value="1">High</option>
-                                    <option value="2">Urgent</option>
-                                {% endcall %}
-                            </div>
-                            <div class="col-md-3">
-                                {{ form_field('Auto Archive Date', 'auto_archive_at', type='date', id='create_auto_archive_at', help_text='News hidden after this date') }}
-                            </div>
-                            <div class="col-md-2 d-flex align-items-end pb-3">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-plus-circle"></i> Create
-                                </button>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                {{ form_field('Content', 'content', type='textarea', required=true, maxlength='1000', help_text='Maximum 1000 characters') }}
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-3">
-                                <button type="button" class="btn btn-outline-secondary" onclick="sendTestEmail()">
-                                    <i class="bi bi-envelope-check"></i> Send Test Email
-                                </button>
-                            </div>
-                        </div>
-                    </form>
+                <div class="fg">
+                    <label class="fl" for="priority">Priority</label>
+                    <select class="fi" id="priority" name="priority">
+                        <option value="0">Normal</option>
+                        <option value="1">High</option>
+                        <option value="2">Urgent</option>
+                    </select>
                 </div>
+                <div class="fg">
+                    <label class="fl" for="create_auto_archive_at">Auto Archive Date</label>
+                    <input class="fi" type="date" id="create_auto_archive_at" name="auto_archive_at">
+                </div>
+                <button class="btn-m btn-p" type="submit" style="margin-bottom:1rem"><i class="bi bi-plus-circle"></i> Create</button>
             </div>
-        </div>
-    </div>
-
-    <!-- Existing News List -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <ul class="nav nav-tabs card-header-tabs" style="margin-bottom: -1px;">
-                        <li class="nav-item">
-                            <a class="nav-link {% if not show_archived %}active bg-body{% endif %}" href="/admin/news">
-                                <i class="bi bi-newspaper me-1"></i> Active News
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if show_archived %}active bg-body{% endif %}" href="/admin/news?show_archived=true">
-                                <i class="bi bi-archive me-1"></i> Archived
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                <div class="card-body">
-                    {% if news_items %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Content</th>
-                                    <th>Author</th>
-                                    <th>Status</th>
-                                    <th>Priority</th>
-                                    <th>Created</th>
-                                    <th>Auto Archive</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in news_items %}
-                                <tr>
-                                    <td>
-                                        <strong>{{ item[1] }}</strong>
-                                    </td>
-                                    <td>
-                                        <small>{{ item[2][:100] }}{% if item[2]|length > 100 %}...{% endif %}</small>
-                                    </td>
-                                    <td>
-                                        {% if item[7] %}
-                                            {% set name_parts = item[7].split() %}
-                                            {% if name_parts|length >= 2 %}
-                                                <small>{{ name_parts[0][0] }}.{{ name_parts[-1] }}</small>
-                                            {% else %}
-                                                <small>{{ item[7] }}</small>
-                                            {% endif %}
-                                        {% else %}
-                                            <small class="text-secondary">-</small>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if item[4] %}
-                                        <span class="badge bg-success">Published</span>
-                                        {% else %}
-                                        <span class="badge bg-secondary">Draft</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if item[5] == 2 %}
-                                        <span class="badge bg-danger">Urgent</span>
-                                        {% elif item[5] == 1 %}
-                                        <span class="badge bg-warning">High</span>
-                                        {% else %}
-                                        <span class="badge bg-info">Normal</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <small>{{ item[3].strftime('%Y-%m-%d') if item[3] else '' }}</small>
-                                    </td>
-                                    <td>
-                                        {% if item[9] %}
-                                        <small>{{ item[9].strftime('%Y-%m-%d') }}</small>
-                                        {% else %}
-                                        <small class="text-secondary">-</small>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if not show_archived %}
-                                        <button class="btn btn-sm btn-warning edit-btn"
-                                                data-id="{{ item[0] }}"
-                                                data-title="{{ item[1] }}"
-                                                data-content="{{ item[2] }}"
-                                                data-priority="{{ item[5] }}"
-                                                data-auto-archive-at="{{ item[9].strftime('%Y-%m-%d') if item[9] else '' }}">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <form method="POST" action="/admin/news/{{ item[0] }}/archive" class="d-inline">
-                                            {{ csrf_token(request) }}
-                                            <button type="submit" class="btn btn-sm btn-secondary" title="Archive">
-                                                <i class="bi bi-archive"></i>
-                                            </button>
-                                        </form>
-                                        {% else %}
-                                        <form method="POST" action="/admin/news/{{ item[0] }}/unarchive" class="d-inline">
-                                            {{ csrf_token(request) }}
-                                            <button type="submit" class="btn btn-sm btn-success" title="Restore">
-                                                <i class="bi bi-arrow-counterclockwise"></i>
-                                            </button>
-                                        </form>
-                                        {% endif %}
-                                        <button class="btn btn-sm btn-danger delete-btn"
-                                                data-id="{{ item[0] }}"
-                                                data-title="{{ item[1] }}">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-4">
-                        {% if show_archived %}
-                        <i class="bi bi-archive display-4 text-secondary"></i>
-                        <p class="text-secondary mt-2">No archived news items.</p>
-                        {% else %}
-                        <i class="bi bi-newspaper display-4 text-secondary"></i>
-                        <p class="text-secondary mt-2">No news items yet. Create your first announcement!</p>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                </div>
+            <div class="fg">
+                <label class="fl" for="content">Content <span style="color:var(--err)">*</span></label>
+                <textarea class="fi" id="content" name="content" required maxlength="1000" rows="3" style="resize:vertical"></textarea>
+                <div style="font-size:.72rem;color:var(--t4);margin-top:.25rem">Maximum 1000 characters</div>
             </div>
+            <button type="button" class="btn-m btn-g" style="font-size:.78rem" onclick="sendTestEmail()"><i class="bi bi-envelope-check"></i> Send Test Email</button>
+        </form>
+    </div>
+</div>
+
+<!-- Existing News List -->
+<div class="cc">
+    <div style="padding:0">
+        <div class="pt" style="width:100%;padding:.75rem 1.4rem;border-bottom:1px solid var(--b0);border-radius:0;background:transparent;display:flex;gap:.5rem">
+            <a href="/admin/news" class="ptb {% if not show_archived %}on{% endif %}" style="text-decoration:none">
+                <i class="bi bi-newspaper"></i> Active News
+            </a>
+            <a href="/admin/news?show_archived=true" class="ptb {% if show_archived %}on{% endif %}" style="text-decoration:none">
+                <i class="bi bi-archive"></i> Archived
+            </a>
         </div>
+
+        {% if news_items %}
+        <table class="mt">
+            <thead><tr><th>Title</th><th>Content</th><th>Author</th><th>Status</th><th>Priority</th><th>Created</th><th>Archive</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody>
+                {% for item in news_items %}
+                <tr>
+                    <td style="font-weight:600;color:var(--t1)">{{ item[1] }}</td>
+                    <td><span style="font-size:.82rem">{{ item[2][:100] }}{% if item[2]|length > 100 %}...{% endif %}</span></td>
+                    <td>
+                        {% if item[7] %}
+                            {% set name_parts = item[7].split() %}
+                            {% if name_parts|length >= 2 %}
+                                <span style="font-size:.82rem">{{ name_parts[0][0] }}.{{ name_parts[-1] }}</span>
+                            {% else %}
+                                <span style="font-size:.82rem">{{ item[7] }}</span>
+                            {% endif %}
+                        {% else %}-{% endif %}
+                    </td>
+                    <td>
+                        {% if item[4] %}<span class="tg tg-s">Published</span>
+                        {% else %}<span class="tg tg-g">Draft</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if item[5] == 2 %}<span class="tg tg-d">Urgent</span>
+                        {% elif item[5] == 1 %}<span class="tg tg-w">High</span>
+                        {% else %}<span class="tg tg-i">Normal</span>{% endif %}
+                    </td>
+                    <td style="font-size:.82rem">{{ item[3].strftime('%Y-%m-%d') if item[3] else '' }}</td>
+                    <td style="font-size:.82rem">{{ item[9].strftime('%Y-%m-%d') if item[9] else '-' }}</td>
+                    <td style="text-align:right">
+                        <div style="display:flex;gap:.35rem;justify-content:flex-end">
+                            {% if not show_archived %}
+                            <button class="btn-icon btn-icon-ghost edit-btn"
+                                    data-id="{{ item[0] }}"
+                                    data-title="{{ item[1] }}"
+                                    data-content="{{ item[2] }}"
+                                    data-priority="{{ item[5] }}"
+                                    data-auto-archive-at="{{ item[9].strftime('%Y-%m-%d') if item[9] else '' }}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <form method="POST" action="/admin/news/{{ item[0] }}/archive" style="display:inline">
+                                {{ csrf_token(request) }}
+                                <button type="submit" class="btn-icon btn-icon-ghost" title="Archive"><i class="bi bi-archive"></i></button>
+                            </form>
+                            {% else %}
+                            <form method="POST" action="/admin/news/{{ item[0] }}/unarchive" style="display:inline">
+                                {{ csrf_token(request) }}
+                                <button type="submit" class="btn-icon btn-icon-ghost" title="Restore"><i class="bi bi-arrow-counterclockwise"></i></button>
+                            </form>
+                            {% endif %}
+                            <button class="btn-icon btn-icon-danger delete-btn"
+                                    data-id="{{ item[0] }}"
+                                    data-title="{{ item[1] }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align:center;padding:2.5rem 1rem;color:var(--t3)">
+            {% if show_archived %}
+            <i class="bi bi-archive" style="font-size:2.5rem;opacity:.3"></i>
+            <div style="margin-top:.5rem">No archived news items.</div>
+            {% else %}
+            <i class="bi bi-newspaper" style="font-size:2.5rem;opacity:.3"></i>
+            <div style="margin-top:.5rem">No news items yet. Create your first announcement!</div>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -202,30 +136,28 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Edit News</h5>
+                <h5>Edit News</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="editForm" method="POST">
                 {{ csrf_token(request) }}
                 <div class="modal-body">
-                    {{ form_field('Title', 'title', required=true, id='edit_title') }}
-                    {{ form_field('Content', 'content', type='textarea', required=true, id='edit_content') }}
-                    <div class="row">
-                        <div class="col-md-6">
-                            {% call form_field('Priority', 'priority', type='select', id='edit_priority') %}
+                    <div class="fg"><label class="fl" for="edit_title">Title</label><input class="fi" type="text" id="edit_title" name="title" required></div>
+                    <div class="fg"><label class="fl" for="edit_content">Content</label><textarea class="fi" id="edit_content" name="content" required rows="4" style="resize:vertical"></textarea></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                        <div class="fg"><label class="fl" for="edit_priority">Priority</label>
+                            <select class="fi" id="edit_priority" name="priority">
                                 <option value="0">Normal</option>
                                 <option value="1">High</option>
                                 <option value="2">Urgent</option>
-                            {% endcall %}
+                            </select>
                         </div>
-                        <div class="col-md-6">
-                            {{ form_field('Auto Archive Date', 'auto_archive_at', type='date', id='edit_auto_archive_at', help_text='News hidden after this date') }}
-                        </div>
+                        <div class="fg"><label class="fl" for="edit_auto_archive_at">Auto Archive Date</label><input class="fi" type="date" id="edit_auto_archive_at" name="auto_archive_at"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-m btn-p">Save Changes</button>
                 </div>
             </form>
         </div>

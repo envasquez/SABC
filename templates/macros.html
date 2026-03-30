@@ -275,7 +275,7 @@
 {# Tournament description row #}
 {% macro tournament_description_row(tournament) %}
 <div class="d-flex justify-content-between align-items-center mb-2">
-    <h6 class="text-secondary mb-0">{{ tournament.name }} | {{ tournament.description[:200] | nl2br }} - {{ tournament.date|date_format("mm-dd-yyyy") }}</h6>
+    <h6 class="text-secondary mb-0">{{ tournament.name }}{% if tournament.description %} | {{ tournament.description[:200] | nl2br }}{% endif %} - {{ tournament.date|date_format("mm-dd-yyyy") }}</h6>
     <div>
         <span class="badge bg-secondary me-2">{{ tournament.fish_limit }} fish/{{ tournament.limit_type }}</span>
         {% if tournament.aoy_points %}

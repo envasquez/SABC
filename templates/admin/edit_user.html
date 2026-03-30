@@ -1,10 +1,10 @@
-{% extends "base.html" %}
+{% extends "admin_base.html" %}
 {% from 'macros.html' import csrf_token, form_field %}
 {% block title %}Edit User - South Austin Bass Club{% endblock %}
-{% block content %}
+{% block admin_content %}
 <div class="container"><div class="row justify-content-center"><div class="col-md-6">
-<div class="card shadow">
-    <div class="card-header bg-warning text-white"><h4 class="mb-0"><i class="bi bi-person-gear me-2"></i>Edit User</h4></div>
+<div class="cc">
+    <div style="padding:1rem 1.35rem;border-bottom:1px solid var(--b0)"><div class="ct"><i class="bi bi-person-gear"></i> Edit User</div></div>
     <div class="card-body">
         <form method="POST" action="/admin/users/{{ edit_user.id }}/edit">
             {{ csrf_token(request) }}

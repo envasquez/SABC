@@ -1,13 +1,11 @@
-{% extends "base.html" %}
+{% extends "admin_base.html" %}
 {% from 'macros.html' import csrf_token, alert %}
 {% block title %}Edit Lake - South Austin Bass Club{% endblock %}
-{% block content %}
+{% block admin_content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-water me-2"></i>Edit Lake: {{ lake.display_name }}</h1>
-        <a href="/admin/lakes" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Back to Lakes
-        </a>
+    <div class="sh">
+        <div class="st"><i class="bi bi-water"></i> Edit Lake: {{ lake.display_name }}</div>
+        <a href="/admin/lakes" class="btn-m btn-g"><i class="bi bi-arrow-left"></i> Back to Lakes</a>
     </div>
 
     {% if request.query_params.get('success') %}

@@ -1,86 +1,69 @@
-{% extends "base.html" %}
-{% from 'macros.html' import alert, csrf_token, delete_modal, data_table %}
+{% extends "admin_base.html" %}
+{% from 'macros.html' import alert, csrf_token, delete_modal %}
 
 {% block title %}Manage Lakes - Admin{% endblock %}
 
-{% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="mb-4">
-                <i class="bi bi-water"></i> Manage Lakes
-            </h1>
+{% block admin_content %}
+<div class="sh"><div class="st"><i class="bi bi-water"></i> Manage Lakes</div></div>
 
-            {{ alert('success', request.query_params.get('success')) }}
-            {{ alert('danger', request.query_params.get('error')) }}
+{{ alert('success', request.query_params.get('success')) }}
+{{ alert('danger', request.query_params.get('error')) }}
+
+<div style="display:grid;grid-template-columns:1fr 2fr;gap:1.4rem">
+    <!-- Create New Lake Form -->
+    <div class="cc">
+        <div class="ci">
+            <div class="ct" style="margin-bottom:1rem"><i class="bi bi-plus-circle"></i> Add Lake</div>
+            <form method="POST" action="/admin/lakes/create">
+                {{ csrf_token(request) }}
+                <div class="fg">
+                    <label class="fl" for="display_name">Display Name</label>
+                    <input class="fi" type="text" id="display_name" name="display_name" required maxlength="100" placeholder="Lake Travis">
+                </div>
+                <div class="fg">
+                    <label class="fl" for="name">Database Name</label>
+                    <input class="fi" type="text" id="name" name="name" required maxlength="50" placeholder="travis">
+                    <div style="font-size:.72rem;color:var(--t4);margin-top:.25rem">Lowercase, no spaces (e.g., "travis", "lake_austin")</div>
+                </div>
+                <button class="btn-m btn-p" type="submit" style="width:100%;justify-content:center"><i class="bi bi-plus-circle"></i> Add Lake</button>
+            </form>
         </div>
     </div>
 
-    <div class="row">
-        <!-- Create New Lake Form -->
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Add Lake</h5>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="/admin/lakes/create">
-                        {{ csrf_token(request) }}
-                        <div class="mb-3">
-                            <label for="display_name" class="form-label">Display Name</label>
-                            <input type="text" class="form-control" id="display_name" name="display_name" required maxlength="100" placeholder="Lake Travis">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="name" class="form-label">Database Name</label>
-                            <input type="text" class="form-control" id="name" name="name" required maxlength="50" placeholder="travis">
-                            <small class="text-secondary">Lowercase, no spaces (e.g., "travis", "lake_austin")</small>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-plus-circle"></i> Add Lake
-                        </button>
-                    </form>
-                </div>
-            </div>
+    <!-- Existing Lakes List -->
+    <div class="cc">
+        <div class="ci" style="padding-bottom:0">
+            <div class="ct" style="margin-bottom:1rem"><i class="bi bi-list-ul"></i> Existing Lakes {% if lakes %}({{ lakes|length }}){% endif %}</div>
         </div>
-
-        <!-- Existing Lakes List -->
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Existing Lakes {% if lakes %}({{ lakes|length }}){% endif %}</h5>
-                </div>
-                <div class="card-body">
-                    {% if lakes %}
-                    {% call data_table(['#', 'Display Name', 'Database Name', 'Actions']) %}
-                        {% for lake in lakes %}
-                        <tr>
-                            <td><span class="text-secondary">{{ loop.index }}</span></td>
-                            <td><strong>{{ lake.display_name }}</strong></td>
-                            <td><code>{{ lake.yaml_key }}</code></td>
-                            <td>
-                                <a href="/admin/lakes/{{ lake.id }}/edit" class="btn btn-sm btn-warning">
-                                    <i class="bi bi-pencil"></i> Edit
-                                </a>
-                                <button class="btn btn-sm btn-danger delete-btn"
-                                        data-id="{{ lake.id }}"
-                                        data-display-name="{{ lake.display_name }}">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    {% endcall %}
-                    {% else %}
-                    <div class="text-center py-4">
-                        <i class="bi bi-water display-4 text-secondary"></i>
-                        <p class="text-secondary mt-2">No lakes yet. Add your first lake!</p>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
+        {% if lakes %}
+        <table class="mt">
+            <thead><tr><th style="width:50px">#</th><th>Display Name</th><th>Database Name</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody>
+                {% for lake in lakes %}
+                <tr>
+                    <td style="color:var(--t4)">{{ loop.index }}</td>
+                    <td style="font-weight:600;color:var(--t1)">{{ lake.display_name }}</td>
+                    <td><code style="color:var(--brand);background:var(--brand-m);padding:.1rem .4rem;border-radius:var(--r-sm);font-size:.78rem">{{ lake.yaml_key }}</code></td>
+                    <td style="text-align:right">
+                        <div style="display:flex;gap:.35rem;justify-content:flex-end">
+                            <a href="/admin/lakes/{{ lake.id }}/edit" class="btn-icon btn-icon-ghost" style="text-decoration:none"><i class="bi bi-pencil"></i></a>
+                            <button class="btn-icon btn-icon-danger delete-btn"
+                                    data-id="{{ lake.id }}"
+                                    data-display-name="{{ lake.display_name }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align:center;padding:2.5rem 1rem;color:var(--t3)">
+            <i class="bi bi-water" style="font-size:2.5rem;opacity:.3"></i>
+            <div style="margin-top:.5rem">No lakes yet. Add your first lake!</div>
         </div>
+        {% endif %}
     </div>
 </div>
 
@@ -91,7 +74,7 @@
 <ul>
     <li>The lake record</li>
     <li>All associated ramps</li>
-    <li>Lake references in tournaments (may cause display issues)</li>
+    <li>Lake references in tournaments</li>
 </ul>
 {% endcall %}
 

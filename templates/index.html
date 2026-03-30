@@ -7,674 +7,408 @@
 
 <!-- Cancelled Tournament Alert Banner -->
 {% if cancelled_tournaments %}
-<div class="row mb-3">
-    <div class="col-12">
-        {% for cancelled in cancelled_tournaments %}
-        <div class="alert alert-danger alert-dismissible fade show d-flex align-items-center" role="alert" id="cancelled-alert-{{ cancelled.id }}">
-            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
-            <div class="flex-grow-1">
-                <strong>Tournament Cancelled:</strong>
-                The {{ cancelled.date|date_format("mm-dd-yyyy") }} tournament
-                {% if cancelled.lake_name %}at <strong>{{ cancelled.lake_name }}</strong>{% endif %}
-                has been cancelled.
-                {% if cancelled.description %}<span class="text-muted ms-1">({{ cancelled.name }})</span>{% endif %}
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissCancelledAlert({{ cancelled.id }})"></button>
-        </div>
-        {% endfor %}
+{% for cancelled in cancelled_tournaments %}
+<div class="alert alert-danger alert-dismissible fade show" role="alert" id="cancelled-alert-{{ cancelled.id }}" style="display:flex;align-items:center;gap:.5rem">
+    <i class="bi bi-exclamation-triangle-fill" style="font-size:1.1rem"></i>
+    <div style="flex:1">
+        <strong>Tournament Cancelled:</strong>
+        The {{ cancelled.date|date_format("mm-dd-yyyy") }} tournament
+        {% if cancelled.lake_name %}at <strong>{{ cancelled.lake_name }}</strong>{% endif %}
+        has been cancelled.
+        {% if cancelled.description %}<span style="color:var(--t3)">({{ cancelled.name }})</span>{% endif %}
     </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissCancelledAlert({{ cancelled.id }})"></button>
 </div>
+{% endfor %}
 {% endif %}
 
-<div class="row">
-    <!-- Main Content -->
-    <div class="col-lg-8">
-        <h1 class="h2 mb-4">Events 🎣</h1>
+{# Tournament data setup #}
+{% set completed_tournaments = all_tournaments | selectattr('is_past', 'equalto', True) | selectattr('event_type', 'equalto', 'sabc_tournament') | sort(attribute='date', reverse=True) | list %}
+{% set upcoming_tournaments = all_tournaments | rejectattr('is_past', 'equalto', True) | selectattr('event_type', 'equalto', 'sabc_tournament') | sort(attribute='date') | list %}
+{% set active_upcoming = upcoming_tournaments | rejectattr('is_cancelled', 'equalto', true) | list %}
+{% set next_tournament = active_upcoming[0] if active_upcoming else none %}
+{% set show_completed_tab = current_page > 1 or not upcoming_tournaments %}
 
-        {# A tournament is "completed" if it has results (complete=True) OR its date has passed (is_past=True) #}
-        {% set completed_tournaments = all_tournaments | selectattr('is_past', 'equalto', True) | selectattr('event_type', 'equalto', 'sabc_tournament') | sort(attribute='date', reverse=True) | list %}
-        {% set upcoming_tournaments = all_tournaments | rejectattr('is_past', 'equalto', True) | selectattr('event_type', 'equalto', 'sabc_tournament') | sort(attribute='date') | list %}
-        {# For "Next Tournament" tab, exclude cancelled tournaments #}
-        {% set active_upcoming = upcoming_tournaments | rejectattr('is_cancelled', 'equalto', true) | list %}
-        {% set next_tournament = active_upcoming[0] if active_upcoming else none %}
-        {% set show_completed_tab = current_page > 1 or not upcoming_tournaments %}
-
-        <!-- Bootstrap Tabs -->
-        <ul class="nav nav-tabs mb-4" id="tournamentTabs" role="tablist">
+<!-- Two-column layout -->
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:1.4rem">
+<!-- Main Content -->
+<div>
+    <div class="sh">
+        <div class="st"><i class="bi bi-calendar-event"></i> Tournaments</div>
+        <div class="pt" id="tournamentTabs">
             {% if next_tournament %}
-            <li class="nav-item" role="presentation">
-                <button class="nav-link{% if not show_completed_tab %} active{% endif %}" id="next-tab" data-bs-toggle="tab" data-bs-target="#next-pane" type="button" role="tab" aria-controls="next-pane" aria-selected="{% if not show_completed_tab %}true{% else %}false{% endif %}">
-                    <i class="bi bi-calendar-event me-1"></i>Next Tournament
-                </button>
-            </li>
+            <button class="ptb {% if not show_completed_tab %}on{% endif %}" onclick="switchHomeTab('next-pane', this)">Next Up</button>
             {% endif %}
-            <li class="nav-item" role="presentation">
-                <button class="nav-link{% if show_completed_tab %} active{% endif %}" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed-pane" type="button" role="tab" aria-controls="completed-pane" aria-selected="{% if show_completed_tab %}true{% else %}false{% endif %}">
-                    <i class="bi bi-trophy me-1"></i>Completed
-                </button>
-            </li>
+            <button class="ptb {% if show_completed_tab %}on{% endif %}" onclick="switchHomeTab('completed-pane', this)">Completed</button>
             {% if upcoming_tournaments %}
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming-pane" type="button" role="tab" aria-controls="upcoming-pane" aria-selected="false">
-                    <i class="bi bi-calendar-plus me-1"></i>Upcoming ({{ upcoming_tournaments|length }})
-                </button>
-            </li>
+            <button class="ptb" onclick="switchHomeTab('upcoming-pane', this)">Upcoming ({{ upcoming_tournaments|length }})</button>
             {% endif %}
-        </ul>
-
-        <!-- Tab Content -->
-        <div class="tab-content" id="tournamentTabsContent">
-            <!-- Next Tournament Tab -->
-            {% if next_tournament %}
-            <div class="tab-pane fade{% if not show_completed_tab %} show active{% endif %}" id="next-pane" role="tabpanel" aria-labelledby="next-tab">
-                {% set tournament = next_tournament %}
-                <div class="card mb-4">
-                    {{ tournament_card_header(tournament, 'bg-primary', 'Next Up') }}
-
-                    <div class="card-body">
-                        {{ tournament_description_row(tournament) }}
-                        {{ tournament_info_row(tournament) }}
-
-                        <!-- Google Maps or Poll Charts for next tournament -->
-                        {% if tournament.google_maps_iframe %}
-                        <div class="mb-3">
-                            <div class="rounded overflow-hidden position-relative w-100" style="height: 180px;">
-                                <style>
-                                    .map-container-next iframe {
-                                        position: absolute;
-                                        top: 0;
-                                        left: 0;
-                                        width: 100% !important;
-                                        height: 100% !important;
-                                        border: 0;
-                                    }
-                                </style>
-                                <div class="w-100 h-100 map-container-next">
-                                    {{ tournament.google_maps_iframe|safe }}
-                                </div>
-                            </div>
-                        </div>
-                        {% else %}
-                        <!-- No location set yet - show poll results if user voted, otherwise show TBD -->
-                        {% if tournament.poll_data and (tournament.poll_data | length > 0) %}
-                        <div class="mb-3">
-                            <!-- Tournament Poll Results - Stacked Bar Chart -->
-                            <div class="tournament-results-container-home" data-tournament-id="next-{{ tournament.id }}">
-                                <div class="row">
-                                    <!-- Stacked Bar Chart (Lakes with Ramps) -->
-                                    <div class="col-lg-8">
-                                        <div class="card border-0 shadow-sm">
-                                            <div class="card-header bg-success text-white py-2">
-                                                <h6 class="mb-0"><i class="bi bi-bar-chart-fill me-1"></i>Location Votes</h6>
-                                            </div>
-                                            <div class="card-body p-3">
-                                                <div class="stacked-chart-container" id="stackedChart-next-{{ tournament.id }}" style="min-height: 150px;">
-                                                    <!-- Stacked bar chart will be drawn here -->
-                                                </div>
-                                                <div class="text-center mt-2">
-                                                    <small class="text-muted"><i class="bi bi-hand-index me-1"></i>Tap bars for details</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Time Slots Table (Right Panel) -->
-                                    <div class="col-lg-4">
-                                        <div class="card border-0 shadow-sm h-100">
-                                            <div class="card-header bg-dark text-white py-2">
-                                                <h6 class="mb-0"><i class="bi bi-clock me-1"></i>Time Slots</h6>
-                                            </div>
-                                            <div class="card-body p-2">
-                                                <div class="time-table-container">
-                                                    <table class="table table-sm table-hover mb-0" id="timeTable-next-{{ tournament.id }}">
-                                                        <thead class="table-light sticky-top">
-                                                            <tr>
-                                                                <th class="text-dark fw-semibold small">Start</th>
-                                                                <th class="text-dark fw-semibold small">End</th>
-                                                                <th class="text-dark fw-semibold text-center small">Votes</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <!-- Time slots will be populated by JavaScript -->
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Hidden data for JavaScript -->
-                                {% for option in tournament.poll_data %}
-                                <div data-option-data="{{ option.option_data | tojson_attr }}"
-                                     data-vote-count="{{ option.vote_count }}"
-                                     class="d-none poll-option-data"></div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% else %}
-                        {{ location_tbd_placeholder() }}
-                        {% endif %}
-                        {% endif %}
-
-                        {% if tournament.poll_id and tournament.poll_is_open and not tournament.user_has_voted %}
-                        <div class="d-flex justify-content-end">
-                            <a href="/polls?tab=tournament#poll-{{ tournament.poll_id }}" class="btn btn-success btn-lg">
-                                <i class="bi bi-hand-index me-2" aria-hidden="true"></i>Vote on Location
-                            </a>
-                        </div>
-                        {% elif tournament.poll_id and (not tournament.poll_is_open or tournament.user_has_voted) %}
-                        <div class="d-flex justify-content-end">
-                            <a href="/polls?tab=tournament#poll-{{ tournament.poll_id }}" class="btn btn-outline-info">
-                                <i class="bi bi-bar-chart-fill me-2" aria-hidden="true"></i>View Poll Results
-                            </a>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Completed Tournaments Tab -->
-            <div class="tab-pane fade{% if show_completed_tab %} show active{% endif %}" id="completed-pane" role="tabpanel" aria-labelledby="completed-tab">
-                {% for tournament in completed_tournaments %}
-                <div class="card mb-4">
-                    {{ tournament_card_header(tournament, 'bg-success', 'Complete') }}
-
-                    <div class="card-body">
-                        {{ tournament_description_row(tournament) }}
-                        {{ tournament_info_row(tournament) }}
-
-                        <!-- Google Maps Section -->
-                        {% if tournament.google_maps_iframe %}
-                        <div class="mb-3">
-                            <div class="rounded overflow-hidden position-relative w-100" style="height: 180px;">
-                                <style>
-                                    .map-container-completed-{{ loop.index }} iframe {
-                                        position: absolute;
-                                        top: 0;
-                                        left: 0;
-                                        width: 100% !important;
-                                        height: 100% !important;
-                                        border: 0;
-                                    }
-                                </style>
-                                <div class="w-100 h-100 map-container-completed-{{ loop.index }}">
-                                    {{ tournament.google_maps_iframe|safe }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Tournament Results Table (below maps) -->
-                        {% if tournament.top_results %}
-                        <div class="mb-3">
-                            <div class="bg-light rounded p-3 border">
-                                <h6 class="mb-3 text-dark"><i class="bi bi-trophy-fill text-warning"></i> Top 3 Results</h6>
-                                <div class="table-responsive">
-                                    <table class="table table-sm mb-0">
-                                        <thead>
-                                            <tr>
-                                                {% for result in tournament.top_results %}
-                                                <th class="text-center">
-                                                    {% if result[0] == 1 %}
-                                                    <span class="badge bg-warning text-dark">1st Place</span>
-                                                    {% elif result[0] == 2 %}
-                                                    <span class="badge bg-secondary">2nd Place</span>
-                                                    {% elif result[0] == 3 %}
-                                                    <span class="badge bg-info">3rd Place</span>
-                                                    {% endif %}
-                                                </th>
-                                                {% endfor %}
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                {% for result in tournament.top_results %}
-                                                <td class="text-center">
-                                                    <div class="fw-semibold text-primary mb-1">
-                                                        {% if result[4] == 1 %}
-                                                            {% set name1_parts = result[1].split() %}
-                                                            {% if name1_parts|length >= 2 %}
-                                                                {{ name1_parts[0][0] }}.{{ name1_parts[-1] }}
-                                                            {% else %}
-                                                                {{ result[1] }}
-                                                            {% endif %}
-                                                            <span class="badge bg-primary ms-1" style="font-size: 0.7em;">Solo</span>
-                                                        {% elif result[2] %}
-                                                            {% set name1_parts = result[1].split() %}
-                                                            {% set name2_parts = result[2].split() %}
-                                                            {% if name1_parts|length >= 2 and name2_parts|length >= 2 %}
-                                                                {{ name1_parts[0][0] }}.{{ name1_parts[-1] }} / {{ name2_parts[0][0] }}.{{ name2_parts[-1] }}
-                                                            {% else %}
-                                                                {{ result[1] }} / {{ result[2] }}
-                                                            {% endif %}
-                                                        {% else %}
-                                                            {% set name1_parts = result[1].split() %}
-                                                            {% if name1_parts|length >= 2 %}
-                                                                {{ name1_parts[0][0] }}.{{ name1_parts[-1] }}
-                                                            {% else %}
-                                                                {{ result[1] }}
-                                                            {% endif %}
-                                                        {% endif %}
-                                                    </div>
-                                                    <div class="text-secondary">{{ "%.2f"|format(result[3]) }} lbs</div>
-                                                </td>
-                                                {% endfor %}
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        {% else %}
-                        <div class="mb-3">
-                            <div class="bg-light border rounded d-flex align-items-center justify-content-center" style="height: 200px;">
-                                <div class="text-center text-secondary">
-                                    <i class="bi bi-geo-alt fs-1"></i>
-                                    <div>Tournament Completed</div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-
-                        <!-- Tournament Stats for completed tournaments -->
-                        {% if tournament.tournament_stats %}
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="bg-light rounded p-2 text-center">
-                                    <div class="small text-secondary fw-medium">Participants</div>
-                                    <div class="fw-bold text-primary">{{ tournament.tournament_stats.participants }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="bg-light rounded p-2 text-center">
-                                    <div class="small text-secondary fw-medium">Winning Weight</div>
-                                    <div class="fw-bold text-success">{{ "%.2f"|format(tournament.tournament_stats.winning_weight) }} lbs</div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-
-                        <div class="d-flex justify-content-end">
-                            {% if tournament.is_cancelled %}
-                            <span class="badge bg-danger fs-6 py-2 px-3">
-                                <i class="bi bi-slash-circle me-1"></i>Cancelled
-                            </span>
-                            {% else %}
-                            <a href="/tournaments/{{ tournament.id }}" class="btn btn-primary">
-                                <i class="bi bi-eye me-1"></i>View Results
-                            </a>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-
-                {% if not completed_tournaments %}
-                <div class="text-center py-5">
-                    <i class="bi bi-calendar-x display-1 text-secondary mb-3"></i>
-                    <h4 class="text-secondary">No completed tournaments</h4>
-                    <p class="text-secondary">Completed tournaments will appear here.</p>
-                </div>
-                {% endif %}
-
-                <!-- Pagination (only for completed tournaments) -->
-                {% if total_pages > 1 %}
-                <nav aria-label="Tournament pagination" class="mt-4">
-                    <ul class="pagination justify-content-center custom-pagination">
-                        {% if current_page > 1 %}
-                            <li class="page-item">
-                                <a class="page-link" href="/?p=1" aria-label="First">
-                                    <span aria-hidden="true">&laquo;&laquo;</span>
-                                </a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="/?p={{ current_page - 1 }}" aria-label="Previous">
-                                    <span aria-hidden="true">&laquo;</span>
-                                </a>
-                            </li>
-                        {% endif %}
-
-                        {% for page_num in page_range %}
-                            {% if page_num == current_page %}
-                                <li class="page-item active" aria-current="page">
-                                    <span class="page-link">{{ page_num }}</span>
-                                </li>
-                            {% else %}
-                                <li class="page-item">
-                                    <a class="page-link" href="/?p={{ page_num }}">{{ page_num }}</a>
-                                </li>
-                            {% endif %}
-                        {% endfor %}
-
-                        {% if current_page < total_pages %}
-                            <li class="page-item">
-                                <a class="page-link" href="/?p={{ current_page + 1 }}" aria-label="Next">
-                                    <span aria-hidden="true">&raquo;</span>
-                                </a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="/?p={{ total_pages }}" aria-label="Last">
-                                    <span aria-hidden="true">&raquo;&raquo;</span>
-                                </a>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </nav>
-
-                <div class="text-center text-secondary small mb-4">
-                    Showing {{ start_index }}–{{ end_index }} of {{ total_tournaments }} tournaments
-                </div>
-                {% endif %}
-
-                <!-- Year Navigation (only for completed tournaments) -->
-                {% if year_links %}
-                <div class="text-center mt-4 mb-4">
-                    <small class="text-light d-block mb-2"><i class="bi bi-calendar3 me-1"></i>Jump to year:</small>
-                    <div class="btn-group" role="group">
-                        {% for year_link in year_links %}
-                        <a href="/?p={{ year_link.page_number }}" class="btn btn-sm btn-info">
-                            {{ year_link.year }}
-                        </a>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- Upcoming Tournaments Tab -->
-            <div class="tab-pane fade" id="upcoming-pane" role="tabpanel" aria-labelledby="upcoming-tab">
-                {% for tournament in upcoming_tournaments %}
-                <div class="card mb-4{% if tournament.is_cancelled %} opacity-60{% endif %}">
-                    {% if tournament.is_cancelled %}
-                    {{ tournament_card_header(tournament, 'bg-danger', 'Cancelled', 'bg-light text-danger') }}
-                    {% else %}
-                    {{ tournament_card_header(tournament, 'bg-primary', 'Upcoming') }}
-                    {% endif %}
-
-                    <div class="card-body">
-                        {{ tournament_description_row(tournament) }}
-                        {{ tournament_info_row(tournament) }}
-
-                        <!-- Google Maps or Poll Charts for upcoming tournaments -->
-                        {% if tournament.google_maps_iframe %}
-                        <div class="mb-3">
-                            <div class="rounded overflow-hidden position-relative w-100" style="height: 180px;">
-                                <style>
-                                    .map-container-upcoming-{{ loop.index }} iframe {
-                                        position: absolute;
-                                        top: 0;
-                                        left: 0;
-                                        width: 100% !important;
-                                        height: 100% !important;
-                                        border: 0;
-                                    }
-                                </style>
-                                <div class="w-100 h-100 map-container-upcoming-{{ loop.index }}">
-                                    {{ tournament.google_maps_iframe|safe }}
-                                </div>
-                            </div>
-                        </div>
-                        {% else %}
-                        <!-- No location set yet - show poll results if user voted, otherwise show TBD -->
-                        {% if tournament.poll_data and (tournament.poll_data | length > 0) %}
-                        <div class="mb-3">
-                            <!-- Tournament Poll Results - Stacked Bar Chart -->
-                            <div class="tournament-results-container-home" data-tournament-id="{{ tournament.id }}">
-                                <div class="row">
-                                    <!-- Stacked Bar Chart (Lakes with Ramps) -->
-                                    <div class="col-lg-8">
-                                        <div class="card border-0 shadow-sm">
-                                            <div class="card-header bg-success text-white py-2">
-                                                <h6 class="mb-0"><i class="bi bi-bar-chart-fill me-1"></i>Location Votes</h6>
-                                            </div>
-                                            <div class="card-body p-3">
-                                                <div class="stacked-chart-container" id="stackedChart-{{ tournament.id }}" style="min-height: 150px;">
-                                                    <!-- Stacked bar chart will be drawn here -->
-                                                </div>
-                                                <div class="text-center mt-2">
-                                                    <small class="text-muted"><i class="bi bi-hand-index me-1"></i>Tap bars for details</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Time Slots Table (Right Panel) -->
-                                    <div class="col-lg-4">
-                                        <div class="card border-0 shadow-sm h-100">
-                                            <div class="card-header bg-dark text-white py-2">
-                                                <h6 class="mb-0"><i class="bi bi-clock me-1"></i>Time Slots</h6>
-                                            </div>
-                                            <div class="card-body p-2">
-                                                <div class="time-table-container">
-                                                    <table class="table table-sm table-hover mb-0" id="timeTable-{{ tournament.id }}">
-                                                        <thead class="table-light sticky-top">
-                                                            <tr>
-                                                                <th class="text-dark fw-semibold small">Start</th>
-                                                                <th class="text-dark fw-semibold small">End</th>
-                                                                <th class="text-dark fw-semibold text-center small">Votes</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <!-- Time slots will be populated by JavaScript -->
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Hidden data for JavaScript -->
-                                {% for option in tournament.poll_data %}
-                                <div data-option-data="{{ option.option_data | tojson_attr }}"
-                                     data-vote-count="{{ option.vote_count }}"
-                                     class="d-none poll-option-data"></div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        {% else %}
-                        {{ location_tbd_placeholder() }}
-                        {% endif %}
-                        {% endif %}
-
-                        {% if tournament.poll_id and tournament.poll_is_open and not tournament.user_has_voted %}
-                        <div class="d-flex justify-content-end">
-                            <a href="/polls?tab=tournament#poll-{{ tournament.poll_id }}" class="btn btn-success btn-lg">
-                                <i class="bi bi-hand-index me-2" aria-hidden="true"></i>Vote on Location
-                            </a>
-                        </div>
-                        {% elif tournament.poll_id and (not tournament.poll_is_open or tournament.user_has_voted) %}
-                        <div class="d-flex justify-content-end">
-                            <a href="/polls?tab=tournament#poll-{{ tournament.poll_id }}" class="btn btn-outline-info">
-                                <i class="bi bi-bar-chart-fill me-2" aria-hidden="true"></i>View Poll Results
-                            </a>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-                {% endfor %}
-
-                {% if not upcoming_tournaments %}
-                <div class="text-center py-5">
-                    <i class="bi bi-calendar-x display-1 text-secondary mb-3"></i>
-                    <h4 class="text-secondary">No upcoming tournaments</h4>
-                    <p class="text-secondary">Check back soon for upcoming tournament announcements.</p>
-                </div>
-                {% endif %}
-            </div>
         </div>
     </div>
 
-    <!-- Sidebar -->
-    <div class="col-lg-4">
-        <h1 class="h2 mb-4">Club News</h1>
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h6 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Latest</h6>
+    <div id="tournamentTabsContent">
+        <!-- Next Tournament Tab -->
+        {% if next_tournament %}
+        <div class="home-tab {% if not show_completed_tab %}active{% endif %}" id="next-pane">
+            {% set tournament = next_tournament %}
+            <div class="tc" style="border-color:rgba(59,130,246,.25)">
+                <div class="tc-h">
+                    <div class="tc-db up">
+                        <span class="mo">{{ tournament.date.strftime('%b') }}</span>
+                        <span class="dy">{{ tournament.date.day }}</span>
+                    </div>
+                    <div class="tc-m">
+                        <div class="tc-t">{{ tournament.name }}</div>
+                        <div class="tc-s">
+                            {% if tournament.lake_name %}<span><i class="bi bi-water"></i> {{ tournament.lake_name }}</span>{% endif %}
+                            {% if tournament.ramp_name %}<span><i class="bi bi-pin-map"></i> {{ tournament.ramp_name }}</span>{% endif %}
+                            {% if tournament.start_time %}<span><i class="bi bi-clock"></i> {{ tournament.start_time }}–{{ tournament.end_time }}</span>{% endif %}
+                        </div>
+                    </div>
+                    <span class="ts ts-u">Upcoming</span>
+                </div>
+                <div class="tc-b">
+                    {{ tournament_description_row(tournament) }}
+                    {{ tournament_info_row(tournament) }}
+
+                    {% if tournament.google_maps_iframe %}
+                    <div style="border-radius:var(--r-md);overflow:hidden;position:relative;height:180px;margin-bottom:1rem">
+                        <style>.map-container-next iframe{position:absolute;top:0;left:0;width:100%!important;height:100%!important;border:0}</style>
+                        <div class="map-container-next" style="width:100%;height:100%">{{ tournament.google_maps_iframe|safe }}</div>
+                    </div>
+                    {% elif tournament.poll_data and (tournament.poll_data | length > 0) %}
+                    <div class="tournament-results-container-home" data-tournament-id="next-{{ tournament.id }}" style="margin-bottom:1rem">
+                        <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem">
+                            <div class="cc"><div class="ci" style="padding:.75rem">
+                                <div style="font-size:.82rem;font-weight:600;color:var(--ok);margin-bottom:.5rem"><i class="bi bi-bar-chart-fill"></i> Location Votes</div>
+                                <div class="stacked-chart-container" id="stackedChart-next-{{ tournament.id }}" style="min-height:150px"></div>
+                            </div></div>
+                            <div class="cc"><div class="ci" style="padding:.75rem">
+                                <div style="font-size:.82rem;font-weight:600;margin-bottom:.5rem"><i class="bi bi-clock"></i> Time Slots</div>
+                                <table class="mt" id="timeTable-next-{{ tournament.id }}">
+                                    <thead><tr><th>Start</th><th>End</th><th style="text-align:center">Votes</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div></div>
+                        </div>
+                        {% for option in tournament.poll_data %}
+                        <div data-option-data="{{ option.option_data | tojson_attr }}" data-vote-count="{{ option.vote_count }}" class="d-none poll-option-data"></div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    {{ location_tbd_placeholder() }}
+                    {% endif %}
+
+                    {% if tournament.poll_id and tournament.poll_is_open and not tournament.user_has_voted %}
+                    <div style="display:flex;justify-content:flex-end">
+                        <a href="/polls?tab=tournament#poll-{{ tournament.poll_id }}" class="btn-m btn-s" style="text-decoration:none"><i class="bi bi-hand-index"></i> Vote on Location</a>
+                    </div>
+                    {% elif tournament.poll_id and (not tournament.poll_is_open or tournament.user_has_voted) %}
+                    <div style="display:flex;justify-content:flex-end">
+                        <a href="/polls?tab=tournament#poll-{{ tournament.poll_id }}" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-bar-chart-fill"></i> View Poll Results</a>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
-            <div class="card-body">
+        </div>
+        {% endif %}
 
-                {% if latest_news %}
-                    <div id="news-list">
-                    {% for news_item in latest_news %}
-                    <div class="news-item mb-3 border-bottom pb-2">
-                        <div class="d-flex align-items-start justify-content-between mb-1">
-                            <h6 class="small fw-bold mb-0">{{ news_item[1] }}</h6>
-                            {% if news_item[5] == 2 %}
-                                <span class="badge bg-danger ms-2 small">Urgent</span>
-                            {% elif news_item[5] == 1 %}
-                                <span class="badge bg-warning text-dark ms-2 small">High</span>
-                            {% else %}
-                                <span class="badge bg-success ms-2 small">Normal</span>
-                            {% endif %}
-                        </div>
-                        <p class="small mb-1">{{ news_item[2] | nl2br }}</p>
-                        <small class="text-secondary">
-                            {% set display_date = news_item[4] if news_item[8] else news_item[3] %}
-                            {% set original_author = news_item[7] %}
-                            {% set editor = news_item[8] %}
-                            <span>{{ display_date.strftime('%Y-%m-%d') if display_date else '' }}</span>
-                            {% if editor %}
-                                {% set editor_parts = editor.split() %}
-                                {% if editor_parts|length >= 2 %}
-                                    - updated by: {{ editor_parts[0][0] }}.{{ editor_parts[-1] }}
-                                {% else %}
-                                    - updated by: {{ editor }}
-                                {% endif %}
-                            {% elif original_author %}
-                                {% set author_parts = original_author.split() %}
-                                {% if author_parts|length >= 2 %}
-                                    - posted by: {{ author_parts[0][0] }}.{{ author_parts[-1] }}
-                                {% else %}
-                                    - posted by: {{ original_author }}
-                                {% endif %}
-                            {% endif %}
-                        </small>
+        <!-- Completed Tournaments Tab -->
+        <div class="home-tab {% if show_completed_tab %}active{% endif %}" id="completed-pane">
+            {% for tournament in completed_tournaments %}
+            <div class="tc" style="margin-bottom:1.15rem;{% if tournament.is_cancelled %}opacity:.6{% endif %}">
+                <div class="tc-h">
+                    <div class="tc-db dn">
+                        <span class="mo">{{ tournament.date.strftime('%b') }}</span>
+                        <span class="dy">{{ tournament.date.day }}</span>
                     </div>
-                    {% endfor %}
-                    </div>
-
-                    <!-- News Pagination Controls -->
-                    <div id="news-pagination" class="d-flex justify-content-between align-items-center mt-3 mb-3" style="display: none !important;">
-                        <small class="text-muted" id="news-page-info">Showing 1-3 of 5</small>
-                        <div>
-                            <button class="btn btn-sm btn-outline-primary" id="news-prev" disabled>
-                                <i class="bi bi-chevron-left"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-primary ms-1" id="news-next">
-                                <i class="bi bi-chevron-right"></i>
-                            </button>
+                    <div class="tc-m">
+                        <div class="tc-t">{{ tournament.name }}</div>
+                        <div class="tc-s">
+                            {% if tournament.lake_name %}<span><i class="bi bi-water"></i> {{ tournament.lake_name }}</span>{% endif %}
+                            {% if tournament.ramp_name %}<span><i class="bi bi-pin-map"></i> {{ tournament.ramp_name }}</span>{% endif %}
                         </div>
                     </div>
-                {% else %}
-                    <div class="text-secondary border-bottom pb-2">
-                        <p>No Current News</p>
+                    {% if tournament.is_cancelled %}
+                    <span class="ts" style="background:var(--err-m);color:var(--err)">Cancelled</span>
+                    {% else %}
+                    <span class="ts ts-c">Complete</span>
+                    {% endif %}
+                </div>
+                <div class="tc-b">
+                    {% if tournament.tournament_stats %}
+                    <div class="tc-sr">
+                        <div class="tc-st"><div class="tc-sl">Winning Team</div><div class="tc-sv" style="color:var(--brand);font-size:.9rem">{{ tournament.tournament_stats.winner_name if tournament.tournament_stats.winner_name else '-' }}</div></div>
+                        <div class="tc-st"><div class="tc-sl">Top Weight</div><div class="tc-sv" style="color:var(--ok)">{{ "%.2f"|format(tournament.tournament_stats.winning_weight) }} lbs</div></div>
+                        <div class="tc-st"><div class="tc-sl">Participants</div><div class="tc-sv" style="color:var(--info)">{{ tournament.tournament_stats.participants }}</div></div>
                     </div>
+                    {% endif %}
+
+                    {% if tournament.top_results %}
+                    <div class="pod" style="padding:.5rem 0">
+                        {% for result in tournament.top_results %}
+                        {% if result[0] == 2 %}
+                        <div class="pod-p"><div class="pod-b p2"><span class="pod-e">&#129352;</span><span class="pod-r s">2</span></div>
+                            <div class="pod-n">{% set n = result[1].split() %}{{ n[-1] if n|length >= 2 else result[1] }}{% if result[2] %}<br><span style="font-weight:400;font-size:.68rem;color:var(--t3)">+ {% set n2 = result[2].split() %}{{ n2[-1] if n2|length >= 2 else result[2] }}</span>{% endif %}</div>
+                            <div class="pod-w">{{ "%.2f"|format(result[3]) }} lbs</div>
+                        </div>
+                        {% elif result[0] == 1 %}
+                        <div class="pod-p"><div class="pod-b p1" style="height:130px"><span class="pod-e">&#129351;</span><span class="pod-r g">1</span></div>
+                            <div class="pod-n">{% set n = result[1].split() %}{{ n[-1] if n|length >= 2 else result[1] }}{% if result[2] %}<br><span style="font-weight:400;font-size:.68rem;color:var(--t3)">+ {% set n2 = result[2].split() %}{{ n2[-1] if n2|length >= 2 else result[2] }}</span>{% endif %}</div>
+                            <div class="pod-w">{{ "%.2f"|format(result[3]) }} lbs</div>
+                        </div>
+                        {% elif result[0] == 3 %}
+                        <div class="pod-p"><div class="pod-b p3"><span class="pod-e">&#129353;</span><span class="pod-r b">3</span></div>
+                            <div class="pod-n">{% set n = result[1].split() %}{{ n[-1] if n|length >= 2 else result[1] }}{% if result[2] %}<br><span style="font-weight:400;font-size:.68rem;color:var(--t3)">+ {% set n2 = result[2].split() %}{{ n2[-1] if n2|length >= 2 else result[2] }}</span>{% endif %}</div>
+                            <div class="pod-w">{{ "%.2f"|format(result[3]) }} lbs</div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if not tournament.is_cancelled %}
+                    <div style="display:flex;justify-content:flex-end;margin-top:.5rem">
+                        <a href="/tournaments/{{ tournament.id }}" class="btn-m btn-p" style="text-decoration:none;font-size:.82rem"><i class="bi bi-eye"></i> View Results</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if not completed_tournaments %}
+            <div style="text-align:center;padding:3rem 1rem;color:var(--t3)">
+                <i class="bi bi-calendar-x" style="font-size:3rem;opacity:.3"></i>
+                <div style="margin-top:.75rem;font-weight:500">No completed tournaments</div>
+            </div>
+            {% endif %}
+
+            <!-- Pagination -->
+            {% if total_pages > 1 %}
+            <div style="display:flex;justify-content:center;gap:.25rem;margin-top:1.5rem">
+                {% if current_page > 1 %}
+                <a href="/?p={{ current_page - 1 }}" class="btn-m btn-g" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem"><i class="bi bi-chevron-left"></i></a>
                 {% endif %}
+                {% for page_num in page_range %}
+                <a href="/?p={{ page_num }}" class="btn-m {% if page_num == current_page %}btn-p{% else %}btn-g{% endif %}" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem">{{ page_num }}</a>
+                {% endfor %}
+                {% if current_page < total_pages %}
+                <a href="/?p={{ current_page + 1 }}" class="btn-m btn-g" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem"><i class="bi bi-chevron-right"></i></a>
+                {% endif %}
+            </div>
+            <div style="text-align:center;color:var(--t4);font-size:.78rem;margin-top:.5rem">
+                Showing {{ start_index }}–{{ end_index }} of {{ total_tournaments }} tournaments
+            </div>
+            {% endif %}
+        </div>
 
-                <!-- Club Info Section (always at bottom) -->
-                <div class="mt-3 pt-3">
-                    <div class="text-center">
-                        <div class="mb-3">
-                            <img src="/static/sabc_logo.png" alt="South Austin Bass Club Logo" class="img-fluid" style="max-height: 200px;">
-                        </div>
-                        <p class="mb-2"><strong>Founded:</strong> 1983</p>
-                        <p class="mb-2"><strong>Members:</strong> {{ member_count }} Active Anglers</p>
-                        <p class="mb-0"><strong>Waters:</strong> Central Texas Lakes</p>
+        <!-- Upcoming Tournaments Tab -->
+        <div class="home-tab" id="upcoming-pane">
+            {% for tournament in upcoming_tournaments %}
+            <div class="tc" style="margin-bottom:1.15rem;{% if tournament.is_cancelled %}opacity:.6{% endif %}">
+                <div class="tc-h">
+                    <div class="tc-db up">
+                        <span class="mo">{{ tournament.date.strftime('%b') }}</span>
+                        <span class="dy">{{ tournament.date.day }}</span>
                     </div>
+                    <div class="tc-m">
+                        <div class="tc-t">{{ tournament.name }}</div>
+                        <div class="tc-s">
+                            {% if tournament.lake_name %}<span><i class="bi bi-water"></i> {{ tournament.lake_name }}</span>{% endif %}
+                            {% if tournament.ramp_name %}<span><i class="bi bi-pin-map"></i> {{ tournament.ramp_name }}</span>{% endif %}
+                            {% if tournament.start_time %}<span><i class="bi bi-clock"></i> {{ tournament.start_time }}–{{ tournament.end_time }}</span>{% endif %}
+                        </div>
+                    </div>
+                    {% if tournament.is_cancelled %}
+                    <span class="ts" style="background:var(--err-m);color:var(--err)">Cancelled</span>
+                    {% else %}
+                    <span class="ts ts-u">Upcoming</span>
+                    {% endif %}
+                </div>
+                <div class="tc-b">
+                    {{ tournament_description_row(tournament) }}
+
+                    {% if tournament.google_maps_iframe %}
+                    <div style="border-radius:var(--r-md);overflow:hidden;position:relative;height:180px;margin-bottom:1rem">
+                        <style>.map-container-upcoming-{{ loop.index }} iframe{position:absolute;top:0;left:0;width:100%!important;height:100%!important;border:0}</style>
+                        <div class="map-container-upcoming-{{ loop.index }}" style="width:100%;height:100%">{{ tournament.google_maps_iframe|safe }}</div>
+                    </div>
+                    {% elif tournament.poll_data and (tournament.poll_data | length > 0) %}
+                    <div class="tournament-results-container-home" data-tournament-id="{{ tournament.id }}" style="margin-bottom:1rem">
+                        <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem">
+                            <div class="cc"><div class="ci" style="padding:.75rem">
+                                <div style="font-size:.82rem;font-weight:600;color:var(--ok);margin-bottom:.5rem"><i class="bi bi-bar-chart-fill"></i> Location Votes</div>
+                                <div class="stacked-chart-container" id="stackedChart-{{ tournament.id }}" style="min-height:150px"></div>
+                            </div></div>
+                            <div class="cc"><div class="ci" style="padding:.75rem">
+                                <div style="font-size:.82rem;font-weight:600;margin-bottom:.5rem"><i class="bi bi-clock"></i> Time Slots</div>
+                                <table class="mt" id="timeTable-{{ tournament.id }}">
+                                    <thead><tr><th>Start</th><th>End</th><th style="text-align:center">Votes</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div></div>
+                        </div>
+                        {% for option in tournament.poll_data %}
+                        <div data-option-data="{{ option.option_data | tojson_attr }}" data-vote-count="{{ option.vote_count }}" class="d-none poll-option-data"></div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    {{ location_tbd_placeholder() }}
+                    {% endif %}
+
+                    {% if tournament.poll_id and tournament.poll_is_open and not tournament.user_has_voted %}
+                    <div style="display:flex;justify-content:flex-end">
+                        <a href="/polls?tab=tournament#poll-{{ tournament.poll_id }}" class="btn-m btn-s" style="text-decoration:none"><i class="bi bi-hand-index"></i> Vote on Location</a>
+                    </div>
+                    {% elif tournament.poll_id and (not tournament.poll_is_open or tournament.user_has_voted) %}
+                    <div style="display:flex;justify-content:flex-end">
+                        <a href="/polls?tab=tournament#poll-{{ tournament.poll_id }}" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-bar-chart-fill"></i> View Poll Results</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if not upcoming_tournaments %}
+            <div style="text-align:center;padding:3rem 1rem;color:var(--t3)">
+                <i class="bi bi-calendar-x" style="font-size:3rem;opacity:.3"></i>
+                <div style="margin-top:.75rem;font-weight:500">No upcoming tournaments</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Sidebar: Club News -->
+<div>
+    <div class="cc">
+        <div class="ci">
+            <div class="ct" style="margin-bottom:1rem"><i class="bi bi-newspaper"></i> Club News</div>
+
+            {% if latest_news %}
+            <div id="news-list">
+            {% for news_item in latest_news %}
+            <div class="news-item" style="padding:.75rem 0;border-bottom:1px solid var(--b0)">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;margin-bottom:.25rem">
+                    <div style="font-weight:600;font-size:.88rem">{{ news_item[1] }}</div>
+                    {% if news_item[5] == 2 %}
+                        <span class="tg tg-d"><i class="bi bi-exclamation-triangle"></i> Urgent</span>
+                    {% elif news_item[5] == 1 %}
+                        <span class="tg tg-w">High</span>
+                    {% endif %}
+                </div>
+                <div style="font-size:.82rem;color:var(--t2);line-height:1.5;margin-bottom:.35rem">{{ news_item[2] | nl2br }}</div>
+                <div style="font-size:.73rem;color:var(--t4)">
+                    {% set display_date = news_item[4] if news_item[8] else news_item[3] %}
+                    <i class="bi bi-clock"></i> {{ display_date.strftime('%b %d') if display_date else '' }}
+                    {% if news_item[8] %}
+                        {% set editor_parts = news_item[8].split() %}
+                        &middot; {{ editor_parts[0][0] }}.{{ editor_parts[-1] if editor_parts|length >= 2 else news_item[8] }}
+                    {% elif news_item[7] %}
+                        {% set author_parts = news_item[7].split() %}
+                        &middot; {{ author_parts[0][0] }}.{{ author_parts[-1] if author_parts|length >= 2 else news_item[7] }}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            </div>
+
+            <!-- News Pagination -->
+            <div id="news-pagination" style="display:none;justify-content:space-between;align-items:center;margin-top:.75rem">
+                <span style="font-size:.78rem;color:var(--t4)" id="news-page-info"></span>
+                <div style="display:flex;gap:.25rem">
+                    <button class="btn-icon btn-icon-ghost" id="news-prev" disabled><i class="bi bi-chevron-left"></i></button>
+                    <button class="btn-icon btn-icon-ghost" id="news-next"><i class="bi bi-chevron-right"></i></button>
+                </div>
+            </div>
+            {% else %}
+            <div style="color:var(--t3);padding:.5rem 0">No current news.</div>
+            {% endif %}
+
+            <!-- Club Info -->
+            <div style="border-top:1px solid var(--b0);margin-top:1rem;padding-top:1rem;text-align:center">
+                <img src="/static/sabc_logo.png" alt="SABC Logo" style="width:120px;height:120px;border-radius:var(--r-lg);object-fit:contain;margin-bottom:.75rem">
+                <div style="font-weight:700">South Austin Bass Club</div>
+                <div style="font-size:.82rem;color:var(--t3)">Est. 1983 &middot; Central Texas</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.75rem">
+                    <div class="cc"><div style="text-align:center;padding:.5rem">
+                        <div style="font-size:1.1rem;font-weight:800;color:var(--brand)">{{ member_count }}</div>
+                        <div style="font-size:.7rem;color:var(--t3)">Members</div>
+                    </div></div>
+                    <div class="cc"><div style="text-align:center;padding:.5rem">
+                        <div style="font-size:1.1rem;font-weight:800;color:var(--ok)">43</div>
+                        <div style="font-size:.7rem;color:var(--t3)">Seasons</div>
+                    </div></div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+</div>
 
-<!-- Chart.js for poll results in tournament cards -->
+<!-- Tab switching JS -->
+<script>
+function switchHomeTab(paneId, btn) {
+    document.querySelectorAll('.home-tab').forEach(function(p) { p.classList.remove('active'); });
+    document.getElementById(paneId).classList.add('active');
+    document.querySelectorAll('#tournamentTabs .ptb').forEach(function(b) { b.classList.remove('on'); });
+    btn.classList.add('on');
+}
+</script>
+<style>
+.home-tab { display: none; }
+.home-tab.active { display: block; }
+.tc { background: var(--bg-surface); border: 1px solid var(--b0); border-radius: var(--r-lg); overflow: hidden; transition: all 0.25s; margin-bottom: 1.15rem; }
+.tc:hover { border-color: var(--b1); box-shadow: 0 4px 12px rgba(0,0,0,.25); transform: translateY(-2px); }
+.tc-h { display: flex; align-items: center; gap: 1rem; padding: 1.15rem 1.35rem; border-bottom: 1px solid var(--b0); }
+.tc-db { width: 52px; height: 52px; border-radius: var(--r-md); display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; text-align: center; }
+.tc-db.up { background: var(--brand-m); border: 1px solid rgba(59,130,246,.25); }
+.tc-db.dn { background: var(--ok-m); border: 1px solid rgba(16,185,129,.25); }
+.tc-db .mo { font-size: .55rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; line-height: 1; }
+.tc-db.up .mo { color: var(--brand); } .tc-db.dn .mo { color: var(--ok); }
+.tc-db .dy { font-size: 1.2rem; font-weight: 800; color: var(--t1); line-height: 1.1; }
+.tc-m { flex: 1; min-width: 0; } .tc-t { font-size: .95rem; font-weight: 600; }
+.tc-s { font-size: .8rem; color: var(--t3); display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; } .tc-s i { font-size: .7rem; }
+.ts { padding: .18rem .65rem; border-radius: var(--r-full); font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; flex-shrink: 0; }
+.ts-u { background: var(--brand-m); color: var(--brand); } .ts-c { background: var(--ok-m); color: var(--ok); }
+.tc-b { padding: 1.15rem 1.35rem; }
+.tc-sr { display: grid; grid-template-columns: repeat(3,1fr); gap: .7rem; margin-bottom: .9rem; }
+.tc-st { text-align: center; padding: .65rem; background: var(--bg-elevated); border-radius: var(--r-md); }
+.tc-sl { font-size: .67rem; font-weight: 500; color: var(--t3); text-transform: uppercase; letter-spacing: .04em; }
+.tc-sv { font-size: 1.1rem; font-weight: 700; margin-top: .05rem; }
+</style>
+
+<!-- Chart.js for poll results -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<!-- External JavaScript -->
 <script src="{{ url_for('static', path='/utils.js') }}"></script>
 <script src="{{ url_for('static', path='/home-polls.js') }}"></script>
 <script src="{{ url_for('static', path='/home-init.js') }}"></script>
 
-<!-- News Pagination JavaScript -->
+<!-- News Pagination -->
 <script>
 (function() {
-    const NEWS_PER_PAGE = 3;
-    let currentPage = 1;
-
-    const items = document.querySelectorAll('.news-item');
-    const totalItems = items.length;
-    const totalPages = Math.ceil(totalItems / NEWS_PER_PAGE);
-
-    const paginationContainer = document.getElementById('news-pagination');
-    const pageInfo = document.getElementById('news-page-info');
-    const prevBtn = document.getElementById('news-prev');
-    const nextBtn = document.getElementById('news-next');
-
-    // Only show pagination if there are more than NEWS_PER_PAGE items
-    if (totalItems <= NEWS_PER_PAGE) {
-        if (paginationContainer) {
-            paginationContainer.style.setProperty('display', 'none', 'important');
-        }
-        return;
-    }
-
-    // Show pagination controls
-    if (paginationContainer) {
-        paginationContainer.style.display = 'flex';
-        paginationContainer.style.cssText = 'display: flex !important;';
-    }
-
+    var NEWS_PER_PAGE = 3;
+    var currentPage = 1;
+    var items = document.querySelectorAll('.news-item');
+    var totalItems = items.length;
+    var totalPages = Math.ceil(totalItems / NEWS_PER_PAGE);
+    var pagination = document.getElementById('news-pagination');
+    var pageInfo = document.getElementById('news-page-info');
+    var prevBtn = document.getElementById('news-prev');
+    var nextBtn = document.getElementById('news-next');
+    if (totalItems <= NEWS_PER_PAGE) return;
+    if (pagination) pagination.style.display = 'flex';
     function showPage(page) {
         currentPage = page;
-
-        // Calculate start and end indices
-        const startIdx = (page - 1) * NEWS_PER_PAGE;
-        const endIdx = Math.min(startIdx + NEWS_PER_PAGE, totalItems);
-
-        // Show/hide items based on current page
-        items.forEach(function(item, index) {
-            if (index >= startIdx && index < endIdx) {
-                item.style.display = 'block';
-            } else {
-                item.style.display = 'none';
-            }
-        });
-
-        // Update page info text
-        if (pageInfo) {
-            pageInfo.textContent = 'Showing ' + (startIdx + 1) + '-' + endIdx + ' of ' + totalItems;
-        }
-
-        // Update button states
-        if (prevBtn) {
-            prevBtn.disabled = (page === 1);
-        }
-        if (nextBtn) {
-            nextBtn.disabled = (page === totalPages);
-        }
+        var start = (page - 1) * NEWS_PER_PAGE;
+        var end = Math.min(start + NEWS_PER_PAGE, totalItems);
+        items.forEach(function(item, i) { item.style.display = (i >= start && i < end) ? 'block' : 'none'; });
+        if (pageInfo) pageInfo.textContent = 'Showing ' + (start+1) + '-' + end + ' of ' + totalItems;
+        if (prevBtn) prevBtn.disabled = (page === 1);
+        if (nextBtn) nextBtn.disabled = (page === totalPages);
     }
-
-    // Event listeners for navigation buttons
-    if (prevBtn) {
-        prevBtn.addEventListener('click', function() {
-            if (currentPage > 1) {
-                showPage(currentPage - 1);
-            }
-        });
-    }
-
-    if (nextBtn) {
-        nextBtn.addEventListener('click', function() {
-            if (currentPage < totalPages) {
-                showPage(currentPage + 1);
-            }
-        });
-    }
-
-    // Initialize with first page
+    if (prevBtn) prevBtn.addEventListener('click', function() { if (currentPage > 1) showPage(currentPage - 1); });
+    if (nextBtn) nextBtn.addEventListener('click', function() { if (currentPage < totalPages) showPage(currentPage + 1); });
     showPage(1);
 })();
 </script>
@@ -682,39 +416,30 @@
 <!-- Ramp Location Modals -->
 {% for tournament in all_tournaments %}
     {% if tournament.ramp_google_maps %}
-        <div class="modal fade" id="rampModal{{ tournament.id }}" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="bi bi-geo-alt me-2"></i>{{ tournament.ramp_name|title }}
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body p-0">
-                        <div style="height: 400px; width: 100%;">
-                            {{ tournament.ramp_google_maps|safe }}
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <small class="text-secondary">{{ tournament.lake_display_name }}</small>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
+    <div class="modal fade" id="rampModal{{ tournament.id }}" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5><i class="bi bi-geo-alt me-2"></i>{{ tournament.ramp_name|title }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div style="height:400px;width:100%">{{ tournament.ramp_google_maps|safe }}</div>
+                </div>
+                <div class="modal-footer">
+                    <span style="color:var(--t3);font-size:.82rem">{{ tournament.lake_display_name }}</span>
+                    <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
+    </div>
     {% endif %}
 {% endfor %}
 
-<!-- Cancelled Tournament Alert Dismissal Script -->
 <script>
 function dismissCancelledAlert(eventId) {
     var dismissed = JSON.parse(localStorage.getItem('dismissedCancelledAlerts') || '[]');
-    if (dismissed.indexOf(eventId) === -1) {
-        dismissed.push(eventId);
-        localStorage.setItem('dismissedCancelledAlerts', JSON.stringify(dismissed));
-    }
+    if (dismissed.indexOf(eventId) === -1) { dismissed.push(eventId); localStorage.setItem('dismissedCancelledAlerts', JSON.stringify(dismissed)); }
 }
 </script>
-
 {% endblock content %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="al">
+    <aside class="as">
+        <div class="as-s">
+            <div class="as-l">Overview</div>
+            <a href="/admin/events" class="as-a {% if request.url.path == '/admin/events' %}on{% endif %}">
+                <i class="bi bi-grid-1x2"></i> Dashboard
+            </a>
+        </div>
+        <div class="as-s">
+            <div class="as-l">Manage</div>
+            <a href="/admin/events" class="as-a {% if request.url.path.startswith('/admin/events') %}on{% endif %}">
+                <i class="bi bi-calendar3"></i> Events
+                {% if admin_counts is defined and admin_counts.events %}<span class="cnt">{{ admin_counts.events }}</span>{% endif %}
+            </a>
+            <a href="/admin/users" class="as-a {% if request.url.path.startswith('/admin/users') %}on{% endif %}">
+                <i class="bi bi-people"></i> Anglers
+                {% if admin_counts is defined and admin_counts.anglers %}<span class="cnt">{{ admin_counts.anglers }}</span>{% endif %}
+            </a>
+            <a href="/admin/polls/create" class="as-a {% if '/polls' in request.url.path and '/admin' in request.url.path %}on{% endif %}">
+                <i class="bi bi-hand-index"></i> Polls
+                {% if admin_counts is defined and admin_counts.polls %}<span class="cnt">{{ admin_counts.polls }}</span>{% endif %}
+            </a>
+            <a href="/admin/lakes" class="as-a {% if request.url.path.startswith('/admin/lakes') %}on{% endif %}">
+                <i class="bi bi-water"></i> Lakes
+                {% if admin_counts is defined and admin_counts.lakes %}<span class="cnt">{{ admin_counts.lakes }}</span>{% endif %}
+            </a>
+            <a href="/admin/news" class="as-a {% if request.url.path.startswith('/admin/news') %}on{% endif %}">
+                <i class="bi bi-newspaper"></i> News
+                {% if admin_counts is defined and admin_counts.news %}<span class="cnt">{{ admin_counts.news }}</span>{% endif %}
+            </a>
+        </div>
+    </aside>
+    <div class="am anim">
+        {% block admin_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

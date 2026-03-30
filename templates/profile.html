@@ -1,157 +1,169 @@
 {% extends "base.html" %}
 {% from 'macros.html' import csrf_token, alert %}
 {% block content %}
-<div class="mb-4"><h1><i class="bi bi-person-circle me-2"></i>Member Profile</h1></div>
+<div class="sh"><div class="st"><i class="bi bi-person-circle"></i> Member Profile</div></div>
 {{ alert('success', success) }}
 {% if request.query_params.get('welcome') == 'true' and not user.member %}
-<div class="alert alert-info">
-<h5><i class="bi bi-info-circle me-2"></i>Welcome to South Austin Bass Club!</h5>
-<p class="mb-2">Your account has been created as a <strong>guest</strong>. To become a member:</p>
-<ol class="mb-2">
-<li>Pay the $25 annual membership fee</li>
-<li>Contact an admin to verify your payment</li>
-<li>Once verified, you'll gain access to polls, roster, and voting privileges</li>
-</ol>
-<p class="mb-0"><small>Until then, you can browse public pages and view your profile.</small></p>
+<div class="cc" style="margin-bottom:1.25rem;border-color:rgba(6,182,212,.2)">
+    <div class="ci" style="padding:1rem">
+        <div style="font-size:.88rem;font-weight:600;color:var(--info);margin-bottom:.5rem"><i class="bi bi-info-circle me-1"></i>Welcome to South Austin Bass Club!</div>
+        <div style="font-size:.82rem;color:var(--t2);line-height:1.6">
+            Your account has been created as a <strong>guest</strong>. To become a member:
+            <ol style="margin:.5rem 0 0;padding-left:1.25rem">
+                <li>Pay the $25 annual membership fee</li>
+                <li>Contact an admin to verify your payment</li>
+                <li>Once verified, you'll gain access to polls, roster, and voting privileges</li>
+            </ol>
+        </div>
+    </div>
 </div>
 {% endif %}
 
-<div class="row g-4">
-<div class="col-lg-8">
-<div class="card">
-<div class="card-header d-flex justify-content-between align-items-center">
-<h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Account Information</h5>
-<button class="btn btn-sm btn-primary" onclick="toggleEdit()" id="editBtn"><i class="bi bi-pencil me-1"></i>Edit</button>
-</div>
-<div class="card-body">
-<!-- View Mode -->
-<div id="viewMode">
-<div class="row">
-<div class="col-md-8">
-<table class="table table-dark table-borderless">
-<tr><th style="width:40%">Name</th><td>{{user.name}}</td></tr>
-<tr><th>Email</th><td>{{user.email or 'Not provided'}}</td></tr>
-<tr><th>Phone</th><td>{{user.phone or 'Not provided'}}</td></tr>
-<tr><th>Year Joined</th><td>{{user.year_joined or 'Not specified'}}</td></tr>
-<tr><th>Status</th><td>
-{% if user.member %}<span class="badge bg-success">Member</span>{% else %}<span class="badge bg-secondary">Guest</span>{% endif %}
-{% if user.is_admin %}<span class="badge bg-danger">Admin</span>{% endif %}
-</td></tr>
-</table>
-</div>
-<div class="col-md-4 text-center">
-<img src="/static/sabc_logo.png" alt="SABC Logo" class="img-fluid rounded" style="max-width: 150px;">
-</div>
-</div>
-</div>
+<div style="display:grid;grid-template-columns:3fr 2fr;gap:1.4rem">
+<!-- Left Column -->
+<div>
+    <!-- Account Information -->
+    <div class="cc" style="margin-bottom:1.25rem">
+        <div class="ci">
+            <div class="ct-row">
+                <div class="ct"><i class="bi bi-info-circle"></i> Account Information</div>
+                <button class="btn-m btn-g" style="padding:.35rem .75rem;font-size:.78rem" onclick="toggleEdit()" id="editBtn"><i class="bi bi-pencil"></i> Edit</button>
+            </div>
 
-<!-- Edit Mode -->
-<div id="editMode" style="display:none">
-<form method="POST" action="/profile/update">
+            <!-- View Mode -->
+            <div id="viewMode">
+                <table class="mt">
+                    <tbody>
+                        <tr><td style="color:var(--t3);width:35%">Name</td><td style="font-weight:600;color:var(--t1)">{{user.name}}</td></tr>
+                        <tr><td style="color:var(--t3)">Email</td><td>{{user.email or 'Not provided'}}</td></tr>
+                        <tr><td style="color:var(--t3)">Phone</td><td>{{user.phone or 'Not provided'}}</td></tr>
+                        <tr><td style="color:var(--t3)">Year Joined</td><td>{{user.year_joined or 'Not specified'}}</td></tr>
+                        <tr><td style="color:var(--t3)">Status</td><td>
+                            {% if user.member %}<span class="tg tg-s">Member</span>{% else %}<span class="tg tg-g">Guest</span>{% endif %}
+                            {% if user.is_admin %}<span class="tg tg-d" style="margin-left:.3rem">Admin</span>{% endif %}
+                        </td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Edit Mode -->
+            <div id="editMode" style="display:none">
+                <form method="POST" action="/profile/update">
                     {{ csrf_token(request) }}
-<div class="mb-3"><label class="form-label">Email</label><input type="email" class="form-control" name="email" value="{{user.email or ''}}" required></div>
-<div class="mb-3"><label class="form-label">Phone</label><input type="tel" class="form-control" name="phone" id="phoneInput" value="{{user.phone or ''}}" placeholder="(555) 123-4567" maxlength="14"></div>
-<div class="mb-3"><label class="form-label">Year Joined</label><input type="number" class="form-control" name="year_joined" value="{{user.year_joined or 2024}}" min="1981" max="2030"></div>
+                    <div class="fg">
+                        <label class="fl">Email</label>
+                        <input class="fi" type="email" name="email" value="{{user.email or ''}}" required>
+                    </div>
+                    <div class="fg">
+                        <label class="fl">Phone</label>
+                        <input class="fi" type="tel" name="phone" id="phoneInput" value="{{user.phone or ''}}" placeholder="(555) 123-4567" maxlength="14">
+                    </div>
+                    <div class="fg">
+                        <label class="fl">Year Joined</label>
+                        <input class="fi" type="number" name="year_joined" value="{{user.year_joined or 2024}}" min="1981" max="2030">
+                    </div>
 
-<!-- Password Change Section -->
-<hr class="my-4">
-<h6 class="text-primary"><i class="bi bi-key me-2"></i>Change Password</h6>
-<p class="text-secondary small mb-3">Leave password fields blank to keep your current password.</p>
-<div class="mb-3">
-    <label class="form-label">Current Password</label>
-    <input type="password" class="form-control" name="current_password" placeholder="Enter your current password">
-    <div class="form-text">Required to change your password</div>
-</div>
-<div class="mb-3">
-    <label class="form-label">New Password</label>
-    <input type="password" class="form-control" name="new_password" placeholder="Enter new password (8+ characters)" minlength="8">
-</div>
-<div class="mb-3">
-    <label class="form-label">Confirm New Password</label>
-    <input type="password" class="form-control" name="confirm_password" placeholder="Confirm new password">
-</div>
+                    <!-- Password Change Section -->
+                    <div class="pwd-section">
+                        <div style="font-size:.88rem;font-weight:600;color:var(--brand);margin-bottom:.35rem"><i class="bi bi-key"></i> Change Password</div>
+                        <div style="font-size:.78rem;color:var(--t4);margin-bottom:1rem">Leave blank to keep your current password.</div>
+                        <div class="fg">
+                            <label class="fl">Current Password</label>
+                            <input class="fi" type="password" name="current_password" placeholder="Enter current password">
+                        </div>
+                        <div class="fg">
+                            <label class="fl">New Password</label>
+                            <input class="fi" type="password" name="new_password" placeholder="12+ characters" minlength="12">
+                            <div style="font-size:.72rem;color:var(--t4);margin-top:.3rem">Uppercase, lowercase, number, and special character required</div>
+                        </div>
+                        <div class="fg">
+                            <label class="fl">Confirm New Password</label>
+                            <input class="fi" type="password" name="confirm_password" placeholder="Confirm new password">
+                        </div>
+                    </div>
 
-<div class="d-flex gap-2">
-<button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Save</button>
-<button type="button" class="btn btn-secondary" onclick="cancelEdit()"><i class="bi bi-x-lg me-1"></i>Cancel</button>
-</div>
-</form>
+                    <div style="display:flex;gap:.5rem;margin-top:1rem">
+                        <button type="submit" class="btn-m btn-p"><i class="bi bi-check-lg"></i> Save Changes</button>
+                        <button type="button" class="btn-m btn-g" onclick="cancelEdit()"><i class="bi bi-x-lg"></i> Cancel</button>
+                    </div>
+                </form>
 
-<hr class="my-4">
-<div class="alert alert-warning">
-<h6><i class="bi bi-exclamation-triangle me-2"></i>Danger Zone</h6>
-<p class="mb-2">Permanently delete your account and all data. This cannot be undone.</p>
-<button type="button" class="btn btn-outline-danger btn-sm" onclick="startDeleteProcess()"><i class="bi bi-trash me-1"></i>Delete Account</button>
-</div>
-</div>
-</div>
-</div>
+                <!-- Danger Zone -->
+                <div class="dz" style="margin-top:1.5rem">
+                    <div class="dz-t"><i class="bi bi-exclamation-triangle"></i> Danger Zone</div>
+                    <div class="dz-d">Permanently delete your account and all data. Tournament results will be retained for record-keeping. This action cannot be undone.</div>
+                    <button type="button" class="btn-m btn-d" style="font-size:.78rem;padding:.4rem .8rem" onclick="startDeleteProcess()"><i class="bi bi-trash"></i> Delete Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<!-- Weight per Tournament -->
-<div class="card mt-4">
-<div class="card-header">
-<h5 class="mb-0"><i class="bi bi-graph-up me-2"></i>Weight per Tournament</h5>
-</div>
-<div class="card-body">
-<div id="chart-data" data-monthly-data="{{ stats.monthly_data | tojson_attr }}"></div>
-<canvas id="monthlyWeightChart" style="max-height: 400px;"></canvas>
-</div>
-</div>
-</div>
-
-<div class="col-lg-4">
-<div class="card">
-<div class="card-header"><h5><i class="bi bi-trophy me-2"></i>Angler Stats</h5></div>
-<div class="card-body">
-<h6 class="text-primary mb-3"><i class="bi bi-bar-chart me-1"></i>Team Totals</h6>
-<div class="row text-center g-3 mb-4">
-<div class="col-4"><div class="h3 text-primary">{{stats.team_tournaments}}</div><small>Tournaments</small></div>
-<div class="col-4"><div class="h3 text-info">{{stats.best_team_weight|int if stats.best_team_weight == 0 else "%.1f"|format(stats.best_team_weight)}}</div><small>Best Weight</small></div>
-<div class="col-4"><div class="h3 text-success">{{"%.1f"|format(stats.big_bass)}} lbs</div><small>Biggest Bass</small></div>
+    <!-- Weight per Tournament Chart -->
+    <div class="cc">
+        <div class="ci">
+            <div class="ct"><i class="bi bi-graph-up"></i> Weight per Tournament</div>
+            <div id="chart-data" data-monthly-data="{{ stats.monthly_data | tojson_attr }}"></div>
+            <canvas id="monthlyWeightChart" style="max-height:400px;margin-top:1rem"></canvas>
+        </div>
+    </div>
 </div>
 
-<h6 class="text-success mb-3"><i class="bi bi-people me-1"></i>Team Finishes</h6>
+<!-- Right Sidebar: Angler Stats -->
+<div>
+    <div class="cc">
+        <div class="ci">
+            <div class="ct-row">
+                <div class="ct"><i class="bi bi-trophy"></i> Angler Stats</div>
+            </div>
 
-<!-- Tabs Navigation -->
-<ul class="nav nav-pills nav-sm mb-3 justify-content-center" id="finishTabs" role="tablist">
-{% for year in stats.year_finishes.keys()|sort(reverse=True) %}
-<li class="nav-item" role="presentation">
-<button class="nav-link {% if loop.first %}active{% endif %}" id="year-{{year}}-tab" data-bs-toggle="pill" data-bs-target="#year-{{year}}" type="button" role="tab" aria-controls="year-{{year}}" aria-selected="{% if loop.first %}true{% else %}false{% endif %}">{{year}}</button>
-</li>
-{% endfor %}
-<li class="nav-item" role="presentation">
-<button class="nav-link" id="all-time-tab" data-bs-toggle="pill" data-bs-target="#all-time" type="button" role="tab" aria-controls="all-time" aria-selected="false">All-Time</button>
-</li>
-</ul>
+            <div style="font-size:.78rem;color:var(--brand);font-weight:600;margin-bottom:.6rem"><i class="bi bi-bar-chart"></i> Team Totals</div>
+            <div class="g3" style="margin-bottom:1.25rem">
+                <div style="text-align:center">
+                    <div style="font-size:1.3rem;font-weight:800;color:var(--brand)">{{stats.team_tournaments}}</div>
+                    <div style="font-size:.7rem;color:var(--t3)">Tournaments</div>
+                </div>
+                <div style="text-align:center">
+                    <div style="font-size:1.3rem;font-weight:800;color:var(--info)">{{stats.best_team_weight|int if stats.best_team_weight == 0 else "%.1f"|format(stats.best_team_weight)}}</div>
+                    <div style="font-size:.7rem;color:var(--t3)">Best Weight</div>
+                </div>
+                <div style="text-align:center">
+                    <div style="font-size:1.3rem;font-weight:800;color:var(--ok)">{{"%.1f"|format(stats.big_bass)}} lbs</div>
+                    <div style="font-size:.7rem;color:var(--t3)">Big Bass</div>
+                </div>
+            </div>
 
-<!-- Tab Content -->
-<div class="tab-content" id="finishTabsContent">
-{% for year, finishes in stats.year_finishes.items()|sort(reverse=True) %}
-<!-- {{year}} Tab -->
-<div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="year-{{year}}" role="tabpanel" aria-labelledby="year-{{year}}-tab">
-<div class="row text-center g-2 mb-3">
-<div class="col-4"><div class="p-2 rounded medal-gold"><div class="h4 color-gold"><i class="bi bi-trophy"></i></div><div class="h5 color-gold-dark">{{finishes.first}}</div><small class="color-gold-dark">1st</small></div></div>
-<div class="col-4"><div class="p-2 rounded medal-silver"><div class="h4 color-silver"><i class="bi bi-award"></i></div><div class="h5 color-silver-dark">{{finishes.second}}</div><small class="color-silver-dark">2nd</small></div></div>
-<div class="col-4"><div class="p-2 rounded medal-bronze"><div class="h4 color-bronze"><i class="bi bi-award"></i></div><div class="h5 color-bronze">{{finishes.third}}</div><small class="color-bronze">3rd</small></div></div>
-</div>
-<div class="text-center mt-2">
-<div class="text-muted"><small>Tournaments Fished: <strong>{{finishes.tournaments}}</strong></small></div>
-</div>
-</div>
-{% endfor %}
+            <div style="font-size:.78rem;color:var(--ok);font-weight:600;margin-bottom:.6rem"><i class="bi bi-people"></i> Team Finishes</div>
 
-<!-- All Time Tab -->
-<div class="tab-pane fade" id="all-time" role="tabpanel" aria-labelledby="all-time-tab">
-<div class="row text-center g-2 mb-3">
-<div class="col-4"><div class="p-2 rounded medal-gold"><div class="h4 color-gold"><i class="bi bi-trophy"></i></div><div class="h5 color-gold-dark">{{stats.all_time_first}}</div><small class="color-gold-dark">1st</small></div></div>
-<div class="col-4"><div class="p-2 rounded medal-silver"><div class="h4 color-silver"><i class="bi bi-award"></i></div><div class="h5 color-silver-dark">{{stats.all_time_second}}</div><small class="color-silver-dark">2nd</small></div></div>
-<div class="col-4"><div class="p-2 rounded medal-bronze"><div class="h4 color-bronze"><i class="bi bi-award"></i></div><div class="h5 color-bronze">{{stats.all_time_third}}</div><small class="color-bronze">3rd</small></div></div>
-</div>
-</div>
-</div>
+            <!-- Year Tabs -->
+            <div class="pt" id="finishTabs">
+                {% for year in stats.year_finishes.keys()|sort(reverse=True) %}
+                <button class="ptb {% if loop.first %}on{% endif %}" onclick="showFinishTab('year-{{year}}', this)">{{year}}</button>
+                {% endfor %}
+                <button class="ptb" onclick="showFinishTab('all-time', this)">All</button>
+            </div>
 
-</div>
-</div>
+            <!-- Year Tab Content -->
+            {% for year, finishes in stats.year_finishes.items()|sort(reverse=True) %}
+            <div class="finish-tab {% if loop.first %}active{% endif %}" id="year-{{year}}">
+                <div class="medal-row">
+                    <div class="medal m-g"><div class="medal-icon">&#129351;</div><div class="medal-v">{{finishes.first}}</div><div class="medal-l">1st</div></div>
+                    <div class="medal m-s"><div class="medal-icon">&#129352;</div><div class="medal-v">{{finishes.second}}</div><div class="medal-l">2nd</div></div>
+                    <div class="medal m-b"><div class="medal-icon">&#129353;</div><div class="medal-v">{{finishes.third}}</div><div class="medal-l">3rd</div></div>
+                </div>
+                <div style="text-align:center;margin-top:.6rem;font-size:.78rem;color:var(--t3)">Fished: <strong>{{finishes.tournaments}}</strong> tournaments</div>
+            </div>
+            {% endfor %}
+
+            <!-- All-Time Tab -->
+            <div class="finish-tab" id="all-time">
+                <div class="medal-row">
+                    <div class="medal m-g"><div class="medal-icon">&#129351;</div><div class="medal-v">{{stats.all_time_first}}</div><div class="medal-l">1st</div></div>
+                    <div class="medal m-s"><div class="medal-icon">&#129352;</div><div class="medal-v">{{stats.all_time_second}}</div><div class="medal-l">2nd</div></div>
+                    <div class="medal m-b"><div class="medal-icon">&#129353;</div><div class="medal-v">{{stats.all_time_third}}</div><div class="medal-l">3rd</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 </div>
 
@@ -164,18 +176,18 @@
 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 <div class="modal-body">
-<div class="alert alert-danger"><strong>⚠️ Warning:</strong> This will permanently delete your account.</div>
+<div class="alert alert-danger"><strong>Warning:</strong> This will permanently delete your account.</div>
 <p><strong>You will lose:</strong> Account access to the club system</p>
 <p><strong>Tournament results will remain for record-keeping.</strong></p>
 <p><strong>Type "DELETE" to confirm:</strong></p>
 <form method="POST" action="/profile/delete" id="deleteForm">
-                    {{ csrf_token(request) }}
-<input type="text" class="form-control" name="confirm" placeholder="Type DELETE to confirm" required id="deleteConfirm">
+    {{ csrf_token(request) }}
+    <input class="fi" type="text" name="confirm" placeholder="Type DELETE to confirm" required id="deleteConfirm">
 </form>
 </div>
 <div class="modal-footer">
-<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-<button type="submit" form="deleteForm" class="btn btn-danger" id="deleteSubmitBtn" disabled><i class="bi bi-trash me-1"></i>Delete Account</button>
+<button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Cancel</button>
+<button type="submit" form="deleteForm" class="btn-m btn-d" id="deleteSubmitBtn" disabled><i class="bi bi-trash me-1"></i>Delete Account</button>
 </div>
 </div>
 </div>
@@ -184,4 +196,16 @@
 <!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="/static/profile.js"></script>
+<script>
+function showFinishTab(tabId, btn) {
+    document.querySelectorAll('.finish-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('#finishTabs .ptb').forEach(function(b) { b.classList.remove('on'); });
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('on');
+}
+</script>
+<style>
+.finish-tab { display: none; }
+.finish-tab.active { display: block; }
+</style>
 {% endblock %}
