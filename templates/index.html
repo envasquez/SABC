@@ -29,6 +29,39 @@
 {% set next_tournament = active_upcoming[0] if active_upcoming else none %}
 {% set show_completed_tab = current_page > 1 or not upcoming_tournaments %}
 
+<!-- KPI Stat Cards -->
+<div class="sg">
+    <div class="sc c1">
+        <div class="sc-l">Next Tournament</div>
+        {% if next_tournament %}
+        <div class="sc-v v1">{{ next_tournament.date.strftime('%b %d') }}</div>
+        <div class="sc-c"><i class="bi bi-geo-alt"></i> {{ next_tournament.lake_name|default('TBD', true) }}{% if next_tournament.ramp_name %} &mdash; {{ next_tournament.ramp_name }}{% endif %}</div>
+        {% else %}
+        <div class="sc-v v1">&mdash;</div>
+        <div class="sc-c">No upcoming tournaments</div>
+        {% endif %}
+        <i class="bi bi-calendar-event sc-i"></i>
+    </div>
+    <div class="sc c2">
+        <div class="sc-l">Completed</div>
+        <div class="sc-v v2">{{ completed_tournaments|length }}</div>
+        <div class="sc-c">Tournaments this season</div>
+        <i class="bi bi-trophy sc-i"></i>
+    </div>
+    <div class="sc c3">
+        <div class="sc-l">Members</div>
+        <div class="sc-v v3">{{ member_count }}</div>
+        <div class="sc-c">Active members</div>
+        <i class="bi bi-people sc-i"></i>
+    </div>
+    <div class="sc c4">
+        <div class="sc-l">Upcoming</div>
+        <div class="sc-v v4">{{ active_upcoming|length }}</div>
+        <div class="sc-c">Tournaments remaining</div>
+        <i class="bi bi-flag sc-i"></i>
+    </div>
+</div>
+
 <!-- Two-column layout -->
 <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.4rem">
 <!-- Main Content -->

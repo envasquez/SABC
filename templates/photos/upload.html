@@ -4,77 +4,76 @@
 {% block title %}Upload Photo - SABC{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 600px;">
-    <h1 class="mb-4"><i class="bi bi-upload"></i> Upload Photo</h1>
+<div class="sh">
+    <div class="st"><i class="bi bi-upload"></i> Upload Photo</div>
+    <a href="/photos" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-arrow-left"></i> Back to Gallery</a>
+</div>
 
-    {{ alert('success', request.query_params.get('success')) }}
-    {{ alert('danger', request.query_params.get('error')) }}
+{{ alert('success', request.query_params.get('success')) }}
+{{ alert('danger', request.query_params.get('error')) }}
 
-    <div class="card">
-        <div class="card-body">
-            <form method="post" action="/photos/upload" enctype="multipart/form-data" id="uploadForm">
-                {{ csrf_token(request) }}
+<div style="max-width:600px">
+<div class="cc">
+    <div class="ci">
+        <form method="post" action="/photos/upload" enctype="multipart/form-data" id="uploadForm">
+            {{ csrf_token(request) }}
 
-                <div class="mb-3">
-                    <label for="photo" class="form-label">Photo <span class="text-danger">*</span></label>
-                    <input type="file" class="form-control" id="photo" name="photo"
-                           accept=".jpg,.jpeg,.png,.gif,.webp" required>
-                    <div class="form-text">Max 10MB. Formats: JPG, PNG, GIF, WebP</div>
+            <div class="fg">
+                <label class="fl" for="photo">Photo <span style="color:var(--err)">*</span></label>
+                <input type="file" class="fi" id="photo" name="photo"
+                       accept=".jpg,.jpeg,.png,.gif,.webp" required>
+                <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">Max 10MB. Formats: JPG, PNG, GIF, WebP</div>
+            </div>
+
+            <div class="fg">
+                <label class="fl">Preview</label>
+                <div id="previewContainer" style="border:1px solid var(--b0);border-radius:var(--r-md);padding:.75rem;text-align:center;background:var(--bg-base);min-height:150px;display:flex;align-items:center;justify-content:center">
+                    <img id="preview" src="" style="max-height:300px;max-width:100%;display:none;border-radius:var(--r-sm)">
+                    <span id="previewPlaceholder" style="color:var(--t4)">
+                        <i class="bi bi-image" style="font-size:2.5rem;opacity:.4"></i>
+                        <div style="margin-top:.25rem;font-size:.82rem">Select a photo to preview</div>
+                    </span>
                 </div>
+            </div>
 
-                <div class="mb-3">
-                    <label for="preview" class="form-label">Preview</label>
-                    <div id="previewContainer" class="border rounded p-2 text-center bg-dark" style="min-height: 150px;">
-                        <img id="preview" src="" class="img-fluid" style="max-height: 300px; display: none;">
-                        <span id="previewPlaceholder" class="text-secondary">
-                            <i class="bi bi-image display-4"></i>
-                            <p class="mb-0">Select a photo to preview</p>
-                        </span>
-                    </div>
-                </div>
+            <div class="fg">
+                <label class="fl" for="tournament_id">Tournament</label>
+                <select class="fi" id="tournament_id" name="tournament_id">
+                    <option value="">No tournament (general photo)</option>
+                    {% for t in tournament_options %}
+                    <option value="{{ t.id }}">{{ t.name }}</option>
+                    {% endfor %}
+                </select>
+                {% if not user.is_admin %}
+                <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">You can upload up to 2 photos per tournament.</div>
+                {% endif %}
+            </div>
 
-                <div class="mb-3">
-                    <label for="tournament_id" class="form-label">Tournament</label>
-                    <select class="form-select" id="tournament_id" name="tournament_id">
-                        <option value="">No tournament (general photo)</option>
-                        {% for t in tournament_options %}
-                        <option value="{{ t.id }}">{{ t.name }}</option>
-                        {% endfor %}
-                    </select>
-                    <div class="form-text">
-                        {% if not user.is_admin %}
-                        You can upload up to 2 photos per tournament.
-                        {% endif %}
-                    </div>
-                </div>
+            <div class="fg">
+                <label class="fl" for="caption">Caption</label>
+                <input type="text" class="fi" id="caption" name="caption"
+                       maxlength="200" placeholder="Describe your catch...">
+                <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">Optional, max 200 characters</div>
+            </div>
 
-                <div class="mb-3">
-                    <label for="caption" class="form-label">Caption</label>
-                    <input type="text" class="form-control" id="caption" name="caption"
-                           maxlength="200" placeholder="Describe your catch...">
-                    <div class="form-text">Optional, max 200 characters</div>
-                </div>
+            <div style="margin-bottom:1rem">
+                <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.88rem;color:var(--t2)">
+                    <input type="checkbox" id="is_big_bass" name="is_big_bass" value="true" style="accent-color:var(--warn);width:16px;height:16px">
+                    <i class="bi bi-trophy-fill" style="color:var(--warn)"></i> This is a Big Bass catch
+                </label>
+            </div>
 
-                <div class="mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="is_big_bass" name="is_big_bass" value="true">
-                        <label class="form-check-label" for="is_big_bass">
-                            <i class="bi bi-trophy-fill text-warning"></i> This is a Big Bass catch
-                        </label>
-                    </div>
-                </div>
-
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary" id="submitBtn">
-                        <i class="bi bi-upload me-1"></i> Upload Photo
-                    </button>
-                    <a href="/photos" class="btn btn-secondary">
-                        <i class="bi bi-arrow-left me-1"></i> Back to Gallery
-                    </a>
-                </div>
-            </form>
-        </div>
+            <div style="display:flex;gap:.5rem">
+                <button type="submit" class="btn-m btn-p" id="submitBtn">
+                    <i class="bi bi-upload"></i> Upload Photo
+                </button>
+                <a href="/photos" class="btn-m btn-g" style="text-decoration:none">
+                    <i class="bi bi-arrow-left"></i> Back to Gallery
+                </a>
+            </div>
+        </form>
     </div>
+</div>
 </div>
 
 <script>
@@ -88,14 +87,11 @@ document.addEventListener('DOMContentLoaded', function() {
     photoInput.addEventListener('change', function() {
         const file = this.files[0];
         if (file) {
-            // Validate size (10MB)
             if (file.size > 10 * 1024 * 1024) {
                 alert('File is too large. Maximum size is 10MB.');
                 this.value = '';
                 return;
             }
-
-            // Show preview
             const reader = new FileReader();
             reader.onload = function(e) {
                 preview.src = e.target.result;
@@ -111,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     form.addEventListener('submit', function() {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Uploading...';
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" style="margin-right:.25rem"></span> Uploading...';
     });
 });
 </script>

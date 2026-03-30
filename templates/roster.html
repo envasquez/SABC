@@ -4,362 +4,288 @@
 {% block content %}
 <div class="sh"><div class="st"><i class="bi bi-people-fill"></i> 2025 Members</div></div>
 
-<div class="row g-4">
-    <!-- Members Section (Officers first, then alphabetically) -->
-    <div class="col-12">
-        <div class="card shadow-sm">
-            <div class="card-header bg-success text-white">
-                <h4 class="mb-0">
-                    <i class="bi bi-people-fill me-2"></i>2025 Members
-                </h4>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped table-dark">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Phone</th>
-                                <th>Email address</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for member in members %}
-                                {% if member['member'] %}
-                                <tr class="member-row" data-bs-toggle="collapse" data-bs-target="#chart-row-{{ member['id'] }}" style="cursor: pointer;" title="Click to view stats">
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <i class="bi bi-bar-chart-line me-2 expand-icon text-primary" style="transition: transform 0.2s; font-size: 1rem;"></i>
-                                            <span>
-                                                {{ member['name'] }}
-                                                {% if member['officer_positions'] %}
-                                                    {% for position in member['officer_positions'].split(', ') %}
-                                                        <span class="badge bg-info text-dark mb-1 me-1"><i class="bi bi-star-fill me-1"></i>{{ position }}</span>
-                                                    {% endfor %}
-                                                {% endif %}
-                                            </span>
+<!-- Roster Statistics -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.4rem">
+    <div class="cc"><div class="ci" style="text-align:center;padding:1rem">
+        <div style="font-size:1.5rem;font-weight:800;color:var(--ok)">{{ members|selectattr('member', 'equalto', true)|list|length }}</div>
+        <div style="font-size:.75rem;color:var(--t3)">Active Members</div>
+    </div></div>
+    <div class="cc"><div class="ci" style="text-align:center;padding:1rem">
+        <div style="font-size:1.5rem;font-weight:800;color:var(--t3)">{{ members|selectattr('member', 'equalto', false)|list|length }}</div>
+        <div style="font-size:.75rem;color:var(--t3)">Guests</div>
+    </div></div>
+</div>
+
+<!-- Members Section -->
+<div class="cc" style="margin-bottom:1.4rem">
+    <div style="padding:1rem 1.35rem;border-bottom:1px solid var(--b0);display:flex;align-items:center;gap:.5rem">
+        <i class="bi bi-people-fill" style="color:var(--ok)"></i>
+        <span style="font-weight:700;font-size:.95rem;color:var(--t1)">2025 Members</span>
+    </div>
+    <div class="ci" style="padding:0">
+        <table class="mt">
+            <thead><tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Email address</th>
+            </tr></thead>
+            <tbody>
+                {% for member in members %}
+                    {% if member['member'] %}
+                    <tr class="member-row" data-bs-toggle="collapse" data-bs-target="#chart-row-{{ member['id'] }}" style="cursor:pointer" title="Click to view stats">
+                        <td>
+                            <div style="display:flex;align-items:center;gap:.5rem">
+                                <i class="bi bi-bar-chart-line expand-icon" style="color:var(--brand);font-size:.85rem;transition:transform .2s"></i>
+                                <span>
+                                    {{ member['name'] }}
+                                    {% if member['officer_positions'] %}
+                                        {% for position in member['officer_positions'].split(', ') %}
+                                            <span class="tg tg-i" style="margin-left:.25rem"><i class="bi bi-star-fill"></i> {{ position }}</span>
+                                        {% endfor %}
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if member['phone'] %}
+                                {% set phone = member['phone']|replace('+1', '')|replace('-', '')|replace(' ', '')|replace('(', '')|replace(')', '') %}
+                                {% if phone|length == 10 %}
+                                    ({{ phone[0:3] }}) {{ phone[3:6] }}-{{ phone[6:10] }}
+                                {% else %}
+                                    {{ member['phone'] }}
+                                {% endif %}
+                            {% else %}
+                                <span style="color:var(--t4)">-</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ member['email'] }}</td>
+                    </tr>
+                    <!-- Expandable stats row -->
+                    {% set stats = member_stats.get(member['id'], {}) %}
+                    <tr class="collapse chart-row" id="chart-row-{{ member['id'] }}">
+                        <td colspan="3" style="padding:0">
+                            <div style="padding:1rem;background:var(--bg-base)">
+                                <div style="display:grid;grid-template-columns:1fr 2fr;gap:1rem">
+                                    <!-- Stats Card -->
+                                    <div class="cc">
+                                        <div style="padding:.6rem .8rem;border-bottom:1px solid var(--b0)">
+                                            <div style="font-size:.82rem;font-weight:600;color:var(--ok)"><i class="bi bi-trophy" style="margin-right:.35rem"></i>Team Stats</div>
                                         </div>
-                                    </td>
-                                    <td>
-                                        {% if member['phone'] %}
-                                            {% set phone = member['phone']|replace('+1', '')|replace('-', '')|replace(' ', '')|replace('(', '')|replace(')', '') %}
-                                            {% if phone|length == 10 %}
-                                                ({{ phone[0:3] }}) {{ phone[3:6] }}-{{ phone[6:10] }}
-                                            {% else %}
-                                                {{ member['phone'] }}
-                                            {% endif %}
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ member['email'] }}</td>
-                                </tr>
-                                <!-- Expandable stats row -->
-                                {% set stats = member_stats.get(member['id'], {}) %}
-                                <tr class="collapse chart-row" id="chart-row-{{ member['id'] }}">
-                                    <td colspan="3" class="p-0">
-                                        <div class="p-3 bg-dark">
-                                            <div class="row g-3">
-                                                <!-- Stats Card -->
-                                                <div class="col-lg-4">
-                                                    <div class="card border-0 shadow-sm h-100">
-                                                        <div class="card-header bg-success bg-opacity-25 py-2">
-                                                            <h6 class="mb-0"><i class="bi bi-trophy me-2"></i>Team Stats</h6>
+                                        <div class="ci" style="padding:.8rem">
+                                            <!-- Team Totals -->
+                                            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;text-align:center;margin-bottom:.75rem">
+                                                <div>
+                                                    <div style="font-size:1.1rem;font-weight:800;color:var(--brand)">{{ stats.get('team_tournaments', 0) }}</div>
+                                                    <div style="font-size:.65rem;color:var(--t3)">Tournaments</div>
+                                                </div>
+                                                <div>
+                                                    <div style="font-size:1.1rem;font-weight:800;color:var(--info)">{{ "%.1f"|format(stats.get('best_team_weight', 0)) if stats.get('best_team_weight', 0) > 0 else "0" }}</div>
+                                                    <div style="font-size:.65rem;color:var(--t3)">Best Weight</div>
+                                                </div>
+                                                <div>
+                                                    <div style="font-size:1.1rem;font-weight:800;color:var(--ok)">{{ "%.1f"|format(stats.get('big_bass', 0)) }}</div>
+                                                    <div style="font-size:.65rem;color:var(--t3)">Big Bass</div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Year Tabs for Finishes -->
+                                            <div style="font-size:.82rem;font-weight:600;color:var(--ok);margin-bottom:.35rem"><i class="bi bi-people" style="margin-right:.25rem"></i>Team Finishes</div>
+                                            <div class="pt" style="margin-bottom:.5rem;justify-content:center" id="finishes-tabs-{{ member['id'] }}">
+                                                {% for year in stats.get('year_finishes', {}).keys()|sort(reverse=True) %}
+                                                <button class="ptb {% if loop.first %}on{% endif %}" style="padding:.15rem .5rem;font-size:.72rem"
+                                                        data-bs-toggle="pill"
+                                                        data-bs-target="#finishes-{{ member['id'] }}-{{ year }}"
+                                                        type="button">{{ year }}</button>
+                                                {% endfor %}
+                                                <button class="ptb" style="padding:.15rem .5rem;font-size:.72rem"
+                                                        data-bs-toggle="pill"
+                                                        data-bs-target="#finishes-{{ member['id'] }}-alltime"
+                                                        type="button">All</button>
+                                            </div>
+
+                                            <!-- Tab Content -->
+                                            <div class="tab-content">
+                                                {% for year, finishes in stats.get('year_finishes', {}).items()|sort(reverse=True) %}
+                                                <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
+                                                     id="finishes-{{ member['id'] }}-{{ year }}" role="tabpanel">
+                                                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.35rem;text-align:center">
+                                                        <div style="padding:.35rem;border-radius:var(--r-sm);background:color-mix(in srgb,#ffd700 12%,transparent)">
+                                                            <div style="font-size:.85rem;color:#ffd700"><i class="bi bi-trophy"></i></div>
+                                                            <div style="font-size:.9rem;font-weight:700;color:#daa520">{{ finishes.get('first', 0) }}</div>
+                                                            <div style="font-size:.6rem;color:#daa520">1st</div>
                                                         </div>
-                                                        <div class="card-body">
-                                                            <!-- Team Totals -->
-                                                            <div class="row text-center g-2 mb-3">
-                                                                <div class="col-4">
-                                                                    <div class="h4 text-primary mb-0">{{ stats.get('team_tournaments', 0) }}</div>
-                                                                    <small class="text-muted">Tournaments</small>
-                                                                </div>
-                                                                <div class="col-4">
-                                                                    <div class="h4 text-info mb-0">{{ "%.1f"|format(stats.get('best_team_weight', 0)) if stats.get('best_team_weight', 0) > 0 else "0" }}</div>
-                                                                    <small class="text-muted">Best Weight</small>
-                                                                </div>
-                                                                <div class="col-4">
-                                                                    <div class="h4 text-success mb-0">{{ "%.1f"|format(stats.get('big_bass', 0)) }}</div>
-                                                                    <small class="text-muted">Big Bass</small>
-                                                                </div>
-                                                            </div>
-
-                                                            <!-- Year Tabs for Finishes -->
-                                                            <h6 class="text-success mb-2 mt-3"><i class="bi bi-people me-1"></i>Team Finishes</h6>
-                                                            <ul class="nav nav-pills nav-sm mb-2 justify-content-center" role="tablist">
-                                                                {% for year in stats.get('year_finishes', {}).keys()|sort(reverse=True) %}
-                                                                <li class="nav-item" role="presentation">
-                                                                    <button class="nav-link py-1 px-2 {% if loop.first %}active{% endif %}"
-                                                                            data-bs-toggle="pill"
-                                                                            data-bs-target="#finishes-{{ member['id'] }}-{{ year }}"
-                                                                            type="button" role="tab">{{ year }}</button>
-                                                                </li>
-                                                                {% endfor %}
-                                                                <li class="nav-item" role="presentation">
-                                                                    <button class="nav-link py-1 px-2"
-                                                                            data-bs-toggle="pill"
-                                                                            data-bs-target="#finishes-{{ member['id'] }}-alltime"
-                                                                            type="button" role="tab">All</button>
-                                                                </li>
-                                                            </ul>
-
-                                                            <!-- Tab Content -->
-                                                            <div class="tab-content">
-                                                                {% for year, finishes in stats.get('year_finishes', {}).items()|sort(reverse=True) %}
-                                                                <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
-                                                                     id="finishes-{{ member['id'] }}-{{ year }}" role="tabpanel">
-                                                                    <div class="row text-center g-1">
-                                                                        <div class="col-4">
-                                                                            <div class="p-2 rounded medal-gold">
-                                                                                <div class="h5 mb-0 color-gold"><i class="bi bi-trophy"></i></div>
-                                                                                <div class="h6 mb-0 color-gold-dark">{{ finishes.get('first', 0) }}</div>
-                                                                                <small class="color-gold-dark">1st</small>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="col-4">
-                                                                            <div class="p-2 rounded medal-silver">
-                                                                                <div class="h5 mb-0 color-silver"><i class="bi bi-award"></i></div>
-                                                                                <div class="h6 mb-0 color-silver-dark">{{ finishes.get('second', 0) }}</div>
-                                                                                <small class="color-silver-dark">2nd</small>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="col-4">
-                                                                            <div class="p-2 rounded medal-bronze">
-                                                                                <div class="h5 mb-0 color-bronze"><i class="bi bi-award"></i></div>
-                                                                                <div class="h6 mb-0 color-bronze">{{ finishes.get('third', 0) }}</div>
-                                                                                <small class="color-bronze">3rd</small>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="text-center mt-2">
-                                                                        <small class="text-muted">Fished: <strong>{{ finishes.get('tournaments', 0) }}</strong></small>
-                                                                    </div>
-                                                                </div>
-                                                                {% endfor %}
-                                                                <!-- All Time Tab -->
-                                                                <div class="tab-pane fade" id="finishes-{{ member['id'] }}-alltime" role="tabpanel">
-                                                                    <div class="row text-center g-1">
-                                                                        <div class="col-4">
-                                                                            <div class="p-2 rounded medal-gold">
-                                                                                <div class="h5 mb-0 color-gold"><i class="bi bi-trophy"></i></div>
-                                                                                <div class="h6 mb-0 color-gold-dark">{{ stats.get('all_time_first', 0) }}</div>
-                                                                                <small class="color-gold-dark">1st</small>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="col-4">
-                                                                            <div class="p-2 rounded medal-silver">
-                                                                                <div class="h5 mb-0 color-silver"><i class="bi bi-award"></i></div>
-                                                                                <div class="h6 mb-0 color-silver-dark">{{ stats.get('all_time_second', 0) }}</div>
-                                                                                <small class="color-silver-dark">2nd</small>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="col-4">
-                                                                            <div class="p-2 rounded medal-bronze">
-                                                                                <div class="h5 mb-0 color-bronze"><i class="bi bi-award"></i></div>
-                                                                                <div class="h6 mb-0 color-bronze">{{ stats.get('all_time_third', 0) }}</div>
-                                                                                <small class="color-bronze">3rd</small>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
+                                                        <div style="padding:.35rem;border-radius:var(--r-sm);background:color-mix(in srgb,#c0c0c0 12%,transparent)">
+                                                            <div style="font-size:.85rem;color:#c0c0c0"><i class="bi bi-award"></i></div>
+                                                            <div style="font-size:.9rem;font-weight:700;color:#a0a0a0">{{ finishes.get('second', 0) }}</div>
+                                                            <div style="font-size:.6rem;color:#a0a0a0">2nd</div>
+                                                        </div>
+                                                        <div style="padding:.35rem;border-radius:var(--r-sm);background:color-mix(in srgb,#cd7f32 12%,transparent)">
+                                                            <div style="font-size:.85rem;color:#cd7f32"><i class="bi bi-award"></i></div>
+                                                            <div style="font-size:.9rem;font-weight:700;color:#cd7f32">{{ finishes.get('third', 0) }}</div>
+                                                            <div style="font-size:.6rem;color:#cd7f32">3rd</div>
                                                         </div>
                                                     </div>
+                                                    <div style="text-align:center;margin-top:.35rem">
+                                                        <span style="font-size:.7rem;color:var(--t3)">Fished: <strong>{{ finishes.get('tournaments', 0) }}</strong></span>
+                                                    </div>
                                                 </div>
-
-                                                <!-- Chart Card -->
-                                                <div class="col-lg-8">
-                                                    <div class="card border-0 shadow-sm h-100">
-                                                        <div class="card-header bg-primary bg-opacity-25 py-2">
-                                                            <h6 class="mb-0"><i class="bi bi-graph-up me-2"></i>Weight per Tournament</h6>
+                                                {% endfor %}
+                                                <!-- All Time Tab -->
+                                                <div class="tab-pane fade" id="finishes-{{ member['id'] }}-alltime" role="tabpanel">
+                                                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.35rem;text-align:center">
+                                                        <div style="padding:.35rem;border-radius:var(--r-sm);background:color-mix(in srgb,#ffd700 12%,transparent)">
+                                                            <div style="font-size:.85rem;color:#ffd700"><i class="bi bi-trophy"></i></div>
+                                                            <div style="font-size:.9rem;font-weight:700;color:#daa520">{{ stats.get('all_time_first', 0) }}</div>
+                                                            <div style="font-size:.6rem;color:#daa520">1st</div>
                                                         </div>
-                                                        <div class="card-body">
-                                                            <div class="chart-data d-none"
-                                                                 data-member-id="{{ member['id'] }}"
-                                                                 data-monthly-data="{{ member_weights.get(member['id'], {}) | tojson_attr }}"></div>
-                                                            <canvas class="member-weight-chart" id="chart-{{ member['id'] }}" style="max-height: 200px;"></canvas>
+                                                        <div style="padding:.35rem;border-radius:var(--r-sm);background:color-mix(in srgb,#c0c0c0 12%,transparent)">
+                                                            <div style="font-size:.85rem;color:#c0c0c0"><i class="bi bi-award"></i></div>
+                                                            <div style="font-size:.9rem;font-weight:700;color:#a0a0a0">{{ stats.get('all_time_second', 0) }}</div>
+                                                            <div style="font-size:.6rem;color:#a0a0a0">2nd</div>
+                                                        </div>
+                                                        <div style="padding:.35rem;border-radius:var(--r-sm);background:color-mix(in srgb,#cd7f32 12%,transparent)">
+                                                            <div style="font-size:.85rem;color:#cd7f32"><i class="bi bi-award"></i></div>
+                                                            <div style="font-size:.9rem;font-weight:700;color:#cd7f32">{{ stats.get('all_time_third', 0) }}</div>
+                                                            <div style="font-size:.6rem;color:#cd7f32">3rd</div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </td>
-                                </tr>
-                                {% endif %}
+                                    </div>
+
+                                    <!-- Chart Card -->
+                                    <div class="cc">
+                                        <div style="padding:.6rem .8rem;border-bottom:1px solid var(--b0)">
+                                            <div style="font-size:.82rem;font-weight:600;color:var(--brand)"><i class="bi bi-graph-up" style="margin-right:.35rem"></i>Weight per Tournament</div>
+                                        </div>
+                                        <div class="ci" style="padding:.8rem">
+                                            <div class="chart-data d-none"
+                                                 data-member-id="{{ member['id'] }}"
+                                                 data-monthly-data="{{ member_weights.get(member['id'], {}) | tojson_attr }}"></div>
+                                            <canvas class="member-weight-chart" id="chart-{{ member['id'] }}" style="max-height:200px"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Guests Section with Year Tabs -->
+<div class="cc">
+    <div style="padding:1rem 1.35rem;border-bottom:1px solid var(--b0);display:flex;align-items:center;gap:.5rem">
+        <i class="bi bi-person-badge" style="color:var(--t3)"></i>
+        <span style="font-weight:700;font-size:.95rem;color:var(--t1)">Guests</span>
+    </div>
+    <div class="ci">
+        {% set guests = members|selectattr('member', 'equalto', false)|list %}
+        {% if guests|length > 0 %}
+            <!-- Group guests by year -->
+            {% set years_dict = {} %}
+            {% set no_date_guests = [] %}
+            {% for guest in guests %}
+                {% if guest['last_tournament_date'] %}
+                    {% set year = guest['last_tournament_date'].year|string %}
+                    {% if year not in years_dict %}
+                        {% set _ = years_dict.update({year: []}) %}
+                    {% endif %}
+                    {% set _ = years_dict[year].append(guest) %}
+                {% else %}
+                    {% set _ = no_date_guests.append(guest) %}
+                {% endif %}
+            {% endfor %}
+
+            <!-- Sort years in descending order -->
+            {% set sorted_years = years_dict.keys()|list|sort(reverse=true) %}
+
+            <!-- Year Tabs -->
+            <div class="pt" style="margin-bottom:1rem" id="guestTabs">
+                {% for year in sorted_years %}
+                <button class="ptb {% if loop.first %}on{% endif %}" onclick="switchGuestTab('year-{{ year }}', this)">
+                    {{ year }} <span class="tg tg-g" style="margin-left:.25rem">{{ years_dict[year]|length }}</span>
+                </button>
+                {% endfor %}
+                {% if no_date_guests|length > 0 %}
+                <button class="ptb {% if sorted_years|length == 0 %}on{% endif %}" onclick="switchGuestTab('no-date', this)">
+                    Older <span class="tg tg-g" style="margin-left:.25rem">{{ no_date_guests|length }}</span>
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- Tab content -->
+            <div id="guestTabContent">
+                {% for year in sorted_years %}
+                <div class="guest-tab {% if loop.first %}active{% endif %}" id="year-{{ year }}">
+                    <table class="mt">
+                        <thead><tr>
+                            <th>First name</th>
+                            <th>Last name</th>
+                            <th>Email address</th>
+                            <th>Last Tournament</th>
+                        </tr></thead>
+                        <tbody>
+                            {% for guest in years_dict[year]|sort(attribute='last_tournament_date', reverse=true) %}
+                            <tr>
+                                <td>{{ guest['name'].split(' ')[0] }}</td>
+                                <td>{{ guest['name'].split(' ')[-1] }}</td>
+                                <td>{% if guest['email'] %}{{ guest['email'] }}{% else %}<span style="color:var(--t4)">&mdash;</span>{% endif %}</td>
+                                <td>{{ guest['last_tournament_date'] }}</td>
+                            </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
-    </div>
+                {% endfor %}
 
-    <!-- Guests Section with Year Tabs -->
-    <div class="col-12">
-        <div class="card shadow-sm">
-            <div class="card-header bg-secondary text-white">
-                <h4 class="mb-0">
-                    <i class="bi bi-person-badge me-2"></i>Guests
-                </h4>
-            </div>
-            <div class="card-body">
-                {% set guests = members|selectattr('member', 'equalto', false)|list %}
-                {% if guests|length > 0 %}
-                    <!-- Group guests by year -->
-                    {% set years_dict = {} %}
-                    {% set no_date_guests = [] %}
-                    {% for guest in guests %}
-                        {% if guest['last_tournament_date'] %}
-                            {% set year = guest['last_tournament_date'].year|string %}
-                            {% if year not in years_dict %}
-                                {% set _ = years_dict.update({year: []}) %}
-                            {% endif %}
-                            {% set _ = years_dict[year].append(guest) %}
-                        {% else %}
-                            {% set _ = no_date_guests.append(guest) %}
-                        {% endif %}
-                    {% endfor %}
-
-                    <!-- Sort years in descending order -->
-                    {% set sorted_years = years_dict.keys()|list|sort(reverse=true) %}
-
-                    <!-- Nav tabs -->
-                    <ul class="nav nav-tabs" id="guestTabs" role="tablist">
-                        {% for year in sorted_years %}
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link {% if loop.first %}active{% endif %}"
-                                    id="year-{{ year }}-tab"
-                                    data-bs-toggle="tab"
-                                    data-bs-target="#year-{{ year }}"
-                                    type="button"
-                                    role="tab"
-                                    aria-controls="year-{{ year }}"
-                                    aria-selected="{% if loop.first %}true{% else %}false{% endif %}">
-                                {{ year }} <span class="badge bg-dark ms-1">{{ years_dict[year]|length }}</span>
-                            </button>
-                        </li>
-                        {% endfor %}
-                        {% if no_date_guests|length > 0 %}
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link {% if sorted_years|length == 0 %}active{% endif %}"
-                                    id="no-date-tab"
-                                    data-bs-toggle="tab"
-                                    data-bs-target="#no-date"
-                                    type="button"
-                                    role="tab"
-                                    aria-controls="no-date"
-                                    aria-selected="{% if sorted_years|length == 0 %}true{% else %}false{% endif %}">
-                                Older than 2023 <span class="badge bg-dark ms-1">{{ no_date_guests|length }}</span>
-                            </button>
-                        </li>
-                        {% endif %}
-                    </ul>
-
-                    <!-- Tab content -->
-                    <div class="tab-content mt-3" id="guestTabContent">
-                        {% for year in sorted_years %}
-                        <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
-                             id="year-{{ year }}"
-                             role="tabpanel"
-                             aria-labelledby="year-{{ year }}-tab">
-                            <div class="table-responsive">
-                                <table class="table table-striped table-dark">
-                                    <thead>
-                                        <tr>
-                                            <th>First name</th>
-                                            <th>Last name</th>
-                                            <th>Email address</th>
-                                            <th>Last Tournament</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for guest in years_dict[year]|sort(attribute='last_tournament_date', reverse=true) %}
-                                        <tr>
-                                            <td>{{ guest['name'].split(' ')[0] }}</td>
-                                            <td>{{ guest['name'].split(' ')[-1] }}</td>
-                                            <td>
-                                                {% if guest['email'] %}
-                                                    {{ guest['email'] }}
-                                                {% else %}
-                                                    —
-                                                {% endif %}
-                                            </td>
-                                            <td>{{ guest['last_tournament_date'] }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        {% endfor %}
-
-                        {% if no_date_guests|length > 0 %}
-                        <div class="tab-pane fade {% if sorted_years|length == 0 %}show active{% endif %}"
-                             id="no-date"
-                             role="tabpanel"
-                             aria-labelledby="no-date-tab">
-                            <div class="table-responsive">
-                                <table class="table table-striped table-dark">
-                                    <thead>
-                                        <tr>
-                                            <th>First name</th>
-                                            <th>Last name</th>
-                                            <th>Email address</th>
-                                            <th>Last Tournament</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for guest in no_date_guests|sort(attribute='name') %}
-                                        <tr>
-                                            <td>{{ guest['name'].split(' ')[0] }}</td>
-                                            <td>{{ guest['name'].split(' ')[-1] }}</td>
-                                            <td>
-                                                {% if guest['email'] %}
-                                                    {{ guest['email'] }}
-                                                {% else %}
-                                                    —
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                <span class="text-secondary">No recent tournaments</span>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                {% else %}
-                    <div class="text-center text-secondary py-3">
-                        <i class="bi bi-info-circle me-2"></i>
-                        No guest members at this time
-                    </div>
+                {% if no_date_guests|length > 0 %}
+                <div class="guest-tab {% if sorted_years|length == 0 %}active{% endif %}" id="no-date">
+                    <table class="mt">
+                        <thead><tr>
+                            <th>First name</th>
+                            <th>Last name</th>
+                            <th>Email address</th>
+                            <th>Last Tournament</th>
+                        </tr></thead>
+                        <tbody>
+                            {% for guest in no_date_guests|sort(attribute='name') %}
+                            <tr>
+                                <td>{{ guest['name'].split(' ')[0] }}</td>
+                                <td>{{ guest['name'].split(' ')[-1] }}</td>
+                                <td>{% if guest['email'] %}{{ guest['email'] }}{% else %}<span style="color:var(--t4)">&mdash;</span>{% endif %}</td>
+                                <td><span style="color:var(--t4)">No recent tournaments</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
                 {% endif %}
             </div>
-        </div>
+        {% else %}
+            <div style="text-align:center;color:var(--t3);padding:1.5rem 0">
+                <i class="bi bi-info-circle" style="margin-right:.35rem"></i>No guest members at this time
+            </div>
+        {% endif %}
     </div>
 </div>
 
-<!-- Roster Statistics -->
-<div class="row mt-4">
-    <div class="col-md-6">
-        <div class="card bg-success text-white">
-            <div class="card-body text-center">
-                <h3 class="card-title">{{ members|selectattr('member', 'equalto', true)|list|length }}</h3>
-                <p class="card-text">Active Members</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card bg-secondary text-white">
-            <div class="card-body text-center">
-                <h3 class="card-title">{{ members|selectattr('member', 'equalto', false)|list|length }}</h3>
-                <p class="card-text">Guests</p>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+.guest-tab { display:none }
+.guest-tab.active { display:block }
+</style>
+<script>
+function switchGuestTab(paneId, btn) {
+    document.querySelectorAll('.guest-tab').forEach(function(p) { p.classList.remove('active'); });
+    document.getElementById(paneId).classList.add('active');
+    document.querySelectorAll('#guestTabs .ptb').forEach(function(b) { b.classList.remove('on'); });
+    btn.classList.add('on');
+}
+</script>
 
 <!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>

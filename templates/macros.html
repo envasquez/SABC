@@ -29,24 +29,24 @@
 {# Form field macro #}
 {% macro form_field(label, name, type='text', required=False, value='', placeholder='', help_text='', id='', minlength='', maxlength='', rows='4', extra_class='', autocomplete='') %}
 {% set field_id = id or name %}
-<div class="mb-3">
-    <label for="{{ field_id }}" class="form-label">
+<div class="fg">
+    <label for="{{ field_id }}" class="fl">
         {{ label|safe }}
-        {% if required %}<span class="text-danger">*</span>{% endif %}
+        {% if required %}<span style="color:var(--err)">*</span>{% endif %}
     </label>
     {% if type == 'textarea' %}
-        <textarea class="form-control {{ extra_class }}" id="{{ field_id }}" name="{{ name }}"
+        <textarea class="fi {{ extra_class }}" id="{{ field_id }}" name="{{ name }}"
                   placeholder="{{ placeholder }}"
                   {% if rows %}rows="{{ rows }}"{% endif %}
                   {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
                   {% if required %}required{% endif %}>{{ value }}</textarea>
     {% elif type == 'select' %}
-        <select class="form-select {{ extra_class }}" id="{{ field_id }}" name="{{ name }}"
+        <select class="fi {{ extra_class }}" id="{{ field_id }}" name="{{ name }}"
                 {% if required %}required{% endif %}>
             {{ caller() }}
         </select>
     {% else %}
-        <input type="{{ type }}" class="form-control {{ extra_class }}" id="{{ field_id }}"
+        <input type="{{ type }}" class="fi {{ extra_class }}" id="{{ field_id }}"
                name="{{ name }}" value="{{ value }}"
                placeholder="{{ placeholder }}"
                {% if minlength %}minlength="{{ minlength }}"{% endif %}
@@ -55,20 +55,20 @@
                {% if required %}required{% endif %}>
     {% endif %}
     {% if help_text %}
-        <div class="form-text">{{ help_text|safe }}</div>
+        <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">{{ help_text|safe }}</div>
     {% endif %}
 </div>
 {% endmacro %}
 
 {# Card macro #}
-{% macro card(title='', header_class='bg-primary text-white', show_header=True) %}
-<div class="card shadow-sm mb-4">
+{% macro card(title='', header_class='', show_header=True) %}
+<div class="cc" style="margin-bottom:1.4rem">
     {% if show_header and title %}
-    <div class="card-header {{ header_class }}">
-        <h5 class="mb-0">{{ title }}</h5>
+    <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
+        <div style="font-size:.88rem;font-weight:600;color:var(--t1)">{{ title }}</div>
     </div>
     {% endif %}
-    <div class="card-body">
+    <div class="ci">
         {{ caller() }}
     </div>
 </div>
@@ -78,9 +78,9 @@
 {% macro modal(id, title, size='') %}
 <div class="modal fade" id="{{ id }}" tabindex="-1" aria-labelledby="{{ id }}-label" aria-hidden="true">
     <div class="modal-dialog {% if size %}modal-{{ size }}{% endif %}">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="{{ id }}-label">{{ title }}</h5>
+        <div class="modal-content" style="background:var(--bg-surface);border:1px solid var(--b1)">
+            <div class="modal-header" style="border-bottom:1px solid var(--b0)">
+                <h5 class="modal-title" id="{{ id }}-label" style="font-size:.95rem;font-weight:600">{{ title }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -91,18 +91,19 @@
 </div>
 {% endmacro %}
 
-{# Badge macro #}
+{# Badge macro — maps to tg classes #}
 {% macro badge(text, color='primary', icon='') %}
-<span class="badge bg-{{ color }}">
-    {% if icon %}<i class="bi bi-{{ icon }} me-1" aria-hidden="true"></i>{% endif %}
+{% set tg_map = {'primary': 'tg-p', 'success': 'tg-s', 'warning': 'tg-w', 'danger': 'tg-d', 'info': 'tg-i', 'secondary': 'tg-g'} %}
+<span class="tg {{ tg_map.get(color, 'tg-g') }}">
+    {% if icon %}<i class="bi bi-{{ icon }}" style="margin-right:.2rem"></i>{% endif %}
     {{ text }}
 </span>
 {% endmacro %}
 
 {# Officer badge macro #}
 {% macro officer_badge(position) %}
-<span class="badge bg-info text-dark mb-1 me-1">
-    <i class="bi bi-star-fill me-1" aria-hidden="true"></i>{{ position }}
+<span class="tg tg-i" style="margin-right:.25rem">
+    <i class="bi bi-star-fill" style="margin-right:.2rem"></i>{{ position }}
 </span>
 {% endmacro %}
 
@@ -117,40 +118,42 @@
 
 {# Stat card macro #}
 {% macro stat_card(icon, title, value, color='primary') %}
-<div class="card bg-{{ color }} text-white">
-    <div class="card-body">
-        <div class="d-flex align-items-center">
-            <i class="bi bi-{{ icon }} fs-1 me-3" aria-hidden="true"></i>
-            <div>
-                <h5 class="card-title mb-0" style="color: white;">{{ title }}</h5>
-                <h3 class="mb-0" style="color: white; font-weight: bold;">{{ value }}</h3>
-            </div>
-        </div>
+{% set color_map = {'primary': '--brand', 'success': '--ok', 'warning': '--warn', 'danger': '--err', 'info': '--info'} %}
+{% set css_color = color_map.get(color, '--brand') %}
+<div class="cc"><div class="ci" style="display:flex;align-items:center;gap:.75rem;padding:1rem">
+    <i class="bi bi-{{ icon }}" style="font-size:1.8rem;color:var({{ css_color }});opacity:.7"></i>
+    <div>
+        <div style="font-size:.78rem;color:var(--t3)">{{ title }}</div>
+        <div style="font-size:1.5rem;font-weight:800;color:var(--t1)">{{ value }}</div>
     </div>
-</div>
+</div></div>
 {% endmacro %}
 
 {# Delete confirmation modal macro #}
 {% macro delete_modal(modal_id, title, item_name_id, confirm_button_id, confirm_input_id='deleteConfirmInput') %}
 <div class="modal fade" id="{{ modal_id }}" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>{{ title }}</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-content" style="background:var(--bg-surface);border:1px solid var(--b1)">
+            <div class="modal-header" style="background:var(--err-m);border-bottom:1px solid var(--b0)">
+                <h5 class="modal-title" style="font-size:.95rem;font-weight:600;color:var(--err)"><i class="bi bi-exclamation-triangle" style="margin-right:.35rem"></i>{{ title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                {{ alert('danger', '⚠️ Warning: This action cannot be undone.', False) }}
-                <p>You are about to permanently delete:</p>
-                <p><strong id="{{ item_name_id }}"></strong></p>
+                <div style="padding:.75rem 1rem;border-radius:var(--r-md);background:var(--err-m);color:var(--err);font-size:.85rem;margin-bottom:1rem">
+                    <strong>Warning:</strong> This action cannot be undone.
+                </div>
+                <p style="color:var(--t2);font-size:.88rem">You are about to permanently delete:</p>
+                <p><strong id="{{ item_name_id }}" style="color:var(--t1)"></strong></p>
                 {{ caller() }}
-                <p class="mt-3"><strong>Type "DELETE" to confirm:</strong></p>
-                <input type="text" class="form-control" id="{{ confirm_input_id }}" placeholder="Type DELETE to confirm" autocomplete="off">
+                <div class="fg" style="margin-top:1rem">
+                    <label class="fl">Type "DELETE" to confirm:</label>
+                    <input type="text" class="fi" id="{{ confirm_input_id }}" placeholder="Type DELETE to confirm" autocomplete="off">
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="{{ confirm_button_id }}" disabled>
-                    <i class="bi bi-trash me-1"></i>{{ title }}
+            <div class="modal-footer" style="border-top:1px solid var(--b0)">
+                <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-m btn-d" id="{{ confirm_button_id }}" disabled>
+                    <i class="bi bi-trash"></i> {{ title }}
                 </button>
             </div>
         </div>
@@ -158,10 +161,9 @@
 </div>
 {% endmacro %}
 
-{# Data table macro - creates responsive table with header #}
-{% macro data_table(headers, table_class='table-hover', id='', responsive=true) %}
-{% if responsive %}<div class="table-responsive">{% endif %}
-<table class="table {{ table_class }}"{% if id %} id="{{ id }}"{% endif %}>
+{# Data table macro #}
+{% macro data_table(headers, table_class='', id='', responsive=true) %}
+<table class="mt"{% if id %} id="{{ id }}"{% endif %}>
     <thead>
         <tr>
             {% for header in headers %}
@@ -173,7 +175,6 @@
         {{ caller() }}
     </tbody>
 </table>
-{% if responsive %}</div>{% endif %}
 {% endmacro %}
 
 {# Time select options macro - generates time options for dropdowns #}
@@ -192,52 +193,44 @@
 
 {# Tournament info row - reusable time/fee/type display #}
 {% macro tournament_info_row(tournament) %}
-<div class="row g-3 mb-3">
-    <div class="col-6 col-md-3">
-        <div class="text-center">
-            {% if tournament.lake_display_name and tournament.start_time %}
-                <i class="bi bi-sunrise text-warning mb-1 fs-4" aria-hidden="true"></i>
-                <div class="small text-secondary">Start</div>
-                <div class="fw-semibold">{{ tournament.start_time | time_format }}</div>
-            {% else %}
-                <i class="bi bi-sunrise text-secondary mb-1 fs-4" aria-hidden="true"></i>
-                <div class="small text-secondary">Start</div>
-                <div class="fw-semibold text-secondary">TBD <i class="bi bi-question-circle-fill ms-1" aria-hidden="true"></i></div>
-            {% endif %}
-        </div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1rem">
+    <div style="text-align:center">
+        {% if tournament.lake_display_name and tournament.start_time %}
+            <i class="bi bi-sunrise" style="color:var(--warn);font-size:1.25rem;display:block;margin-bottom:.2rem"></i>
+            <div style="font-size:.75rem;color:var(--t3)">Start</div>
+            <div style="font-weight:600;font-size:.88rem">{{ tournament.start_time | time_format }}</div>
+        {% else %}
+            <i class="bi bi-sunrise" style="color:var(--t4);font-size:1.25rem;display:block;margin-bottom:.2rem"></i>
+            <div style="font-size:.75rem;color:var(--t3)">Start</div>
+            <div style="font-weight:600;color:var(--t4)">TBD</div>
+        {% endif %}
     </div>
-    <div class="col-6 col-md-3">
-        <div class="text-center">
-            {% if tournament.lake_display_name and tournament.end_time %}
-                <i class="bi bi-clipboard-data text-primary mb-1 fs-4" aria-hidden="true"></i>
-                <div class="small text-secondary">Weigh-in</div>
-                <div class="fw-semibold">{{ tournament.end_time | time_format }}</div>
-            {% else %}
-                <i class="bi bi-clipboard-data text-secondary mb-1 fs-4" aria-hidden="true"></i>
-                <div class="small text-secondary">Weigh-in</div>
-                <div class="fw-semibold text-secondary">TBD <i class="bi bi-question-circle-fill ms-1" aria-hidden="true"></i></div>
-            {% endif %}
-        </div>
+    <div style="text-align:center">
+        {% if tournament.lake_display_name and tournament.end_time %}
+            <i class="bi bi-clipboard-data" style="color:var(--brand);font-size:1.25rem;display:block;margin-bottom:.2rem"></i>
+            <div style="font-size:.75rem;color:var(--t3)">Weigh-in</div>
+            <div style="font-weight:600;font-size:.88rem">{{ tournament.end_time | time_format }}</div>
+        {% else %}
+            <i class="bi bi-clipboard-data" style="color:var(--t4);font-size:1.25rem;display:block;margin-bottom:.2rem"></i>
+            <div style="font-size:.75rem;color:var(--t3)">Weigh-in</div>
+            <div style="font-weight:600;color:var(--t4)">TBD</div>
+        {% endif %}
     </div>
-    <div class="col-6 col-md-3">
-        <div class="text-center">
-            <i class="bi bi-cash-coin text-success mb-1 fs-4" aria-hidden="true"></i>
-            <div class="small text-secondary">Entry Fee</div>
-            <div class="fw-semibold">${{ "%.0f"|format(tournament.entry_fee) }}</div>
-        </div>
+    <div style="text-align:center">
+        <i class="bi bi-cash-coin" style="color:var(--ok);font-size:1.25rem;display:block;margin-bottom:.2rem"></i>
+        <div style="font-size:.75rem;color:var(--t3)">Entry Fee</div>
+        <div style="font-weight:600;font-size:.88rem">${{ "%.0f"|format(tournament.entry_fee) }}</div>
     </div>
-    <div class="col-6 col-md-3">
-        <div class="text-center">
-            {% if tournament.is_team %}
-                <i class="bi bi-people-fill text-info mb-1 fs-4" aria-hidden="true"></i>
-                <div class="small text-secondary">Type</div>
-                <div class="fw-semibold">Team</div>
-            {% else %}
-                <i class="bi bi-person-fill text-secondary mb-1 fs-4" aria-hidden="true"></i>
-                <div class="small text-secondary">Type</div>
-                <div class="fw-semibold">Individual</div>
-            {% endif %}
-        </div>
+    <div style="text-align:center">
+        {% if tournament.is_team %}
+            <i class="bi bi-people-fill" style="color:var(--info);font-size:1.25rem;display:block;margin-bottom:.2rem"></i>
+            <div style="font-size:.75rem;color:var(--t3)">Type</div>
+            <div style="font-weight:600;font-size:.88rem">Team</div>
+        {% else %}
+            <i class="bi bi-person-fill" style="color:var(--t3);font-size:1.25rem;display:block;margin-bottom:.2rem"></i>
+            <div style="font-size:.75rem;color:var(--t3)">Type</div>
+            <div style="font-weight:600;font-size:.88rem">Individual</div>
+        {% endif %}
     </div>
 </div>
 {% endmacro %}
@@ -274,12 +267,12 @@
 
 {# Tournament description row #}
 {% macro tournament_description_row(tournament) %}
-<div class="d-flex justify-content-between align-items-center mb-2">
-    <h6 class="text-secondary mb-0">{{ tournament.name }}{% if tournament.description %} | {{ tournament.description[:200] | nl2br }}{% endif %} - {{ tournament.date|date_format("mm-dd-yyyy") }}</h6>
-    <div>
-        <span class="badge bg-secondary me-2">{{ tournament.fish_limit }} fish/{{ tournament.limit_type }}</span>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+    <div style="font-size:.85rem;color:var(--t3)">{{ tournament.name }}{% if tournament.description %} | {{ tournament.description[:200] | nl2br }}{% endif %} - {{ tournament.date|date_format("mm-dd-yyyy") }}</div>
+    <div style="display:flex;gap:.35rem;flex-shrink:0">
+        <span class="tg tg-g">{{ tournament.fish_limit }} fish/{{ tournament.limit_type }}</span>
         {% if tournament.aoy_points %}
-            <span class="badge bg-info">AoY Points</span>
+            <span class="tg tg-i">AoY Points</span>
         {% endif %}
     </div>
 </div>
@@ -287,12 +280,12 @@
 
 {# Location TBD placeholder #}
 {% macro location_tbd_placeholder() %}
-<div class="mb-3">
-    <div class="bg-white border border-2 border-dark rounded d-flex align-items-center justify-content-center h-200">
-        <div class="text-center">
-            <i class="bi bi-geo-alt fs-1 text-dark" aria-hidden="true"></i>
-            <div class="fw-bold fs-4 text-dark">Location TBD</div>
-            <div class="mt-2 text-dark">Will be determined by poll vote</div>
+<div style="margin-bottom:1rem">
+    <div style="background:var(--bg-elevated);border:1px solid var(--b1);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;padding:2rem;min-height:150px">
+        <div style="text-align:center">
+            <i class="bi bi-geo-alt" style="font-size:2rem;color:var(--t4);display:block;margin-bottom:.5rem"></i>
+            <div style="font-weight:700;font-size:1.1rem;color:var(--t2)">Location TBD</div>
+            <div style="font-size:.85rem;color:var(--t3);margin-top:.25rem">Will be determined by poll vote</div>
         </div>
     </div>
 </div>
@@ -301,65 +294,50 @@
 {# Seasonal tournament history card macro - detailed version #}
 {% macro seasonal_history_card(seasonal_history) %}
 {% if seasonal_history and seasonal_history|length > 0 %}
-<div class="card border-info">
-    <div class="card-header bg-info text-white py-2">
-        <h6 class="mb-0">
-            <i class="bi bi-calendar3 me-1"></i>
-            {{ seasonal_history[0].month_name }} Tournament History
-        </h6>
+<div class="cc" style="margin-top:1rem">
+    <div style="padding:.6rem .8rem;border-bottom:1px solid var(--b0)">
+        <div style="font-size:.82rem;font-weight:600;color:var(--info)"><i class="bi bi-calendar3" style="margin-right:.25rem"></i> {{ seasonal_history[0].month_name }} Tournament History</div>
     </div>
-    <div class="card-body p-3">
-        <div class="row g-2">
+    <div class="ci">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
             {% for hist in seasonal_history %}
-            <div class="col-md-6">
-                <div class="card bg-dark border-secondary h-100">
-                    <div class="card-body p-3">
-                        <h6 class="card-title mb-2">
-                            <a href="/tournaments/{{ hist.tournament_id }}" class="text-info text-decoration-none">
-                                {{ hist.month_name }} {{ hist.year }}
-                                <small class="text-muted">({{ hist.date.strftime('%m/%d') }})</small>
-                                <i class="bi bi-box-arrow-up-right small ms-1"></i>
-                            </a>
-                        </h6>
-                        <p class="mb-2 small">
-                            <i class="bi bi-geo-alt text-success"></i>
-                            <strong>{{ hist.lake_name }}</strong>
-                            {% if hist.ramp_name != 'TBD' %}
-                                <br><span class="text-muted ms-3">{{ hist.ramp_name }}</span>
-                            {% endif %}
-                            {% if hist.start_time and hist.end_time %}
-                                <br><span class="text-muted ms-3">
-                                    <i class="bi bi-clock"></i>
-                                    {{ hist.start_time | time_format }} - {{ hist.end_time | time_format }}
-                                </span>
-                            {% endif %}
-                        </p>
-
-                        <div class="row g-2 small">
-                            <div class="col-4">
-                                <i class="bi bi-people text-primary"></i>
-                                {{ hist.num_anglers }} anglers
-                            </div>
-                            <div class="col-4">
-                                <i class="bi bi-trophy text-warning"></i>
-                                {{ hist.num_limits }} limits
-                            </div>
-                            <div class="col-4 {% if hist.num_zeros > 0 %}text-danger{% else %}text-muted{% endif %}">
-                                <i class="bi bi-x-circle"></i>
-                                {{ hist.num_zeros }} zero{{ 's' if hist.num_zeros != 1 else '' }}
-                            </div>
-                            <div class="col-12">
-                                <i class="bi bi-graph-up text-success"></i>
-                                <strong>Top 3:</strong>
-                                {% if hist.top_3_weights|length > 0 %}
-                                    {% for weight in hist.top_3_weights %}
-                                        {{ "%.1f"|format(weight) }}{% if not loop.last %}, {% endif %}
-                                    {% endfor %} lbs
-                                {% else %}
-                                    N/A
-                                {% endif %}
-                            </div>
-                        </div>
+            <div class="cc">
+                <div class="ci" style="padding:.75rem">
+                    <div style="font-size:.88rem;font-weight:600;margin-bottom:.35rem">
+                        <a href="/tournaments/{{ hist.tournament_id }}" style="color:var(--info);text-decoration:none">
+                            {{ hist.month_name }} {{ hist.year }}
+                            <span style="font-size:.75rem;color:var(--t4)">({{ hist.date.strftime('%m/%d') }})</span>
+                            <i class="bi bi-box-arrow-up-right" style="font-size:.7rem;margin-left:.2rem"></i>
+                        </a>
+                    </div>
+                    <div style="font-size:.82rem;margin-bottom:.35rem">
+                        <i class="bi bi-geo-alt" style="color:var(--ok)"></i>
+                        <strong>{{ hist.lake_name }}</strong>
+                        {% if hist.ramp_name != 'TBD' %}
+                            <br><span style="color:var(--t4);margin-left:1rem">{{ hist.ramp_name }}</span>
+                        {% endif %}
+                        {% if hist.start_time and hist.end_time %}
+                            <br><span style="color:var(--t4);margin-left:1rem">
+                                <i class="bi bi-clock"></i>
+                                {{ hist.start_time | time_format }} - {{ hist.end_time | time_format }}
+                            </span>
+                        {% endif %}
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.25rem;font-size:.78rem">
+                        <div><i class="bi bi-people" style="color:var(--brand)"></i> {{ hist.num_anglers }} anglers</div>
+                        <div><i class="bi bi-trophy" style="color:var(--warn)"></i> {{ hist.num_limits }} limits</div>
+                        <div style="color:{% if hist.num_zeros > 0 %}var(--err){% else %}var(--t4){% endif %}"><i class="bi bi-x-circle"></i> {{ hist.num_zeros }} zero{{ 's' if hist.num_zeros != 1 else '' }}</div>
+                    </div>
+                    <div style="font-size:.78rem;margin-top:.25rem">
+                        <i class="bi bi-graph-up" style="color:var(--ok)"></i>
+                        <strong>Top 3:</strong>
+                        {% if hist.top_3_weights|length > 0 %}
+                            {% for weight in hist.top_3_weights %}
+                                {{ "%.1f"|format(weight) }}{% if not loop.last %}, {% endif %}
+                            {% endfor %} lbs
+                        {% else %}
+                            N/A
+                        {% endif %}
                     </div>
                 </div>
             </div>

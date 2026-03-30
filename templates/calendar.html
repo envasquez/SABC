@@ -2,6 +2,65 @@
 {% block title %}Calendar - South Austin Bass Club{% endblock %}
 {% block content %}
 
+<style>
+/* Calendar-specific styles */
+.cal-tab { display: none; }
+.cal-tab.active { display: block; }
+
+.cal-grid {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+.cal-grid th {
+    font-size: .65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--t4);
+    text-align: center;
+    padding: 2px 0;
+    width: 14.28%;
+}
+.cal-grid td {
+    font-size: .72rem;
+    text-align: center;
+    padding: 0;
+    height: 22px;
+    line-height: 22px;
+    color: var(--t2);
+    border-radius: 3px;
+}
+.cal-grid td.cal-ev {
+    cursor: pointer;
+    color: #fff;
+    font-weight: 600;
+    transition: filter 0.15s ease;
+}
+.cal-grid td.cal-ev:hover {
+    filter: brightness(1.2);
+}
+.cal-grid td.cal-sabc { background: var(--brand); }
+.cal-grid td.cal-club { background: var(--ok); }
+.cal-grid td.cal-other { background: var(--warn); color: var(--bg-base); }
+.cal-grid td.cal-holiday { background: var(--err); }
+
+/* Responsive month grid */
+.cal-months {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .6rem;
+}
+@media (max-width: 991px) {
+    .cal-months { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 767px) {
+    .cal-months { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 479px) {
+    .cal-months { grid-template-columns: 1fr; }
+}
+</style>
+
 <!-- Data passed to JavaScript -->
 <div id="calendar-data"
      data-current-events="{{ current_event_details_json | e }}"
@@ -11,193 +70,161 @@
 <div class="sh"><div class="st"><i class="bi bi-calendar3"></i> Club Calendar</div></div>
 
 <!-- Year Tabs -->
-<ul class="nav nav-tabs mb-3" id="yearTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="current-year-tab" data-bs-toggle="tab" data-bs-target="#current-year" type="button" role="tab" aria-controls="current-year" aria-selected="true">
-            {{ current_year }}
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="next-year-tab" data-bs-toggle="tab" data-bs-target="#next-year" type="button" role="tab" aria-controls="next-year" aria-selected="false">
-            {{ next_year }}
-        </button>
-    </li>
-</ul>
+<div class="pt" id="yearTabs" style="margin-bottom:1rem">
+    <button class="ptb on" onclick="switchCalTab('current-year', this)">{{ current_year }}</button>
+    <button class="ptb" onclick="switchCalTab('next-year', this)">{{ next_year }}</button>
+</div>
 
-<!-- Tab Content -->
-<div class="tab-content" id="yearTabContent">
-    <!-- Current Year Tab -->
-    <div class="tab-pane fade show active" id="current-year" role="tabpanel" aria-labelledby="current-year-tab">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white text-center">
-                <h4 class="mb-0">{{ current_year }} Calendar</h4>
-            </div>
-            <div class="card-body">
-                <div class="row g-2">
-                    {% for m in current_calendar_data %}
-                    {% set month_num = loop.index %}
-                    <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
-                        <div class="card h-100">
-                            <div class="card-header bg-secondary text-light text-center py-1">
-                                <small class="fw-bold">{{m[0]}}</small>
-                            </div>
-                            <div class="card-body p-1">
-                                <table class="table table-sm mb-0 small table-dark">
-                                    <thead>
-                                        <tr>
-                                            {% for d in ['S','M','T','W','T','F','S'] %}
-                                            <th class="text-center p-0" style="width:14%;">{{d}}</th>
-                                            {% endfor %}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for w in m[1] %}
-                                        <tr>
-                                            {% for d in w %}
-                                            <td class="text-center p-0 {% if '†' in d %}bg-primary text-white calendar-event{% elif '§' in d %}bg-success text-white calendar-event{% elif '‡' in d %}bg-warning text-dark calendar-event{% elif '*' in d %}bg-danger text-white calendar-event{% endif %}"
-                                                style="height:20px;line-height:20px;{% if '†' in d or '§' in d or '‡' in d or '*' in d %}cursor:pointer;{% endif %}"
-                                                {% if '†' in d or '§' in d or '‡' in d or '*' in d %}
-                                                data-year="{{ current_year }}"
-                                                data-month="{{ month_num }}"
-                                                data-day="{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}"
-                                                onclick="showEventDetails(this)"
-                                                {% endif %}>
-                                                {% if d %}{{d.replace('†','').replace('§','').replace('‡','').replace('*','')}}{% endif %}
-                                            </td>
-                                            {% endfor %}
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+<!-- Current Year Tab -->
+<div class="cal-tab active" id="current-year">
+    <div class="cc">
+        <div style="text-align:center;padding:.6rem;background:var(--bg-elevated);border-bottom:1px solid var(--b0);font-weight:700;color:var(--t1)">{{ current_year }} Calendar</div>
+        <div style="padding:.75rem">
+            <div class="cal-months">
+                {% for m in current_calendar_data %}
+                {% set month_num = loop.index %}
+                <div class="cc" style="border-radius:var(--r-md)">
+                    <div style="text-align:center;padding:.4rem;background:var(--bg-elevated);border-bottom:1px solid var(--b0);font-size:.78rem;font-weight:700;color:var(--t2)">{{ m[0] }}</div>
+                    <div style="padding:.35rem">
+                        <table class="cal-grid">
+                            <thead>
+                                <tr>
+                                    {% for d in ['S','M','T','W','T','F','S'] %}
+                                    <th>{{ d }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for w in m[1] %}
+                                <tr>
+                                    {% for d in w %}
+                                    <td class="{% if '†' in d %}cal-ev cal-sabc{% elif '§' in d %}cal-ev cal-club{% elif '‡' in d %}cal-ev cal-other{% elif '*' in d %}cal-ev cal-holiday{% endif %}"
+                                        {% if '†' in d or '§' in d or '‡' in d or '*' in d %}
+                                        data-year="{{ current_year }}"
+                                        data-month="{{ month_num }}"
+                                        data-day="{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}"
+                                        onclick="showEventDetails(this)"
+                                        {% endif %}>
+                                        {% if d %}{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}{% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
-                    {% endfor %}
                 </div>
-            </div>
-            <div class="card-footer text-center">
-                <div class="row">
-                    {% if 'sabc_tournament' in event_types_present %}
-                    <div class="col">
-                        <span class="badge bg-primary me-2">&nbsp;</span>SABC Tournaments
-                    </div>
-                    {% endif %}
-                    {% if 'other_tournament' in event_types_present %}
-                    <div class="col">
-                        <span class="badge bg-warning text-dark me-2">&nbsp;</span>Other Tournaments
-                    </div>
-                    {% endif %}
-                    {% if 'holiday' in event_types_present %}
-                    <div class="col">
-                        <span class="badge bg-danger me-2">&nbsp;</span>Holidays
-                    </div>
-                    {% endif %}
-                    {% if 'club_event' in event_types_present %}
-                    <div class="col">
-                        <span class="badge bg-success me-2">&nbsp;</span>Club Events
-                    </div>
-                    {% endif %}
-                </div>
+                {% endfor %}
             </div>
         </div>
-    </div>
-
-    <!-- Next Year Tab -->
-    <div class="tab-pane fade" id="next-year" role="tabpanel" aria-labelledby="next-year-tab">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white text-center">
-                <h4 class="mb-0">{{ next_year }} Calendar</h4>
-            </div>
-            <div class="card-body">
-                <div class="row g-2">
-                    {% for m in next_calendar_data %}
-                    {% set month_num = loop.index %}
-                    <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
-                        <div class="card h-100">
-                            <div class="card-header bg-secondary text-light text-center py-1">
-                                <small class="fw-bold">{{m[0]}}</small>
-                            </div>
-                            <div class="card-body p-1">
-                                <table class="table table-sm mb-0 small table-dark">
-                                    <thead>
-                                        <tr>
-                                            {% for d in ['S','M','T','W','T','F','S'] %}
-                                            <th class="text-center p-0" style="width:14%;">{{d}}</th>
-                                            {% endfor %}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for w in m[1] %}
-                                        <tr>
-                                            {% for d in w %}
-                                            <td class="text-center p-0 {% if '†' in d %}bg-primary text-white calendar-event{% elif '§' in d %}bg-success text-white calendar-event{% elif '‡' in d %}bg-warning text-dark calendar-event{% elif '*' in d %}bg-danger text-white calendar-event{% endif %}"
-                                                style="height:20px;line-height:20px;{% if '†' in d or '§' in d or '‡' in d or '*' in d %}cursor:pointer;{% endif %}"
-                                                {% if '†' in d or '§' in d or '‡' in d or '*' in d %}
-                                                data-year="{{ next_year }}"
-                                                data-month="{{ month_num }}"
-                                                data-day="{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}"
-                                                onclick="showEventDetails(this)"
-                                                {% endif %}>
-                                                {% if d %}{{d.replace('†','').replace('§','').replace('‡','').replace('*','')}}{% endif %}
-                                            </td>
-                                            {% endfor %}
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            <div class="card-footer text-center">
-                <div class="row">
-                    {% if 'sabc_tournament' in event_types_present %}
-                    <div class="col">
-                        <span class="badge bg-primary me-2">&nbsp;</span>SABC Tournaments
-                    </div>
-                    {% endif %}
-                    {% if 'other_tournament' in event_types_present %}
-                    <div class="col">
-                        <span class="badge bg-warning text-dark me-2">&nbsp;</span>Other Tournaments
-                    </div>
-                    {% endif %}
-                    {% if 'holiday' in event_types_present %}
-                    <div class="col">
-                        <span class="badge bg-danger me-2">&nbsp;</span>Holidays
-                    </div>
-                    {% endif %}
-                    {% if 'club_event' in event_types_present %}
-                    <div class="col">
-                        <span class="badge bg-success me-2">&nbsp;</span>Club Events
-                    </div>
-                    {% endif %}
-                </div>
+        <!-- Legend -->
+        <div style="padding:.6rem .75rem;border-top:1px solid var(--b0)">
+            <div style="display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap">
+                {% if 'sabc_tournament' in event_types_present %}
+                <span style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--t2)"><span style="width:14px;height:14px;border-radius:3px;background:var(--brand);display:inline-block"></span> SABC Tournaments</span>
+                {% endif %}
+                {% if 'other_tournament' in event_types_present %}
+                <span style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--t2)"><span style="width:14px;height:14px;border-radius:3px;background:var(--warn);display:inline-block"></span> Other Tournaments</span>
+                {% endif %}
+                {% if 'holiday' in event_types_present %}
+                <span style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--t2)"><span style="width:14px;height:14px;border-radius:3px;background:var(--err);display:inline-block"></span> Holidays</span>
+                {% endif %}
+                {% if 'club_event' in event_types_present %}
+                <span style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--t2)"><span style="width:14px;height:14px;border-radius:3px;background:var(--ok);display:inline-block"></span> Club Events</span>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
-<!-- Event Details Modal -->
+<!-- Next Year Tab -->
+<div class="cal-tab" id="next-year">
+    <div class="cc">
+        <div style="text-align:center;padding:.6rem;background:var(--bg-elevated);border-bottom:1px solid var(--b0);font-weight:700;color:var(--t1)">{{ next_year }} Calendar</div>
+        <div style="padding:.75rem">
+            <div class="cal-months">
+                {% for m in next_calendar_data %}
+                {% set month_num = loop.index %}
+                <div class="cc" style="border-radius:var(--r-md)">
+                    <div style="text-align:center;padding:.4rem;background:var(--bg-elevated);border-bottom:1px solid var(--b0);font-size:.78rem;font-weight:700;color:var(--t2)">{{ m[0] }}</div>
+                    <div style="padding:.35rem">
+                        <table class="cal-grid">
+                            <thead>
+                                <tr>
+                                    {% for d in ['S','M','T','W','T','F','S'] %}
+                                    <th>{{ d }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for w in m[1] %}
+                                <tr>
+                                    {% for d in w %}
+                                    <td class="{% if '†' in d %}cal-ev cal-sabc{% elif '§' in d %}cal-ev cal-club{% elif '‡' in d %}cal-ev cal-other{% elif '*' in d %}cal-ev cal-holiday{% endif %}"
+                                        {% if '†' in d or '§' in d or '‡' in d or '*' in d %}
+                                        data-year="{{ next_year }}"
+                                        data-month="{{ month_num }}"
+                                        data-day="{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}"
+                                        onclick="showEventDetails(this)"
+                                        {% endif %}>
+                                        {% if d %}{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}{% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <!-- Legend -->
+        <div style="padding:.6rem .75rem;border-top:1px solid var(--b0)">
+            <div style="display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap">
+                {% if 'sabc_tournament' in event_types_present %}
+                <span style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--t2)"><span style="width:14px;height:14px;border-radius:3px;background:var(--brand);display:inline-block"></span> SABC Tournaments</span>
+                {% endif %}
+                {% if 'other_tournament' in event_types_present %}
+                <span style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--t2)"><span style="width:14px;height:14px;border-radius:3px;background:var(--warn);display:inline-block"></span> Other Tournaments</span>
+                {% endif %}
+                {% if 'holiday' in event_types_present %}
+                <span style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--t2)"><span style="width:14px;height:14px;border-radius:3px;background:var(--err);display:inline-block"></span> Holidays</span>
+                {% endif %}
+                {% if 'club_event' in event_types_present %}
+                <span style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--t2)"><span style="width:14px;height:14px;border-radius:3px;background:var(--ok);display:inline-block"></span> Club Events</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Event Details Modal (Bootstrap JS modal) -->
 <div class="modal fade" id="eventModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="eventModalTitle">Event Details</h5>
+        <div class="modal-content" style="background:var(--bg-surface);border:1px solid var(--b1);border-radius:var(--r-lg)">
+            <div class="modal-header" style="border-bottom:1px solid var(--b0)">
+                <h5 class="modal-title" id="eventModalTitle" style="font-size:.95rem;font-weight:600">Event Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="eventModalBody">
                 <!-- Event details will be populated here -->
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <div class="modal-footer" style="border-top:1px solid var(--b0)">
+                <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
 
-
+<script>
+function switchCalTab(paneId, btn) {
+    document.querySelectorAll('.cal-tab').forEach(function(p) { p.classList.remove('active'); });
+    document.getElementById(paneId).classList.add('active');
+    document.querySelectorAll('#yearTabs .ptb').forEach(function(b) { b.classList.remove('on'); });
+    btn.classList.add('on');
+}
+</script>
 <script src="/static/calendar.js"></script>
 
 {% endblock %}
