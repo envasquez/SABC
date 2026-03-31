@@ -283,9 +283,12 @@ async def home_paginated(request: Request, page: int = 1):
             }
             tournaments_with_results.append(tournament_dict)
 
-        # Get member count
+        # Get member count (only members with current dues)
         member_count = (
-            session.query(func.count(Angler.id)).filter(Angler.member.is_(True)).scalar() or 0
+            session.query(func.count(Angler.id))
+            .filter(Angler.member.is_(True), Angler.dues_paid_through >= date.today())
+            .scalar()
+            or 0
         )
 
         # Get cancelled upcoming tournaments for alert banner
