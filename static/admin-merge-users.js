@@ -34,7 +34,7 @@ function loadPreview() {
     const targetId = document.getElementById('target_id').value;
 
     if (!sourceId || !targetId) {
-        document.getElementById('preview_section').classList.add('d-none');
+        document.getElementById('preview_section').style.display = 'none';
         return;
     }
 
@@ -44,13 +44,13 @@ function loadPreview() {
     }
 
     // Show preview section with loading indicator
-    document.getElementById('preview_section').classList.remove('d-none');
+    document.getElementById('preview_section').style.display = '';
     document.getElementById('preview_content').innerHTML = `
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
+        <div style="text-align:center;padding:2.5rem 0">
+            <div class="spinner-border" style="color:var(--brand)" role="status">
                 <span class="visually-hidden">Loading preview...</span>
             </div>
-            <p class="mt-3 text-muted">Loading preview...</p>
+            <p style="margin-top:.75rem;color:var(--t3)">Loading preview...</p>
         </div>
     `;
 
@@ -78,18 +78,18 @@ function loadPreview() {
             renderPreview(data.data);
         } else {
             document.getElementById('preview_content').innerHTML = `
-                <div class="alert alert-danger">
-                    <h5 class="alert-heading"><i class="bi bi-x-circle me-2"></i>Error</h5>
-                    <p class="mb-0">${escapeHtml(data.error || 'Unknown error')}</p>
+                <div style="padding:1rem;border-radius:var(--r-md);background:var(--err-m);color:var(--err);font-size:.85rem;border:1px solid color-mix(in srgb,var(--err) 25%,transparent)">
+                    <div style="font-weight:700;margin-bottom:.35rem"><i class="bi bi-x-circle"></i> Error</div>
+                    <p style="margin:0">${escapeHtml(data.error || 'Unknown error')}</p>
                 </div>
             `;
         }
     })
     .catch(error => {
         document.getElementById('preview_content').innerHTML = `
-            <div class="alert alert-danger">
-                <h5 class="alert-heading"><i class="bi bi-x-circle me-2"></i>Error</h5>
-                <p class="mb-0">Failed to load preview: ${escapeHtml(error.message || 'Unknown error')}</p>
+            <div style="padding:1rem;border-radius:var(--r-md);background:var(--err-m);color:var(--err);font-size:.85rem;border:1px solid color-mix(in srgb,var(--err) 25%,transparent)">
+                <div style="font-weight:700;margin-bottom:.35rem"><i class="bi bi-x-circle"></i> Error</div>
+                <p style="margin:0">Failed to load preview: ${escapeHtml(error.message || 'Unknown error')}</p>
             </div>
         `;
     });
@@ -118,88 +118,64 @@ function loadPreview() {
  */
 function renderPreview(preview) {
     const duplicateVotesHtml = preview.duplicate_poll_votes.length > 0 ? `
-        <div class="alert alert-warning border-warning mt-3">
-            <h6 class="alert-heading"><i class="bi bi-exclamation-triangle-fill me-2"></i>Duplicate Poll Votes Detected</h6>
-            <p class="mb-2">Both accounts have voted on the following polls. The source account's votes will be <strong>deleted</strong>:</p>
-            <ul class="mb-0">
+        <div style="padding:.75rem 1rem;border-radius:var(--r-md);background:var(--warn-m);color:var(--warn);font-size:.85rem;margin-top:.75rem;border:1px solid color-mix(in srgb,var(--warn) 25%,transparent)">
+            <div style="font-weight:700;margin-bottom:.35rem"><i class="bi bi-exclamation-triangle-fill"></i> Duplicate Poll Votes Detected</div>
+            <p style="margin-bottom:.35rem">Both accounts have voted on the following polls. The source account's votes will be <strong>deleted</strong>:</p>
+            <ul style="margin:0;padding-left:1.25rem">
                 ${preview.duplicate_poll_votes.map(dv => `<li>${escapeHtml(dv.poll_title || '')}</li>`).join('')}
             </ul>
         </div>
     ` : '';
 
     const html = `
-        <div class="row g-3">
-            <div class="col-md-6">
-                <div class="card bg-secondary h-100">
-                    <div class="card-body">
-                        <h6 class="card-title text-danger"><i class="bi bi-database-dash me-2"></i>Data Moving FROM</h6>
-                        <p class="mb-1"><strong>${escapeHtml(preview.source_angler.name || '')}</strong></p>
-                        <p class="text-muted small mb-0">${escapeHtml(preview.source_angler.email || 'No email')}</p>
-                    </div>
-                </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+            <div style="padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
+                <div style="font-weight:600;color:var(--err);font-size:.88rem;margin-bottom:.35rem"><i class="bi bi-database-dash"></i> Data Moving FROM</div>
+                <p style="margin-bottom:.15rem;color:var(--t1)"><strong>${escapeHtml(preview.source_angler.name || '')}</strong></p>
+                <p style="color:var(--t3);font-size:.8rem;margin:0">${escapeHtml(preview.source_angler.email || 'No email')}</p>
             </div>
-            <div class="col-md-6">
-                <div class="card bg-secondary h-100">
-                    <div class="card-body">
-                        <h6 class="card-title text-success"><i class="bi bi-database-add me-2"></i>Data Moving TO</h6>
-                        <p class="mb-1"><strong>${escapeHtml(preview.target_angler.name || '')}</strong></p>
-                        <p class="text-muted small mb-0">${escapeHtml(preview.target_angler.email || 'No email')}</p>
-                    </div>
-                </div>
+            <div style="padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
+                <div style="font-weight:600;color:var(--ok);font-size:.88rem;margin-bottom:.35rem"><i class="bi bi-database-add"></i> Data Moving TO</div>
+                <p style="margin-bottom:.15rem;color:var(--t1)"><strong>${escapeHtml(preview.target_angler.name || '')}</strong></p>
+                <p style="color:var(--t3);font-size:.8rem;margin:0">${escapeHtml(preview.target_angler.email || 'No email')}</p>
             </div>
         </div>
 
         ${duplicateVotesHtml}
 
-        <h6 class="mt-4 mb-3"><i class="bi bi-list-check me-2"></i>Data to be Migrated</h6>
-        <div class="row g-3">
-            <div class="col-md-3">
-                <div class="text-center p-3 bg-secondary rounded">
-                    <h3 class="text-primary mb-1">${preview.results_count}</h3>
-                    <small class="text-muted">Tournament Results</small>
-                </div>
+        <div style="font-weight:600;font-size:.88rem;color:var(--t1);margin-top:1.25rem;margin-bottom:.75rem"><i class="bi bi-list-check"></i> Data to be Migrated</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem">
+            <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--brand);margin-bottom:.15rem">${preview.results_count}</div>
+                <div style="font-size:.75rem;color:var(--t3)">Tournament Results</div>
             </div>
-            <div class="col-md-3">
-                <div class="text-center p-3 bg-secondary rounded">
-                    <h3 class="text-primary mb-1">${preview.team_results_angler1_count + preview.team_results_angler2_count}</h3>
-                    <small class="text-muted">Team Results</small>
-                </div>
+            <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--brand);margin-bottom:.15rem">${preview.team_results_angler1_count + preview.team_results_angler2_count}</div>
+                <div style="font-size:.75rem;color:var(--t3)">Team Results</div>
             </div>
-            <div class="col-md-3">
-                <div class="text-center p-3 bg-secondary rounded">
-                    <h3 class="text-primary mb-1">${preview.poll_votes_count}</h3>
-                    <small class="text-muted">Poll Votes</small>
-                </div>
+            <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--brand);margin-bottom:.15rem">${preview.poll_votes_count}</div>
+                <div style="font-size:.75rem;color:var(--t3)">Poll Votes</div>
             </div>
-            <div class="col-md-3">
-                <div class="text-center p-3 bg-secondary rounded">
-                    <h3 class="text-primary mb-1">${preview.officer_positions_count}</h3>
-                    <small class="text-muted">Officer Positions</small>
-                </div>
+            <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--brand);margin-bottom:.15rem">${preview.officer_positions_count}</div>
+                <div style="font-size:.75rem;color:var(--t3)">Officer Positions</div>
             </div>
-            <div class="col-md-3">
-                <div class="text-center p-3 bg-secondary rounded">
-                    <h3 class="text-muted mb-1">${preview.polls_created_count}</h3>
-                    <small class="text-muted">Polls Created</small>
-                </div>
+            <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">${preview.polls_created_count}</div>
+                <div style="font-size:.75rem;color:var(--t3)">Polls Created</div>
             </div>
-            <div class="col-md-3">
-                <div class="text-center p-3 bg-secondary rounded">
-                    <h3 class="text-muted mb-1">${preview.news_authored_count}</h3>
-                    <small class="text-muted">News Articles</small>
-                </div>
+            <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">${preview.news_authored_count}</div>
+                <div style="font-size:.75rem;color:var(--t3)">News Articles</div>
             </div>
-            <div class="col-md-3">
-                <div class="text-center p-3 bg-secondary rounded">
-                    <h3 class="text-muted mb-1">${preview.tournaments_created_count}</h3>
-                    <small class="text-muted">Tournaments Created</small>
-                </div>
+            <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">${preview.tournaments_created_count}</div>
+                <div style="font-size:.75rem;color:var(--t3)">Tournaments Created</div>
             </div>
-            <div class="col-md-3">
-                <div class="text-center p-3 bg-secondary rounded">
-                    <h3 class="text-muted mb-1">${preview.proxy_votes_cast_count}</h3>
-                    <small class="text-muted">Proxy Votes Cast</small>
-                </div>
+            <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">${preview.proxy_votes_cast_count}</div>
+                <div style="font-size:.75rem;color:var(--t3)">Proxy Votes Cast</div>
             </div>
         </div>
     `;

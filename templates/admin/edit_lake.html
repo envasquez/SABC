@@ -1,137 +1,116 @@
-{% extends "base.html" %}
+{% extends "admin_base.html" %}
 {% from 'macros.html' import csrf_token, alert %}
 {% block title %}Edit Lake - South Austin Bass Club{% endblock %}
-{% block content %}
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-water me-2"></i>Edit Lake: {{ lake.display_name }}</h1>
-        <a href="/admin/lakes" class="btn btn-secondary">
-            <i class="bi bi-arrow-left"></i> Back to Lakes
-        </a>
-    </div>
+{% block admin_content %}
+<div class="sh">
+    <div class="st"><i class="bi bi-water"></i> Edit Lake: {{ lake.display_name }}</div>
+    <a href="/admin/lakes" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-arrow-left"></i> Back to Lakes</a>
+</div>
 
-    {% if request.query_params.get('success') %}
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="bi bi-check-circle"></i> {{ request.query_params.get('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    {% endif %}
+{{ alert('success', request.query_params.get('success')) }}
+{{ alert('danger', request.query_params.get('error')) }}
 
-    {% if request.query_params.get('error') %}
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="bi bi-exclamation-triangle"></i> {{ request.query_params.get('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    {% endif %}
-
-    <div class="row">
-        <!-- Lake Details -->
-        <div class="col-md-6">
-            <div class="card shadow mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="bi bi-info-circle me-2"></i>Lake Details</h4>
-                </div>
-                <div class="card-body">
-                    <form method="POST" action="/admin/lakes/{{ lake.id }}/update">
-                    {{ csrf_token(request) }}
-                        <div class="mb-3">
-                            <label for="display_name" class="form-label">Display Name</label>
-                            <input type="text" class="form-control" id="display_name" name="display_name" value="{{ lake.display_name }}" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="name" class="form-label">Database Name</label>
-                            <input type="text" class="form-control" id="name" name="name" value="{{ lake.yaml_key }}" required>
-                            <small class="text-secondary">Lowercase, no spaces</small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="google_maps_embed" class="form-label">Google Maps Embed Code</label>
-                            <textarea class="form-control" id="google_maps_embed" name="google_maps_embed" rows="3">{{ lake.google_maps_iframe or '' }}</textarea>
-                            <small class="text-secondary">Full iframe embed code (optional)</small>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-save me-1"></i>Save Lake Details
-                        </button>
-                    </form>
-                </div>
-            </div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.4rem">
+    <!-- Lake Details -->
+    <div class="cc">
+        <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
+            <div style="font-size:.88rem;font-weight:600;color:var(--brand)"><i class="bi bi-info-circle" style="margin-right:.35rem"></i>Lake Details</div>
         </div>
-
-        <!-- Ramps Management -->
-        <div class="col-md-6">
-            <div class="card shadow mb-4">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0"><i class="bi bi-sign-stop me-2"></i>Associated Ramps</h4>
+        <div class="ci">
+            <form method="POST" action="/admin/lakes/{{ lake.id }}/update">
+            {{ csrf_token(request) }}
+                <div class="fg">
+                    <label class="fl" for="display_name">Display Name</label>
+                    <input type="text" class="fi" id="display_name" name="display_name" value="{{ lake.display_name }}" required>
                 </div>
-                <div class="card-body">
-                    {% if ramps %}
-                    <div class="table-responsive mb-3">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Ramp Name</th>
-                                    <th>Map</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for ramp in ramps %}
-                                <tr id="ramp-row-{{ ramp.id }}">
-                                    <td><strong>{{ ramp.name }}</strong></td>
-                                    <td>
-                                        {% if ramp.google_maps_iframe %}
-                                            <i class="bi bi-map text-success" title="Has map embed"></i>
-                                        {% else %}
-                                            <small class="text-secondary">No map</small>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-warning edit-ramp-btn"
-                                                data-id="{{ ramp.id }}"
-                                                data-name="{{ ramp.name }}"
-                                                data-map="{{ ramp.google_maps_iframe or '' }}">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger delete-ramp-btn"
-                                                data-id="{{ ramp.id }}"
-                                                data-name="{{ ramp.name }}">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle me-2"></i>No ramps yet. Add your first ramp below!
-                    </div>
-                    {% endif %}
 
-                    <hr>
-
-                    <h5 class="mb-3"><i class="bi bi-plus-circle me-2"></i>Add New Ramp</h5>
-                    <form method="POST" action="/admin/lakes/{{ lake.id }}/ramps" id="addRampForm">
-                    {{ csrf_token(request) }}
-                        <div class="mb-3">
-                            <label for="ramp_name" class="form-label">Ramp Name</label>
-                            <input type="text" class="form-control" id="ramp_name" name="name" required placeholder="e.g., Mansfield Dam Park">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="google_maps_iframe" class="form-label">Google Maps Embed Code</label>
-                            <textarea class="form-control" id="google_maps_iframe" name="google_maps_iframe" rows="3" placeholder="<iframe src='...' ...></iframe>"></textarea>
-                            <small class="text-secondary">Full iframe embed code from Google Maps (optional)</small>
-                        </div>
-
-                        <button type="submit" class="btn btn-success w-100">
-                            <i class="bi bi-plus-circle me-1"></i>Add Ramp
-                        </button>
-                    </form>
+                <div class="fg">
+                    <label class="fl" for="name">Database Name</label>
+                    <input type="text" class="fi" id="name" name="name" value="{{ lake.yaml_key }}" required>
+                    <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">Lowercase, no spaces</div>
                 </div>
+
+                <div class="fg">
+                    <label class="fl" for="google_maps_embed">Google Maps Embed Code</label>
+                    <textarea class="fi" id="google_maps_embed" name="google_maps_embed" rows="3" style="resize:vertical">{{ lake.google_maps_iframe or '' }}</textarea>
+                    <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">Full iframe embed code (optional)</div>
+                </div>
+
+                <button type="submit" class="btn-m btn-p" style="width:100%">
+                    <i class="bi bi-save"></i> Save Lake Details
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Ramps Management -->
+    <div class="cc">
+        <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
+            <div style="font-size:.88rem;font-weight:600;color:var(--ok)"><i class="bi bi-sign-stop" style="margin-right:.35rem"></i>Associated Ramps</div>
+        </div>
+        <div class="ci">
+            {% if ramps %}
+            <table class="mt" style="margin-bottom:1rem">
+                <thead><tr>
+                    <th>Ramp Name</th>
+                    <th>Map</th>
+                    <th style="text-align:right">Actions</th>
+                </tr></thead>
+                <tbody>
+                    {% for ramp in ramps %}
+                    <tr id="ramp-row-{{ ramp.id }}">
+                        <td style="font-weight:600">{{ ramp.name }}</td>
+                        <td>
+                            {% if ramp.google_maps_iframe %}
+                                <i class="bi bi-map" style="color:var(--ok)" title="Has map embed"></i>
+                            {% else %}
+                                <span style="font-size:.78rem;color:var(--t4)">No map</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align:right">
+                            <div style="display:flex;gap:.25rem;justify-content:flex-end">
+                                <button class="btn-icon btn-icon-ghost edit-ramp-btn"
+                                        data-id="{{ ramp.id }}"
+                                        data-name="{{ ramp.name }}"
+                                        data-map="{{ ramp.google_maps_iframe or '' }}">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn-icon btn-icon-danger delete-ramp-btn"
+                                        data-id="{{ ramp.id }}"
+                                        data-name="{{ ramp.name }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="padding:.75rem 1rem;border-radius:var(--r-md);background:var(--info-m);color:var(--info);font-size:.85rem;margin-bottom:1rem">
+                <i class="bi bi-info-circle" style="margin-right:.35rem"></i>No ramps yet. Add your first ramp below!
+            </div>
+            {% endif %}
+
+            <div style="border-top:1px solid var(--b0);padding-top:1rem;margin-top:.5rem">
+                <div style="font-weight:600;font-size:.88rem;color:var(--t1);margin-bottom:.75rem"><i class="bi bi-plus-circle" style="margin-right:.35rem"></i>Add New Ramp</div>
+                <form method="POST" action="/admin/lakes/{{ lake.id }}/ramps" id="addRampForm">
+                {{ csrf_token(request) }}
+                    <div class="fg">
+                        <label class="fl" for="ramp_name">Ramp Name</label>
+                        <input type="text" class="fi" id="ramp_name" name="name" required placeholder="e.g., Mansfield Dam Park">
+                    </div>
+
+                    <div class="fg">
+                        <label class="fl" for="google_maps_iframe">Google Maps Embed Code</label>
+                        <textarea class="fi" id="google_maps_iframe" name="google_maps_iframe" rows="3" style="resize:vertical" placeholder="<iframe src='...' ...></iframe>"></textarea>
+                        <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">Full iframe embed code from Google Maps (optional)</div>
+                    </div>
+
+                    <button type="submit" class="btn-m btn-s" style="width:100%">
+                        <i class="bi bi-plus-circle"></i> Add Ramp
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -140,30 +119,28 @@
 <!-- Edit Ramp Modal -->
 <div class="modal fade" id="editRampModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-warning">
-                <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Edit Ramp</h5>
+        <div class="modal-content" style="background:var(--bg-surface);border:1px solid var(--b1)">
+            <div class="modal-header" style="background:var(--warn-m);border-bottom:1px solid var(--b0)">
+                <h5 class="modal-title" style="font-size:.95rem;font-weight:600;color:var(--warn)"><i class="bi bi-pencil" style="margin-right:.35rem"></i>Edit Ramp</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="editRampForm" method="POST">
-                    {{ csrf_token(request) }}
+                {{ csrf_token(request) }}
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="edit_ramp_name" class="form-label">Ramp Name</label>
-                        <input type="text" class="form-control" id="edit_ramp_name" name="name" required>
+                    <div class="fg">
+                        <label class="fl" for="edit_ramp_name">Ramp Name</label>
+                        <input type="text" class="fi" id="edit_ramp_name" name="name" required>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="edit_google_maps_iframe" class="form-label">Google Maps Embed Code</label>
-                        <textarea class="form-control" id="edit_google_maps_iframe" name="google_maps_iframe" rows="3"></textarea>
-                        <small class="text-secondary">Full iframe embed code from Google Maps (optional)</small>
+                    <div class="fg">
+                        <label class="fl" for="edit_google_maps_iframe">Google Maps Embed Code</label>
+                        <textarea class="fi" id="edit_google_maps_iframe" name="google_maps_iframe" rows="3" style="resize:vertical"></textarea>
+                        <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">Full iframe embed code from Google Maps (optional)</div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-warning">
-                        <i class="bi bi-save me-1"></i>Save Changes
-                    </button>
+                <div class="modal-footer" style="border-top:1px solid var(--b0)">
+                    <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-m btn-w"><i class="bi bi-save"></i> Save Changes</button>
                 </div>
             </form>
         </div>
@@ -173,27 +150,29 @@
 <!-- Delete Ramp Confirmation Modal -->
 <div class="modal fade" id="deleteRampModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-exclamation-triangle me-2"></i>Delete Ramp
+        <div class="modal-content" style="background:var(--bg-surface);border:1px solid var(--b1)">
+            <div class="modal-header" style="background:var(--err-m);border-bottom:1px solid var(--b0)">
+                <h5 class="modal-title" style="font-size:.95rem;font-weight:600;color:var(--err)">
+                    <i class="bi bi-exclamation-triangle" style="margin-right:.35rem"></i>Delete Ramp
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-danger">
-                    <strong>⚠️ Warning:</strong> This action cannot be undone.
+                <div style="padding:.75rem 1rem;border-radius:var(--r-md);background:var(--err-m);color:var(--err);font-size:.85rem;margin-bottom:1rem">
+                    <strong>Warning:</strong> This action cannot be undone.
                 </div>
-                <p>You are about to permanently delete the ramp:</p>
-                <p><strong id="delete-ramp-name"></strong></p>
-                <p class="text-secondary">This will remove the ramp. Ensure no tournaments reference this ramp.</p>
-                <p><strong>Type "DELETE" to confirm:</strong></p>
-                <input type="text" class="form-control" id="delete-ramp-confirmation" placeholder="Type DELETE to confirm" autocomplete="off">
+                <p style="color:var(--t2);font-size:.88rem">You are about to permanently delete the ramp:</p>
+                <p><strong id="delete-ramp-name" style="color:var(--t1)"></strong></p>
+                <p style="color:var(--t3);font-size:.85rem">This will remove the ramp. Ensure no tournaments reference this ramp.</p>
+                <div class="fg">
+                    <label class="fl">Type "DELETE" to confirm:</label>
+                    <input type="text" class="fi" id="delete-ramp-confirmation" placeholder="Type DELETE to confirm" autocomplete="off">
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteRampBtn" disabled>
-                    <i class="bi bi-trash me-1"></i>Delete Ramp
+            <div class="modal-footer" style="border-top:1px solid var(--b0)">
+                <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-m btn-d" id="confirmDeleteRampBtn" disabled>
+                    <i class="bi bi-trash"></i> Delete Ramp
                 </button>
             </div>
         </div>

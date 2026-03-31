@@ -1,118 +1,102 @@
-{% extends "base.html" %}
+{% extends "admin_base.html" %}
 {% from 'macros.html' import alert, csrf_token %}
 {% block title %}Merge Completed - South Austin Bass Club{% endblock %}
-{% block content %}
-<div class="mb-4">
-    <div class="alert alert-success border-success">
-        <h4 class="alert-heading"><i class="bi bi-check-circle-fill me-2"></i>Merge Completed Successfully!</h4>
-        <p class="mb-0">All data has been migrated from the source account to the target account.</p>
+{% block admin_content %}
+<div style="margin-bottom:1.4rem">
+    <!-- Success Banner -->
+    <div style="padding:1rem;border-radius:var(--r-md);background:var(--ok-m);color:var(--ok);font-size:.9rem;margin-bottom:1.4rem;border:1px solid color-mix(in srgb,var(--ok) 25%,transparent)">
+        <div style="font-weight:700;font-size:1.05rem;margin-bottom:.25rem"><i class="bi bi-check-circle-fill"></i> Merge Completed Successfully!</div>
+        <p style="margin:0">All data has been migrated from the source account to the target account.</p>
     </div>
 
-    <div class="row g-4 mb-4">
-        <div class="col-md-6">
-            <div class="card bg-dark border-secondary">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-person-x me-2"></i>Source Account (Old)</h5>
-                </div>
-                <div class="card-body">
-                    <p class="mb-1"><strong>ID:</strong> {{ result.source_angler_id }}</p>
-                    <p class="text-warning mb-0"><strong>⚠️ Account kept for audit purposes - do not delete</strong></p>
-                </div>
+    <!-- Source / Target Cards -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;margin-bottom:1.4rem">
+        <div class="cc" style="border-color:var(--b1)">
+            <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
+                <div style="font-weight:700;color:var(--t2)"><i class="bi bi-person-x"></i> Source Account (Old)</div>
+            </div>
+            <div class="ci">
+                <p style="margin-bottom:.35rem;color:var(--t1)"><strong>ID:</strong> {{ result.source_angler_id }}</p>
+                <p style="margin:0;color:var(--warn);font-weight:600;font-size:.85rem">&#9888;&#65039; Account kept for audit purposes - do not delete</p>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card bg-dark border-success">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="bi bi-person-check me-2"></i>Target Account (Active)</h5>
-                </div>
-                <div class="card-body">
-                    <p class="mb-1"><strong>ID:</strong> {{ result.target_angler_id }}</p>
-                    <p class="text-success mb-0">All data has been consolidated into this account.</p>
-                </div>
+        <div class="cc" style="border-color:color-mix(in srgb,var(--ok) 40%,transparent)">
+            <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0);background:var(--ok-m)">
+                <div style="font-weight:700;color:var(--ok)"><i class="bi bi-person-check"></i> Target Account (Active)</div>
+            </div>
+            <div class="ci">
+                <p style="margin-bottom:.35rem;color:var(--t1)"><strong>ID:</strong> {{ result.target_angler_id }}</p>
+                <p style="margin:0;color:var(--ok);font-size:.85rem">All data has been consolidated into this account.</p>
             </div>
         </div>
     </div>
 
-    <div class="card bg-dark mb-4">
-        <div class="card-header">
-            <h5 class="mb-0"><i class="bi bi-list-check me-2"></i>Migration Summary</h5>
+    <!-- Migration Summary -->
+    <div class="cc" style="margin-bottom:1.4rem">
+        <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
+            <div style="font-weight:700;color:var(--t1)"><i class="bi bi-list-check"></i> Migration Summary</div>
         </div>
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="text-center p-3 bg-secondary rounded">
-                        <h3 class="text-success mb-1">{{ result.migrated.results }}</h3>
-                        <small class="text-muted">Tournament Results</small>
-                    </div>
+        <div class="ci">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem">
+                <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--ok);margin-bottom:.15rem">{{ result.migrated.results }}</div>
+                    <div style="font-size:.75rem;color:var(--t3)">Tournament Results</div>
                 </div>
-                <div class="col-md-3">
-                    <div class="text-center p-3 bg-secondary rounded">
-                        <h3 class="text-success mb-1">{{ result.migrated.team_results }}</h3>
-                        <small class="text-muted">Team Results</small>
-                    </div>
+                <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--ok);margin-bottom:.15rem">{{ result.migrated.team_results }}</div>
+                    <div style="font-size:.75rem;color:var(--t3)">Team Results</div>
                 </div>
-                <div class="col-md-3">
-                    <div class="text-center p-3 bg-secondary rounded">
-                        <h3 class="text-success mb-1">{{ result.migrated.poll_votes }}</h3>
-                        <small class="text-muted">Poll Votes</small>
-                    </div>
+                <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--ok);margin-bottom:.15rem">{{ result.migrated.poll_votes }}</div>
+                    <div style="font-size:.75rem;color:var(--t3)">Poll Votes</div>
                 </div>
-                <div class="col-md-3">
-                    <div class="text-center p-3 bg-secondary rounded">
-                        <h3 class="text-success mb-1">{{ result.migrated.officer_positions }}</h3>
-                        <small class="text-muted">Officer Positions</small>
-                    </div>
+                <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--ok);margin-bottom:.15rem">{{ result.migrated.officer_positions }}</div>
+                    <div style="font-size:.75rem;color:var(--t3)">Officer Positions</div>
                 </div>
-                <div class="col-md-3">
-                    <div class="text-center p-3 bg-secondary rounded">
-                        <h3 class="text-muted mb-1">{{ result.migrated.polls_created }}</h3>
-                        <small class="text-muted">Polls Created</small>
-                    </div>
+                <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">{{ result.migrated.polls_created }}</div>
+                    <div style="font-size:.75rem;color:var(--t3)">Polls Created</div>
                 </div>
-                <div class="col-md-3">
-                    <div class="text-center p-3 bg-secondary rounded">
-                        <h3 class="text-muted mb-1">{{ result.migrated.news_authored }}</h3>
-                        <small class="text-muted">News Articles</small>
-                    </div>
+                <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">{{ result.migrated.news_authored }}</div>
+                    <div style="font-size:.75rem;color:var(--t3)">News Articles</div>
                 </div>
-                <div class="col-md-3">
-                    <div class="text-center p-3 bg-secondary rounded">
-                        <h3 class="text-muted mb-1">{{ result.migrated.tournaments_created }}</h3>
-                        <small class="text-muted">Tournaments Created</small>
-                    </div>
+                <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">{{ result.migrated.tournaments_created }}</div>
+                    <div style="font-size:.75rem;color:var(--t3)">Tournaments Created</div>
                 </div>
-                <div class="col-md-3">
-                    <div class="text-center p-3 bg-secondary rounded">
-                        <h3 class="text-muted mb-1">{{ result.migrated.proxy_votes_cast }}</h3>
-                        <small class="text-muted">Proxy Votes Cast</small>
-                    </div>
+                <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">{{ result.migrated.proxy_votes_cast }}</div>
+                    <div style="font-size:.75rem;color:var(--t3)">Proxy Votes Cast</div>
                 </div>
             </div>
 
             {% if result.deleted_duplicate_votes > 0 %}
-            <div class="alert alert-warning border-warning mt-3">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <div style="padding:.75rem 1rem;border-radius:var(--r-md);background:var(--warn-m);color:var(--warn);font-size:.85rem;margin-top:.75rem;border:1px solid color-mix(in srgb,var(--warn) 25%,transparent)">
+                <i class="bi bi-exclamation-triangle-fill"></i>
                 <strong>{{ result.deleted_duplicate_votes }}</strong> duplicate poll vote(s) were deleted (where both accounts voted on the same poll).
             </div>
             {% endif %}
         </div>
     </div>
 
-    <div class="card bg-dark border-danger">
-        <div class="card-header bg-danger text-white">
-            <h5 class="mb-0"><i class="bi bi-exclamation-triangle-fill me-2"></i>About the Old Account</h5>
+    <!-- About the Old Account -->
+    <div class="cc" style="border-color:color-mix(in srgb,var(--err) 40%,transparent)">
+        <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0);background:var(--err-m)">
+            <div style="font-weight:700;color:var(--err)"><i class="bi bi-exclamation-triangle-fill"></i> About the Old Account</div>
         </div>
-        <div class="card-body">
-            <div class="alert alert-danger border-danger">
-                <h6 class="alert-heading"><i class="bi bi-shield-exclamation me-2"></i>DO NOT DELETE THE OLD ACCOUNT</h6>
-                <p class="mb-2">The source account (ID {{ result.source_angler_id }}) must be kept in the system to preserve data integrity.</p>
-                <p class="mb-0"><strong>Important:</strong> Due to database constraints, deleting the old account may cause unintended data loss. The account will remain in the system but is now empty and inactive.</p>
+        <div class="ci">
+            <div style="padding:1rem;border-radius:var(--r-md);background:var(--err-m);color:var(--err);font-size:.85rem;margin-bottom:1rem;border:1px solid color-mix(in srgb,var(--err) 25%,transparent)">
+                <div style="font-weight:700;margin-bottom:.35rem"><i class="bi bi-shield-exclamation"></i> DO NOT DELETE THE OLD ACCOUNT</div>
+                <p style="margin-bottom:.35rem">The source account (ID {{ result.source_angler_id }}) must be kept in the system to preserve data integrity.</p>
+                <p style="margin:0"><strong>Important:</strong> Due to database constraints, deleting the old account may cause unintended data loss. The account will remain in the system but is now empty and inactive.</p>
             </div>
 
-            <p class="text-muted mb-3">The old account serves as an audit trail and must not be deleted. It will not interfere with normal operations.</p>
+            <p style="color:var(--t3);margin-bottom:1rem;font-size:.88rem">The old account serves as an audit trail and must not be deleted. It will not interfere with normal operations.</p>
 
-            <a href="/admin/users" class="btn btn-primary">
-                <i class="bi bi-arrow-left me-2"></i>Return to User List
+            <a href="/admin/users" class="btn-m btn-p">
+                <i class="bi bi-arrow-left"></i> Return to User List
             </a>
         </div>
     </div>

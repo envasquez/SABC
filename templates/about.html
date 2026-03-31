@@ -1,94 +1,67 @@
 {% extends "base.html" %}
-{% from "macros.html" import csrf_token, alert, form_field %}
+{% from "macros.html" import csrf_token, alert %}
 {% block title %}About - South Austin Bass Club{% endblock %}
 {% block content %}
 {{ alert('success', request.query_params.get('success')) }}
 {{ alert('danger', request.query_params.get('error')) }}
-<div class="mb-4">
-<h1 class="display-5"><i class="bi bi-people-fill me-2"></i>About</h1>
-<p class="lead text-secondary">South Austin Bass Club - Established 1983</p>
-</div>
+<div class="sh"><div class="st"><i class="bi bi-people-fill"></i> About</div></div>
 
-<!-- Hero Introduction -->
-<div class="row g-4">
-<div class="col-12">
-<div class="card shadow-sm border-0 bg-primary bg-gradient text-white">
-<div class="card-body py-4">
-<div class="row align-items-center">
-<div class="col-lg-8">
-<h2 class="mb-3"><i class="bi bi-fish me-2"></i>South Austin Bass Club</h2>
-<p class="lead mb-2">A close group of fishermen fishing Central Texas lakes within a 1.5 hour drive from Austin.</p>
-<p class="mb-0">We hold team tournaments on the last Sunday of each month (except May, November and December - due to holidays). Our focus is friendly yet competitive fishing at a low cost, where every member has a voice in club decisions.</p>
-</div>
-<div class="col-lg-4 text-center d-none d-lg-block">
-<img src="/static/sabc_logo.png" alt="South Austin Bass Club Logo" class="img-fluid" style="max-height: 150px;">
-</div>
-</div>
-</div>
-</div>
+<!-- Hero -->
+<div class="cc" style="margin-bottom:1.4rem;border-color:rgba(59,130,246,.2);overflow:hidden">
+    <div class="ci" style="display:flex;align-items:center;gap:2rem">
+        <div style="flex:1">
+            <div style="font-size:1.3rem;font-weight:700;margin-bottom:.5rem"><i class="bi bi-fish" style="color:var(--brand)"></i> South Austin Bass Club</div>
+            <div style="color:var(--t2);line-height:1.7;margin-bottom:.5rem">A close group of fishermen fishing Central Texas lakes within a 1.5 hour drive from Austin.</div>
+            <div style="color:var(--t3);line-height:1.7">We hold team tournaments on the last Sunday of each month (except May, November and December). Our focus is friendly yet competitive fishing at a low cost, where every member has a voice in club decisions.</div>
+        </div>
+        <img src="/static/sabc_logo.png" alt="SABC Logo" style="width:120px;height:120px;border-radius:var(--r-lg);object-fit:contain;flex-shrink:0">
+    </div>
 </div>
 
 <!-- Three Feature Cards -->
-<div class="col-12 col-lg-4">
-<div class="card shadow-sm h-100">
-<div class="card-header bg-success text-white"><h5 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Tournaments</h5></div>
-<div class="card-body">
-<ul class="list-unstyled mb-0">
-<li class="mb-3 d-flex"><i class="bi bi-geo-alt-fill text-danger me-3 fs-5"></i><div><strong>Local Lakes</strong><br><small class="text-secondary">Within 1.5 hours of Austin</small></div></li>
-<li class="mb-3 d-flex"><i class="bi bi-calendar-check text-primary me-3 fs-5"></i><div><strong>Last Sunday Monthly</strong><br><small class="text-secondary">Except May, Nov & Dec (holidays)</small></div></li>
-<li class="mb-3 d-flex"><i class="bi bi-cash-coin text-success me-3 fs-5"></i><div><strong>Low Cost Entry</strong><br><small class="text-secondary">$50/boat (includes Big Bass)</small></div></li>
-<li class="d-flex"><i class="bi bi-trophy-fill text-warning me-3 fs-5"></i><div><strong>100% Payback</strong><br><small class="text-secondary">All entry fees paid out to 1st, 2nd, 3rd + Big Bass</small></div></li>
-</ul>
-</div>
-</div>
+<div class="g3" style="margin-bottom:1.4rem">
+    <div class="cc"><div class="ci">
+        <div style="color:var(--ok);font-weight:600;margin-bottom:.75rem"><i class="bi bi-calendar-event"></i> Tournaments</div>
+        <div style="display:flex;flex-direction:column;gap:.65rem;font-size:.86rem">
+            <div style="display:flex;gap:.65rem"><i class="bi bi-geo-alt-fill" style="color:var(--err);flex-shrink:0;margin-top:2px"></i><div><strong>Local Lakes</strong><br><span style="color:var(--t3)">Within 1.5 hours of Austin</span></div></div>
+            <div style="display:flex;gap:.65rem"><i class="bi bi-calendar-check" style="color:var(--brand);flex-shrink:0;margin-top:2px"></i><div><strong>Last Sunday Monthly</strong><br><span style="color:var(--t3)">Except May, Nov & Dec</span></div></div>
+            <div style="display:flex;gap:.65rem"><i class="bi bi-cash-coin" style="color:var(--ok);flex-shrink:0;margin-top:2px"></i><div><strong>Low Cost Entry</strong><br><span style="color:var(--t3)">$50/boat (includes Big Bass)</span></div></div>
+            <div style="display:flex;gap:.65rem"><i class="bi bi-trophy-fill" style="color:var(--warn);flex-shrink:0;margin-top:2px"></i><div><strong>100% Payback</strong><br><span style="color:var(--t3)">All fees paid to 1st, 2nd, 3rd + Big Bass</span></div></div>
+        </div>
+    </div></div>
+
+    <div class="cc"><div class="ci">
+        <div style="color:var(--info);font-weight:600;margin-bottom:.75rem"><i class="bi bi-person-check-fill"></i> Membership</div>
+        <div style="display:flex;flex-direction:column;gap:.65rem;font-size:.86rem">
+            <div style="display:flex;gap:.65rem"><i class="bi bi-globe" style="color:var(--brand);flex-shrink:0;margin-top:2px"></i><div><strong>100% Online</strong><br><span style="color:var(--t3)">Modern, accessible club management</span></div></div>
+            <div style="display:flex;gap:.65rem"><i class="bi bi-check2-square" style="color:var(--ok);flex-shrink:0;margin-top:2px"></i><div><strong>Online Polls</strong><br><span style="color:var(--t3)">Club issues, officers, locations & times</span></div></div>
+            <div style="display:flex;gap:.65rem"><i class="bi bi-wallet2" style="color:var(--warn);flex-shrink:0;margin-top:2px"></i><div><strong>$25 Annual Dues</strong><br><span style="color:var(--t3)">January to December</span></div></div>
+        </div>
+    </div></div>
+
+    <div class="cc"><div class="ci" style="text-align:center">
+        <div style="color:var(--brand);font-weight:600;margin-bottom:.75rem"><i class="bi bi-credit-card"></i> Payment Info</div>
+        <div style="color:var(--t2);margin-bottom:.75rem;font-size:.86rem">Send tournament fees, buy-ins, and dues via Venmo:</div>
+        <img src="/static/venmo.png" alt="Venmo QR Code" style="max-width:180px;border-radius:var(--r-md)">
+        <div style="font-weight:600;margin-top:.75rem">@Chris-Annoni</div>
+    </div></div>
 </div>
 
-<div class="col-12 col-lg-4">
-<div class="card shadow-sm h-100">
-<div class="card-header bg-info text-white"><h5 class="mb-0"><i class="bi bi-person-check-fill me-2"></i>Membership</h5></div>
-<div class="card-body">
-<ul class="list-unstyled mb-0">
-<li class="mb-3 d-flex"><i class="bi bi-globe text-primary me-3 fs-5"></i><div><strong>100% Online</strong><br><small class="text-secondary">Modern, accessible club management</small></div></li>
-<li class="mb-3 d-flex"><i class="bi bi-check2-square text-success me-3 fs-5"></i><div><strong>Online Polls</strong><br><small class="text-secondary">Club issues, officers, & decisions<br>Tournament locations & times</small></div></li>
-<li class="d-flex"><i class="bi bi-wallet2 text-warning me-3 fs-5"></i><div><strong>$25 Annual Dues</strong><br><small class="text-secondary">Membership runs January to December</small></div></li>
-</ul>
-</div>
-</div>
-</div>
-
-<!-- Payment Card -->
-<div class="col-12 col-lg-4">
-<div class="card shadow-sm h-100">
-<div class="card-header text-white" style="background-color: #3D95CE;"><h5 class="mb-0"><i class="bi bi-credit-card me-2"></i>Payment Information</h5></div>
-<div class="card-body text-center" style="background-color: white;">
-<p class="mb-3 text-dark">Send payments for tournament entry fees, buy-ins, and membership dues via Venmo:</p>
-<img src="/static/venmo.png" alt="Venmo QR Code - Chris Annoni @Chris-Annoni" class="img-fluid" style="max-width:200px">
-<p class="mt-3 text-dark"><strong>@Chris-Annoni</strong></p>
-</div>
-</div>
-</div>
 <!-- Contact Form -->
-<div class="col-12">
-<div class="card shadow-sm">
-<div class="card-header bg-secondary text-white"><h5 class="mb-0"><i class="bi bi-envelope-fill me-2"></i>Contact Us</h5></div>
-<div class="card-body">
-<p class="text-secondary mb-3">Have a question or want to learn more? Send us a message and we'll get back to you.</p>
-<form method="POST" action="/about/contact">
-    {{ csrf_token(request) }}
-    <div class="row">
-        <div class="col-md-6">
-            {{ form_field('Name', 'name', required=True, placeholder='Your name', maxlength='100') }}
-        </div>
-        <div class="col-md-6">
-            {{ form_field('Email', 'email', type='email', required=True, placeholder='your@email.com', maxlength='255') }}
-        </div>
+<div class="cc" id="contact">
+    <div class="ci">
+        <div class="ct" style="margin-bottom:.5rem"><i class="bi bi-envelope-fill"></i> Contact Us</div>
+        <div style="color:var(--t3);margin-bottom:1rem;font-size:.86rem">Have a question or want to learn more? Send us a message and we'll get back to you.</div>
+        <form method="POST" action="/about/contact">
+            {{ csrf_token(request) }}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                <div class="fg"><label class="fl" for="name">Name <span style="color:var(--err)">*</span></label><input class="fi" type="text" id="name" name="name" required placeholder="Your name" maxlength="100"></div>
+                <div class="fg"><label class="fl" for="email">Email <span style="color:var(--err)">*</span></label><input class="fi" type="email" id="email" name="email" required placeholder="your@email.com" maxlength="255"></div>
+            </div>
+            <div class="fg"><label class="fl" for="subject">Subject <span style="color:var(--err)">*</span></label><input class="fi" type="text" id="subject" name="subject" required placeholder="What is this about?" maxlength="200"></div>
+            <div class="fg"><label class="fl" for="message">Message <span style="color:var(--err)">*</span></label><textarea class="fi" id="message" name="message" required placeholder="Your message..." rows="5" maxlength="2000" style="resize:vertical"></textarea></div>
+            <button class="btn-m btn-p" type="submit"><i class="bi bi-send"></i> Send Message</button>
+        </form>
     </div>
-    {{ form_field('Subject', 'subject', required=True, placeholder='What is this about?', maxlength='200') }}
-    {{ form_field('Message', 'message', type='textarea', required=True, placeholder='Your message...', rows='5', maxlength='2000') }}
-    <button type="submit" class="btn btn-primary"><i class="bi bi-send me-2"></i>Send Message</button>
-</form>
-</div>
-</div>
-</div>
 </div>
 {% endblock %}

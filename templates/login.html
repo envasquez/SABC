@@ -1,25 +1,33 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert, csrf_token, form_field %}
+{% from 'macros.html' import alert, csrf_token %}
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h3>Login</h3>
-                {{ alert('danger', error) }}
-                {{ alert('success', success) }}
-                <form method="post" action="/login">
-                    {{ csrf_token(request) }}
-                    <input type="hidden" name="next_url" value="{{ next_url }}">
-                    {{ form_field('Email', 'email', type='email', required=true) }}
-                    {{ form_field('Password', 'password', type='password', required=true) }}
-                    <button type="submit" class="btn btn-primary w-100">Login</button>
-                </form>
-                <div class="text-center mt-3">
-                    <p class="mb-2"><a href="/register">Create an account</a></p>
-                    <p class="mb-0"><a href="/forgot-password" class="text-secondary">Forgot your password?</a></p>
-                </div>
+<div class="auth-wrap">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <img src="/static/sabc_logo.png" alt="SABC" width="64" height="64">
+        </div>
+        <div class="auth-title">Welcome Back</div>
+        <div class="auth-sub">Sign in to your SABC account</div>
+        {{ alert('danger', error) }}
+        {{ alert('success', success) }}
+        <form method="post" action="/login">
+            {{ csrf_token(request) }}
+            <input type="hidden" name="next_url" value="{{ next_url }}">
+            <div class="fg">
+                <label class="fl" for="email">Email</label>
+                <input class="fi" type="email" id="email" name="email" placeholder="your@email.com" required>
             </div>
+            <div class="fg">
+                <label class="fl" for="password">Password</label>
+                <input class="fi" type="password" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+            <button class="btn-m btn-p" type="submit" style="width:100%;justify-content:center;padding:.7rem">
+                Sign In
+            </button>
+        </form>
+        <div class="auth-links">
+            <p style="margin:.5rem 0"><a href="/register">Create an account</a></p>
+            <p style="margin:0"><a href="/forgot-password" style="color:var(--t3)">Forgot your password?</a></p>
         </div>
     </div>
 </div>

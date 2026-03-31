@@ -124,7 +124,7 @@ function initMemberChart(memberId) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: true,
@@ -197,49 +197,32 @@ function initMemberChart(memberId) {
 }
 
 /**
- * Handle row expand/collapse icon and visual feedback
+ * Toggle chart row visibility — no Bootstrap collapse, no animation, no ResizeObserver issues
  */
-function setupExpandIcons() {
-    document.querySelectorAll('.member-row').forEach(row => {
-        const targetId = row.dataset.bsTarget;
-        const chartRow = document.querySelector(targetId);
-        const icon = row.querySelector('.expand-icon');
+function toggleChartRow(memberId) {
+    var chartRow = document.getElementById('chart-row-' + memberId);
+    var memberRow = chartRow.previousElementSibling;
+    var icon = memberRow.querySelector('.expand-icon');
 
-        if (chartRow && icon) {
-            // Listen for Bootstrap collapse events
-            chartRow.addEventListener('show.bs.collapse', function() {
-                // Change to filled chart icon and highlight
-                icon.classList.remove('bi-bar-chart-line', 'text-primary');
-                icon.classList.add('bi-bar-chart-line-fill', 'text-success');
-                row.classList.add('table-active');
-                // Initialize chart when row expands
-                const memberId = targetId.replace('#chart-row-', '');
-                initMemberChart(memberId);
-            });
-
-            chartRow.addEventListener('hide.bs.collapse', function() {
-                // Revert to outline chart icon
-                icon.classList.remove('bi-bar-chart-line-fill', 'text-success');
-                icon.classList.add('bi-bar-chart-line', 'text-primary');
-                row.classList.remove('table-active');
-            });
+    if (chartRow.style.display === 'none') {
+        // Show
+        chartRow.style.display = 'table-row';
+        if (icon) {
+            icon.classList.remove('bi-bar-chart-line');
+            icon.classList.add('bi-bar-chart-line-fill');
+            icon.style.color = 'var(--ok)';
         }
-
-        // Add hover effect
-        row.addEventListener('mouseenter', function() {
-            if (!chartRow || !chartRow.classList.contains('show')) {
-                this.style.backgroundColor = 'rgba(13, 110, 253, 0.1)';
-            }
+        // Init chart after row is visible and laid out
+        requestAnimationFrame(function() {
+            initMemberChart(memberId);
         });
-        row.addEventListener('mouseleave', function() {
-            if (!chartRow || !chartRow.classList.contains('show')) {
-                this.style.backgroundColor = '';
-            }
-        });
-    });
+    } else {
+        // Hide
+        chartRow.style.display = 'none';
+        if (icon) {
+            icon.classList.remove('bi-bar-chart-line-fill');
+            icon.classList.add('bi-bar-chart-line');
+            icon.style.color = 'var(--brand)';
+        }
+    }
 }
-
-// Initialize on DOM ready
-document.addEventListener('DOMContentLoaded', function() {
-    setupExpandIcons();
-});

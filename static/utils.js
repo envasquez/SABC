@@ -69,24 +69,6 @@ var CHART_LINE_COLORS = [
 ];
 
 /**
- * Create a horizontal gradient for chart bars
- * @param {CanvasRenderingContext2D} ctx - Canvas context
- * @param {Object} chartArea - Chart area dimensions
- * @param {string} colorStart - Start color (left)
- * @param {string} colorEnd - End color (right)
- * @returns {CanvasGradient} Gradient object
- */
-function createBarGradient(ctx, chartArea, colorStart, colorEnd) {
-    const gradient = ctx.createLinearGradient(
-        chartArea.left, 0,
-        chartArea.right, 0
-    );
-    gradient.addColorStop(0, colorStart);
-    gradient.addColorStop(1, colorEnd);
-    return gradient;
-}
-
-/**
  * Shared Chart.js configuration for beautiful charts
  */
 const CHART_CONFIG = {
@@ -347,6 +329,7 @@ function escapeHtml(text) {
  */
 function formatDateTimeLocal(date) {
     const d = new Date(date);
+    if (isNaN(d.getTime())) return '';
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
@@ -867,7 +850,7 @@ function getRampName(lakesData, rampId) {
     if (!rampId) return 'Unknown Ramp';
     if (lakesData && Array.isArray(lakesData)) {
         for (let i = 0; i < lakesData.length; i++) {
-            const ramp = lakesData[i].ramps.find(function(r) { return r.id == rampId; });
+            const ramp = (lakesData[i].ramps || []).find(function(r) { return r.id == rampId; });
             if (ramp) return ramp.name;
         }
     }

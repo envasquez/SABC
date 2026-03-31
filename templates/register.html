@@ -1,36 +1,44 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert, csrf_token, form_field %}
+{% from 'macros.html' import alert, csrf_token %}
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h3>Register</h3>
-                {{ alert('danger', error) }}
-                {{ alert('success', success) }}
-                <form method="post" action="/register">
-                    {{ csrf_token(request) }}
-                    {{ form_field('First Name', 'first_name', required=true, value=first_name or '') }}
-                    {{ form_field('Last Name', 'last_name', required=true, value=last_name or '') }}
-                    {{ form_field('Email', 'email', type='email', required=true, value=email or '') }}
-                    {% set password_help %}
-                        Must be at least 12 characters and include:
-                        <ul class="mb-0 mt-1" style="font-size: 0.875em;">
-                            <li>At least one uppercase letter</li>
-                            <li>At least one lowercase letter</li>
-                            <li>At least one number</li>
-                            <li>At least one special character (!@#$%^&*)</li>
-                            <li>No sequential numbers (like 123 or 321)</li>
-                        </ul>
-                    {% endset %}
-                    {{ form_field('Password', 'password', type='password', required=true, help_text=password_help) }}
-                    <button type="submit" class="btn btn-primary w-100">Register</button>
-                </form>
-                <div class="text-center mt-3">
-                    <p class="mb-2"><a href="/login">Already have an account? Login</a></p>
-                    <p class="mb-0"><a href="/forgot-password" class="text-secondary">Forgot your password?</a></p>
+<div class="auth-wrap">
+    <div class="auth-card" style="max-width:440px">
+        <div class="auth-logo">
+            <img src="/static/sabc_logo.png" alt="SABC" width="64" height="64">
+        </div>
+        <div class="auth-title">Create Account</div>
+        <div class="auth-sub">Join the South Austin Bass Club</div>
+        {{ alert('danger', error) }}
+        {{ alert('success', success) }}
+        <form method="post" action="/register">
+            {{ csrf_token(request) }}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                <div class="fg">
+                    <label class="fl" for="first_name">First Name</label>
+                    <input class="fi" type="text" id="first_name" name="first_name" placeholder="First name" value="{{ first_name or '' }}" required>
+                </div>
+                <div class="fg">
+                    <label class="fl" for="last_name">Last Name</label>
+                    <input class="fi" type="text" id="last_name" name="last_name" placeholder="Last name" value="{{ last_name or '' }}" required>
                 </div>
             </div>
+            <div class="fg">
+                <label class="fl" for="email">Email</label>
+                <input class="fi" type="email" id="email" name="email" placeholder="your@email.com" value="{{ email or '' }}" required>
+            </div>
+            <div class="fg">
+                <label class="fl" for="password">Password</label>
+                <input class="fi" type="password" id="password" name="password" placeholder="Create a password" minlength="12" required>
+                <div style="font-size:.75rem;color:var(--t4);margin-top:.25rem;line-height:1.5">
+                    12+ characters with uppercase, lowercase, number, and special character (!@#$%^&*)
+                </div>
+            </div>
+            <button class="btn-m btn-p" type="submit" style="width:100%;justify-content:center;padding:.7rem">
+                Create Account
+            </button>
+        </form>
+        <div class="auth-links">
+            <p style="margin:.5rem 0">Already have an account? <a href="/login">Sign in</a></p>
         </div>
     </div>
 </div>

@@ -4,62 +4,63 @@
 {% block title %}Edit Photo - SABC{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 600px;">
-    <h1 class="mb-4"><i class="bi bi-pencil"></i> Edit Photo</h1>
+<div class="sh">
+    <div class="st"><i class="bi bi-pencil"></i> Edit Photo</div>
+    <a href="/photos" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-arrow-left"></i> Back to Gallery</a>
+</div>
 
-    {{ alert('success', request.query_params.get('success')) }}
-    {{ alert('danger', request.query_params.get('error')) }}
+{{ alert('success', request.query_params.get('success')) }}
+{{ alert('danger', request.query_params.get('error')) }}
 
-    <div class="card">
-        <div class="card-body">
-            <!-- Photo Preview -->
-            <div class="mb-3 text-center">
-                <img src="{{ photo.url }}" class="img-fluid rounded" style="max-height: 300px;">
+<div style="max-width:600px">
+<div class="cc">
+    <div class="ci">
+        <!-- Photo Preview -->
+        <div style="text-align:center;margin-bottom:1.25rem">
+            <img src="{{ photo.url }}" style="max-height:300px;max-width:100%;border-radius:var(--r-md)">
+        </div>
+
+        <form method="post" action="/photos/{{ photo.id }}/edit">
+            {{ csrf_token(request) }}
+
+            <div class="fg">
+                <label class="fl" for="tournament_id">Tournament</label>
+                <select class="fi" id="tournament_id" name="tournament_id">
+                    <option value="">No tournament (general photo)</option>
+                    {% for t in tournament_options %}
+                    <option value="{{ t.id }}" {% if photo.tournament_id == t.id %}selected{% endif %}>
+                        {{ t.name }}
+                    </option>
+                    {% endfor %}
+                </select>
             </div>
 
-            <form method="post" action="/photos/{{ photo.id }}/edit">
-                {{ csrf_token(request) }}
+            <div class="fg">
+                <label class="fl" for="caption">Caption</label>
+                <input type="text" class="fi" id="caption" name="caption"
+                       maxlength="200" placeholder="Describe your catch..."
+                       value="{{ photo.caption }}">
+                <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">Optional, max 200 characters</div>
+            </div>
 
-                <div class="mb-3">
-                    <label for="tournament_id" class="form-label">Tournament</label>
-                    <select class="form-select" id="tournament_id" name="tournament_id">
-                        <option value="">No tournament (general photo)</option>
-                        {% for t in tournament_options %}
-                        <option value="{{ t.id }}" {% if photo.tournament_id == t.id %}selected{% endif %}>
-                            {{ t.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
+            <div style="margin-bottom:1rem">
+                <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.88rem;color:var(--t2)">
+                    <input type="checkbox" id="is_big_bass" name="is_big_bass" value="true"
+                           {% if photo.is_big_bass %}checked{% endif %} style="accent-color:var(--warn);width:16px;height:16px">
+                    <i class="bi bi-trophy-fill" style="color:var(--warn)"></i> This is a Big Bass catch
+                </label>
+            </div>
 
-                <div class="mb-3">
-                    <label for="caption" class="form-label">Caption</label>
-                    <input type="text" class="form-control" id="caption" name="caption"
-                           maxlength="200" placeholder="Describe your catch..."
-                           value="{{ photo.caption }}">
-                    <div class="form-text">Optional, max 200 characters</div>
-                </div>
-
-                <div class="mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="is_big_bass" name="is_big_bass" value="true"
-                               {% if photo.is_big_bass %}checked{% endif %}>
-                        <label class="form-check-label" for="is_big_bass">
-                            <i class="bi bi-trophy-fill text-warning"></i> This is a Big Bass catch
-                        </label>
-                    </div>
-                </div>
-
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-lg me-1"></i> Save Changes
-                    </button>
-                    <a href="/photos" class="btn btn-secondary">
-                        <i class="bi bi-arrow-left me-1"></i> Back to Gallery
-                    </a>
-                </div>
-            </form>
-        </div>
+            <div style="display:flex;gap:.5rem">
+                <button type="submit" class="btn-m btn-p">
+                    <i class="bi bi-check-lg"></i> Save Changes
+                </button>
+                <a href="/photos" class="btn-m btn-g" style="text-decoration:none">
+                    <i class="bi bi-arrow-left"></i> Back to Gallery
+                </a>
+            </div>
+        </form>
     </div>
+</div>
 </div>
 {% endblock %}

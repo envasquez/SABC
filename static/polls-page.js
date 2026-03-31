@@ -229,7 +229,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Get lakes data from data attribute
     const lakesDataElement = document.getElementById('lakes-data');
-    const lakesData = lakesDataElement ? JSON.parse(lakesDataElement.dataset.lakes || '[]') : [];
+    let lakesData = [];
+    if (lakesDataElement) {
+        try {
+            lakesData = JSON.parse(lakesDataElement.dataset.lakes || '[]');
+        } catch (e) {
+            console.warn('Failed to parse lakes data:', e);
+            lakesData = [];
+        }
+    }
 
     // Initialize poll voting handler
     const pollVotingHandler = new PollVotingHandler(lakesData);
@@ -283,16 +291,18 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('resize', handlePollsResize);
 
     // Cleanup on page unload to prevent memory leaks
-    window.addEventListener('beforeunload', function() {
+    function cleanupCharts() {
         window.removeEventListener('resize', handlePollsResize);
-        // Destroy all charts to free memory
         Object.values(clubPollCharts).forEach(function(chart) {
             if (chart && typeof chart.destroy === 'function') {
                 chart.destroy();
             }
         });
         clubPollCharts = {};
-    });
+    }
+    window.addEventListener('beforeunload', cleanupCharts);
+    // Also cleanup when HTMX swaps content (SPA-like navigation)
+    document.addEventListener('htmx:beforeSwap', cleanupCharts);
 
     // Initialize delete confirmation manager
     pollDeleteManager = new DeleteConfirmationManager({

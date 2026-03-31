@@ -4,12 +4,7 @@
 {% block title %}Polls - South Austin Bass Club{% endblock %}
 
 {% block content %}
-<div class="mb-4">
-    <h1 class="display-5">
-        <i class="bi bi-card-checklist me-2"></i>Polls
-    </h1>
-    <p class="lead text-secondary">Member voting and tournament location polls</p>
-</div>
+<div class="sh"><div class="st"><i class="bi bi-card-checklist"></i> Polls</div></div>
 
 <!-- Data passed to JavaScript -->
 <div id="lakes-data" data-lakes="{{ lakes_data | tojson_attr }}"></div>
@@ -20,405 +15,266 @@
 
 <!-- Dues Reminder Banner -->
 {% if show_dues_banner %}
-<div class="alert alert-warning alert-dismissible fade show" role="alert">
-    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-    <strong>Dues Required:</strong> Your club dues have expired.
-    Please pay your annual dues to vote in polls.
-    <form method="POST" action="/dismiss-dues-banner" class="d-inline float-end">
-        {{ csrf_token(request) }}
-        <button type="submit" class="btn-close" aria-label="Dismiss"></button>
-    </form>
+<div style="padding:.75rem 1rem;border-radius:var(--r-md);background:var(--warn-m);color:var(--warn);font-size:.85rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between">
+    <div><i class="bi bi-exclamation-triangle-fill" style="margin-right:.35rem"></i><strong>Dues Required:</strong> Your club dues have expired. Please pay your annual dues to vote in polls.</div>
+    <form method="POST" action="/dismiss-dues-banner" style="margin:0">{{ csrf_token(request) }}<button type="submit" class="btn-close" aria-label="Dismiss"></button></form>
 </div>
 {% endif %}
 
-<!-- Bootstrap Tabs -->
-<ul class="nav nav-tabs mb-4" id="pollTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link {% if current_tab == 'club' %}active{% endif %}"
-                id="club-tab"
-                onclick="window.location.href='/polls?tab=club&p=1'"
-                type="button"
-                role="tab">
-            <i class="bi bi-card-checklist me-1"></i>Club Polls
-            {% if active_club_polls > 0 %}
-                <span class="badge bg-success ms-2">{{ active_club_polls }} active</span>
-            {% endif %}
-            {% if upcoming_club_polls > 0 %}
-                <span class="badge bg-info ms-1">{{ upcoming_club_polls }} upcoming</span>
-            {% endif %}
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link {% if current_tab == 'tournament' %}active{% endif %}"
-                id="tournament-tab"
-                onclick="window.location.href='/polls?tab=tournament&p=1'"
-                type="button"
-                role="tab">
-            <i class="bi bi-geo-alt me-1"></i>Tournament Polls
-            {% if active_tournament_polls > 0 %}
-                <span class="badge bg-success ms-2">{{ active_tournament_polls }} active</span>
-            {% endif %}
-            {% if upcoming_tournament_polls > 0 %}
-                <span class="badge bg-info ms-1">{{ upcoming_tournament_polls }} upcoming</span>
-            {% endif %}
-        </button>
-    </li>
-</ul>
+<!-- Poll Type Tabs -->
+<div class="pt" style="margin-bottom:1.4rem">
+    <a href="/polls?tab=club&p=1" class="ptb {% if current_tab == 'club' %}on{% endif %}" style="text-decoration:none">
+        <i class="bi bi-card-checklist"></i> Club Polls
+        {% if active_club_polls > 0 %}<span class="tg tg-s" style="margin-left:.3rem">{{ active_club_polls }} active</span>{% endif %}
+        {% if upcoming_club_polls > 0 %}<span class="tg tg-i" style="margin-left:.2rem">{{ upcoming_club_polls }} upcoming</span>{% endif %}
+    </a>
+    <a href="/polls?tab=tournament&p=1" class="ptb {% if current_tab == 'tournament' %}on{% endif %}" style="text-decoration:none">
+        <i class="bi bi-geo-alt"></i> Tournament Polls
+        {% if active_tournament_polls > 0 %}<span class="tg tg-s" style="margin-left:.3rem">{{ active_tournament_polls }} active</span>{% endif %}
+        {% if upcoming_tournament_polls > 0 %}<span class="tg tg-i" style="margin-left:.2rem">{{ upcoming_tournament_polls }} upcoming</span>{% endif %}
+    </a>
+</div>
 
-<div class="row g-4">
-    {% if polls %}
-        {% for poll in polls %}
-        <div class="col-12" id="poll-{{ poll.id }}">
-            <div class="card shadow-sm">
-                <div class="card-header {{ 'bg-success' if poll.status == 'closed' else ('bg-warning' if poll.status == 'active' else 'bg-secondary') }} text-white d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="mb-0">
-                            {{ poll.title }}
-                            {% if poll.status == 'closed' %}
-                                <span class="badge bg-warning text-dark ms-2">CLOSED</span>
-                            {% elif poll.status == 'active' %}
-                                <span class="badge bg-light text-dark ms-2">ACTIVE</span>
-                            {% elif poll.status == 'upcoming' %}
-                                <span class="badge bg-info ms-2">UPCOMING</span>
-                            {% endif %}
-                        </h5>
-                        <small>
-                            Poll Opens on {{ (poll.starts_at | to_local).strftime('%m-%d-%Y at %H:%M') }} | Closes on {{ (poll.closes_at | to_local).strftime('%m-%d-%Y at %H:%M') }}
-                        </small>
-                    </div>
-                    {% if user and user.is_admin %}
-                    <div class="btn-group">
-                        <button class="btn btn-sm btn-warning"
-                                onclick="window.location.href='/admin/polls/{{ poll.id }}/edit'">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger"
-                                onclick="deletePoll({{ poll.id }}, '{{ poll.title|e }}')">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </div>
+{% if polls %}
+    {% for poll in polls %}
+    <div class="cc" style="margin-bottom:1.4rem" id="poll-{{ poll.id }}">
+        <!-- Poll Header -->
+        <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0);display:flex;justify-content:space-between;align-items:center">
+            <div>
+                <div style="font-weight:700;font-size:.95rem;color:var(--t1)">
+                    {{ poll.title }}
+                    {% if poll.status == 'closed' %}
+                        <span class="tg tg-w" style="margin-left:.35rem">CLOSED</span>
+                    {% elif poll.status == 'active' %}
+                        <span class="tg tg-s" style="margin-left:.35rem">ACTIVE</span>
+                    {% elif poll.status == 'upcoming' %}
+                        <span class="tg tg-i" style="margin-left:.35rem">UPCOMING</span>
                     {% endif %}
                 </div>
-                <div class="card-body">
-                    {% if poll.description %}
-                    <div class="mb-3">
-                        <p class="text-secondary">{{ poll.description | nl2br_safe }}</p>
-                    </div>
-                    {% endif %}
+                <div style="font-size:.75rem;color:var(--t3)">
+                    Opens {{ (poll.starts_at | to_local).strftime('%m-%d-%Y at %H:%M') }} | Closes {{ (poll.closes_at | to_local).strftime('%m-%d-%Y at %H:%M') }}
+                </div>
+            </div>
+            {% if user and user.is_admin %}
+            <div style="display:flex;gap:.25rem">
+                <button class="btn-icon btn-icon-ghost"
+                        onclick="window.location.href='/admin/polls/{{ poll.id }}/edit'">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="btn-icon btn-icon-danger"
+                        onclick="deletePoll({{ poll.id }}, '{{ poll.title|e }}')">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+            {% endif %}
+        </div>
 
-                    {% if poll.options %}
-                        <!-- Per-Poll Tabs for Admin Proxy Voting -->
-                        {% if user.is_admin and poll.status == 'active' %}
-                        <ul class="nav nav-tabs mb-3" id="poll{{ poll.id }}Tabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="vote-tab-{{ poll.id }}" data-bs-toggle="tab"
-                                        data-bs-target="#vote-pane-{{ poll.id }}" type="button" role="tab">
-                                    <i class="bi bi-person-check me-1"></i>Your Vote
-                                </button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="admin-vote-tab-{{ poll.id }}" data-bs-toggle="tab"
-                                        data-bs-target="#admin-vote-pane-{{ poll.id }}" type="button" role="tab">
-                                    <i class="bi bi-person-badge me-1"></i>Cast Vote For Member
-                                </button>
-                            </li>
-                        </ul>
+        <!-- Poll Body -->
+        <div class="ci">
+            {% if poll.description %}
+            <div style="margin-bottom:.75rem">
+                <p style="color:var(--t3);margin:0">{{ poll.description | nl2br_safe }}</p>
+            </div>
+            {% endif %}
 
-                        <div class="tab-content" id="poll{{ poll.id }}TabContent">
-                            <!-- Your Vote Tab -->
-                            <div class="tab-pane fade show active" id="vote-pane-{{ poll.id }}" role="tabpanel">
-                                {% if poll.user_has_voted %}
-                                    <div class="alert alert-success">
-                                        <i class="bi bi-check-circle me-2"></i>You have already voted in this poll.
-                                    </div>
-                                {% else %}
-                            <!-- Regular Voting Interface (hidden on Admin Vote tab) -->
-                            <form method="POST" action="/polls/{{ poll.id }}/vote" data-poll-vote="true" data-poll-id="{{ poll.id }}" data-poll-type="{{ poll.poll_type }}" data-context="admin_own">
-                                {{ csrf_token(request) }}
-                                <div class="mb-3">
-                                    <p class="fw-bold text-primary">
-                                        <i class="bi bi-check-circle me-2"></i>Cast your vote:
-                                    </p>
-                                    {% if poll.poll_type == 'tournament_location' %}
-                                    <!-- Tournament location polls - interactive selection -->
-                                    <div class="card mb-3">
-                                        <div class="card-body">
-                                            <!-- Three Column Layout -->
-                                            <div class="row g-3">
-                                                <!-- Lake Selection -->
-                                                <div class="col-md-4">
-                                                    <label for="lake_select_admin_own_{{ poll.id }}" class="form-label fw-bold small">
-                                                        <i class="bi bi-geo-alt me-1"></i>Lake
-                                                    </label>
-                                                    <select id="lake_select_admin_own_{{ poll.id }}" class="form-select form-select-sm" required data-poll-id="{{ poll.id }}" data-context="admin_own" data-poll-lake="true">
-                                                        <option value="">Choose a lake...</option>
+            {% if poll.options %}
+                <!-- Per-Poll Tabs for Admin Proxy Voting -->
+                {% if user.is_admin and poll.status == 'active' %}
+                <div class="pt" style="margin-bottom:.75rem" id="poll{{ poll.id }}Tabs">
+                    <button class="ptb on" id="vote-tab-{{ poll.id }}" data-bs-toggle="tab"
+                            data-bs-target="#vote-pane-{{ poll.id }}" type="button" role="tab">
+                        <i class="bi bi-person-check"></i> Your Vote
+                    </button>
+                    <button class="ptb" id="admin-vote-tab-{{ poll.id }}" data-bs-toggle="tab"
+                            data-bs-target="#admin-vote-pane-{{ poll.id }}" type="button" role="tab">
+                        <i class="bi bi-person-badge"></i> Cast Vote For Member
+                    </button>
+                </div>
+
+                <div class="tab-content" id="poll{{ poll.id }}TabContent">
+                    <!-- Your Vote Tab -->
+                    <div class="tab-pane fade show active" id="vote-pane-{{ poll.id }}" role="tabpanel">
+                        {% if poll.user_has_voted %}
+                            <div style="padding:.75rem 1rem;border-radius:var(--r-md);background:var(--ok-m);color:var(--ok);font-size:.85rem;margin-bottom:1rem">
+                                <i class="bi bi-check-circle" style="margin-right:.35rem"></i>You have already voted in this poll.
+                            </div>
+                        {% else %}
+                    <!-- Regular Voting Interface (hidden on Admin Vote tab) -->
+                    <form method="POST" action="/polls/{{ poll.id }}/vote" data-poll-vote="true" data-poll-id="{{ poll.id }}" data-poll-type="{{ poll.poll_type }}" data-context="admin_own">
+                        {{ csrf_token(request) }}
+                        <div style="margin-bottom:.75rem">
+                            <p style="font-weight:600;color:var(--brand);margin-bottom:.5rem">
+                                <i class="bi bi-check-circle" style="margin-right:.35rem"></i>Cast your vote:
+                            </p>
+                            {% if poll.poll_type == 'tournament_location' %}
+                            <!-- Tournament location polls - interactive selection -->
+                            <div class="cc" style="margin-bottom:.75rem">
+                                <div class="ci">
+                                    <!-- Three Column Layout -->
+                                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+                                        <!-- Lake Selection -->
+                                        <div class="fg">
+                                            <label for="lake_select_admin_own_{{ poll.id }}" class="fl">
+                                                <i class="bi bi-geo-alt"></i> Lake
+                                            </label>
+                                            <select id="lake_select_admin_own_{{ poll.id }}" class="fi" required data-poll-id="{{ poll.id }}" data-context="admin_own" data-poll-lake="true">
+                                                <option value="">Choose a lake...</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Ramp Selection -->
+                                        <div class="fg">
+                                            <label for="ramp_select_admin_own_{{ poll.id }}" class="fl">
+                                                <i class="bi bi-signpost"></i> Ramp
+                                            </label>
+                                            <select id="ramp_select_admin_own_{{ poll.id }}" class="fi" required disabled>
+                                                <option value="">First select a lake</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Time Selection -->
+                                        <div class="fg">
+                                            <label class="fl">
+                                                <i class="bi bi-clock"></i> Times
+                                            </label>
+                                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+                                                <div>
+                                                    <select id="start_time_admin_own_{{ poll.id }}" class="fi" required title="Start Time">
+                                                        <option value="">Start...</option>
+                                                        <option value="05:00" selected>5:00 AM</option>
+                                                        <option value="05:30">5:30 AM</option>
+                                                        <option value="06:00">6:00 AM</option>
+                                                        <option value="06:30">6:30 AM</option>
+                                                        <option value="07:00">7:00 AM</option>
+                                                        <option value="07:30">7:30 AM</option>
+                                                        <option value="08:00">8:00 AM</option>
+                                                        <option value="08:30">8:30 AM</option>
+                                                        <option value="09:00">9:00 AM</option>
+                                                        <option value="09:30">9:30 AM</option>
+                                                        <option value="10:00">10:00 AM</option>
+                                                        <option value="10:30">10:30 AM</option>
+                                                        <option value="11:00">11:00 AM</option>
+                                                        <option value="11:30">11:30 AM</option>
+                                                        <option value="12:00">12:00 PM</option>
+                                                        <option value="12:30">12:30 PM</option>
+                                                        <option value="13:00">1:00 PM</option>
+                                                        <option value="13:30">1:30 PM</option>
+                                                        <option value="14:00">2:00 PM</option>
+                                                        <option value="14:30">2:30 PM</option>
+                                                        <option value="15:00">3:00 PM</option>
+                                                        <option value="15:30">3:30 PM</option>
+                                                        <option value="16:00">4:00 PM</option>
+                                                        <option value="16:30">4:30 PM</option>
+                                                        <option value="17:00">5:00 PM</option>
+                                                        <option value="17:30">5:30 PM</option>
+                                                        <option value="18:00">6:00 PM</option>
+                                                        <option value="18:30">6:30 PM</option>
+                                                        <option value="19:00">7:00 PM</option>
+                                                        <option value="19:30">7:30 PM</option>
+                                                        <option value="20:00">8:00 PM</option>
                                                     </select>
+                                                    <div style="font-size:.7rem;color:var(--t3);text-align:center;margin-top:.25rem">Start</div>
                                                 </div>
-
-                                                <!-- Ramp Selection -->
-                                                <div class="col-md-4">
-                                                    <label for="ramp_select_admin_own_{{ poll.id }}" class="form-label fw-bold small">
-                                                        <i class="bi bi-signpost me-1"></i>Ramp
-                                                    </label>
-                                                    <select id="ramp_select_admin_own_{{ poll.id }}" class="form-select form-select-sm" required disabled>
-                                                        <option value="">First select a lake</option>
-                                                    </select>
-                                                </div>
-
-                                                <!-- Time Selection -->
-                                                <div class="col-md-4">
-                                                    <label class="form-label fw-bold small">
-                                                        <i class="bi bi-clock me-1"></i>Times
-                                                    </label>
-                                                    <div class="d-flex gap-2">
-                                                        <div class="flex-fill">
-                                                            <select id="start_time_admin_own_{{ poll.id }}" class="form-select form-select-sm" required title="Start Time">
-                                                                <option value="">Start...</option>
-                                                                <option value="05:00" selected>5:00 AM</option>
-                                                                <option value="05:30">5:30 AM</option>
-                                                                <option value="06:00">6:00 AM</option>
-                                                                <option value="06:30">6:30 AM</option>
-                                                                <option value="07:00">7:00 AM</option>
-                                                                <option value="07:30">7:30 AM</option>
-                                                                <option value="08:00">8:00 AM</option>
-                                                                <option value="08:30">8:30 AM</option>
-                                                                <option value="09:00">9:00 AM</option>
-                                                                <option value="09:30">9:30 AM</option>
-                                                                <option value="10:00">10:00 AM</option>
-                                                                <option value="10:30">10:30 AM</option>
-                                                                <option value="11:00">11:00 AM</option>
-                                                                <option value="11:30">11:30 AM</option>
-                                                                <option value="12:00">12:00 PM</option>
-                                                                <option value="12:30">12:30 PM</option>
-                                                                <option value="13:00">1:00 PM</option>
-                                                                <option value="13:30">1:30 PM</option>
-                                                                <option value="14:00">2:00 PM</option>
-                                                                <option value="14:30">2:30 PM</option>
-                                                                <option value="15:00">3:00 PM</option>
-                                                                <option value="15:30">3:30 PM</option>
-                                                                <option value="16:00">4:00 PM</option>
-                                                                <option value="16:30">4:30 PM</option>
-                                                                <option value="17:00">5:00 PM</option>
-                                                                <option value="17:30">5:30 PM</option>
-                                                                <option value="18:00">6:00 PM</option>
-                                                                <option value="18:30">6:30 PM</option>
-                                                                <option value="19:00">7:00 PM</option>
-                                                                <option value="19:30">7:30 PM</option>
-                                                                <option value="20:00">8:00 PM</option>
-                                                            </select>
-                                                            <small class="text-secondary d-block text-center mt-1">Start</small>
-                                                        </div>
-                                                        <div class="flex-fill">
-                                                            <select id="end_time_admin_own_{{ poll.id }}" class="form-select form-select-sm" required title="End Time">
-                                                                <option value="">End...</option>
+                                                <div>
+                                                    <select id="end_time_admin_own_{{ poll.id }}" class="fi" required title="End Time">
+                                                        <option value="">End...</option>
 {{ time_select_options(5, 20, 30, "15:00") }}
-                                                            </select>
-                                                            <small class="text-secondary d-block text-center mt-1">End</small>
-                                                        </div>
-                                                    </div>
+                                                    </select>
+                                                    <div style="font-size:.7rem;color:var(--t3);text-align:center;margin-top:.25rem">End</div>
                                                 </div>
                                             </div>
-
-                                            <input type="hidden" name="option_id" id="vote_option_id_admin_own_{{ poll.id }}" required>
                                         </div>
                                     </div>
 
-                                    {% else %}
-                                    <!-- Regular polls - single column -->
-                                    {% for option in poll.options %}
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="radio" name="option_id"
-                                               id="option_{{ option.id }}" value="{{ option.id }}" required>
-                                        <label class="form-check-label" for="option_{{ option.id }}">
-                                            {{ option.text }}
-                                        </label>
-                                    </div>
-                                    {% endfor %}
-                                    {% endif %}
+                                    <input type="hidden" name="option_id" id="vote_option_id_admin_own_{{ poll.id }}" required>
                                 </div>
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-check-square me-2"></i>Cast Your Vote
-                                </button>
-                            </form>
+                            </div>
 
-                            <!-- Seasonal Tournament History for active tournament polls -->
-                            {% if poll.poll_type == 'tournament_location' and poll.seasonal_history and poll.seasonal_history|length > 0 %}
-                            <div class="mt-4">
-                                {{ seasonal_history_card(poll.seasonal_history) }}
+                            {% else %}
+                            <!-- Regular polls - single column -->
+                            <div style="display:flex;flex-direction:column;gap:.5rem">
+                                {% for option in poll.options %}
+                                <label style="display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;border-radius:var(--r-md);border:1px solid var(--b0);cursor:pointer;font-size:.88rem;color:var(--t2)">
+                                    <input type="radio" name="option_id" id="option_{{ option.id }}" value="{{ option.id }}" required style="accent-color:var(--brand)">
+                                    {{ option.text }}
+                                </label>
+                                {% endfor %}
                             </div>
                             {% endif %}
-                                {% endif %} <!-- Close else for user_has_voted (admin tab) -->
-                            </div> <!-- Close vote-pane (admin tab) -->
+                        </div>
+                        <button type="submit" class="btn-m btn-p" style="width:100%">
+                            <i class="bi bi-check-square" style="margin-right:.35rem"></i>Cast Your Vote
+                        </button>
+                    </form>
 
-                            <!-- Cast Vote For Member Tab (admin tab) -->
-                            <div class="tab-pane fade" id="admin-vote-pane-{{ poll.id }}" role="tabpanel">
-                                <div class="card border-warning">
-                                    <div class="card-header bg-warning text-dark">
-                                        <h6 class="mb-0">
-                                            <i class="bi bi-person-badge me-2"></i><strong>Admin: Cast Vote on Behalf of Member</strong>
-                                        </h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <form method="POST" action="/polls/{{ poll.id }}/vote" data-poll-vote="true" data-poll-id="{{ poll.id }}" data-poll-type="{{ poll.poll_type }}" data-context="admin_proxy">
-                                            {{ csrf_token(request) }}
-                                            <div class="mb-3">
-                                                <label for="vote_as_angler_{{ poll.id }}" class="form-label fw-bold">
-                                                    <i class="bi bi-person-check me-1"></i>Select Member to Vote For:
-                                                </label>
-                                                <select name="vote_as_angler_id" id="vote_as_angler_{{ poll.id }}" class="form-select" required>
-                                                    <option value="">Choose a member...</option>
-                                                    {% for member in members %}
-                                                        <option value="{{ member.id }}">{{ member.name }} ({{ member.email }})</option>
-                                                    {% endfor %}
-                                                </select>
-                                                <div class="form-text">Select which member you are casting a vote for</div>
-                                            </div>
+                    <!-- Seasonal Tournament History for active tournament polls -->
+                    {% if poll.poll_type == 'tournament_location' and poll.seasonal_history and poll.seasonal_history|length > 0 %}
+                    <div style="margin-top:1rem">
+                        {{ seasonal_history_card(poll.seasonal_history) }}
+                    </div>
+                    {% endif %}
+                        {% endif %} <!-- Close else for user_has_voted (admin tab) -->
+                    </div> <!-- Close vote-pane (admin tab) -->
 
-                                            {% if poll.poll_type == 'tournament_location' %}
-                                            <!-- Tournament location options for admin -->
-                                            <div class="card mb-3 border-secondary">
-                                                <div class="card-body">
-                                                    <div class="row g-3">
-                                                        <div class="col-md-4">
-                                                            <label class="form-label fw-bold small">
-                                                                <i class="bi bi-geo-alt me-1"></i>Lake
-                                                            </label>
-                                                            <select id="admin_lake_select_{{ poll.id }}" class="form-select form-select-sm" required data-poll-id="{{ poll.id }}" data-context="admin_proxy" data-poll-lake="true">
-                                                                <option value="">Choose a lake...</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label fw-bold small">
-                                                                <i class="bi bi-signpost me-1"></i>Ramp
-                                                            </label>
-                                                            <select id="admin_ramp_select_{{ poll.id }}" class="form-select form-select-sm" required disabled>
-                                                                <option value="">First select a lake</option>
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label fw-bold small">
-                                                                <i class="bi bi-clock me-1"></i>Times
-                                                            </label>
-                                                            <div class="d-flex gap-2">
-                                                                <div class="flex-fill">
-                                                                    <select id="admin_start_time_{{ poll.id }}" class="form-select form-select-sm" required title="Start Time">
-                                                                        <option value="">Start...</option>
-{{ time_select_options(5, 20, 30) }}
-                                                                    </select>
-                                                                    <small class="text-secondary d-block text-center mt-1">Start</small>
-                                                                </div>
-                                                                <div class="flex-fill">
-                                                                    <select id="admin_end_time_{{ poll.id }}" class="form-select form-select-sm" required title="End Time">
-                                                                        <option value="">End...</option>
-{{ time_select_options(5, 20, 30, "15:00") }}
-                                                                        <option value="20:30">8:30 PM</option>
-                                                                        <option value="21:00">9:00 PM</option>
-                                                                        <option value="21:30">9:30 PM</option>
-                                                                        <option value="22:00">10:00 PM</option>
-                                                                    </select>
-                                                                    <small class="text-secondary d-block text-center mt-1">Weigh-in</small>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <input type="hidden" name="option_id" id="admin_vote_option_id_{{ poll.id }}" required>
-                                            {% else %}
-                                            <!-- Regular poll options for admin -->
-                                            {% for option in poll.options %}
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input" type="radio" name="option_id"
-                                                       id="admin_option_{{ poll.id }}_{{ option.id }}" value="{{ option.id }}" required>
-                                                <label class="form-check-label" for="admin_option_{{ poll.id }}_{{ option.id }}">
-                                                    {{ option.text }}
-                                                </label>
-                                            </div>
-                                            {% endfor %}
-                                            {% endif %}
-
-                                            <button type="submit" class="btn btn-warning w-100 mt-3">
-                                                <i class="bi bi-check-square me-2"></i>Cast Vote on Behalf of Selected Member
-                                            </button>
-                                        </form>
-                                    </div>
+                    <!-- Cast Vote For Member Tab (admin tab) -->
+                    <div class="tab-pane fade" id="admin-vote-pane-{{ poll.id }}" role="tabpanel">
+                        <div class="cc" style="border:1px solid var(--warn)">
+                            <div style="padding:.6rem .8rem;border-bottom:1px solid var(--b0);background:var(--warn-m)">
+                                <div style="font-size:.85rem;font-weight:700;color:var(--warn)">
+                                    <i class="bi bi-person-badge" style="margin-right:.35rem"></i>Admin: Cast Vote on Behalf of Member
                                 </div>
-                            </div> <!-- Close admin-vote-pane -->
-                        </div> <!-- Close tab-content -->
-                        {% elif poll.status == 'active' and user.member and not poll.user_has_voted %}
-                            <!-- Non-admin member voting (no tabs) -->
-                            <form method="POST" action="/polls/{{ poll.id }}/vote" data-poll-vote="true" data-poll-id="{{ poll.id }}" data-poll-type="{{ poll.poll_type }}" data-context="nonadmin">
-                                {{ csrf_token(request) }}
-                                <div class="mb-3">
-                                    <p class="fw-bold text-primary">
-                                        <i class="bi bi-check-circle me-2"></i>Cast your vote:
-                                    </p>
+                            </div>
+                            <div class="ci">
+                                <form method="POST" action="/polls/{{ poll.id }}/vote" data-poll-vote="true" data-poll-id="{{ poll.id }}" data-poll-type="{{ poll.poll_type }}" data-context="admin_proxy">
+                                    {{ csrf_token(request) }}
+                                    <div class="fg" style="margin-bottom:.75rem">
+                                        <label for="vote_as_angler_{{ poll.id }}" class="fl">
+                                            <i class="bi bi-person-check"></i> Select Member to Vote For:
+                                        </label>
+                                        <select name="vote_as_angler_id" id="vote_as_angler_{{ poll.id }}" class="fi" required>
+                                            <option value="">Choose a member...</option>
+                                            {% for member in members %}
+                                                <option value="{{ member.id }}">{{ member.name }} ({{ member.email }})</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div style="font-size:.75rem;color:var(--t4);margin-top:.25rem">Select which member you are casting a vote for</div>
+                                    </div>
+
                                     {% if poll.poll_type == 'tournament_location' %}
-                                    <!-- Tournament location polls - interactive selection -->
-                                    <div class="card mb-3">
-                                        <div class="card-body">
-                                            <!-- Lake/Ramp/Time selection same as admin tab -->
-                                            <div class="row g-3">
-                                                <div class="col-md-4">
-                                                    <label for="lake_select_nonadmin_{{ poll.id }}" class="form-label fw-bold small">
-                                                        <i class="bi bi-geo-alt me-1"></i>Lake
+                                    <!-- Tournament location options for admin -->
+                                    <div class="cc" style="margin-bottom:.75rem">
+                                        <div class="ci">
+                                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+                                                <div class="fg">
+                                                    <label class="fl">
+                                                        <i class="bi bi-geo-alt"></i> Lake
                                                     </label>
-                                                    <select id="lake_select_nonadmin_{{ poll.id }}" class="form-select form-select-sm" required data-poll-id="{{ poll.id }}" data-context="nonadmin" data-poll-lake="true">
+                                                    <select id="admin_lake_select_{{ poll.id }}" class="fi" required data-poll-id="{{ poll.id }}" data-context="admin_proxy" data-poll-lake="true">
                                                         <option value="">Choose a lake...</option>
                                                     </select>
                                                 </div>
-                                                <div class="col-md-4">
-                                                    <label for="ramp_select_nonadmin_{{ poll.id }}" class="form-label fw-bold small">
-                                                        <i class="bi bi-signpost me-1"></i>Ramp
+                                                <div class="fg">
+                                                    <label class="fl">
+                                                        <i class="bi bi-signpost"></i> Ramp
                                                     </label>
-                                                    <select id="ramp_select_nonadmin_{{ poll.id }}" class="form-select form-select-sm" required disabled>
+                                                    <select id="admin_ramp_select_{{ poll.id }}" class="fi" required disabled>
                                                         <option value="">First select a lake</option>
                                                     </select>
                                                 </div>
-                                                <div class="col-md-4">
-                                                    <label class="form-label fw-bold small">
-                                                        <i class="bi bi-clock me-1"></i>Times
+                                                <div class="fg">
+                                                    <label class="fl">
+                                                        <i class="bi bi-clock"></i> Times
                                                     </label>
-                                                    <div class="d-flex gap-2">
-                                                        <div class="flex-fill">
-                                                            <select id="start_time_nonadmin_{{ poll.id }}" class="form-select form-select-sm" required title="Start Time">
+                                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+                                                        <div>
+                                                            <select id="admin_start_time_{{ poll.id }}" class="fi" required title="Start Time">
                                                                 <option value="">Start...</option>
-                                                                <option value="05:00" selected>5:00 AM</option>
-                                                                <option value="05:30">5:30 AM</option>
-                                                                <option value="06:00">6:00 AM</option>
-                                                                <option value="06:30">6:30 AM</option>
-                                                                <option value="07:00">7:00 AM</option>
-                                                                <option value="07:30">7:30 AM</option>
-                                                                <option value="08:00">8:00 AM</option>
-                                                                <option value="08:30">8:30 AM</option>
-                                                                <option value="09:00">9:00 AM</option>
-                                                                <option value="09:30">9:30 AM</option>
-                                                                <option value="10:00">10:00 AM</option>
-                                                                <option value="10:30">10:30 AM</option>
-                                                                <option value="11:00">11:00 AM</option>
-                                                                <option value="11:30">11:30 AM</option>
-                                                                <option value="12:00">12:00 PM</option>
-                                                                <option value="12:30">12:30 PM</option>
-                                                                <option value="13:00">1:00 PM</option>
-                                                                <option value="13:30">1:30 PM</option>
-                                                                <option value="14:00">2:00 PM</option>
-                                                                <option value="14:30">2:30 PM</option>
-                                                                <option value="15:00">3:00 PM</option>
-                                                                <option value="15:30">3:30 PM</option>
-                                                                <option value="16:00">4:00 PM</option>
-                                                                <option value="16:30">4:30 PM</option>
-                                                                <option value="17:00">5:00 PM</option>
-                                                                <option value="17:30">5:30 PM</option>
-                                                                <option value="18:00">6:00 PM</option>
-                                                                <option value="18:30">6:30 PM</option>
-                                                                <option value="19:00">7:00 PM</option>
-                                                                <option value="19:30">7:30 PM</option>
-                                                                <option value="20:00">8:00 PM</option>
+{{ time_select_options(5, 20, 30) }}
                                                             </select>
-                                                            <small class="text-secondary d-block text-center mt-1">Start</small>
+                                                            <div style="font-size:.7rem;color:var(--t3);text-align:center;margin-top:.25rem">Start</div>
                                                         </div>
-                                                        <div class="flex-fill">
-                                                            <select id="end_time_nonadmin_{{ poll.id }}" class="form-select form-select-sm" required title="End Time">
+                                                        <div>
+                                                            <select id="admin_end_time_{{ poll.id }}" class="fi" required title="End Time">
                                                                 <option value="">End...</option>
 {{ time_select_options(5, 20, 30, "15:00") }}
                                                                 <option value="20:30">8:30 PM</option>
@@ -426,423 +282,471 @@
                                                                 <option value="21:30">9:30 PM</option>
                                                                 <option value="22:00">10:00 PM</option>
                                                             </select>
-                                                            <small class="text-secondary d-block text-center mt-1">Weigh-in</small>
+                                                            <div style="font-size:.7rem;color:var(--t3);text-align:center;margin-top:.25rem">Weigh-in</div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <input type="hidden" name="option_id" id="vote_option_id_nonadmin_{{ poll.id }}" required>
+                                    <input type="hidden" name="option_id" id="admin_vote_option_id_{{ poll.id }}" required>
                                     {% else %}
-                                    <!-- Regular poll options -->
-                                    {% for option in poll.options %}
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="radio" name="option_id"
-                                               id="option_nonadmin_{{ poll.id }}_{{ option.id }}" value="{{ option.id }}" required>
-                                        <label class="form-check-label" for="option_nonadmin_{{ poll.id }}_{{ option.id }}">
+                                    <!-- Regular poll options for admin -->
+                                    <div style="display:flex;flex-direction:column;gap:.5rem">
+                                        {% for option in poll.options %}
+                                        <label style="display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;border-radius:var(--r-md);border:1px solid var(--b0);cursor:pointer;font-size:.88rem;color:var(--t2)">
+                                            <input type="radio" name="option_id" id="admin_option_{{ poll.id }}_{{ option.id }}" value="{{ option.id }}" required style="accent-color:var(--brand)">
                                             {{ option.text }}
                                         </label>
-                                    </div>
-                                    {% endfor %}
-                                    {% endif %}
-                                </div>
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-check-square me-2"></i>Cast Your Vote
-                                </button>
-                            </form>
-                        {% elif poll.status == 'active' and not user.member %}
-                            <!-- Non-member message -->
-                            <div class="alert alert-warning">
-                                <i class="bi bi-exclamation-triangle me-2"></i>
-                                Only club members can vote in polls.
-                            </div>
-                        {% elif poll.status == 'upcoming' %}
-                            <!-- Poll not yet open -->
-                            <div class="alert alert-info">
-                                <i class="bi bi-clock me-2"></i>
-                                This poll will open for voting on {{ (poll.starts_at | to_local).strftime('%Y-%m-%d') }} at {{ (poll.starts_at | to_local).strftime('%H:%M') }}.
-                            </div>
-
-                            <!-- Show options for upcoming generic polls -->
-                            {% if poll.poll_type != 'tournament_location' and poll.options %}
-                            <div class="mt-3">
-                                <h6 class="mb-3 text-white">
-                                    <i class="bi bi-list-ul me-2"></i>Poll Options:
-                                </h6>
-                                <div class="list-group">
-                                    {% for option in poll.options %}
-                                    <div class="list-group-item d-flex align-items-center" style="background-color: #1a1a1a; border-color: #333;">
-                                        <i class="bi bi-circle me-3 text-secondary"></i>
-                                        <span class="text-white">{{ option.text }}</span>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            {% endif %}
-
-                            <!-- Seasonal Tournament History for upcoming tournament polls -->
-                            {% if poll.poll_type == 'tournament_location' and poll.seasonal_history and poll.seasonal_history|length > 0 %}
-                            <div class="mt-4">
-                                <div class="card border-info">
-                                    <div class="card-header bg-info text-white py-2">
-                                        <h6 class="mb-0">
-                                            <i class="bi bi-calendar3 me-1"></i>
-                                            {{ poll.seasonal_history[0].month_name }} Tournament History
-                                        </h6>
-                                    </div>
-                                    <div class="card-body p-3">
-                                        <div class="row g-2">
-                                            {% for hist in poll.seasonal_history %}
-                                            <div class="col-md-6">
-                                                <div class="card bg-dark border-secondary h-100">
-                                                    <div class="card-body p-3">
-                                                        <h6 class="card-title mb-2">
-                                                            <a href="/tournaments/{{ hist.tournament_id }}" class="text-info text-decoration-none">
-                                                                {{ hist.month_name }} {{ hist.year }}
-                                                                <small class="text-muted">({{ hist.date.strftime('%m/%d') }})</small>
-                                                                <i class="bi bi-box-arrow-up-right small ms-1"></i>
-                                                            </a>
-                                                        </h6>
-                                                        <p class="mb-2 small">
-                                                            <i class="bi bi-geo-alt text-success"></i>
-                                                            <strong>{{ hist.lake_name }}</strong>
-                                                            {% if hist.ramp_name != 'TBD' %}
-                                                                <br><span class="text-muted ms-3">{{ hist.ramp_name }}</span>
-                                                            {% endif %}
-                                                            {% if hist.start_time and hist.end_time %}
-                                                                <br><span class="text-muted ms-3">
-                                                                    <i class="bi bi-clock"></i>
-                                                                    {{ hist.start_time | time_format }} - {{ hist.end_time | time_format }}
-                                                                </span>
-                                                            {% endif %}
-                                                        </p>
-
-                                                        <div class="row g-2 small">
-                                                            <div class="col-4">
-                                                                <i class="bi bi-people text-primary"></i>
-                                                                {{ hist.num_anglers }} anglers
-                                                            </div>
-                                                            <div class="col-4">
-                                                                <i class="bi bi-trophy text-warning"></i>
-                                                                {{ hist.num_limits }} limits
-                                                            </div>
-                                                            <div class="col-4 {% if hist.num_zeros > 0 %}text-danger{% else %}text-muted{% endif %}">
-                                                                <i class="bi bi-x-circle"></i>
-                                                                {{ hist.num_zeros }} zero{{ 's' if hist.num_zeros != 1 else '' }}
-                                                            </div>
-                                                            <div class="col-12">
-                                                                <i class="bi bi-graph-up text-success"></i>
-                                                                <strong>Top 3:</strong>
-                                                                {% if hist.top_3_weights|length > 0 %}
-                                                                    {% for weight in hist.top_3_weights %}
-                                                                        {{ "%.1f"|format(weight) }}{% if not loop.last %}, {% endif %}
-                                                                    {% endfor %} lbs
-                                                                {% else %}
-                                                                    N/A
-                                                                {% endif %}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endif %}
-                        {% else %}
-                        {% endif %}
-
-                        <!-- Always show results if there are any votes -->
-                        {% if poll.status == 'closed' or poll.user_has_voted or (poll.options | sum(attribute='vote_count')) > 0 %}
-                            <div class="mt-3">
-                                {% set total_votes = poll.options | sum(attribute='vote_count') %}
-                                {% if poll.poll_type == 'tournament_location' %}
-                                <!-- Tournament location polls - interactive bar chart -->
-                                <div class="tournament-results-container"
-                                     data-poll-type="tournament_location"
-                                     data-poll-id="{{ poll.id }}">
-                                    <!-- Hidden data elements for JavaScript -->
-                                    {% for option in poll.options %}
-                                    <div class="poll-option-data d-none"
-                                         data-option-id="{{ option.id }}"
-                                         data-option-text="{{ option.option_text | escape }}"
-                                         data-option-data="{{ (option.option_data | from_json) | tojson_attr if option.option_data else '{}' }}"
-                                         data-vote-count="{{ option.vote_count }}"></div>
-                                    {% endfor %}
-                                    <div class="row">
-                                        <!-- Stacked Bar Chart (Lakes with Ramps) -->
-                                        <div class="col-lg-8">
-                                            <div class="card border-0 shadow-sm">
-                                                <div class="card-header bg-success text-white py-2">
-                                                    <h6 class="mb-0"><i class="bi bi-bar-chart-fill me-1"></i>Location Votes</h6>
-                                                </div>
-                                                <div class="card-body p-3">
-                                                    <div class="stacked-chart-container" id="stackedChart-{{ poll.id }}" style="min-height: 150px;">
-                                                        <!-- Stacked bar chart will be drawn here -->
-                                                    </div>
-                                                    <div class="text-center mt-2">
-                                                        <small class="text-muted"><i class="bi bi-hand-index me-1"></i>Tap bars for details</small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Time Slots Table (Right Panel) -->
-                                        <div class="col-lg-4">
-                                            <div class="card border-0 shadow-sm h-100">
-                                                <div class="card-header bg-dark text-white py-2">
-                                                    <h6 class="mb-0"><i class="bi bi-clock me-1"></i>Time Slots</h6>
-                                                </div>
-                                                <div class="card-body p-2">
-                                                    <div class="time-table-container">
-                                                        <table class="table table-sm table-hover mb-0" id="timeTable-{{ poll.id }}">
-                                                            <thead class="table-light sticky-top">
-                                                                <tr>
-                                                                    <th class="text-dark fw-semibold small">Start</th>
-                                                                    <th class="text-dark fw-semibold small">End</th>
-                                                                    <th class="text-dark fw-semibold text-center small">Votes</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <!-- Time slots will be populated by JavaScript -->
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Vote count summary for tournament polls -->
-                                    <div class="text-center mt-3 text-secondary">
-                                        <small><i class="bi bi-people-fill me-1"></i>{{ total_votes }} member{{ 's' if total_votes != 1 else '' }} voted</small>
-                                    </div>
-
-                                    <!-- Seasonal Tournament History -->
-                                    {% if poll.seasonal_history and poll.seasonal_history|length > 0 %}
-                                    <div class="mt-4">
-                                        <div class="card border-info">
-                                            <div class="card-header bg-info text-white py-2">
-                                                <h6 class="mb-0">
-                                                    <i class="bi bi-calendar3 me-1"></i>
-                                                    {{ poll.seasonal_history[0].month_name }} Tournament History
-                                                </h6>
-                                            </div>
-                                            <div class="card-body p-3">
-                                                <div class="row g-2">
-                                                    {% for hist in poll.seasonal_history %}
-                                                    <div class="col-md-6">
-                                                        <div class="card bg-dark border-secondary h-100">
-                                                            <div class="card-body p-3">
-                                                                <h6 class="card-title mb-2">
-                                                                    <a href="/tournaments/{{ hist.tournament_id }}" class="text-info text-decoration-none">
-                                                                        {{ hist.month_name }} {{ hist.year }}
-                                                                        <small class="text-muted">({{ hist.date.strftime('%m/%d') }})</small>
-                                                                        <i class="bi bi-box-arrow-up-right small ms-1"></i>
-                                                                    </a>
-                                                                </h6>
-                                                                <p class="mb-2 small">
-                                                                    <i class="bi bi-geo-alt text-success"></i>
-                                                                    <strong>{{ hist.lake_name }}</strong>
-                                                                    {% if hist.ramp_name != 'TBD' %}
-                                                                        <br><span class="text-muted ms-3">{{ hist.ramp_name }}</span>
-                                                                    {% endif %}
-                                                                    {% if hist.start_time and hist.end_time %}
-                                                                        <br><span class="text-muted ms-3">
-                                                                            <i class="bi bi-clock"></i>
-                                                                            {{ hist.start_time | time_format }} - {{ hist.end_time | time_format }}
-                                                                        </span>
-                                                                    {% endif %}
-                                                                </p>
-
-                                                                <div class="row g-2 small">
-                                                                    <div class="col-4">
-                                                                        <i class="bi bi-people text-primary"></i>
-                                                                        {{ hist.num_anglers }} anglers
-                                                                    </div>
-                                                                    <div class="col-4">
-                                                                        <i class="bi bi-trophy text-warning"></i>
-                                                                        {{ hist.num_limits }} limits
-                                                                    </div>
-                                                                    <div class="col-4 {% if hist.num_zeros > 0 %}text-danger{% else %}text-muted{% endif %}">
-                                                                        <i class="bi bi-x-circle"></i>
-                                                                        {{ hist.num_zeros }} zero{{ 's' if hist.num_zeros != 1 else '' }}
-                                                                    </div>
-                                                                    <div class="col-12">
-                                                                        <i class="bi bi-graph-up text-success"></i>
-                                                                        <strong>Top 3:</strong>
-                                                                        {% if hist.top_3_weights|length > 0 %}
-                                                                            {% for weight in hist.top_3_weights %}
-                                                                                {{ "%.1f"|format(weight) }}{% if not loop.last %}, {% endif %}
-                                                                            {% endfor %} lbs
-                                                                        {% else %}
-                                                                            N/A
-                                                                        {% endif %}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    {% endfor %}
-                                                </div>
-                                            </div>
-                                        </div>
+                                        {% endfor %}
                                     </div>
                                     {% endif %}
-                                </div>
-                                {% else %}
-                                <!-- Regular polls - horizontal bar chart results -->
-                                <div class="card border-0 shadow-sm">
-                                    <div class="card-header bg-primary text-white py-2">
-                                        <h6 class="mb-0"><i class="bi bi-bar-chart-fill me-1"></i>Poll Results</h6>
-                                    </div>
-                                    <div class="card-body p-3">
-                                        <!-- Horizontal Bar Chart Container -->
-                                        <div class="club-poll-chart-container" id="clubPollChart-{{ poll.id }}" style="min-height: 150px;">
-                                            <!-- Chart will be rendered by JavaScript -->
-                                        </div>
-                                        <div class="text-center mt-2">
-                                            <small class="text-muted"><i class="bi bi-hand-index me-1"></i>Tap bars for details</small>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <!-- Hidden data for club poll chart -->
-                                <div class="club-poll-data d-none"
-                                     data-poll-id="{{ poll.id }}"
-                                     data-options="{{ poll.options | map(attribute='option_text') | list | tojson_attr }}"
-                                     data-votes="{{ poll.options | map(attribute='vote_count') | list | tojson_attr }}"
-                                     data-total-votes="{{ total_votes }}">
-                                </div>
-
-                                <!-- Vote count summary for generic polls -->
-                                <div class="text-center mt-3 text-secondary">
-                                    <small><i class="bi bi-people-fill me-1"></i>{{ total_votes }} member{{ 's' if total_votes != 1 else '' }} voted</small>
-                                </div>
-                                {% endif %}
+                                    <button type="submit" class="btn-m btn-w" style="width:100%;margin-top:.75rem">
+                                        <i class="bi bi-check-square" style="margin-right:.35rem"></i>Cast Vote on Behalf of Selected Member
+                                    </button>
+                                </form>
                             </div>
-                        {% endif %}
-                    {% else %}
-                        <!-- No options -->
-                        <div class="alert alert-warning">
-                            <i class="bi bi-exclamation-triangle me-2"></i>
-                            This poll has no voting options yet.
                         </div>
+                    </div> <!-- Close admin-vote-pane -->
+                </div> <!-- Close tab-content -->
+                {% elif poll.status == 'active' and user.member and not poll.user_has_voted %}
+                    <!-- Non-admin member voting (no tabs) -->
+                    <form method="POST" action="/polls/{{ poll.id }}/vote" data-poll-vote="true" data-poll-id="{{ poll.id }}" data-poll-type="{{ poll.poll_type }}" data-context="nonadmin">
+                        {{ csrf_token(request) }}
+                        <div style="margin-bottom:.75rem">
+                            <p style="font-weight:600;color:var(--brand);margin-bottom:.5rem">
+                                <i class="bi bi-check-circle" style="margin-right:.35rem"></i>Cast your vote:
+                            </p>
+                            {% if poll.poll_type == 'tournament_location' %}
+                            <!-- Tournament location polls - interactive selection -->
+                            <div class="cc" style="margin-bottom:.75rem">
+                                <div class="ci">
+                                    <!-- Lake/Ramp/Time selection same as admin tab -->
+                                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+                                        <div class="fg">
+                                            <label for="lake_select_nonadmin_{{ poll.id }}" class="fl">
+                                                <i class="bi bi-geo-alt"></i> Lake
+                                            </label>
+                                            <select id="lake_select_nonadmin_{{ poll.id }}" class="fi" required data-poll-id="{{ poll.id }}" data-context="nonadmin" data-poll-lake="true">
+                                                <option value="">Choose a lake...</option>
+                                            </select>
+                                        </div>
+                                        <div class="fg">
+                                            <label for="ramp_select_nonadmin_{{ poll.id }}" class="fl">
+                                                <i class="bi bi-signpost"></i> Ramp
+                                            </label>
+                                            <select id="ramp_select_nonadmin_{{ poll.id }}" class="fi" required disabled>
+                                                <option value="">First select a lake</option>
+                                            </select>
+                                        </div>
+                                        <div class="fg">
+                                            <label class="fl">
+                                                <i class="bi bi-clock"></i> Times
+                                            </label>
+                                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+                                                <div>
+                                                    <select id="start_time_nonadmin_{{ poll.id }}" class="fi" required title="Start Time">
+                                                        <option value="">Start...</option>
+                                                        <option value="05:00" selected>5:00 AM</option>
+                                                        <option value="05:30">5:30 AM</option>
+                                                        <option value="06:00">6:00 AM</option>
+                                                        <option value="06:30">6:30 AM</option>
+                                                        <option value="07:00">7:00 AM</option>
+                                                        <option value="07:30">7:30 AM</option>
+                                                        <option value="08:00">8:00 AM</option>
+                                                        <option value="08:30">8:30 AM</option>
+                                                        <option value="09:00">9:00 AM</option>
+                                                        <option value="09:30">9:30 AM</option>
+                                                        <option value="10:00">10:00 AM</option>
+                                                        <option value="10:30">10:30 AM</option>
+                                                        <option value="11:00">11:00 AM</option>
+                                                        <option value="11:30">11:30 AM</option>
+                                                        <option value="12:00">12:00 PM</option>
+                                                        <option value="12:30">12:30 PM</option>
+                                                        <option value="13:00">1:00 PM</option>
+                                                        <option value="13:30">1:30 PM</option>
+                                                        <option value="14:00">2:00 PM</option>
+                                                        <option value="14:30">2:30 PM</option>
+                                                        <option value="15:00">3:00 PM</option>
+                                                        <option value="15:30">3:30 PM</option>
+                                                        <option value="16:00">4:00 PM</option>
+                                                        <option value="16:30">4:30 PM</option>
+                                                        <option value="17:00">5:00 PM</option>
+                                                        <option value="17:30">5:30 PM</option>
+                                                        <option value="18:00">6:00 PM</option>
+                                                        <option value="18:30">6:30 PM</option>
+                                                        <option value="19:00">7:00 PM</option>
+                                                        <option value="19:30">7:30 PM</option>
+                                                        <option value="20:00">8:00 PM</option>
+                                                    </select>
+                                                    <div style="font-size:.7rem;color:var(--t3);text-align:center;margin-top:.25rem">Start</div>
+                                                </div>
+                                                <div>
+                                                    <select id="end_time_nonadmin_{{ poll.id }}" class="fi" required title="End Time">
+                                                        <option value="">End...</option>
+{{ time_select_options(5, 20, 30, "15:00") }}
+                                                        <option value="20:30">8:30 PM</option>
+                                                        <option value="21:00">9:00 PM</option>
+                                                        <option value="21:30">9:30 PM</option>
+                                                        <option value="22:00">10:00 PM</option>
+                                                    </select>
+                                                    <div style="font-size:.7rem;color:var(--t3);text-align:center;margin-top:.25rem">Weigh-in</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="hidden" name="option_id" id="vote_option_id_nonadmin_{{ poll.id }}" required>
+                            {% else %}
+                            <!-- Regular poll options -->
+                            <div style="display:flex;flex-direction:column;gap:.5rem">
+                                {% for option in poll.options %}
+                                <label style="display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;border-radius:var(--r-md);border:1px solid var(--b0);cursor:pointer;font-size:.88rem;color:var(--t2)">
+                                    <input type="radio" name="option_id" id="option_nonadmin_{{ poll.id }}_{{ option.id }}" value="{{ option.id }}" required style="accent-color:var(--brand)">
+                                    {{ option.text }}
+                                </label>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn-m btn-p" style="width:100%">
+                            <i class="bi bi-check-square" style="margin-right:.35rem"></i>Cast Your Vote
+                        </button>
+                    </form>
+                {% elif poll.status == 'active' and not user.member %}
+                    <!-- Non-member message -->
+                    <div style="padding:.75rem 1rem;border-radius:var(--r-md);background:var(--warn-m);color:var(--warn);font-size:.85rem;margin-bottom:1rem">
+                        <i class="bi bi-exclamation-triangle" style="margin-right:.35rem"></i>
+                        Only club members can vote in polls.
+                    </div>
+                {% elif poll.status == 'upcoming' %}
+                    <!-- Poll not yet open -->
+                    <div style="padding:.75rem 1rem;border-radius:var(--r-md);background:var(--info-m);color:var(--info);font-size:.85rem;margin-bottom:1rem">
+                        <i class="bi bi-clock" style="margin-right:.35rem"></i>
+                        This poll will open for voting on {{ (poll.starts_at | to_local).strftime('%Y-%m-%d') }} at {{ (poll.starts_at | to_local).strftime('%H:%M') }}.
+                    </div>
+
+                    <!-- Show options for upcoming generic polls -->
+                    {% if poll.poll_type != 'tournament_location' and poll.options %}
+                    <div style="margin-top:.75rem">
+                        <div style="font-weight:600;font-size:.88rem;color:var(--t1);margin-bottom:.5rem">
+                            <i class="bi bi-list-ul" style="margin-right:.35rem"></i>Poll Options:
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:.35rem">
+                            {% for option in poll.options %}
+                            <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;border-radius:var(--r-md);border:1px solid var(--b0);font-size:.88rem;color:var(--t2)">
+                                <i class="bi bi-circle" style="color:var(--t4);font-size:.6rem"></i>
+                                {{ option.text }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                     {% endif %}
-                </div>
-            </div>
-        </div>
-        {% endfor %}
 
-        <!-- Pagination -->
-        {% if total_pages > 1 %}
-        <div class="col-12">
-            <nav aria-label="Poll pagination" class="mt-4">
-                <ul class="pagination justify-content-center custom-pagination">
-                    {% if current_page > 1 %}
-                        <li class="page-item">
-                            <a class="page-link" href="/polls?tab={{ current_tab }}&p=1" aria-label="First">
-                                <span aria-hidden="true">&laquo;&laquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="/polls?tab={{ current_tab }}&p={{ current_page - 1 }}" aria-label="Previous">
-                                <span aria-hidden="true">&laquo;</span>
-                            </a>
-                        </li>
+                    <!-- Seasonal Tournament History for upcoming tournament polls -->
+                    {% if poll.poll_type == 'tournament_location' and poll.seasonal_history and poll.seasonal_history|length > 0 %}
+                    <div class="cc" style="margin-top:1rem">
+                        <div style="padding:.6rem .8rem;border-bottom:1px solid var(--b0)">
+                            <div style="font-size:.82rem;font-weight:600;color:var(--info)"><i class="bi bi-calendar3" style="margin-right:.35rem"></i>{{ poll.seasonal_history[0].month_name }} Tournament History</div>
+                        </div>
+                        <div class="ci">
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+                                {% for hist in poll.seasonal_history %}
+                                <div class="cc">
+                                    <div class="ci" style="padding:.75rem">
+                                        <div style="font-weight:600;font-size:.88rem;margin-bottom:.4rem">
+                                            <a href="/tournaments/{{ hist.tournament_id }}" style="color:var(--info);text-decoration:none">
+                                                {{ hist.month_name }} {{ hist.year }}
+                                                <span style="color:var(--t4);font-size:.75rem">({{ hist.date.strftime('%m/%d') }})</span>
+                                                <i class="bi bi-box-arrow-up-right" style="font-size:.7rem;margin-left:.2rem"></i>
+                                            </a>
+                                        </div>
+                                        <div style="font-size:.82rem;margin-bottom:.4rem">
+                                            <i class="bi bi-geo-alt" style="color:var(--ok)"></i>
+                                            <strong>{{ hist.lake_name }}</strong>
+                                            {% if hist.ramp_name != 'TBD' %}
+                                                <br><span style="color:var(--t4);margin-left:.75rem">{{ hist.ramp_name }}</span>
+                                            {% endif %}
+                                            {% if hist.start_time and hist.end_time %}
+                                                <br><span style="color:var(--t4);margin-left:.75rem">
+                                                    <i class="bi bi-clock"></i>
+                                                    {{ hist.start_time | time_format }} - {{ hist.end_time | time_format }}
+                                                </span>
+                                            {% endif %}
+                                        </div>
+
+                                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.25rem;font-size:.78rem">
+                                            <div style="color:var(--brand)">
+                                                <i class="bi bi-people"></i>
+                                                {{ hist.num_anglers }} anglers
+                                            </div>
+                                            <div style="color:var(--warn)">
+                                                <i class="bi bi-trophy"></i>
+                                                {{ hist.num_limits }} limits
+                                            </div>
+                                            <div style="color:{% if hist.num_zeros > 0 %}var(--err){% else %}var(--t4){% endif %}">
+                                                <i class="bi bi-x-circle"></i>
+                                                {{ hist.num_zeros }} zero{{ 's' if hist.num_zeros != 1 else '' }}
+                                            </div>
+                                        </div>
+                                        <div style="font-size:.78rem;color:var(--ok);margin-top:.25rem">
+                                            <i class="bi bi-graph-up"></i>
+                                            <strong>Top 3:</strong>
+                                            {% if hist.top_3_weights|length > 0 %}
+                                                {% for weight in hist.top_3_weights %}
+                                                    {{ "%.1f"|format(weight) }}{% if not loop.last %}, {% endif %}
+                                                {% endfor %} lbs
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
                     {% endif %}
-
-                    {% for page_num in page_range %}
-                        {% if page_num == current_page %}
-                            <li class="page-item active" aria-current="page">
-                                <span class="page-link">{{ page_num }}</span>
-                            </li>
-                        {% else %}
-                            <li class="page-item">
-                                <a class="page-link" href="/polls?tab={{ current_tab }}&p={{ page_num }}">{{ page_num }}</a>
-                            </li>
-                        {% endif %}
-                    {% endfor %}
-
-                    {% if current_page < total_pages %}
-                        <li class="page-item">
-                            <a class="page-link" href="/polls?tab={{ current_tab }}&p={{ current_page + 1 }}" aria-label="Next">
-                                <span aria-hidden="true">&raquo;</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="/polls?tab={{ current_tab }}&p={{ total_pages }}" aria-label="Last">
-                                <span aria-hidden="true">&raquo;&raquo;</span>
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </nav>
-
-            <div class="text-center text-secondary small mb-4">
-                Showing {{ start_index }}–{{ end_index }} of {{ total_polls }} polls
-            </div>
-        </div>
-        {% endif %}
-    {% else %}
-    <div class="col-12">
-        <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-            <div class="card-body text-white py-4">
-                <h4 class="mb-3"><i class="bi bi-inbox me-2"></i>No Polls Available</h4>
-                <p class="mb-0 opacity-90">There are currently no polls available. Check back later!</p>
-                {% if user and user.is_admin %}
-                <hr class="border-white opacity-25">
-                <p class="mb-0">
-                    <a href="/admin/polls/create" class="btn btn-light btn-sm">
-                        <i class="bi bi-plus-circle me-1 text-dark"></i><span class="text-dark">Create New Poll</span>
-                    </a>
-                </p>
+                {% else %}
                 {% endif %}
-            </div>
+
+                <!-- Always show results if there are any votes -->
+                {% if poll.status == 'closed' or poll.user_has_voted or (poll.options | sum(attribute='vote_count')) > 0 %}
+                    <div style="margin-top:.75rem">
+                        {% set total_votes = poll.options | sum(attribute='vote_count') %}
+                        {% if poll.poll_type == 'tournament_location' %}
+                        <!-- Tournament location polls - interactive bar chart -->
+                        <div class="tournament-results-container"
+                             data-poll-type="tournament_location"
+                             data-poll-id="{{ poll.id }}">
+                            <!-- Hidden data elements for JavaScript -->
+                            {% for option in poll.options %}
+                            <div class="poll-option-data" style="display:none"
+                                 data-option-id="{{ option.id }}"
+                                 data-option-text="{{ option.option_text | escape }}"
+                                 data-option-data="{{ (option.option_data | from_json) | tojson_attr if option.option_data else '{}' }}"
+                                 data-vote-count="{{ option.vote_count }}"></div>
+                            {% endfor %}
+                            <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem">
+                                <!-- Stacked Bar Chart (Lakes with Ramps) -->
+                                <div class="cc">
+                                    <div style="padding:.6rem .8rem;border-bottom:1px solid var(--b0)">
+                                        <div style="font-size:.82rem;font-weight:600;color:var(--ok)"><i class="bi bi-bar-chart-fill" style="margin-right:.35rem"></i>Location Votes</div>
+                                    </div>
+                                    <div class="ci" style="padding:.75rem">
+                                        <div class="stacked-chart-container" id="stackedChart-{{ poll.id }}" style="min-height: 150px;">
+                                            <!-- Stacked bar chart will be drawn here -->
+                                        </div>
+                                        <div style="text-align:center;margin-top:.5rem">
+                                            <span style="font-size:.75rem;color:var(--t4)"><i class="bi bi-hand-index" style="margin-right:.25rem"></i>Tap bars for details</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Time Slots Table (Right Panel) -->
+                                <div class="cc">
+                                    <div style="padding:.6rem .8rem;border-bottom:1px solid var(--b0)">
+                                        <div style="font-size:.82rem;font-weight:600;color:var(--t1)"><i class="bi bi-clock" style="margin-right:.35rem"></i>Time Slots</div>
+                                    </div>
+                                    <div class="ci" style="padding:.5rem">
+                                        <div class="time-table-container">
+                                            <table class="mt" id="timeTable-{{ poll.id }}">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Start</th>
+                                                        <th>End</th>
+                                                        <th style="text-align:center">Votes</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <!-- Time slots will be populated by JavaScript -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Vote count summary for tournament polls -->
+                            <div style="text-align:center;margin-top:.75rem;color:var(--t3);font-size:.82rem">
+                                <i class="bi bi-people-fill" style="margin-right:.25rem"></i>{{ total_votes }} member{{ 's' if total_votes != 1 else '' }} voted
+                            </div>
+
+                            <!-- Seasonal Tournament History -->
+                            {% if poll.seasonal_history and poll.seasonal_history|length > 0 %}
+                            <div class="cc" style="margin-top:1rem">
+                                <div style="padding:.6rem .8rem;border-bottom:1px solid var(--b0)">
+                                    <div style="font-size:.82rem;font-weight:600;color:var(--info)"><i class="bi bi-calendar3" style="margin-right:.35rem"></i>{{ poll.seasonal_history[0].month_name }} Tournament History</div>
+                                </div>
+                                <div class="ci">
+                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
+                                        {% for hist in poll.seasonal_history %}
+                                        <div class="cc">
+                                            <div class="ci" style="padding:.75rem">
+                                                <div style="font-weight:600;font-size:.88rem;margin-bottom:.4rem">
+                                                    <a href="/tournaments/{{ hist.tournament_id }}" style="color:var(--info);text-decoration:none">
+                                                        {{ hist.month_name }} {{ hist.year }}
+                                                        <span style="color:var(--t4);font-size:.75rem">({{ hist.date.strftime('%m/%d') }})</span>
+                                                        <i class="bi bi-box-arrow-up-right" style="font-size:.7rem;margin-left:.2rem"></i>
+                                                    </a>
+                                                </div>
+                                                <div style="font-size:.82rem;margin-bottom:.4rem">
+                                                    <i class="bi bi-geo-alt" style="color:var(--ok)"></i>
+                                                    <strong>{{ hist.lake_name }}</strong>
+                                                    {% if hist.ramp_name != 'TBD' %}
+                                                        <br><span style="color:var(--t4);margin-left:.75rem">{{ hist.ramp_name }}</span>
+                                                    {% endif %}
+                                                    {% if hist.start_time and hist.end_time %}
+                                                        <br><span style="color:var(--t4);margin-left:.75rem">
+                                                            <i class="bi bi-clock"></i>
+                                                            {{ hist.start_time | time_format }} - {{ hist.end_time | time_format }}
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+
+                                                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.25rem;font-size:.78rem">
+                                                    <div style="color:var(--brand)">
+                                                        <i class="bi bi-people"></i>
+                                                        {{ hist.num_anglers }} anglers
+                                                    </div>
+                                                    <div style="color:var(--warn)">
+                                                        <i class="bi bi-trophy"></i>
+                                                        {{ hist.num_limits }} limits
+                                                    </div>
+                                                    <div style="color:{% if hist.num_zeros > 0 %}var(--err){% else %}var(--t4){% endif %}">
+                                                        <i class="bi bi-x-circle"></i>
+                                                        {{ hist.num_zeros }} zero{{ 's' if hist.num_zeros != 1 else '' }}
+                                                    </div>
+                                                </div>
+                                                <div style="font-size:.78rem;color:var(--ok);margin-top:.25rem">
+                                                    <i class="bi bi-graph-up"></i>
+                                                    <strong>Top 3:</strong>
+                                                    {% if hist.top_3_weights|length > 0 %}
+                                                        {% for weight in hist.top_3_weights %}
+                                                            {{ "%.1f"|format(weight) }}{% if not loop.last %}, {% endif %}
+                                                        {% endfor %} lbs
+                                                    {% else %}
+                                                        N/A
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <!-- Regular polls - horizontal bar chart results -->
+                        <div class="cc">
+                            <div style="padding:.6rem .8rem;border-bottom:1px solid var(--b0)">
+                                <div style="font-size:.82rem;font-weight:600;color:var(--brand)"><i class="bi bi-bar-chart-fill" style="margin-right:.35rem"></i>Poll Results</div>
+                            </div>
+                            <div class="ci" style="padding:.75rem">
+                                <!-- Horizontal Bar Chart Container -->
+                                <div class="club-poll-chart-container" id="clubPollChart-{{ poll.id }}" style="min-height: 150px;">
+                                    <!-- Chart will be rendered by JavaScript -->
+                                </div>
+                                <div style="text-align:center;margin-top:.5rem">
+                                    <span style="font-size:.75rem;color:var(--t4)"><i class="bi bi-hand-index" style="margin-right:.25rem"></i>Tap bars for details</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hidden data for club poll chart -->
+                        <div class="club-poll-data" style="display:none"
+                             data-poll-id="{{ poll.id }}"
+                             data-options="{{ poll.options | map(attribute='option_text') | list | tojson_attr }}"
+                             data-votes="{{ poll.options | map(attribute='vote_count') | list | tojson_attr }}"
+                             data-total-votes="{{ total_votes }}">
+                        </div>
+
+                        <!-- Vote count summary for generic polls -->
+                        <div style="text-align:center;margin-top:.75rem;color:var(--t3);font-size:.82rem">
+                            <i class="bi bi-people-fill" style="margin-right:.25rem"></i>{{ total_votes }} member{{ 's' if total_votes != 1 else '' }} voted
+                        </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% else %}
+                <!-- No options -->
+                <div style="padding:.75rem 1rem;border-radius:var(--r-md);background:var(--warn-m);color:var(--warn);font-size:.85rem">
+                    <i class="bi bi-exclamation-triangle" style="margin-right:.35rem"></i>
+                    This poll has no voting options yet.
+                </div>
+            {% endif %}
         </div>
     </div>
+    {% endfor %}
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div style="display:flex;justify-content:center;gap:.25rem;margin-top:1.5rem">
+        {% if current_page > 1 %}
+        <a href="/polls?tab={{ current_tab }}&p=1" class="btn-m btn-g" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem"><i class="bi bi-chevron-double-left"></i></a>
+        <a href="/polls?tab={{ current_tab }}&p={{ current_page - 1 }}" class="btn-m btn-g" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem"><i class="bi bi-chevron-left"></i></a>
+        {% endif %}
+        {% for page_num in page_range %}
+        <a href="/polls?tab={{ current_tab }}&p={{ page_num }}" class="btn-m {% if page_num == current_page %}btn-p{% else %}btn-g{% endif %}" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem">{{ page_num }}</a>
+        {% endfor %}
+        {% if current_page < total_pages %}
+        <a href="/polls?tab={{ current_tab }}&p={{ current_page + 1 }}" class="btn-m btn-g" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem"><i class="bi bi-chevron-right"></i></a>
+        <a href="/polls?tab={{ current_tab }}&p={{ total_pages }}" class="btn-m btn-g" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem"><i class="bi bi-chevron-double-right"></i></a>
+        {% endif %}
+    </div>
+    <div style="text-align:center;color:var(--t3);font-size:.82rem;margin-top:.5rem;margin-bottom:1rem">
+        Showing {{ start_index }}–{{ end_index }} of {{ total_polls }} polls
+    </div>
     {% endif %}
-</div>
+{% else %}
+    <!-- No polls empty state -->
+    <div style="text-align:center;padding:3rem 1rem;color:var(--t3)">
+        <i class="bi bi-inbox" style="font-size:3rem;opacity:.3"></i>
+        <div style="margin-top:.75rem;font-weight:500">No Polls Available</div>
+        <div style="font-size:.85rem;color:var(--t4);margin-top:.35rem">Check back later!</div>
+        {% if user and user.is_admin %}<a href="/admin/polls/create" class="btn-m btn-p" style="text-decoration:none;margin-top:1rem;display:inline-flex">Create New Poll</a>{% endif %}
+    </div>
+{% endif %}
 
 <!-- Delete Poll Confirmation Modal -->
 {% call delete_modal('deletePollModal', 'Delete Poll', 'deletePollTitle', 'confirmDeletePollBtn', 'deletePollConfirmInput') %}
-<p class="text-secondary">This will remove the poll, all options, and all votes. This cannot be reversed.</p>
+<p style="color:var(--t3)">This will remove the poll, all options, and all votes. This cannot be reversed.</p>
 {% endcall %}
 
 <!-- Vote Confirmation Modal -->
 <div class="modal fade" id="voteConfirmModal" tabindex="-1" aria-labelledby="voteConfirmModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header" style="background:var(--brand);color:#fff">
                 <h5 class="modal-title" id="voteConfirmModalLabel">
-                    <i class="bi bi-check-circle me-2"></i>Confirm Your Vote
+                    <i class="bi bi-check-circle" style="margin-right:.35rem"></i>Confirm Your Vote
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p class="text-secondary mb-3">Please review your vote before submitting:</p>
-                <div class="card bg-dark border-secondary">
-                    <div class="card-header">
-                        <h6 class="mb-0" id="voteConfirmPollTitle"></h6>
+                <p style="color:var(--t3);margin-bottom:.75rem">Please review your vote before submitting:</p>
+                <div class="cc">
+                    <div style="padding:.6rem .8rem;border-bottom:1px solid var(--b0)">
+                        <div style="font-weight:600;font-size:.88rem" id="voteConfirmPollTitle"></div>
                     </div>
-                    <div class="card-body">
+                    <div class="ci">
                         <div id="voteConfirmSummary"></div>
                     </div>
                 </div>
-                <div class="alert alert-info mt-3 mb-0">
-                    <i class="bi bi-info-circle me-2"></i>
-                    <small>Once submitted, your vote cannot be changed.</small>
+                <div style="padding:.75rem 1rem;border-radius:var(--r-md);background:var(--info-m);color:var(--info);font-size:.85rem;margin-top:.75rem">
+                    <i class="bi bi-info-circle" style="margin-right:.35rem"></i>
+                    Once submitted, your vote cannot be changed.
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="bi bi-arrow-left me-1"></i>Go Back
+                <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">
+                    <i class="bi bi-arrow-left" style="margin-right:.25rem"></i>Go Back
                 </button>
-                <button type="button" class="btn btn-primary" id="confirmVoteBtn">
-                    <i class="bi bi-check-square me-1"></i>Confirm Vote
+                <button type="button" class="btn-m btn-p" id="confirmVoteBtn">
+                    <i class="bi bi-check-square" style="margin-right:.25rem"></i>Confirm Vote
                 </button>
             </div>
         </div>

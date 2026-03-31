@@ -8,6 +8,19 @@ let currentEventDetails = {};
 let nextEventDetails = {};
 let currentYear = '';
 
+/**
+ * Validate that a URL is safe before inserting into HTML
+ * Only allows relative URLs (not protocol-relative) or http(s) URLs
+ */
+function isValidUrl(url) {
+    if (!url || typeof url !== 'string') return false;
+    // Allow relative URLs (starting with /) but not protocol-relative URLs (//)
+    // Also allow http(s) URLs
+    return (url.startsWith('/') && !url.startsWith('//')) ||
+           url.startsWith('http://') ||
+           url.startsWith('https://');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Get calendar data from data attribute
     const calendarDataElement = document.getElementById('calendar-data');
@@ -107,12 +120,12 @@ function showEventDetails(element) {
             if (event.poll_id) {
                 if (event.poll_status === 'active') {
                     modalContent += '<div class="mt-2">';
-                    modalContent += '<a href="' + event.poll_link + '" class="btn btn-primary btn-sm me-2">';
+                    modalContent += '<a href="' + (isValidUrl(event.poll_link) ? event.poll_link : '#') + '" class="btn btn-primary btn-sm me-2">';
                     modalContent += '<i class="bi bi-hand-thumbs-up me-1"></i>Vote in Poll</a>';
                     modalContent += '</div>';
                 } else if (event.poll_status === 'closed' || event.poll_status === 'results') {
                     modalContent += '<div class="mt-2">';
-                    modalContent += '<a href="' + event.poll_link + '" class="btn btn-secondary btn-sm me-2">';
+                    modalContent += '<a href="' + (isValidUrl(event.poll_link) ? event.poll_link : '#') + '" class="btn btn-secondary btn-sm me-2">';
                     modalContent += '<i class="bi bi-bar-chart me-1"></i>View Poll Results</a>';
                     modalContent += '</div>';
                 }
@@ -120,7 +133,7 @@ function showEventDetails(element) {
 
             if (event.tournament_link) {
                 modalContent += '<div class="mt-2">';
-                modalContent += '<a href="' + event.tournament_link + '" class="btn btn-success btn-sm">';
+                modalContent += '<a href="' + (isValidUrl(event.tournament_link) ? event.tournament_link : '#') + '" class="btn btn-success btn-sm">';
                 modalContent += '<i class="bi bi-trophy me-1"></i>View Tournament Results</a>';
                 modalContent += '</div>';
             }
