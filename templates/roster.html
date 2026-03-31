@@ -32,7 +32,7 @@
             <tbody>
                 {% for member in members %}
                     {% if member['member'] %}
-                    <tr class="member-row" data-bs-toggle="collapse" data-bs-target="#chart-row-{{ member['id'] }}" style="cursor:pointer" title="Click to view stats">
+                    <tr class="member-row" onclick="toggleChartRow('{{ member['id'] }}')" style="cursor:pointer" title="Click to view stats">
                         <td>
                             <div style="display:flex;align-items:center;gap:.5rem">
                                 <i class="bi bi-bar-chart-line expand-icon" style="color:var(--brand);font-size:.85rem;transition:transform .2s"></i>
@@ -62,8 +62,8 @@
                     </tr>
                     <!-- Expandable stats row -->
                     {% set stats = member_stats.get(member['id'], {}) %}
-                    <tr class="collapse chart-row" id="chart-row-{{ member['id'] }}">
-                        <td colspan="3" style="padding:0">
+                    <tr class="chart-row" id="chart-row-{{ member['id'] }}" style="display:none">
+                        <td colspan="3" style="padding:0;width:100%">
                             <div style="padding:1rem;background:var(--bg-base)">
                                 <div style="display:grid;grid-template-columns:1fr 2fr;gap:1rem">
                                     <!-- Stats Card -->
@@ -155,15 +155,17 @@
                                     </div>
 
                                     <!-- Chart Card -->
-                                    <div class="cc">
+                                    <div class="cc" style="min-width:0">
                                         <div style="padding:.6rem .8rem;border-bottom:1px solid var(--b0)">
                                             <div style="font-size:.82rem;font-weight:600;color:var(--brand)"><i class="bi bi-graph-up" style="margin-right:.35rem"></i>Weight per Tournament</div>
                                         </div>
-                                        <div class="ci" style="padding:.8rem">
-                                            <div class="chart-data d-none"
+                                        <div style="padding:.8rem;position:relative">
+                                            <div class="chart-data" style="display:none"
                                                  data-member-id="{{ member['id'] }}"
                                                  data-monthly-data="{{ member_weights.get(member['id'], {}) | tojson_attr }}"></div>
-                                            <canvas class="member-weight-chart" id="chart-{{ member['id'] }}" style="max-height:200px"></canvas>
+                                            <div style="height:250px">
+                                                <canvas class="member-weight-chart" id="chart-{{ member['id'] }}"></canvas>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -289,5 +291,5 @@ function switchGuestTab(paneId, btn) {
 
 <!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="/static/roster.js"></script>
+<script src="/static/roster.js?v=2"></script>
 {% endblock %}

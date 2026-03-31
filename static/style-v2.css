@@ -42,6 +42,7 @@
 .btn-close:hover { opacity: 1; }
 
 /* Dropdown (Bootstrap JS) */
+.dropdown { position: relative; }
 .dropdown-menu { position: absolute; z-index: 1000; display: none; min-width: 10rem; padding: 0.5rem 0; }
 .dropdown-menu.show { display: block; }
 .dropdown-menu-end { right: 0; left: auto; }
