@@ -314,7 +314,7 @@ def fetch_tournament_data(
     )
 
     # Calculate payouts based on bylaws
-    entry_fee = Decimal(str(tournament.entry_fee)) if tournament.entry_fee else Decimal("25.00")
+    entry_fee = Decimal(str(tournament.entry_fee)) if tournament.entry_fee else Decimal("50.00")
     # Dynamically calculate carryover from previous tournaments
     carryover = calculate_big_bass_carryover(qs, tournament_id, str(tournament.event_date))
     # Use total_boats for payout calculation (team format = boats, standard = anglers)

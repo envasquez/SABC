@@ -52,7 +52,7 @@ async def create_event(
     weigh_in_time: str = Form(default=""),
     lake_name: str = Form(default=""),
     ramp_name: str = Form(default=""),
-    entry_fee: float = Form(default=25.00),
+    entry_fee: float = Form(default=50.00),
     fish_limit: int = Form(default=5),
     aoy_points: str = Form(default="true"),
     create_poll: str = Form(default="true"),

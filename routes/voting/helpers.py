@@ -250,7 +250,7 @@ def process_closed_polls() -> int:
                             ramp_id=ramp_id,
                             lake_name=lake_name,
                             ramp_name=ramp_name,
-                            entry_fee=event.entry_fee or Decimal("25.0"),
+                            entry_fee=event.entry_fee or Decimal("50.0"),
                             fish_limit=5,  # Default fish limit
                             start_time=start_time_obj,
                             end_time=end_time_obj,

@@ -262,7 +262,7 @@ async def home_paginated(request: Request, page: int = 1):
                 "google_maps_iframe": tournament[7] or tournament[8],
                 "start_time": tournament[9],
                 "end_time": tournament[10],
-                "entry_fee": tournament[11] or 25.0,
+                "entry_fee": tournament[11] or 50.0,
                 "fish_limit": tournament[12] or 5,
                 "limit_type": tournament[13] or "per_person",
                 "is_team": tournament[14],
