@@ -120,21 +120,21 @@ function showEventDetails(element) {
             if (event.poll_id) {
                 if (event.poll_status === 'active') {
                     modalContent += '<div class="mt-2">';
-                    modalContent += '<a href="' + (isValidUrl(event.poll_link) ? event.poll_link : '#') + '" class="btn btn-primary btn-sm me-2">';
-                    modalContent += '<i class="bi bi-hand-thumbs-up me-1"></i>Vote in Poll</a>';
+                    modalContent += '<a href="' + (isValidUrl(event.poll_link) ? event.poll_link : '#') + '" class="btn-m btn-s" style="text-decoration:none;font-size:.82rem">';
+                    modalContent += '<i class="bi bi-hand-thumbs-up"></i> Vote in Poll</a>';
                     modalContent += '</div>';
                 } else if (event.poll_status === 'closed' || event.poll_status === 'results') {
                     modalContent += '<div class="mt-2">';
-                    modalContent += '<a href="' + (isValidUrl(event.poll_link) ? event.poll_link : '#') + '" class="btn btn-secondary btn-sm me-2">';
-                    modalContent += '<i class="bi bi-bar-chart me-1"></i>View Poll Results</a>';
+                    modalContent += '<a href="' + (isValidUrl(event.poll_link) ? event.poll_link : '#') + '" class="btn-m btn-g" style="text-decoration:none;font-size:.82rem">';
+                    modalContent += '<i class="bi bi-bar-chart"></i> View Poll Results</a>';
                     modalContent += '</div>';
                 }
             }
 
             if (event.tournament_link) {
                 modalContent += '<div class="mt-2">';
-                modalContent += '<a href="' + (isValidUrl(event.tournament_link) ? event.tournament_link : '#') + '" class="btn btn-success btn-sm">';
-                modalContent += '<i class="bi bi-trophy me-1"></i>View Tournament Results</a>';
+                modalContent += '<a href="' + (isValidUrl(event.tournament_link) ? event.tournament_link : '#') + '" class="btn-m btn-p" style="text-decoration:none;font-size:.82rem">';
+                modalContent += '<i class="bi bi-trophy"></i> View Results</a>';
                 modalContent += '</div>';
             }
 

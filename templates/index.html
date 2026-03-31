@@ -69,19 +69,44 @@
 <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.4rem">
 <!-- Main Content -->
 <div>
-    <div class="sh">
-        <div class="st"><i class="bi bi-calendar-event"></i> Tournaments</div>
-        <div class="pt" id="tournamentTabs">
-            <button class="ptb on" onclick="switchHomeTab('completed-pane', this)">Completed</button>
-            {% if upcoming_tournaments %}
-            <button class="ptb" onclick="switchHomeTab('upcoming-pane', this)">Upcoming ({{ upcoming_tournaments|length }})</button>
+    <!-- Next Tournament Card — only shown when location is finalized -->
+    {% if next_tournament and next_tournament.lake_name and next_tournament.ramp_name and next_tournament.start_time %}
+    {% set tournament = next_tournament %}
+    <div class="tc" style="border-color:rgba(59,130,246,.25);margin-bottom:1.4rem">
+        <div class="tc-h">
+            <div class="tc-db up">
+                <span class="mo">{{ tournament.date.strftime('%b') }}</span>
+                <span class="dy">{{ tournament.date.day }}</span>
+            </div>
+            <div class="tc-m">
+                <div class="tc-t">{{ tournament.name }}</div>
+                <div class="tc-s">
+                    <span><i class="bi bi-water"></i> {{ tournament.lake_name }}</span>
+                    <span><i class="bi bi-pin-map"></i> {{ tournament.ramp_name }}</span>
+                    <span><i class="bi bi-clock"></i> {{ tournament.start_time }}–{{ tournament.end_time }}</span>
+                </div>
+            </div>
+            <span class="ts ts-u">Upcoming</span>
+        </div>
+        <div class="tc-b">
+            {{ tournament_description_row(tournament) }}
+            {{ tournament_info_row(tournament) }}
+
+            {% if tournament.google_maps_iframe %}
+            <div style="border-radius:var(--r-md);overflow:hidden;position:relative;height:180px;margin-bottom:1rem">
+                <style>.map-container-next iframe{position:absolute;top:0;left:0;width:100%!important;height:100%!important;border:0}</style>
+                <div class="map-container-next" style="width:100%;height:100%">{{ tournament.google_maps_iframe|safe }}</div>
+            </div>
             {% endif %}
         </div>
     </div>
+    {% endif %}
 
-    <div id="tournamentTabsContent">
-        <!-- Completed Tournaments Tab -->
-        <div class="home-tab active" id="completed-pane">
+    <div class="sh">
+        <div class="st"><i class="bi bi-calendar-event"></i> Tournaments</div>
+    </div>
+
+    <div>
             {% for tournament in completed_tournaments %}
             <div class="tc" style="margin-bottom:1.15rem;{% if tournament.is_cancelled %}opacity:.6{% endif %}">
                 <div class="tc-h">
@@ -176,80 +201,6 @@
             {% endif %}
         </div>
 
-        <!-- Upcoming Tournaments Tab -->
-        <div class="home-tab" id="upcoming-pane">
-            {% for tournament in upcoming_tournaments %}
-            <div class="tc" style="margin-bottom:1.15rem;{% if tournament.is_cancelled %}opacity:.6{% endif %}">
-                <div class="tc-h">
-                    <div class="tc-db up">
-                        <span class="mo">{{ tournament.date.strftime('%b') }}</span>
-                        <span class="dy">{{ tournament.date.day }}</span>
-                    </div>
-                    <div class="tc-m">
-                        <div class="tc-t">{{ tournament.name }}</div>
-                        <div class="tc-s">
-                            {% if tournament.lake_name %}<span><i class="bi bi-water"></i> {{ tournament.lake_name }}</span>{% endif %}
-                            {% if tournament.ramp_name %}<span><i class="bi bi-pin-map"></i> {{ tournament.ramp_name }}</span>{% endif %}
-                            {% if tournament.start_time %}<span><i class="bi bi-clock"></i> {{ tournament.start_time }}–{{ tournament.end_time }}</span>{% endif %}
-                        </div>
-                    </div>
-                    {% if tournament.is_cancelled %}
-                    <span class="ts" style="background:var(--err-m);color:var(--err)">Cancelled</span>
-                    {% else %}
-                    <span class="ts ts-u">Upcoming</span>
-                    {% endif %}
-                </div>
-                <div class="tc-b">
-                    {{ tournament_description_row(tournament) }}
-
-                    {% if tournament.google_maps_iframe %}
-                    <div style="border-radius:var(--r-md);overflow:hidden;position:relative;height:180px;margin-bottom:1rem">
-                        <style>.map-container-upcoming-{{ loop.index }} iframe{position:absolute;top:0;left:0;width:100%!important;height:100%!important;border:0}</style>
-                        <div class="map-container-upcoming-{{ loop.index }}" style="width:100%;height:100%">{{ tournament.google_maps_iframe|safe }}</div>
-                    </div>
-                    {% elif tournament.poll_data and (tournament.poll_data | length > 0) %}
-                    <div class="tournament-results-container-home" data-tournament-id="{{ tournament.id }}" style="margin-bottom:1rem">
-                        <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem">
-                            <div class="cc"><div class="ci" style="padding:.75rem">
-                                <div style="font-size:.82rem;font-weight:600;color:var(--ok);margin-bottom:.5rem"><i class="bi bi-bar-chart-fill"></i> Location Votes</div>
-                                <div class="stacked-chart-container" id="stackedChart-{{ tournament.id }}" style="min-height:150px"></div>
-                            </div></div>
-                            <div class="cc"><div class="ci" style="padding:.75rem">
-                                <div style="font-size:.82rem;font-weight:600;margin-bottom:.5rem"><i class="bi bi-clock"></i> Time Slots</div>
-                                <table class="mt" id="timeTable-{{ tournament.id }}">
-                                    <thead><tr><th>Start</th><th>End</th><th style="text-align:center">Votes</th></tr></thead>
-                                    <tbody></tbody>
-                                </table>
-                            </div></div>
-                        </div>
-                        {% for option in tournament.poll_data %}
-                        <div data-option-data="{{ option.option_data | tojson_attr }}" data-vote-count="{{ option.vote_count }}" class="d-none poll-option-data"></div>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    {{ location_tbd_placeholder() }}
-                    {% endif %}
-
-                    {% if tournament.poll_id and tournament.poll_is_open and not tournament.user_has_voted %}
-                    <div style="display:flex;justify-content:flex-end">
-                        <a href="/polls?tab=tournament#poll-{{ tournament.poll_id }}" class="btn-m btn-s" style="text-decoration:none"><i class="bi bi-hand-index"></i> Vote on Location</a>
-                    </div>
-                    {% elif tournament.poll_id and (not tournament.poll_is_open or tournament.user_has_voted) %}
-                    <div style="display:flex;justify-content:flex-end">
-                        <a href="/polls?tab=tournament#poll-{{ tournament.poll_id }}" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-bar-chart-fill"></i> View Poll Results</a>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-
-            {% if not upcoming_tournaments %}
-            <div style="text-align:center;padding:3rem 1rem;color:var(--t3)">
-                <i class="bi bi-calendar-x" style="font-size:3rem;opacity:.3"></i>
-                <div style="margin-top:.75rem;font-weight:500">No upcoming tournaments</div>
-            </div>
-            {% endif %}
-        </div>
     </div>
 </div>
 
@@ -320,18 +271,7 @@
 </div>
 </div>
 
-<!-- Tab switching JS -->
-<script>
-function switchHomeTab(paneId, btn) {
-    document.querySelectorAll('.home-tab').forEach(function(p) { p.classList.remove('active'); });
-    document.getElementById(paneId).classList.add('active');
-    document.querySelectorAll('#tournamentTabs .ptb').forEach(function(b) { b.classList.remove('on'); });
-    btn.classList.add('on');
-}
-</script>
 <style>
-.home-tab { display: none; }
-.home-tab.active { display: block; }
 .tc { background: var(--bg-surface); border: 1px solid var(--b0); border-radius: var(--r-lg); overflow: hidden; transition: all 0.25s; margin-bottom: 1.15rem; }
 .tc:hover { border-color: var(--b1); box-shadow: 0 4px 12px rgba(0,0,0,.25); transform: translateY(-2px); }
 .tc-h { display: flex; align-items: center; gap: 1rem; padding: 1.15rem 1.35rem; border-bottom: 1px solid var(--b0); }
