@@ -350,10 +350,10 @@
 <div style="display:flex;align-items:center;gap:.5rem;margin-top:1.5rem;flex-wrap:wrap">
     <a href="/" class="btn-m btn-p" style="text-decoration:none"><i class="bi bi-arrow-left"></i> Back</a>
     {% if prev_tournament_id %}
-    <a href="/tournaments/{{ prev_tournament_id }}" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-chevron-left"></i> Previous Result</a>
+    <a href="/tournaments/{{ prev_tournament_id }}" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-chevron-left"></i> Previous</a>
     {% endif %}
     {% if next_tournament_id %}
-    <a href="/tournaments/{{ next_tournament_id }}" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-chevron-right"></i> Next Result</a>
+    <a href="/tournaments/{{ next_tournament_id }}" class="btn-m btn-g" style="text-decoration:none">Next <i class="bi bi-chevron-right"></i></a>
     {% endif %}
 </div>
 

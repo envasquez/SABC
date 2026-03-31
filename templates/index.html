@@ -179,17 +179,17 @@
                         {% for result in tournament.top_results %}
                         {% if result[0] == 2 %}
                         <div class="pod-p"><div class="pod-b p2"><span class="pod-e">&#129352;</span><span class="pod-r s">2</span></div>
-                            <div class="pod-n">{% set n = result[1].split() %}{{ n[-1] if n|length >= 2 else result[1] }}{% if result[2] %}<br><span style="font-weight:400;font-size:.68rem;color:var(--t3)">+ {% set n2 = result[2].split() %}{{ n2[-1] if n2|length >= 2 else result[2] }}</span>{% endif %}</div>
+                            <div class="pod-n">{% set n = result[1].split() %}{{ n[0][0] + '. ' + n[-1] if n|length >= 2 else result[1] }}{% if result[2] %}<br><span style="font-weight:400;font-size:.68rem;color:var(--t3)">+ {% set n2 = result[2].split() %}{{ n2[0][0] + '. ' + n2[-1] if n2|length >= 2 else result[2] }}</span>{% endif %}</div>
                             <div class="pod-w">{{ "%.2f"|format(result[3]) }} lbs</div>
                         </div>
                         {% elif result[0] == 1 %}
                         <div class="pod-p"><div class="pod-b p1" style="height:130px"><span class="pod-e">&#129351;</span><span class="pod-r g">1</span></div>
-                            <div class="pod-n">{% set n = result[1].split() %}{{ n[-1] if n|length >= 2 else result[1] }}{% if result[2] %}<br><span style="font-weight:400;font-size:.68rem;color:var(--t3)">+ {% set n2 = result[2].split() %}{{ n2[-1] if n2|length >= 2 else result[2] }}</span>{% endif %}</div>
+                            <div class="pod-n">{% set n = result[1].split() %}{{ n[0][0] + '. ' + n[-1] if n|length >= 2 else result[1] }}{% if result[2] %}<br><span style="font-weight:400;font-size:.68rem;color:var(--t3)">+ {% set n2 = result[2].split() %}{{ n2[0][0] + '. ' + n2[-1] if n2|length >= 2 else result[2] }}</span>{% endif %}</div>
                             <div class="pod-w">{{ "%.2f"|format(result[3]) }} lbs</div>
                         </div>
                         {% elif result[0] == 3 %}
                         <div class="pod-p"><div class="pod-b p3"><span class="pod-e">&#129353;</span><span class="pod-r b">3</span></div>
-                            <div class="pod-n">{% set n = result[1].split() %}{{ n[-1] if n|length >= 2 else result[1] }}{% if result[2] %}<br><span style="font-weight:400;font-size:.68rem;color:var(--t3)">+ {% set n2 = result[2].split() %}{{ n2[-1] if n2|length >= 2 else result[2] }}</span>{% endif %}</div>
+                            <div class="pod-n">{% set n = result[1].split() %}{{ n[0][0] + '. ' + n[-1] if n|length >= 2 else result[1] }}{% if result[2] %}<br><span style="font-weight:400;font-size:.68rem;color:var(--t3)">+ {% set n2 = result[2].split() %}{{ n2[0][0] + '. ' + n2[-1] if n2|length >= 2 else result[2] }}</span>{% endif %}</div>
                             <div class="pod-w">{{ "%.2f"|format(result[3]) }} lbs</div>
                         </div>
                         {% endif %}
