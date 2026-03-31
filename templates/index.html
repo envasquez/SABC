@@ -23,7 +23,9 @@
 {% endif %}
 
 {# Tournament data setup #}
+{% set current_year_num = now_local().year %}
 {% set completed_tournaments = all_tournaments | selectattr('is_past', 'equalto', True) | selectattr('event_type', 'equalto', 'sabc_tournament') | sort(attribute='date', reverse=True) | list %}
+{% set completed_this_year = completed_tournaments | selectattr('date.year', 'equalto', current_year_num) | rejectattr('is_cancelled', 'equalto', true) | list %}
 {% set upcoming_tournaments = all_tournaments | rejectattr('is_past', 'equalto', True) | selectattr('event_type', 'equalto', 'sabc_tournament') | sort(attribute='date') | list %}
 {% set active_upcoming = upcoming_tournaments | rejectattr('is_cancelled', 'equalto', true) | list %}
 {% set next_tournament = active_upcoming[0] if active_upcoming else none %}
@@ -44,7 +46,7 @@
     </div>
     <div class="sc c2">
         <div class="sc-l">Completed</div>
-        <div class="sc-v v2">{{ completed_tournaments|length }}</div>
+        <div class="sc-v v2">{{ completed_this_year|length }}</div>
         <div class="sc-c">Tournaments this season</div>
         <i class="bi bi-trophy sc-i"></i>
     </div>
