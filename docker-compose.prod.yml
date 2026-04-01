@@ -17,6 +17,8 @@ services:
       ENVIRONMENT: ${ENVIRONMENT:-production}
       SENTRY_DSN: ${SENTRY_DSN:-}
       RELEASE_VERSION: ${RELEASE_VERSION:-}
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
     ports:
       - "8000:8000"
     depends_on:
