@@ -54,6 +54,12 @@
         <div style="color:var(--t3);margin-bottom:1rem;font-size:.86rem">Have a question or want to learn more? Send us a message and we'll get back to you.</div>
         <form method="POST" action="/about/contact">
             {{ csrf_token(request) }}
+            <!-- Honeypot field - hidden from humans, bots will fill it -->
+            <div style="position:absolute;left:-9999px" aria-hidden="true">
+                <label for="website">Website</label>
+                <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+            </div>
+            <input type="hidden" name="form_loaded_at" value="{{ form_loaded_at }}">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
                 <div class="fg"><label class="fl" for="name">Name <span style="color:var(--err)">*</span></label><input class="fi" type="text" id="name" name="name" required placeholder="Your name" maxlength="100"></div>
                 <div class="fg"><label class="fl" for="email">Email <span style="color:var(--err)">*</span></label><input class="fi" type="email" id="email" name="email" required placeholder="your@email.com" maxlength="255"></div>

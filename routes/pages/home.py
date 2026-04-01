@@ -1,3 +1,5 @@
+import re
+import time
 from datetime import date
 from typing import Any, Dict, List
 
@@ -428,6 +430,43 @@ logger = get_logger(__name__)
 
 EXCLUDED_EMAIL_DOMAINS = ("@sabc.com", "@saustinbc.com")
 
+# Minimum seconds between form load and submit (bots submit instantly)
+MIN_SUBMIT_TIME_SECONDS = 3
+# Patterns that indicate spam content
+SPAM_URL_PATTERN = re.compile(r"https?://\S+", re.IGNORECASE)
+
+
+def _is_spam_submission(
+    honeypot: str, form_loaded_at: str, sender_name: str, message: str
+) -> str | None:
+    """Check if a contact form submission is spam.
+
+    Returns a reason string if spam, None if legitimate.
+    """
+    # Honeypot check - bots fill hidden fields that humans can't see
+    if honeypot:
+        return "honeypot filled"
+
+    # Time-based check - bots submit forms faster than humans can type
+    try:
+        loaded_at = int(form_loaded_at)
+        elapsed = int(time.time()) - loaded_at
+        if elapsed < MIN_SUBMIT_TIME_SECONDS:
+            return f"submitted too fast ({elapsed}s)"
+    except (ValueError, TypeError):
+        return "missing timestamp"
+
+    # Content checks - common spam patterns
+    if SPAM_URL_PATTERN.search(sender_name):
+        return "URL in name field"
+
+    # Reject messages that are just a URL with no real content
+    message_without_urls = SPAM_URL_PATTERN.sub("", message).strip()
+    if len(message_without_urls) < 10:
+        return "message is mostly URLs"
+
+    return None
+
 
 @router.post("/about/contact")
 async def contact_form(request: Request) -> RedirectResponse:
@@ -440,6 +479,15 @@ async def contact_form(request: Request) -> RedirectResponse:
 
     if not all([sender_name, sender_email, subject_line, message]):
         return error_redirect("/about", "All fields are required.")
+
+    # Spam protection checks
+    honeypot = str(form.get("website", "")).strip()
+    form_loaded_at = str(form.get("form_loaded_at", "")).strip()
+    spam_reason = _is_spam_submission(honeypot, form_loaded_at, sender_name, message)
+    if spam_reason:
+        logger.warning(f"Spam contact form blocked: {spam_reason} (from {sender_email})")
+        # Return success message to not tip off bots
+        return success_redirect("/about", "Your message has been sent! We'll get back to you soon.")
 
     # Get admin emails, excluding placeholder domains
     with get_session() as session:
@@ -473,5 +521,8 @@ async def contact_form(request: Request) -> RedirectResponse:
 async def static_page(request: Request, page: str):
     user = get_user_optional(request)
     if page in ["about", "bylaws"]:
-        return templates.TemplateResponse(f"{page}.html", {"request": request, "user": user})
+        context: Dict[str, Any] = {"request": request, "user": user}
+        if page == "about":
+            context["form_loaded_at"] = str(int(time.time()))
+        return templates.TemplateResponse(f"{page}.html", context)
     raise HTTPException(status_code=404, detail="Page not found")

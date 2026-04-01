@@ -1,5 +1,6 @@
 """Contact form tests."""
 
+import time
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
@@ -7,6 +8,20 @@ from sqlalchemy.orm import Session
 
 from core.db_schema import Angler
 from tests.conftest import post_with_csrf
+
+
+def _valid_form_data(**overrides: str) -> dict:
+    """Return valid contact form data with spam protection fields."""
+    data = {
+        "name": "John Doe",
+        "email": "john@example.com",
+        "subject": "Question about membership",
+        "message": "I would like to join the club.",
+        "website": "",  # honeypot - must be empty
+        "form_loaded_at": str(int(time.time()) - 10),  # loaded 10 seconds ago
+    }
+    data.update(overrides)
+    return data
 
 
 class TestContactFormPage:
@@ -22,6 +37,13 @@ class TestContactFormPage:
         assert 'name="email"' in response.text
         assert 'name="subject"' in response.text
         assert 'name="message"' in response.text
+
+    def test_about_page_has_honeypot_field(self, client: TestClient):
+        """Test that the about page contains the hidden honeypot field."""
+        response = client.get("/about")
+        assert response.status_code == 200
+        assert 'name="website"' in response.text
+        assert 'name="form_loaded_at"' in response.text
 
 
 class TestContactFormSubmission:
@@ -56,12 +78,7 @@ class TestContactFormSubmission:
             response = post_with_csrf(
                 client,
                 "/about/contact",
-                data={
-                    "name": "John Doe",
-                    "email": "john@example.com",
-                    "subject": "Question about membership",
-                    "message": "I would like to join the club.",
-                },
+                data=_valid_form_data(),
             )
             assert response.status_code == 200  # After redirect
             mock_send.assert_called_once_with(
@@ -107,12 +124,12 @@ class TestContactFormSubmission:
             response = post_with_csrf(
                 client,
                 "/about/contact",
-                data={
-                    "name": "Jane",
-                    "email": "jane@example.com",
-                    "subject": "Test",
-                    "message": "Hello",
-                },
+                data=_valid_form_data(
+                    name="Jane",
+                    email="jane@example.com",
+                    subject="Test",
+                    message="Hello, I have a question about joining.",
+                ),
             )
             assert response.status_code == 200
             mock_send.assert_called_once()
@@ -125,12 +142,12 @@ class TestContactFormSubmission:
         response = post_with_csrf(
             client,
             "/about/contact",
-            data={
-                "name": "Test",
-                "email": "test@example.com",
-                "subject": "Test",
-                "message": "Hello",
-            },
+            data=_valid_form_data(
+                name="Test",
+                email="test@example.com",
+                subject="Test",
+                message="Hello, this is a test message.",
+            ),
         )
         assert response.status_code == 200
         assert "error" in str(response.url) or "Unable to send" in response.text
@@ -153,15 +170,154 @@ class TestContactFormSubmission:
             response = post_with_csrf(
                 client,
                 "/about/contact",
-                data={
-                    "name": "Test",
-                    "email": "test@example.com",
-                    "subject": "Test",
-                    "message": "Hello",
-                },
+                data=_valid_form_data(
+                    name="Test",
+                    email="test@example.com",
+                    subject="Test",
+                    message="Hello, this is a test message.",
+                ),
             )
             assert response.status_code == 200
             assert "error" in str(response.url) or "Failed to send" in response.text
+
+
+class TestContactFormSpamProtection:
+    """Test spam protection mechanisms."""
+
+    def test_honeypot_blocks_spam(self, client: TestClient):
+        """Test that filling the honeypot field blocks the submission."""
+        with patch("routes.pages.home.send_contact_email") as mock_send:
+            response = post_with_csrf(
+                client,
+                "/about/contact",
+                data=_valid_form_data(website="http://spam.com"),
+            )
+            assert response.status_code == 200
+            # Returns fake success to not tip off bots
+            assert "success" in str(response.url) or "been sent" in response.text
+            # But email was NOT actually sent
+            mock_send.assert_not_called()
+
+    def test_fast_submission_blocks_spam(self, client: TestClient):
+        """Test that submitting too quickly blocks the submission."""
+        with patch("routes.pages.home.send_contact_email") as mock_send:
+            response = post_with_csrf(
+                client,
+                "/about/contact",
+                data=_valid_form_data(form_loaded_at=str(int(time.time()))),  # just now
+            )
+            assert response.status_code == 200
+            assert "success" in str(response.url) or "been sent" in response.text
+            mock_send.assert_not_called()
+
+    def test_missing_timestamp_blocks_spam(self, client: TestClient):
+        """Test that missing form_loaded_at blocks the submission."""
+        with patch("routes.pages.home.send_contact_email") as mock_send:
+            response = post_with_csrf(
+                client,
+                "/about/contact",
+                data=_valid_form_data(form_loaded_at=""),
+            )
+            assert response.status_code == 200
+            assert "success" in str(response.url) or "been sent" in response.text
+            mock_send.assert_not_called()
+
+    def test_url_in_name_blocks_spam(self, client: TestClient):
+        """Test that URLs in the name field block the submission."""
+        with patch("routes.pages.home.send_contact_email") as mock_send:
+            response = post_with_csrf(
+                client,
+                "/about/contact",
+                data=_valid_form_data(name="http://spam.example.com"),
+            )
+            assert response.status_code == 200
+            assert "success" in str(response.url) or "been sent" in response.text
+            mock_send.assert_not_called()
+
+    def test_message_mostly_urls_blocks_spam(self, client: TestClient):
+        """Test that messages that are mostly URLs are blocked."""
+        with patch("routes.pages.home.send_contact_email") as mock_send:
+            response = post_with_csrf(
+                client,
+                "/about/contact",
+                data=_valid_form_data(message="http://spam.example.com/deposit"),
+            )
+            assert response.status_code == 200
+            assert "success" in str(response.url) or "been sent" in response.text
+            mock_send.assert_not_called()
+
+    def test_legitimate_message_with_url_passes(
+        self, client: TestClient, db_session: Session, password_hash: str
+    ):
+        """Test that a real message containing a URL is allowed."""
+        admin = Angler(
+            name="Admin",
+            email="admin@example.com",
+            password_hash=password_hash,
+            member=True,
+            is_admin=True,
+        )
+        db_session.add(admin)
+        db_session.commit()
+
+        with patch("routes.pages.home.send_contact_email", return_value=True) as mock_send:
+            response = post_with_csrf(
+                client,
+                "/about/contact",
+                data=_valid_form_data(
+                    message="Hi, I saw your site at https://sabc.com and I want to join the club!"
+                ),
+            )
+            assert response.status_code == 200
+            mock_send.assert_called_once()
+
+
+class TestSpamDetectionUnit:
+    """Unit tests for the _is_spam_submission function."""
+
+    def test_clean_submission(self):
+        from routes.pages.home import _is_spam_submission
+
+        result = _is_spam_submission("", str(int(time.time()) - 10), "John", "A real message here")
+        assert result is None
+
+    def test_honeypot_filled(self):
+        from routes.pages.home import _is_spam_submission
+
+        result = _is_spam_submission(
+            "spam", str(int(time.time()) - 10), "John", "A real message here"
+        )
+        assert result == "honeypot filled"
+
+    def test_too_fast(self):
+        from routes.pages.home import _is_spam_submission
+
+        result = _is_spam_submission("", str(int(time.time())), "John", "A real message here")
+        assert result is not None
+        assert "too fast" in result
+
+    def test_invalid_timestamp(self):
+        from routes.pages.home import _is_spam_submission
+
+        result = _is_spam_submission("", "not-a-number", "John", "A real message here")
+        assert result == "missing timestamp"
+
+    def test_url_in_name(self):
+        from routes.pages.home import _is_spam_submission
+
+        result = _is_spam_submission(
+            "", str(int(time.time()) - 10), "http://spam.com", "A real message here"
+        )
+        assert result == "URL in name field"
+
+    def test_message_mostly_urls(self):
+        from routes.pages.home import _is_spam_submission
+
+        result = _is_spam_submission(
+            "", str(int(time.time()) - 10), "John", "https://spam.example.com"
+        )
+        assert result is not None
+        assert "URLs" in result
 
 
 class TestContactEmailTemplate:
