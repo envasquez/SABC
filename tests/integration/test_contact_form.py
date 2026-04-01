@@ -1,7 +1,7 @@
 """Contact form tests."""
 
 import time
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -318,6 +318,127 @@ class TestSpamDetectionUnit:
         )
         assert result is not None
         assert "URLs" in result
+
+
+class TestTurnstileVerification:
+    """Test Cloudflare Turnstile CAPTCHA integration."""
+
+    def test_turnstile_skipped_when_not_configured(
+        self, client: TestClient, db_session: Session, password_hash: str
+    ):
+        """Test that Turnstile is skipped when no secret key is set."""
+        admin = Angler(
+            name="Admin",
+            email="admin@example.com",
+            password_hash=password_hash,
+            member=True,
+            is_admin=True,
+        )
+        db_session.add(admin)
+        db_session.commit()
+
+        # No TURNSTILE_SECRET_KEY set (default) — should send email normally
+        with patch("routes.pages.home.send_contact_email", return_value=True) as mock_send:
+            response = post_with_csrf(
+                client,
+                "/about/contact",
+                data=_valid_form_data(),
+            )
+            assert response.status_code == 200
+            mock_send.assert_called_once()
+
+    def test_turnstile_blocks_invalid_token(
+        self, client: TestClient, db_session: Session, password_hash: str
+    ):
+        """Test that invalid Turnstile token blocks submission."""
+        admin = Angler(
+            name="Admin",
+            email="admin@example.com",
+            password_hash=password_hash,
+            member=True,
+            is_admin=True,
+        )
+        db_session.add(admin)
+        db_session.commit()
+
+        with (
+            patch("routes.pages.home.TURNSTILE_SECRET_KEY", "test-secret-key"),
+            patch(
+                "routes.pages.home._verify_turnstile", new_callable=AsyncMock, return_value=False
+            ),
+            patch("routes.pages.home.send_contact_email") as mock_send,
+        ):
+            response = post_with_csrf(
+                client,
+                "/about/contact",
+                data=_valid_form_data(),
+            )
+            assert response.status_code == 200
+            assert "error" in str(response.url) or "CAPTCHA" in response.text
+            mock_send.assert_not_called()
+
+    def test_turnstile_allows_valid_token(
+        self, client: TestClient, db_session: Session, password_hash: str
+    ):
+        """Test that valid Turnstile token allows submission."""
+        admin = Angler(
+            name="Admin",
+            email="admin@example.com",
+            password_hash=password_hash,
+            member=True,
+            is_admin=True,
+        )
+        db_session.add(admin)
+        db_session.commit()
+
+        with (
+            patch("routes.pages.home.TURNSTILE_SECRET_KEY", "test-secret-key"),
+            patch("routes.pages.home._verify_turnstile", new_callable=AsyncMock, return_value=True),
+            patch("routes.pages.home.send_contact_email", return_value=True) as mock_send,
+        ):
+            response = post_with_csrf(
+                client,
+                "/about/contact",
+                data={**_valid_form_data(), "cf-turnstile-response": "valid-token"},
+            )
+            assert response.status_code == 200
+            mock_send.assert_called_once()
+
+    def test_turnstile_widget_shown_when_configured(self, client: TestClient):
+        """Test that Turnstile widget appears when site key is set."""
+        with patch("routes.pages.home.TURNSTILE_SITE_KEY", "test-site-key"):
+            response = client.get("/about")
+            assert response.status_code == 200
+            assert "cf-turnstile" in response.text
+            assert "test-site-key" in response.text
+
+    def test_turnstile_widget_hidden_when_not_configured(self, client: TestClient):
+        """Test that Turnstile widget is hidden when no site key is set."""
+        response = client.get("/about")
+        assert response.status_code == 200
+        assert "cf-turnstile" not in response.text
+
+
+class TestVerifyTurnstileUnit:
+    """Unit tests for the _verify_turnstile function."""
+
+    def test_skips_when_no_secret(self):
+        import asyncio
+
+        from routes.pages.home import _verify_turnstile
+
+        with patch("routes.pages.home.TURNSTILE_SECRET_KEY", ""):
+            result = asyncio.get_event_loop().run_until_complete(_verify_turnstile("any-token"))
+            assert result is True
+
+    def test_rejects_empty_token(self):
+        import asyncio
+
+        from routes.pages.home import _verify_turnstile
+
+        with patch("routes.pages.home.TURNSTILE_SECRET_KEY", "secret"):
+            result = asyncio.get_event_loop().run_until_complete(_verify_turnstile(""))
+            assert result is False
 
 
 class TestContactEmailTemplate:

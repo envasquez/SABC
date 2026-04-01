@@ -1,8 +1,10 @@
+import os
 import re
 import time
 from datetime import date
 from typing import Any, Dict, List
 
+import httpx
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import case, func
@@ -430,6 +432,33 @@ logger = get_logger(__name__)
 
 EXCLUDED_EMAIL_DOMAINS = ("@sabc.com", "@saustinbc.com")
 
+# Cloudflare Turnstile CAPTCHA
+TURNSTILE_SITE_KEY = os.environ.get("TURNSTILE_SITE_KEY", "")
+TURNSTILE_SECRET_KEY = os.environ.get("TURNSTILE_SECRET_KEY", "")
+TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+
+
+async def _verify_turnstile(token: str, remote_ip: str | None = None) -> bool:
+    """Verify a Cloudflare Turnstile token. Returns True if valid."""
+    if not TURNSTILE_SECRET_KEY:
+        # Turnstile not configured — skip verification
+        return True
+    if not token:
+        return False
+    try:
+        async with httpx.AsyncClient() as client:
+            payload: Dict[str, str] = {"secret": TURNSTILE_SECRET_KEY, "response": token}
+            if remote_ip:
+                payload["remoteip"] = remote_ip
+            resp = await client.post(TURNSTILE_VERIFY_URL, data=payload, timeout=5.0)
+            result = resp.json()
+            return bool(result.get("success", False))
+    except Exception as e:
+        logger.error(f"Turnstile verification failed: {e}")
+        # Fail open — don't block legitimate users if Cloudflare is down
+        return True
+
+
 # Minimum seconds between form load and submit (bots submit instantly)
 MIN_SUBMIT_TIME_SECONDS = 3
 # Patterns that indicate spam content
@@ -489,6 +518,14 @@ async def contact_form(request: Request) -> RedirectResponse:
         # Return success message to not tip off bots
         return success_redirect("/about", "Your message has been sent! We'll get back to you soon.")
 
+    # Cloudflare Turnstile CAPTCHA verification
+    if TURNSTILE_SECRET_KEY:
+        turnstile_token = str(form.get("cf-turnstile-response", "")).strip()
+        client_ip = request.client.host if request.client else None
+        if not await _verify_turnstile(turnstile_token, client_ip):
+            logger.warning(f"Turnstile verification failed (from {sender_email})")
+            return error_redirect("/about", "CAPTCHA verification failed. Please try again.")
+
     # Get admin emails, excluding placeholder domains
     with get_session() as session:
         admin_emails: List[str] = [
@@ -524,5 +561,6 @@ async def static_page(request: Request, page: str):
         context: Dict[str, Any] = {"request": request, "user": user}
         if page == "about":
             context["form_loaded_at"] = str(int(time.time()))
+            context["turnstile_site_key"] = TURNSTILE_SITE_KEY
         return templates.TemplateResponse(f"{page}.html", context)
     raise HTTPException(status_code=404, detail="Page not found")

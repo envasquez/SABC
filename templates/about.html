@@ -66,6 +66,12 @@
             </div>
             <div class="fg"><label class="fl" for="subject">Subject <span style="color:var(--err)">*</span></label><input class="fi" type="text" id="subject" name="subject" required placeholder="What is this about?" maxlength="200"></div>
             <div class="fg"><label class="fl" for="message">Message <span style="color:var(--err)">*</span></label><textarea class="fi" id="message" name="message" required placeholder="Your message..." rows="5" maxlength="2000" style="resize:vertical"></textarea></div>
+            {% if turnstile_site_key %}
+            <div class="fg">
+                <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+                <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-theme="dark"></div>
+            </div>
+            {% endif %}
             <button class="btn-m btn-p" type="submit"><i class="bi bi-send"></i> Send Message</button>
         </form>
     </div>
