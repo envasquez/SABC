@@ -93,21 +93,19 @@
                                             <div class="pt" style="margin-bottom:.5rem;justify-content:center" id="finishes-tabs-{{ member['id'] }}">
                                                 {% for year in stats.get('year_finishes', {}).keys()|sort(reverse=True) %}
                                                 <button class="ptb {% if loop.first %}on{% endif %}" style="padding:.15rem .5rem;font-size:.72rem"
-                                                        data-bs-toggle="pill"
-                                                        data-bs-target="#finishes-{{ member['id'] }}-{{ year }}"
+                                                        onclick="switchFinishesTab('finishes-{{ member['id'] }}-{{ year }}', this)"
                                                         type="button">{{ year }}</button>
                                                 {% endfor %}
                                                 <button class="ptb" style="padding:.15rem .5rem;font-size:.72rem"
-                                                        data-bs-toggle="pill"
-                                                        data-bs-target="#finishes-{{ member['id'] }}-alltime"
+                                                        onclick="switchFinishesTab('finishes-{{ member['id'] }}-alltime', this)"
                                                         type="button">All</button>
                                             </div>
 
                                             <!-- Tab Content -->
-                                            <div class="tab-content">
+                                            <div>
                                                 {% for year, finishes in stats.get('year_finishes', {}).items()|sort(reverse=True) %}
-                                                <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
-                                                     id="finishes-{{ member['id'] }}-{{ year }}" role="tabpanel">
+                                                <div class="finishes-pane {% if loop.first %}active{% endif %}"
+                                                     id="finishes-{{ member['id'] }}-{{ year }}">
                                                     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.35rem;text-align:center">
                                                         <div style="padding:.35rem;border-radius:var(--r-sm);background:color-mix(in srgb,#ffd700 12%,transparent)">
                                                             <div style="font-size:.85rem;color:#ffd700"><i class="bi bi-trophy"></i></div>
@@ -131,7 +129,7 @@
                                                 </div>
                                                 {% endfor %}
                                                 <!-- All Time Tab -->
-                                                <div class="tab-pane fade" id="finishes-{{ member['id'] }}-alltime" role="tabpanel">
+                                                <div class="finishes-pane" id="finishes-{{ member['id'] }}-alltime">
                                                     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.35rem;text-align:center">
                                                         <div style="padding:.35rem;border-radius:var(--r-sm);background:color-mix(in srgb,#ffd700 12%,transparent)">
                                                             <div style="font-size:.85rem;color:#ffd700"><i class="bi bi-trophy"></i></div>
@@ -279,8 +277,17 @@
 <style>
 .guest-tab { display:none }
 .guest-tab.active { display:block }
+.finishes-pane { display:none }
+.finishes-pane.active { display:block }
 </style>
 <script>
+function switchFinishesTab(paneId, btn) {
+    var container = btn.closest('.ci');
+    container.querySelectorAll('.finishes-pane').forEach(function(p) { p.classList.remove('active'); });
+    document.getElementById(paneId).classList.add('active');
+    btn.closest('.pt').querySelectorAll('.ptb').forEach(function(b) { b.classList.remove('on'); });
+    btn.classList.add('on');
+}
 function switchGuestTab(paneId, btn) {
     document.querySelectorAll('.guest-tab').forEach(function(p) { p.classList.remove('active'); });
     document.getElementById(paneId).classList.add('active');
