@@ -22,12 +22,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         csp = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://challenges.cloudflare.com; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
             "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; "
             "img-src 'self' data: https:; "
-            "frame-src https://www.google.com https://maps.google.com; "
-            "connect-src 'self'"
+            "frame-src https://www.google.com https://maps.google.com https://challenges.cloudflare.com; "
+            "connect-src 'self' https://challenges.cloudflare.com"
         )
         # Only upgrade insecure requests in production (HTTPS)
         if is_https:
