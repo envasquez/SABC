@@ -22,5 +22,5 @@ async def validate_event(request: Request):
             data.get("lake_name", ""),
         )
         return JSONResponse(validation)
-    except Exception as e:
-        return JSONResponse({"error": f"Validation failed: {str(e)}"}, status_code=500)
+    except (ValueError, KeyError, TypeError):
+        return JSONResponse({"error": "Validation failed"}, status_code=500)

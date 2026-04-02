@@ -453,7 +453,7 @@ async def _verify_turnstile(token: str, remote_ip: str | None = None) -> bool:
             resp = await client.post(TURNSTILE_VERIFY_URL, data=payload, timeout=5.0)
             result = resp.json()
             return bool(result.get("success", False))
-    except Exception as e:
+    except (httpx.HTTPError, ValueError, KeyError) as e:
         logger.error(f"Turnstile verification failed: {e}")
         # Fail open — don't block legitimate users if Cloudflare is down
         return True

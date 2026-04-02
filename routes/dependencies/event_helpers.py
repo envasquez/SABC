@@ -29,6 +29,26 @@ def get_admin_events_data(
         return qs.get_admin_events_data(per_page, upcoming_offset, per_page, past_offset)
 
 
+def _validate_tournament_times(
+    start_time: Optional[str],
+    weigh_in_time: Optional[str],
+    entry_fee: Optional[float],
+    errors: List[str],
+) -> None:
+    """Validate start/weigh-in times and entry fee for tournament events."""
+    if start_time and not re.match(r"^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$", start_time):
+        errors.append("Invalid start time format. Use HH:MM (24-hour)")
+    if weigh_in_time and not re.match(r"^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$", weigh_in_time):
+        errors.append("Invalid weigh-in time format. Use HH:MM (24-hour)")
+    if start_time and weigh_in_time:
+        start = datetime.strptime(start_time, "%H:%M").time()
+        weigh_in = datetime.strptime(weigh_in_time, "%H:%M").time()
+        if weigh_in <= start:
+            errors.append("Weigh-in time must be after start time")
+    if entry_fee is not None and entry_fee < 0:
+        errors.append("Entry fee cannot be negative")
+
+
 def validate_event_data(
     date_str: str,
     name: str,
@@ -73,30 +93,12 @@ def validate_event_data(
     if not name or len(name.strip()) < 3:
         errors.append("Event name must be at least 3 characters")
     if event_type == "sabc_tournament":
-        if start_time and not re.match(r"^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$", start_time):
-            errors.append("Invalid start time format. Use HH:MM (24-hour)")
-        if weigh_in_time and not re.match(r"^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$", weigh_in_time):
-            errors.append("Invalid weigh-in time format. Use HH:MM (24-hour)")
-        if start_time and weigh_in_time:
-            start = datetime.strptime(start_time, "%H:%M").time()
-            weigh_in = datetime.strptime(weigh_in_time, "%H:%M").time()
-            if weigh_in <= start:
-                errors.append("Weigh-in time must be after start time")
-        if entry_fee is not None and entry_fee < 0:
-            errors.append("Entry fee cannot be negative")
+        _validate_tournament_times(start_time, weigh_in_time, entry_fee, errors)
     elif event_type == "holiday":
         if start_time or weigh_in_time or entry_fee:
             warnings.append("Holidays don't typically need tournament details")
     elif event_type == "other_tournament":
         if not lake_name or len(lake_name.strip()) < 2:
             errors.append("Lake name is required for other tournaments")
-        if start_time and not re.match(r"^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$", start_time):
-            errors.append("Invalid start time format. Use HH:MM (24-hour)")
-        if weigh_in_time and not re.match(r"^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$", weigh_in_time):
-            errors.append("Invalid weigh-in time format. Use HH:MM (24-hour)")
-        if start_time and weigh_in_time:
-            start = datetime.strptime(start_time, "%H:%M").time()
-            weigh_in = datetime.strptime(weigh_in_time, "%H:%M").time()
-            if weigh_in <= start:
-                errors.append("Weigh-in time must be after start time")
+        _validate_tournament_times(start_time, weigh_in_time, entry_fee, errors)
     return {"errors": errors, "warnings": warnings}

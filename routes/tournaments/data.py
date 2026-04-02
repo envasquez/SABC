@@ -54,8 +54,13 @@ def calculate_big_bass_carryover(qs: QueryService, tournament_id: int, event_dat
         """SELECT t.id, e.date, e.year,
                   COUNT(DISTINCT CASE WHEN a.name != 'Admin User' THEN r.angler_id END) as angler_count,
                   COUNT(DISTINCT CASE WHEN a1.name != 'Admin User' THEN tr.id END) as boat_count,
-                  MAX(CASE WHEN r.was_member = TRUE AND r.big_bass_weight > :min_weight
-                           AND r.disqualified = FALSE AND a.name != 'Admin User' THEN 1 ELSE 0 END) as member_won_big_bass
+                  MAX(CASE
+                      WHEN r.was_member = TRUE AND r.big_bass_weight > :min_weight
+                           AND r.disqualified = FALSE AND a.name != 'Admin User' THEN 1
+                      WHEN tr.big_bass_weight > :min_weight
+                           AND a1.name != 'Admin User' THEN 1
+                      ELSE 0
+                  END) as member_won_big_bass
            FROM tournaments t
            JOIN events e ON t.event_id = e.id
            LEFT JOIN results r ON r.tournament_id = t.id
@@ -168,7 +173,8 @@ def fetch_tournament_data(
            e.description as event_description, t.lake_name, t.ramp_name, t.entry_fee,
            t.fish_limit, t.complete, e.event_type,
            COALESCE(t.big_bass_carryover, 0) as big_bass_carryover,
-           COALESCE(t.aoy_points, TRUE) as aoy_points
+           COALESCE(t.aoy_points, TRUE) as aoy_points,
+           t.start_time, t.end_time
            FROM tournaments t
            JOIN events e ON t.event_id = e.id
            WHERE t.id = :tournament_id""",

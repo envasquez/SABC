@@ -8,8 +8,8 @@
         <div style="font-size:1.3rem;font-weight:600;color:var(--t2);margin-bottom:1rem">Page Not Found</div>
         <div style="color:var(--t3);margin-bottom:2rem">Looks like this fish got away!<br>The page you're looking for doesn't exist or has been moved.</div>
         <div style="display:flex;gap:.75rem;justify-content:center">
-            <a href="/" class="btn-m btn-p"><i class="bi bi-house"></i> Return Home</a>
-            <a href="/calendar" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-calendar3"></i> View Calendar</a>
+            <a href="/" class="btn-m btn-p"><i class="bi bi-house" aria-hidden="true"></i> Return Home</a>
+            <a href="/calendar" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-calendar3" aria-hidden="true"></i> View Calendar</a>
         </div>
         {% if correlation_id %}
         <div style="margin-top:1.5rem;font-size:.78rem;color:var(--t4)">Reference ID: <code>{{ correlation_id }}</code></div>

@@ -72,7 +72,10 @@ function loadPreview() {
         },
         body: formData
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) throw new Error('Server error');
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             renderPreview(data.data);

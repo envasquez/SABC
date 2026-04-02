@@ -2,6 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Event, get_session
 from core.helpers.auth import require_admin
@@ -145,7 +146,7 @@ async def update_event_by_id(
             poll_closes_date,
             is_cancelled,
         )
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         return handle_event_error(e, date)
 
 
@@ -188,5 +189,5 @@ async def edit_event(
             is_cancelled,
             poll_id,
         )
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         return handle_event_error(e, date)

@@ -4,14 +4,15 @@ from typing import Dict, Optional
 
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Poll, PollOption, PollVote, get_session
 from core.helpers.auth import require_admin
 from core.helpers.forms import get_form_string
 from core.helpers.logging import get_logger
 from core.helpers.timezone import make_aware
-from routes.admin.polls.poll_option_helpers import update_or_create_poll_option
-from routes.dependencies import find_lake_by_id, get_lakes_list
+from routes.admin.polls.poll_option_helpers import create_lake_option, update_or_create_poll_option
+from routes.dependencies import get_lakes_list
 
 router = APIRouter()
 logger = get_logger("admin.polls.edit")
@@ -93,14 +94,7 @@ async def update_poll(request: Request, poll_id: int) -> RedirectResponse:
 
                 # 3. Add new options for newly selected lakes
                 for lake_id in lakes_to_add:
-                    lake_name = find_lake_by_id(lake_id, "name")
-                    if lake_name:
-                        new_option = PollOption(
-                            poll_id=poll_id,
-                            option_text=lake_name,
-                            option_data=json.dumps({"lake_id": lake_id}),
-                        )
-                        session.add(new_option)
+                    create_lake_option(session, poll_id, lake_id)
 
                 # 4. Remove options that are no longer selected (only if they have no votes)
                 for lake_id in lakes_to_remove:
@@ -159,7 +153,7 @@ async def update_poll(request: Request, poll_id: int) -> RedirectResponse:
         return RedirectResponse(
             f"/admin/polls/{poll_id}/edit?success={success_msg}", status_code=302
         )
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         logger.error(
             "Error updating poll",
             extra={
@@ -170,5 +164,6 @@ async def update_poll(request: Request, poll_id: int) -> RedirectResponse:
             exc_info=True,
         )
         return RedirectResponse(
-            f"/admin/polls/{poll_id}/edit?error=Failed to update poll: {str(e)}", status_code=302
+            f"/admin/polls/{poll_id}/edit?error=Failed to update poll. Please try again.",
+            status_code=302,
         )

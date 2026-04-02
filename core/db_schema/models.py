@@ -108,7 +108,15 @@ class Poll(Base):
     closes_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     closed: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
     multiple_votes: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
-    winning_option_id: Mapped[Optional[int]] = mapped_column(Integer)
+    winning_option_id: Mapped[Optional[int]] = mapped_column(
+        Integer,
+        ForeignKey(
+            "poll_options.id",
+            ondelete="SET NULL",
+            use_alter=True,
+            name="fk_polls_winning_option_id",
+        ),
+    )
 
 
 class PollOption(Base):
@@ -165,7 +173,9 @@ class News(Base):
     published: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
     priority: Mapped[Optional[int]] = mapped_column(Integer, default=0)
     expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
-    last_edited_by: Mapped[Optional[int]] = mapped_column(Integer)
+    last_edited_by: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("anglers.id", ondelete="SET NULL")
+    )
     archived: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
 
 

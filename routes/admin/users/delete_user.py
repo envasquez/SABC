@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Request, Response
 from sqlalchemy import func
@@ -13,11 +13,12 @@ from core.db_schema import (
     TeamResult,
 )
 from core.helpers.crud import delete_entity
+from core.types import UserDict
 
 router = APIRouter()
 
 
-def _check_self_delete(user: Dict[str, Any], user_id: int) -> bool:
+def _check_self_delete(user: UserDict, user_id: int) -> bool:
     """Check if user is trying to delete themselves."""
     return user.get("id") == user_id
 

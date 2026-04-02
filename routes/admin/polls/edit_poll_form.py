@@ -2,6 +2,7 @@ import json
 
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Poll, PollOption, engine, get_session
 from core.helpers.auth import require_admin
@@ -73,5 +74,5 @@ async def edit_poll_form(request: Request, poll_id: int):
             else:
                 return templates.TemplateResponse("admin/edit_poll.html", context)
 
-    except Exception as e:
-        return RedirectResponse(f"/polls?error=Failed to load poll: {str(e)}", status_code=302)
+    except SQLAlchemyError:
+        return RedirectResponse("/polls?error=Failed to load poll", status_code=302)

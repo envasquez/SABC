@@ -13,7 +13,7 @@ def get_error_message(error: Exception, date: str, operation: str = "update") ->
     elif "FOREIGN KEY constraint failed" in error_msg:
         return "Invalid lake or ramp selection. Please refresh the page and try again."
     else:
-        return f"Failed to {operation} event. Details: {error_msg}"
+        return f"Failed to {operation} event. Please try again."
 
 
 def handle_event_error(e: Exception, date: str, operation: str = "update") -> RedirectResponse:

@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Request
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import engine
 from core.deps import templates
@@ -79,7 +80,7 @@ async def awards(request: Request, year: Optional[int] = None):
                     angler_totals[angler_id]["total_fish"] += result.get("num_fish", 0)
                     angler_totals[angler_id]["total_weight"] += float(result.get("total_weight", 0))
                     angler_totals[angler_id]["tournaments_fished"] += 1
-        except Exception as e:
+        except (SQLAlchemyError, ValueError, KeyError) as e:
             # Log error but continue - show empty standings
             from core.helpers.logging import get_logger
 

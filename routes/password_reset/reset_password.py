@@ -3,6 +3,7 @@ from urllib.parse import quote
 import bcrypt
 from fastapi import APIRouter, Form, Query, Request
 from fastapi.responses import RedirectResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Angler, get_session
 from core.email import use_reset_token, verify_reset_token
@@ -45,7 +46,7 @@ async def reset_password_form(
             },
         )
 
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         logger.error(f"Error showing password reset form: {e}", exc_info=True)
         return error_redirect(
             "/forgot-password",
@@ -101,7 +102,7 @@ async def process_password_reset(
             "/login?success=Your password has been successfully reset. You can now log in with your new password.",
             status_code=302,
         )
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         logger.error(f"Error processing password reset: {e}", exc_info=True)
         return RedirectResponse(
             f"/reset-password?token={token}&error={quote(ERROR_RESET_FAILED)}", status_code=303

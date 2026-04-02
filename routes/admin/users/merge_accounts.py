@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import JSONResponse, RedirectResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.helpers.auth import AdminUser
 from core.helpers.response import error_redirect, success_redirect
@@ -42,9 +43,9 @@ async def merge_preview(
         return JSONResponse(content={"success": True, "data": preview_data})
     except AccountMergeError as e:
         return JSONResponse(content={"success": False, "error": str(e)}, status_code=400)
-    except Exception as e:
+    except SQLAlchemyError:
         return JSONResponse(
-            content={"success": False, "error": f"Unexpected error: {str(e)}"},
+            content={"success": False, "error": "An unexpected error occurred"},
             status_code=500,
         )
 
@@ -84,8 +85,8 @@ async def merge_execute(
 
     except AccountMergeError as e:
         return error_redirect("/admin/users/merge", f"Merge failed: {str(e)}")
-    except Exception as e:
-        return error_redirect("/admin/users/merge", f"Unexpected error during merge: {str(e)}")
+    except SQLAlchemyError:
+        return error_redirect("/admin/users/merge", "An unexpected error occurred during merge")
 
 
 @router.post("/admin/users/merge/delete")
@@ -98,5 +99,5 @@ async def merge_delete_account(
         return success_redirect("/admin/users", f"Account ID {angler_id} deleted successfully")
     except AccountMergeError as e:
         return error_redirect("/admin/users", f"Delete failed: {str(e)}")
-    except Exception as e:
-        return error_redirect("/admin/users", f"Unexpected error during delete: {str(e)}")
+    except SQLAlchemyError:
+        return error_redirect("/admin/users", "An unexpected error occurred during delete")

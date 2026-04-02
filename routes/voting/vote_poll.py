@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
@@ -10,6 +10,7 @@ from core.helpers.auth import is_dues_current, require_auth
 from core.helpers.logging import get_logger
 from core.helpers.response import sanitize_error_message
 from core.helpers.timezone import now_local
+from core.types import UserDict
 from routes.voting.vote_validation import (
     get_or_create_option_id,
     validate_proxy_vote,
@@ -26,7 +27,7 @@ async def vote_in_poll(
     poll_id: int,
     option_id: str = Form(),
     vote_as_angler_id: Optional[int] = Form(None),
-    user: Dict[str, Any] = Depends(require_auth),
+    user: UserDict = Depends(require_auth),
 ) -> RedirectResponse:
     if not user.get("member"):
         return RedirectResponse("/polls?error=Only members can vote", status_code=303)
@@ -277,7 +278,7 @@ async def vote_in_poll(
 @router.post("/dismiss-dues-banner")
 async def dismiss_dues_banner(
     request: Request,
-    user: Dict[str, Any] = Depends(require_auth),
+    user: UserDict = Depends(require_auth),
 ) -> RedirectResponse:
     """
     Dismiss the dues reminder banner for the current user.

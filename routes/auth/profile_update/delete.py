@@ -2,7 +2,7 @@
 
 from fastapi import Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from core.db_schema import Angler, get_session
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
@@ -57,7 +57,7 @@ async def delete_account(request: Request, confirm: str) -> RedirectResponse:
             "associated data. Please contact an administrator for assistance.",
             status_code=303,
         )
-    except Exception as e:
+    except SQLAlchemyError as e:
         logger.error(
             "Account deletion error", extra={"user_id": user["id"], "error": str(e)}, exc_info=True
         )

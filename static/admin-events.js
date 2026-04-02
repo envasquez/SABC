@@ -23,7 +23,10 @@ function editEvent(id, date, eventType, name, description, hasPoll) {
     const ensureLakesLoadedAndEdit = () => {
         // Fetch complete event data
         fetch(`/admin/events/${id}/info`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to load event');
+                return response.json();
+            })
             .then(data => {
                 if (data.error) {
                     showToast('Error loading event data: ' + data.error, 'error');
@@ -130,7 +133,10 @@ function editEvent(id, date, eventType, name, description, hasPoll) {
     const currentLakesData = getLakesData();
     if (currentLakesData.length === 0) {
         fetch('/api/lakes')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to load lakes');
+                return response.json();
+            })
             .then(lakes => {
                 setLakesData(lakes);
                 ensureLakesLoadedAndEdit();

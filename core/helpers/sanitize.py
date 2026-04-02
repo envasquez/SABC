@@ -32,6 +32,37 @@ def sanitize_html(text: str) -> str:
     return text
 
 
+def sanitize_iframe(raw_html: str) -> str:
+    """Extract only a safe iframe tag from raw HTML input.
+
+    Only allows iframes with Google Maps src URLs. Strips all other HTML,
+    scripts, and attributes to prevent stored XSS.
+
+    Args:
+        raw_html: Raw HTML string (typically from admin form input)
+
+    Returns:
+        A sanitized iframe tag, or empty string if no valid iframe found
+    """
+    if not raw_html or not raw_html.strip():
+        return ""
+
+    # Match iframe with a Google Maps src URL
+    match = re.search(
+        r'<iframe\s[^>]*src="(https://www\.google\.com/maps/embed[^"]*)"[^>]*>',
+        raw_html,
+        re.IGNORECASE,
+    )
+    if match:
+        src = match.group(1)
+        return (
+            f'<iframe src="{src}" style="border:0" '
+            f'allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">'
+            f"</iframe>"
+        )
+    return ""
+
+
 def sanitize_for_json(value: Any) -> Any:
     """Recursively sanitize data structure for safe JSON embedding in templates.
 

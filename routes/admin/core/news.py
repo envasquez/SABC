@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Form, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Angler, News, get_session, utc_now
 from core.email import send_news_notification
@@ -137,8 +138,9 @@ async def create_news(
             logger.error(f"Failed to send news notifications: {email_error}")
 
         return RedirectResponse("/admin/news?success=News created successfully", status_code=302)
-    except Exception as e:
-        return error_redirect("/admin/news", str(e))
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to create news: {e}", exc_info=True)
+        return error_redirect("/admin/news", "Failed to create news post")
 
 
 @router.get("/admin/news/{news_id}/edit")
@@ -213,8 +215,9 @@ async def update_news(
                 # Context manager will commit automatically on successful exit
 
         return RedirectResponse("/admin/news?success=News updated successfully", status_code=302)
-    except Exception as e:
-        return error_redirect("/admin/news", str(e))
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to update news: {e}", exc_info=True)
+        return error_redirect("/admin/news", "Failed to update news post")
 
 
 @router.post("/admin/news/test-email")
@@ -246,7 +249,7 @@ async def test_news_email(request: Request, title: str = Form(...), content: str
                 "/admin/news", "Failed to send test email. Check SMTP configuration."
             )
 
-    except Exception as e:
+    except (OSError, ValueError) as e:
         logger.error(f"Test email error: {e}")
         return error_redirect("/admin/news", "Failed to send test email")
 
@@ -289,7 +292,7 @@ async def archive_news(request: Request, news_id: int) -> RedirectResponse:
                 news_item.updated_at = utc_now()
 
         return RedirectResponse("/admin/news?success=News archived successfully", status_code=302)
-    except Exception as e:
+    except SQLAlchemyError as e:
         logger.error(f"Failed to archive news: {e}")
         return error_redirect("/admin/news", "Failed to archive news")
 
@@ -310,6 +313,6 @@ async def unarchive_news(request: Request, news_id: int) -> RedirectResponse:
             "/admin/news?show_archived=true&success=News restored successfully",
             status_code=302,
         )
-    except Exception as e:
+    except SQLAlchemyError as e:
         logger.error(f"Failed to unarchive news: {e}")
         return error_redirect("/admin/news?show_archived=true", "Failed to restore news")

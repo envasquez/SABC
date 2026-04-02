@@ -1,7 +1,7 @@
 """Prometheus metrics for SABC application monitoring."""
 
 try:
-    from prometheus_client import Counter, Gauge, Histogram, generate_latest
+    from prometheus_client import Counter, Histogram, generate_latest
     from prometheus_client.core import CollectorRegistry
 
     PROMETHEUS_AVAILABLE = True
@@ -17,19 +17,6 @@ except ImportError:
             return self
 
         def inc(self, *args, **kwargs):  # type: ignore[no-untyped-def]
-            pass
-
-    class Gauge:  # type: ignore[no-redef]
-        def __init__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
-            pass
-
-        def set(self, *args, **kwargs):  # type: ignore[no-untyped-def]
-            pass
-
-        def inc(self, *args, **kwargs):  # type: ignore[no-untyped-def]
-            pass
-
-        def dec(self, *args, **kwargs):  # type: ignore[no-untyped-def]
             pass
 
     class Histogram:  # type: ignore[no-redef]
@@ -62,48 +49,6 @@ http_request_duration_seconds = Histogram(
     "HTTP request latency in seconds",
     ["method", "endpoint"],
     buckets=(0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0),
-    registry=registry,
-)
-
-# Database metrics
-db_query_duration_seconds = Histogram(
-    "db_query_duration_seconds",
-    "Database query latency in seconds",
-    ["query_type"],
-    buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0),
-    registry=registry,
-)
-
-db_connections_active = Gauge(
-    "db_connections_active",
-    "Number of active database connections",
-    registry=registry,
-)
-
-# Application metrics
-active_sessions = Gauge(
-    "active_sessions",
-    "Number of active user sessions",
-    registry=registry,
-)
-
-poll_votes_total = Counter(
-    "poll_votes_total",
-    "Total poll votes submitted",
-    ["poll_type"],
-    registry=registry,
-)
-
-failed_logins_total = Counter(
-    "failed_logins_total",
-    "Total failed login attempts",
-    registry=registry,
-)
-
-email_sent_total = Counter(
-    "email_sent_total",
-    "Total emails sent",
-    ["email_type", "status"],
     registry=registry,
 )
 

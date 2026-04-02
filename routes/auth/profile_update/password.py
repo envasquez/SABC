@@ -5,13 +5,14 @@ from typing import Optional, Tuple
 from core.db_schema import Angler, get_session
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
 from core.helpers.password_validator import validate_password_strength
+from core.types import UserDict
 from routes.dependencies import bcrypt
 
 logger = get_logger("auth.profile_update.password")
 
 
 def handle_password_change(
-    user: dict, current_password: str, new_password: str, confirm_password: str, ip_address: str
+    user: UserDict, current_password: str, new_password: str, confirm_password: str, ip_address: str
 ) -> Tuple[bool, Optional[str]]:
     """Handle password change validation and update.
 

@@ -57,13 +57,7 @@ class CSRFMiddleware(BaseCSRFMiddleware):
                         form_data = parse_qs(body.decode("utf-8"))
                         submitted_csrf_token = form_data.get("csrf_token", [None])[0]
                     elif "multipart/form-data" in content_type:
-                        # Parse multipart form data
-                        from starlette.formparsers import MultiPartParser
-
-                        # Extract boundary from content-type
-                        content_type.split("boundary=")[-1].encode()
-                        MultiPartParser(headers=request.headers, stream=request.stream())
-                        # For now, try to extract csrf_token from body as string
+                        # Extract csrf_token from multipart body as string
                         body_str = body.decode("utf-8", errors="ignore")
                         if 'name="csrf_token"' in body_str:
                             # Simple extraction - find csrf_token value

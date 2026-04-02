@@ -5,7 +5,7 @@ This module provides reusable patterns for DELETE operations and other
 CRUD functions to eliminate duplication across route handlers.
 """
 
-from typing import Any, Callable, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, Callable, List, Optional, Type, TypeVar, Union
 
 from fastapi import Request
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from core.db_schema import get_session
 from core.helpers.auth import require_admin
 from core.helpers.response import error_redirect, json_error, json_success, success_redirect
+from core.types import UserDict
 
 # Type variable for SQLAlchemy models
 T = TypeVar("T")
@@ -29,7 +30,7 @@ def delete_entity(
     error_message: str = "Failed to delete item",
     validation_check: Optional[Callable[[Session, int], Optional[str]]] = None,
     pre_delete_hook: Optional[Callable[[Session, int], None]] = None,
-    self_delete_check: Optional[Callable[[Dict[str, Any], int], bool]] = None,
+    self_delete_check: Optional[Callable[[UserDict, int], bool]] = None,
 ) -> Union[JSONResponse, RedirectResponse]:
     """
     Generic DELETE endpoint handler for database entities.

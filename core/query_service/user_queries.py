@@ -1,8 +1,9 @@
 """User-related database queries with full type safety."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 from core.query_service.base import QueryServiceBase
+from core.types import UserDict
 
 # Whitelist of allowed columns for user updates to prevent SQL injection
 ALLOWED_UPDATE_COLUMNS = {
@@ -20,7 +21,7 @@ ALLOWED_UPDATE_COLUMNS = {
 class UserQueries(QueryServiceBase):
     """Query service for user/angler database operations."""
 
-    def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
+    def get_user_by_email(self, email: str) -> Optional[UserDict]:
         """
         Get user by email address (case-insensitive).
 
@@ -30,11 +31,12 @@ class UserQueries(QueryServiceBase):
         Returns:
             User dictionary if found, None otherwise
         """
-        return self.fetch_one(
+        result = self.fetch_one(
             "SELECT * FROM anglers WHERE LOWER(email) = LOWER(:email)", {"email": email}
         )
+        return cast(Optional[UserDict], result)
 
-    def get_user_by_id(self, user_id: int) -> Optional[Dict[str, Any]]:
+    def get_user_by_id(self, user_id: int) -> Optional[UserDict]:
         """
         Get user by ID.
 
@@ -44,7 +46,8 @@ class UserQueries(QueryServiceBase):
         Returns:
             User dictionary if found, None otherwise
         """
-        return self.fetch_one("SELECT * FROM anglers WHERE id = :id", {"id": user_id})
+        result = self.fetch_one("SELECT * FROM anglers WHERE id = :id", {"id": user_id})
+        return cast(Optional[UserDict], result)
 
     def update_user(self, user_id: int, updates: Dict[str, Any]) -> None:
         """

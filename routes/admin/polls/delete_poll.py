@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from core.db_schema import Angler, Poll, PollOption, PollVote, get_session
@@ -60,6 +61,6 @@ async def delete_vote(request: Request, vote_id: int):
             },
             status_code=200,
         )
-    except Exception as e:
+    except SQLAlchemyError as e:
         error_msg = sanitize_error_message(e, "Failed to delete vote")
         return JSONResponse({"error": error_msg}, status_code=500)

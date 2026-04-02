@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import func
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Angler, get_session
 from core.email import create_password_reset_token, send_password_reset_email
@@ -61,7 +62,7 @@ async def request_password_reset(
             "/forgot-password?success=If that email is in our system, we've sent you a password reset link. Please check your email (and spam folder).",
             status_code=302,
         )
-    except Exception as e:
+    except (SQLAlchemyError, OSError, ValueError) as e:
         logger.error(f"Error processing password reset request: {e}", exc_info=True)
         return error_redirect(
             "/forgot-password",

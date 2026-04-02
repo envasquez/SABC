@@ -168,7 +168,7 @@
 
                     {% if not tournament.is_cancelled %}
                     <div style="display:flex;justify-content:flex-end;margin-top:.5rem">
-                        <a href="/tournaments/{{ tournament.id }}" class="btn-m btn-p" style="text-decoration:none;font-size:.82rem"><i class="bi bi-eye"></i> View Results</a>
+                        <a href="/tournaments/{{ tournament.id }}" class="btn-m btn-p" style="text-decoration:none;font-size:.82rem"><i class="bi bi-eye" aria-hidden="true"></i> View Results</a>
                     </div>
                     {% endif %}
                 </div>
@@ -186,13 +186,13 @@
             {% if total_pages > 1 %}
             <div style="display:flex;justify-content:center;gap:.25rem;margin-top:1.5rem">
                 {% if current_page > 1 %}
-                <a href="/?p={{ current_page - 1 }}" class="btn-m btn-g" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem"><i class="bi bi-chevron-left"></i></a>
+                <a href="/?p={{ current_page - 1 }}" class="btn-m btn-g" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem" aria-label="Previous page"><i class="bi bi-chevron-left"></i></a>
                 {% endif %}
                 {% for page_num in page_range %}
                 <a href="/?p={{ page_num }}" class="btn-m {% if page_num == current_page %}btn-p{% else %}btn-g{% endif %}" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem">{{ page_num }}</a>
                 {% endfor %}
                 {% if current_page < total_pages %}
-                <a href="/?p={{ current_page + 1 }}" class="btn-m btn-g" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem"><i class="bi bi-chevron-right"></i></a>
+                <a href="/?p={{ current_page + 1 }}" class="btn-m btn-g" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem" aria-label="Next page"><i class="bi bi-chevron-right"></i></a>
                 {% endif %}
             </div>
             <div style="text-align:center;color:var(--t4);font-size:.78rem;margin-top:.5rem">
@@ -240,8 +240,8 @@
             <div id="news-pagination" style="display:none;justify-content:space-between;align-items:center;margin-top:.75rem">
                 <span style="font-size:.78rem;color:var(--t4)" id="news-page-info"></span>
                 <div style="display:flex;gap:.25rem">
-                    <button class="btn-icon btn-icon-ghost" id="news-prev" disabled><i class="bi bi-chevron-left"></i></button>
-                    <button class="btn-icon btn-icon-ghost" id="news-next"><i class="bi bi-chevron-right"></i></button>
+                    <button class="btn-icon btn-icon-ghost" id="news-prev" disabled aria-label="Previous news"><i class="bi bi-chevron-left"></i></button>
+                    <button class="btn-icon btn-icon-ghost" id="news-next" aria-label="Next news"><i class="bi bi-chevron-right"></i></button>
                 </div>
             </div>
             {% else %}

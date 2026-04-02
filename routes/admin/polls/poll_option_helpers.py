@@ -1,9 +1,27 @@
+import json
+
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 from core.db_schema import PollOption, get_session
 from core.helpers.logging import get_logger
+from routes.dependencies import find_lake_by_id
 
 logger = get_logger("admin.polls.helpers")
+
+
+def create_lake_option(session: Session, poll_id: int, lake_id: int) -> PollOption | None:
+    """Create a poll option for a lake. Returns the option or None if lake not found."""
+    lake_name = find_lake_by_id(lake_id, "name")
+    if not lake_name:
+        return None
+    option = PollOption(
+        poll_id=poll_id,
+        option_text=lake_name,
+        option_data=json.dumps({"lake_id": lake_id}),
+    )
+    session.add(option)
+    return option
 
 
 def update_or_create_poll_option(poll_id: int, option_text: str, option_id: str | None) -> None:

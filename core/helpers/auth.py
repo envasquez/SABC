@@ -1,18 +1,17 @@
 """Authentication and authorization helper functions with full type safety."""
 
 from datetime import date
-from typing import Annotated, Any, Dict, Optional, Union
+from typing import Annotated, Optional
 from urllib.parse import quote
 
 from fastapi import Depends, HTTPException, Request
 
 from core.db_schema import engine
 from core.query_service import QueryService
+from core.types import UserDict
 
-UserDict = Dict[str, Union[int, str, bool, None]]
 
-
-def is_dues_current(user: Dict[str, Any]) -> bool:
+def is_dues_current(user: UserDict) -> bool:
     """
     Check if user's dues are paid through today or later.
 

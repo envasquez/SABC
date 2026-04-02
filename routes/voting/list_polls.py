@@ -9,6 +9,7 @@ from core.deps import templates
 from core.helpers.auth import is_dues_current, require_auth
 from core.helpers.timezone import now_local
 from core.query_service import QueryService
+from core.types import UserDict
 from routes.dependencies import get_lakes_list, get_ramps_for_lake
 from routes.voting.helpers import (
     get_poll_options,
@@ -23,7 +24,7 @@ router = APIRouter()
 async def polls(
     request: Request,
     background_tasks: BackgroundTasks,
-    user: Dict[str, Any] = Depends(require_auth),
+    user: UserDict = Depends(require_auth),
     tab: Optional[str] = None,
     p: int = 1,
 ):

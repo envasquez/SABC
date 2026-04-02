@@ -95,7 +95,7 @@ async def create_poll(request: Request) -> RedirectResponse:
                     "error": str(e),
                 },
             )
-            return error_redirect("/admin/events", f"Invalid poll options: {str(e)}")
+            return error_redirect("/admin/events", "Invalid poll options")
 
         logger.info(
             "Poll created successfully",
@@ -149,9 +149,9 @@ async def create_poll(request: Request) -> RedirectResponse:
                 "error": str(e),
             },
         )
-        return error_redirect("/admin/events", f"Invalid data: {str(e)}")
+        return error_redirect("/admin/events", "Invalid data provided")
 
-    except Exception as e:
+    except (TypeError, KeyError, AttributeError) as e:
         logger.critical(
             "Unexpected error creating poll",
             extra={

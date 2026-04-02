@@ -144,32 +144,35 @@ function manageDescriptionFields(activeFieldId) {
     const descriptionField = document.getElementById('description');
     const otherDescriptionField = document.getElementById('other_description');
 
+    const descriptionWrapper = descriptionField ? descriptionField.closest('.fg') : null;
+    const otherDescriptionWrapper = otherDescriptionField ? otherDescriptionField.closest('#other-tournament-description') || otherDescriptionField.closest('.fg') : null;
+
     if (activeFieldId === 'other_description') {
         // Hide general description, show other_description
-        if (descriptionField) {
-            descriptionField.closest('.col-md-3').style.display = 'none';
+        if (descriptionWrapper) {
+            descriptionWrapper.style.display = 'none';
             descriptionField.removeAttribute('required');
         }
-        if (otherDescriptionField) {
-            otherDescriptionField.closest('.col-md-12').style.display = 'block';
+        if (otherDescriptionWrapper) {
+            otherDescriptionWrapper.style.display = 'block';
             otherDescriptionField.setAttribute('required', 'required');
         }
     } else if (activeFieldId === 'description') {
         // Show general description, hide other_description
-        if (descriptionField) {
-            descriptionField.closest('.col-md-3').style.display = 'block';
+        if (descriptionWrapper) {
+            descriptionWrapper.style.display = 'block';
         }
-        if (otherDescriptionField) {
-            otherDescriptionField.closest('.col-md-12').style.display = 'none';
+        if (otherDescriptionWrapper) {
+            otherDescriptionWrapper.style.display = 'none';
             otherDescriptionField.removeAttribute('required');
         }
     } else {
         // No description field active
-        if (descriptionField) {
-            descriptionField.closest('.col-md-3').style.display = 'block';
+        if (descriptionWrapper) {
+            descriptionWrapper.style.display = 'block';
         }
-        if (otherDescriptionField) {
-            otherDescriptionField.closest('.col-md-12').style.display = 'none';
+        if (otherDescriptionWrapper) {
+            otherDescriptionWrapper.style.display = 'none';
             otherDescriptionField.removeAttribute('required');
         }
     }

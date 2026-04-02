@@ -32,14 +32,14 @@
                     <label class="fl" for="create_auto_archive_at">Auto Archive Date</label>
                     <input class="fi" type="date" id="create_auto_archive_at" name="auto_archive_at">
                 </div>
-                <button class="btn-m btn-p" type="submit" style="margin-bottom:1rem"><i class="bi bi-plus-circle"></i> Create</button>
+                <button class="btn-m btn-p" type="submit" style="margin-bottom:1rem"><i class="bi bi-plus-circle" aria-hidden="true"></i> Create</button>
             </div>
             <div class="fg">
                 <label class="fl" for="content">Content <span style="color:var(--err)">*</span></label>
                 <textarea class="fi" id="content" name="content" required maxlength="1000" rows="3" style="resize:vertical"></textarea>
                 <div style="font-size:.72rem;color:var(--t4);margin-top:.25rem">Maximum 1000 characters</div>
             </div>
-            <button type="button" class="btn-m btn-g" style="font-size:.78rem" onclick="sendTestEmail()"><i class="bi bi-envelope-check"></i> Send Test Email</button>
+            <button type="button" class="btn-m btn-g" style="font-size:.78rem" onclick="sendTestEmail()"><i class="bi bi-envelope-check" aria-hidden="true"></i> Send Test Email</button>
         </form>
     </div>
 </div>
@@ -49,10 +49,10 @@
     <div style="padding:0">
         <div class="pt" style="width:100%;padding:.75rem 1.4rem;border-bottom:1px solid var(--b0);border-radius:0;background:transparent;display:flex;gap:.5rem">
             <a href="/admin/news" class="ptb {% if not show_archived %}on{% endif %}" style="text-decoration:none">
-                <i class="bi bi-newspaper"></i> Active News
+                <i class="bi bi-newspaper" aria-hidden="true"></i> Active News
             </a>
             <a href="/admin/news?show_archived=true" class="ptb {% if show_archived %}on{% endif %}" style="text-decoration:none">
-                <i class="bi bi-archive"></i> Archived
+                <i class="bi bi-archive" aria-hidden="true"></i> Archived
             </a>
         </div>
 
@@ -93,22 +93,24 @@
                                     data-title="{{ item[1] }}"
                                     data-content="{{ item[2] }}"
                                     data-priority="{{ item[5] }}"
-                                    data-auto-archive-at="{{ item[9].strftime('%Y-%m-%d') if item[9] else '' }}">
+                                    data-auto-archive-at="{{ item[9].strftime('%Y-%m-%d') if item[9] else '' }}"
+                                    aria-label="Edit news item">
                                 <i class="bi bi-pencil"></i>
                             </button>
                             <form method="POST" action="/admin/news/{{ item[0] }}/archive" style="display:inline">
                                 {{ csrf_token(request) }}
-                                <button type="submit" class="btn-icon btn-icon-ghost" title="Archive"><i class="bi bi-archive"></i></button>
+                                <button type="submit" class="btn-icon btn-icon-ghost" title="Archive" aria-label="Archive news item"><i class="bi bi-archive"></i></button>
                             </form>
                             {% else %}
                             <form method="POST" action="/admin/news/{{ item[0] }}/unarchive" style="display:inline">
                                 {{ csrf_token(request) }}
-                                <button type="submit" class="btn-icon btn-icon-ghost" title="Restore"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                <button type="submit" class="btn-icon btn-icon-ghost" title="Restore" aria-label="Restore news item"><i class="bi bi-arrow-counterclockwise"></i></button>
                             </form>
                             {% endif %}
                             <button class="btn-icon btn-icon-danger delete-btn"
                                     data-id="{{ item[0] }}"
-                                    data-title="{{ item[1] }}">
+                                    data-title="{{ item[1] }}"
+                                    aria-label="Delete news item">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </div>

@@ -25,7 +25,7 @@
                     <input class="fi" type="text" id="name" name="name" required maxlength="50" placeholder="travis">
                     <div style="font-size:.72rem;color:var(--t4);margin-top:.25rem">Lowercase, no spaces (e.g., "travis", "lake_austin")</div>
                 </div>
-                <button class="btn-m btn-p" type="submit" style="width:100%;justify-content:center"><i class="bi bi-plus-circle"></i> Add Lake</button>
+                <button class="btn-m btn-p" type="submit" style="width:100%;justify-content:center"><i class="bi bi-plus-circle" aria-hidden="true"></i> Add Lake</button>
             </form>
         </div>
     </div>
@@ -46,10 +46,11 @@
                     <td><code style="color:var(--brand);background:var(--brand-m);padding:.1rem .4rem;border-radius:var(--r-sm);font-size:.78rem">{{ lake.yaml_key }}</code></td>
                     <td style="text-align:right">
                         <div style="display:flex;gap:.35rem;justify-content:flex-end">
-                            <a href="/admin/lakes/{{ lake.id }}/edit" class="btn-icon btn-icon-ghost" style="text-decoration:none"><i class="bi bi-pencil"></i></a>
+                            <a href="/admin/lakes/{{ lake.id }}/edit" class="btn-icon btn-icon-ghost" style="text-decoration:none" aria-label="Edit lake"><i class="bi bi-pencil"></i></a>
                             <button class="btn-icon btn-icon-danger delete-btn"
                                     data-id="{{ lake.id }}"
-                                    data-display-name="{{ lake.display_name }}">
+                                    data-display-name="{{ lake.display_name }}"
+                                    aria-label="Delete lake">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </div>

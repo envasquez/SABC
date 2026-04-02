@@ -2,6 +2,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.helpers.auth import require_admin
 from core.helpers.timezone import now_local
@@ -94,5 +95,5 @@ async def create_event(
         return RedirectResponse(
             f"/admin/events?success=Event created successfully{warning_msg}", status_code=302
         )
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         return handle_event_error(e, date, "create")

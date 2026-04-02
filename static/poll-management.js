@@ -15,20 +15,19 @@ function addOption(containerId = 'poll-options-container', includeHiddenId = fal
     const optionCount = container.children.length + 1;
 
     const optionRow = document.createElement('div');
-    optionRow.className = 'poll-option-row mb-2';
+    optionRow.className = 'poll-option-row';
+    optionRow.style.cssText = 'display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem';
 
     const hiddenField = includeHiddenId
         ? '<input type="hidden" name="option_ids[]" value="">'
         : '';
 
     optionRow.innerHTML = `
-        <div class="input-group">
-            <input type="text" class="form-control" name="poll_options[]" placeholder="Option ${optionCount}" required>
-            ${hiddenField}
-            <button class="btn btn-outline-danger" type="button" onclick="removeOption(this)">
-                <i class="bi bi-x"></i>
-            </button>
-        </div>
+        <input type="text" class="fi" name="poll_options[]" placeholder="Option ${optionCount}" style="flex:1" required>
+        ${hiddenField}
+        <button class="btn-icon btn-icon-danger" type="button" onclick="removeOption(this)" aria-label="Remove option">
+            <i class="bi bi-x"></i>
+        </button>
     `;
 
     container.appendChild(optionRow);

@@ -281,114 +281,114 @@ function addTeam() {
     const container = document.getElementById('teams-container');
 
     const teamHtml = `
-        <div class="card mb-3 team-card" id="team-${teamCount}">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">Team ${teamCount}</h6>
-                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeTeam(${teamCount})">
+        <div class="cc team-card" id="team-${teamCount}" style="margin-bottom:1rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;background:var(--bg-alt);border-bottom:1px solid var(--b1);border-radius:var(--r-md) var(--r-md) 0 0">
+                <strong style="font-size:.9rem">Team ${teamCount}</strong>
+                <button type="button" class="btn-icon btn-icon-danger" onclick="removeTeam(${teamCount})" aria-label="Remove team">
                     <i class="bi bi-trash"></i>
                 </button>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <!-- Angler 1 -->
-                    <div class="col-md-6">
-                        <h6 class="text-primary">Boater</h6>
-                        <div class="row g-2">
-                            <div class="col-12">
-                                <label class="form-label">Name</label>
-                                <div class="autocomplete-wrapper">
-                                    <input type="text"
-                                           class="form-control autocomplete-input angler1-input"
-                                           data-team="${teamCount}"
-                                           data-angler="1"
-                                           placeholder="Start typing angler name..."
-                                           autocomplete="off"
-                                           required>
-                                    <span class="clear-selection" style="display:none;" onclick="clearAnglerSelection(${teamCount}, 1)">×</span>
-                                    <div class="autocomplete-dropdown"></div>
-                                    <input type="hidden" name="angler1_id_${teamCount}" class="angler1-id">
-                                </div>
+            <div class="ci" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+                <!-- Angler 1 -->
+                <div>
+                    <h6 style="color:var(--brand);font-size:.85rem;margin-bottom:.5rem">Boater</h6>
+                    <div style="display:grid;gap:.5rem">
+                        <div>
+                            <label class="fl">Name</label>
+                            <div class="autocomplete-wrapper">
+                                <input type="text"
+                                       class="fi autocomplete-input angler1-input"
+                                       data-team="${teamCount}"
+                                       data-angler="1"
+                                       placeholder="Start typing angler name..."
+                                       autocomplete="off"
+                                       required>
+                                <span class="clear-selection" style="display:none;" onclick="clearAnglerSelection(${teamCount}, 1)">&times;</span>
+                                <div class="autocomplete-dropdown"></div>
+                                <input type="hidden" name="angler1_id_${teamCount}" class="angler1-id">
                             </div>
-                            <div class="col-4">
-                                <label class="form-label">Fish</label>
-                                <input type="number" class="form-control" name="angler1_fish_${teamCount}" min="0" max="5" value="0">
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem">
+                            <div>
+                                <label class="fl">Fish</label>
+                                <input type="number" class="fi" name="angler1_fish_${teamCount}" min="0" max="5" value="0">
                             </div>
-                            <div class="col-4">
-                                <label class="form-label">Weight (lbs)</label>
-                                <input type="number" class="form-control" name="angler1_weight_${teamCount}" step="0.01" min="0" value="0.00">
+                            <div>
+                                <label class="fl">Weight (lbs)</label>
+                                <input type="number" class="fi" name="angler1_weight_${teamCount}" step="0.01" min="0" value="0.00">
                             </div>
-                            <div class="col-4">
-                                <label class="form-label">Big Bass (lbs)</label>
-                                <input type="number" class="form-control" name="angler1_big_bass_${teamCount}" step="0.01" min="0" value="0.00">
+                            <div>
+                                <label class="fl">Big Bass (lbs)</label>
+                                <input type="number" class="fi" name="angler1_big_bass_${teamCount}" step="0.01" min="0" value="0.00">
                             </div>
-                            <div class="col-6">
-                                <label class="form-label">Dead Fish Penalty</label>
-                                <input type="number" class="form-control" name="angler1_dead_penalty_${teamCount}" step="0.25" min="0" value="0.00">
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+                            <div>
+                                <label class="fl">Dead Fish Penalty</label>
+                                <input type="number" class="fi" name="angler1_dead_penalty_${teamCount}" step="0.25" min="0" value="0.00">
                             </div>
-                            <div class="col-6">
-                                <div class="form-check mt-4">
-                                    <input class="form-check-input" type="checkbox" name="angler1_disqualified_${teamCount}" value="1">
-                                    <label class="form-check-label">Disqualified</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="angler1_buyIn_${teamCount}" value="1" onchange="handleBuyInChange(this, ${teamCount}, 'angler1')">
-                                    <label class="form-label">Buy-in</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="angler1_was_member_${teamCount}" value="1" checked>
-                                    <label class="form-check-label">Member</label>
-                                </div>
+                            <div style="display:flex;flex-direction:column;gap:.3rem;padding-top:1.2rem">
+                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
+                                    <input type="checkbox" name="angler1_disqualified_${teamCount}" value="1"> Disqualified
+                                </label>
+                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
+                                    <input type="checkbox" name="angler1_buyIn_${teamCount}" value="1" onchange="handleBuyInChange(this, ${teamCount}, 'angler1')"> Buy-in
+                                </label>
+                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
+                                    <input type="checkbox" name="angler1_was_member_${teamCount}" value="1" checked> Member
+                                </label>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Angler 2 -->
-                    <div class="col-md-6">
-                        <h6 class="text-primary">Non-boater</h6>
-                        <div class="row g-2">
-                            <div class="col-12">
-                                <label class="form-label">Name <span class="text-secondary">(optional)</span></label>
-                                <div class="autocomplete-wrapper">
-                                    <input type="text"
-                                           class="form-control autocomplete-input angler2-input"
-                                           data-team="${teamCount}"
-                                           data-angler="2"
-                                           placeholder="Start typing angler name..."
-                                           autocomplete="off">
-                                    <span class="clear-selection" style="display:none;" onclick="clearAnglerSelection(${teamCount}, 2)">×</span>
-                                    <div class="autocomplete-dropdown"></div>
-                                    <input type="hidden" name="angler2_id_${teamCount}" class="angler2-id">
-                                </div>
+                <!-- Angler 2 -->
+                <div>
+                    <h6 style="color:var(--brand);font-size:.85rem;margin-bottom:.5rem">Non-boater</h6>
+                    <div style="display:grid;gap:.5rem">
+                        <div>
+                            <label class="fl">Name <span style="color:var(--t3)">(optional)</span></label>
+                            <div class="autocomplete-wrapper">
+                                <input type="text"
+                                       class="fi autocomplete-input angler2-input"
+                                       data-team="${teamCount}"
+                                       data-angler="2"
+                                       placeholder="Start typing angler name..."
+                                       autocomplete="off">
+                                <span class="clear-selection" style="display:none;" onclick="clearAnglerSelection(${teamCount}, 2)">&times;</span>
+                                <div class="autocomplete-dropdown"></div>
+                                <input type="hidden" name="angler2_id_${teamCount}" class="angler2-id">
                             </div>
-                            <div class="col-4">
-                                <label class="form-label">Fish</label>
-                                <input type="number" class="form-control" name="angler2_fish_${teamCount}" min="0" max="5" value="0">
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem">
+                            <div>
+                                <label class="fl">Fish</label>
+                                <input type="number" class="fi" name="angler2_fish_${teamCount}" min="0" max="5" value="0">
                             </div>
-                            <div class="col-4">
-                                <label class="form-label">Weight (lbs)</label>
-                                <input type="number" class="form-control" name="angler2_weight_${teamCount}" step="0.01" min="0" value="0.00">
+                            <div>
+                                <label class="fl">Weight (lbs)</label>
+                                <input type="number" class="fi" name="angler2_weight_${teamCount}" step="0.01" min="0" value="0.00">
                             </div>
-                            <div class="col-4">
-                                <label class="form-label">Big Bass (lbs)</label>
-                                <input type="number" class="form-control" name="angler2_big_bass_${teamCount}" step="0.01" min="0" value="0.00">
+                            <div>
+                                <label class="fl">Big Bass (lbs)</label>
+                                <input type="number" class="fi" name="angler2_big_bass_${teamCount}" step="0.01" min="0" value="0.00">
                             </div>
-                            <div class="col-6">
-                                <label class="form-label">Dead Fish Penalty</label>
-                                <input type="number" class="form-control" name="angler2_dead_penalty_${teamCount}" step="0.25" min="0" value="0.00">
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+                            <div>
+                                <label class="fl">Dead Fish Penalty</label>
+                                <input type="number" class="fi" name="angler2_dead_penalty_${teamCount}" step="0.25" min="0" value="0.00">
                             </div>
-                            <div class="col-6">
-                                <div class="form-check mt-4">
-                                    <input class="form-check-input" type="checkbox" name="angler2_disqualified_${teamCount}" value="1">
-                                    <label class="form-check-label">Disqualified</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="angler2_buyIn_${teamCount}" value="1" onchange="handleBuyInChange(this, ${teamCount}, 'angler2')">
-                                    <label class="form-check-label">Buy-in</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="angler2_was_member_${teamCount}" value="1" checked>
-                                    <label class="form-check-label">Member</label>
-                                </div>
+                            <div style="display:flex;flex-direction:column;gap:.3rem;padding-top:1.2rem">
+                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
+                                    <input type="checkbox" name="angler2_disqualified_${teamCount}" value="1"> Disqualified
+                                </label>
+                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
+                                    <input type="checkbox" name="angler2_buyIn_${teamCount}" value="1" onchange="handleBuyInChange(this, ${teamCount}, 'angler2')"> Buy-in
+                                </label>
+                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
+                                    <input type="checkbox" name="angler2_was_member_${teamCount}" value="1" checked> Member
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -431,68 +431,47 @@ function addTeamFormatTeam() {
     const container = document.getElementById('teams-container');
 
     const teamHtml = `
-        <div class="card mb-3 team-card" id="team-${teamCount}">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">Team ${teamCount}</h6>
-                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeTeam(${teamCount})">
+        <div class="cc team-card" id="team-${teamCount}" style="margin-bottom:1rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;background:var(--bg-alt);border-bottom:1px solid var(--b1);border-radius:var(--r-md) var(--r-md) 0 0">
+                <strong style="font-size:.9rem">Team ${teamCount}</strong>
+                <button type="button" class="btn-icon btn-icon-danger" onclick="removeTeam(${teamCount})" aria-label="Remove team">
                     <i class="bi bi-trash"></i>
                 </button>
             </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <!-- Boater -->
-                    <div class="col-md-3">
-                        <label class="form-label">Boater <span class="text-danger">*</span></label>
-                        <div class="autocomplete-wrapper">
-                            <input type="text"
-                                   class="form-control autocomplete-input angler1-input"
-                                   data-team="${teamCount}"
-                                   data-angler="1"
-                                   placeholder="Start typing angler name..."
-                                   autocomplete="off"
-                                   required>
-                            <span class="clear-selection" style="display:none;" onclick="clearAnglerSelection(${teamCount}, 1)">×</span>
-                            <div class="autocomplete-dropdown"></div>
-                            <input type="hidden" name="angler1_id_${teamCount}" class="angler1-id">
-                        </div>
+            <div class="ci" style="display:grid;grid-template-columns:3fr 3fr 1fr 2fr 2fr;gap:.75rem;align-items:end">
+                <div>
+                    <label class="fl">Boater <span style="color:var(--err)">*</span></label>
+                    <div class="autocomplete-wrapper">
+                        <input type="text" class="fi autocomplete-input angler1-input"
+                               data-team="${teamCount}" data-angler="1"
+                               placeholder="Start typing angler name..." autocomplete="off" required>
+                        <span class="clear-selection" style="display:none;" onclick="clearAnglerSelection(${teamCount}, 1)">&times;</span>
+                        <div class="autocomplete-dropdown"></div>
+                        <input type="hidden" name="angler1_id_${teamCount}" class="angler1-id">
                     </div>
-
-                    <!-- Non-boater -->
-                    <div class="col-md-3">
-                        <label class="form-label">Non-boater <span class="text-secondary">(optional)</span></label>
-                        <div class="autocomplete-wrapper">
-                            <input type="text"
-                                   class="form-control autocomplete-input angler2-input"
-                                   data-team="${teamCount}"
-                                   data-angler="2"
-                                   placeholder="Start typing angler name..."
-                                   autocomplete="off">
-                            <span class="clear-selection" style="display:none;" onclick="clearAnglerSelection(${teamCount}, 2)">×</span>
-                            <div class="autocomplete-dropdown"></div>
-                            <input type="hidden" name="angler2_id_${teamCount}" class="angler2-id">
-                        </div>
+                </div>
+                <div>
+                    <label class="fl">Non-boater <span style="color:var(--t3)">(optional)</span></label>
+                    <div class="autocomplete-wrapper">
+                        <input type="text" class="fi autocomplete-input angler2-input"
+                               data-team="${teamCount}" data-angler="2"
+                               placeholder="Start typing angler name..." autocomplete="off">
+                        <span class="clear-selection" style="display:none;" onclick="clearAnglerSelection(${teamCount}, 2)">&times;</span>
+                        <div class="autocomplete-dropdown"></div>
+                        <input type="hidden" name="angler2_id_${teamCount}" class="angler2-id">
                     </div>
-
-                    <!-- Num Fish -->
-                    <div class="col-md-2">
-                        <label class="form-label">Fish Count</label>
-                        <input type="number" class="form-control" name="num_fish_${teamCount}"
-                               min="0" max="10" value="0">
-                    </div>
-
-                    <!-- Team Weight (combined) -->
-                    <div class="col-md-2">
-                        <label class="form-label">Team Weight (lbs)</label>
-                        <input type="number" class="form-control" name="team_weight_${teamCount}"
-                               step="0.01" min="0" value="0.00">
-                    </div>
-
-                    <!-- Big Bass (optional) -->
-                    <div class="col-md-2">
-                        <label class="form-label">Big Bass (lbs)</label>
-                        <input type="number" class="form-control" name="big_bass_${teamCount}"
-                               step="0.01" min="0" value="0.00">
-                    </div>
+                </div>
+                <div>
+                    <label class="fl">Fish</label>
+                    <input type="number" class="fi" name="num_fish_${teamCount}" min="0" max="10" value="0">
+                </div>
+                <div>
+                    <label class="fl">Team Weight (lbs)</label>
+                    <input type="number" class="fi" name="team_weight_${teamCount}" step="0.01" min="0" value="0.00">
+                </div>
+                <div>
+                    <label class="fl">Big Bass (lbs)</label>
+                    <input type="number" class="fi" name="big_bass_${teamCount}" step="0.01" min="0" value="0.00">
                 </div>
             </div>
         </div>
@@ -526,67 +505,46 @@ function addTeamFormatTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_
     const container = document.getElementById('teams-container');
 
     const teamHtml = `
-        <div class="card mb-3 team-card" id="team-${teamCount}">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">Team ${teamCount}</h6>
+        <div class="cc team-card" id="team-${teamCount}" style="margin-bottom:1rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;background:var(--bg-alt);border-bottom:1px solid var(--b1);border-radius:var(--r-md) var(--r-md) 0 0">
+                <strong style="font-size:.9rem">Team ${teamCount}</strong>
             </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <!-- Boater -->
-                    <div class="col-md-3">
-                        <label class="form-label">Boater <span class="text-danger">*</span></label>
-                        <div class="autocomplete-wrapper">
-                            <input type="text"
-                                   class="form-control autocomplete-input angler1-input angler-selected"
-                                   data-team="${teamCount}"
-                                   data-angler="1"
-                                   placeholder="Start typing angler name..."
-                                   autocomplete="off"
-                                   value="${escapeHtml(angler1_name)}"
-                                   required>
-                            <span class="clear-selection" style="display:${angler1_id ? 'block' : 'none'};" onclick="clearAnglerSelection(${teamCount}, 1)">×</span>
-                            <div class="autocomplete-dropdown"></div>
-                            <input type="hidden" name="angler1_id_${teamCount}" class="angler1-id" value="${angler1_id}">
-                        </div>
+            <div class="ci" style="display:grid;grid-template-columns:3fr 3fr 1fr 2fr 2fr;gap:.75rem;align-items:end">
+                <div>
+                    <label class="fl">Boater <span style="color:var(--err)">*</span></label>
+                    <div class="autocomplete-wrapper">
+                        <input type="text" class="fi autocomplete-input angler1-input angler-selected"
+                               data-team="${teamCount}" data-angler="1"
+                               placeholder="Start typing angler name..." autocomplete="off"
+                               value="${escapeHtml(angler1_name)}" required>
+                        <span class="clear-selection" style="display:${angler1_id ? 'block' : 'none'};" onclick="clearAnglerSelection(${teamCount}, 1)">&times;</span>
+                        <div class="autocomplete-dropdown"></div>
+                        <input type="hidden" name="angler1_id_${teamCount}" class="angler1-id" value="${angler1_id}">
                     </div>
-
-                    <!-- Non-boater -->
-                    <div class="col-md-3">
-                        <label class="form-label">Non-boater <span class="text-secondary">(optional)</span></label>
-                        <div class="autocomplete-wrapper">
-                            <input type="text"
-                                   class="form-control autocomplete-input angler2-input ${angler2_id ? 'angler-selected' : ''}"
-                                   data-team="${teamCount}"
-                                   data-angler="2"
-                                   placeholder="Start typing angler name..."
-                                   autocomplete="off"
-                                   value="${angler2_name ? escapeHtml(angler2_name) : ''}">
-                            <span class="clear-selection" style="display:${angler2_id ? 'block' : 'none'};" onclick="clearAnglerSelection(${teamCount}, 2)">×</span>
-                            <div class="autocomplete-dropdown"></div>
-                            <input type="hidden" name="angler2_id_${teamCount}" class="angler2-id" value="${angler2_id || ''}">
-                        </div>
+                </div>
+                <div>
+                    <label class="fl">Non-boater <span style="color:var(--t3)">(optional)</span></label>
+                    <div class="autocomplete-wrapper">
+                        <input type="text" class="fi autocomplete-input angler2-input ${angler2_id ? 'angler-selected' : ''}"
+                               data-team="${teamCount}" data-angler="2"
+                               placeholder="Start typing angler name..." autocomplete="off"
+                               value="${angler2_name ? escapeHtml(angler2_name) : ''}">
+                        <span class="clear-selection" style="display:${angler2_id ? 'block' : 'none'};" onclick="clearAnglerSelection(${teamCount}, 2)">&times;</span>
+                        <div class="autocomplete-dropdown"></div>
+                        <input type="hidden" name="angler2_id_${teamCount}" class="angler2-id" value="${angler2_id || ''}">
                     </div>
-
-                    <!-- Num Fish -->
-                    <div class="col-md-2">
-                        <label class="form-label">Fish Count</label>
-                        <input type="number" class="form-control" name="num_fish_${teamCount}"
-                               min="0" max="10" value="${num_fish}">
-                    </div>
-
-                    <!-- Team Weight (combined) -->
-                    <div class="col-md-2">
-                        <label class="form-label">Team Weight (lbs)</label>
-                        <input type="number" class="form-control" name="team_weight_${teamCount}"
-                               step="0.01" min="0" value="${team_weight}">
-                    </div>
-
-                    <!-- Big Bass (optional) -->
-                    <div class="col-md-2">
-                        <label class="form-label">Big Bass (lbs)</label>
-                        <input type="number" class="form-control" name="big_bass_${teamCount}"
-                               step="0.01" min="0" value="${big_bass}">
-                    </div>
+                </div>
+                <div>
+                    <label class="fl">Fish</label>
+                    <input type="number" class="fi" name="num_fish_${teamCount}" min="0" max="10" value="${num_fish}">
+                </div>
+                <div>
+                    <label class="fl">Team Weight (lbs)</label>
+                    <input type="number" class="fi" name="team_weight_${teamCount}" step="0.01" min="0" value="${team_weight}">
+                </div>
+                <div>
+                    <label class="fl">Big Bass (lbs)</label>
+                    <input type="number" class="fi" name="big_bass_${teamCount}" step="0.01" min="0" value="${big_bass}">
                 </div>
             </div>
         </div>
@@ -630,111 +588,69 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
     const container = document.getElementById('teams-container');
 
     const teamHtml = `
-        <div class="card mb-3 team-card" id="team-${teamCount}">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">Team ${teamCount}</h6>
+        <div class="cc team-card" id="team-${teamCount}" style="margin-bottom:1rem">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;background:var(--bg-alt);border-bottom:1px solid var(--b1);border-radius:var(--r-md) var(--r-md) 0 0">
+                <strong style="font-size:.9rem">Team ${teamCount}</strong>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="text-primary">Boater</h6>
-                        <div class="row g-2">
-                            <div class="col-12">
-                                <label class="form-label">Name</label>
-                                <div class="autocomplete-wrapper">
-                                    <input type="text"
-                                           class="form-control autocomplete-input angler1-input"
-                                           data-team="${teamCount}"
-                                           data-angler="1"
-                                           placeholder="Start typing angler name..."
-                                           autocomplete="off"
-                                           value="${escapeHtml(angler1_name)}"
-                                           required>
-                                    <span class="clear-selection" style="display:${angler1_id ? 'block' : 'none'};" onclick="clearAnglerSelection(${teamCount}, 1)">×</span>
-                                    <div class="autocomplete-dropdown"></div>
-                                    <input type="hidden" name="angler1_id_${teamCount}" class="angler1-id" value="${angler1_id}">
-                                </div>
+            <div class="ci" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+                <!-- Angler 1 -->
+                <div>
+                    <h6 style="color:var(--brand);font-size:.85rem;margin-bottom:.5rem">Boater</h6>
+                    <div style="display:grid;gap:.5rem">
+                        <div>
+                            <label class="fl">Name</label>
+                            <div class="autocomplete-wrapper">
+                                <input type="text" class="fi autocomplete-input angler1-input"
+                                       data-team="${teamCount}" data-angler="1"
+                                       placeholder="Start typing angler name..." autocomplete="off"
+                                       value="${escapeHtml(angler1_name)}" required>
+                                <span class="clear-selection" style="display:${angler1_id ? 'block' : 'none'};" onclick="clearAnglerSelection(${teamCount}, 1)">&times;</span>
+                                <div class="autocomplete-dropdown"></div>
+                                <input type="hidden" name="angler1_id_${teamCount}" class="angler1-id" value="${angler1_id}">
                             </div>
-                            <div class="col-4">
-                                <label class="form-label">Fish</label>
-                                <input type="number" class="form-control" name="angler1_fish_${teamCount}" min="0" max="5" value="${angler1_fish}">
-                            </div>
-                            <div class="col-4">
-                                <label class="form-label">Weight (lbs)</label>
-                                <input type="number" class="form-control" name="angler1_weight_${teamCount}" step="0.01" min="0" value="${angler1_weight}">
-                            </div>
-                            <div class="col-4">
-                                <label class="form-label">Big Bass (lbs)</label>
-                                <input type="number" class="form-control" name="angler1_big_bass_${teamCount}" step="0.01" min="0" value="${angler1_big_bass}">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Dead Fish Penalty</label>
-                                <input type="number" class="form-control" name="angler1_dead_penalty_${teamCount}" step="0.25" min="0" value="${angler1_dead_penalty}">
-                            </div>
-                            <div class="col-6">
-                                <div class="form-check mt-4">
-                                    <input class="form-check-input" type="checkbox" name="angler1_disqualified_${teamCount}" value="1" ${angler1_disqualified ? 'checked' : ''}>
-                                    <label class="form-check-label">Disqualified</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="angler1_buyIn_${teamCount}" value="1" ${angler1_buy_in ? 'checked' : ''} onchange="handleBuyInChange(this, ${teamCount}, 'angler1')">
-                                    <label class="form-check-label">Buy-in</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="angler1_was_member_${teamCount}" value="1" ${angler1_was_member !== false ? 'checked' : ''}>
-                                    <label class="form-check-label">Member</label>
-                                </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem">
+                            <div><label class="fl">Fish</label><input type="number" class="fi" name="angler1_fish_${teamCount}" min="0" max="5" value="${angler1_fish}"></div>
+                            <div><label class="fl">Weight (lbs)</label><input type="number" class="fi" name="angler1_weight_${teamCount}" step="0.01" min="0" value="${angler1_weight}"></div>
+                            <div><label class="fl">Big Bass (lbs)</label><input type="number" class="fi" name="angler1_big_bass_${teamCount}" step="0.01" min="0" value="${angler1_big_bass}"></div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+                            <div><label class="fl">Dead Fish Penalty</label><input type="number" class="fi" name="angler1_dead_penalty_${teamCount}" step="0.25" min="0" value="${angler1_dead_penalty}"></div>
+                            <div style="display:flex;flex-direction:column;gap:.3rem;padding-top:1.2rem">
+                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler1_disqualified_${teamCount}" value="1" ${angler1_disqualified ? 'checked' : ''}> Disqualified</label>
+                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler1_buyIn_${teamCount}" value="1" ${angler1_buy_in ? 'checked' : ''} onchange="handleBuyInChange(this, ${teamCount}, 'angler1')"> Buy-in</label>
+                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler1_was_member_${teamCount}" value="1" ${angler1_was_member !== false ? 'checked' : ''}> Member</label>
                             </div>
                         </div>
                     </div>
-
-                    <div class="col-md-6">
-                        <h6 class="text-primary">Non-boater</h6>
-                        <div class="row g-2">
-                            <div class="col-12">
-                                <label class="form-label">Name <span class="text-secondary">(optional)</span></label>
-                                <div class="autocomplete-wrapper">
-                                    <input type="text"
-                                           class="form-control autocomplete-input angler2-input"
-                                           data-team="${teamCount}"
-                                           data-angler="2"
-                                           placeholder="Start typing angler name..."
-                                           autocomplete="off"
-                                           value="${angler2_name ? escapeHtml(angler2_name) : ''}">
-                                    <span class="clear-selection" style="display:${angler2_id ? 'block' : 'none'};" onclick="clearAnglerSelection(${teamCount}, 2)">×</span>
-                                    <div class="autocomplete-dropdown"></div>
-                                    <input type="hidden" name="angler2_id_${teamCount}" class="angler2-id" value="${angler2_id || ''}">
-                                </div>
+                </div>
+                <!-- Angler 2 -->
+                <div>
+                    <h6 style="color:var(--brand);font-size:.85rem;margin-bottom:.5rem">Non-boater</h6>
+                    <div style="display:grid;gap:.5rem">
+                        <div>
+                            <label class="fl">Name <span style="color:var(--t3)">(optional)</span></label>
+                            <div class="autocomplete-wrapper">
+                                <input type="text" class="fi autocomplete-input angler2-input"
+                                       data-team="${teamCount}" data-angler="2"
+                                       placeholder="Start typing angler name..." autocomplete="off"
+                                       value="${angler2_name ? escapeHtml(angler2_name) : ''}">
+                                <span class="clear-selection" style="display:${angler2_id ? 'block' : 'none'};" onclick="clearAnglerSelection(${teamCount}, 2)">&times;</span>
+                                <div class="autocomplete-dropdown"></div>
+                                <input type="hidden" name="angler2_id_${teamCount}" class="angler2-id" value="${angler2_id || ''}">
                             </div>
-                            <div class="col-4">
-                                <label class="form-label">Fish</label>
-                                <input type="number" class="form-control" name="angler2_fish_${teamCount}" min="0" max="5" value="${angler2_fish}">
-                            </div>
-                            <div class="col-4">
-                                <label class="form-label">Weight (lbs)</label>
-                                <input type="number" class="form-control" name="angler2_weight_${teamCount}" step="0.01" min="0" value="${angler2_weight}">
-                            </div>
-                            <div class="col-4">
-                                <label class="form-label">Big Bass (lbs)</label>
-                                <input type="number" class="form-control" name="angler2_big_bass_${teamCount}" step="0.01" min="0" value="${angler2_big_bass}">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Dead Fish Penalty</label>
-                                <input type="number" class="form-control" name="angler2_dead_penalty_${teamCount}" step="0.25" min="0" value="${angler2_dead_penalty}">
-                            </div>
-                            <div class="col-6">
-                                <div class="form-check mt-4">
-                                    <input class="form-check-input" type="checkbox" name="angler2_disqualified_${teamCount}" value="1" ${angler2_disqualified ? 'checked' : ''}>
-                                    <label class="form-check-label">Disqualified</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="angler2_buyIn_${teamCount}" value="1" ${angler2_buy_in ? 'checked' : ''} onchange="handleBuyInChange(this, ${teamCount}, 'angler2')">
-                                    <label class="form-check-label">Buy-in</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="angler2_was_member_${teamCount}" value="1" ${angler2_was_member !== false ? 'checked' : ''}>
-                                    <label class="form-check-label">Member</label>
-                                </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem">
+                            <div><label class="fl">Fish</label><input type="number" class="fi" name="angler2_fish_${teamCount}" min="0" max="5" value="${angler2_fish}"></div>
+                            <div><label class="fl">Weight (lbs)</label><input type="number" class="fi" name="angler2_weight_${teamCount}" step="0.01" min="0" value="${angler2_weight}"></div>
+                            <div><label class="fl">Big Bass (lbs)</label><input type="number" class="fi" name="angler2_big_bass_${teamCount}" step="0.01" min="0" value="${angler2_big_bass}"></div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+                            <div><label class="fl">Dead Fish Penalty</label><input type="number" class="fi" name="angler2_dead_penalty_${teamCount}" step="0.25" min="0" value="${angler2_dead_penalty}"></div>
+                            <div style="display:flex;flex-direction:column;gap:.3rem;padding-top:1.2rem">
+                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler2_disqualified_${teamCount}" value="1" ${angler2_disqualified ? 'checked' : ''}> Disqualified</label>
+                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler2_buyIn_${teamCount}" value="1" ${angler2_buy_in ? 'checked' : ''} onchange="handleBuyInChange(this, ${teamCount}, 'angler2')"> Buy-in</label>
+                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler2_was_member_${teamCount}" value="1" ${angler2_was_member !== false ? 'checked' : ''}> Member</label>
                             </div>
                         </div>
                     </div>
@@ -745,11 +661,9 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
 
     container.insertAdjacentHTML('beforeend', teamHtml);
 
-    // Setup autocomplete for the newly added team
     const teamCard = document.getElementById(`team-${teamCount}`);
     teamCard.querySelectorAll('.autocomplete-input').forEach(input => {
         setupAutocomplete(input);
-        // If there's a pre-selected value, mark it as selected
         if (input.value) {
             input.classList.add('angler-selected');
         }
@@ -837,7 +751,10 @@ function createGuest() {
         },
         body: JSON.stringify(guestData)
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to create guest');
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             // Add the new guest to the anglers array

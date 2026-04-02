@@ -24,12 +24,12 @@
 <!-- Poll Type Tabs -->
 <div class="pt" style="margin-bottom:1.4rem">
     <a href="/polls?tab=club&p=1" class="ptb {% if current_tab == 'club' %}on{% endif %}" style="text-decoration:none">
-        <i class="bi bi-card-checklist"></i> Club Polls
+        <i class="bi bi-card-checklist" aria-hidden="true"></i> Club Polls
         {% if active_club_polls > 0 %}<span class="tg tg-s" style="margin-left:.3rem">{{ active_club_polls }} active</span>{% endif %}
         {% if upcoming_club_polls > 0 %}<span class="tg tg-i" style="margin-left:.2rem">{{ upcoming_club_polls }} upcoming</span>{% endif %}
     </a>
     <a href="/polls?tab=tournament&p=1" class="ptb {% if current_tab == 'tournament' %}on{% endif %}" style="text-decoration:none">
-        <i class="bi bi-geo-alt"></i> Tournament Polls
+        <i class="bi bi-geo-alt" aria-hidden="true"></i> Tournament Polls
         {% if active_tournament_polls > 0 %}<span class="tg tg-s" style="margin-left:.3rem">{{ active_tournament_polls }} active</span>{% endif %}
         {% if upcoming_tournament_polls > 0 %}<span class="tg tg-i" style="margin-left:.2rem">{{ upcoming_tournament_polls }} upcoming</span>{% endif %}
     </a>
@@ -58,11 +58,13 @@
             {% if user and user.is_admin %}
             <div style="display:flex;gap:.25rem">
                 <button class="btn-icon btn-icon-ghost"
-                        onclick="window.location.href='/admin/polls/{{ poll.id }}/edit'">
+                        onclick="window.location.href='/admin/polls/{{ poll.id }}/edit'"
+                        aria-label="Edit poll">
                     <i class="bi bi-pencil"></i>
                 </button>
                 <button class="btn-icon btn-icon-danger"
-                        onclick="deletePoll({{ poll.id }}, '{{ poll.title|e }}')">
+                        onclick="deletePoll({{ poll.id }}, '{{ poll.title|e }}')"
+                        aria-label="Delete poll">
                     <i class="bi bi-trash"></i>
                 </button>
             </div>
@@ -80,20 +82,22 @@
             {% if poll.options %}
                 <!-- Per-Poll Tabs for Admin Proxy Voting -->
                 {% if user.is_admin and poll.status == 'active' %}
-                <div class="pt" style="margin-bottom:.75rem" id="poll{{ poll.id }}Tabs">
-                    <button class="ptb on" id="vote-tab-{{ poll.id }}" data-bs-toggle="tab"
-                            data-bs-target="#vote-pane-{{ poll.id }}" type="button" role="tab">
+                <div class="pt" style="margin-bottom:.75rem" id="poll{{ poll.id }}Tabs" role="tablist">
+                    <button class="ptb active" id="vote-tab-{{ poll.id }}" data-bs-toggle="tab"
+                            data-bs-target="#vote-pane-{{ poll.id }}" type="button" role="tab"
+                            aria-controls="vote-pane-{{ poll.id }}" aria-selected="true">
                         <i class="bi bi-person-check"></i> Your Vote
                     </button>
                     <button class="ptb" id="admin-vote-tab-{{ poll.id }}" data-bs-toggle="tab"
-                            data-bs-target="#admin-vote-pane-{{ poll.id }}" type="button" role="tab">
+                            data-bs-target="#admin-vote-pane-{{ poll.id }}" type="button" role="tab"
+                            aria-controls="admin-vote-pane-{{ poll.id }}" aria-selected="false">
                         <i class="bi bi-person-badge"></i> Cast Vote For Member
                     </button>
                 </div>
 
                 <div class="tab-content" id="poll{{ poll.id }}TabContent">
                     <!-- Your Vote Tab -->
-                    <div class="tab-pane fade show active" id="vote-pane-{{ poll.id }}" role="tabpanel">
+                    <div class="tab-pane fade show active" id="vote-pane-{{ poll.id }}" role="tabpanel" aria-labelledby="vote-tab-{{ poll.id }}">
                         {% if poll.user_has_voted %}
                             <div style="padding:.75rem 1rem;border-radius:var(--r-md);background:var(--ok-m);color:var(--ok);font-size:.85rem;margin-bottom:1rem">
                                 <i class="bi bi-check-circle" style="margin-right:.35rem"></i>You have already voted in this poll.
@@ -202,7 +206,7 @@
                             </div>
                             {% endif %}
                         </div>
-                        <button type="submit" class="btn-m btn-p" style="width:100%">
+                        <button type="submit" class="btn-m btn-p">
                             <i class="bi bi-check-square" style="margin-right:.35rem"></i>Cast Your Vote
                         </button>
                     </form>
@@ -217,7 +221,7 @@
                     </div> <!-- Close vote-pane (admin tab) -->
 
                     <!-- Cast Vote For Member Tab (admin tab) -->
-                    <div class="tab-pane fade" id="admin-vote-pane-{{ poll.id }}" role="tabpanel">
+                    <div class="tab-pane fade" id="admin-vote-pane-{{ poll.id }}" role="tabpanel" aria-labelledby="admin-vote-tab-{{ poll.id }}">
                         <div class="cc" style="border:1px solid var(--warn)">
                             <div style="padding:.6rem .8rem;border-bottom:1px solid var(--b0);background:var(--warn-m)">
                                 <div style="font-size:.85rem;font-weight:700;color:var(--warn)">
@@ -302,8 +306,8 @@
                                     </div>
                                     {% endif %}
 
-                                    <button type="submit" class="btn-m btn-w" style="width:100%;margin-top:.75rem">
-                                        <i class="bi bi-check-square" style="margin-right:.35rem"></i>Cast Vote on Behalf of Selected Member
+                                    <button type="submit" class="btn-m btn-w" style="margin-top:.75rem">
+                                        <i class="bi bi-check-square" style="margin-right:.35rem"></i>Cast Vote for Member
                                     </button>
                                 </form>
                             </div>
@@ -411,7 +415,7 @@
                             </div>
                             {% endif %}
                         </div>
-                        <button type="submit" class="btn-m btn-p" style="width:100%">
+                        <button type="submit" class="btn-m btn-p">
                             <i class="bi bi-check-square" style="margin-right:.35rem"></i>Cast Your Vote
                         </button>
                     </form>
@@ -686,15 +690,15 @@
     {% if total_pages > 1 %}
     <div style="display:flex;justify-content:center;gap:.25rem;margin-top:1.5rem">
         {% if current_page > 1 %}
-        <a href="/polls?tab={{ current_tab }}&p=1" class="btn-m btn-g" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem"><i class="bi bi-chevron-double-left"></i></a>
-        <a href="/polls?tab={{ current_tab }}&p={{ current_page - 1 }}" class="btn-m btn-g" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem"><i class="bi bi-chevron-left"></i></a>
+        <a href="/polls?tab={{ current_tab }}&p=1" class="btn-m btn-g" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem" aria-label="First page"><i class="bi bi-chevron-double-left"></i></a>
+        <a href="/polls?tab={{ current_tab }}&p={{ current_page - 1 }}" class="btn-m btn-g" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem" aria-label="Previous page"><i class="bi bi-chevron-left"></i></a>
         {% endif %}
         {% for page_num in page_range %}
         <a href="/polls?tab={{ current_tab }}&p={{ page_num }}" class="btn-m {% if page_num == current_page %}btn-p{% else %}btn-g{% endif %}" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem">{{ page_num }}</a>
         {% endfor %}
         {% if current_page < total_pages %}
-        <a href="/polls?tab={{ current_tab }}&p={{ current_page + 1 }}" class="btn-m btn-g" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem"><i class="bi bi-chevron-right"></i></a>
-        <a href="/polls?tab={{ current_tab }}&p={{ total_pages }}" class="btn-m btn-g" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem"><i class="bi bi-chevron-double-right"></i></a>
+        <a href="/polls?tab={{ current_tab }}&p={{ current_page + 1 }}" class="btn-m btn-g" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem" aria-label="Next page"><i class="bi bi-chevron-right"></i></a>
+        <a href="/polls?tab={{ current_tab }}&p={{ total_pages }}" class="btn-m btn-g" style="text-decoration:none;padding:.35rem .65rem;font-size:.82rem" aria-label="Last page"><i class="bi bi-chevron-double-right"></i></a>
         {% endif %}
     </div>
     <div style="text-align:center;color:var(--t3);font-size:.82rem;margin-top:.5rem;margin-bottom:1rem">

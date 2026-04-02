@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Angler, get_session, utc_now
 
@@ -17,13 +18,12 @@ async def health_check():
             "angler_count": angler_count,
             "timestamp": utc_now().isoformat(),
         }
-    except Exception as e:
+    except SQLAlchemyError:
         return JSONResponse(
             status_code=503,
             content={
                 "status": "unhealthy",
                 "database": "disconnected",
-                "error": str(e),
                 "timestamp": utc_now().isoformat(),
             },
         )

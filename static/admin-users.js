@@ -43,6 +43,7 @@ async function submitAddUser() {
             })
         });
 
+        if (!response.ok) throw new Error('Server error');
         const data = await response.json();
 
         if (data.success) {

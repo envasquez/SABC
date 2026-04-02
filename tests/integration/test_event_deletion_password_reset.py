@@ -511,7 +511,9 @@ class TestHealthEndpoint:
     ):
         """Test that health check returns unhealthy status on database error."""
         # Simulate database error
-        mock_get_session.side_effect = Exception("Database connection failed")
+        from sqlalchemy.exc import SQLAlchemyError
+
+        mock_get_session.side_effect = SQLAlchemyError("Database connection failed")
 
         response = client.get("/health")
 
@@ -519,5 +521,4 @@ class TestHealthEndpoint:
         data = response.json()
         assert data["status"] == "unhealthy"
         assert data["database"] == "disconnected"
-        assert "error" in data
         assert "timestamp" in data

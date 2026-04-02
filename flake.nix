@@ -14,7 +14,7 @@
           config.allowBroken = true;
         };
 
-        python = pkgs.python311;
+        python = pkgs.python312;
 
         # Dependencies for FastAPI + PostgreSQL
         pythonEnv = python.withPackages (ps: with ps; [
@@ -158,7 +158,7 @@ print('Database reset complete!')
           echo ""
 
           # Set test database URL
-          export DATABASE_URL="postgresql://postgres:dev123@localhost:5432/sabc_test"
+          export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/sabc_test"
 
           # Check if PostgreSQL container is running
           if ! docker ps | grep -q sabc-postgres; then
@@ -213,7 +213,7 @@ print('Database reset complete!')
 
           shellHook = ''
             # Note: slowapi and starlette-csrf should be installed manually to .nix-python-packages
-            # Run: python3.11 -m pip install --target .nix-python-packages starlette-csrf==3.0.0 slowapi==0.1.9
+            # Run: python3.12 -m pip install --target .nix-python-packages starlette-csrf==3.0.0 slowapi==0.1.9
 
             echo "🎣 SABC FastAPI Development Environment"
             echo "======================================"
@@ -246,17 +246,17 @@ print('Database reset complete!')
           # Environment variables
           PYTHONPATH = ".:.nix-python-packages";
           SABC_ENV = "development";
-          DATABASE_URL = "postgresql://postgres:dev123@localhost:5432/sabc";
+          DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/sabc";
         };
 
         # Package the application for production
-        packages.default = pkgs.python311Packages.buildPythonPackage {
+        packages.default = pkgs.python312Packages.buildPythonPackage {
           pname = "sabc-fastapi";
           version = "1.0.0";
 
           src = ./.;
 
-          propagatedBuildInputs = with pkgs.python311Packages; [
+          propagatedBuildInputs = with pkgs.python312Packages; [
             fastapi
             uvicorn
             jinja2

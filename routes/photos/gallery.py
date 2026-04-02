@@ -9,11 +9,13 @@ from fastapi import APIRouter, File, Form, Request, UploadFile
 from fastapi.responses import RedirectResponse
 from PIL import Image, ImageOps
 from sqlalchemy import or_
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Angler, Event, Photo, TeamResult, Tournament, get_session
 from core.helpers.auth import get_current_user, require_member
 from core.helpers.logging import get_logger
 from core.helpers.response import error_redirect, success_redirect
+from core.types import UserDict
 from routes.dependencies import templates
 
 router = APIRouter()
@@ -90,7 +92,7 @@ def generate_placeholder(contents: bytes, filename: str) -> Optional[str]:
         logger.debug(f"Placeholder generated: {placeholder_filename}")
 
         return placeholder_filename
-    except Exception as e:
+    except (OSError, ValueError) as e:
         logger.error(f"Failed to generate placeholder: {e}")
         return None
 
@@ -138,13 +140,13 @@ def generate_thumbnail(contents: bytes, filename: str) -> tuple[Optional[str], O
         # Generate blur placeholder
         placeholder_filename = generate_placeholder(contents, filename)
 
-    except Exception as e:
+    except (OSError, ValueError) as e:
         logger.error(f"Failed to generate thumbnail: {e}")
 
     return thumb_filename, placeholder_filename
 
 
-def can_upload_photo(user: Dict[str, Any], tournament_id: Optional[int]) -> bool:
+def can_upload_photo(user: UserDict, tournament_id: Optional[int]) -> bool:
     """Check if user can upload a photo for a tournament."""
     if user.get("is_admin"):
         return True
@@ -159,12 +161,12 @@ def can_upload_photo(user: Dict[str, Any], tournament_id: Optional[int]) -> bool
         return count < 2
 
 
-def can_delete_photo(user: Dict[str, Any], photo: Photo) -> bool:
+def can_delete_photo(user: UserDict, photo: Photo) -> bool:
     """Check if user can delete a photo."""
     return user.get("is_admin") or photo.angler_id == user["id"]
 
 
-def can_edit_photo(user: Dict[str, Any], photo: Photo) -> bool:
+def can_edit_photo(user: UserDict, photo: Photo) -> bool:
     """Check if user can edit a photo."""
     return user.get("is_admin") or photo.angler_id == user["id"]
 
@@ -196,7 +198,7 @@ def photo_to_dict(
     photo: Photo,
     angler: Angler,
     tournament: Optional[Tournament],
-    user: Optional[Dict[str, Any]],
+    user: Optional[UserDict],
 ) -> Dict[str, Any]:
     """Convert photo model to dict for template."""
     # Use thumbnail if available, otherwise fall back to original
@@ -427,7 +429,7 @@ async def upload_photo(
         with open(filepath, "wb") as f:
             f.write(contents)
         logger.info("Photo upload: file saved successfully")
-    except Exception as e:
+    except OSError as e:
         logger.error(f"Failed to save photo: {e}")
         return error_redirect("/photos/upload", "Failed to save photo. Please try again.")
 
@@ -454,7 +456,7 @@ async def upload_photo(
             f"Photo upload: success! filename={filename}, "
             f"thumbnail={thumbnail_filename}, placeholder={placeholder_filename}"
         )
-    except Exception as e:
+    except SQLAlchemyError as e:
         logger.error(f"Failed to create photo record: {e}")
         # Clean up files if database insert fails
         if os.path.exists(filepath):
@@ -490,7 +492,7 @@ async def delete_photo(request: Request, photo_id: int) -> RedirectResponse:
         if os.path.exists(filepath):
             try:
                 os.remove(filepath)
-            except Exception as e:
+            except OSError as e:
                 logger.error(f"Failed to delete photo file: {e}")
 
         # Delete thumbnail if exists
@@ -499,7 +501,7 @@ async def delete_photo(request: Request, photo_id: int) -> RedirectResponse:
             if os.path.exists(thumb_path):
                 try:
                     os.remove(thumb_path)
-                except Exception as e:
+                except OSError as e:
                     logger.error(f"Failed to delete thumbnail: {e}")
 
         # Delete placeholder if exists
@@ -508,7 +510,7 @@ async def delete_photo(request: Request, photo_id: int) -> RedirectResponse:
             if os.path.exists(placeholder_path):
                 try:
                     os.remove(placeholder_path)
-                except Exception as e:
+                except OSError as e:
                     logger.error(f"Failed to delete placeholder: {e}")
 
         # Delete database record

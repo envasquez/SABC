@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from core.db_schema import Lake, get_session
 from core.helpers.auth import require_admin
 from core.helpers.response import error_redirect
+from core.helpers.sanitize import sanitize_iframe
 
 router = APIRouter()
 
@@ -33,7 +34,7 @@ async def create_lake(
             lake = Lake(
                 yaml_key=yaml_key,
                 display_name=display_name.strip(),
-                google_maps_iframe=google_maps_embed.strip(),
+                google_maps_iframe=sanitize_iframe(google_maps_embed),
             )
             session.add(lake)
         return RedirectResponse("/admin/lakes?success=Lake created successfully", status_code=302)
@@ -43,8 +44,8 @@ async def create_lake(
         raise HTTPException(
             status_code=400, detail="Duplicate lake name or database constraint violation"
         )
-    except Exception as e:
-        return error_redirect("/admin/lakes", str(e))
+    except SQLAlchemyError:
+        return error_redirect("/admin/lakes", "Failed to create lake")
 
 
 @router.post("/admin/lakes/{lake_id}/update")
@@ -64,9 +65,9 @@ async def update_lake(
 
             lake.yaml_key = name.strip().lower().replace(" ", "_")
             lake.display_name = display_name.strip()
-            lake.google_maps_iframe = google_maps_embed.strip()
+            lake.google_maps_iframe = sanitize_iframe(google_maps_embed)
         return RedirectResponse("/admin/lakes?success=Lake updated successfully", status_code=302)
     except HTTPException:
         raise
-    except Exception as e:
-        return error_redirect("/admin/lakes", str(e))
+    except SQLAlchemyError:
+        return error_redirect("/admin/lakes", "Failed to update lake")

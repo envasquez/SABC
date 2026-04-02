@@ -2,6 +2,7 @@ import json
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Angler, get_session
 from core.helpers.auth import require_admin
@@ -75,7 +76,7 @@ async def create_user(request: Request):
 
     except json.JSONDecodeError:
         return JSONResponse({"success": False, "message": "Invalid JSON data"}, status_code=400)
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         logger.error(
             "User creation failed",
             extra={
@@ -84,4 +85,7 @@ async def create_user(request: Request):
             },
             exc_info=True,
         )
-        return JSONResponse({"success": False, "message": str(e)}, status_code=500)
+        return JSONResponse(
+            {"success": False, "message": "Failed to create user. Please try again."},
+            status_code=500,
+        )

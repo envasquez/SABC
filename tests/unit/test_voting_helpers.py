@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from routes.voting.helpers import get_poll_options, process_closed_polls
 
 
@@ -54,7 +56,7 @@ class TestProcessClosedPolls:
     def test_process_closed_polls_handles_exceptions(self, db_session):
         """Test process_closed_polls returns 0 on database errors."""
         with patch("routes.voting.helpers.get_session") as mock_get_session:
-            mock_get_session.side_effect = Exception("Database error")
+            mock_get_session.side_effect = SQLAlchemyError("Database error")
 
             result = process_closed_polls()
 

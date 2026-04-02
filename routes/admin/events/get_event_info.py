@@ -1,8 +1,12 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Event, Poll, Tournament, get_session
 from core.helpers.auth import require_admin
+from core.helpers.logging import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -73,5 +77,6 @@ async def get_event_info(request: Request, event_id: int):
             else:
                 return JSONResponse({"error": "Event not found"}, status_code=404)
 
-    except Exception as e:
-        return JSONResponse({"error": f"Failed to get event info: {str(e)}"}, status_code=500)
+    except SQLAlchemyError as e:
+        logger.error(f"Failed to get event info: {e}", exc_info=True)
+        return JSONResponse({"error": "Failed to get event info"}, status_code=500)

@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, Mock, patch
 
+from core.types import UserDict
 from routes.auth.profile_update.password import handle_password_change
 
 
@@ -36,7 +37,7 @@ class TestHandlePasswordChange:
         mock_session.query().filter().first.return_value = mock_user
         mock_get_session.return_value.__enter__.return_value = mock_session
 
-        user = {"id": 1, "email": "test@example.com"}
+        user: UserDict = {"id": 1, "email": "test@example.com"}
         success, error = handle_password_change(
             user, "current123", "NewPass123!", "NewPass123!", "192.168.1.1"
         )
@@ -49,7 +50,7 @@ class TestHandlePasswordChange:
     @patch("routes.auth.profile_update.password.validate_password_strength")
     def test_returns_error_for_missing_fields(self, mock_validate: Mock):
         """Test returns error when required fields are missing."""
-        user = {"id": 1, "email": "test@example.com"}
+        user: UserDict = {"id": 1, "email": "test@example.com"}
 
         # Missing current password
         success, error = handle_password_change(user, "", "NewPass123!", "NewPass123!", "1.1.1.1")
@@ -74,7 +75,7 @@ class TestHandlePasswordChange:
         """Test returns error when new password is weak."""
         mock_validate.return_value = (False, "Password must be at least 8 characters")
 
-        user = {"id": 1, "email": "test@example.com"}
+        user: UserDict = {"id": 1, "email": "test@example.com"}
         success, error = handle_password_change(user, "current123", "weak", "weak", "1.1.1.1")
 
         assert success is False
@@ -86,7 +87,7 @@ class TestHandlePasswordChange:
         """Test returns error when new password and confirmation don't match."""
         mock_validate.return_value = (True, None)
 
-        user = {"id": 1, "email": "test@example.com"}
+        user: UserDict = {"id": 1, "email": "test@example.com"}
         success, error = handle_password_change(
             user, "current123", "NewPass123!", "Different123!", "1.1.1.1"
         )
@@ -105,7 +106,7 @@ class TestHandlePasswordChange:
         mock_session.query().filter().first.return_value = None
         mock_get_session.return_value.__enter__.return_value = mock_session
 
-        user = {"id": 999, "email": "test@example.com"}
+        user: UserDict = {"id": 999, "email": "test@example.com"}
         success, error = handle_password_change(
             user, "current123", "NewPass123!", "NewPass123!", "1.1.1.1"
         )
@@ -128,7 +129,7 @@ class TestHandlePasswordChange:
         mock_session.query().filter().first.return_value = mock_user
         mock_get_session.return_value.__enter__.return_value = mock_session
 
-        user = {"id": 1, "email": "test@example.com"}
+        user: UserDict = {"id": 1, "email": "test@example.com"}
         success, error = handle_password_change(
             user, "current123", "NewPass123!", "NewPass123!", "1.1.1.1"
         )
@@ -154,7 +155,7 @@ class TestHandlePasswordChange:
         mock_session.query().filter().first.return_value = mock_user
         mock_get_session.return_value.__enter__.return_value = mock_session
 
-        user = {"id": 1, "email": "test@example.com"}
+        user: UserDict = {"id": 1, "email": "test@example.com"}
         success, error = handle_password_change(
             user, "wrongpassword", "NewPass123!", "NewPass123!", "1.1.1.1"
         )
@@ -188,7 +189,7 @@ class TestHandlePasswordChange:
         mock_session.query().filter().first.return_value = mock_user
         mock_get_session.return_value.__enter__.return_value = mock_session
 
-        user = {"id": 1, "email": "test@example.com"}
+        user: UserDict = {"id": 1, "email": "test@example.com"}
         handle_password_change(user, "current123", "NewPass123!", "NewPass123!", "1.2.3.4")
 
         mock_log.assert_called_once_with(
@@ -224,7 +225,7 @@ class TestHandlePasswordChange:
         mock_session.query().filter().first.return_value = mock_user
         mock_get_session.return_value.__enter__.return_value = mock_session
 
-        user = {"id": 1, "email": "test@example.com"}
+        user: UserDict = {"id": 1, "email": "test@example.com"}
         success, error = handle_password_change(
             user, "current123", "NewPass123!", "NewPass123!", "1.1.1.1"
         )

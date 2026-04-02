@@ -3,6 +3,7 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse, Response
 from sqlalchemy import case, desc, func, literal
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Angler, Event, Result, TeamResult, Tournament, get_session
 from core.helpers.logging import get_logger
@@ -361,7 +362,7 @@ async def profile_page(request: Request) -> Response:
             )
             if aoy_result:
                 aoy_position = aoy_result[0]
-        except Exception as e:
+        except SQLAlchemyError as e:
             logger.warning(f"Failed to calculate AOY standings for user {user['id']}: {e}")
             # aoy_position remains None, which is acceptable
 

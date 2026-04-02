@@ -4,7 +4,8 @@ from typing import Any, Dict, Union
 from starlette.datastructures import FormData
 
 from core.db_schema import PollOption, get_session
-from routes.dependencies import find_lake_by_id, get_lakes_list
+from routes.admin.polls.poll_option_helpers import create_lake_option
+from routes.dependencies import get_lakes_list
 
 
 def create_tournament_location_options(
@@ -19,23 +20,11 @@ def create_tournament_location_options(
         if selected_lake_ids:
             for lake_id_raw in selected_lake_ids:
                 if isinstance(lake_id_raw, str):
-                    lake_name = find_lake_by_id(int(lake_id_raw), "name")
-                    if lake_name:
-                        new_option = PollOption(
-                            poll_id=poll_id,
-                            option_text=lake_name,
-                            option_data=json.dumps({"lake_id": int(lake_id_raw)}),
-                        )
-                        session.add(new_option)
+                    create_lake_option(session, poll_id, int(lake_id_raw))
         else:
             all_lakes = get_lakes_list()
             for lake in all_lakes:
-                new_option = PollOption(
-                    poll_id=poll_id,
-                    option_text=lake["display_name"],
-                    option_data=json.dumps({"lake_id": lake["id"]}),
-                )
-                session.add(new_option)
+                create_lake_option(session, poll_id, lake["id"])
 
 
 def create_generic_poll_options(poll_id: int, form: Union[FormData, Dict[str, Any]]) -> None:

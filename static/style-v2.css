@@ -681,7 +681,8 @@ main.container:has(.al) {
   color: var(--t2);
 }
 
-.ptb.on {
+.ptb.on,
+.ptb.active {
   color: var(--t1);
   background: var(--bg-surface);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);

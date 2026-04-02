@@ -2,6 +2,7 @@
 
 from fastapi import Request
 from fastapi.responses import RedirectResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Angler, get_session
 from core.helpers.forms import normalize_email
@@ -76,7 +77,7 @@ async def update_profile_fields(
             success_msg += " and password changed"
         return RedirectResponse(f"/profile?success={success_msg}", status_code=303)
 
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         logger.error(
             "Profile update error", extra={"user_id": user["id"], "error": str(e)}, exc_info=True
         )

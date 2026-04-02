@@ -1,6 +1,7 @@
 from fastapi import Query, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import Date, cast, func
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Event, Poll, get_session
 from core.helpers.auth import require_admin
@@ -60,7 +61,7 @@ async def create_poll_form(request: Request, event_id: int = Query(None)):
             "ramps": ramps,
         }
         return templates.TemplateResponse("admin/create_poll.html", context)
-    except Exception as e:
+    except SQLAlchemyError:
         return RedirectResponse(
-            f"/admin/events?error=Failed to load poll creation form: {str(e)}", status_code=302
+            "/admin/events?error=Failed to load poll creation form", status_code=302
         )

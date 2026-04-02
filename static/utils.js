@@ -687,6 +687,7 @@ class LakeRampSelector {
 
         try {
             const response = await fetch(`/api/lakes/${lakeKey}/ramps`);
+            if (!response.ok) throw new Error('Failed to load ramps');
             const data = await response.json();
 
             this.populateRamps(data.ramps || [], 'name', 'name');

@@ -72,7 +72,7 @@
                         <input type="text" class="fi" name="poll_options[]"
                                value="{{ option.text }}" placeholder="Option {{ loop.index }}" style="flex:1" required>
                         <input type="hidden" name="option_ids[]" value="{{ option.id }}">
-                        <button class="btn-icon btn-icon-danger" type="button" onclick="removeOption(this)">
+                        <button class="btn-icon btn-icon-danger" type="button" onclick="removeOption(this)" aria-label="Remove option">
                             <i class="bi bi-x"></i>
                         </button>
                         {% if option.votes %}
@@ -131,7 +131,8 @@
                         </div>
                         <button class="btn-icon btn-icon-danger"
                                 onclick="if(confirm('Delete vote by {{ vote.voter_name }}?')) deleteVote({{ vote.vote_id }})"
-                                title="Delete this vote">
+                                title="Delete this vote"
+                                aria-label="Delete vote">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>

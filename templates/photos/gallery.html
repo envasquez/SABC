@@ -8,7 +8,7 @@
     <div class="st"><i class="bi bi-images"></i> Photo Gallery</div>
     {% if user and user.member %}
     <a href="/photos/upload" class="btn-m btn-p" style="text-decoration:none">
-        <i class="bi bi-upload"></i> Upload Photo
+        <i class="bi bi-upload" aria-hidden="true"></i> Upload Photo
     </a>
     {% endif %}
 </div>
@@ -50,8 +50,8 @@
                 </label>
             </div>
             <div style="display:flex;gap:.5rem">
-                <button type="submit" class="btn-m btn-g"><i class="bi bi-funnel"></i> Filter</button>
-                <a href="/photos" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-x-circle"></i> Clear</a>
+                <button type="submit" class="btn-m btn-g"><i class="bi bi-funnel" aria-hidden="true"></i> Filter</button>
+                <a href="/photos" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-x-circle" aria-hidden="true"></i> Clear</a>
             </div>
         </form>
     </div>

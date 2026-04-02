@@ -4,6 +4,7 @@ from decimal import Decimal
 from typing import Any, Dict, List
 
 from sqlalchemy import case, distinct, exists, extract, false, func, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from core.db_schema import (
@@ -264,5 +265,5 @@ def process_closed_polls() -> int:
                         continue
 
             return len(closed_polls)
-    except Exception:
+    except SQLAlchemyError:
         return 0

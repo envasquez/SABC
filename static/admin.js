@@ -10,6 +10,7 @@
 async function deleteVote(voteId) {
     try {
         const response = await deleteRequest(`/admin/votes/${voteId}`);
+        if (!response.ok) throw new Error('Failed to delete vote');
         const result = await response.json();
 
         if (result.success) {

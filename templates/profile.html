@@ -27,7 +27,7 @@
         <div class="ci">
             <div class="ct-row">
                 <div class="ct"><i class="bi bi-info-circle"></i> Account Information</div>
-                <button class="btn-m btn-g" style="padding:.35rem .75rem;font-size:.78rem" onclick="toggleEdit()" id="editBtn"><i class="bi bi-pencil"></i> Edit</button>
+                <button class="btn-m btn-g" style="padding:.35rem .75rem;font-size:.78rem" onclick="toggleEdit()" id="editBtn"><i class="bi bi-pencil" aria-hidden="true"></i> Edit</button>
             </div>
 
             <!-- View Mode -->
@@ -83,8 +83,8 @@
                     </div>
 
                     <div style="display:flex;gap:.5rem;margin-top:1rem">
-                        <button type="submit" class="btn-m btn-p"><i class="bi bi-check-lg"></i> Save Changes</button>
-                        <button type="button" class="btn-m btn-g" onclick="cancelEdit()"><i class="bi bi-x-lg"></i> Cancel</button>
+                        <button type="submit" class="btn-m btn-p"><i class="bi bi-check-lg" aria-hidden="true"></i> Save Changes</button>
+                        <button type="button" class="btn-m btn-g" onclick="cancelEdit()"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</button>
                     </div>
                 </form>
 
@@ -92,7 +92,7 @@
                 <div class="dz" style="margin-top:1.5rem">
                     <div class="dz-t"><i class="bi bi-exclamation-triangle"></i> Danger Zone</div>
                     <div class="dz-d">Permanently delete your account and all data. Tournament results will be retained for record-keeping. This action cannot be undone.</div>
-                    <button type="button" class="btn-m btn-d" style="font-size:.78rem;padding:.4rem .8rem" onclick="startDeleteProcess()"><i class="bi bi-trash"></i> Delete Account</button>
+                    <button type="button" class="btn-m btn-d" style="font-size:.78rem;padding:.4rem .8rem" onclick="startDeleteProcess()"><i class="bi bi-trash" aria-hidden="true"></i> Delete Account</button>
                 </div>
             </div>
         </div>

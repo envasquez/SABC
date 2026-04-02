@@ -34,8 +34,8 @@
         {{ alert('danger', error) }}
 
         <!-- Poll Type Tabs -->
-        <div class="pt" style="margin-bottom:1rem" id="pollTypeTabs">
-            <button class="ptb on" id="tournament-tab" data-bs-toggle="tab" data-bs-target="#tournament-poll" type="button" role="tab" aria-controls="tournament-poll" aria-selected="true">
+        <div class="pt" style="margin-bottom:1rem" id="pollTypeTabs" role="tablist">
+            <button class="ptb active" id="tournament-tab" data-bs-toggle="tab" data-bs-target="#tournament-poll" type="button" role="tab" aria-controls="tournament-poll" aria-selected="true">
                 <i class="bi bi-geo-alt" style="margin-right:.4rem"></i>Team Tournament Poll
             </button>
             <button class="ptb" id="generic-tab" data-bs-toggle="tab" data-bs-target="#generic-poll" type="button" role="tab" aria-controls="generic-poll" aria-selected="false">
@@ -164,16 +164,16 @@
                         <div id="poll-options-container">
                             <div class="poll-option-row" style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem">
                                 <input type="text" class="fi" name="poll_options[]" placeholder="Option 1" style="flex:1" required>
-                                <button class="btn-icon btn-icon-danger" type="button" onclick="removeOption(this)" disabled><i class="bi bi-x"></i></button>
+                                <button class="btn-icon btn-icon-danger" type="button" onclick="removeOption(this)" disabled aria-label="Remove option"><i class="bi bi-x"></i></button>
                             </div>
                             <div class="poll-option-row" style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem">
                                 <input type="text" class="fi" name="poll_options[]" placeholder="Option 2" style="flex:1" required>
-                                <button class="btn-icon btn-icon-danger" type="button" onclick="removeOption(this)" disabled><i class="bi bi-x"></i></button>
+                                <button class="btn-icon btn-icon-danger" type="button" onclick="removeOption(this)" disabled aria-label="Remove option"><i class="bi bi-x"></i></button>
                             </div>
                         </div>
 
                         <button type="button" class="btn-m btn-s" onclick="addOption()" style="font-size:.8rem">
-                            <i class="bi bi-plus-circle" style="margin-right:.25rem"></i>Add Option
+                            <i class="bi bi-plus-circle" style="margin-right:.25rem" aria-hidden="true"></i>Add Option
                         </button>
                     </div>
 
@@ -182,7 +182,7 @@
                     <div style="display:flex;justify-content:flex-end;gap:.5rem">
                         <a href="/admin/events" class="btn-m btn-g">Cancel</a>
                         <button type="submit" class="btn-m btn-p">
-                            <i class="bi bi-plus-circle" style="margin-right:.25rem"></i>Create Generic Poll
+                            <i class="bi bi-plus-circle" style="margin-right:.25rem" aria-hidden="true"></i>Create Generic Poll
                         </button>
                     </div>
                 </form>

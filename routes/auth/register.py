@@ -4,6 +4,7 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse, Response
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Angler, get_session
 from core.helpers.forms import normalize_email
@@ -119,7 +120,7 @@ async def register(
             },
         )
         return RedirectResponse("/", status_code=303)
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         logger.error(
             "Registration error",
             extra={

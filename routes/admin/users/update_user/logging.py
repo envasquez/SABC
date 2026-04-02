@@ -1,11 +1,14 @@
-from typing import Tuple
+from typing import Any, Dict, Tuple
 
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
+from core.types import UserDict
 
 logger = get_logger("admin.users.update")
 
 
-def log_update_initiated(admin_user: dict, user_id: int, update_params: dict, before: Tuple):
+def log_update_initiated(
+    admin_user: UserDict, user_id: int, update_params: Dict[str, Any], before: Tuple
+):
     logger.info(
         "Admin user update initiated",
         extra={
@@ -18,7 +21,12 @@ def log_update_initiated(admin_user: dict, user_id: int, update_params: dict, be
 
 
 def log_update_completed(
-    request, admin_user: dict, user_id: int, update_params: dict, before: Tuple, after: Tuple
+    request: Any,
+    admin_user: UserDict,
+    user_id: int,
+    update_params: Dict[str, Any],
+    before: Tuple,
+    after: Tuple,
 ):
     log_security_event(
         SecurityEvent.ADMIN_USER_UPDATE,
@@ -42,7 +50,7 @@ def log_update_completed(
     )
 
 
-def log_update_failed(admin_user: dict, user_id: int, update_params: dict):
+def log_update_failed(admin_user: UserDict, user_id: int, update_params: Dict[str, Any]):
     logger.warning(
         "User update failed - no changes detected",
         extra={
@@ -53,7 +61,9 @@ def log_update_failed(admin_user: dict, user_id: int, update_params: dict):
     )
 
 
-def log_update_exception(admin_user: dict, user_id: int, error: Exception, update_params: dict):
+def log_update_exception(
+    admin_user: UserDict, user_id: int, error: Exception, update_params: Dict[str, Any]
+):
     logger.error(
         "User update exception",
         extra={

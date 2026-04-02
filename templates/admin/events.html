@@ -128,7 +128,7 @@
             <div id="holiday-fields" style="display:none"></div>
 
             <div style="margin-top:1rem">
-                <button class="btn-m btn-p" type="submit"><i class="bi bi-plus-circle"></i> Add Event</button>
+                <button class="btn-m btn-p" type="submit"><i class="bi bi-plus-circle" aria-hidden="true"></i> Add Event</button>
             </div>
         </form>
     </div>
@@ -138,21 +138,21 @@
 <div class="cc">
     <div style="padding:0">
         <!-- Tab Navigation -->
-        <div class="pt" style="width:100%;padding:.75rem 1.4rem;border-bottom:1px solid var(--b0);border-radius:0;background:transparent;display:flex;gap:.5rem">
-            <button class="ptb on" id="sabc-tab" data-bs-toggle="tab" data-bs-target="#sabc-events" type="button">
-                <i class="bi bi-trophy"></i> SABC Tournaments
+        <div class="pt" style="width:100%;padding:.75rem 1.4rem;border-bottom:1px solid var(--b0);border-radius:0;background:transparent;display:flex;gap:.5rem" role="tablist">
+            <button class="ptb active" id="sabc-tab" data-bs-toggle="tab" data-bs-target="#sabc-events" type="button" role="tab">
+                <i class="bi bi-trophy" aria-hidden="true"></i> SABC Tournaments
                 <span class="tg tg-p" style="margin-left:.3rem">{{ upcoming_sabc_tournaments|default([])|length }}</span>
             </button>
             <button class="ptb" id="past-tournaments-tab" data-bs-toggle="tab" data-bs-target="#past-tournaments-events" type="button">
-                <i class="bi bi-trophy-fill"></i> Past Tournaments
+                <i class="bi bi-trophy-fill" aria-hidden="true"></i> Past Tournaments
                 <span class="tg tg-g" style="margin-left:.3rem">{{ past_tournaments|length if past_tournaments else 0 }}</span>
             </button>
             <button class="ptb" id="holidays-tab" data-bs-toggle="tab" data-bs-target="#holidays-events" type="button">
-                <i class="bi bi-calendar-heart"></i> Holidays
+                <i class="bi bi-calendar-heart" aria-hidden="true"></i> Holidays
                 <span class="tg tg-i" style="margin-left:.3rem">{{ events|selectattr('event_type', 'equalto', 'holiday')|list|length }}</span>
             </button>
             <button class="ptb" id="other-tab" data-bs-toggle="tab" data-bs-target="#other-events" type="button">
-                <i class="bi bi-calendar-plus"></i> Other Events
+                <i class="bi bi-calendar-plus" aria-hidden="true"></i> Other Events
                 <span class="tg tg-w" style="margin-left:.3rem">{{ events|selectattr('event_type', 'equalto', 'other_tournament')|list|length }}</span>
             </button>
         </div>
@@ -185,7 +185,7 @@
                             <option value="{{ lake }}">{{ lake }}</option>
                             {% endfor %}
                         </select>
-                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" onclick="clearFilters('sabc')"><i class="bi bi-x-circle"></i> Clear</button>
+                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" onclick="clearFilters('sabc')"><i class="bi bi-x-circle" aria-hidden="true"></i> Clear</button>
                     </div>
                 </div>
                 {% set sabc_events = upcoming_sabc_tournaments|default(events|selectattr('event_type', 'equalto', 'sabc_tournament')|list) %}
@@ -199,12 +199,13 @@
                             <td>{{ event.lake_name or '-' }}</td>
                             <td style="text-align:right">
                                 <div style="display:flex;gap:.35rem;justify-content:flex-end">
-                                    <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
                                     <button class="btn-icon btn-icon-danger"
                                             data-event-id="{{ event.id }}"
                                             data-event-name="{{ event.name }}"
                                             data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
-                                            onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)">
+                                            onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)"
+                                            aria-label="Delete event">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -245,7 +246,7 @@
                             <option value="has-results">Has Results</option>
                             <option value="no-results">No Results</option>
                         </select>
-                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" onclick="clearFilters('past-tournaments')"><i class="bi bi-x-circle"></i> Clear</button>
+                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" onclick="clearFilters('past-tournaments')"><i class="bi bi-x-circle" aria-hidden="true"></i> Clear</button>
                     </div>
                 </div>
                 <table class="mt">
@@ -259,12 +260,13 @@
                             <td>{{ event.lake_name or '-' }}</td>
                             <td style="text-align:right">
                                 <div style="display:flex;gap:.35rem;justify-content:flex-end">
-                                    <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
                                     <button class="btn-icon btn-icon-danger"
                                             data-event-id="{{ event.id }}"
                                             data-event-name="{{ event.name }}"
                                             data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
-                                            onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)">
+                                            onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)"
+                                            aria-label="Delete event">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -289,7 +291,7 @@
                             <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
                             {% endfor %}
                         </select>
-                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" onclick="clearFilters('holidays')"><i class="bi bi-x-circle"></i> Clear</button>
+                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" onclick="clearFilters('holidays')"><i class="bi bi-x-circle" aria-hidden="true"></i> Clear</button>
                     </div>
                 </div>
                 {% set holiday_events = events|selectattr('event_type', 'equalto', 'holiday')|list %}
@@ -303,12 +305,13 @@
                             <td>{{ event.lake_name or '-' }}</td>
                             <td style="text-align:right">
                                 <div style="display:flex;gap:.35rem;justify-content:flex-end">
-                                    <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
                                     <button class="btn-icon btn-icon-danger"
                                             data-event-id="{{ event.id }}"
                                             data-event-name="{{ event.name }}"
                                             data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
-                                            onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)">
+                                            onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)"
+                                            aria-label="Delete event">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -337,7 +340,7 @@
                             <option value="">All Types</option>
                             <option value="other_tournament">Other Tournaments</option>
                         </select>
-                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" onclick="clearFilters('other')"><i class="bi bi-x-circle"></i> Clear</button>
+                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" onclick="clearFilters('other')"><i class="bi bi-x-circle" aria-hidden="true"></i> Clear</button>
                     </div>
                 </div>
                 {% set other_events = events|selectattr('event_type', 'equalto', 'other_tournament')|list %}
@@ -351,12 +354,13 @@
                             <td>{{ event.lake_name or '-' }}</td>
                             <td style="text-align:right">
                                 <div style="display:flex;gap:.35rem;justify-content:flex-end">
-                                    <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
                                     <button class="btn-icon btn-icon-danger"
                                             data-event-id="{{ event.id }}"
                                             data-event-name="{{ event.name }}"
                                             data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
-                                            onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)">
+                                            onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)"
+                                            aria-label="Delete event">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>

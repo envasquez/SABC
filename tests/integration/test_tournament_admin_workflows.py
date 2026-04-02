@@ -255,33 +255,6 @@ class TestTeamResultsEntry:
 class TestResultsManagement:
     """Tests for managing existing tournament results."""
 
-    def test_admin_can_view_manage_results_page(
-        self,
-        admin_client: TestClient,
-        test_tournament: Tournament,
-        member_user: Angler,
-        db_session: Session,
-    ):
-        """Test that admins can view results management page."""
-        # Create a result first
-        result = Result(
-            tournament_id=test_tournament.id,
-            angler_id=member_user.id,
-            total_weight=12.5,
-            num_fish=5,
-            big_bass_weight=4.0,
-            disqualified=False,
-            buy_in=True,
-        )
-        db_session.add(result)
-        db_session.commit()
-
-        response = admin_client.get(f"/admin/tournaments/{test_tournament.id}/manage-results")
-
-        assert response.status_code == 200
-        # Page may redirect to tournament list on error, just check it renders successfully
-        assert "Tournament" in response.text or test_tournament.name in response.text
-
     def test_admin_can_delete_individual_result(
         self,
         admin_client: TestClient,

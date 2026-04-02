@@ -136,7 +136,8 @@
                         </div>
                         <button class="btn-icon btn-icon-danger"
                                 onclick="if(confirm('Delete vote by {{ vote.voter_name }}?')) deleteVote({{ vote.vote_id }})"
-                                title="Delete this vote">
+                                title="Delete this vote"
+                                aria-label="Delete vote">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>

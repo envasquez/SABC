@@ -41,18 +41,20 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
                 payouts,
             ) = fetch_tournament_data(qs, tournament_id)
             tournament_tuple = (
-                tournament.id,
-                tournament.event_id,
-                tournament.event_date,
-                tournament.event_name,
-                tournament.event_description,
-                tournament.lake_name,
-                tournament.ramp_name,
-                tournament.entry_fee,
-                tournament.fish_limit,
-                tournament.complete,
-                tournament.event_type,
-                tournament.aoy_points,
+                tournament.id,  # 0
+                tournament.event_id,  # 1
+                tournament.event_date,  # 2
+                tournament.event_name,  # 3
+                tournament.event_description,  # 4
+                tournament.lake_name,  # 5
+                tournament.ramp_name,  # 6
+                tournament.entry_fee,  # 7
+                tournament.fish_limit,  # 8
+                tournament.complete,  # 9
+                tournament.event_type,  # 10
+                tournament.aoy_points,  # 11
+                tournament.start_time,  # 12
+                tournament.end_time,  # 13
             )
             stats_tuple = (
                 stats.total_anglers,

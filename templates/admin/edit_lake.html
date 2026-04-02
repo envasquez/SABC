@@ -37,7 +37,7 @@
                 </div>
 
                 <button type="submit" class="btn-m btn-p" style="width:100%">
-                    <i class="bi bi-save"></i> Save Lake Details
+                    <i class="bi bi-save" aria-hidden="true"></i> Save Lake Details
                 </button>
             </form>
         </div>
@@ -72,12 +72,14 @@
                                 <button class="btn-icon btn-icon-ghost edit-ramp-btn"
                                         data-id="{{ ramp.id }}"
                                         data-name="{{ ramp.name }}"
-                                        data-map="{{ ramp.google_maps_iframe or '' }}">
+                                        data-map="{{ ramp.google_maps_iframe or '' }}"
+                                        aria-label="Edit ramp">
                                     <i class="bi bi-pencil"></i>
                                 </button>
                                 <button class="btn-icon btn-icon-danger delete-ramp-btn"
                                         data-id="{{ ramp.id }}"
-                                        data-name="{{ ramp.name }}">
+                                        data-name="{{ ramp.name }}"
+                                        aria-label="Delete ramp">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </div>
@@ -108,7 +110,7 @@
                     </div>
 
                     <button type="submit" class="btn-m btn-s" style="width:100%">
-                        <i class="bi bi-plus-circle"></i> Add Ramp
+                        <i class="bi bi-plus-circle" aria-hidden="true"></i> Add Ramp
                     </button>
                 </form>
             </div>
@@ -140,7 +142,7 @@
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--b0)">
                     <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn-m btn-w"><i class="bi bi-save"></i> Save Changes</button>
+                    <button type="submit" class="btn-m btn-w"><i class="bi bi-save" aria-hidden="true"></i> Save Changes</button>
                 </div>
             </form>
         </div>
@@ -172,7 +174,7 @@
             <div class="modal-footer" style="border-top:1px solid var(--b0)">
                 <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn-m btn-d" id="confirmDeleteRampBtn" disabled>
-                    <i class="bi bi-trash"></i> Delete Ramp
+                    <i class="bi bi-trash" aria-hidden="true"></i> Delete Ramp
                 </button>
             </div>
         </div>

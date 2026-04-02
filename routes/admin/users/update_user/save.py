@@ -5,6 +5,7 @@ from typing import Optional
 
 from fastapi import Form, Request
 from fastapi.responses import RedirectResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Angler, get_session
 from core.helpers.auth import require_admin
@@ -89,7 +90,7 @@ async def update_user(
                 session.flush()
                 session.refresh(angler)
                 after = (angler.name, angler.email, angler.phone, angler.member, angler.is_admin)
-            except Exception as flush_error:
+            except SQLAlchemyError as flush_error:
                 # If flush fails, rollback and re-raise
                 log_update_exception(user, user_id, flush_error, update_params)
                 session.rollback()
@@ -106,12 +107,12 @@ async def update_user(
                 "/admin/users?error=Update failed - no changes saved", status_code=302
             )
 
-    except Exception as e:
+    except (SQLAlchemyError, ValueError) as e:
         log_update_exception(user, user_id, e, update_params if "update_params" in locals() else {})
-        error_msg = str(e)
+        error_str = str(e)
         if (
-            "UNIQUE constraint failed: anglers.email" in error_msg
-            or "unique constraint" in error_msg.lower()
+            "UNIQUE constraint failed: anglers.email" in error_str
+            or "unique constraint" in error_str.lower()
         ):
             with get_session() as session:
                 existing = (
@@ -124,4 +125,6 @@ async def update_user(
                     if existing
                     else f"Email '{update_params['email']}' is already in use"
                 )
+        else:
+            error_msg = "Failed to update user"
         return error_redirect("/admin/users", error_msg)

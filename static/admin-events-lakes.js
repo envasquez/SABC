@@ -11,7 +11,10 @@ let lakesData = [];
  */
 function loadLakes() {
     fetch('/api/lakes')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to load lakes');
+            return response.json();
+        })
         .then(lakes => {
             lakesData = lakes;
             // Populate create form lake select
