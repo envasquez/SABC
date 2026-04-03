@@ -27,7 +27,11 @@ def create_admin_user(
     if not interactive:
         email = email or "admin@sabc.com"
         name = name or "Admin User"
-        password = password or "admin123"
+        if not password:
+            password = os.environ.get("ADMIN_PASSWORD")
+            if not password:
+                logger.error("Password must be provided via --password or ADMIN_PASSWORD env var")
+                return 1
 
     if interactive:
         if not email:
