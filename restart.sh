@@ -6,7 +6,7 @@ set -e  # Exit on any error
 echo "🚀 Starting deployment..."
 
 # Backup database before anything else
-BACKUP_DIR="/root/backups"
+BACKUP_DIR="$HOME/backups"
 BACKUP_FILE="$BACKUP_DIR/sabc_$(date +%Y%m%d_%H%M%S).sql.gz"
 mkdir -p "$BACKUP_DIR"
 
@@ -63,4 +63,4 @@ echo "🌐 Application: https://saustinbc.com"
 echo "📊 Check logs: docker compose -f docker-compose.prod.yml logs -f web"
 
 # To restore a backup ...
-# gunzip -c /root/backups/sabc_XXXXXXXX_XXXXXX.sql.gz | docker compose -f docker-compose.prod.yml exec -T postgres psql -U sabc_user sabc
+# gunzip -c ~/backups/sabc_XXXXXXXX_XXXXXX.sql.gz | docker compose -f docker-compose.prod.yml exec -T postgres psql -U sabc_user sabc
