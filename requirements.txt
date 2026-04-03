@@ -22,4 +22,4 @@ markdown==3.8.1
 urllib3==2.6.3
 requests==2.33.0
 cryptography==46.0.6
-Pillow==11.2.1
+Pillow==12.1.1
