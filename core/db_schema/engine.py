@@ -10,11 +10,6 @@ if not DATABASE_URL:
         raise RuntimeError("DATABASE_URL must be set in production")
     DATABASE_URL = "postgresql://postgres:dev123@localhost:5432/sabc"
 
-# Enforce SSL for production database connections
-if _env == "production" and "sslmode=" not in DATABASE_URL:
-    separator = "&" if "?" in DATABASE_URL else "?"
-    DATABASE_URL += f"{separator}sslmode=require"
-
 engine = create_engine(
     DATABASE_URL,
     echo=False,
