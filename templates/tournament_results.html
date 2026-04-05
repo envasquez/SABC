@@ -55,7 +55,7 @@
         <div style="font-size:.88rem;font-weight:600;color:var(--brand)"><i class="bi bi-graph-up" style="margin-right:.35rem"></i>Tournament Statistics</div>
     </div>
     <div class="ci">
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem">
+        <div class="grid-stats">
             <div style="text-align:center;padding:.65rem;background:var(--bg-elevated);border-radius:var(--r-md)">
                 <div style="font-size:1.2rem;font-weight:800;color:var(--t1)">{{ tournament_stats[0] }}</div>
                 <div style="font-size:.7rem;color:var(--t3)">Anglers</div>
@@ -109,7 +109,7 @@
         <div style="font-size:.88rem;font-weight:600;color:var(--ok)"><i class="bi bi-cash-stack" style="margin-right:.35rem"></i>Tournament Payouts</div>
     </div>
     <div class="ci">
-        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.75rem">
+        <div class="grid-payouts">
             <div style="text-align:center;padding:.65rem;background:var(--bg-elevated);border-radius:var(--r-md)">
                 <div style="font-size:1.1rem;font-weight:800;color:var(--t1)">${{ "%.2f"|format(payouts.total_entry) }}</div>
                 <div style="font-size:.7rem;color:var(--t3)">Total Entries</div>

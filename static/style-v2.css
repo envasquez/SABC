@@ -2450,6 +2450,8 @@ textarea.fi { resize: vertical; min-height: 100px; }
    ========================================== */
 .g2 { display: grid; grid-template-columns: 2fr 1fr; gap: 1.4rem; }
 .g2e { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.grid-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+.grid-payouts { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
 
 /* ==========================================
    NEWS ITEMS (from mockup)
@@ -2554,6 +2556,13 @@ textarea.fi { resize: vertical; min-height: 100px; }
   .sg { grid-template-columns: repeat(2, 1fr); }
   .cal-grid { grid-template-columns: repeat(2, 1fr); }
   .photo-grid { grid-template-columns: repeat(2, 1fr); }
+  .grid-stats { grid-template-columns: repeat(2, 1fr); }
+  .grid-payouts { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 400px) {
+  .grid-stats { grid-template-columns: 1fr; }
+  .grid-payouts { grid-template-columns: 1fr; }
 }
 
 /* ==========================================
