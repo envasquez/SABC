@@ -336,7 +336,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-0">
-                    <div style="height:400px;width:100%">{{ tournament.ramp_google_maps|safe }}</div>
+                    <div style="height:400px;width:100%">{{ tournament.ramp_google_maps|sanitize_iframe }}</div>
                 </div>
                 <div class="modal-footer">
                     <span style="color:var(--t3);font-size:.82rem">{{ tournament.lake_display_name }}</span>

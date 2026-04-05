@@ -47,9 +47,9 @@ def sanitize_iframe(raw_html: str) -> str:
     if not raw_html or not raw_html.strip():
         return ""
 
-    # Match iframe with a Google Maps src URL
+    # Match iframe with a Google Maps src URL (multiple valid domains/paths)
     match = re.search(
-        r'<iframe\s[^>]*src="(https://www\.google\.com/maps/embed[^"]*)"[^>]*>',
+        r'<iframe\s[^>]*src="(https://(?:www\.google\.com/maps|maps\.google\.com/maps)[^"]*)"[^>]*>',
         raw_html,
         re.IGNORECASE,
     )
