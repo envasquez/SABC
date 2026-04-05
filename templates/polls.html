@@ -75,7 +75,7 @@
         <div class="ci">
             {% if poll.description %}
             <div style="margin-bottom:.75rem">
-                <p style="color:var(--t3);margin:0">{{ poll.description | nl2br_safe }}</p>
+                <p style="color:var(--t3);margin:0">{{ poll.description | nl2br }}</p>
             </div>
             {% endif %}
 
@@ -238,7 +238,7 @@
                                         <select name="vote_as_angler_id" id="vote_as_angler_{{ poll.id }}" class="fi" required>
                                             <option value="">Choose a member...</option>
                                             {% for member in members %}
-                                                <option value="{{ member.id }}">{{ member.name }} ({{ member.email }})</option>
+                                                <option value="{{ member.id }}">{{ member.name }}</option>
                                             {% endfor %}
                                         </select>
                                         <div style="font-size:.75rem;color:var(--t4);margin-top:.25rem">Select which member you are casting a vote for</div>

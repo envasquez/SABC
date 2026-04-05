@@ -101,7 +101,7 @@ services:
 
       # Logging
       - key: LOG_LEVEL
-        value: DEBUG
+        value: INFO
         scope: RUN_TIME
 
       # Session Configuration

@@ -4,6 +4,7 @@
 Usage: python check_user_password.py <email>
 """
 
+import shlex
 import sys
 
 from core.db_schema import Angler, get_session
@@ -38,7 +39,9 @@ with get_session() as session:
     else:
         print("   ❌ NO PASSWORD HASH SET!")
 
+safe_email = shlex.quote(email)
 print("\nTo test password manually:")
 print(
-    f"  docker exec sabc-postgres psql -U postgres -d sabc -c \"SELECT password_hash FROM anglers WHERE email='{email}';\""
+    f"  docker exec sabc-postgres psql -U postgres -d sabc -c "
+    f'"SELECT password_hash FROM anglers WHERE email={safe_email};"'
 )

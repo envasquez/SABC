@@ -226,14 +226,14 @@
 <script>
 // Store chart data
 const originalData = {
-    weightTrends: {{ weight_trends | tojson }},
-    membershipByYear: {{ membership_by_year | tojson }},
-    limitsZerosByYear: {{ limits_zeros_by_year | tojson }},
-    winningWeightsByYear: {{ winning_weights_by_year | tojson }},
-    winningWeightsByLake: {{ winning_weights_by_lake | tojson }},
-    winningWeightsByLakeYear: {{ winning_weights_by_lake_year | tojson }},
-    tournamentParticipation: {{ tournament_participation | tojson }},
-    ytdTrends: {{ ytd_trends | tojson }}
+    weightTrends: {{ weight_trends | safe_json }},
+    membershipByYear: {{ membership_by_year | safe_json }},
+    limitsZerosByYear: {{ limits_zeros_by_year | safe_json }},
+    winningWeightsByYear: {{ winning_weights_by_year | safe_json }},
+    winningWeightsByLake: {{ winning_weights_by_lake | safe_json }},
+    winningWeightsByLakeYear: {{ winning_weights_by_lake_year | safe_json }},
+    tournamentParticipation: {{ tournament_participation | safe_json }},
+    ytdTrends: {{ ytd_trends | safe_json }}
 };
 
 // Chart instances

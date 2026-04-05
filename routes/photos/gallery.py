@@ -8,6 +8,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, File, Form, Request, UploadFile
 from fastapi.responses import RedirectResponse
 from PIL import Image, ImageOps
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -20,6 +22,8 @@ from routes.dependencies import templates
 
 router = APIRouter()
 logger = get_logger(__name__)
+is_test_env = os.environ.get("ENVIRONMENT") == "test"
+limiter = Limiter(key_func=get_remote_address, enabled=not is_test_env)
 
 # Upload directory configuration
 UPLOAD_DIR = "uploads/photos"
@@ -373,6 +377,7 @@ async def upload_form(request: Request) -> Any:
 
 
 @router.post("/photos/upload")
+@limiter.limit("10/hour")
 async def upload_photo(
     request: Request,
     photo: UploadFile = File(...),

@@ -1,4 +1,8 @@
 import os
+import threading
+import time
+from collections import defaultdict
+from typing import Dict, List
 
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse, Response
@@ -17,6 +21,34 @@ logger = get_logger("auth.login")
 # Disable rate limiting in test environment
 is_test_env = os.environ.get("ENVIRONMENT") == "test"
 limiter = Limiter(key_func=get_remote_address, enabled=not is_test_env)
+
+# --- Account lockout (defense-in-depth alongside rate limiting) ---
+_MAX_FAILED_ATTEMPTS = 10
+_LOCKOUT_SECONDS = 900  # 15 minutes
+_failed_attempts: Dict[str, List[float]] = defaultdict(list)
+_lockout_lock = threading.Lock()
+
+
+def _is_account_locked(email: str) -> bool:
+    """Check if an account is temporarily locked due to failed login attempts."""
+    with _lockout_lock:
+        attempts = _failed_attempts.get(email)
+        if not attempts:
+            return False
+        cutoff = time.monotonic() - _LOCKOUT_SECONDS
+        fresh = [t for t in attempts if t > cutoff]
+        _failed_attempts[email] = fresh
+        return len(fresh) >= _MAX_FAILED_ATTEMPTS
+
+
+def _record_failed_attempt(email: str) -> None:
+    with _lockout_lock:
+        _failed_attempts[email].append(time.monotonic())
+
+
+def _clear_failed_attempts(email: str) -> None:
+    with _lockout_lock:
+        _failed_attempts.pop(email, None)
 
 
 @router.get("/login")
@@ -54,6 +86,23 @@ async def login(
     # Validate next_url to prevent open redirect attacks
     safe_next_url = get_safe_redirect_url(next_url, default="/")
 
+    # Account lockout check (per-email, complements per-IP rate limiting)
+    if _is_account_locked(email):
+        log_security_event(
+            SecurityEvent.AUTH_LOGIN_FAILURE,
+            user_email=email,
+            ip_address=ip_address,
+            details={"reason": "account_locked"},
+        )
+        logger.warning(
+            "Login rejected - account temporarily locked",
+            extra={"user_email": email, "ip_address": ip_address},
+        )
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": "Too many failed attempts. Please try again later."},
+        )
+
     try:
         with get_session() as session:
             angler = session.query(Angler).filter(Angler.email == email).first()
@@ -74,6 +123,7 @@ async def login(
 
         # Successful login
         if password_valid and user_id:
+            _clear_failed_attempts(email)
             set_user_session(request, user_id)
             log_security_event(
                 SecurityEvent.AUTH_LOGIN_SUCCESS,
@@ -94,6 +144,7 @@ async def login(
             return RedirectResponse(safe_next_url, status_code=303)
 
         # Failed login - log but don't reveal whether email exists
+        _record_failed_attempt(email)
         log_security_event(
             SecurityEvent.AUTH_LOGIN_FAILURE,
             user_email=email,

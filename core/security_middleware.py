@@ -13,16 +13,22 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["X-XSS-Protection"] = "0"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
 
         if is_https:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
+        # CSP uses 'unsafe-inline' for script-src because the codebase relies heavily
+        # on inline event handlers (onclick=, onchange=, etc.) across templates.
+        # A nonce-based approach would require migrating all inline handlers to
+        # addEventListener() first — otherwise CSP3 browsers silently ignore
+        # 'unsafe-inline' when a nonce is present, breaking all onclick handlers.
         csp = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://challenges.cloudflare.com; "
+            "script-src 'self' 'unsafe-inline' "
+            "https://cdn.jsdelivr.net https://unpkg.com https://challenges.cloudflare.com; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
             "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; "
             "img-src 'self' data: https:; "

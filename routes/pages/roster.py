@@ -10,6 +10,7 @@ from core.query_service.dialect_helpers import (
     DialectName,
     bool_or,
     month_extract,
+    safe_in_clause,
     string_agg,
     year_extract,
 )
@@ -48,27 +49,26 @@ def get_member_stats(
                 "tournaments": 0,
             }
 
-    id_list = ",".join(str(id) for id in member_ids)
+    in_sql, in_params = safe_in_clause(member_ids, "mids", dialect_name)
 
     # Query 1: Team tournaments count and best team weight per member
-    # This query is dialect-agnostic
     team_stats_query = f"""
         SELECT tr.angler1_id as angler_id,
                COUNT(DISTINCT tr.tournament_id) as team_tournaments,
                MAX(tr.total_weight) as best_team_weight
         FROM team_results tr
-        WHERE tr.angler1_id IN ({id_list})
+        WHERE tr.angler1_id {in_sql}
         GROUP BY tr.angler1_id
         UNION ALL
         SELECT tr.angler2_id as angler_id,
                COUNT(DISTINCT tr.tournament_id) as team_tournaments,
                MAX(tr.total_weight) as best_team_weight
         FROM team_results tr
-        WHERE tr.angler2_id IN ({id_list})
+        WHERE tr.angler2_id {in_sql}
         GROUP BY tr.angler2_id
     """
 
-    team_results = qs.fetch_all(team_stats_query, {})
+    team_results = qs.fetch_all(team_stats_query, in_params)
     # Aggregate results (member could appear in both angler1 and angler2)
     team_agg: Dict[int, Dict[str, float]] = {}
     for row in team_results:
@@ -90,11 +90,11 @@ def get_member_stats(
         SELECT r.angler_id,
                MAX(r.big_bass_weight) as big_bass
         FROM results r
-        WHERE r.angler_id IN ({id_list})
+        WHERE r.angler_id {in_sql}
           AND r.disqualified = FALSE
         GROUP BY r.angler_id
     """
-    big_bass_results = qs.fetch_all(big_bass_query, {})
+    big_bass_results = qs.fetch_all(big_bass_query, in_params)
     for row in big_bass_results:
         aid = row["angler_id"]
         if aid in member_stats:
@@ -118,15 +118,15 @@ def get_member_stats(
         SELECT angler_id, year, place, COUNT(*) as cnt
         FROM (
             SELECT angler1_id as angler_id, year, place FROM ranked_results
-            WHERE angler1_id IN ({id_list}) AND place <= 3
+            WHERE angler1_id {in_sql} AND place <= 3
             UNION ALL
             SELECT angler2_id as angler_id, year, place FROM ranked_results
-            WHERE angler2_id IN ({id_list}) AND place <= 3
+            WHERE angler2_id {in_sql} AND place <= 3
         ) sub
         GROUP BY angler_id, year, place
     """
 
-    finishes_results = qs.fetch_all(finishes_query, {})
+    finishes_results = qs.fetch_all(finishes_query, in_params)
     for row in finishes_results:
         aid = row["angler_id"]
         year = int(row["year"])
@@ -160,7 +160,7 @@ def get_member_stats(
             FROM team_results tr
             JOIN tournaments t ON tr.tournament_id = t.id
             JOIN events e ON t.event_id = e.id
-            WHERE tr.angler1_id IN ({id_list})
+            WHERE tr.angler1_id {in_sql}
               AND {year_col} >= 2023
             UNION
             SELECT tr.angler2_id as angler_id, tr.tournament_id,
@@ -168,13 +168,13 @@ def get_member_stats(
             FROM team_results tr
             JOIN tournaments t ON tr.tournament_id = t.id
             JOIN events e ON t.event_id = e.id
-            WHERE tr.angler2_id IN ({id_list})
+            WHERE tr.angler2_id {in_sql}
               AND {year_col} >= 2023
         ) sub
         GROUP BY angler_id, year
     """
 
-    year_tournaments_results = qs.fetch_all(year_tournaments_query, {})
+    year_tournaments_results = qs.fetch_all(year_tournaments_query, in_params)
     for row in year_tournaments_results:
         aid = row["angler_id"]
         year = int(row["year"])
@@ -203,7 +203,7 @@ def get_member_monthly_weights(
     month_col = month_extract("e.date", dialect_name)
 
     if dialect_name == "sqlite":
-        id_list = ",".join(str(id) for id in member_ids)
+        in_sql, in_params = safe_in_clause(member_ids, "mids", dialect_name)
         monthly_query = f"""
             WITH all_weights AS (
                 -- Individual results (primary source)
@@ -215,7 +215,7 @@ def get_member_monthly_weights(
                 FROM results r
                 JOIN tournaments t ON r.tournament_id = t.id
                 JOIN events e ON t.event_id = e.id
-                WHERE r.angler_id IN ({id_list})
+                WHERE r.angler_id {in_sql}
                   AND r.disqualified = FALSE
                   AND {year_col} >= 2023
                 UNION ALL
@@ -228,7 +228,7 @@ def get_member_monthly_weights(
                 FROM team_results tr
                 JOIN tournaments t ON tr.tournament_id = t.id
                 JOIN events e ON t.event_id = e.id
-                WHERE tr.angler1_id IN ({id_list})
+                WHERE tr.angler1_id {in_sql}
                   AND {year_col} >= 2023
                   AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
                 UNION ALL
@@ -241,7 +241,7 @@ def get_member_monthly_weights(
                 FROM team_results tr
                 JOIN tournaments t ON tr.tournament_id = t.id
                 JOIN events e ON t.event_id = e.id
-                WHERE tr.angler2_id IN ({id_list})
+                WHERE tr.angler2_id {in_sql}
                   AND tr.angler2_id IS NOT NULL
                   AND {year_col} >= 2023
                   AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
@@ -255,7 +255,7 @@ def get_member_monthly_weights(
             GROUP BY angler_id, year, month
             ORDER BY angler_id, year, month
         """
-        results = qs.fetch_all(monthly_query, {})
+        results = qs.fetch_all(monthly_query, in_params)
     else:
         # PostgreSQL version using ANY for array (more efficient)
         monthly_query = f"""

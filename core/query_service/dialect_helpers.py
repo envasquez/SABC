@@ -1,6 +1,6 @@
 """SQL dialect helpers for PostgreSQL/SQLite compatibility."""
 
-from typing import Literal
+from typing import Any, Dict, List, Literal, Tuple
 
 DialectName = Literal["postgresql", "sqlite"]
 
@@ -72,17 +72,29 @@ def bool_or(column: str, dialect: DialectName) -> str:
     return f"bool_or({column})"
 
 
-def in_list_param(param_name: str, dialect: DialectName) -> str:
-    """Generate SQL for IN clause with parameterized list.
+def safe_in_clause(
+    values: List[int], param_name: str, dialect: DialectName
+) -> Tuple[str, Dict[str, Any]]:
+    """Generate a parameterized IN clause fragment and its parameters.
+
+    Returns a SQL fragment and parameter dict. Use with a column name:
+        in_sql, in_params = safe_in_clause(ids, "mids", dialect)
+        query = f"WHERE col {in_sql}"
+        qs.fetch_all(query, {**in_params, **other_params})
+
+    PostgreSQL: ``= ANY(:mids)`` with ``{"mids": [1, 2, 3]}``
+    SQLite: ``IN (:mids_0, :mids_1, ...)`` with ``{"mids_0": 1, ...}``
 
     Args:
-        param_name: Parameter name (without colon)
-        dialect: Database dialect
+        values: List of integer IDs to match against
+        param_name: Base name for the generated parameters
+        dialect: Database dialect ('postgresql' or 'sqlite')
 
     Returns:
-        SQL expression for IN clause
+        Tuple of (SQL fragment, parameter dict)
     """
-    if dialect == "sqlite":
-        # SQLite requires pre-formatted comma-separated string
-        return f"IN ({{{param_name}}})"  # Placeholder for f-string formatting
-    return f"= ANY(:{param_name})"
+    if dialect == "postgresql":
+        return f"= ANY(:{param_name})", {param_name: values}
+    placeholders = ", ".join(f":{param_name}_{i}" for i in range(len(values)))
+    params = {f"{param_name}_{i}": v for i, v in enumerate(values)}
+    return f"IN ({placeholders})", params

@@ -39,6 +39,16 @@ def get_csrf_token(request: Request) -> str:
     return request.cookies.get("csrf_token", "")
 
 
+def _get_secret_key() -> str:
+    """Get the secret key, requiring it in production."""
+    secret = os.environ.get("SECRET_KEY")
+    if secret:
+        return secret
+    if os.environ.get("ENVIRONMENT") == "production":
+        raise RuntimeError("SECRET_KEY must be set in production")
+    return "dev-key-change-in-production"
+
+
 def create_app() -> FastAPI:
     # Initialize monitoring before anything else
     init_sentry()
@@ -72,9 +82,10 @@ def create_app() -> FastAPI:
     app.add_middleware(SecurityHeadersMiddleware)
 
     # Session middleware with secure configuration
+    secret_key = _get_secret_key()
     app.add_middleware(
         SessionMiddleware,
-        secret_key=os.environ.get("SECRET_KEY", "dev-key-change-in-production"),
+        secret_key=secret_key,
         session_cookie="sabc_session",
         max_age=int(os.environ.get("SESSION_TIMEOUT", "86400")),  # Default 24 hours
         same_site="lax",  # "lax" for better compatibility, "strict" for maximum security
@@ -85,7 +96,7 @@ def create_app() -> FastAPI:
     if os.environ.get("ENVIRONMENT") != "test":
         app.add_middleware(
             CSRFMiddleware,
-            secret=os.environ.get("SECRET_KEY", "dev-key-change-in-production"),
+            secret=secret_key,
             cookie_name="csrf_token",
             cookie_secure=os.environ.get("ENVIRONMENT", "development") == "production",
             cookie_samesite="lax",
@@ -117,6 +128,18 @@ def create_app() -> FastAPI:
     templates.env.filters["nl2br_safe"] = nl2br_safe_filter
     templates.env.filters["to_local"] = to_local_datetime_filter
     templates.env.filters["is_dues_current"] = is_dues_current_filter
+
+    # Sanitize iframe filter — applies sanitize_iframe at render time for defense-in-depth
+    from markupsafe import Markup as _Markup
+
+    from core.helpers.sanitize import sanitize_iframe as _sanitize_iframe
+
+    def _sanitize_iframe_filter(value: Any) -> _Markup:
+        if not value:
+            return _Markup("")
+        return _Markup(_sanitize_iframe(str(value)))
+
+    templates.env.filters["sanitize_iframe"] = _sanitize_iframe_filter
 
     # Add CSRF token to global template context
     templates.env.globals["get_csrf_token"] = get_csrf_token

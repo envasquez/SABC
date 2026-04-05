@@ -250,15 +250,15 @@ async def polls(
 
         page_range = range(start_page, end_page + 1)
 
-    # Get all members for admin proxy voting dropdown
+    # Get all members for admin proxy voting dropdown (no PII beyond name)
     with get_session() as session:
         all_members = (
-            session.query(Angler.id, Angler.name, Angler.email)
+            session.query(Angler.id, Angler.name)
             .filter(Angler.member.is_(true()))
             .order_by(Angler.name)
             .all()
         )
-        members_list = [{"id": m.id, "name": m.name, "email": m.email} for m in all_members]
+        members_list = [{"id": m.id, "name": m.name} for m in all_members]
 
     lakes_data = [
         {
