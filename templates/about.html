@@ -69,10 +69,38 @@
             {% if turnstile_site_key %}
             <div class="fg">
                 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-                <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-theme="dark"></div>
+                <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-theme="dark" data-callback="onTurnstileSuccess" data-expired-callback="onTurnstileExpired" data-error-callback="onTurnstileError"></div>
+                <div id="turnstile-msg" style="color:var(--err);font-size:.82rem;margin-top:.35rem;display:none">Please complete the CAPTCHA verification above.</div>
             </div>
             {% endif %}
-            <button class="btn-m btn-p" type="submit"><i class="bi bi-send" aria-hidden="true"></i> Send Message</button>
+            <button class="btn-m btn-p" type="submit" id="contact-submit"{% if turnstile_site_key %} disabled style="opacity:.5;cursor:not-allowed"{% endif %}><i class="bi bi-send" aria-hidden="true"></i> Send Message</button>
+            {% if turnstile_site_key %}
+            <script>
+            function onTurnstileSuccess(token) {
+                var btn = document.getElementById('contact-submit');
+                btn.disabled = false;
+                btn.style.opacity = '';
+                btn.style.cursor = '';
+                document.getElementById('turnstile-msg').style.display = 'none';
+            }
+            function onTurnstileExpired() {
+                var btn = document.getElementById('contact-submit');
+                btn.disabled = true;
+                btn.style.opacity = '.5';
+                btn.style.cursor = 'not-allowed';
+            }
+            function onTurnstileError() {
+                onTurnstileExpired();
+            }
+            document.querySelector('form[action="/about/contact"]').addEventListener('submit', function(e) {
+                var resp = document.querySelector('input[name="cf-turnstile-response"]');
+                if (!resp || !resp.value) {
+                    e.preventDefault();
+                    document.getElementById('turnstile-msg').style.display = 'block';
+                }
+            });
+            </script>
+            {% endif %}
         </form>
     </div>
 </div>

@@ -519,8 +519,13 @@ async def contact_form(request: Request) -> RedirectResponse:
         return success_redirect("/about", "Your message has been sent! We'll get back to you soon.")
 
     # Cloudflare Turnstile CAPTCHA verification
+    # When the site key is configured, the widget was shown to the user,
+    # so we must require a valid token (fail closed).
+    turnstile_token = str(form.get("cf-turnstile-response", "")).strip()
+    if TURNSTILE_SITE_KEY and not turnstile_token:
+        logger.warning(f"Turnstile token missing (from {sender_email})")
+        return error_redirect("/about", "CAPTCHA verification failed. Please try again.")
     if TURNSTILE_SECRET_KEY:
-        turnstile_token = str(form.get("cf-turnstile-response", "")).strip()
         client_ip = request.client.host if request.client else None
         if not await _verify_turnstile(turnstile_token, client_ip):
             logger.warning(f"Turnstile verification failed (from {sender_email})")
