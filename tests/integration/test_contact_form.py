@@ -404,6 +404,67 @@ class TestTurnstileVerification:
             assert response.status_code == 200
             mock_send.assert_called_once()
 
+    def test_turnstile_rejects_missing_token_when_site_key_configured(
+        self, client: TestClient, db_session: Session, password_hash: str
+    ):
+        """Test that missing Turnstile token is rejected when site key is set.
+
+        This is the core fix for issue #278: when the Turnstile widget is
+        displayed (TURNSTILE_SITE_KEY is set), submitting without completing
+        the CAPTCHA must fail -- even if the secret key is not configured.
+        """
+        admin = Angler(
+            name="Admin",
+            email="admin@example.com",
+            password_hash=password_hash,
+            member=True,
+            is_admin=True,
+        )
+        db_session.add(admin)
+        db_session.commit()
+
+        with (
+            patch("routes.pages.home.TURNSTILE_SITE_KEY", "test-site-key"),
+            patch("routes.pages.home.TURNSTILE_SECRET_KEY", ""),
+            patch("routes.pages.home.send_contact_email") as mock_send,
+        ):
+            response = post_with_csrf(
+                client,
+                "/about/contact",
+                data=_valid_form_data(),  # no cf-turnstile-response field
+            )
+            assert response.status_code == 200
+            assert "error" in str(response.url) or "CAPTCHA" in response.text
+            mock_send.assert_not_called()
+
+    def test_turnstile_rejects_empty_token_when_site_key_configured(
+        self, client: TestClient, db_session: Session, password_hash: str
+    ):
+        """Test that an empty Turnstile token is rejected when site key is set."""
+        admin = Angler(
+            name="Admin",
+            email="admin@example.com",
+            password_hash=password_hash,
+            member=True,
+            is_admin=True,
+        )
+        db_session.add(admin)
+        db_session.commit()
+
+        with (
+            patch("routes.pages.home.TURNSTILE_SITE_KEY", "test-site-key"),
+            patch("routes.pages.home.TURNSTILE_SECRET_KEY", "test-secret-key"),
+            patch("routes.pages.home.send_contact_email") as mock_send,
+        ):
+            response = post_with_csrf(
+                client,
+                "/about/contact",
+                data={**_valid_form_data(), "cf-turnstile-response": ""},
+            )
+            assert response.status_code == 200
+            assert "error" in str(response.url) or "CAPTCHA" in response.text
+            mock_send.assert_not_called()
+
     def test_turnstile_widget_shown_when_configured(self, client: TestClient):
         """Test that Turnstile widget appears when site key is set."""
         with patch("routes.pages.home.TURNSTILE_SITE_KEY", "test-site-key"):
