@@ -130,6 +130,8 @@ def create_app() -> FastAPI:
     templates.env.filters["is_dues_current"] = is_dues_current_filter
 
     # Sanitize iframe filter — applies sanitize_iframe at render time for defense-in-depth
+    import html as _html
+
     from markupsafe import Markup as _Markup
 
     from core.helpers.sanitize import sanitize_iframe as _sanitize_iframe
@@ -137,7 +139,10 @@ def create_app() -> FastAPI:
     def _sanitize_iframe_filter(value: Any) -> _Markup:
         if not value:
             return _Markup("")
-        return _Markup(_sanitize_iframe(str(value)))
+        # Jinja2 autoescaping converts < to &lt; before the filter runs,
+        # so unescape first to get raw HTML, then sanitize, then mark safe.
+        raw = _html.unescape(str(value))
+        return _Markup(_sanitize_iframe(raw))
 
     templates.env.filters["sanitize_iframe"] = _sanitize_iframe_filter
 
