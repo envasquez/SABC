@@ -2063,6 +2063,22 @@ html {
 
 
 /* ==========================================
+   TOURNAMENT RESULTS GRID
+   ========================================== */
+
+.tournament-results-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 767px) {
+  .tournament-results-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================
    CHART CONTAINER STYLING
    ========================================== */
 

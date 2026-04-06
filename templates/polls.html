@@ -533,7 +533,7 @@
                                  data-option-data="{{ (option.option_data | from_json) | tojson_attr if option.option_data else '{}' }}"
                                  data-vote-count="{{ option.vote_count }}"></div>
                             {% endfor %}
-                            <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem">
+                            <div class="tournament-results-grid">
                                 <!-- Stacked Bar Chart (Lakes with Ramps) -->
                                 <div class="cc">
                                     <div style="padding:.6rem .8rem;border-bottom:1px solid var(--b0)">

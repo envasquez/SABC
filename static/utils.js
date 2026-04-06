@@ -1070,8 +1070,36 @@ class PollResultsRenderer {
         // Build color map for ramps
         const rampColorMap = this.buildRampColorMap(rampsByLake);
 
+        // Wrap long labels on narrow screens (same logic as club poll charts)
+        function wrapLabel(text, limit) {
+            if (text.length <= limit) return text;
+            const words = text.split(' ');
+            const lines = [];
+            let currentLine = '';
+            for (const word of words) {
+                if (currentLine && (currentLine + ' ' + word).length > limit) {
+                    lines.push(currentLine);
+                    currentLine = word;
+                } else {
+                    currentLine = currentLine ? currentLine + ' ' + word : word;
+                }
+            }
+            if (currentLine) lines.push(currentLine);
+            return lines;
+        }
+
+        const screenWidth = window.innerWidth;
+        let wrapLimit = 35;
+        if (screenWidth < 400) {
+            wrapLimit = 14;
+        } else if (screenWidth < 576) {
+            wrapLimit = 20;
+        } else if (screenWidth < 768) {
+            wrapLimit = 28;
+        }
+
         // Prepare data for Chart.js stacked bar
-        const labels = lakesArray.map(lake => lake.name);
+        const labels = lakesArray.map(lake => wrapLabel(lake.name, wrapLimit));
 
         // Create datasets with gradient colors - one per unique ramp
         const datasets = rampColorMap.map((ramp) => {
