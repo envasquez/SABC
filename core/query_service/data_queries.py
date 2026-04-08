@@ -434,8 +434,7 @@ class DataQueries(QueryServiceBase):
                 WHERE t.complete = true
                 UNION ALL
                 -- Team results only for tournaments without individual data
-                -- For team format, check if team caught limit (fish_limit * 2)
-                SELECT e.year, tr.num_fish, t.fish_limit * 2 as fish_limit, false as disqualified
+                SELECT e.year, tr.num_fish, t.fish_limit, false as disqualified
                 FROM tournaments t
                 JOIN events e ON t.event_id = e.id
                 JOIN team_results tr ON tr.tournament_id = t.id
