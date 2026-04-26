@@ -79,6 +79,11 @@
             </div>
             {% endif %}
 
+            <!-- Day-of info: sunrise + weather forecast (tournament polls only) -->
+            {% if poll.poll_type == 'tournament_location' and poll.day_info and poll.status == 'active' %}
+                {{ poll_day_info_card(poll.day_info) }}
+            {% endif %}
+
             {% if poll.options %}
                 <!-- Per-Poll Tabs for Admin Proxy Voting -->
                 {% if user.is_admin and poll.status == 'active' %}
@@ -210,11 +215,6 @@
                             <i class="bi bi-check-square" style="margin-right:.35rem"></i>Cast Your Vote
                         </button>
                     </form>
-
-                    <!-- Day-of info: sunrise + weather forecast -->
-                    {% if poll.poll_type == 'tournament_location' and poll.day_info %}
-                        {{ poll_day_info_card(poll.day_info) }}
-                    {% endif %}
 
                     <!-- Seasonal Tournament History for active tournament polls -->
                     {% if poll.poll_type == 'tournament_location' and poll.seasonal_history and poll.seasonal_history|length > 0 %}

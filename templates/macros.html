@@ -291,52 +291,29 @@
 </div>
 {% endmacro %}
 
-{# Day-of info card: sunrise + weather forecast for the tournament date #}
+{# Day-of info strip: sunrise + weather forecast for the tournament date.
+   Compact single-line layout meant to sit at the top of a tournament poll. #}
 {% macro poll_day_info_card(day_info) %}
 {% if day_info %}
-<div class="cc" style="margin-top:1rem">
-    <div style="padding:.6rem .8rem;border-bottom:1px solid var(--b0)">
-        <div style="font-size:.82rem;font-weight:600;color:var(--info)">
-            <i class="bi bi-cloud-sun" style="margin-right:.25rem"></i>
-            Tournament Day Conditions{% if day_info.date %} <span style="color:var(--t4);font-weight:400">({{ day_info.date.strftime('%a %b %d') }})</span>{% endif %}
-        </div>
-    </div>
-    <div class="ci">
-        <div style="display:grid;grid-template-columns:repeat({% if day_info.weather %}3{% else %}1{% endif %},1fr);gap:.75rem">
-            <div style="text-align:center">
-                <i class="bi bi-sunrise" style="color:var(--warn);font-size:1.4rem;display:block;margin-bottom:.2rem"></i>
-                <div style="font-size:.72rem;color:var(--t3)">Sunrise (Austin)</div>
-                <div style="font-weight:700;font-size:.95rem">{{ day_info.sunrise.strftime('%-I:%M %p') }}</div>
-            </div>
-            {% if day_info.weather %}
-            <div style="text-align:center">
-                <i class="bi bi-thermometer-half" style="color:var(--err);font-size:1.4rem;display:block;margin-bottom:.2rem"></i>
-                <div style="font-size:.72rem;color:var(--t3)">High / Low</div>
-                <div style="font-weight:700;font-size:.95rem">
-                    {% if day_info.weather.high is not none %}{{ day_info.weather.high }}°{{ day_info.weather.unit }}{% else %}—{% endif %}
-                    /
-                    {% if day_info.weather.low is not none %}{{ day_info.weather.low }}°{{ day_info.weather.unit }}{% else %}—{% endif %}
-                </div>
-            </div>
-            <div style="text-align:center">
-                <i class="bi bi-cloud-drizzle" style="color:var(--info);font-size:1.4rem;display:block;margin-bottom:.2rem"></i>
-                <div style="font-size:.72rem;color:var(--t3)">Conditions</div>
-                <div style="font-weight:700;font-size:.88rem">
-                    {{ day_info.weather.short_forecast or '—' }}
-                    {% if day_info.weather.precip_chance %}
-                        <span style="color:var(--info);font-weight:600">({{ day_info.weather.precip_chance }}%)</span>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-        </div>
-        {% if not day_info.weather %}
-        <div style="font-size:.72rem;color:var(--t4);margin-top:.5rem;text-align:center">
-            <i class="bi bi-info-circle"></i>
-            Weather forecast available within ~7 days of tournament
-        </div>
-        {% endif %}
-    </div>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:.6rem .9rem;padding:.4rem .65rem;margin-bottom:.75rem;border-left:3px solid var(--info);background:var(--bg-elevated);border-radius:var(--r-sm);font-size:.78rem;color:var(--t2)" title="Conditions for the tournament date in Austin, TX">
+    {% if day_info.date %}
+    <span style="color:var(--t4);font-weight:600">{{ day_info.date.strftime('%a %b %-d') }}</span>
+    {% endif %}
+    <span><i class="bi bi-sunrise" style="color:var(--warn);margin-right:.25rem"></i><strong>{{ day_info.sunrise.strftime('%-I:%M %p') }}</strong> sunrise</span>
+    {% if day_info.weather %}
+    <span style="color:var(--t4)">·</span>
+    <span>
+        <i class="bi bi-thermometer-half" style="color:var(--err);margin-right:.2rem"></i>
+        <strong>{% if day_info.weather.high is not none %}{{ day_info.weather.high }}°{% else %}—{% endif %}</strong>/<strong>{% if day_info.weather.low is not none %}{{ day_info.weather.low }}°{% else %}—{% endif %}</strong>{{ day_info.weather.unit }}
+    </span>
+    <span style="color:var(--t4)">·</span>
+    <span>
+        <i class="bi bi-cloud-sun" style="color:var(--info);margin-right:.2rem"></i>
+        {{ day_info.weather.short_forecast or '—' }}{% if day_info.weather.precip_chance %} <span style="color:var(--info);font-weight:600">({{ day_info.weather.precip_chance }}% rain)</span>{% endif %}
+    </span>
+    {% else %}
+    <span style="color:var(--t4)">· weather available ~7 days out</span>
+    {% endif %}
 </div>
 {% endif %}
 {% endmacro %}
