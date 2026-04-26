@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert, badge, csrf_token, delete_modal, time_select_options, seasonal_history_card %}
+{% from 'macros.html' import alert, badge, csrf_token, delete_modal, time_select_options, seasonal_history_card, poll_day_info_card %}
 
 {% block title %}Polls - South Austin Bass Club{% endblock %}
 
@@ -210,6 +210,11 @@
                             <i class="bi bi-check-square" style="margin-right:.35rem"></i>Cast Your Vote
                         </button>
                     </form>
+
+                    <!-- Day-of info: sunrise + weather forecast -->
+                    {% if poll.poll_type == 'tournament_location' and poll.day_info %}
+                        {{ poll_day_info_card(poll.day_info) }}
+                    {% endif %}
 
                     <!-- Seasonal Tournament History for active tournament polls -->
                     {% if poll.poll_type == 'tournament_location' and poll.seasonal_history and poll.seasonal_history|length > 0 %}

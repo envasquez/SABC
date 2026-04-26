@@ -4,9 +4,11 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import case, exists, false, func, select, true
 
-from core.db_schema import Angler, Poll, PollVote, engine, get_session
+from core.db_schema import Angler, Event, Poll, PollVote, engine, get_session
 from core.deps import templates
 from core.helpers.auth import is_dues_current, require_auth
+from core.helpers.logging import get_logger
+from core.helpers.poll_day_info import get_poll_day_info
 from core.helpers.timezone import now_local
 from core.query_service import QueryService
 from core.types import UserDict
@@ -17,6 +19,7 @@ from routes.voting.helpers import (
     process_closed_polls,
 )
 
+logger = get_logger(__name__)
 router = APIRouter()
 
 
@@ -198,12 +201,21 @@ async def polls(
             # Get vote count from pre-fetched data
             unique_voters = vote_counts.get(poll_row.id, 0)
 
-            # Get seasonal history for tournament polls
+            # Get seasonal history + day-of info (sunrise/weather) for tournament polls
             seasonal_history = []
+            day_info: Optional[Dict[str, Any]] = None
             if poll_row.poll_type == "tournament_location":
                 poll_obj = session.query(Poll).filter(Poll.id == poll_row.id).first()
                 if poll_obj:
                     seasonal_history = get_seasonal_tournament_history(session, poll_obj)
+                    if poll_obj.event_id:
+                        event = session.query(Event).filter(Event.id == poll_obj.event_id).first()
+                        if event and event.date:
+                            try:
+                                day_info = get_poll_day_info(event.date)
+                            except Exception as e:
+                                # Never let sunrise/weather lookup break the poll page.
+                                logger.warning(f"poll_day_info failed for poll {poll_row.id}: {e}")
 
             polls.append(
                 {
@@ -224,6 +236,7 @@ async def polls(
                         (unique_voters / member_count * 100) if member_count > 0 else 0, 1
                     ),
                     "seasonal_history": seasonal_history,
+                    "day_info": day_info,
                 }
             )
 
