@@ -316,6 +316,9 @@
     <span><i class="bi bi-thermometer-half" style="color:var(--err);margin-right:.15rem"></i><strong>{% if day_info.weather.high is not none %}{{ day_info.weather.high }}°{% else %}—{% endif %}</strong>/<strong>{% if day_info.weather.low is not none %}{{ day_info.weather.low }}°{% else %}—{% endif %}</strong>{{ day_info.weather.unit }}</span>
     <span style="color:var(--t4)">·</span>
     <span><i class="bi bi-cloud-sun" style="color:var(--info);margin-right:.15rem"></i>{{ day_info.weather.short_forecast or '—' }}{% if day_info.weather.precip_chance %} <span style="color:var(--info);font-weight:600">({{ day_info.weather.precip_chance }}%)</span>{% endif %}</span>
+    {% else %}
+    {% if day_info.sunrise %}<span style="color:var(--t4)">·</span>{% endif %}
+    <span style="color:var(--t4);font-style:italic">weather ~7d out</span>
     {% endif %}
 </div>
 {% endif %}
