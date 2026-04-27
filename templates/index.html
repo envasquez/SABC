@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros.html" import tournament_card_header, tournament_description_row, tournament_info_row, location_tbd_placeholder %}
+{% from "macros.html" import tournament_card_header, tournament_description_row, tournament_info_row, location_tbd_placeholder, tournament_day_info_strip %}
 {% block content %}
 
 <!-- Data passed to JavaScript -->
@@ -86,6 +86,11 @@
                     <span><i class="bi bi-clock"></i> {{ tournament.start_time }}–{{ tournament.end_time }}</span>
                 </div>
             </div>
+            {% if tournament.day_info %}
+            <div style="flex:1 1 auto;display:flex;justify-content:flex-end;min-width:0">
+                {{ tournament_day_info_strip(tournament.day_info) }}
+            </div>
+            {% endif %}
             <span class="ts ts-u">Upcoming</span>
         </div>
         <div class="tc-b">

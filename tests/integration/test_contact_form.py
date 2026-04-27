@@ -18,7 +18,8 @@ def _valid_form_data(**overrides: str) -> dict:
         "subject": "Question about membership",
         "message": "I would like to join the club.",
         "website": "",  # honeypot - must be empty
-        "form_loaded_at": str(int(time.time()) - 10),  # loaded 10 seconds ago
+        "phone": "",  # alt honeypot - must be empty
+        "form_loaded_at": str(int(time.time()) - 15),  # loaded 15 seconds ago
     }
     data.update(overrides)
     return data
@@ -39,10 +40,11 @@ class TestContactFormPage:
         assert 'name="message"' in response.text
 
     def test_about_page_has_honeypot_field(self, client: TestClient):
-        """Test that the about page contains the hidden honeypot field."""
+        """Test that the about page contains the hidden honeypot fields."""
         response = client.get("/about")
         assert response.status_code == 200
         assert 'name="website"' in response.text
+        assert 'name="phone"' in response.text
         assert 'name="form_loaded_at"' in response.text
 
 
@@ -278,35 +280,52 @@ class TestSpamDetectionUnit:
     def test_clean_submission(self):
         from routes.pages.home import _is_spam_submission
 
-        result = _is_spam_submission("", str(int(time.time()) - 10), "John", "A real message here")
+        result = _is_spam_submission(
+            "", "", str(int(time.time()) - 15), "John", "Question", "A real message here"
+        )
         assert result is None
 
     def test_honeypot_filled(self):
         from routes.pages.home import _is_spam_submission
 
         result = _is_spam_submission(
-            "spam", str(int(time.time()) - 10), "John", "A real message here"
+            "spam", "", str(int(time.time()) - 15), "John", "Question", "A real message here"
         )
         assert result == "honeypot filled"
+
+    def test_alt_honeypot_filled(self):
+        from routes.pages.home import _is_spam_submission
+
+        result = _is_spam_submission(
+            "", "555-1212", str(int(time.time()) - 15), "John", "Question", "A real message here"
+        )
+        assert result == "alt honeypot filled"
 
     def test_too_fast(self):
         from routes.pages.home import _is_spam_submission
 
-        result = _is_spam_submission("", str(int(time.time())), "John", "A real message here")
+        result = _is_spam_submission(
+            "", "", str(int(time.time())), "John", "Question", "A real message here"
+        )
         assert result is not None
         assert "too fast" in result
 
     def test_invalid_timestamp(self):
         from routes.pages.home import _is_spam_submission
 
-        result = _is_spam_submission("", "not-a-number", "John", "A real message here")
+        result = _is_spam_submission("", "", "not-a-number", "John", "Question", "A real message")
         assert result == "missing timestamp"
 
     def test_url_in_name(self):
         from routes.pages.home import _is_spam_submission
 
         result = _is_spam_submission(
-            "", str(int(time.time()) - 10), "http://spam.com", "A real message here"
+            "",
+            "",
+            str(int(time.time()) - 15),
+            "http://spam.com",
+            "Question",
+            "A real message here",
         )
         assert result == "URL in name field"
 
@@ -314,10 +333,34 @@ class TestSpamDetectionUnit:
         from routes.pages.home import _is_spam_submission
 
         result = _is_spam_submission(
-            "", str(int(time.time()) - 10), "John", "https://spam.example.com"
+            "", "", str(int(time.time()) - 15), "John", "Question", "https://spam.example.com"
         )
         assert result is not None
         assert "URLs" in result
+
+    def test_solicitor_pattern_two_matches_blocked(self):
+        from routes.pages.home import _is_spam_submission
+
+        msg = (
+            "Hello, I noticed your website while researching local clubs. "
+            "Our team can help boost your search engine ranking with our SEO services. "
+            "Reply for a free consultation."
+        )
+        result = _is_spam_submission(
+            "", "", str(int(time.time()) - 15), "Marketing Pro", "Quick question", msg
+        )
+        assert result is not None
+        assert "solicitor" in result
+
+    def test_solicitor_single_phrase_allowed(self):
+        from routes.pages.home import _is_spam_submission
+
+        # One coincidental match should not block legitimate users.
+        msg = "Hi, I noticed your website mentions tournament dates. When is the next one?"
+        result = _is_spam_submission(
+            "", "", str(int(time.time()) - 15), "John Doe", "Tournament dates", msg
+        )
+        assert result is None
 
 
 class TestTurnstileVerification:

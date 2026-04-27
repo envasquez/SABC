@@ -29,6 +29,7 @@ from core.deps import templates
 from core.email import send_contact_email
 from core.helpers.auth import get_user_optional
 from core.helpers.logging import get_logger
+from core.helpers.poll_day_info import get_poll_day_info
 from core.helpers.response import error_redirect, success_redirect
 from core.query_service import QueryService
 from routes.dependencies import get_lakes_list, get_ramps_for_lake
@@ -253,6 +254,17 @@ async def home_paginated(request: Request, page: int = 1):
             tournament_date = tournament[1]
             is_past = tournament_date < date.today() if tournament_date else False
 
+            # Sunrise + forecast for upcoming, non-cancelled tournaments. Sunrise
+            # is always available; weather is only populated within the NWS
+            # forecast window (~7 days), otherwise the weather field is None.
+            day_info: Any = None
+            is_cancelled = tournament[23] or False
+            if not is_past and not is_cancelled and tournament_date:
+                try:
+                    day_info = get_poll_day_info(tournament_date)
+                except Exception as e:
+                    logger.warning(f"day info lookup failed for tournament {tournament[0]}: {e}")
+
             tournament_dict = {
                 "id": tournament[0],
                 "date": tournament_date,
@@ -279,7 +291,8 @@ async def home_paginated(request: Request, page: int = 1):
                 "total_weight": tournament[20] or 0.0,
                 "aoy_points": tournament[21] if tournament[21] is not None else True,
                 "event_type": tournament[22],
-                "is_cancelled": tournament[23] or False,
+                "is_cancelled": is_cancelled,
+                "day_info": day_info,
                 "top_results": top_results_query,
                 "poll_data": poll_data,
                 "user_has_voted": user_has_voted,
@@ -459,22 +472,51 @@ async def _verify_turnstile(token: str, remote_ip: str | None = None) -> bool:
         return True
 
 
-# Minimum seconds between form load and submit (bots submit instantly)
-MIN_SUBMIT_TIME_SECONDS = 3
+# Minimum seconds between form load and submit. Real humans take 30+ seconds to
+# write a contact message; bots (including LLM agents) typically submit in <5s.
+MIN_SUBMIT_TIME_SECONDS = 10
 # Patterns that indicate spam content
 SPAM_URL_PATTERN = re.compile(r"https?://\S+", re.IGNORECASE)
+# Phrases common in solicitor/marketing/SEO outreach. Triggering 2+ marks as spam;
+# single matches are tolerated since real users may use these phrases coincidentally.
+SOLICITOR_PATTERNS = [
+    re.compile(p, re.IGNORECASE)
+    for p in (
+        r"\bi (?:represent|am writing on behalf)\b",
+        r"\b(?:noticed|came across|stumbled upon|visited) your (?:website|site)\b",
+        r"\b(?:boost|improve|increase) your (?:ranking|seo|traffic|visibility)\b",
+        r"\b(?:seo|search engine optimization) services\b",
+        r"\b(?:digital marketing|web (?:design|development)) services\b",
+        r"\b(?:guest post|backlink|link[- ]building|do[- ]?follow)\b",
+        r"\bour (?:team|agency|company) can (?:help|offer|provide)\b",
+        r"\bfree (?:consultation|quote|audit|trial)\b",
+        r"\bpersonal injury\b",
+        r"\b(?:accident|injury) (?:attorney|lawyer)\b",
+        r"\b(?:purchase|buy|acquire) your domain\b",
+        r"\binterested in (?:buying|purchasing|acquiring) (?:your|the) (?:site|domain|website)\b",
+        r"\bgenerate (?:more )?(?:leads|sales|revenue)\b",
+        r"\bno obligation\b",
+    )
+]
 
 
 def _is_spam_submission(
-    honeypot: str, form_loaded_at: str, sender_name: str, message: str
+    honeypot: str,
+    honeypot_alt: str,
+    form_loaded_at: str,
+    sender_name: str,
+    subject: str,
+    message: str,
 ) -> str | None:
     """Check if a contact form submission is spam.
 
     Returns a reason string if spam, None if legitimate.
     """
-    # Honeypot check - bots fill hidden fields that humans can't see
+    # Honeypot checks - bots fill hidden fields that humans can't see
     if honeypot:
         return "honeypot filled"
+    if honeypot_alt:
+        return "alt honeypot filled"
 
     # Time-based check - bots submit forms faster than humans can type
     try:
@@ -494,6 +536,12 @@ def _is_spam_submission(
     if len(message_without_urls) < 10:
         return "message is mostly URLs"
 
+    # Solicitor / marketing outreach detection
+    combined = f"{subject}\n{message}"
+    matches = [pat.pattern for pat in SOLICITOR_PATTERNS if pat.search(combined)]
+    if len(matches) >= 2:
+        return f"solicitor patterns matched: {len(matches)}"
+
     return None
 
 
@@ -511,8 +559,11 @@ async def contact_form(request: Request) -> RedirectResponse:
 
     # Spam protection checks
     honeypot = str(form.get("website", "")).strip()
+    honeypot_alt = str(form.get("phone", "")).strip()
     form_loaded_at = str(form.get("form_loaded_at", "")).strip()
-    spam_reason = _is_spam_submission(honeypot, form_loaded_at, sender_name, message)
+    spam_reason = _is_spam_submission(
+        honeypot, honeypot_alt, form_loaded_at, sender_name, subject_line, message
+    )
     if spam_reason:
         logger.warning(f"Spam contact form blocked: {spam_reason} (from {sender_email})")
         # Return success message to not tip off bots

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert, badge, csrf_token, delete_modal, time_select_options, seasonal_history_card, poll_day_info_card %}
+{% from 'macros.html' import alert, badge, csrf_token, delete_modal, time_select_options, seasonal_history_card, poll_sunrise_strip %}
 
 {% block title %}Polls - South Austin Bass Club{% endblock %}
 
@@ -56,10 +56,10 @@
                 </div>
             </div>
 
-            <!-- Day-of info: sunrise + weather forecast (tournament polls only) -->
+            <!-- Sunrise time (tournament polls only) -->
             {% if poll.poll_type == 'tournament_location' and poll.day_info and poll.status == 'active' %}
             <div style="flex:1 1 auto;display:flex;justify-content:flex-end;min-width:0">
-                {{ poll_day_info_card(poll.day_info) }}
+                {{ poll_sunrise_strip(poll.day_info) }}
             </div>
             {% endif %}
 
