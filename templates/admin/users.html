@@ -54,15 +54,16 @@ function switchUserTab(paneId, btn) {
     <div class="tab-pane fade show active" id="members-pane" role="tabpanel">
         {% set members = users | selectattr('member') | list %}
         {% if members %}
-        <table class="mt">
+        <div class="mt-wrap">
+        <table class="mt mt-cards">
             <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Officer</th><th style="text-align:right">Actions</th></tr></thead>
             <tbody>
                 {% for u in members %}
                 <tr>
-                    <td style="font-weight:600;color:var(--t1)">{{ u.name }}</td>
-                    <td>{{ u.email or '-' }}</td>
-                    <td>{{ u.phone or '-' }}</td>
-                    <td>
+                    <td data-label="Name" style="font-weight:600;color:var(--t1)">{{ u.name }}</td>
+                    <td data-label="Email">{{ u.email or '-' }}</td>
+                    <td data-label="Phone">{{ u.phone or '-' }}</td>
+                    <td data-label="Status">
                         {% if u.dues_paid_through | is_dues_current %}
                             <span class="tg tg-s">Active</span>
                         {% else %}
@@ -70,7 +71,7 @@ function switchUserTab(paneId, btn) {
                         {% endif %}
                         {% if u.is_admin %}<span class="tg tg-w" style="margin-left:.25rem">Admin</span>{% endif %}
                     </td>
-                    <td>
+                    <td data-label="Officer">
                         {% if u.officer_positions %}
                             {% for position in u.officer_positions.split(', ') %}
                                 <span class="tg tg-i"><i class="bi bi-star-fill"></i> {{ position }}</span>
@@ -91,6 +92,7 @@ function switchUserTab(paneId, btn) {
                 {% endfor %}
             </tbody>
         </table>
+        </div>
         {% else %}
         {{ alert('info', 'No members found.') }}
         {% endif %}
@@ -100,14 +102,15 @@ function switchUserTab(paneId, btn) {
     <div class="tab-pane fade" id="guests-pane" role="tabpanel">
         {% set guests = users | rejectattr('member') | list %}
         {% if guests %}
-        <table class="mt">
+        <div class="mt-wrap">
+        <table class="mt mt-cards">
             <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th style="text-align:right">Actions</th></tr></thead>
             <tbody>
                 {% for u in guests %}
                 <tr>
-                    <td style="font-weight:600;color:var(--t1)">{{ u.name }}</td>
-                    <td>{{ u.email or '-' }}</td>
-                    <td>{{ u.phone or '-' }}</td>
+                    <td data-label="Name" style="font-weight:600;color:var(--t1)">{{ u.name }}</td>
+                    <td data-label="Email">{{ u.email or '-' }}</td>
+                    <td data-label="Phone">{{ u.phone or '-' }}</td>
                     <td style="text-align:right">
                         <div style="display:flex;gap:.35rem;justify-content:flex-end">
                             <button class="btn-icon btn-icon-ghost" onclick="location='/admin/users/{{ u.id }}/edit'" aria-label="Edit user"><i class="bi bi-pencil"></i></button>
@@ -122,6 +125,7 @@ function switchUserTab(paneId, btn) {
                 {% endfor %}
             </tbody>
         </table>
+        </div>
         {% else %}
         {{ alert('info', 'No guests found.') }}
         {% endif %}

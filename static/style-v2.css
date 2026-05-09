@@ -2582,6 +2582,84 @@ textarea.fi { resize: vertical; min-height: 100px; }
 }
 
 /* ==========================================
+   MOBILE RESPONSIVE FALLBACKS
+   ========================================== */
+
+/* Collapse inline-styled grid layouts to a single column on small screens.
+   Targets any element with `grid-template-columns` set via inline style inside
+   the main page content, so admin forms and the home 2-col layout reflow
+   automatically without per-template media queries. */
+@media (max-width: 768px) {
+  main [style*="grid-template-columns"],
+  .am [style*="grid-template-columns"],
+  .ci [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Horizontally scrollable wrapper for `.mt` data tables on narrow screens. */
+.mt-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.mt-wrap > .mt {
+  min-width: 640px;
+}
+
+/* Opt-in mobile card layout: tables marked `.mt.mt-cards` collapse each row
+   into a stacked card with `data-label` attributes shown as field labels. */
+@media (max-width: 768px) {
+  .mt-wrap > .mt.mt-cards { min-width: 0; }
+  .mt.mt-cards thead { display: none; }
+  .mt.mt-cards,
+  .mt.mt-cards tbody,
+  .mt.mt-cards tr {
+    display: block;
+    width: 100%;
+  }
+  .mt.mt-cards tr {
+    border: 1px solid var(--b0);
+    border-radius: var(--r-md);
+    background: var(--bg-elevated);
+    margin: 0.75rem 1rem;
+    padding: 0.5rem 0.85rem;
+  }
+  .mt.mt-cards tr:hover td {
+    background: transparent;
+  }
+  .mt.mt-cards td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.45rem 0;
+    border-bottom: 1px solid var(--b0);
+    text-align: right;
+    word-break: break-word;
+  }
+  .mt.mt-cards td:last-child {
+    border-bottom: none;
+    justify-content: flex-end;
+    padding-top: 0.6rem;
+  }
+  .mt.mt-cards td::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--t3);
+    text-align: left;
+  }
+  .mt.mt-cards td[data-label=""]::before,
+  .mt.mt-cards td:not([data-label])::before {
+    display: none;
+  }
+}
+
+/* ==========================================
    PRINT STYLES
    ========================================== */
 

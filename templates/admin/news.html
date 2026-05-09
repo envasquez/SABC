@@ -57,14 +57,15 @@
         </div>
 
         {% if news_items %}
-        <table class="mt">
+        <div class="mt-wrap">
+        <table class="mt mt-cards">
             <thead><tr><th>Title</th><th>Content</th><th>Author</th><th>Status</th><th>Priority</th><th>Created</th><th>Archive</th><th style="text-align:right">Actions</th></tr></thead>
             <tbody>
                 {% for item in news_items %}
                 <tr>
-                    <td style="font-weight:600;color:var(--t1)">{{ item[1] }}</td>
-                    <td><span style="font-size:.82rem">{{ item[2][:100] }}{% if item[2]|length > 100 %}...{% endif %}</span></td>
-                    <td>
+                    <td data-label="Title" style="font-weight:600;color:var(--t1)">{{ item[1] }}</td>
+                    <td data-label="Content"><span style="font-size:.82rem">{{ item[2][:100] }}{% if item[2]|length > 100 %}...{% endif %}</span></td>
+                    <td data-label="Author">
                         {% if item[7] %}
                             {% set name_parts = item[7].split() %}
                             {% if name_parts|length >= 2 %}
@@ -74,17 +75,17 @@
                             {% endif %}
                         {% else %}-{% endif %}
                     </td>
-                    <td>
+                    <td data-label="Status">
                         {% if item[4] %}<span class="tg tg-s">Published</span>
                         {% else %}<span class="tg tg-g">Draft</span>{% endif %}
                     </td>
-                    <td>
+                    <td data-label="Priority">
                         {% if item[5] == 2 %}<span class="tg tg-d">Urgent</span>
                         {% elif item[5] == 1 %}<span class="tg tg-w">High</span>
                         {% else %}<span class="tg tg-i">Normal</span>{% endif %}
                     </td>
-                    <td style="font-size:.82rem">{{ item[3].strftime('%Y-%m-%d') if item[3] else '' }}</td>
-                    <td style="font-size:.82rem">{{ item[9].strftime('%Y-%m-%d') if item[9] else '-' }}</td>
+                    <td data-label="Created" style="font-size:.82rem">{{ item[3].strftime('%Y-%m-%d') if item[3] else '' }}</td>
+                    <td data-label="Archive" style="font-size:.82rem">{{ item[9].strftime('%Y-%m-%d') if item[9] else '-' }}</td>
                     <td style="text-align:right">
                         <div style="display:flex;gap:.35rem;justify-content:flex-end">
                             {% if not show_archived %}
@@ -119,6 +120,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
         {% else %}
         <div style="text-align:center;padding:2.5rem 1rem;color:var(--t3)">
             {% if show_archived %}

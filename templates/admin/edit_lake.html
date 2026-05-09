@@ -50,7 +50,8 @@
         </div>
         <div class="ci">
             {% if ramps %}
-            <table class="mt" style="margin-bottom:1rem">
+            <div class="mt-wrap" style="margin-bottom:1rem">
+            <table class="mt mt-cards">
                 <thead><tr>
                     <th>Ramp Name</th>
                     <th>Map</th>
@@ -59,8 +60,8 @@
                 <tbody>
                     {% for ramp in ramps %}
                     <tr id="ramp-row-{{ ramp.id }}">
-                        <td style="font-weight:600">{{ ramp.name }}</td>
-                        <td>
+                        <td data-label="Ramp Name" style="font-weight:600">{{ ramp.name }}</td>
+                        <td data-label="Map">
                             {% if ramp.google_maps_iframe %}
                                 <i class="bi bi-map" style="color:var(--ok)" title="Has map embed"></i>
                             {% else %}
@@ -88,6 +89,7 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
             {% else %}
             <div style="padding:.75rem 1rem;border-radius:var(--r-md);background:var(--info-m);color:var(--info);font-size:.85rem;margin-bottom:1rem">
                 <i class="bi bi-info-circle" style="margin-right:.35rem"></i>No ramps yet. Add your first ramp below!

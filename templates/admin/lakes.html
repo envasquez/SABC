@@ -36,14 +36,15 @@
             <div class="ct" style="margin-bottom:1rem"><i class="bi bi-list-ul"></i> Existing Lakes {% if lakes %}({{ lakes|length }}){% endif %}</div>
         </div>
         {% if lakes %}
-        <table class="mt">
+        <div class="mt-wrap">
+        <table class="mt mt-cards">
             <thead><tr><th style="width:50px">#</th><th>Display Name</th><th>Database Name</th><th style="text-align:right">Actions</th></tr></thead>
             <tbody>
                 {% for lake in lakes %}
                 <tr>
-                    <td style="color:var(--t4)">{{ loop.index }}</td>
-                    <td style="font-weight:600;color:var(--t1)">{{ lake.display_name }}</td>
-                    <td><code style="color:var(--brand);background:var(--brand-m);padding:.1rem .4rem;border-radius:var(--r-sm);font-size:.78rem">{{ lake.yaml_key }}</code></td>
+                    <td data-label="#" style="color:var(--t4)">{{ loop.index }}</td>
+                    <td data-label="Display Name" style="font-weight:600;color:var(--t1)">{{ lake.display_name }}</td>
+                    <td data-label="Database Name"><code style="color:var(--brand);background:var(--brand-m);padding:.1rem .4rem;border-radius:var(--r-sm);font-size:.78rem">{{ lake.yaml_key }}</code></td>
                     <td style="text-align:right">
                         <div style="display:flex;gap:.35rem;justify-content:flex-end">
                             <a href="/admin/lakes/{{ lake.id }}/edit" class="btn-icon btn-icon-ghost" style="text-decoration:none" aria-label="Edit lake"><i class="bi bi-pencil"></i></a>
@@ -59,6 +60,7 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
         {% else %}
         <div style="text-align:center;padding:2.5rem 1rem;color:var(--t3)">
             <i class="bi bi-water" style="font-size:2.5rem;opacity:.3"></i>

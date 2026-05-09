@@ -189,14 +189,15 @@
                     </div>
                 </div>
                 {% set sabc_events = upcoming_sabc_tournaments|default(events|selectattr('event_type', 'equalto', 'sabc_tournament')|list) %}
-                <table class="mt">
+                <div class="mt-wrap">
+                <table class="mt mt-cards">
                     <thead><tr><th>Date</th><th>Event</th><th>Lake</th><th style="text-align:right">Actions</th></tr></thead>
                     <tbody>
                         {% for event in sabc_events %}
                         <tr data-year="{{ event.date.year }}">
-                            <td>{{ event.date }}</td>
-                            <td>{{ event.name }}</td>
-                            <td>{{ event.lake_name or '-' }}</td>
+                            <td data-label="Date">{{ event.date }}</td>
+                            <td data-label="Event">{{ event.name }}</td>
+                            <td data-label="Lake">{{ event.lake_name or '-' }}</td>
                             <td style="text-align:right">
                                 <div style="display:flex;gap:.35rem;justify-content:flex-end">
                                     <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
@@ -214,6 +215,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
             </div>
 
             <!-- Past Tournaments Tab -->
@@ -249,15 +251,16 @@
                         <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" onclick="clearFilters('past-tournaments')"><i class="bi bi-x-circle" aria-hidden="true"></i> Clear</button>
                     </div>
                 </div>
-                <table class="mt">
+                <div class="mt-wrap">
+                <table class="mt mt-cards">
                     <thead><tr><th>Date</th><th>Event</th><th>Type</th><th>Lake</th><th style="text-align:right">Actions</th></tr></thead>
                     <tbody>
                         {% for event in past_tournaments %}
                         <tr data-event-type="{{ event.event_type }}" data-year="{{ event.date.year }}" data-has-results="{{ 'yes' if event.has_results else 'no' }}" data-lake="{{ event.lake_name|lower if event.lake_name else '' }}">
-                            <td>{{ event.date }}</td>
-                            <td>{{ event.name }}</td>
-                            <td>{{ event.event_type }}</td>
-                            <td>{{ event.lake_name or '-' }}</td>
+                            <td data-label="Date">{{ event.date }}</td>
+                            <td data-label="Event">{{ event.name }}</td>
+                            <td data-label="Type">{{ event.event_type }}</td>
+                            <td data-label="Lake">{{ event.lake_name or '-' }}</td>
                             <td style="text-align:right">
                                 <div style="display:flex;gap:.35rem;justify-content:flex-end">
                                     <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
@@ -275,6 +278,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
             </div>
 
             <!-- Holidays Tab -->
@@ -295,14 +299,15 @@
                     </div>
                 </div>
                 {% set holiday_events = events|selectattr('event_type', 'equalto', 'holiday')|list %}
-                <table class="mt">
+                <div class="mt-wrap">
+                <table class="mt mt-cards">
                     <thead><tr><th>Date</th><th>Event</th><th>Lake</th><th style="text-align:right">Actions</th></tr></thead>
                     <tbody>
                         {% for event in holiday_events %}
                         <tr>
-                            <td>{{ event.date }}</td>
-                            <td>{{ event.name }}</td>
-                            <td>{{ event.lake_name or '-' }}</td>
+                            <td data-label="Date">{{ event.date }}</td>
+                            <td data-label="Event">{{ event.name }}</td>
+                            <td data-label="Lake">{{ event.lake_name or '-' }}</td>
                             <td style="text-align:right">
                                 <div style="display:flex;gap:.35rem;justify-content:flex-end">
                                     <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
@@ -320,6 +325,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
             </div>
 
             <!-- Other Events Tab -->
@@ -344,14 +350,15 @@
                     </div>
                 </div>
                 {% set other_events = events|selectattr('event_type', 'equalto', 'other_tournament')|list %}
-                <table class="mt">
+                <div class="mt-wrap">
+                <table class="mt mt-cards">
                     <thead><tr><th>Date</th><th>Event</th><th>Lake</th><th style="text-align:right">Actions</th></tr></thead>
                     <tbody>
                         {% for event in other_events %}
                         <tr data-year="{{ event.date.year }}" data-event-type="{{ event.event_type }}">
-                            <td>{{ event.date }}</td>
-                            <td>{{ event.name }}</td>
-                            <td>{{ event.lake_name or '-' }}</td>
+                            <td data-label="Date">{{ event.date }}</td>
+                            <td data-label="Event">{{ event.name }}</td>
+                            <td data-label="Lake">{{ event.lake_name or '-' }}</td>
                             <td style="text-align:right">
                                 <div style="display:flex;gap:.35rem;justify-content:flex-end">
                                     <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
@@ -369,6 +376,7 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     </div>
