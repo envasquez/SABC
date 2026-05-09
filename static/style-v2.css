@@ -46,7 +46,7 @@
 .dropdown-menu { position: absolute; z-index: 1000; display: none; min-width: 10rem; padding: 0.5rem 0; }
 .dropdown-menu.show { display: block; }
 .dropdown-menu-end { right: 0; left: auto; }
-.dropdown-item { display: block; width: 100%; padding: 0.45rem 1rem; clear: both; white-space: nowrap; border: 0; text-decoration: none; cursor: pointer; }
+.dropdown-item { display: block; width: 100%; padding: 0.45rem 1rem; clear: both; white-space: nowrap; border: 0; background: transparent; text-align: inherit; font: inherit; text-decoration: none; cursor: pointer; }
 .dropdown-divider { height: 0; margin: 0.5rem 0; overflow: hidden; }
 .dropdown-header { display: block; padding: 0.5rem 1rem; white-space: nowrap; }
 

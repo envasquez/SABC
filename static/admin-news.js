@@ -46,7 +46,101 @@ document.addEventListener('DOMContentLoaded', function() {
             deleteNews(id, title);
         });
     });
+
+    // Submit confirmation for create/edit forms
+    setupNewsConfirmation();
 });
+
+let pendingNewsForm = null;
+let newsConfirmModal = null;
+
+function setupNewsConfirmation() {
+    const modalEl = document.getElementById('newsConfirmModal');
+    if (!modalEl) return;
+    newsConfirmModal = new bootstrap.Modal(modalEl);
+
+    document.querySelectorAll('form[data-news-confirm]').forEach(form => {
+        form.addEventListener('submit', (e) => {
+            if (form.dataset.confirmed === 'true') return;
+            e.preventDefault();
+
+            const title = form.querySelector('[name="title"]')?.value?.trim() || '';
+            const content = form.querySelector('[name="content"]')?.value?.trim() || '';
+
+            if (!title) {
+                showToast('Title is required', 'warning');
+                return;
+            }
+            if (!content) {
+                showToast('Content is required', 'warning');
+                return;
+            }
+
+            const mode = form.dataset.newsConfirm;
+            const priority = form.querySelector('[name="priority"]')?.value || '0';
+            const archive = form.querySelector('[name="auto_archive_at"]')?.value || '';
+
+            populateNewsConfirm(mode, title, content, priority, archive);
+            pendingNewsForm = form;
+            newsConfirmModal.show();
+        });
+    });
+
+    document.getElementById('confirmNewsBtn')?.addEventListener('click', () => {
+        if (!pendingNewsForm) return;
+        const form = pendingNewsForm;
+        pendingNewsForm = null;
+        form.dataset.confirmed = 'true';
+        newsConfirmModal.hide();
+        form.submit();
+    });
+
+    modalEl.addEventListener('hidden.bs.modal', () => {
+        if (pendingNewsForm && pendingNewsForm.dataset.confirmed !== 'true') {
+            pendingNewsForm = null;
+        }
+    });
+}
+
+function populateNewsConfirm(mode, title, content, priority, archive) {
+    const heading = document.getElementById('newsConfirmHeading');
+    const btnText = document.getElementById('confirmNewsBtnText');
+    const note = document.getElementById('newsConfirmNote');
+    const titleEl = document.getElementById('newsConfirmTitle');
+    const summary = document.getElementById('newsConfirmSummary');
+
+    heading.textContent = mode === 'edit' ? 'Confirm Update' : 'Confirm Publish';
+    btnText.textContent = mode === 'edit' ? 'Save Changes' : 'Publish';
+
+    if (mode === 'create') {
+        note.style.display = '';
+        note.innerHTML = '<i class="bi bi-envelope" style="margin-right:.35rem"></i>All members will be emailed when this is published.';
+    } else {
+        note.style.display = 'none';
+    }
+
+    const priorityLabel = {'0': 'Normal', '1': 'High', '2': 'Urgent'}[priority] || 'Normal';
+
+    titleEl.textContent = title;
+
+    let html = '<dl class="row mb-0" style="margin:0">';
+    html += '<dt class="col-sm-3"><i class="bi bi-card-text me-1"></i>Content</dt>';
+    html += '<dd class="col-sm-9" style="white-space:pre-wrap;word-break:break-word">' + escapeNewsHtml(content) + '</dd>';
+    html += '<dt class="col-sm-3"><i class="bi bi-flag me-1"></i>Priority</dt>';
+    html += '<dd class="col-sm-9 fw-bold">' + escapeNewsHtml(priorityLabel) + '</dd>';
+    if (archive) {
+        html += '<dt class="col-sm-3"><i class="bi bi-archive me-1"></i>Auto Archive</dt>';
+        html += '<dd class="col-sm-9">' + escapeNewsHtml(archive) + '</dd>';
+    }
+    html += '</dl>';
+    summary.innerHTML = html;
+}
+
+function escapeNewsHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
 function sendTestEmail() {
     const title = document.getElementById('title').value;

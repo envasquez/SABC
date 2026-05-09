@@ -13,7 +13,7 @@
 <div class="cc" style="margin-bottom:1.4rem">
     <div class="ci">
         <div class="ct" style="margin-bottom:1rem"><i class="bi bi-plus-circle"></i> Create News</div>
-        <form method="POST" action="/admin/news/create">
+        <form method="POST" action="/admin/news/create" data-news-confirm="create">
             {{ csrf_token(request) }}
             <div style="display:grid;grid-template-columns:2.5fr 1fr 1.5fr auto;gap:1rem;align-items:end">
                 <div class="fg">
@@ -141,7 +141,7 @@
                 <h5>Edit News</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="editForm" method="POST">
+            <form id="editForm" method="POST" data-news-confirm="edit">
                 {{ csrf_token(request) }}
                 <div class="modal-body">
                     <div class="fg"><label class="fl" for="edit_title">Title</label><input class="fi" type="text" id="edit_title" name="title" required></div>
@@ -170,6 +170,43 @@
 {% call delete_modal('deleteNewsModal', 'Delete News', 'delete-news-title', 'confirmDeleteNewsBtn', 'delete-confirmation') %}
 <input type="hidden" id="delete-news-id">
 {% endcall %}
+
+<!-- News Submission Confirmation Modal -->
+<div class="modal fade" id="newsConfirmModal" tabindex="-1" aria-labelledby="newsConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background:var(--brand);color:#fff">
+                <h5 class="modal-title" id="newsConfirmModalLabel">
+                    <i class="bi bi-check-circle" style="margin-right:.35rem"></i><span id="newsConfirmHeading">Confirm Publish</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p style="color:var(--t3);margin-bottom:.75rem">Please review before publishing:</p>
+                <div class="cc">
+                    <div style="padding:.6rem .8rem;border-bottom:1px solid var(--b0)">
+                        <div style="font-weight:600;font-size:.88rem" id="newsConfirmTitle"></div>
+                    </div>
+                    <div class="ci">
+                        <div id="newsConfirmSummary" style="max-height:18rem;overflow-y:auto"></div>
+                    </div>
+                </div>
+                <div style="padding:.75rem 1rem;border-radius:var(--r-md);background:var(--info-m);color:var(--info);font-size:.85rem;margin-top:.75rem" id="newsConfirmNote">
+                    <i class="bi bi-envelope" style="margin-right:.35rem"></i>
+                    All members will be emailed when this is published.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">
+                    <i class="bi bi-arrow-left" style="margin-right:.25rem"></i>Go Back
+                </button>
+                <button type="button" class="btn-m btn-p" id="confirmNewsBtn">
+                    <i class="bi bi-check-square" style="margin-right:.25rem"></i><span id="confirmNewsBtnText">Publish</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script src="/static/admin-news.js"></script>
 {% endblock %}

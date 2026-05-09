@@ -85,12 +85,12 @@
                     <span><i class="bi bi-pin-map"></i> {{ tournament.ramp_name }}</span>
                     <span><i class="bi bi-clock"></i> {{ tournament.start_time }}–{{ tournament.end_time }}</span>
                 </div>
+                {% if tournament.day_info %}
+                <div style="margin-top:.35rem">
+                    {{ tournament_day_info_strip(tournament.day_info) }}
+                </div>
+                {% endif %}
             </div>
-            {% if tournament.day_info %}
-            <div style="flex:1 1 auto;display:flex;justify-content:flex-end;min-width:0">
-                {{ tournament_day_info_strip(tournament.day_info) }}
-            </div>
-            {% endif %}
             <span class="ts ts-u">Upcoming</span>
         </div>
         <div class="tc-b">
