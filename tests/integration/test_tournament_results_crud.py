@@ -106,53 +106,6 @@ class TestIndividualResultsUpdate:
         db_session.refresh(result)
         assert result.disqualified is True
 
-    def test_admin_can_update_result_with_dead_fish_penalty(
-        self,
-        admin_client: TestClient,
-        test_tournament: Tournament,
-        member_user: Angler,
-        db_session: Session,
-    ):
-        """Test that admins can add/update dead fish penalty on a result."""
-        # Create initial result without penalty
-        result = Result(
-            tournament_id=test_tournament.id,
-            angler_id=member_user.id,
-            num_fish=5,
-            total_weight=Decimal("15.0"),
-            big_bass_weight=Decimal("4.0"),
-            dead_fish_penalty=Decimal("0.0"),
-            disqualified=False,
-            buy_in=True,
-        )
-        db_session.add(result)
-        db_session.commit()
-
-        # Update with penalty (gross 15.5, penalty 0.5 = net 15.0)
-        response = post_with_csrf(
-            admin_client,
-            f"/admin/tournaments/{test_tournament.id}/results",
-            data={
-                "angler_id": str(member_user.id),
-                "total_weight": "15.5",  # Gross weight
-                "num_fish": "5",
-                "big_bass_weight": "4.0",
-                "dead_fish_penalty": "0.5",
-                "buy_in": "true",
-                "disqualified": "false",
-            },
-            follow_redirects=False,
-        )
-
-        assert response.status_code in [200, 302, 303]
-
-        # Verify penalty was recorded and net weight calculated
-        db_session.refresh(result)
-        assert result.dead_fish_penalty is not None and float(result.dead_fish_penalty) == 0.5
-        assert (
-            result.total_weight is not None and float(result.total_weight) == 15.0
-        )  # Gross - penalty
-
 
 class TestIndividualResultsDeletion:
     """Tests for deleting individual tournament results."""

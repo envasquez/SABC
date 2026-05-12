@@ -51,12 +51,7 @@ async def profile_page(request: Request) -> Response:
 
         # Best weight
         best_weight = (
-            session.query(
-                func.coalesce(
-                    func.max(Result.total_weight - func.coalesce(Result.dead_fish_penalty, 0)),
-                    0,
-                )
-            )
+            session.query(func.coalesce(func.max(Result.total_weight), 0))
             .join(Tournament, Result.tournament_id == Tournament.id)
             .filter(Result.angler_id == user["id"], Result.disqualified.is_(False))
             .scalar()
@@ -214,7 +209,7 @@ async def profile_page(request: Request) -> Response:
                 -- Individual results (primary source)
                 SELECT {year_col} as year,
                        {month_col} as month,
-                       r.total_weight - COALESCE(r.dead_fish_penalty, 0) as weight
+                       r.total_weight as weight
                 FROM results r
                 JOIN tournaments t ON r.tournament_id = t.id
                 JOIN events e ON t.event_id = e.id
@@ -275,9 +270,7 @@ async def profile_page(request: Request) -> Response:
                 session.query(
                     Result.angler_id,
                     Result.tournament_id,
-                    (Result.total_weight - func.coalesce(Result.dead_fish_penalty, 0)).label(
-                        "adjusted_weight"
-                    ),
+                    Result.total_weight.label("adjusted_weight"),
                     Result.num_fish,
                     Result.disqualified,
                     Result.buy_in,

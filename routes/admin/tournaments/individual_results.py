@@ -35,18 +35,11 @@ async def save_result(
 
         angler_id = angler_id_val
         num_fish = get_form_int(form_data, "num_fish", 0) or 0
-        gross_weight = Decimal(str(get_form_float(form_data, "total_weight", 0.0) or 0.0))
+        # total_weight is entered as NET — the user subtracts any dead-fish
+        # penalty themselves at the weigh-in before entering. The dead_fish_penalty
+        # column is left at its 0.0 default for new rows.
+        total_weight = Decimal(str(get_form_float(form_data, "total_weight", 0.0) or 0.0))
         big_bass_weight = Decimal(str(get_form_float(form_data, "big_bass_weight", 0.0) or 0.0))
-        # Accept both "dead_fish" and "dead_fish_penalty" field names
-        dead_fish_penalty = Decimal(
-            str(
-                get_form_float(form_data, "dead_fish_penalty", 0.0)
-                or get_form_float(form_data, "dead_fish", 0.0)
-                or 0.0
-            )
-        )
-        # Calculate net weight (gross weight - penalty)
-        total_weight = gross_weight - dead_fish_penalty
         disqualified = get_form_bool(form_data, "disqualified")
         buy_in = get_form_bool(form_data, "buy_in")
         was_member = get_form_bool(form_data, "was_member")
@@ -58,13 +51,11 @@ async def save_result(
         )
 
         if existing:
-            # Update existing result
             qs.execute(
                 """UPDATE results
                    SET num_fish = :num_fish,
                        total_weight = :total_weight,
                        big_bass_weight = :big_bass_weight,
-                       dead_fish_penalty = :dead_fish_penalty,
                        disqualified = :disqualified,
                        buy_in = :buy_in,
                        was_member = :was_member
@@ -73,7 +64,6 @@ async def save_result(
                     "num_fish": num_fish,
                     "total_weight": total_weight,
                     "big_bass_weight": big_bass_weight,
-                    "dead_fish_penalty": dead_fish_penalty,
                     "disqualified": disqualified,
                     "buy_in": buy_in,
                     "was_member": was_member,
@@ -81,20 +71,18 @@ async def save_result(
                 },
             )
         else:
-            # Insert new result
             qs.execute(
                 """INSERT INTO results
                    (tournament_id, angler_id, num_fish, total_weight, big_bass_weight,
-                    dead_fish_penalty, disqualified, buy_in, was_member)
+                    disqualified, buy_in, was_member)
                    VALUES (:tid, :aid, :num_fish, :total_weight, :big_bass_weight,
-                           :dead_fish_penalty, :disqualified, :buy_in, :was_member)""",
+                           :disqualified, :buy_in, :was_member)""",
                 {
                     "tid": tournament_id,
                     "aid": angler_id,
                     "num_fish": num_fish,
                     "total_weight": total_weight,
                     "big_bass_weight": big_bass_weight,
-                    "dead_fish_penalty": dead_fish_penalty,
                     "disqualified": disqualified,
                     "buy_in": buy_in,
                     "was_member": was_member,

@@ -305,27 +305,22 @@ class TestTeamDeadFishPenalties:
 
 
 class TestSQLQueryPenalties:
-    """Document that SQL queries must use net weight calculations."""
+    """Document the canonical net-weight invariant for SQL queries."""
 
-    def test_individual_results_query_uses_net_weight(self):
+    def test_individual_results_query_uses_stored_net_weight(self):
         """
-        Document that get_tournament_results() must calculate net weight.
+        results.total_weight is stored as NET (gross minus dead-fish penalty).
+        Readers select it as-is; they MUST NOT subtract dead_fish_penalty again.
 
-        Expected SQL pattern:
-        SELECT (r.total_weight - COALESCE(r.dead_fish_penalty, 0)) as total_weight
-        FROM results r
-        ORDER BY (r.total_weight - COALESCE(r.dead_fish_penalty, 0)) DESC
+        Correct:    SELECT r.total_weight FROM results r ORDER BY r.total_weight DESC
+        Incorrect:  SELECT (r.total_weight - r.dead_fish_penalty) FROM ...
         """
         pass
 
-    def test_team_results_query_uses_net_weight(self):
+    def test_team_results_query_sums_stored_net_weights(self):
         """
-        Document that team result updates must use net weight for both anglers.
-
-        Expected calculation:
-        net_weight_angler_1 = total_weight_1 - penalty_1
-        net_weight_angler_2 = total_weight_2 - penalty_2
-        team_total = net_weight_angler_1 + net_weight_angler_2
+        Team totals sum each angler's stored total_weight directly (already net).
+        team_total = total_weight_1 + total_weight_2
         """
         pass
 

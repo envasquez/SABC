@@ -96,7 +96,7 @@ async def home_paginated(request: Request, page: int = 1):
                     Tournament.poll_id,
                     func.count(func.distinct(Result.angler_id)).label("total_anglers"),
                     func.sum(Result.num_fish).label("total_fish"),
-                    func.sum(Result.total_weight - Result.dead_fish_penalty).label("total_weight"),
+                    func.sum(Result.total_weight).label("total_weight"),
                     Tournament.aoy_points,
                     Event.event_type,
                     Event.is_cancelled,

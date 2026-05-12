@@ -61,14 +61,17 @@ function initializeResultsEntry(config) {
         if (editData.type === 'individual') {
             addTeamForEdit(editData.angler_id, editData.angler_name, null, null,
                          editData.num_fish, editData.total_weight, editData.big_bass_weight,
-                         editData.dead_fish_penalty, editData.disqualified, editData.buy_in, editData.was_member,
-                         0, 0, 0, 0, false, false, true);
+                         editData.disqualified, editData.buy_in, editData.was_member,
+                         0, 0, 0, false, false, true);
         } else if (editData.type === 'team') {
-            let angler1_result = editData.angler1_result || [0, 0, 0, 0, false, false, true];
-            let angler2_result = editData.angler2_result || [0, 0, 0, 0, false, false, true];
+            // angler*_result tuple from server is [fish, weight, big_bass, dead_penalty,
+            // disqualified, buy_in, was_member]; the dead_penalty slot (index 3) is
+            // ignored — net weight is stored directly.
+            let a1 = editData.angler1_result || [0, 0, 0, 0, false, false, true];
+            let a2 = editData.angler2_result || [0, 0, 0, 0, false, false, true];
             addTeamForEdit(editData.angler1_id, editData.angler1_name, editData.angler2_id, editData.angler2_name,
-                         angler1_result[0], angler1_result[1], angler1_result[2], angler1_result[3], angler1_result[4], angler1_result[5], angler1_result[6],
-                         angler2_result[0], angler2_result[1], angler2_result[2], angler2_result[3], angler2_result[4], angler2_result[5], angler2_result[6]);
+                         a1[0], a1[1], a1[2], a1[4], a1[5], a1[6],
+                         a2[0], a2[1], a2[2], a2[4], a2[5], a2[6]);
         }
     } else if (editTeamResultData) {
         // Edit team result mode - show one pre-loaded team
@@ -88,14 +91,12 @@ function initializeResultsEntry(config) {
                 editTeamResultData.angler1_fish || 0,
                 editTeamResultData.angler1_weight || 0,
                 editTeamResultData.angler1_big_bass || 0,
-                editTeamResultData.angler1_dead_penalty || 0,
                 editTeamResultData.angler1_disqualified || false,
                 editTeamResultData.angler1_buy_in || false,
                 editTeamResultData.angler1_was_member !== false,
                 editTeamResultData.angler2_fish || 0,
                 editTeamResultData.angler2_weight || 0,
                 editTeamResultData.angler2_big_bass || 0,
-                editTeamResultData.angler2_dead_penalty || 0,
                 editTeamResultData.angler2_disqualified || false,
                 editTeamResultData.angler2_buy_in || false,
                 editTeamResultData.angler2_was_member !== false
@@ -329,22 +330,16 @@ function addTeam() {
                                 <input type="number" class="fi" name="angler1_big_bass_${teamCount}" step="0.01" min="0" value="0.00">
                             </div>
                         </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
-                            <div>
-                                <label class="fl">Dead Fish Penalty</label>
-                                <input type="number" class="fi" name="angler1_dead_penalty_${teamCount}" step="0.25" min="0" value="0.00">
-                            </div>
-                            <div style="display:flex;flex-direction:column;gap:.3rem;padding-top:1.2rem">
-                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
-                                    <input type="checkbox" name="angler1_disqualified_${teamCount}" value="1"> Disqualified
-                                </label>
-                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
-                                    <input type="checkbox" name="angler1_buyIn_${teamCount}" value="1" onchange="handleBuyInChange(this, ${teamCount}, 'angler1')"> Buy-in
-                                </label>
-                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
-                                    <input type="checkbox" name="angler1_was_member_${teamCount}" value="1" checked> Member
-                                </label>
-                            </div>
+                        <div style="display:flex;flex-direction:row;gap:1rem;flex-wrap:wrap">
+                            <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
+                                <input type="checkbox" name="angler1_disqualified_${teamCount}" value="1"> Disqualified
+                            </label>
+                            <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
+                                <input type="checkbox" name="angler1_buyIn_${teamCount}" value="1" onchange="handleBuyInChange(this, ${teamCount}, 'angler1')"> Buy-in
+                            </label>
+                            <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
+                                <input type="checkbox" name="angler1_was_member_${teamCount}" value="1" checked> Member
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -381,22 +376,16 @@ function addTeam() {
                                 <input type="number" class="fi" name="angler2_big_bass_${teamCount}" step="0.01" min="0" value="0.00">
                             </div>
                         </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
-                            <div>
-                                <label class="fl">Dead Fish Penalty</label>
-                                <input type="number" class="fi" name="angler2_dead_penalty_${teamCount}" step="0.25" min="0" value="0.00">
-                            </div>
-                            <div style="display:flex;flex-direction:column;gap:.3rem;padding-top:1.2rem">
-                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
-                                    <input type="checkbox" name="angler2_disqualified_${teamCount}" value="1"> Disqualified
-                                </label>
-                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
-                                    <input type="checkbox" name="angler2_buyIn_${teamCount}" value="1" onchange="handleBuyInChange(this, ${teamCount}, 'angler2')"> Buy-in
-                                </label>
-                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
-                                    <input type="checkbox" name="angler2_was_member_${teamCount}" value="1" checked> Member
-                                </label>
-                            </div>
+                        <div style="display:flex;flex-direction:row;gap:1rem;flex-wrap:wrap">
+                            <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
+                                <input type="checkbox" name="angler2_disqualified_${teamCount}" value="1"> Disqualified
+                            </label>
+                            <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
+                                <input type="checkbox" name="angler2_buyIn_${teamCount}" value="1" onchange="handleBuyInChange(this, ${teamCount}, 'angler2')"> Buy-in
+                            </label>
+                            <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
+                                <input type="checkbox" name="angler2_was_member_${teamCount}" value="1" checked> Member
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -575,21 +564,19 @@ function addTeamFormatTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_
  * @param {number} angler1_fish - Boater's fish count
  * @param {number} angler1_weight - Boater's total weight
  * @param {number} angler1_big_bass - Boater's big bass weight
- * @param {number} angler1_dead_penalty - Boater's dead fish penalty
  * @param {boolean} angler1_disqualified - Boater disqualified flag
  * @param {boolean} angler1_buy_in - Boater buy-in flag
  * @param {boolean} angler1_was_member - Boater membership status at time of tournament
  * @param {number} angler2_fish - Non-boater's fish count
  * @param {number} angler2_weight - Non-boater's total weight
  * @param {number} angler2_big_bass - Non-boater's big bass weight
- * @param {number} angler2_dead_penalty - Non-boater's dead fish penalty
  * @param {boolean} angler2_disqualified - Non-boater disqualified flag
  * @param {boolean} angler2_buy_in - Non-boater buy-in flag
  * @param {boolean} angler2_was_member - Non-boater membership status at time of tournament
  */
 function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
-                       angler1_fish, angler1_weight, angler1_big_bass, angler1_dead_penalty, angler1_disqualified, angler1_buy_in, angler1_was_member,
-                       angler2_fish, angler2_weight, angler2_big_bass, angler2_dead_penalty, angler2_disqualified, angler2_buy_in, angler2_was_member) {
+                       angler1_fish, angler1_weight, angler1_big_bass, angler1_disqualified, angler1_buy_in, angler1_was_member,
+                       angler2_fish, angler2_weight, angler2_big_bass, angler2_disqualified, angler2_buy_in, angler2_was_member) {
     ResultsEntryState.teamCount++;
     const teamCount = ResultsEntryState.teamCount;
     const container = document.getElementById('teams-container');
@@ -621,13 +608,10 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
                             <div><label class="fl">Weight (lbs)</label><input type="number" class="fi" name="angler1_weight_${teamCount}" step="0.01" min="0" value="${angler1_weight}"></div>
                             <div><label class="fl">Big Bass (lbs)</label><input type="number" class="fi" name="angler1_big_bass_${teamCount}" step="0.01" min="0" value="${angler1_big_bass}"></div>
                         </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
-                            <div><label class="fl">Dead Fish Penalty</label><input type="number" class="fi" name="angler1_dead_penalty_${teamCount}" step="0.25" min="0" value="${angler1_dead_penalty}"></div>
-                            <div style="display:flex;flex-direction:column;gap:.3rem;padding-top:1.2rem">
-                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler1_disqualified_${teamCount}" value="1" ${angler1_disqualified ? 'checked' : ''}> Disqualified</label>
-                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler1_buyIn_${teamCount}" value="1" ${angler1_buy_in ? 'checked' : ''} onchange="handleBuyInChange(this, ${teamCount}, 'angler1')"> Buy-in</label>
-                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler1_was_member_${teamCount}" value="1" ${angler1_was_member !== false ? 'checked' : ''}> Member</label>
-                            </div>
+                        <div style="display:flex;flex-direction:row;gap:1rem;flex-wrap:wrap">
+                            <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler1_disqualified_${teamCount}" value="1" ${angler1_disqualified ? 'checked' : ''}> Disqualified</label>
+                            <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler1_buyIn_${teamCount}" value="1" ${angler1_buy_in ? 'checked' : ''} onchange="handleBuyInChange(this, ${teamCount}, 'angler1')"> Buy-in</label>
+                            <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler1_was_member_${teamCount}" value="1" ${angler1_was_member !== false ? 'checked' : ''}> Member</label>
                         </div>
                     </div>
                 </div>
@@ -652,13 +636,10 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
                             <div><label class="fl">Weight (lbs)</label><input type="number" class="fi" name="angler2_weight_${teamCount}" step="0.01" min="0" value="${angler2_weight}"></div>
                             <div><label class="fl">Big Bass (lbs)</label><input type="number" class="fi" name="angler2_big_bass_${teamCount}" step="0.01" min="0" value="${angler2_big_bass}"></div>
                         </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
-                            <div><label class="fl">Dead Fish Penalty</label><input type="number" class="fi" name="angler2_dead_penalty_${teamCount}" step="0.25" min="0" value="${angler2_dead_penalty}"></div>
-                            <div style="display:flex;flex-direction:column;gap:.3rem;padding-top:1.2rem">
-                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler2_disqualified_${teamCount}" value="1" ${angler2_disqualified ? 'checked' : ''}> Disqualified</label>
-                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler2_buyIn_${teamCount}" value="1" ${angler2_buy_in ? 'checked' : ''} onchange="handleBuyInChange(this, ${teamCount}, 'angler2')"> Buy-in</label>
-                                <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler2_was_member_${teamCount}" value="1" ${angler2_was_member !== false ? 'checked' : ''}> Member</label>
-                            </div>
+                        <div style="display:flex;flex-direction:row;gap:1rem;flex-wrap:wrap">
+                            <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler2_disqualified_${teamCount}" value="1" ${angler2_disqualified ? 'checked' : ''}> Disqualified</label>
+                            <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler2_buyIn_${teamCount}" value="1" ${angler2_buy_in ? 'checked' : ''} onchange="handleBuyInChange(this, ${teamCount}, 'angler2')"> Buy-in</label>
+                            <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler2_was_member_${teamCount}" value="1" ${angler2_was_member !== false ? 'checked' : ''}> Member</label>
                         </div>
                     </div>
                 </div>
@@ -685,36 +666,18 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
  * @param {string} anglerType - 'angler1' or 'angler2'
  */
 function handleBuyInChange(checkbox, teamNumber, anglerType) {
-    const isChecked = checkbox.checked;
+    const fishInput = document.querySelector(`[name="${anglerType}_fish_${teamNumber}"]`);
+    const weightInput = document.querySelector(`[name="${anglerType}_weight_${teamNumber}"]`);
+    const bigBassInput = document.querySelector(`[name="${anglerType}_big_bass_${teamNumber}"]`);
 
-    if (isChecked) {
-        // Zero out all results for this angler when Buy-in is selected
-        const fishInput = document.querySelector(`[name="${anglerType}_fish_${teamNumber}"]`);
-        const weightInput = document.querySelector(`[name="${anglerType}_weight_${teamNumber}"]`);
-        const bigBassInput = document.querySelector(`[name="${anglerType}_big_bass_${teamNumber}"]`);
-        const deadPenaltyInput = document.querySelector(`[name="${anglerType}_dead_penalty_${teamNumber}"]`);
-
-        if (fishInput) fishInput.value = '0';
-        if (weightInput) weightInput.value = '0.00';
-        if (bigBassInput) bigBassInput.value = '0.00';
-        if (deadPenaltyInput) deadPenaltyInput.value = '0.00';
-
-        // Disable the inputs to prevent editing
-        if (fishInput) fishInput.disabled = true;
-        if (weightInput) weightInput.disabled = true;
-        if (bigBassInput) bigBassInput.disabled = true;
-        if (deadPenaltyInput) deadPenaltyInput.disabled = true;
+    if (checkbox.checked) {
+        if (fishInput) { fishInput.value = '0'; fishInput.disabled = true; }
+        if (weightInput) { weightInput.value = '0.00'; weightInput.disabled = true; }
+        if (bigBassInput) { bigBassInput.value = '0.00'; bigBassInput.disabled = true; }
     } else {
-        // Re-enable inputs when Buy-in is unchecked
-        const fishInput = document.querySelector(`[name="${anglerType}_fish_${teamNumber}"]`);
-        const weightInput = document.querySelector(`[name="${anglerType}_weight_${teamNumber}"]`);
-        const bigBassInput = document.querySelector(`[name="${anglerType}_big_bass_${teamNumber}"]`);
-        const deadPenaltyInput = document.querySelector(`[name="${anglerType}_dead_penalty_${teamNumber}"]`);
-
         if (fishInput) fishInput.disabled = false;
         if (weightInput) weightInput.disabled = false;
         if (bigBassInput) bigBassInput.disabled = false;
-        if (deadPenaltyInput) deadPenaltyInput.disabled = false;
     }
 }
 
@@ -818,7 +781,6 @@ async function handleFormSubmit(e) {
                 angler1Data.append('num_fish', formData.get(`angler1_fish_${teamId}`) || 0);
                 angler1Data.append('total_weight', formData.get(`angler1_weight_${teamId}`) || 0);
                 angler1Data.append('big_bass_weight', formData.get(`angler1_big_bass_${teamId}`) || 0);
-                angler1Data.append('dead_fish', formData.get(`angler1_dead_penalty_${teamId}`) || 0);
                 angler1Data.append('disqualified', formData.get(`angler1_disqualified_${teamId}`) ? 'on' : '');
                 angler1Data.append('buy_in', formData.get(`angler1_buyIn_${teamId}`) ? 'on' : '');
                 angler1Data.append('was_member', formData.get(`angler1_was_member_${teamId}`) ? 'on' : '');
@@ -849,7 +811,6 @@ async function handleFormSubmit(e) {
                 angler2Data.append('num_fish', formData.get(`angler2_fish_${teamId}`) || 0);
                 angler2Data.append('total_weight', formData.get(`angler2_weight_${teamId}`) || 0);
                 angler2Data.append('big_bass_weight', formData.get(`angler2_big_bass_${teamId}`) || 0);
-                angler2Data.append('dead_fish', formData.get(`angler2_dead_penalty_${teamId}`) || 0);
                 angler2Data.append('disqualified', formData.get(`angler2_disqualified_${teamId}`) ? 'on' : '');
                 angler2Data.append('buy_in', formData.get(`angler2_buyIn_${teamId}`) ? 'on' : '');
                 angler2Data.append('was_member', formData.get(`angler2_was_member_${teamId}`) ? 'on' : '');

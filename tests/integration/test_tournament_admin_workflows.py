@@ -393,44 +393,6 @@ class TestPollManagementByAdmin:
 class TestDeadFishPenalties:
     """Tests for dead fish penalty handling in results."""
 
-    def test_admin_can_enter_results_with_dead_fish_penalty(
-        self,
-        admin_client: TestClient,
-        test_tournament: Tournament,
-        member_user: Angler,
-        db_session: Session,
-    ):
-        """Test that admins can enter results with dead fish penalties."""
-        response = post_with_csrf(
-            admin_client,
-            f"/admin/tournaments/{test_tournament.id}/results",
-            data={
-                "angler_id": str(member_user.id),
-                "total_weight": "15.00",
-                "num_fish": "5",
-                "big_bass_weight": "5.0",
-                "dead_fish_penalty": "0.25",  # Quarter pound penalty
-                "buy_in": "true",
-                "disqualified": "false",
-            },
-            follow_redirects=False,
-        )
-
-        assert response.status_code in [302, 303]
-
-        # Verify penalty was recorded
-        result = (
-            db_session.query(Result)
-            .filter(
-                Result.tournament_id == test_tournament.id,
-                Result.angler_id == member_user.id,
-            )
-            .first()
-        )
-        assert result is not None
-        assert result.dead_fish_penalty is not None
-        assert float(result.dead_fish_penalty) == 0.25
-
     def test_results_with_penalty_show_net_weight(
         self,
         admin_client: TestClient,

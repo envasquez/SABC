@@ -5,7 +5,7 @@ def tournaments_count_query() -> str:
 
 
 def best_weight_query() -> str:
-    return """SELECT COALESCE(MAX(r.total_weight - COALESCE(r.dead_fish_penalty, 0)), 0)
+    return """SELECT COALESCE(MAX(r.total_weight), 0)
         FROM results r JOIN tournaments t ON r.tournament_id = t.id
         WHERE r.angler_id = :user_id AND r.disqualified = FALSE"""
 
@@ -48,10 +48,10 @@ def all_time_finishes_query() -> str:
 
 def aoy_position_query() -> str:
     return """WITH tournament_standings AS (
-            SELECT r.angler_id, r.tournament_id, r.total_weight - COALESCE(r.dead_fish_penalty, 0) as adjusted_weight,
+            SELECT r.angler_id, r.tournament_id, r.total_weight as adjusted_weight,
                 r.num_fish, r.disqualified, r.buy_in,
                 DENSE_RANK() OVER (PARTITION BY r.tournament_id ORDER BY
-                    CASE WHEN r.disqualified = TRUE THEN 0 ELSE r.total_weight - COALESCE(r.dead_fish_penalty, 0) END DESC) as place_finish,
+                    CASE WHEN r.disqualified = TRUE THEN 0 ELSE r.total_weight END DESC) as place_finish,
                 COUNT(*) OVER (PARTITION BY r.tournament_id) as total_participants
             FROM results r JOIN tournaments t ON r.tournament_id = t.id JOIN events e ON t.event_id = e.id
             WHERE e.year = :current_year

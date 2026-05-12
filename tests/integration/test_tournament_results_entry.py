@@ -144,41 +144,6 @@ class TestIndividualResults:
             updated_result.total_weight is not None and float(updated_result.total_weight) == 18.0
         )
 
-    def test_save_result_with_dead_fish_penalty(
-        self,
-        admin_client: TestClient,
-        db_session: Session,
-        test_tournament: Tournament,
-        member_user: Angler,
-    ):
-        """Result should calculate net weight by subtracting dead fish penalty."""
-        response = post_with_csrf(
-            admin_client,
-            f"/admin/tournaments/{test_tournament.id}/results",
-            data={
-                "angler_id": member_user.id,
-                "num_fish": 5,
-                "total_weight": 15.0,  # Gross weight
-                "big_bass_weight": 4.0,
-                "dead_fish_penalty": 1.0,  # Penalty
-                "disqualified": False,
-                "buy_in": False,
-                "was_member": True,
-            },
-            follow_redirects=False,
-        )
-
-        assert response.status_code == 303
-
-        # Verify net weight = gross - penalty
-        result = (
-            db_session.query(Result)
-            .filter(Result.tournament_id == test_tournament.id, Result.angler_id == member_user.id)
-            .first()
-        )
-        assert result is not None
-        assert result.total_weight is not None and float(result.total_weight) == 14.0  # 15.0 - 1.0
-
     def test_save_result_missing_angler_id(
         self, admin_client: TestClient, test_tournament: Tournament
     ):
