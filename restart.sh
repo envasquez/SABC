@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 # Production deployment script with database migrations
 
-set -e  # Exit on any error
+set -euo pipefail
 
 echo "🚀 Starting deployment..."
 

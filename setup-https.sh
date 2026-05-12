@@ -3,7 +3,7 @@
 # HTTPS Setup Script for SABC
 # Run this on your production server
 
-set -e
+set -euo pipefail
 
 echo "🔐 Setting up HTTPS for South Austin Bass Club"
 echo "================================================"
@@ -14,6 +14,17 @@ if [[ $EUID -eq 0 ]]; then
    exit 1
 fi
 
+# Require SECRET_KEY (or pull from .env.production if present) before any
+# docker-compose operation so we never start prod containers with a placeholder.
+if [ -z "${SECRET_KEY:-}" ] && [ -f .env.production ]; then
+    # shellcheck disable=SC1091
+    set -a && . ./.env.production && set +a
+fi
+if [ -z "${SECRET_KEY:-}" ]; then
+    echo "❌ SECRET_KEY is not set. Export it or put it in .env.production before running."
+    exit 1
+fi
+
 # Check if domain resolves to this server
 echo "📡 Checking if saustinbc.com points to this server..."
 DOMAIN_IP=$(dig +short saustinbc.com)
@@ -22,7 +33,7 @@ SERVER_IP=$(curl -s ifconfig.me)
 if [ "$DOMAIN_IP" != "$SERVER_IP" ]; then
     echo "⚠️  Warning: saustinbc.com ($DOMAIN_IP) doesn't point to this server ($SERVER_IP)"
     echo "   Make sure your DNS is configured correctly before proceeding."
-    read -p "Continue anyway? (y/N): " -n 1 -r
+    read -r -p "Continue anyway? (y/N): " -n 1 REPLY
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         exit 1
@@ -40,7 +51,7 @@ fi
 
 # Stop current containers
 echo "🛑 Stopping current containers..."
-SECRET_KEY=your-secret-key-here docker compose -f docker-compose.prod.yml down
+docker compose -f docker-compose.prod.yml down
 
 # Create SSL directory
 echo "📁 Creating SSL directory..."
@@ -60,11 +71,11 @@ sudo certbot certonly --standalone \
 echo "📋 Copying certificates..."
 sudo cp /etc/letsencrypt/live/saustinbc.com/fullchain.pem ssl/
 sudo cp /etc/letsencrypt/live/saustinbc.com/privkey.pem ssl/
-sudo chown $USER:$USER ssl/*.pem
+sudo chown "$USER:$USER" ssl/*.pem
 
 # Start containers with HTTPS
 echo "🚀 Starting containers with HTTPS..."
-SECRET_KEY=your-secret-key-here docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml up -d
 
 # Wait for startup
 echo "⏳ Waiting for services to start..."

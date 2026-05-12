@@ -14,7 +14,7 @@
 #   - PostgreSQL client (psql) must be installed
 #   - Python with required dependencies must be available
 
-set -e  # Exit on error
+set -euo pipefail
 
 # Colors for output
 RED='\033[0;31m'

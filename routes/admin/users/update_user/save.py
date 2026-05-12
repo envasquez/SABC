@@ -114,17 +114,7 @@ async def update_user(
             "UNIQUE constraint failed: anglers.email" in error_str
             or "unique constraint" in error_str.lower()
         ):
-            with get_session() as session:
-                existing = (
-                    session.query(Angler)
-                    .filter(Angler.email == update_params["email"], Angler.id != user_id)
-                    .first()
-                )
-                error_msg = (
-                    f"Email '{update_params['email']}' already belongs to {existing.name}"
-                    if existing
-                    else f"Email '{update_params['email']}' is already in use"
-                )
+            error_msg = "This email address is already in use."
         else:
             error_msg = "Failed to update user"
         return error_redirect("/admin/users", error_msg)
