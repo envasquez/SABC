@@ -288,9 +288,9 @@ class PollVotingHandler {
 
         let summary = '<dl class="row mb-0">';
         summary += '<dt class="col-sm-4"><i class="bi bi-geo-alt me-1"></i>Lake</dt>';
-        summary += '<dd class="col-sm-8 fw-bold">' + this.escapeHtml(lakeName) + '</dd>';
+        summary += '<dd class="col-sm-8 fw-bold">' + escapeHtml(lakeName) + '</dd>';
         summary += '<dt class="col-sm-4"><i class="bi bi-signpost me-1"></i>Ramp</dt>';
-        summary += '<dd class="col-sm-8 fw-bold">' + this.escapeHtml(rampName) + '</dd>';
+        summary += '<dd class="col-sm-8 fw-bold">' + escapeHtml(rampName) + '</dd>';
         summary += '<dt class="col-sm-4"><i class="bi bi-clock me-1"></i>Start Time</dt>';
         summary += '<dd class="col-sm-8 fw-bold">' + startTime + '</dd>';
         summary += '<dt class="col-sm-4"><i class="bi bi-clock-history me-1"></i>End Time</dt>';
@@ -302,7 +302,7 @@ class PollVotingHandler {
             const memberSelect = document.getElementById(ids.member);
             const memberName = memberSelect?.selectedOptions[0]?.text || 'Unknown';
             summary += '<div class="mt-2 pt-2 border-top">';
-            summary += '<small class="text-warning"><i class="bi bi-person-badge me-1"></i>Voting on behalf of: <strong>' + this.escapeHtml(memberName) + '</strong></small>';
+            summary += '<small class="text-warning"><i class="bi bi-person-badge me-1"></i>Voting on behalf of: <strong>' + escapeHtml(memberName) + '</strong></small>';
             summary += '</div>';
         }
 
@@ -326,7 +326,7 @@ class PollVotingHandler {
 
         let summary = '<div class="d-flex align-items-center">';
         summary += '<i class="bi bi-check-circle-fill text-success me-2" style="font-size: 1.5rem;"></i>';
-        summary += '<span class="fw-bold">' + this.escapeHtml(optionText) + '</span>';
+        summary += '<span class="fw-bold">' + escapeHtml(optionText) + '</span>';
         summary += '</div>';
 
         return summary;
@@ -345,18 +345,6 @@ class PollVotingHandler {
         const ampm = h >= 12 ? 'PM' : 'AM';
         const h12 = h % 12 || 12;
         return h12 + ':' + minutes + ' ' + ampm;
-    }
-
-    /**
-     * Escape HTML to prevent XSS
-     * @param {string} text - Text to escape
-     * @returns {string} Escaped text
-     * @private
-     */
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
     }
 
     /**

@@ -715,6 +715,7 @@ function createGuest() {
     // Send request to create guest
     fetch('/admin/users', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: {
             'Content-Type': 'application/json',
             'x-csrf-token': getCsrfToken(),

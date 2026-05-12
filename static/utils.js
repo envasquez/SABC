@@ -666,7 +666,7 @@ class LakeRampSelector {
         }
         // Handle array format: [{id: 1, name: 'Lake Travis', ramps: [...]}, ...]
         else if (Array.isArray(this.lakesData)) {
-            const lake = this.lakesData.find(l => l.id == lakeId);
+            const lake = this.lakesData.find(l => Number(l.id) === Number(lakeId));
             if (lake && lake.ramps) {
                 this.populateRamps(lake.ramps, 'id', 'name');
             } else {
@@ -828,7 +828,7 @@ function formatTime12Hour(time24) {
 function getLakeName(lakesData, lakeId) {
     if (!lakeId) return 'Unknown Lake';
     if (lakesData && Array.isArray(lakesData)) {
-        const lake = lakesData.find(function(l) { return l.id == lakeId; });
+        const lake = lakesData.find(function(l) { return Number(l.id) === Number(lakeId); });
         if (lake) return lake.name;
     }
     return 'Lake ' + lakeId;
@@ -851,7 +851,7 @@ function getRampName(lakesData, rampId) {
     if (!rampId) return 'Unknown Ramp';
     if (lakesData && Array.isArray(lakesData)) {
         for (let i = 0; i < lakesData.length; i++) {
-            const ramp = (lakesData[i].ramps || []).find(function(r) { return r.id == rampId; });
+            const ramp = (lakesData[i].ramps || []).find(function(r) { return Number(r.id) === Number(rampId); });
             if (ramp) return ramp.name;
         }
     }

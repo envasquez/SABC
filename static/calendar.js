@@ -38,7 +38,7 @@ function showEventDetails(element) {
     const eventKey = month + '-' + day;
 
     // Select the appropriate event details based on year
-    const eventDetails = (year == currentYear) ? currentEventDetails : nextEventDetails;
+    const eventDetails = (Number(year) === Number(currentYear)) ? currentEventDetails : nextEventDetails;
 
     if (eventDetails[eventKey]) {
         const events = eventDetails[eventKey];

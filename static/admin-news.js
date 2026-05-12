@@ -125,21 +125,15 @@ function populateNewsConfirm(mode, title, content, priority, archive) {
 
     let html = '<dl class="row mb-0" style="margin:0">';
     html += '<dt class="col-sm-3"><i class="bi bi-card-text me-1"></i>Content</dt>';
-    html += '<dd class="col-sm-9" style="white-space:pre-wrap;word-break:break-word">' + escapeNewsHtml(content) + '</dd>';
+    html += '<dd class="col-sm-9" style="white-space:pre-wrap;word-break:break-word">' + escapeHtml(content) + '</dd>';
     html += '<dt class="col-sm-3"><i class="bi bi-flag me-1"></i>Priority</dt>';
-    html += '<dd class="col-sm-9 fw-bold">' + escapeNewsHtml(priorityLabel) + '</dd>';
+    html += '<dd class="col-sm-9 fw-bold">' + escapeHtml(priorityLabel) + '</dd>';
     if (archive) {
         html += '<dt class="col-sm-3"><i class="bi bi-archive me-1"></i>Auto Archive</dt>';
-        html += '<dd class="col-sm-9">' + escapeNewsHtml(archive) + '</dd>';
+        html += '<dd class="col-sm-9">' + escapeHtml(archive) + '</dd>';
     }
     html += '</dl>';
     summary.innerHTML = html;
-}
-
-function escapeNewsHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
 }
 
 function sendTestEmail() {
