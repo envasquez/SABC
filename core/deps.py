@@ -8,8 +8,11 @@ from markupsafe import Markup
 from sqlalchemy import Connection
 
 from core.db_schema import engine
+from core.helpers.logging import get_logger
 from core.helpers.timezone import now_local, to_local
 from core.query_service import QueryService
+
+_filter_logger = get_logger(__name__)
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -107,7 +110,10 @@ def date_format_filter(date_str: Any, format_type: str = "display") -> str:
         if format_type == "mm-dd-yyyy":
             return date_obj.strftime("%m-%d-%Y")
         return date_obj.strftime("%b. %d, %Y")
-    except Exception:
+    except (ValueError, AttributeError, TypeError) as exc:
+        _filter_logger.warning(
+            "date_format_filter failed", extra={"input": repr(date_str), "error": str(exc)}
+        )
         return str(date_str)
 
 
@@ -120,7 +126,10 @@ def time_format_filter(time_str: Any) -> str:
         else:
             time_obj = datetime.strptime(str(time_str), "%H:%M")
         return time_obj.strftime("%I:%M %p").lstrip("0")
-    except Exception:
+    except (ValueError, AttributeError, TypeError) as exc:
+        _filter_logger.warning(
+            "time_format_filter failed", extra={"input": repr(time_str), "error": str(exc)}
+        )
         return str(time_str)
 
 
@@ -173,7 +182,10 @@ def month_number_filter(date_str: Any) -> str:
     try:
         date_obj = datetime.strptime(str(date_str), "%Y-%m-%d")
         return date_obj.strftime("%m")
-    except Exception:
+    except (ValueError, AttributeError, TypeError) as exc:
+        _filter_logger.warning(
+            "month_number_filter failed", extra={"input": repr(date_str), "error": str(exc)}
+        )
         return "00"
 
 

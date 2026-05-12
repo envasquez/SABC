@@ -258,15 +258,22 @@ function selectAngler(id, name, input, hiddenInput, dropdown, clearBtn) {
  * @param {number} anglerNum - Angler position (1 or 2)
  */
 function clearAnglerSelection(teamId, anglerNum) {
-    const wrapper = document.querySelector(`[data-team="${teamId}"][data-angler="${anglerNum}"]`).closest('.autocomplete-wrapper');
+    const anchor = document.querySelector(`[data-team="${teamId}"][data-angler="${anglerNum}"]`);
+    if (!anchor) {
+        console.warn('clearAnglerSelection: no element for team', teamId, 'angler', anglerNum);
+        return;
+    }
+    const wrapper = anchor.closest('.autocomplete-wrapper');
+    if (!wrapper) return;
     const input = wrapper.querySelector('.autocomplete-input');
     const hiddenInput = wrapper.querySelector('input[type="hidden"]');
     const clearBtn = wrapper.querySelector('.clear-selection');
+    if (!input || !hiddenInput) return;
 
     input.value = '';
     hiddenInput.value = '';
     input.classList.remove('angler-selected');
-    clearBtn.style.display = 'none';
+    if (clearBtn) clearBtn.style.display = 'none';
     onAnglerChange();
 }
 
