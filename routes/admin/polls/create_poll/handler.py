@@ -108,7 +108,7 @@ async def create_poll(request: Request) -> RedirectResponse:
         )
 
         return RedirectResponse(
-            f"/admin/polls/{poll_id}/edit?success=Poll created successfully", status_code=302
+            f"/admin/polls/{poll_id}/edit?success=Poll created successfully", status_code=303
         )
 
     except IntegrityError as e:

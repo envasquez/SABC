@@ -100,7 +100,7 @@ async def process_password_reset(
         )
         return RedirectResponse(
             "/login?success=Your password has been successfully reset. You can now log in with your new password.",
-            status_code=302,
+            status_code=303,
         )
     except (SQLAlchemyError, ValueError) as e:
         logger.error(f"Error processing password reset: {e}", exc_info=True)

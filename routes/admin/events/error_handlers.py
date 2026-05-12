@@ -19,4 +19,4 @@ def get_error_message(error: Exception, date: str, operation: str = "update") ->
 def handle_event_error(e: Exception, date: str, operation: str = "update") -> RedirectResponse:
     """Handle errors during event create/update and redirect with error message."""
     error_msg = get_error_message(e, date, operation)
-    return RedirectResponse(f"/admin/events?error={error_msg}", status_code=302)
+    return RedirectResponse(f"/admin/events?error={error_msg}", status_code=303)

@@ -67,7 +67,7 @@ async def request_password_reset(
 
         return RedirectResponse(
             "/forgot-password?success=If that email is in our system, we've sent you a password reset link. Please check your email (and spam folder).",
-            status_code=302,
+            status_code=303,
         )
     except (SQLAlchemyError, OSError, ValueError) as e:
         logger.error(f"Error processing password reset request: {e}", exc_info=True)

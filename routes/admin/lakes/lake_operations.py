@@ -37,7 +37,7 @@ async def create_lake(
                 google_maps_iframe=sanitize_iframe(google_maps_embed),
             )
             session.add(lake)
-        return RedirectResponse("/admin/lakes?success=Lake created successfully", status_code=302)
+        return RedirectResponse("/admin/lakes?success=Lake created successfully", status_code=303)
     except HTTPException:
         raise
     except IntegrityError:
@@ -66,7 +66,7 @@ async def update_lake(
             lake.yaml_key = name.strip().lower().replace(" ", "_")
             lake.display_name = display_name.strip()
             lake.google_maps_iframe = sanitize_iframe(google_maps_embed)
-        return RedirectResponse("/admin/lakes?success=Lake updated successfully", status_code=302)
+        return RedirectResponse("/admin/lakes?success=Lake updated successfully", status_code=303)
     except HTTPException:
         raise
     except SQLAlchemyError:

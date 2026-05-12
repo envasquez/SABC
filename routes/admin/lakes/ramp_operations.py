@@ -27,7 +27,7 @@ async def create_ramp(
             )
             session.add(ramp)
         return RedirectResponse(
-            f"/admin/lakes/{lake_id}/edit?success=Ramp added successfully", status_code=302
+            f"/admin/lakes/{lake_id}/edit?success=Ramp added successfully", status_code=303
         )
     except SQLAlchemyError:
         return error_redirect(f"/admin/lakes/{lake_id}/edit", "Failed to add ramp")
@@ -53,7 +53,7 @@ async def update_ramp(
             ramp.google_maps_iframe = sanitize_iframe(google_maps_iframe)
 
         return RedirectResponse(
-            f"/admin/lakes/{lake_id}/edit?success=Ramp updated successfully", status_code=302
+            f"/admin/lakes/{lake_id}/edit?success=Ramp updated successfully", status_code=303
         )
     except SQLAlchemyError:
         redirect_path = f"/admin/lakes/{lake_id}/edit" if lake_id else "/admin/lakes"

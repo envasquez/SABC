@@ -49,7 +49,7 @@ async def create_poll_form(request: Request, event_id: int = Query(None)):
                 if existing_poll:
                     return RedirectResponse(
                         f"/admin/polls/{existing_poll.id}/edit?info=Poll already exists for this event",
-                        status_code=302,
+                        status_code=303,
                     )
 
         context = {
@@ -63,5 +63,5 @@ async def create_poll_form(request: Request, event_id: int = Query(None)):
         return templates.TemplateResponse("admin/create_poll.html", context)
     except SQLAlchemyError:
         return RedirectResponse(
-            "/admin/events?error=Failed to load poll creation form", status_code=302
+            "/admin/events?error=Failed to load poll creation form", status_code=303
         )

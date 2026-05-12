@@ -445,7 +445,7 @@ class TestAdminDashboard:
     def test_admin_root_redirects_to_events(self, admin_client: TestClient):
         """Admin root should redirect to events page."""
         response = admin_client.get("/admin", follow_redirects=False)
-        assert response.status_code == 302
+        assert response.status_code == 303
         assert "/admin/events" in response.headers.get("location", "")
 
     def test_admin_events_page(self, admin_client: TestClient):

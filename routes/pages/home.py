@@ -29,6 +29,7 @@ from core.deps import templates
 from core.email import send_contact_email
 from core.helpers.auth import get_user_optional
 from core.helpers.logging import get_logger
+from core.helpers.pagination import PaginationState
 from core.helpers.poll_day_info import get_poll_day_info
 from core.helpers.response import error_redirect, success_redirect
 from core.query_service import QueryService
@@ -53,20 +54,23 @@ async def home_paginated(request: Request, page: int = 1):
             or 0
         )
 
-        # Calculate total pages and validate page number
-        total_pages = (
-            (total_completed_tournaments + items_per_page - 1) // items_per_page
-            if total_completed_tournaments > 0
-            else 1
+        pagination = PaginationState(
+            page=page,
+            items_per_page=items_per_page,
+            total_items=total_completed_tournaments,
         )
 
-        # Validate page is within bounds - redirect to last page if too high
-        if page > total_pages and total_pages > 0:
-            return RedirectResponse(f"/?p={total_pages}", status_code=303)
+        if pagination.is_out_of_range():
+            return RedirectResponse(f"/?p={pagination.total_pages}", status_code=303)
 
-        # Ensure page is at least 1
         page = max(1, page)
-        offset = (page - 1) * items_per_page
+        pagination = PaginationState(
+            page=page,
+            items_per_page=items_per_page,
+            total_items=total_completed_tournaments,
+        )
+        offset = pagination.offset
+        total_pages = pagination.total_pages
 
         # Base query for tournament data
         def build_tournament_query(complete_filter: bool | None = None):
@@ -418,11 +422,11 @@ async def home_paginated(request: Request, page: int = 1):
             "request": request,
             "user": user,
             "all_tournaments": tournaments_with_results,
-            "current_page": page,
-            "total_pages": total_pages,
+            "current_page": pagination.page,
+            "total_pages": pagination.total_pages,
             "page_range": page_range,
-            "has_prev": page > 1,
-            "has_next": page < total_pages,
+            "has_prev": pagination.has_prev,
+            "has_next": pagination.has_next,
             "start_index": start_index,
             "end_index": end_index,
             "total_tournaments": total_completed_tournaments,

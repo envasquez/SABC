@@ -99,12 +99,12 @@ async def update_user(
         if after != before:
             log_update_completed(request, user, user_id, update_params, before, after)
             return RedirectResponse(
-                "/admin/users?success=User updated and verified", status_code=302
+                "/admin/users?success=User updated and verified", status_code=303
             )
         else:
             log_update_failed(user, user_id, update_params)
             return RedirectResponse(
-                "/admin/users?error=Update failed - no changes saved", status_code=302
+                "/admin/users?error=Update failed - no changes saved", status_code=303
             )
 
     except (SQLAlchemyError, ValueError) as e:
