@@ -210,7 +210,7 @@ def get_member_monthly_weights(
                 SELECT r.angler_id,
                        {year_col} as year,
                        {month_col} as month,
-                       r.total_weight - COALESCE(r.dead_fish_penalty, 0) as weight,
+                       r.total_weight as weight,
                        r.buy_in
                 FROM results r
                 JOIN tournaments t ON r.tournament_id = t.id
@@ -264,7 +264,7 @@ def get_member_monthly_weights(
                 SELECT r.angler_id,
                        {year_col} as year,
                        {month_col} as month,
-                       r.total_weight - COALESCE(r.dead_fish_penalty, 0) as weight,
+                       r.total_weight as weight,
                        r.buy_in
                 FROM results r
                 JOIN tournaments t ON r.tournament_id = t.id

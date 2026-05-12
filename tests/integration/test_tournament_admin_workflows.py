@@ -409,7 +409,7 @@ class TestDeadFishPenalties:
                 "total_weight": "15.00",
                 "num_fish": "5",
                 "big_bass_weight": "5.0",
-                "dead_fish_penalty": "0.25",  # Quarter pound penalty
+                "num_dead_fish": "1",  # 1 dead fish at 0.25 lb = 0.25 lb penalty
                 "buy_in": "true",
                 "disqualified": "false",
             },

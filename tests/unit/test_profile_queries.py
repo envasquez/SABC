@@ -25,12 +25,13 @@ class TestProfileQueries:
         assert "disqualified = FALSE" in query
 
     def test_best_weight_query(self):
-        """Test best weight query returns valid SQL."""
+        """Best weight is the stored total_weight (already net of dead-fish penalty)."""
         query = best_weight_query()
         assert "MAX(r.total_weight" in query
-        assert "dead_fish_penalty" in query
         assert "WHERE r.angler_id = :user_id" in query
         assert "disqualified = FALSE" in query
+        # Must NOT subtract penalty again — total_weight is stored as net
+        assert "dead_fish_penalty" not in query
 
     def test_big_bass_query(self):
         """Test big bass query returns valid SQL."""

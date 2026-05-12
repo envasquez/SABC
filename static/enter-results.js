@@ -128,6 +128,29 @@ function initializeResultsEntry(config) {
         }
     }
     updateAllAnglerDropdowns();
+    setupNetWeightPreview();
+}
+
+/**
+ * Wire one delegated 'input' listener that updates the "Net: X.XX lbs" readout
+ * next to each # Dead Fish input whenever its sibling weight or dead-fish count
+ * changes. Net = gross - num_dead * 0.25 (matches server calc).
+ */
+function setupNetWeightPreview() {
+    const form = document.getElementById('resultsForm');
+    if (!form || form.dataset.netPreviewWired === '1') return;
+    form.dataset.netPreviewWired = '1';
+    form.addEventListener('input', (e) => {
+        const target = e.target;
+        if (!target.name) return;
+        const m = target.name.match(/^(angler[12])_(weight|num_dead)_(\d+)$/);
+        if (!m) return;
+        const [, prefix, , teamId] = m;
+        const weight = parseFloat(form.querySelector(`[name="${prefix}_weight_${teamId}"]`)?.value) || 0;
+        const dead = parseInt(form.querySelector(`[name="${prefix}_num_dead_${teamId}"]`)?.value, 10) || 0;
+        const readout = form.querySelector(`.net-weight-readout[data-net-team="${teamId}"][data-net-angler="${prefix}"]`);
+        if (readout) readout.textContent = `Net: ${(weight - dead * 0.25).toFixed(2)} lbs`;
+    });
 }
 
 // ===== Autocomplete functionality =====
@@ -324,8 +347,9 @@ function addTeam() {
                         </div>
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
                             <div>
-                                <label class="fl">Dead Fish Penalty</label>
-                                <input type="number" class="fi" name="angler1_dead_penalty_${teamCount}" step="0.25" min="0" value="0.00">
+                                <label class="fl"># Dead Fish</label>
+                                <input type="number" class="fi" name="angler1_num_dead_${teamCount}" data-net-source="angler1" data-team="${teamCount}" step="1" min="0" max="5" value="0">
+                                <div class="net-weight-readout" data-net-team="${teamCount}" data-net-angler="angler1" style="font-size:.72rem;color:var(--t3);margin-top:.2rem">Net: 0.00 lbs</div>
                             </div>
                             <div style="display:flex;flex-direction:column;gap:.3rem;padding-top:1.2rem">
                                 <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
@@ -376,8 +400,9 @@ function addTeam() {
                         </div>
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
                             <div>
-                                <label class="fl">Dead Fish Penalty</label>
-                                <input type="number" class="fi" name="angler2_dead_penalty_${teamCount}" step="0.25" min="0" value="0.00">
+                                <label class="fl"># Dead Fish</label>
+                                <input type="number" class="fi" name="angler2_num_dead_${teamCount}" data-net-source="angler2" data-team="${teamCount}" step="1" min="0" max="5" value="0">
+                                <div class="net-weight-readout" data-net-team="${teamCount}" data-net-angler="angler2" style="font-size:.72rem;color:var(--t3);margin-top:.2rem">Net: 0.00 lbs</div>
                             </div>
                             <div style="display:flex;flex-direction:column;gap:.3rem;padding-top:1.2rem">
                                 <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
@@ -615,7 +640,11 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
                             <div><label class="fl">Big Bass (lbs)</label><input type="number" class="fi" name="angler1_big_bass_${teamCount}" step="0.01" min="0" value="${angler1_big_bass}"></div>
                         </div>
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
-                            <div><label class="fl">Dead Fish Penalty</label><input type="number" class="fi" name="angler1_dead_penalty_${teamCount}" step="0.25" min="0" value="${angler1_dead_penalty}"></div>
+                            <div>
+                                <label class="fl"># Dead Fish</label>
+                                <input type="number" class="fi" name="angler1_num_dead_${teamCount}" data-net-source="angler1" data-team="${teamCount}" step="1" min="0" max="5" value="${Math.round((angler1_dead_penalty || 0) / 0.25)}">
+                                <div class="net-weight-readout" data-net-team="${teamCount}" data-net-angler="angler1" style="font-size:.72rem;color:var(--t3);margin-top:.2rem">Net: 0.00 lbs</div>
+                            </div>
                             <div style="display:flex;flex-direction:column;gap:.3rem;padding-top:1.2rem">
                                 <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler1_disqualified_${teamCount}" value="1" ${angler1_disqualified ? 'checked' : ''}> Disqualified</label>
                                 <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler1_buyIn_${teamCount}" value="1" ${angler1_buy_in ? 'checked' : ''} onchange="handleBuyInChange(this, ${teamCount}, 'angler1')"> Buy-in</label>
@@ -646,7 +675,11 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
                             <div><label class="fl">Big Bass (lbs)</label><input type="number" class="fi" name="angler2_big_bass_${teamCount}" step="0.01" min="0" value="${angler2_big_bass}"></div>
                         </div>
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
-                            <div><label class="fl">Dead Fish Penalty</label><input type="number" class="fi" name="angler2_dead_penalty_${teamCount}" step="0.25" min="0" value="${angler2_dead_penalty}"></div>
+                            <div>
+                                <label class="fl"># Dead Fish</label>
+                                <input type="number" class="fi" name="angler2_num_dead_${teamCount}" data-net-source="angler2" data-team="${teamCount}" step="1" min="0" max="5" value="${Math.round((angler2_dead_penalty || 0) / 0.25)}">
+                                <div class="net-weight-readout" data-net-team="${teamCount}" data-net-angler="angler2" style="font-size:.72rem;color:var(--t3);margin-top:.2rem">Net: 0.00 lbs</div>
+                            </div>
                             <div style="display:flex;flex-direction:column;gap:.3rem;padding-top:1.2rem">
                                 <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler2_disqualified_${teamCount}" value="1" ${angler2_disqualified ? 'checked' : ''}> Disqualified</label>
                                 <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler2_buyIn_${teamCount}" value="1" ${angler2_buy_in ? 'checked' : ''} onchange="handleBuyInChange(this, ${teamCount}, 'angler2')"> Buy-in</label>
@@ -685,7 +718,7 @@ function handleBuyInChange(checkbox, teamNumber, anglerType) {
         const fishInput = document.querySelector(`[name="${anglerType}_fish_${teamNumber}"]`);
         const weightInput = document.querySelector(`[name="${anglerType}_weight_${teamNumber}"]`);
         const bigBassInput = document.querySelector(`[name="${anglerType}_big_bass_${teamNumber}"]`);
-        const deadPenaltyInput = document.querySelector(`[name="${anglerType}_dead_penalty_${teamNumber}"]`);
+        const deadPenaltyInput = document.querySelector(`[name="${anglerType}_num_dead_${teamNumber}"]`);
 
         if (fishInput) fishInput.value = '0';
         if (weightInput) weightInput.value = '0.00';
@@ -702,7 +735,7 @@ function handleBuyInChange(checkbox, teamNumber, anglerType) {
         const fishInput = document.querySelector(`[name="${anglerType}_fish_${teamNumber}"]`);
         const weightInput = document.querySelector(`[name="${anglerType}_weight_${teamNumber}"]`);
         const bigBassInput = document.querySelector(`[name="${anglerType}_big_bass_${teamNumber}"]`);
-        const deadPenaltyInput = document.querySelector(`[name="${anglerType}_dead_penalty_${teamNumber}"]`);
+        const deadPenaltyInput = document.querySelector(`[name="${anglerType}_num_dead_${teamNumber}"]`);
 
         if (fishInput) fishInput.disabled = false;
         if (weightInput) weightInput.disabled = false;
@@ -811,7 +844,7 @@ async function handleFormSubmit(e) {
                 angler1Data.append('num_fish', formData.get(`angler1_fish_${teamId}`) || 0);
                 angler1Data.append('total_weight', formData.get(`angler1_weight_${teamId}`) || 0);
                 angler1Data.append('big_bass_weight', formData.get(`angler1_big_bass_${teamId}`) || 0);
-                angler1Data.append('dead_fish', formData.get(`angler1_dead_penalty_${teamId}`) || 0);
+                angler1Data.append('num_dead_fish', formData.get(`angler1_num_dead_${teamId}`) || 0);
                 angler1Data.append('disqualified', formData.get(`angler1_disqualified_${teamId}`) ? 'on' : '');
                 angler1Data.append('buy_in', formData.get(`angler1_buyIn_${teamId}`) ? 'on' : '');
                 angler1Data.append('was_member', formData.get(`angler1_was_member_${teamId}`) ? 'on' : '');
@@ -842,7 +875,7 @@ async function handleFormSubmit(e) {
                 angler2Data.append('num_fish', formData.get(`angler2_fish_${teamId}`) || 0);
                 angler2Data.append('total_weight', formData.get(`angler2_weight_${teamId}`) || 0);
                 angler2Data.append('big_bass_weight', formData.get(`angler2_big_bass_${teamId}`) || 0);
-                angler2Data.append('dead_fish', formData.get(`angler2_dead_penalty_${teamId}`) || 0);
+                angler2Data.append('num_dead_fish', formData.get(`angler2_num_dead_${teamId}`) || 0);
                 angler2Data.append('disqualified', formData.get(`angler2_disqualified_${teamId}`) ? 'on' : '');
                 angler2Data.append('buy_in', formData.get(`angler2_buyIn_${teamId}`) ? 'on' : '');
                 angler2Data.append('was_member', formData.get(`angler2_was_member_${teamId}`) ? 'on' : '');

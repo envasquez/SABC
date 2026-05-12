@@ -151,7 +151,7 @@ class TestIndividualResults:
         test_tournament: Tournament,
         member_user: Angler,
     ):
-        """Result should calculate net weight by subtracting dead fish penalty."""
+        """Result should calculate net weight from gross minus 0.25 per dead fish."""
         response = post_with_csrf(
             admin_client,
             f"/admin/tournaments/{test_tournament.id}/results",
@@ -160,7 +160,7 @@ class TestIndividualResults:
                 "num_fish": 5,
                 "total_weight": 15.0,  # Gross weight
                 "big_bass_weight": 4.0,
-                "dead_fish_penalty": 1.0,  # Penalty
+                "num_dead_fish": 4,  # 4 × 0.25 = 1.0 lb penalty
                 "disqualified": False,
                 "buy_in": False,
                 "was_member": True,
@@ -170,7 +170,7 @@ class TestIndividualResults:
 
         assert response.status_code == 303
 
-        # Verify net weight = gross - penalty
+        # Verify net weight = gross - (num_dead_fish * 0.25)
         result = (
             db_session.query(Result)
             .filter(Result.tournament_id == test_tournament.id, Result.angler_id == member_user.id)

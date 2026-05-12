@@ -37,15 +37,8 @@ async def save_result(
         num_fish = get_form_int(form_data, "num_fish", 0) or 0
         gross_weight = Decimal(str(get_form_float(form_data, "total_weight", 0.0) or 0.0))
         big_bass_weight = Decimal(str(get_form_float(form_data, "big_bass_weight", 0.0) or 0.0))
-        # Accept both "dead_fish" and "dead_fish_penalty" field names
-        dead_fish_penalty = Decimal(
-            str(
-                get_form_float(form_data, "dead_fish_penalty", 0.0)
-                or get_form_float(form_data, "dead_fish", 0.0)
-                or 0.0
-            )
-        )
-        # Calculate net weight (gross weight - penalty)
+        num_dead_fish = get_form_int(form_data, "num_dead_fish", 0) or 0
+        dead_fish_penalty = Decimal(num_dead_fish) * Decimal("0.25")
         total_weight = gross_weight - dead_fish_penalty
         disqualified = get_form_bool(form_data, "disqualified")
         buy_in = get_form_bool(form_data, "buy_in")

@@ -128,7 +128,7 @@ class TestIndividualResultsUpdate:
         db_session.add(result)
         db_session.commit()
 
-        # Update with penalty (gross 15.5, penalty 0.5 = net 15.0)
+        # Update with 2 dead fish (gross 15.5, penalty 2*0.25 = 0.5, net 15.0)
         response = post_with_csrf(
             admin_client,
             f"/admin/tournaments/{test_tournament.id}/results",
@@ -137,7 +137,7 @@ class TestIndividualResultsUpdate:
                 "total_weight": "15.5",  # Gross weight
                 "num_fish": "5",
                 "big_bass_weight": "4.0",
-                "dead_fish_penalty": "0.5",
+                "num_dead_fish": "2",
                 "buy_in": "true",
                 "disqualified": "false",
             },
