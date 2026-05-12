@@ -50,14 +50,20 @@ class CSRFMiddleware(BaseCSRFMiddleware):
                         body_parts.append(chunk)
                     body = b"".join(body_parts)
 
-                    # Parse form data to extract CSRF token
+                    # Parse form data to extract CSRF token. Non-UTF-8 bodies
+                    # (typically scanner probes posting binary payloads to URLs
+                    # that advertise a form content-type) fall through to CSRF
+                    # rejection rather than crashing the middleware.
                     if "application/x-www-form-urlencoded" in content_type:
                         from urllib.parse import parse_qs
 
-                        form_data = parse_qs(body.decode("utf-8"))
+                        try:
+                            decoded_body = body.decode("utf-8")
+                        except UnicodeDecodeError:
+                            decoded_body = ""
+                        form_data = parse_qs(decoded_body)
                         submitted_csrf_token = form_data.get("csrf_token", [None])[0]
                     elif "multipart/form-data" in content_type:
-                        # Extract csrf_token from multipart body as string
                         body_str = body.decode("utf-8", errors="ignore")
                         if 'name="csrf_token"' in body_str:
                             # Simple extraction - find csrf_token value
