@@ -75,4 +75,4 @@ async def edit_poll_form(request: Request, poll_id: int):
                 return templates.TemplateResponse("admin/edit_poll.html", context)
 
     except SQLAlchemyError:
-        return RedirectResponse("/polls?error=Failed to load poll", status_code=302)
+        return RedirectResponse("/polls?error=Failed to load poll", status_code=303)

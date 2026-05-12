@@ -137,7 +137,7 @@ async def create_news(
             # Log email failure but don't fail the news post creation
             logger.error(f"Failed to send news notifications: {email_error}")
 
-        return RedirectResponse("/admin/news?success=News created successfully", status_code=302)
+        return RedirectResponse("/admin/news?success=News created successfully", status_code=303)
     except SQLAlchemyError as e:
         logger.error(f"Failed to create news: {e}", exc_info=True)
         return error_redirect("/admin/news", "Failed to create news post")
@@ -152,7 +152,7 @@ async def edit_news_form(request: Request, news_id: int):
         news_item = session.query(News).filter(News.id == news_id).first()
         if not news_item:
             return RedirectResponse(
-                f"/admin/news?error=News item with ID {news_id} not found", status_code=302
+                f"/admin/news?error=News item with ID {news_id} not found", status_code=303
             )
 
     # Return the admin news page with the news item data
@@ -214,7 +214,7 @@ async def update_news(
                     news_item.expires_at = expires_at
                 # Context manager will commit automatically on successful exit
 
-        return RedirectResponse("/admin/news?success=News updated successfully", status_code=302)
+        return RedirectResponse("/admin/news?success=News updated successfully", status_code=303)
     except SQLAlchemyError as e:
         logger.error(f"Failed to update news: {e}", exc_info=True)
         return error_redirect("/admin/news", "Failed to update news post")
@@ -242,7 +242,7 @@ async def test_news_email(request: Request, title: str = Form(...), content: str
 
         if success:
             return RedirectResponse(
-                f"/admin/news?success=Test email sent to {admin_email}", status_code=302
+                f"/admin/news?success=Test email sent to {admin_email}", status_code=303
             )
         else:
             return error_redirect(
@@ -291,7 +291,7 @@ async def archive_news(request: Request, news_id: int) -> RedirectResponse:
                 news_item.archived = True
                 news_item.updated_at = utc_now()
 
-        return RedirectResponse("/admin/news?success=News archived successfully", status_code=302)
+        return RedirectResponse("/admin/news?success=News archived successfully", status_code=303)
     except SQLAlchemyError as e:
         logger.error(f"Failed to archive news: {e}")
         return error_redirect("/admin/news", "Failed to archive news")
@@ -311,7 +311,7 @@ async def unarchive_news(request: Request, news_id: int) -> RedirectResponse:
 
         return RedirectResponse(
             "/admin/news?show_archived=true&success=News restored successfully",
-            status_code=302,
+            status_code=303,
         )
     except SQLAlchemyError as e:
         logger.error(f"Failed to unarchive news: {e}")

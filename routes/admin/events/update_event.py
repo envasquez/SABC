@@ -44,7 +44,7 @@ def _do_event_update(
     if validation["errors"]:
         error_msg = "; ".join(validation["errors"])
         return RedirectResponse(
-            f"/admin/events?error=Validation failed: {error_msg}", status_code=302
+            f"/admin/events?error=Validation failed: {error_msg}", status_code=303
         )
 
     event_params, tournament_params = prepare_event_params(
@@ -67,7 +67,7 @@ def _do_event_update(
         rowcount = update_event_record(session, event_params)
         if rowcount == 0:
             return RedirectResponse(
-                f"/admin/events?error=Event with ID {event_id} not found", status_code=302
+                f"/admin/events?error=Event with ID {event_id} not found", status_code=303
             )
 
         if event_type in ["sabc_tournament", "other_tournament"]:
@@ -75,7 +75,7 @@ def _do_event_update(
             if tournament_rowcount == 0:
                 return RedirectResponse(
                     f"/admin/events?error=Tournament record for event ID {event_id} not found",
-                    status_code=302,
+                    status_code=303,
                 )
 
     if event_type == "sabc_tournament":
@@ -83,7 +83,7 @@ def _do_event_update(
         if poll_id:
             update_tournament_poll_id(event_id, int(poll_id))
 
-    return RedirectResponse("/admin/events?success=Event updated successfully", status_code=302)
+    return RedirectResponse("/admin/events?success=Event updated successfully", status_code=303)
 
 
 @router.get("/admin/events/{event_id}/edit")
@@ -95,7 +95,7 @@ async def get_edit_event(request: Request, event_id: int):
         event = session.query(Event).filter(Event.id == event_id).first()
         if not event:
             return RedirectResponse(
-                f"/admin/events?error=Event with ID {event_id} not found", status_code=302
+                f"/admin/events?error=Event with ID {event_id} not found", status_code=303
             )
 
     return templates.TemplateResponse(

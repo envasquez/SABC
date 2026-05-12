@@ -6,6 +6,7 @@ from sqlalchemy import Date, Integer, cast, func
 
 from core.db_schema import Event, Poll, get_session
 from core.helpers.auth import require_admin
+from core.helpers.pagination import PaginationState
 from core.helpers.timezone import now_local
 from routes.admin.core.dashboard_data import get_tournaments_data, get_users_data
 from routes.admin.core.event_queries import get_sabc_tournaments, get_upcoming_events_data
@@ -20,7 +21,7 @@ VALID_ADMIN_PAGES = {"events", "users", "tournaments"}
 @router.get("/admin")
 async def admin_root(request: Request):
     _user = require_admin(request)
-    return RedirectResponse("/admin/events", status_code=302)
+    return RedirectResponse("/admin/events", status_code=303)
 
 
 @router.get("/admin/{page}")
@@ -96,25 +97,19 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
         ctx["past_tournament_lakes"] = past_tournament_lakes
         ctx["available_polls"] = available_polls
 
-        upcoming_total_pages = (total_upcoming + per_page - 1) // per_page
+        upcoming_pagination = PaginationState(
+            page=upcoming_page, items_per_page=per_page, total_items=total_upcoming
+        )
         # Past tournaments don't use pagination - all loaded for client-side filtering
-        past_total_pages = 1
         total_past = len(past_tournaments)
+        past_pagination = PaginationState(
+            page=past_page, items_per_page=total_past or 1, total_items=total_past
+        )
+        ctx.update(upcoming_pagination.to_template_context(prefix="upcoming"))
+        ctx.update(past_pagination.to_template_context(prefix="past"))
         ctx.update(
             {
-                "upcoming_page": upcoming_page,
-                "upcoming_total_pages": upcoming_total_pages,
-                "upcoming_has_prev": upcoming_page > 1,
-                "upcoming_has_next": upcoming_page < upcoming_total_pages,
-                "upcoming_prev_page": upcoming_page - 1,
-                "upcoming_next_page": upcoming_page + 1,
                 "total_upcoming": total_upcoming,
-                "past_page": past_page,
-                "past_total_pages": past_total_pages,
-                "past_has_prev": past_page > 1,
-                "past_has_next": past_page < past_total_pages,
-                "past_prev_page": past_page - 1,
-                "past_next_page": past_page + 1,
                 "total_past": total_past,
                 "per_page": per_page,
             }

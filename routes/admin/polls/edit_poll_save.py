@@ -34,7 +34,7 @@ async def update_poll(request: Request, poll_id: int) -> RedirectResponse:
 
         if not title:
             return RedirectResponse(
-                f"/admin/polls/{poll_id}/edit?error=Title is required", status_code=302
+                f"/admin/polls/{poll_id}/edit?error=Title is required", status_code=303
             )
 
         # Parse datetime strings - interpret as Central Time (club timezone)
@@ -48,7 +48,7 @@ async def update_poll(request: Request, poll_id: int) -> RedirectResponse:
         with get_session() as session:
             poll = session.query(Poll).filter(Poll.id == poll_id).first()
             if not poll:
-                return RedirectResponse("/admin/polls?error=Poll not found", status_code=302)
+                return RedirectResponse("/admin/polls?error=Poll not found", status_code=303)
 
             # Store poll_type before session closes
             poll_type = poll.poll_type
@@ -151,7 +151,7 @@ async def update_poll(request: Request, poll_id: int) -> RedirectResponse:
             success_msg += f". Note: Some options ({', '.join(kept_options_with_votes)}) could not be removed because they have existing votes."
 
         return RedirectResponse(
-            f"/admin/polls/{poll_id}/edit?success={success_msg}", status_code=302
+            f"/admin/polls/{poll_id}/edit?success={success_msg}", status_code=303
         )
     except (SQLAlchemyError, ValueError) as e:
         logger.error(
@@ -165,5 +165,5 @@ async def update_poll(request: Request, poll_id: int) -> RedirectResponse:
         )
         return RedirectResponse(
             f"/admin/polls/{poll_id}/edit?error=Failed to update poll. Please try again.",
-            status_code=302,
+            status_code=303,
         )

@@ -66,7 +66,7 @@ async def create_event(
         if validation["errors"]:
             error_msg = "; ".join(validation["errors"])
             return RedirectResponse(
-                f"/admin/events?error=Validation failed: {error_msg}", status_code=302
+                f"/admin/events?error=Validation failed: {error_msg}", status_code=303
             )
         warning_msg = ""
         if validation["warnings"]:
@@ -93,7 +93,7 @@ async def create_event(
             create_poll_options(poll_id)
             link_tournament_to_poll(event_id, poll_id)
         return RedirectResponse(
-            f"/admin/events?success=Event created successfully{warning_msg}", status_code=302
+            f"/admin/events?success=Event created successfully{warning_msg}", status_code=303
         )
     except (SQLAlchemyError, ValueError) as e:
         return handle_event_error(e, date, "create")

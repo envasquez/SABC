@@ -231,7 +231,7 @@ class TestPasswordResetRequest:
             follow_redirects=False,
         )
 
-        assert response.status_code == 302
+        assert response.status_code == 303
         assert "success" in response.headers.get("location", "").lower()
 
         # Verify email was sent
@@ -256,7 +256,7 @@ class TestPasswordResetRequest:
         )
 
         # Should still show success to prevent email enumeration
-        assert response.status_code == 302
+        assert response.status_code == 303
         assert "success" in response.headers.get("location", "").lower()
 
         # But should not send email
@@ -301,7 +301,7 @@ class TestPasswordResetRequest:
             follow_redirects=False,
         )
 
-        assert response.status_code == 302
+        assert response.status_code == 303
         mock_create_token.assert_called_once_with(member_user.id, member_user.email)
 
 

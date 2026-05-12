@@ -32,7 +32,7 @@ def validate_and_get_event(
             if existing_poll:
                 return None, RedirectResponse(
                     f"/admin/polls/{existing_poll.id}/edit?error=Poll already exists for this event",
-                    status_code=302,
+                    status_code=303,
                 )
 
             return event, None
