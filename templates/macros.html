@@ -31,7 +31,7 @@
 {% set field_id = id or name %}
 <div class="fg">
     <label for="{{ field_id }}" class="fl">
-        {{ label|safe }}
+        {{ label }}
         {% if required %}<span style="color:var(--err)">*</span>{% endif %}
     </label>
     {% if type == 'textarea' %}
@@ -55,7 +55,7 @@
                {% if required %}required{% endif %}>
     {% endif %}
     {% if help_text %}
-        <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">{{ help_text|safe }}</div>
+        <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">{{ help_text }}</div>
     {% endif %}
 </div>
 {% endmacro %}

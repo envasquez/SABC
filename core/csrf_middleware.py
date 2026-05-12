@@ -1,10 +1,40 @@
 """Custom CSRF middleware that supports both headers and form data."""
 
 import functools
+from email import policy
+from email.message import EmailMessage
+from email.parser import BytesParser
+from typing import Optional
 
 from starlette.requests import Request
 from starlette.types import Receive, Scope, Send
 from starlette_csrf.middleware import CSRFMiddleware as BaseCSRFMiddleware
+
+
+def _extract_multipart_csrf_token(body: bytes, content_type: str) -> Optional[str]:
+    """Extract csrf_token from a multipart/form-data body using stdlib MIME parsing.
+
+    Returns the token if a part named "csrf_token" is found, else None. Returns
+    None on any parse failure so the middleware falls through to CSRF rejection
+    rather than crashing on malformed scanner payloads.
+    """
+    try:
+        header_bytes = f"Content-Type: {content_type}\r\n\r\n".encode("utf-8")
+        parser = BytesParser(EmailMessage, policy=policy.default)
+        msg = parser.parsebytes(header_bytes + body)
+        if not msg.is_multipart():
+            return None
+        for part in msg.iter_parts():
+            cd = part.get("Content-Disposition", "")
+            if 'name="csrf_token"' not in cd:
+                continue
+            content = part.get_content()
+            if isinstance(content, bytes):
+                content = content.decode("utf-8", errors="replace")
+            return str(content).strip() or None
+    except Exception:
+        return None
+    return None
 
 
 class CSRFMiddleware(BaseCSRFMiddleware):
@@ -64,14 +94,7 @@ class CSRFMiddleware(BaseCSRFMiddleware):
                         form_data = parse_qs(decoded_body)
                         submitted_csrf_token = form_data.get("csrf_token", [None])[0]
                     elif "multipart/form-data" in content_type:
-                        body_str = body.decode("utf-8", errors="ignore")
-                        if 'name="csrf_token"' in body_str:
-                            # Simple extraction - find csrf_token value
-                            import re
-
-                            match = re.search(r'name="csrf_token"\r?\n\r?\n([^\r\n]+)', body_str)
-                            if match:
-                                submitted_csrf_token = match.group(1)
+                        submitted_csrf_token = _extract_multipart_csrf_token(body, content_type)
 
                     # Create a new receive callable that replays the cached body
                     async def receive_with_cached_body():

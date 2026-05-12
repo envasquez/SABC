@@ -6,7 +6,7 @@ services:
     container_name: sabc-web
     restart: always
     environment:
-      DATABASE_URL: postgresql://sabc_user:${DB_PASSWORD:-secure_password}@postgres:5432/sabc
+      DATABASE_URL: postgresql://sabc_user:${DB_PASSWORD:?DB_PASSWORD must be set in .env.production}@postgres:5432/sabc
       SECRET_KEY: ${SECRET_KEY}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       DEBUG: ${DEBUG:-false}
@@ -49,7 +49,7 @@ services:
     environment:
       POSTGRES_DB: sabc
       POSTGRES_USER: sabc_user
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-secure_password}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in .env.production}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.utf8"
     ports:
       - "5432:5432"
