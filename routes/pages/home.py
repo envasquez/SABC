@@ -417,9 +417,9 @@ async def home_paginated(request: Request, page: int = 1):
     ]
 
     return templates.TemplateResponse(
+        request,
         "index.html",
         {
-            "request": request,
             "user": user,
             "all_tournaments": tournaments_with_results,
             "current_page": pagination.page,
@@ -618,9 +618,9 @@ async def contact_form(request: Request) -> RedirectResponse:
 async def static_page(request: Request, page: str):
     user = get_user_optional(request)
     if page in ["about", "bylaws"]:
-        context: Dict[str, Any] = {"request": request, "user": user}
+        context: Dict[str, Any] = {"user": user}
         if page == "about":
             context["form_loaded_at"] = str(int(time.time()))
             context["turnstile_site_key"] = TURNSTILE_SITE_KEY
-        return templates.TemplateResponse(f"{page}.html", context)
+        return templates.TemplateResponse(request, f"{page}.html", context)
     raise HTTPException(status_code=404, detail="Page not found")

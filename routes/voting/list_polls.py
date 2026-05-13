@@ -284,9 +284,9 @@ async def polls(
         for lake in get_lakes_list()
     ]
     return templates.TemplateResponse(
+        request,
         "polls.html",
         {
-            "request": request,
             "user": user,
             "polls": polls,
             "members": members_list,

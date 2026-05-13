@@ -292,9 +292,9 @@ async def gallery(
         if is_htmx:
             # Return just the photo grid items for infinite scroll
             return templates.TemplateResponse(
+                request,
                 "photos/_photo_grid.html",
                 {
-                    "request": request,
                     "user": user,
                     "photos": photos,
                     "page": page,
@@ -325,9 +325,9 @@ async def gallery(
         angler_options = [{"id": a.id, "name": a.name} for a in anglers]
 
     return templates.TemplateResponse(
+        request,
         "photos/gallery.html",
         {
-            "request": request,
             "user": user,
             "photos": photos,
             "tournament_options": tournament_options,
@@ -367,9 +367,9 @@ async def upload_form(request: Request) -> Any:
         tournament_options = [{"id": t.id, "name": t.name} for t in tournaments]
 
     return templates.TemplateResponse(
+        request,
         "photos/upload.html",
         {
-            "request": request,
             "user": user,
             "tournament_options": tournament_options,
         },
@@ -555,9 +555,9 @@ async def edit_photo_form(request: Request, photo_id: int) -> Any:
         }
 
     return templates.TemplateResponse(
+        request,
         "photos/edit.html",
         {
-            "request": request,
             "user": user,
             "photo": photo_data,
             "tournament_options": tournament_options,

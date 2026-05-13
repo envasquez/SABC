@@ -45,9 +45,9 @@ async def edit_user_page(request: Request, user_id: int):
         current_officer_positions = [pos.position for pos in positions]
 
     return templates.TemplateResponse(
+        request,
         "admin/edit_user.html",
         {
-            "request": request,
             "user": user,
             "edit_user": edit_user,
             "current_officer_positions": current_officer_positions,
