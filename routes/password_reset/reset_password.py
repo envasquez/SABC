@@ -35,9 +35,9 @@ async def reset_password_form(
         success = request.query_params.get("success")
 
         return templates.TemplateResponse(
+            request,
             "auth/reset_password.html",
             {
-                "request": request,
                 "token": token,
                 "user_name": token_data["name"],
                 "expires_at": token_data["expires_at"],

@@ -38,9 +38,9 @@ async def calendar_page(request: Request) -> Response:
     all_event_types = current_event_types | next_event_types
 
     return templates.TemplateResponse(
+        request,
         "calendar.html",
         {
-            "request": request,
             "user": user,
             "current_year": current_year,
             "next_year": next_year,
