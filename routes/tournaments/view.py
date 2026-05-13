@@ -70,9 +70,9 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
             prev_tournament_id = qs.get_previous_tournament_id(tournament_id)
             year_links = qs.get_tournament_years_with_first_id(4)
             return templates.TemplateResponse(
+                request,
                 "tournament_results.html",
                 {
-                    "request": request,
                     "user": user,
                     "tournament": tournament_tuple,
                     "tournament_stats": stats_tuple,

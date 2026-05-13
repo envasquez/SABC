@@ -31,9 +31,9 @@ async def admin_users(request: Request, user: AdminUser):
     guest_count = sum(1 for u in users if not u.get("member"))
     total_count = len(users)
     return templates.TemplateResponse(
+        request,
         "admin/users.html",
         {
-            "request": request,
             "user": user,
             "users": users,
             "active_member_count": active_member_count,

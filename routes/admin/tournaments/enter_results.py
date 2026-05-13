@@ -74,9 +74,9 @@ async def enter_results_page(
     is_team_format = not tournament.get("aoy_points", True)
 
     response = templates.TemplateResponse(
+        request,
         "admin/enter_results.html",
         {
-            "request": request,
             "user": user,
             "tournament": tournament,
             "anglers": anglers,
