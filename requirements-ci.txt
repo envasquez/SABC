@@ -44,7 +44,7 @@ psutil==7.0.0
 psycopg==3.2.9
 psycopg2-binary==2.9.9
 py-cpuinfo==9.0.0
-pycparser==2.22
+pycparser==3.0
 pydantic==2.10.4
 pydantic_core==2.27.2
 pytest==9.0.3
