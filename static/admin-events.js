@@ -22,7 +22,7 @@ function editEvent(id, date, eventType, name, description, hasPoll) {
     // Ensure lakes are loaded before proceeding
     const ensureLakesLoadedAndEdit = () => {
         // Fetch complete event data
-        fetch(`/admin/events/${id}/info`)
+        fetch(`/admin/events/${id}/info`, { credentials: 'same-origin' })
             .then(response => {
                 if (!response.ok) throw new Error('Failed to load event');
                 return response.json();
@@ -132,7 +132,7 @@ function editEvent(id, date, eventType, name, description, hasPoll) {
     // Check if lakes are already loaded
     const currentLakesData = getLakesData();
     if (currentLakesData.length === 0) {
-        fetch('/api/lakes')
+        fetch('/api/lakes', { credentials: 'same-origin' })
             .then(response => {
                 if (!response.ok) throw new Error('Failed to load lakes');
                 return response.json();
