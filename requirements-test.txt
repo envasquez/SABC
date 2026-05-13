@@ -17,7 +17,7 @@ httpx==0.28.1
 # Additional testing utilities
 pytest-timeout==2.2.0  # Timeout for hanging tests
 pytest-sugar==0.9.7  # Better test output
-pytest-randomly==3.15.0  # Randomize test order to catch dependencies
+pytest-randomly==4.1.0  # Randomize test order to catch dependencies
 
 # Security testing
 bandit==1.7.6  # Already used for security scanning
