@@ -49,7 +49,10 @@ class TestEventCreationHelpers:
     def test_create_event_with_missing_required_fields_fails(
         self, admin_client: TestClient, db_session: Session
     ):
-        """Test that creating an event with missing required fields fails."""
+        """Empty `name` should fail. fastapi >= 0.133 rejects at Form() with
+        422 before the route runs; older versions accepted "" and the route
+        redirected 303 with ?error=... Either is a valid rejection.
+        """
         future_date = (now_local() + timedelta(days=30)).strftime("%Y-%m-%d")
 
         # Missing name
@@ -66,7 +69,7 @@ class TestEventCreationHelpers:
             follow_redirects=False,
         )
 
-        assert response.status_code in [302, 303]
+        assert response.status_code in [302, 303, 422]
 
     def test_create_event_with_invalid_lake_fails(
         self, admin_client: TestClient, db_session: Session
@@ -137,7 +140,10 @@ class TestEventUpdateErrors:
         test_event: Event,
         db_session: Session,
     ):
-        """Test that updating an event with missing required fields fails."""
+        """Empty `name` should fail. fastapi >= 0.133 rejects at Form() with
+        422 before the route runs; older versions accepted "" and the route
+        redirected 303 with ?error=... Either is a valid rejection.
+        """
         response = post_with_csrf(
             admin_client,
             f"/admin/events/{test_event.id}/update",
@@ -149,7 +155,7 @@ class TestEventUpdateErrors:
             follow_redirects=False,
         )
 
-        assert response.status_code in [302, 303]
+        assert response.status_code in [302, 303, 422]
 
     def test_update_event_with_invalid_foreign_key_fails(
         self,
