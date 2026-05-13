@@ -105,6 +105,7 @@
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form method="post" action="/logout" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ get_csrf_token(request) }}">
                                         <button type="submit" class="dropdown-item">
                                             <i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>Logout
                                         </button>
