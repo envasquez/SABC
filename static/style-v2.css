@@ -2464,8 +2464,6 @@ textarea.fi { resize: vertical; min-height: 100px; }
 /* ==========================================
    GRID HELPERS (from mockup)
    ========================================== */
-.g2 { display: grid; grid-template-columns: 2fr 1fr; gap: 1.4rem; }
-.g2e { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .grid-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
 .grid-payouts { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
 
@@ -2501,27 +2499,6 @@ textarea.fi { resize: vertical; min-height: 100px; }
 .cal-leg-dot { width: 10px; height: 10px; border-radius: 2px; }
 
 /* ==========================================
-   PHOTO GALLERY (from mockup)
-   ========================================== */
-.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
-.photo-card { background: var(--bg-surface); border: 1px solid var(--b0); border-radius: var(--r-md); overflow: hidden; transition: all 0.2s; cursor: pointer; }
-.photo-card:hover { border-color: var(--b2); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.3); }
-.photo-ph { height: 180px; background: var(--bg-elevated); display: flex; align-items: center; justify-content: center; color: var(--t4); }
-.photo-info { padding: 0.75rem; }
-.photo-cap { font-size: 0.82rem; font-weight: 500; margin-bottom: 0.3rem; }
-.photo-meta { font-size: 0.72rem; color: var(--t3); }
-
-/* ==========================================
-   EXPANDABLE ROSTER ROWS (from mockup)
-   ========================================== */
-.expand-row { display: none; background: var(--bg-base); }
-.expand-row.open { display: table-row; }
-.expand-trigger { cursor: pointer; transition: background 0.15s; }
-.expand-trigger:hover td { background: var(--bg-elevated) !important; }
-.expand-trigger .exp-icon { transition: transform 0.2s; display: inline-block; }
-.expand-trigger.open .exp-icon { transform: rotate(90deg); }
-
-/* ==========================================
    TEAM RESULT NAMES (from mockup)
    ========================================== */
 .team-names { display: flex; flex-direction: column; gap: 0.1rem; }
@@ -2530,48 +2507,12 @@ textarea.fi { resize: vertical; min-height: 100px; }
 .team-names .angler-name:last-child { color: var(--t3); font-size: 0.78rem; }
 
 /* ==========================================
-   TREND CARDS (from mockup)
-   ========================================== */
-.trend { text-align: center; padding: 0.65rem; background: var(--bg-surface); border: 1px solid var(--b0); border-radius: var(--r-md); }
-.trend-l { font-size: 0.65rem; color: var(--t3); text-transform: uppercase; letter-spacing: 0.04em; }
-.trend-v { font-size: 1.3rem; font-weight: 800; margin: 0.1rem 0; }
-.trend-c { font-size: 0.72rem; }
-.trend-up { color: var(--ok); }
-.trend-dn { color: var(--err); }
-
-/* ==========================================
-   POLL OPTIONS (from mockup)
-   ========================================== */
-.po { display: flex; align-items: center; gap: 0.9rem; padding: 0.7rem 0.9rem; margin: 0.45rem 0; background: var(--bg-elevated); border: 1px solid var(--b0); border-radius: var(--r-md); cursor: pointer; transition: all 0.15s; }
-.po:hover { border-color: var(--brand); background: var(--brand-m); }
-.po.sel { border-color: var(--brand); background: var(--brand-m); }
-.po-r { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--b2); flex-shrink: 0; transition: all 0.15s; position: relative; }
-.po.sel .po-r { border-color: var(--brand); background: var(--brand); }
-.po.sel .po-r::after { content: ''; position: absolute; top: 2px; left: 2px; right: 2px; bottom: 2px; background: #fff; border-radius: 50%; }
-.po-t { font-size: 0.86rem; font-weight: 500; flex: 1; }
-.po-bg { height: 5px; border-radius: 3px; background: var(--bg-overlay); overflow: hidden; margin-top: 0.35rem; }
-.po-bf { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--brand), var(--accent)); }
-.po-pct { font-size: 0.8rem; font-weight: 700; color: var(--brand); min-width: 38px; text-align: right; }
-
-/* ==========================================
-   MAP PLACEHOLDER (from mockup)
-   ========================================== */
-.map-ph { border-radius: var(--r-md); overflow: hidden; position: relative; background: var(--bg-elevated); height: 190px; display: flex; align-items: center; justify-content: center; }
-.map-ov { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(10,14,20,.8)); padding: 0.9rem 1.15rem 0.65rem; display: flex; align-items: center; justify-content: space-between; }
-
-/* ==========================================
-   DIVIDER & MISC (from mockup)
-   ========================================== */
-.divider { height: 1px; background: var(--b0); margin: 1.4rem 0; }
-
-/* ==========================================
    RESPONSIVE (from mockup)
    ========================================== */
 @media (max-width: 768px) {
-  .g2, .g3, .g2e { grid-template-columns: 1fr; }
+  .g3 { grid-template-columns: 1fr; }
   .sg { grid-template-columns: repeat(2, 1fr); }
   .cal-grid { grid-template-columns: repeat(2, 1fr); }
-  .photo-grid { grid-template-columns: repeat(2, 1fr); }
   .grid-stats { grid-template-columns: repeat(2, 1fr); }
   .grid-payouts { grid-template-columns: repeat(2, 1fr); }
 }
