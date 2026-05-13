@@ -24,9 +24,7 @@ async def admin_lakes(request: Request):
             }
             for lake in lake_objs
         ]
-    return templates.TemplateResponse(
-        request, "admin/lakes.html", {"user": user, "lakes": lakes}
-    )
+    return templates.TemplateResponse(request, "admin/lakes.html", {"user": user, "lakes": lakes})
 
 
 @router.get("/admin/lakes/{lake_id}/edit")

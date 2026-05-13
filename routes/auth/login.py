@@ -183,9 +183,7 @@ async def login(
             details={"reason": "system_error", "error": str(e)},
         )
 
-    return templates.TemplateResponse(
-        request, "login.html", {"error": "Invalid email or password"}
-    )
+    return templates.TemplateResponse(request, "login.html", {"error": "Invalid email or password"})
 
 
 @router.post("/logout")
