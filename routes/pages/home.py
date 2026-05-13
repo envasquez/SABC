@@ -167,8 +167,8 @@ async def home_paginated(request: Request, page: int = 1):
 
         tournaments_with_results: List[Dict[str, Any]] = []
         for tournament in tournaments_query:
-            tournament_id = tournament[0]
-            poll_id = tournament[17]
+            tournament_id = tournament.id
+            poll_id = tournament.poll_id
 
             # Get top 3 team results for this tournament
             Angler1 = aliased(Angler)
@@ -255,46 +255,46 @@ async def home_paginated(request: Request, page: int = 1):
                         )
 
             # Check if tournament date has passed (for display purposes)
-            tournament_date = tournament[1]
+            tournament_date = tournament.date
             is_past = tournament_date < date.today() if tournament_date else False
 
             # Sunrise + forecast for upcoming, non-cancelled tournaments. Sunrise
             # is always available; weather is only populated within the NWS
             # forecast window (~7 days), otherwise the weather field is None.
             day_info: Any = None
-            is_cancelled = tournament[23] or False
+            is_cancelled = tournament.is_cancelled or False
             if not is_past and not is_cancelled and tournament_date:
                 try:
                     day_info = get_poll_day_info(tournament_date)
                 except Exception as e:
-                    logger.warning(f"day info lookup failed for tournament {tournament[0]}: {e}")
+                    logger.warning(f"day info lookup failed for tournament {tournament.id}: {e}")
 
             tournament_dict = {
-                "id": tournament[0],
+                "id": tournament.id,
                 "date": tournament_date,
-                "name": tournament[2],
-                "description": tournament[3],
-                "lake_display_name": tournament[4],
-                "lake_name": tournament[5],
-                "ramp_name": tournament[6],
-                "ramp_google_maps": tournament[7],
-                "lake_google_maps": tournament[8],
-                "google_maps_iframe": tournament[7] or tournament[8],
-                "start_time": tournament[9],
-                "end_time": tournament[10],
-                "entry_fee": tournament[11] or 50.0,
-                "fish_limit": tournament[12] or 5,
-                "limit_type": tournament[13] or "per_person",
-                "is_team": tournament[14],
-                "is_paper": tournament[15],
-                "complete": tournament[16],
+                "name": tournament.name,
+                "description": tournament.description,
+                "lake_display_name": tournament.lake_display_name,
+                "lake_name": tournament.lake_name,
+                "ramp_name": tournament.ramp_name,
+                "ramp_google_maps": tournament.ramp_google_maps,
+                "lake_google_maps": tournament.lake_google_maps,
+                "google_maps_iframe": tournament.ramp_google_maps or tournament.lake_google_maps,
+                "start_time": tournament.start_time,
+                "end_time": tournament.end_time,
+                "entry_fee": tournament.entry_fee or 50.0,
+                "fish_limit": tournament.fish_limit or 5,
+                "limit_type": tournament.limit_type or "per_person",
+                "is_team": tournament.is_team,
+                "is_paper": tournament.is_paper,
+                "complete": tournament.complete,
                 "is_past": is_past,  # True if date has passed, regardless of complete status
                 "poll_id": poll_id,
-                "total_anglers": tournament[18] or 0,
-                "total_fish": tournament[19] or 0,
-                "total_weight": tournament[20] or 0.0,
-                "aoy_points": tournament[21] if tournament[21] is not None else True,
-                "event_type": tournament[22],
+                "total_anglers": tournament.total_anglers or 0,
+                "total_fish": tournament.total_fish or 0,
+                "total_weight": tournament.total_weight or 0.0,
+                "aoy_points": tournament.aoy_points if tournament.aoy_points is not None else True,
+                "event_type": tournament.event_type,
                 "is_cancelled": is_cancelled,
                 "day_info": day_info,
                 "top_results": top_results_query,
