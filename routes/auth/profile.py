@@ -6,6 +6,7 @@ from sqlalchemy import case, desc, func, literal
 from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Angler, Event, Result, TeamResult, Tournament, get_session
+from core.enums import TOURNAMENT_DATA_START_YEAR
 from core.helpers.logging import get_logger
 from routes.dependencies import get_current_user, templates
 
@@ -143,12 +144,12 @@ async def profile_page(request: Request) -> Response:
                 "tournaments": year_tournaments,
             }
 
-        # Get team finishes for each year (2023-current)
+        # Get team finishes for each year (since data start)
         year_finishes = {}
-        for year in range(2023, current_year + 1):
+        for year in range(TOURNAMENT_DATA_START_YEAR, current_year + 1):
             year_finishes[year] = get_year_finishes(year)
 
-        # All time finishes (team results from 2023+)
+        # All time finishes (team results since data start)
         # First, rank ALL participants within each tournament
         all_time_ranked_subquery = (
             session.query(
@@ -165,7 +166,7 @@ async def profile_page(request: Request) -> Response:
             .select_from(TeamResult)
             .join(Tournament, TeamResult.tournament_id == Tournament.id)
             .join(Event, Tournament.event_id == Event.id)
-            .filter(Event.year >= 2023)
+            .filter(Event.year >= TOURNAMENT_DATA_START_YEAR)
             .subquery()
         )
 
@@ -187,7 +188,7 @@ async def profile_page(request: Request) -> Response:
         all_time_second = all_time_finishes[1] or 0 if all_time_finishes else 0
         all_time_third = all_time_finishes[2] or 0 if all_time_finishes else 0
 
-        # Monthly weight aggregation for chart (2023-current year)
+        # Monthly weight aggregation for chart (since data start through current year)
         # Uses individual results as primary source
         # Falls back to team_results for tournaments without individual data
         from sqlalchemy import text
@@ -215,7 +216,7 @@ async def profile_page(request: Request) -> Response:
                 JOIN events e ON t.event_id = e.id
                 WHERE r.angler_id = :user_id
                   AND r.disqualified = FALSE
-                  AND {year_col} >= 2023
+                  AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
                 UNION ALL
                 -- Team results (only for tournaments without individual data)
                 -- Attribute team weight to angler1 to avoid double-counting
@@ -226,7 +227,7 @@ async def profile_page(request: Request) -> Response:
                 JOIN tournaments t ON tr.tournament_id = t.id
                 JOIN events e ON t.event_id = e.id
                 WHERE tr.angler1_id = :user_id
-                  AND {year_col} >= 2023
+                  AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
                   AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
                 UNION ALL
                 -- Angler2 gets 0 weight for team-only tournaments (just for participation tracking)
@@ -237,7 +238,7 @@ async def profile_page(request: Request) -> Response:
                 JOIN tournaments t ON tr.tournament_id = t.id
                 JOIN events e ON t.event_id = e.id
                 WHERE tr.angler2_id = :user_id
-                  AND {year_col} >= 2023
+                  AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
                   AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
             )
             SELECT year, month, SUM(weight) as total_weight
@@ -250,7 +251,7 @@ async def profile_page(request: Request) -> Response:
 
         # Format monthly data for Chart.js
         monthly_data: Dict[str, Any] = {}
-        for year in range(2023, current_year + 1):
+        for year in range(TOURNAMENT_DATA_START_YEAR, current_year + 1):
             monthly_data[str(year)] = [0] * 12
 
         for year, month, weight in monthly_weights:

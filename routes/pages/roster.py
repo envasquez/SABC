@@ -4,6 +4,7 @@ from fastapi import APIRouter, Request
 
 from core.db_schema import engine
 from core.deps import templates
+from core.enums import TOURNAMENT_DATA_START_YEAR
 from core.helpers.auth import get_user_optional
 from core.query_service import QueryService
 from core.query_service.dialect_helpers import (
@@ -41,7 +42,7 @@ def get_member_stats(
             "all_time_third": 0,
         }
         # Initialize year finishes for each year
-        for year in range(2023, current_year + 1):
+        for year in range(TOURNAMENT_DATA_START_YEAR, current_year + 1):
             member_stats[member_id]["year_finishes"][year] = {
                 "first": 0,
                 "second": 0,
@@ -113,7 +114,7 @@ def get_member_stats(
             FROM team_results tr
             JOIN tournaments t ON tr.tournament_id = t.id
             JOIN events e ON t.event_id = e.id
-            WHERE {year_col} >= 2023
+            WHERE {year_col} >= {TOURNAMENT_DATA_START_YEAR}
         )
         SELECT angler_id, year, place, COUNT(*) as cnt
         FROM (
@@ -161,7 +162,7 @@ def get_member_stats(
             JOIN tournaments t ON tr.tournament_id = t.id
             JOIN events e ON t.event_id = e.id
             WHERE tr.angler1_id {in_sql}
-              AND {year_col} >= 2023
+              AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
             UNION
             SELECT tr.angler2_id as angler_id, tr.tournament_id,
                    {year_col} as year
@@ -169,7 +170,7 @@ def get_member_stats(
             JOIN tournaments t ON tr.tournament_id = t.id
             JOIN events e ON t.event_id = e.id
             WHERE tr.angler2_id {in_sql}
-              AND {year_col} >= 2023
+              AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
         ) sub
         GROUP BY angler_id, year
     """
@@ -217,7 +218,7 @@ def get_member_monthly_weights(
                 JOIN events e ON t.event_id = e.id
                 WHERE r.angler_id {in_sql}
                   AND r.disqualified = FALSE
-                  AND {year_col} >= 2023
+                  AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
                 UNION ALL
                 -- Team results angler1 (only for tournaments without individual data)
                 SELECT tr.angler1_id as angler_id,
@@ -229,7 +230,7 @@ def get_member_monthly_weights(
                 JOIN tournaments t ON tr.tournament_id = t.id
                 JOIN events e ON t.event_id = e.id
                 WHERE tr.angler1_id {in_sql}
-                  AND {year_col} >= 2023
+                  AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
                   AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
                 UNION ALL
                 -- Team results angler2 (only for tournaments without individual data, 0 weight)
@@ -243,7 +244,7 @@ def get_member_monthly_weights(
                 JOIN events e ON t.event_id = e.id
                 WHERE tr.angler2_id {in_sql}
                   AND tr.angler2_id IS NOT NULL
-                  AND {year_col} >= 2023
+                  AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
                   AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
             )
             SELECT angler_id,
@@ -271,7 +272,7 @@ def get_member_monthly_weights(
                 JOIN events e ON t.event_id = e.id
                 WHERE r.angler_id = ANY(:member_ids)
                   AND r.disqualified = FALSE
-                  AND {year_col} >= 2023
+                  AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
                 UNION ALL
                 -- Team results angler1 (only for tournaments without individual data)
                 SELECT tr.angler1_id as angler_id,
@@ -283,7 +284,7 @@ def get_member_monthly_weights(
                 JOIN tournaments t ON tr.tournament_id = t.id
                 JOIN events e ON t.event_id = e.id
                 WHERE tr.angler1_id = ANY(:member_ids)
-                  AND {year_col} >= 2023
+                  AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
                   AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
                 UNION ALL
                 -- Team results angler2 (only for tournaments without individual data, 0 weight)
@@ -297,7 +298,7 @@ def get_member_monthly_weights(
                 JOIN events e ON t.event_id = e.id
                 WHERE tr.angler2_id = ANY(:member_ids)
                   AND tr.angler2_id IS NOT NULL
-                  AND {year_col} >= 2023
+                  AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
                   AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
             )
             SELECT angler_id,
@@ -316,7 +317,7 @@ def get_member_monthly_weights(
     member_weights: Dict[int, Dict[str, List[Dict[str, Any]]]] = {}
     for member_id in member_ids:
         member_weights[member_id] = {}
-        for year in range(2023, current_year + 1):
+        for year in range(TOURNAMENT_DATA_START_YEAR, current_year + 1):
             member_weights[member_id][str(year)] = [
                 {"weight": 0.0, "buy_in": False} for _ in range(12)
             ]
