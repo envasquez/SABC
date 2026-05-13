@@ -225,9 +225,11 @@ async def home_paginated(request: Request, page: int = 1):
                     .all()
                 )
 
-                # Check if user has voted
+                # Check if user has voted. get_user_optional always returns a
+                # UserDict (or None) — the previous defensive isinstance check
+                # was lying to the type system.
                 if user:
-                    user_id = user.get("id") if isinstance(user, dict) else user.id  # type: ignore[attr-defined]
+                    user_id = user.get("id")
                     user_vote = (
                         session.query(PollVote)
                         .filter(PollVote.poll_id == poll_id, PollVote.angler_id == user_id)
