@@ -46,6 +46,14 @@ services:
     image: postgres:17-alpine
     container_name: sabc-postgres
     restart: always
+    # Bump max_connections above the default 100. With workers=4 and a per-
+    # worker pool budget of 5+10, we max at 60 — but multiple gunicorn workers
+    # plus migration tasks plus the occasional pg_dump backup can spike higher.
+    # 200 leaves comfortable headroom on a 2GB+ droplet (each conn ~10MB).
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=200"
     environment:
       POSTGRES_DB: sabc
       POSTGRES_USER: sabc_user
