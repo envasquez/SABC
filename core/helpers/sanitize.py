@@ -47,9 +47,12 @@ def sanitize_iframe(raw_html: str) -> str:
     if not raw_html or not raw_html.strip():
         return ""
 
-    # Match iframe with a Google Maps src URL (multiple valid domains/paths)
+    # Match iframe with a Google Maps src URL. Tolerate both single- and
+    # double-quoted attribute values: the seed data in scripts/lakes_production.json
+    # ships single-quoted iframes (Google's "Share/Embed map" UI emitted those
+    # historically), and the output normalizes to double quotes regardless.
     match = re.search(
-        r'<iframe\s[^>]*src="(https://(?:www\.google\.com/maps|maps\.google\.com/maps)[^"]*)"[^>]*>',
+        r"""<iframe\s[^>]*src=["'](https://(?:www\.google\.com/maps|maps\.google\.com/maps)[^"']*)["'][^>]*>""",
         raw_html,
         re.IGNORECASE,
     )
