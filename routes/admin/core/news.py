@@ -47,9 +47,9 @@ async def admin_news(request: Request, show_archived: bool = False):
         news_items = news_query.all()
 
     return templates.TemplateResponse(
+        request,
         "admin/news.html",
         {
-            "request": request,
             "user": user,
             "news_items": news_items,
             "show_archived": show_archived,
@@ -157,9 +157,9 @@ async def edit_news_form(request: Request, news_id: int):
 
     # Return the admin news page with the news item data
     return templates.TemplateResponse(
+        request,
         "admin/news.html",
         {
-            "request": request,
             "user": user,
             "edit_news": news_item,
         },

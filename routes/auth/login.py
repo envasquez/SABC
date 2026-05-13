@@ -62,9 +62,9 @@ async def login_page(request: Request) -> Response:
     next_url = request.query_params.get("next", "/")
 
     return templates.TemplateResponse(
+        request,
         "login.html",
         {
-            "request": request,
             "success": success,
             "error": error,
             "next_url": next_url,
@@ -99,8 +99,9 @@ async def login(
             extra={"user_email": email, "ip_address": ip_address},
         )
         return templates.TemplateResponse(
+            request,
             "login.html",
-            {"request": request, "error": "Too many failed attempts. Please try again later."},
+            {"error": "Too many failed attempts. Please try again later."},
         )
 
     try:
@@ -183,7 +184,7 @@ async def login(
         )
 
     return templates.TemplateResponse(
-        "login.html", {"request": request, "error": "Invalid email or password"}
+        request, "login.html", {"error": "Invalid email or password"}
     )
 
 

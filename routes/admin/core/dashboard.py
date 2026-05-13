@@ -33,7 +33,7 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
         raise HTTPException(status_code=404, detail=f"Admin page '{page}' not found")
 
     current_year = now_local().year
-    ctx: Dict[str, Any] = {"request": request, "user": user, "current_year": current_year}
+    ctx: Dict[str, Any] = {"user": user, "current_year": current_year}
     if page == "events":
         per_page = 20
         events, total_upcoming = get_upcoming_events_data(upcoming_page, per_page)
@@ -118,4 +118,4 @@ async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_p
         ctx.update(get_users_data())
     elif page == "tournaments":
         ctx["tournaments"] = get_tournaments_data()
-    return templates.TemplateResponse(f"admin/{page}.html", ctx)
+    return templates.TemplateResponse(request, f"admin/{page}.html", ctx)

@@ -38,7 +38,7 @@ async def edit_poll_form(request: Request, poll_id: int):
                 poll_obj.description,
             )
 
-            context = {"request": request, "user": user, "poll": poll}
+            context = {"user": user, "poll": poll}
 
             # Get poll options with vote counts
             with engine.connect() as conn:
@@ -70,9 +70,11 @@ async def edit_poll_form(request: Request, poll_id: int):
                             # Skip this option, continue with others
 
                 context["selected_lake_ids"] = selected_lake_ids
-                return templates.TemplateResponse("admin/edit_tournament_poll.html", context)
+                return templates.TemplateResponse(
+                    request, "admin/edit_tournament_poll.html", context
+                )
             else:
-                return templates.TemplateResponse("admin/edit_poll.html", context)
+                return templates.TemplateResponse(request, "admin/edit_poll.html", context)
 
     except SQLAlchemyError:
         return RedirectResponse("/polls?error=Failed to load poll", status_code=303)

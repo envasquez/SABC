@@ -25,7 +25,7 @@ async def admin_lakes(request: Request):
             for lake in lake_objs
         ]
     return templates.TemplateResponse(
-        "admin/lakes.html", {"request": request, "user": user, "lakes": lakes}
+        request, "admin/lakes.html", {"user": user, "lakes": lakes}
     )
 
 
@@ -56,9 +56,9 @@ async def edit_lake_page(request: Request, lake_id: int):
         ]
 
     return templates.TemplateResponse(
+        request,
         "admin/edit_lake.html",
         {
-            "request": request,
             "user": user,
             "lake": lake,
             "ramps": ramps,

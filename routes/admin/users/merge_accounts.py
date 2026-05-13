@@ -25,8 +25,9 @@ async def merge_accounts_page(request: Request, user: AdminUser):
     anglers_sorted = sorted(anglers, key=lambda a: a.get("name", "").lower())
 
     return templates.TemplateResponse(
+        request,
         "admin/users/merge.html",
-        {"request": request, "user": user, "anglers": anglers_sorted},
+        {"user": user, "anglers": anglers_sorted},
     )
 
 
@@ -73,9 +74,9 @@ async def merge_execute(
 
         # Show success page with merge summary
         return templates.TemplateResponse(
+            request,
             "admin/users/merge_success.html",
             {
-                "request": request,
                 "user": user,
                 "result": result,
                 "source_id": source_id,
