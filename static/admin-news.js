@@ -158,6 +158,7 @@ function sendTestEmail() {
     // Send test email
     fetch('/admin/news/test-email', {
         method: 'POST',
+        credentials: 'same-origin',
         body: formData
     })
     .then(response => {
