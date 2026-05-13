@@ -10,7 +10,7 @@ let lakesData = [];
  * Load lakes data from API and populate all lake dropdowns
  */
 function loadLakes() {
-    fetch('/api/lakes')
+    fetch('/api/lakes', { credentials: 'same-origin' })
         .then(response => {
             if (!response.ok) throw new Error('Failed to load lakes');
             return response.json();

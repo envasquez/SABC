@@ -1,9 +1,12 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Lake, Ramp, get_session
+from core.helpers.logging import get_logger
 
 router = APIRouter()
+logger = get_logger(__name__)
 
 
 @router.get("/api/lakes")
@@ -24,8 +27,14 @@ async def api_get_lakes():
                 for lake_id, yaml_key, display_name in lakes_query
             ]
         return JSONResponse(lakes)
-    except Exception:
-        return JSONResponse([])
+    except SQLAlchemyError as exc:
+        # Log and surface a real error rather than silently returning an empty
+        # list — admins would otherwise see "no lakes" instead of "DB down".
+        logger.error("api_get_lakes: database error", exc_info=exc)
+        return JSONResponse(
+            {"error": "Failed to load lakes"},
+            status_code=500,
+        )
 
 
 @router.get("/api/lakes/{lake_key}/ramps")
