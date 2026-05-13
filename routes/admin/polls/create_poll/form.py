@@ -53,14 +53,13 @@ async def create_poll_form(request: Request, event_id: int = Query(None)):
                     )
 
         context = {
-            "request": request,
             "user": user,
             "events": events_list,
             "selected_event": selected_event,
             "lakes": lakes,
             "ramps": ramps,
         }
-        return templates.TemplateResponse("admin/create_poll.html", context)
+        return templates.TemplateResponse(request, "admin/create_poll.html", context)
     except SQLAlchemyError:
         return RedirectResponse(
             "/admin/events?error=Failed to load poll creation form", status_code=303

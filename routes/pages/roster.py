@@ -427,9 +427,9 @@ async def roster(request: Request) -> Any:
 
     user = get_user_optional(request)
     return templates.TemplateResponse(
+        request,
         "roster.html",
         {
-            "request": request,
             "user": user,
             "members": members,
             "member_weights": member_monthly_weights,

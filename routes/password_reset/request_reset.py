@@ -28,7 +28,7 @@ limiter = Limiter(key_func=get_remote_address, enabled=not is_test_env)
 
 @router.get("/forgot-password")
 async def forgot_password_form(request: Request):
-    return templates.TemplateResponse("auth/forgot_password.html", {"request": request})
+    return templates.TemplateResponse(request, "auth/forgot_password.html", {})
 
 
 @router.post("/forgot-password")
@@ -79,4 +79,4 @@ async def request_password_reset(
 
 @router.get("/reset-password/help")
 async def password_reset_help(request: Request):
-    return templates.TemplateResponse("auth/password_reset_help.html", {"request": request})
+    return templates.TemplateResponse(request, "auth/password_reset_help.html", {})

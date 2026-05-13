@@ -375,9 +375,9 @@ async def profile_page(request: Request) -> Response:
         }
 
     return templates.TemplateResponse(
+        request,
         "profile.html",
         {
-            "request": request,
             "user": user_profile,
             "stats": stats,
             "current_year": current_year,

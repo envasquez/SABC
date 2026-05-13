@@ -24,7 +24,7 @@ async def register_page(request: Request) -> Response:
     return (
         RedirectResponse("/")
         if get_current_user(request)
-        else templates.TemplateResponse("register.html", {"request": request})
+        else templates.TemplateResponse(request, "register.html", {})
     )
 
 
@@ -34,7 +34,7 @@ async def register_page_auth(request: Request) -> Response:
     return (
         RedirectResponse("/")
         if get_current_user(request)
-        else templates.TemplateResponse("register.html", {"request": request})
+        else templates.TemplateResponse(request, "register.html", {})
     )
 
 
@@ -57,9 +57,9 @@ async def register(
     is_valid, error_message = validate_password_strength(password)
     if not is_valid:
         return templates.TemplateResponse(
+            request,
             "register.html",
             {
-                "request": request,
                 "error": error_message,
                 "first_name": first_name,
                 "last_name": last_name,
@@ -77,9 +77,9 @@ async def register(
                     extra={"user_email": email, "ip_address": ip_address},
                 )
                 return templates.TemplateResponse(
+                    request,
                     "register.html",
                     {
-                        "request": request,
                         "error": "Email already exists",
                         "first_name": first_name,
                         "last_name": last_name,
@@ -132,9 +132,9 @@ async def register(
             exc_info=True,
         )
         return templates.TemplateResponse(
+            request,
             "register.html",
             {
-                "request": request,
                 "error": "Registration failed",
                 "first_name": first_name,
                 "last_name": last_name,

@@ -99,9 +99,9 @@ async def get_edit_event(request: Request, event_id: int):
             )
 
     return templates.TemplateResponse(
+        request,
         "admin/events.html",
         {
-            "request": request,
             "user": user,
             "edit_event_id": event_id,
             "current_year": now_local().year,
