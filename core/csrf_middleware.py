@@ -1,14 +1,22 @@
 """Custom CSRF middleware that supports both headers and form data."""
 
 import functools
+import os
 from email import policy
 from email.message import EmailMessage
 from email.parser import BytesParser
 from typing import Optional
 
 from starlette.requests import Request
+from starlette.responses import PlainTextResponse, Response
 from starlette.types import Receive, Scope, Send
 from starlette_csrf.middleware import CSRFMiddleware as BaseCSRFMiddleware
+
+# Cap the request body we'll drain into memory looking for the CSRF token.
+# nginx already enforces client_max_body_size 15m upstream; we leave a small
+# margin so legitimate at-cap requests don't get rejected at this layer too.
+# Override via CSRF_MAX_BODY_BYTES if a deployment needs a different ceiling.
+_MAX_BODY_BYTES = int(os.environ.get("CSRF_MAX_BODY_BYTES", str(16 * 1024 * 1024)))
 
 
 def _extract_multipart_csrf_token(body: bytes, content_type: str) -> Optional[str]:
@@ -74,9 +82,36 @@ class CSRFMiddleware(BaseCSRFMiddleware):
                     "application/x-www-form-urlencoded" in content_type
                     or "multipart/form-data" in content_type
                 ):
-                    # Read and cache the entire body
+                    # Reject oversized bodies up front via Content-Length, before
+                    # we drain anything into Python memory. nginx normally
+                    # enforces this, but we don't want the middleware to be the
+                    # single point of failure if it's ever fronted differently
+                    # (e.g. local dev without nginx).
+                    cl_header = request.headers.get("content-length")
+                    if cl_header is not None:
+                        try:
+                            if int(cl_header) > _MAX_BODY_BYTES:
+                                too_large: Response = PlainTextResponse(
+                                    "Request body too large", status_code=413
+                                )
+                                await too_large(scope, receive, send)
+                                return
+                        except ValueError:
+                            pass
+
+                    # Read and cache the entire body, but bound it: if a chunked
+                    # request lies about its size (or omits Content-Length),
+                    # we still won't grow the buffer past the cap.
                     body_parts = []
+                    total = 0
                     async for chunk in request.stream():
+                        total += len(chunk)
+                        if total > _MAX_BODY_BYTES:
+                            too_large_streamed: Response = PlainTextResponse(
+                                "Request body too large", status_code=413
+                            )
+                            await too_large_streamed(scope, receive, send)
+                            return
                         body_parts.append(chunk)
                     body = b"".join(body_parts)
 

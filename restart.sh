@@ -1,17 +1,28 @@
 #!/usr/bin/bash
-# Production deployment script with database migrations
+# Production deployment script with database migrations.
+# Rollback procedure: see docs/RUNBOOK.md
 
 set -euo pipefail
 
+COMPOSE="docker compose -f docker-compose.prod.yml"
+HEALTH_URL="${HEALTH_URL:-http://localhost/health}"
+
 echo "🚀 Starting deployment..."
 
-# Backup database before anything else
+# 1. Pull the latest code FIRST. This is read-only and atomic — if it fails
+#    (rebase conflict, network blip, GitHub outage), we abort before touching
+#    the running site. The previous order (down → pull) meant a failed pull
+#    left the site down with no easy recovery.
+echo "📥 Pulling latest code..."
+git pull
+
+# 2. Back up the running database before any state-mutating step.
 BACKUP_DIR="$HOME/backups"
 BACKUP_FILE="$BACKUP_DIR/sabc_$(date +%Y%m%d_%H%M%S).sql.gz"
 mkdir -p "$BACKUP_DIR"
 
 echo "💾 Backing up database..."
-if docker compose -f docker-compose.prod.yml exec -T postgres pg_dump -U sabc_user sabc | gzip > "$BACKUP_FILE"; then
+if $COMPOSE exec -T postgres pg_dump -U sabc_user sabc | gzip > "$BACKUP_FILE"; then
     BACKUP_SIZE=$(du -h "$BACKUP_FILE" | cut -f1)
     echo "✅ Backup saved: $BACKUP_FILE ($BACKUP_SIZE)"
 else
@@ -23,35 +34,46 @@ fi
 ls -t "$BACKUP_DIR"/sabc_*.sql.gz 2>/dev/null | tail -n +11 | xargs -r rm
 echo "🗂️  Retained $(ls "$BACKUP_DIR"/sabc_*.sql.gz 2>/dev/null | wc -l) backups"
 
-# Stop containers
-echo "⏹️  Stopping containers..."
-docker compose -f docker-compose.prod.yml down
+# 3. Build the new image while the old containers keep serving. Docker build
+#    doesn't touch running containers, so the site stays up during this step.
+echo "🔨 Building new image..."
+$COMPOSE build --no-cache
 
-# Pull latest code
-echo "📥 Pulling latest code..."
-git pull
+# 4. Stop the old containers and start the new ones.
+echo "⏹️  Stopping old containers..."
+$COMPOSE down
 
-# Rebuild containers
-echo "🔨 Building containers..."
-docker compose -f docker-compose.prod.yml build --no-cache
+echo "▶️  Starting new containers..."
+$COMPOSE up -d
 
-# Start containers
-echo "▶️  Starting containers..."
-docker compose -f docker-compose.prod.yml up -d
-
-# Wait for database to be ready
-echo "⏳ Waiting for database..."
+# 5. Wait for the web container to be ready before we run migrations through it.
+echo "⏳ Waiting for web container to accept exec..."
 sleep 10
 
-# Run database migrations
+# 6. Apply database migrations.
 echo "📦 Running database migrations..."
-docker compose -f docker-compose.prod.yml exec -T web alembic upgrade head
+$COMPOSE exec -T web alembic upgrade head
 
-# Check migration status
 echo "📊 Current migration version:"
-docker compose -f docker-compose.prod.yml exec -T web alembic current
+$COMPOSE exec -T web alembic current
 
-# Cleanup
+# 7. Verify the app actually serves. If this fails, the deploy reports failure
+#    and the caller knows to roll back per docs/RUNBOOK.md.
+echo "🩺 Health check..."
+HEALTH_TRIES=10
+for i in $(seq 1 "$HEALTH_TRIES"); do
+    if curl -fsS "$HEALTH_URL" >/dev/null; then
+        echo "✅ Health check passed on attempt $i"
+        break
+    fi
+    if [ "$i" -eq "$HEALTH_TRIES" ]; then
+        echo "❌ Health check failed after $HEALTH_TRIES attempts. See docs/RUNBOOK.md for rollback."
+        exit 1
+    fi
+    sleep 2
+done
+
+# 8. Host hygiene.
 echo "🧹 Cleaning up..."
 docker system prune -f
 sudo journalctl --vacuum-time=7d
@@ -60,7 +82,5 @@ sudo apt clean
 echo ""
 echo "✅ Deployment complete!"
 echo "🌐 Application: https://saustinbc.com"
-echo "📊 Check logs: docker compose -f docker-compose.prod.yml logs -f web"
-
-# To restore a backup ...
-# gunzip -c ~/backups/sabc_XXXXXXXX_XXXXXX.sql.gz | docker compose -f docker-compose.prod.yml exec -T postgres psql -U sabc_user sabc
+echo "📊 Check logs: $COMPOSE logs -f web"
+echo "↩️  Rollback steps: docs/RUNBOOK.md"

@@ -1,5 +1,4 @@
 import os
-import re
 from typing import Any, Dict, List, Sequence, Union
 
 from fastapi import FastAPI, Request
@@ -39,13 +38,26 @@ def get_csrf_token(request: Request) -> str:
     return request.cookies.get("csrf_token", "")
 
 
+_DEV_SECRET_FALLBACK_ENVS = {"development", "test"}
+
+
 def _get_secret_key() -> str:
-    """Get the secret key, requiring it in production."""
+    """Get the secret key.
+
+    Hard-fails unless ENVIRONMENT is explicitly "development" or "test". The
+    previous "fail only when production" gate was a footgun — staging or any
+    misspelled ENVIRONMENT value silently used a hardcoded dev key, making
+    sessions forgeable on every non-prod environment.
+    """
     secret = os.environ.get("SECRET_KEY")
     if secret:
         return secret
-    if os.environ.get("ENVIRONMENT") == "production":
-        raise RuntimeError("SECRET_KEY must be set in production")
+    env = os.environ.get("ENVIRONMENT", "development")
+    if env not in _DEV_SECRET_FALLBACK_ENVS:
+        raise RuntimeError(
+            f"SECRET_KEY must be set when ENVIRONMENT={env!r}. "
+            f"The dev fallback only applies to ENVIRONMENT in {_DEV_SECRET_FALLBACK_ENVS!r}."
+        )
     return "dev-key-change-in-production"
 
 
@@ -92,7 +104,13 @@ def create_app() -> FastAPI:
         https_only=os.environ.get("ENVIRONMENT", "development") == "production",
     )
 
-    # CSRF protection middleware (disabled in test environment to simplify testing)
+    # CSRF protection middleware (disabled in test environment to simplify testing).
+    # No exempt_urls: the previous list (/login, /logout, /register,
+    # /forgot-password, /reset-password) allowed login-CSRF. Rate limiting and
+    # bcrypt defend against credential guessing, not against an attacker
+    # forcing a victim's browser to log in as the attacker. All five forms
+    # already emit {{ csrf_token(request) }}; the middleware will now validate
+    # them like every other state-mutating endpoint.
     if os.environ.get("ENVIRONMENT") != "test":
         app.add_middleware(
             CSRFMiddleware,
@@ -101,15 +119,6 @@ def create_app() -> FastAPI:
             cookie_secure=os.environ.get("ENVIRONMENT", "development") == "production",
             cookie_samesite="lax",
             header_name="x-csrf-token",
-            # Exempt authentication endpoints - they have their own security measures
-            # These endpoints either use email verification, session management, or rate limiting
-            exempt_urls=[
-                re.compile(r"^/login$"),  # Login - protected by rate limiting + bcrypt
-                re.compile(r"^/logout$"),  # Logout - session-based, no sensitive state change
-                re.compile(r"^/register$"),  # Registration - email verification required
-                re.compile(r"^/forgot-password$"),  # Password reset request - email verification
-                re.compile(r"^/reset-password$"),  # Password reset - cryptographic tokens
-            ],
         )
 
     app.mount("/static", StaticFiles(directory="static"), name="static")
