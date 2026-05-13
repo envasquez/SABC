@@ -115,9 +115,9 @@ async def awards(request: Request, year: Optional[int] = None):
             team_wins = []
 
         return templates.TemplateResponse(
+            request,
             "awards.html",
             {
-                "request": request,
                 "user": user,
                 "current_year": year,
                 "available_years": years,

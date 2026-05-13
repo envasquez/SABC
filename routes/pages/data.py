@@ -33,9 +33,9 @@ async def data_dashboard(
     tournament_participation = qs.get_tournament_participation()
 
     return templates.TemplateResponse(
+        request,
         "data.html",
         {
-            "request": request,
             "user": user,
             "available_years": available_years,
             "overview_stats": overview_stats,
