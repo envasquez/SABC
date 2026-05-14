@@ -1,8 +1,8 @@
 import os
 import threading
 import time
-from collections import defaultdict
-from typing import Dict, List
+from collections import OrderedDict
+from typing import List
 
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse, Response
@@ -25,8 +25,24 @@ limiter = Limiter(key_func=get_remote_address, enabled=not is_test_env)
 # --- Account lockout (defense-in-depth alongside rate limiting) ---
 _MAX_FAILED_ATTEMPTS = 10
 _LOCKOUT_SECONDS = 900  # 15 minutes
-_failed_attempts: Dict[str, List[float]] = defaultdict(list)
+# Cap total number of tracked emails to bound memory growth from attackers
+# submitting unique random emails.
+_FAILED_ATTEMPTS_MAX = 10000
+_failed_attempts: "OrderedDict[str, List[float]]" = OrderedDict()
 _lockout_lock = threading.Lock()
+
+
+def _purge_expired_entries() -> None:
+    """Drop entries whose newest attempt is older than the lockout window.
+
+    Caller MUST hold _lockout_lock.
+    """
+    cutoff = time.monotonic() - _LOCKOUT_SECONDS
+    # Iterate over a snapshot of keys since we mutate during iteration.
+    for email in list(_failed_attempts.keys()):
+        attempts = _failed_attempts[email]
+        if not attempts or attempts[-1] <= cutoff:
+            del _failed_attempts[email]
 
 
 def _is_account_locked(email: str) -> bool:
@@ -37,13 +53,26 @@ def _is_account_locked(email: str) -> bool:
             return False
         cutoff = time.monotonic() - _LOCKOUT_SECONDS
         fresh = [t for t in attempts if t > cutoff]
-        _failed_attempts[email] = fresh
+        if fresh:
+            _failed_attempts[email] = fresh
+        else:
+            _failed_attempts.pop(email, None)
         return len(fresh) >= _MAX_FAILED_ATTEMPTS
 
 
 def _record_failed_attempt(email: str) -> None:
     with _lockout_lock:
-        _failed_attempts[email].append(time.monotonic())
+        # Opportunistic purge of stale entries before bookkeeping.
+        _purge_expired_entries()
+        if email in _failed_attempts:
+            # Move-to-end so this key becomes the most-recently-used.
+            _failed_attempts.move_to_end(email)
+            _failed_attempts[email].append(time.monotonic())
+            return
+        # New key — enforce the size cap by evicting the oldest entry first.
+        if len(_failed_attempts) >= _FAILED_ATTEMPTS_MAX:
+            _failed_attempts.popitem(last=False)
+        _failed_attempts[email] = [time.monotonic()]
 
 
 def _clear_failed_attempts(email: str) -> None:

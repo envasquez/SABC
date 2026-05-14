@@ -19,8 +19,11 @@ from core.db_schema import (
     engine,
     get_session,
 )
+from core.helpers.logging import get_logger
 from core.helpers.timezone import now_local
 from core.query_service import QueryService
+
+logger = get_logger(__name__)
 
 
 def get_poll_options(poll_id: int, is_admin: bool = False) -> List[Dict[str, Any]]:
@@ -266,4 +269,9 @@ def process_closed_polls() -> int:
 
             return len(closed_polls)
     except SQLAlchemyError:
-        return 0
+        # process_closed_polls is the only path that materializes tournaments
+        # from won polls — silently swallowing errors would hide real bugs.
+        # Log with full traceback and re-raise so callers (e.g. background
+        # schedulers) see the failure.
+        logger.exception("process_closed_polls failed")
+        raise

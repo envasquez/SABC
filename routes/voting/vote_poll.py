@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from core.db_schema import Angler, Poll, PollOption, PollVote, get_session
 from core.helpers.auth import is_dues_current, require_auth
 from core.helpers.logging import get_logger
-from core.helpers.response import sanitize_error_message
+from core.helpers.response import get_safe_redirect_url, sanitize_error_message
 from core.helpers.timezone import now_local
 from core.types import UserDict
 from routes.voting.vote_validation import (
@@ -103,23 +103,12 @@ async def vote_in_poll(
                     "/polls?error=You have already voted in this poll", status_code=303
                 )
 
-            # Validate poll is currently active (time window check)
-            # Poll times are stored as timezone-aware, so use timezone-aware comparison
+            # Validate poll is currently active (time window check).
+            # poll.starts_at / poll.closes_at are TIMESTAMPTZ columns
+            # (migration d2195fd0305e), so SQLAlchemy returns aware datetimes.
             current_time = now_local()
 
-            # Ensure all datetimes are timezone-aware for comparison
-            poll_starts = (
-                poll.starts_at
-                if poll.starts_at.tzinfo
-                else poll.starts_at.replace(tzinfo=current_time.tzinfo)
-            )
-            poll_closes = (
-                poll.closes_at
-                if poll.closes_at.tzinfo
-                else poll.closes_at.replace(tzinfo=current_time.tzinfo)
-            )
-
-            if not (poll_starts <= current_time <= poll_closes):
+            if not (poll.starts_at <= current_time <= poll.closes_at):
                 logger.info(
                     "Vote attempted on inactive poll",
                     extra={
@@ -293,7 +282,7 @@ async def dismiss_dues_banner(
                 angler = session.query(Angler).filter(Angler.id == user_id).first()
                 if angler:
                     angler.dues_banner_dismissed_at = now_local()
-                    session.commit()
+                    # get_session() auto-commits on __exit__; no inner commit needed.
                     logger.info(
                         "Dues banner dismissed",
                         extra={"user_id": user_id},
@@ -304,6 +293,7 @@ async def dismiss_dues_banner(
                 extra={"user_id": user_id, "error": str(e)},
             )
 
-    # Return to previous page or polls
-    referer = request.headers.get("referer", "/polls")
-    return RedirectResponse(referer, status_code=303)
+    # Return to previous page or polls (defense-in-depth: validate referer
+    # against open-redirect — it's an attacker-controlled header).
+    redirect_url = get_safe_redirect_url(request.headers.get("referer", ""), default="/polls")
+    return RedirectResponse(redirect_url, status_code=303)

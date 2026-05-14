@@ -52,6 +52,22 @@ def set_sqlite_decimal_support(dbapi_conn, connection_record):
     # sqlite3.register_converter("DECIMAL", lambda s: Decimal(s.decode('utf-8')))
 
 
+# SQLite has no native TIMESTAMPTZ — it strips tzinfo on read even when the
+# column is declared as DateTime(timezone=True). Production (Postgres) uses
+# real TIMESTAMPTZ, so we re-attach the club timezone on load to keep tests
+# aligned with production. Tests should write aware datetimes using
+# now_local() so the wall-clock stored in SQLite matches the club timezone.
+from core.helpers.timezone import CLUB_TIMEZONE  # noqa: E402
+
+
+@event.listens_for(Poll, "load")
+def _restore_poll_tz_on_load(target: Poll, _context: Any) -> None:
+    if target.starts_at is not None and target.starts_at.tzinfo is None:
+        target.starts_at = target.starts_at.replace(tzinfo=CLUB_TIMEZONE)
+    if target.closes_at is not None and target.closes_at.tzinfo is None:
+        target.closes_at = target.closes_at.replace(tzinfo=CLUB_TIMEZONE)
+
+
 TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
 
@@ -282,8 +298,10 @@ def test_poll(db_session: Session, test_event: Event, admin_user: Angler) -> Pol
 
     from core.helpers.timezone import now_local
 
-    # Use naive datetime for SQLite compatibility (matches production behavior)
-    now = now_local().replace(tzinfo=None)
+    # Poll.starts_at / Poll.closes_at are DateTime(timezone=True) in the ORM
+    # (TIMESTAMPTZ in production after migration d2195fd0305e). Use aware
+    # datetimes so the tests mirror production behavior.
+    now = now_local()
     poll = Poll(
         title="Test Poll",
         description="Test poll description",

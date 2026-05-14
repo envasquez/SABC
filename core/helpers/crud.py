@@ -14,8 +14,11 @@ from sqlalchemy.orm import Session
 
 from core.db_schema import get_session
 from core.helpers.auth import require_admin
+from core.helpers.logging import get_logger
 from core.helpers.response import error_redirect, json_error, json_success, success_redirect
 from core.types import UserDict
+
+logger = get_logger(__name__)
 
 # Type variable for SQLAlchemy models
 T = TypeVar("T")
@@ -128,8 +131,14 @@ def delete_entity(
             return success_redirect(redirect_url, success_message)
         return json_success(message=success_message)
 
-    except Exception as e:
-        error_msg = f"{error_message}: {str(e)}"
+    except Exception:
+        # Log full traceback server-side; return a generic message to clients
+        # so we don't leak schema details / SQLAlchemy exception text.
+        logger.exception(
+            "delete_entity failed",
+            extra={"entity": model_class.__name__, "id": entity_id},
+        )
+        error_msg = error_message
         if redirect_url:
             return error_redirect(redirect_url, error_msg)
         return json_error(error_msg, status_code=500)
