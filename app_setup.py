@@ -93,7 +93,15 @@ def create_app() -> FastAPI:
 
     app.add_middleware(SecurityHeadersMiddleware)
 
-    # Session middleware with secure configuration
+    # Session middleware with secure configuration.
+    # Note: Starlette's SessionMiddleware always sets HttpOnly on the session
+    # cookie (it has no kwarg to disable it), so HttpOnly is implicit-by-default
+    # and is reviewable in the upstream source. We make same_site, max_age, and
+    # https_only explicit here so the security posture is auditable in-tree.
+    # https_only is enabled for every environment that is NOT dev/test — this
+    # mirrors the _DEV_SECRET_FALLBACK_ENVS allowlist above so a misspelled or
+    # new ENVIRONMENT value (e.g. "staging") gets the tighter posture by default
+    # rather than silently falling back to insecure cookies.
     secret_key = _get_secret_key()
     app.add_middleware(
         SessionMiddleware,
@@ -101,7 +109,7 @@ def create_app() -> FastAPI:
         session_cookie="sabc_session",
         max_age=int(os.environ.get("SESSION_TIMEOUT", "86400")),  # Default 24 hours
         same_site="lax",  # "lax" for better compatibility, "strict" for maximum security
-        https_only=os.environ.get("ENVIRONMENT", "development") == "production",
+        https_only=os.environ.get("ENVIRONMENT", "development") not in _DEV_SECRET_FALLBACK_ENVS,
     )
 
     # CSRF protection middleware (disabled in test environment to simplify testing).
