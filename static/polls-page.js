@@ -314,6 +314,16 @@ document.addEventListener('DOMContentLoaded', function() {
         onSuccess: () => location.reload(),
         onError: (error) => showToast(`Error deleting poll: ${error}`, 'error')
     });
+
+    // Delegated listener for poll delete buttons.
+    // Using data-* attributes + addEventListener avoids the HTML-attribute ->
+    // JS string breakout vector that inline onclick="fn('{{ title }}')" exposes
+    // (admin-supplied poll titles are a stored-XSS vector against other admins).
+    document.querySelectorAll('.js-delete-poll').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            deletePoll(btn.dataset.pollId, btn.dataset.pollTitle);
+        });
+    });
 });
 
 /**
