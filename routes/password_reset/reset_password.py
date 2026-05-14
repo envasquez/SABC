@@ -79,6 +79,10 @@ async def process_password_reset(
             angler = session.query(Angler).filter(Angler.id == token_data["user_id"]).first()
             if angler:
                 angler.password_hash = password_hash
+                # Bump session_version so any sessions issued before the
+                # reset (e.g. an attacker's session, which is why the user
+                # is resetting) are invalidated on their next request.
+                angler.session_version = (angler.session_version or 1) + 1
                 session.commit()  # CRITICAL: Must commit to save password change!
 
         use_reset_token(token)

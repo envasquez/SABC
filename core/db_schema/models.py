@@ -50,6 +50,9 @@ class Angler(Base):
     created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=utc_now)
     dues_paid_through: Mapped[Optional[date]] = mapped_column(Date)
     dues_banner_dismissed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    session_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=1, server_default="1"
+    )
 
 
 class PasswordResetToken(Base):
