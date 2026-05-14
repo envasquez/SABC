@@ -20,9 +20,6 @@ async def save_team_result(
     user=Depends(require_admin),
     conn: Connection = Depends(get_db),
 ):
-    if isinstance(user, RedirectResponse):
-        return user
-
     form_data = await request.form()
     qs = QueryService(conn)
 

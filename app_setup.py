@@ -21,7 +21,6 @@ from core.deps import (
     is_dues_current_filter,
     month_number_filter,
     nl2br_filter,
-    nl2br_safe_filter,
     safe_json_filter,
     templates,
     time_format_filter,
@@ -142,7 +141,6 @@ def create_app() -> FastAPI:
     templates.env.filters["month_number"] = month_number_filter
     templates.env.filters["safe_json"] = safe_json_filter
     templates.env.filters["nl2br"] = nl2br_filter
-    templates.env.filters["nl2br_safe"] = nl2br_safe_filter
     templates.env.filters["to_local"] = to_local_datetime_filter
     templates.env.filters["is_dues_current"] = is_dues_current_filter
 

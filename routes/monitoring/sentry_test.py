@@ -2,16 +2,10 @@
 
 import os
 
+import sentry_sdk
 from fastapi import HTTPException
 
 from routes.monitoring import router
-
-try:
-    import sentry_sdk
-
-    SENTRY_AVAILABLE = True
-except ImportError:
-    SENTRY_AVAILABLE = False
 
 
 @router.get("/sentry-test")
@@ -33,13 +27,12 @@ async def sentry_test() -> dict[str, str]:
         ZeroDivisionError: Always raised to test Sentry integration
     """
     # First, manually capture a test message
-    if SENTRY_AVAILABLE:
-        sentry_sdk.capture_message(  # type: ignore[attr-defined]
-            "Sentry test endpoint was accessed - this is a manual test message",
-            level="info",
-        )
-        # Flush to ensure it's sent immediately
-        sentry_sdk.flush(timeout=2.0)  # type: ignore[attr-defined]
+    sentry_sdk.capture_message(
+        "Sentry test endpoint was accessed - this is a manual test message",
+        level="info",
+    )
+    # Flush to ensure it's sent immediately
+    sentry_sdk.flush(timeout=2.0)
 
     # Then trigger a real exception that Sentry should also capture
     result = 1 / 0  # noqa: F841
@@ -58,11 +51,11 @@ async def sentry_debug() -> dict[str, str]:
     dsn_masked = dsn[:30] + "..." if len(dsn) > 30 else dsn
 
     return {
-        "sentry_sdk_installed": str(SENTRY_AVAILABLE),
+        "sentry_sdk_installed": "True",
         "sentry_dsn_set": "Yes" if dsn != "NOT SET" else "No",
         "sentry_dsn_masked": dsn_masked,
         "environment": os.environ.get("ENVIRONMENT", "NOT SET"),
-        "sentry_initialized": str(SENTRY_AVAILABLE and dsn != "NOT SET"),
+        "sentry_initialized": str(dsn != "NOT SET"),
     }
 
 
