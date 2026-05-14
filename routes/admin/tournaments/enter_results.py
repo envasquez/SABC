@@ -23,8 +23,9 @@ async def enter_results_page(
     if isinstance(user, RedirectResponse):
         return user
 
-    # Auto-complete past tournaments using ORM session
-    auto_complete_past_tournaments()
+    # Auto-complete this tournament only (single-row write on index lookup
+    # instead of a full-table scan).
+    auto_complete_past_tournaments(tournament_id)
 
     qs = QueryService(conn)
 
