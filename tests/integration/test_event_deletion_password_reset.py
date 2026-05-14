@@ -267,10 +267,12 @@ class TestPasswordResetRequest:
         self,
         client: TestClient,
     ):
-        """Empty email should fail. fastapi >= 0.133 rejects at the Form() layer
-        with 422 before the route runs; older versions accepted "" and the
-        route handler redirected 303 with ?error=... Either is a valid
-        rejection — assert the request didn't succeed.
+        """Empty email should redirect back to the form with a flash error.
+
+        The route validates the empty string itself (it does not rely on
+        FastAPI's `Form(...)` parser to reject it) and returns 303 with
+        ?error=... in the Location. Pinned to 303 so any drift to a 422
+        (parser-level rejection) or 200 (silently accepted) shows up.
         """
         response = post_with_csrf(
             client,
@@ -279,9 +281,8 @@ class TestPasswordResetRequest:
             follow_redirects=False,
         )
 
-        assert response.status_code in [302, 303, 422]
-        if response.status_code in [302, 303]:
-            assert "error" in response.headers.get("location", "").lower()
+        assert response.status_code == 303
+        assert "error" in response.headers.get("location", "").lower()
 
     @patch("routes.password_reset.request_reset.send_password_reset_email")
     @patch("routes.password_reset.request_reset.create_password_reset_token")

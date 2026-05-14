@@ -49,9 +49,12 @@ class TestEventCreationHelpers:
     def test_create_event_with_missing_required_fields_fails(
         self, admin_client: TestClient, db_session: Session
     ):
-        """Empty `name` should fail. fastapi >= 0.133 rejects at Form() with
-        422 before the route runs; older versions accepted "" and the route
-        redirected 303 with ?error=... Either is a valid rejection.
+        """Empty `name` should redirect back with a validation flash error.
+
+        The route's own validation rejects the empty name and redirects to
+        /admin/events?error=Validation%20failed... with 303. Pinned to 303
+        so any drift to a 422 (parser-level rejection) or 2xx (silently
+        accepted -> event created with empty name) shows up.
         """
         future_date = (now_local() + timedelta(days=30)).strftime("%Y-%m-%d")
 
@@ -69,7 +72,8 @@ class TestEventCreationHelpers:
             follow_redirects=False,
         )
 
-        assert response.status_code in [302, 303, 422]
+        assert response.status_code == 303
+        assert "error" in response.headers.get("location", "").lower()
 
     def test_create_event_with_invalid_lake_fails(
         self, admin_client: TestClient, db_session: Session
@@ -140,9 +144,12 @@ class TestEventUpdateErrors:
         test_event: Event,
         db_session: Session,
     ):
-        """Empty `name` should fail. fastapi >= 0.133 rejects at Form() with
-        422 before the route runs; older versions accepted "" and the route
-        redirected 303 with ?error=... Either is a valid rejection.
+        """Empty `name` should redirect back with a validation flash error.
+
+        The route's own validation rejects the empty name and redirects to
+        /admin/events?error=Validation%20failed... with 303. Pinned to 303
+        so any drift to a 422 (parser-level rejection) or 2xx (silently
+        accepted -> event updated to empty name) shows up.
         """
         response = post_with_csrf(
             admin_client,
@@ -155,7 +162,8 @@ class TestEventUpdateErrors:
             follow_redirects=False,
         )
 
-        assert response.status_code in [302, 303, 422]
+        assert response.status_code == 303
+        assert "error" in response.headers.get("location", "").lower()
 
     def test_update_event_with_invalid_foreign_key_fails(
         self,
