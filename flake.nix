@@ -45,6 +45,10 @@
           # Markdown rendering
           markdown  # For rendering markdown content as HTML
 
+          # Monitoring & observability (hard dependencies)
+          sentry-sdk  # Error monitoring
+          prometheus-client  # Metrics collection
+
           # Testing
           pytest
           pytest-cov
@@ -271,6 +275,8 @@ print('Database reset complete!')
             requests
             beautifulsoup4
             markdown
+            sentry-sdk
+            prometheus-client
           ];
 
           # Skip tests for package build

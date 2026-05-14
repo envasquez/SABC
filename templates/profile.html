@@ -51,16 +51,16 @@
                 <form method="POST" action="/profile/update">
                     {{ csrf_token(request) }}
                     <div class="fg">
-                        <label class="fl">Email</label>
-                        <input class="fi" type="email" name="email" value="{{user.email or ''}}" required>
+                        <label class="fl" for="profile-email">Email</label>
+                        <input class="fi" id="profile-email" type="email" name="email" value="{{user.email or ''}}" required>
                     </div>
                     <div class="fg">
-                        <label class="fl">Phone</label>
+                        <label class="fl" for="phoneInput">Phone</label>
                         <input class="fi" type="tel" name="phone" id="phoneInput" value="{{user.phone or ''}}" placeholder="(555) 123-4567" maxlength="14">
                     </div>
                     <div class="fg">
-                        <label class="fl">Year Joined</label>
-                        <input class="fi" type="number" name="year_joined" value="{{user.year_joined or 2024}}" min="1981" max="2030">
+                        <label class="fl" for="profile-year-joined">Year Joined</label>
+                        <input class="fi" id="profile-year-joined" type="number" name="year_joined" value="{{user.year_joined or 2024}}" min="1981" max="2030">
                     </div>
 
                     <!-- Password Change Section -->
@@ -68,17 +68,17 @@
                         <div style="font-size:.88rem;font-weight:600;color:var(--brand);margin-bottom:.35rem"><i class="bi bi-key"></i> Change Password</div>
                         <div style="font-size:.78rem;color:var(--t4);margin-bottom:1rem">Leave blank to keep your current password.</div>
                         <div class="fg">
-                            <label class="fl">Current Password</label>
-                            <input class="fi" type="password" name="current_password" placeholder="Enter current password">
+                            <label class="fl" for="pw-current">Current Password</label>
+                            <input class="fi" id="pw-current" type="password" name="current_password" placeholder="Enter current password" autocomplete="current-password">
                         </div>
                         <div class="fg">
-                            <label class="fl">New Password</label>
-                            <input class="fi" type="password" name="new_password" placeholder="12+ characters" minlength="12">
+                            <label class="fl" for="pw-new">New Password</label>
+                            <input class="fi" id="pw-new" type="password" name="new_password" placeholder="12+ characters" minlength="12" autocomplete="new-password">
                             <div style="font-size:.72rem;color:var(--t4);margin-top:.3rem">Uppercase, lowercase, number, and special character required</div>
                         </div>
                         <div class="fg">
-                            <label class="fl">Confirm New Password</label>
-                            <input class="fi" type="password" name="confirm_password" placeholder="Confirm new password">
+                            <label class="fl" for="pw-confirm">Confirm New Password</label>
+                            <input class="fi" id="pw-confirm" type="password" name="confirm_password" placeholder="Confirm new password" autocomplete="new-password">
                         </div>
                     </div>
 

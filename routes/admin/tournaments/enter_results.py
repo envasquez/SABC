@@ -20,9 +20,6 @@ async def enter_results_page(
     user=Depends(require_admin),
     conn: Connection = Depends(get_db),
 ):
-    if isinstance(user, RedirectResponse):
-        return user
-
     # Auto-complete this tournament only (single-row write on index lookup
     # instead of a full-table scan).
     auto_complete_past_tournaments(tournament_id)
