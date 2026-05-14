@@ -21,9 +21,6 @@ async def save_result(
     conn: Connection = Depends(get_db),
 ):
     """Save or update individual tournament result."""
-    if isinstance(user, RedirectResponse):
-        return user
-
     form_data = await request.form()
     qs = QueryService(conn)
 
@@ -150,9 +147,6 @@ async def delete_result(
     conn: Connection = Depends(get_db),
 ):
     """Delete an individual tournament result."""
-    if isinstance(user, RedirectResponse):
-        return user
-
     qs = QueryService(conn)
 
     try:
