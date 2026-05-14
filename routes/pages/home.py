@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import time
@@ -32,6 +33,7 @@ from core.helpers.logging import get_logger
 from core.helpers.pagination import PaginationState
 from core.helpers.poll_day_info import get_poll_day_info
 from core.helpers.response import error_redirect, success_redirect
+from core.helpers.timezone import now_local
 from core.query_service import QueryService
 from routes.dependencies import get_lakes_list, get_ramps_for_lake
 
@@ -165,16 +167,24 @@ async def home_paginated(request: Request, page: int = 1):
         # Combine both queries
         tournaments_query = list(completed_tournaments_query) + list(upcoming_tournaments_query)
 
-        tournaments_with_results: List[Dict[str, Any]] = []
-        for tournament in tournaments_query:
-            tournament_id = tournament.id
-            poll_id = tournament.poll_id
+        # Batch-fetch the per-tournament data the loop needs, so we don't
+        # fire 3-4 queries per tournament card (was an N+1 burning 12+ round
+        # trips for the typical 4-tournament homepage).
+        tournament_ids = [t.id for t in tournaments_query]
+        poll_ids = [t.poll_id for t in tournaments_query if t.poll_id]
 
-            # Get top 3 team results for this tournament
+        # 1) Top-3 team results bucketed by tournament_id. We sort by
+        # (tournament_id, place_finish) and slice to 3 per tournament in
+        # Python — cheaper than N LIMIT-3 round trips, and order is preserved.
+        # The "Admin User" filter (default admin who should never appear on
+        # the homepage podium) is preserved verbatim.
+        top_results_by_tid: Dict[int, List[Any]] = {tid: [] for tid in tournament_ids}
+        if tournament_ids:
             Angler1 = aliased(Angler)
             Angler2 = aliased(Angler)
-            top_results_query = (
+            all_top_results = (
                 session.query(
+                    TeamResult.tournament_id,
                     TeamResult.place_finish,
                     Angler1.name.label("angler1_name"),
                     Angler2.name.label("angler2_name"),
@@ -184,58 +194,99 @@ async def home_paginated(request: Request, page: int = 1):
                 .join(Angler1, TeamResult.angler1_id == Angler1.id)
                 .outerjoin(Angler2, TeamResult.angler2_id == Angler2.id)
                 .filter(
-                    TeamResult.tournament_id == tournament_id,
+                    TeamResult.tournament_id.in_(tournament_ids),
                     Angler1.name != "Admin User",
                     (Angler2.name != "Admin User") | (Angler2.name.is_(None)),
                 )
-                .order_by(TeamResult.place_finish.asc())
-                .limit(3)
+                .order_by(TeamResult.tournament_id.asc(), TeamResult.place_finish.asc())
                 .all()
             )
+            for row in all_top_results:
+                bucket = top_results_by_tid[row.tournament_id]
+                if len(bucket) < 3:
+                    # Strip the tournament_id prefix so the row shape stays
+                    # (place_finish, a1_name, a2_name, total_weight, team_size)
+                    # — the template indexes result[0]..result[3], so the
+                    # positional shape must match the original query exactly.
+                    bucket.append(
+                        (
+                            row.place_finish,
+                            row.angler1_name,
+                            row.angler2_name,
+                            row.total_weight,
+                            row.team_size,
+                        )
+                    )
+
+        # 2) Polls keyed by id (for starts_at/closes_at status check).
+        polls_by_id: Dict[int, Poll] = {}
+        if poll_ids:
+            polls_by_id = {p.id: p for p in session.query(Poll).filter(Poll.id.in_(poll_ids)).all()}
+
+        # 3) Poll options + vote counts bucketed by poll_id. Identical
+        # outerjoin+group_by shape to the original per-poll query.
+        options_by_poll: Dict[int, List[Any]] = {pid: [] for pid in poll_ids}
+        if poll_ids:
+            all_poll_options = (
+                session.query(
+                    PollOption.poll_id,
+                    PollOption.id,
+                    PollOption.option_text,
+                    PollOption.option_data,
+                    func.count(PollVote.id).label("vote_count"),
+                )
+                .outerjoin(PollVote, PollOption.id == PollVote.option_id)
+                .filter(PollOption.poll_id.in_(poll_ids))
+                .group_by(
+                    PollOption.poll_id,
+                    PollOption.id,
+                    PollOption.option_text,
+                    PollOption.option_data,
+                )
+                .all()
+            )
+            for opt in all_poll_options:
+                options_by_poll[opt.poll_id].append(opt)
+
+        # 4) Which polls has the current user voted in? Only query when a
+        # user is logged in — anonymous visitors can never have a vote row.
+        user_voted_polls: set[int] = set()
+        if user and poll_ids:
+            user_id = user.get("id")
+            user_voted_polls = {
+                pv.poll_id
+                for pv in session.query(PollVote.poll_id)
+                .filter(PollVote.poll_id.in_(poll_ids), PollVote.angler_id == user_id)
+                .all()
+            }
+
+        now = now_local() if poll_ids else None
+
+        tournaments_with_results: List[Dict[str, Any]] = []
+        for tournament in tournaments_query:
+            tournament_id = tournament.id
+            poll_id = tournament.poll_id
+
+            top_results_query = top_results_by_tid.get(tournament_id, [])
 
             # Get poll data and check if user has voted
-            import json
-
             poll_data = None
             user_has_voted = False
             poll_is_open = False
 
             if poll_id:
-                # Get poll status
-                poll = session.query(Poll).filter(Poll.id == poll_id).first()
-                if poll:
-                    from core.helpers.timezone import now_local
+                poll = polls_by_id.get(poll_id)
+                # Poll datetimes are already timezone-aware from database
+                if poll and poll.starts_at and poll.closes_at and now is not None:
+                    poll_is_open = poll.starts_at <= now <= poll.closes_at
 
-                    now = now_local()
-                    # Poll datetimes are already timezone-aware from database
-                    if poll.starts_at and poll.closes_at:
-                        poll_is_open = poll.starts_at <= now <= poll.closes_at
-
-                # Get poll options with vote counts (for all users if they've voted)
-                poll_options = (
-                    session.query(
-                        PollOption.id,
-                        PollOption.option_text,
-                        PollOption.option_data,
-                        func.count(PollVote.id).label("vote_count"),
-                    )
-                    .outerjoin(PollVote, PollOption.id == PollVote.option_id)
-                    .filter(PollOption.poll_id == poll_id)
-                    .group_by(PollOption.id, PollOption.option_text, PollOption.option_data)
-                    .all()
-                )
+                poll_options = options_by_poll.get(poll_id, [])
 
                 # Check if user has voted. get_user_optional always returns a
                 # UserDict (or None) — the previous defensive isinstance check
                 # was lying to the type system.
                 if user:
-                    user_id = user.get("id")
-                    user_vote = (
-                        session.query(PollVote)
-                        .filter(PollVote.poll_id == poll_id, PollVote.angler_id == user_id)
-                        .first()
-                    )
-                    user_has_voted = user_vote is not None
+                    user_has_voted = poll_id in user_voted_polls
 
                 # Show poll data if user has voted OR if poll is closed (results are public)
                 if (user_has_voted or not poll_is_open) and poll_options:
