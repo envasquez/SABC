@@ -36,6 +36,7 @@ share/
 pyvenv.cfg
 
 # IDEs
+.claude/
 .vscode/
 .idea/
 *.swp
