@@ -24,11 +24,11 @@
             </div>
             <div class="fg">
                 <label class="fl" for="email">Email</label>
-                <input class="fi" type="email" id="email" name="email" placeholder="your@email.com" value="{{ email or '' }}" required>
+                <input class="fi" type="email" id="email" name="email" placeholder="your@email.com" value="{{ email or '' }}" autocomplete="email" required>
             </div>
             <div class="fg">
                 <label class="fl" for="password">Password</label>
-                <input class="fi" type="password" id="password" name="password" placeholder="Create a password" minlength="12" required>
+                <input class="fi" type="password" id="password" name="password" placeholder="Create a password" minlength="12" autocomplete="new-password" required>
                 <div style="font-size:.75rem;color:var(--t4);margin-top:.25rem;line-height:1.5">
                     12+ characters with uppercase, lowercase, number, and special character (!@#$%^&*)
                 </div>
