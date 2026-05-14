@@ -57,6 +57,7 @@ pyvenv.cfg
 .env.*
 !.env.example
 !.env.production.example
+!.env.local-test.example
 .env.local
 .env.development
 .env.production

@@ -201,11 +201,10 @@
                             <td style="text-align:right">
                                 <div style="display:flex;gap:.35rem;justify-content:flex-end">
                                     <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
-                                    <button class="btn-icon btn-icon-danger"
+                                    <button class="btn-icon btn-icon-danger js-delete-event"
                                             data-event-id="{{ event.id }}"
                                             data-event-name="{{ event.name }}"
                                             data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
-                                            onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)"
                                             aria-label="Delete event">
                                         <i class="bi bi-trash"></i>
                                     </button>
@@ -264,11 +263,10 @@
                             <td style="text-align:right">
                                 <div style="display:flex;gap:.35rem;justify-content:flex-end">
                                     <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
-                                    <button class="btn-icon btn-icon-danger"
+                                    <button class="btn-icon btn-icon-danger js-delete-event"
                                             data-event-id="{{ event.id }}"
                                             data-event-name="{{ event.name }}"
                                             data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
-                                            onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)"
                                             aria-label="Delete event">
                                         <i class="bi bi-trash"></i>
                                     </button>
@@ -311,11 +309,10 @@
                             <td style="text-align:right">
                                 <div style="display:flex;gap:.35rem;justify-content:flex-end">
                                     <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
-                                    <button class="btn-icon btn-icon-danger"
+                                    <button class="btn-icon btn-icon-danger js-delete-event"
                                             data-event-id="{{ event.id }}"
                                             data-event-name="{{ event.name }}"
                                             data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
-                                            onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)"
                                             aria-label="Delete event">
                                         <i class="bi bi-trash"></i>
                                     </button>
@@ -362,11 +359,10 @@
                             <td style="text-align:right">
                                 <div style="display:flex;gap:.35rem;justify-content:flex-end">
                                     <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
-                                    <button class="btn-icon btn-icon-danger"
+                                    <button class="btn-icon btn-icon-danger js-delete-event"
                                             data-event-id="{{ event.id }}"
                                             data-event-name="{{ event.name }}"
                                             data-has-dependencies="{{ 'true' if event.has_poll or event.has_tournament else 'false' }}"
-                                            onclick="deleteEvent(this.dataset.eventId, this.dataset.hasDependencies === 'true', this.dataset.eventName)"
                                             aria-label="Delete event">
                                         <i class="bi bi-trash"></i>
                                     </button>

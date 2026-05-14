@@ -26,8 +26,6 @@ async def create_event_page(request: Request):
     from routes.dependencies import templates
 
     user = require_admin(request)
-    if isinstance(user, RedirectResponse):
-        return user
 
     # Reuse the events list template which has inline creation capability
     return templates.TemplateResponse(

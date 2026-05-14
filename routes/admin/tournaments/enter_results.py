@@ -20,9 +20,6 @@ async def enter_results_page(
     user=Depends(require_admin),
     conn: Connection = Depends(get_db),
 ):
-    if isinstance(user, RedirectResponse):
-        return user
-
     # Auto-complete past tournaments using ORM session
     auto_complete_past_tournaments()
 

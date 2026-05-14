@@ -334,6 +334,21 @@ function setupEventListeners() {
             }
         });
     }
+
+    // Delegated listener for delete-event buttons.
+    // Using addEventListener with data-* attributes avoids the HTML-attribute ->
+    // JS string breakout vector that inline onclick="fn('{{ name }}')" exposes
+    // (admin-supplied event names are a stored-XSS vector against other admins).
+    document.querySelectorAll('.js-delete-event').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const d = btn.dataset;
+            deleteEvent(
+                d.eventId,
+                d.hasDependencies === 'true',
+                d.eventName
+            );
+        });
+    });
 }
 
 // Initialize when DOM is ready
