@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Diagnostic script to check if a user's password hash exists and is valid.
 
-Usage: python check_user_password.py <email>
+Usage: python scripts/check_user_password.py <email>
 """
 
 import shlex
@@ -10,7 +10,7 @@ import sys
 from core.db_schema import Angler, get_session
 
 if len(sys.argv) < 2:
-    print("Usage: python check_user_password.py <email>")
+    print("Usage: python scripts/check_user_password.py <email>")
     sys.exit(1)
 
 email = sys.argv[1].lower().strip()
