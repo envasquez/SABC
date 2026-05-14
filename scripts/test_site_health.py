@@ -8,7 +8,7 @@ Tests all public and admin routes for:
 - Proper redirects for auth-protected pages
 - Database connectivity
 
-Run with: python test_site_health.py
+Run with: python scripts/test_site_health.py
 """
 
 import sys
