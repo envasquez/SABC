@@ -12,6 +12,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Query, Session
 
 from core.db_schema import Angler, Event, Photo, TeamResult, Tournament, get_session
 from core.helpers.auth import get_current_user, require_member
@@ -176,12 +177,18 @@ def can_edit_photo(user: UserDict, photo: Photo) -> bool:
 
 
 def build_photo_query(
-    session: Any,
+    session: Session,
     tournament_id_int: Optional[int],
     angler_id_int: Optional[int],
     big_bass_bool: Optional[bool],
-) -> Any:
-    """Build the base query for photos with filters."""
+) -> "Query[Any]":
+    """Build the base query for photos with filters.
+
+    Returns Query[Any] because the underlying query selects a 3-tuple
+    (Photo, Angler, Tournament) — there is no single row type to parametrise
+    Query with. The Session parameter is now explicit so callers get type
+    checking on the session they pass in.
+    """
     query = (
         session.query(Photo, Angler, Tournament)
         .join(Angler, Photo.angler_id == Angler.id)
