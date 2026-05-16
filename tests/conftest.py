@@ -3,14 +3,23 @@
 import os
 
 # CRITICAL: Set test database URL BEFORE any imports
-# This must happen before core.db_schema.engine imports and creates the engine
-# Use file-based SQLite so multiple engines can share the same database
-TEST_DATABASE_URL = "sqlite:///test_sabc.db"  # File-based SQLite for tests
+# This must happen before core.db_schema.engine imports and creates the engine.
+# File-based SQLite (not :memory:) is used so the app's engine and the test
+# engine — two engines built from DATABASE_URL — share one database.
+# Each pytest-xdist worker gets its own file so parallel workers stay isolated;
+# PYTEST_XDIST_WORKER is "main" when running without xdist.
+_worker_id = os.environ.get("PYTEST_XDIST_WORKER", "main")
+TEST_DATABASE_URL = f"sqlite:///test_sabc_{_worker_id}.db"
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 os.environ["ENVIRONMENT"] = "test"
 os.environ["SECRET_KEY"] = "test-secret-key-for-testing-only-minimum-32-characters-long"
 os.environ["DEBUG"] = "false"
 os.environ["LOG_LEVEL"] = "ERROR"
+# Use the minimum bcrypt work factor in tests. At the production factor (12),
+# bcrypt costs ~380ms per hash/verify and dominates the suite runtime; at 4 it
+# is ~1.6ms. The cost is encoded in the hash, so test-created hashes are also
+# cheap to verify. Production reads no BCRYPT_ROUNDS and defaults to 12.
+os.environ["BCRYPT_ROUNDS"] = "4"
 
 # ruff: noqa: E402 - Must set env vars before imports
 from datetime import date, datetime, timedelta, timezone
@@ -79,6 +88,7 @@ def set_test_environment():
     os.environ["DATABASE_URL"] = TEST_DATABASE_URL
     os.environ["DEBUG"] = "false"
     os.environ["LOG_LEVEL"] = "ERROR"  # Reduce noise in test output
+    os.environ["BCRYPT_ROUNDS"] = "4"  # Fast hashing for tests (see module header)
     yield
     # Cleanup
     os.environ.pop("ENVIRONMENT", None)
@@ -150,8 +160,8 @@ def test_password() -> str:
 
 @pytest.fixture
 def password_hash(test_password: str) -> str:
-    """Hashed version of test password."""
-    return bcrypt.hashpw(test_password.encode(), bcrypt.gensalt()).decode()
+    """Hashed version of test password (work factor 4 — see module header)."""
+    return bcrypt.hashpw(test_password.encode(), bcrypt.gensalt(4)).decode()
 
 
 @pytest.fixture

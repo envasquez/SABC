@@ -13,6 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from core.db_schema import Angler, get_session
 from core.helpers.forms import normalize_email
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
+from core.helpers.passwords import bcrypt_gensalt
 from core.helpers.response import get_client_ip, get_safe_redirect_url, set_user_session
 from routes.dependencies import bcrypt, get_current_user, templates
 
@@ -145,7 +146,7 @@ async def login(
                 user_session_version = angler.session_version
             else:
                 # User doesn't exist - perform dummy hash to prevent timing attack
-                stored_hash = bcrypt.hashpw(b"dummy_password", bcrypt.gensalt())
+                stored_hash = bcrypt.hashpw(b"dummy_password", bcrypt_gensalt())
                 user_id = None
                 user_name = None
                 user_session_version = 1
