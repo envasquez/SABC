@@ -242,7 +242,7 @@ def photo_to_dict(
 
 
 @router.get("/photos")
-async def gallery(
+def gallery(
     request: Request,
     tournament_id: Optional[str] = None,
     angler_id: Optional[str] = None,
@@ -350,7 +350,7 @@ async def gallery(
 
 
 @router.get("/photos/upload")
-async def upload_form(request: Request) -> Any:
+def upload_form(request: Request) -> Any:
     """Display the photo upload form."""
     user = require_member(request)
 
@@ -520,7 +520,7 @@ async def upload_photo(
 
 
 @router.post("/photos/{photo_id}/delete")
-async def delete_photo(request: Request, photo_id: int) -> RedirectResponse:
+def delete_photo(request: Request, photo_id: int) -> RedirectResponse:
     """Delete a photo."""
     user = require_member(request)
 
@@ -565,7 +565,7 @@ async def delete_photo(request: Request, photo_id: int) -> RedirectResponse:
 
 
 @router.get("/photos/{photo_id}/edit")
-async def edit_photo_form(request: Request, photo_id: int) -> Any:
+def edit_photo_form(request: Request, photo_id: int) -> Any:
     """Display the photo edit form."""
     user = require_member(request)
 
@@ -605,7 +605,7 @@ async def edit_photo_form(request: Request, photo_id: int) -> Any:
 
 
 @router.post("/photos/{photo_id}/edit")
-async def edit_photo(
+def edit_photo(
     request: Request,
     photo_id: int,
     caption: str = Form(default=""),

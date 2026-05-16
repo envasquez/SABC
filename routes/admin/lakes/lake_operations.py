@@ -11,7 +11,7 @@ router = APIRouter()
 
 
 @router.post("/admin/lakes/create")
-async def create_lake(
+def create_lake(
     request: Request,
     name: str = Form(...),
     display_name: str = Form(...),
@@ -49,7 +49,7 @@ async def create_lake(
 
 
 @router.post("/admin/lakes/{lake_id}/update")
-async def update_lake(
+def update_lake(
     request: Request,
     lake_id: int,
     name: str = Form(...),

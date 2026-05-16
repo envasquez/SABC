@@ -20,7 +20,7 @@ def _delete_poll_cascade(session: Session, poll_id: int) -> None:
 
 
 @router.delete("/admin/polls/{poll_id}")
-async def delete_poll(request: Request, poll_id: int) -> Response:
+def delete_poll(request: Request, poll_id: int) -> Response:
     """Delete a poll and all associated votes and options."""
     return delete_entity(
         request,
@@ -33,7 +33,7 @@ async def delete_poll(request: Request, poll_id: int) -> Response:
 
 
 @router.delete("/admin/votes/{vote_id}")
-async def delete_vote(request: Request, vote_id: int) -> JSONResponse:
+def delete_vote(request: Request, vote_id: int) -> JSONResponse:
     _user = require_admin(request)
     try:
         with get_session() as session:

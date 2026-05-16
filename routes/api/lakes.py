@@ -10,7 +10,7 @@ logger = get_logger(__name__)
 
 
 @router.get("/api/lakes")
-async def api_get_lakes() -> JSONResponse:
+def api_get_lakes() -> JSONResponse:
     try:
         with get_session() as session:
             lakes_query = (
@@ -38,7 +38,7 @@ async def api_get_lakes() -> JSONResponse:
 
 
 @router.get("/api/lakes/{lake_key}/ramps")
-async def api_get_lake_ramps(lake_key: str) -> JSONResponse:
+def api_get_lake_ramps(lake_key: str) -> JSONResponse:
     with get_session() as session:
         lake = session.query(Lake).filter(Lake.yaml_key == lake_key).first()
         if not lake:

@@ -905,7 +905,31 @@ def seed_data() -> None:
     print("   • Officer positions for 2020-2026")
 
 
+_ALLOWED_SEED_ENVIRONMENTS = ("development", "staging", "test", "local")
+
+
+def _require_non_production_environment() -> None:
+    """Abort unless ENVIRONMENT is a non-production value.
+
+    This script creates well-known credentials (admin@sabc.com/admin123 and
+    members with password123). Running it against production would be a
+    serious security incident, so refuse to run anywhere that isn't
+    explicitly a development/staging/test/local environment.
+    """
+    environment = os.environ.get("ENVIRONMENT", "").lower()
+    if environment not in _ALLOWED_SEED_ENVIRONMENTS:
+        print(
+            "❌ Refusing to seed: ENVIRONMENT must be one of "
+            f"{', '.join(_ALLOWED_SEED_ENVIRONMENTS)} "
+            f"(got {os.environ.get('ENVIRONMENT', '') or '<unset>'!r}).\n"
+            "   This script creates well-known test credentials and must "
+            "never run against production."
+        )
+        sys.exit(1)
+
+
 if __name__ == "__main__":
+    _require_non_production_environment()
     try:
         seed_data()
     except Exception as e:

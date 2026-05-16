@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @router.delete("/admin/tournaments/{tournament_id}/results/{result_id}")
-async def delete_result(
+def delete_result(
     tournament_id: int,
     result_id: int,
     user: UserDict = Depends(require_admin),
@@ -58,7 +58,7 @@ async def delete_result(
 
 
 @router.delete("/admin/tournaments/{tournament_id}/team-results/{team_result_id}")
-async def delete_team_result(
+def delete_team_result(
     tournament_id: int,
     team_result_id: int,
     user: UserDict = Depends(require_admin),
@@ -99,7 +99,7 @@ async def delete_team_result(
 
 
 @router.post("/admin/tournaments/{tournament_id}/toggle-complete")
-async def toggle_tournament_complete(
+def toggle_tournament_complete(
     tournament_id: int,
     user: UserDict = Depends(require_admin),
     conn: Connection = Depends(get_db),

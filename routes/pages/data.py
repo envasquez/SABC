@@ -11,7 +11,7 @@ router = APIRouter()
 
 
 @router.get("/data")
-async def data_dashboard(
+def data_dashboard(
     request: Request,
     qs: QueryService = Depends(get_query_service),
 ) -> Response:

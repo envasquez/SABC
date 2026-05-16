@@ -76,10 +76,10 @@ def use_reset_token(token: str) -> bool:
         rowcount = mark_token_used(token)
 
         if rowcount > 0:
-            logger.info(f"Marked reset token as used: {token[:10]}...")
+            logger.info("Marked reset token as used")
             return True
         else:
-            logger.warning(f"Failed to mark token as used: {token[:10]}...")
+            logger.warning("Failed to mark token as used (token not found or already used)")
             return False
     except Exception as e:
         logger.error(f"Error marking token as used: {e}")

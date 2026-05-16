@@ -10,7 +10,7 @@ router = APIRouter()
 
 
 @router.post("/profile/update")
-async def update_profile(
+def update_profile(
     request: Request,
     email: str = Form(...),
     phone: str = Form(""),
@@ -20,12 +20,12 @@ async def update_profile(
     confirm_password: str = Form(""),
 ) -> RedirectResponse:
     """Update user profile including optional password change."""
-    return await update_profile_fields(
+    return update_profile_fields(
         request, email, phone, year_joined, current_password, new_password, confirm_password
     )
 
 
 @router.post("/profile/delete")
-async def delete_profile(request: Request, confirm: str = Form(...)) -> RedirectResponse:
+def delete_profile(request: Request, confirm: str = Form(...)) -> RedirectResponse:
     """Delete user account with confirmation."""
-    return await delete_account(request, confirm)
+    return delete_account(request, confirm)

@@ -42,7 +42,7 @@ def _delete_event_cascade(session: Session, event_id: int) -> None:
 
 
 @router.post("/admin/events/{event_id}/delete")
-async def delete_event_post(request: Request, event_id: int) -> Response:
+def delete_event_post(request: Request, event_id: int) -> Response:
     """Delete an event via POST (for form submissions)."""
     return delete_entity(
         request,
@@ -57,7 +57,7 @@ async def delete_event_post(request: Request, event_id: int) -> Response:
 
 
 @router.delete("/admin/events/{event_id}")
-async def delete_event(request: Request, event_id: int) -> Response:
+def delete_event(request: Request, event_id: int) -> Response:
     """Delete an event and its associated data."""
     return delete_entity(
         request,

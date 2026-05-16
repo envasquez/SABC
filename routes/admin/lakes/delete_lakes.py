@@ -42,7 +42,7 @@ def _cascade_delete_ramps(session: Session, lake_id: int) -> None:
 
 
 @router.delete("/admin/ramps/{ramp_id}")
-async def delete_ramp(request: Request, ramp_id: int) -> Response:
+def delete_ramp(request: Request, ramp_id: int) -> Response:
     """Delete a ramp (cannot delete if referenced by tournaments)."""
     return delete_entity(
         request,
@@ -55,7 +55,7 @@ async def delete_ramp(request: Request, ramp_id: int) -> Response:
 
 
 @router.delete("/admin/lakes/{lake_id}")
-async def delete_lake(request: Request, lake_id: int) -> Response:
+def delete_lake(request: Request, lake_id: int) -> Response:
     """Delete a lake and its ramps (cannot delete if ramps are referenced by tournaments)."""
     return delete_entity(
         request,

@@ -22,7 +22,7 @@ limiter = Limiter(key_func=get_remote_address, enabled=not is_test_env)
 
 
 @router.get("/register")
-async def register_page(request: Request) -> Response:
+def register_page(request: Request) -> Response:
     return (
         RedirectResponse("/")
         if get_current_user(request)
@@ -31,7 +31,7 @@ async def register_page(request: Request) -> Response:
 
 
 @router.get("/auth/register")
-async def register_page_auth(request: Request) -> Response:
+def register_page_auth(request: Request) -> Response:
     """Alternative route for /auth/register."""
     return (
         RedirectResponse("/")
@@ -42,7 +42,7 @@ async def register_page_auth(request: Request) -> Response:
 
 @router.post("/register")
 @limiter.limit("3/hour")
-async def register(
+def register(
     request: Request,
     first_name: str = Form(...),
     last_name: str = Form(...),

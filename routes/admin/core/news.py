@@ -20,7 +20,7 @@ router = APIRouter()
 
 
 @router.get("/admin/news")
-async def admin_news(request: Request, show_archived: bool = False) -> Response:
+def admin_news(request: Request, show_archived: bool = False) -> Response:
     user = require_admin(request)
 
     with get_session() as session:
@@ -58,7 +58,7 @@ async def admin_news(request: Request, show_archived: bool = False) -> Response:
 
 
 @router.post("/admin/news/create")
-async def create_news(
+def create_news(
     request: Request,
     title: str = Form(...),
     content: str = Form(...),
@@ -144,7 +144,7 @@ async def create_news(
 
 
 @router.get("/admin/news/{news_id}/edit")
-async def edit_news_form(request: Request, news_id: int) -> Response:
+def edit_news_form(request: Request, news_id: int) -> Response:
     """GET endpoint for editing news - returns the edit form."""
     user = require_admin(request)
 
@@ -167,7 +167,7 @@ async def edit_news_form(request: Request, news_id: int) -> Response:
 
 
 @router.post("/admin/news/{news_id}/update")
-async def update_news(
+def update_news(
     request: Request,
     news_id: int,
     title: str = Form(...),
@@ -221,7 +221,7 @@ async def update_news(
 
 
 @router.post("/admin/news/test-email")
-async def test_news_email(
+def test_news_email(
     request: Request, title: str = Form(...), content: str = Form(...)
 ) -> RedirectResponse:
     """Send a test email notification to the currently logged-in admin."""
@@ -257,7 +257,7 @@ async def test_news_email(
 
 
 @router.post("/admin/news/{news_id}/delete")
-async def delete_news_post(request: Request, news_id: int) -> Response:
+def delete_news_post(request: Request, news_id: int) -> Response:
     """POST endpoint for deleting news (for form submissions)."""
     return delete_entity(
         request,
@@ -270,7 +270,7 @@ async def delete_news_post(request: Request, news_id: int) -> Response:
 
 
 @router.delete("/admin/news/{news_id}")
-async def delete_news(request: Request, news_id: int) -> Response:
+def delete_news(request: Request, news_id: int) -> Response:
     """DELETE endpoint for deleting news (for AJAX requests)."""
     return delete_entity(
         request,
@@ -282,7 +282,7 @@ async def delete_news(request: Request, news_id: int) -> Response:
 
 
 @router.post("/admin/news/{news_id}/archive")
-async def archive_news(request: Request, news_id: int) -> RedirectResponse:
+def archive_news(request: Request, news_id: int) -> RedirectResponse:
     """Archive a news item (soft delete)."""
     require_admin(request)
 
@@ -300,7 +300,7 @@ async def archive_news(request: Request, news_id: int) -> RedirectResponse:
 
 
 @router.post("/admin/news/{news_id}/unarchive")
-async def unarchive_news(request: Request, news_id: int) -> RedirectResponse:
+def unarchive_news(request: Request, news_id: int) -> RedirectResponse:
     """Unarchive a news item (restore from archive)."""
     require_admin(request)
 

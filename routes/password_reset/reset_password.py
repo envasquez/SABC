@@ -22,7 +22,7 @@ logger = get_logger("password_reset")
 
 
 @router.get("/reset-password")
-async def reset_password_form(
+def reset_password_form(
     request: Request, token: str = Query(..., description="Password reset token")
 ) -> Response:
     try:
@@ -56,7 +56,7 @@ async def reset_password_form(
 
 
 @router.post("/reset-password")
-async def process_password_reset(
+def process_password_reset(
     request: Request,
     token: str = Form(..., description="Password reset token"),
     password: str = Form(..., min_length=8, description="New password"),

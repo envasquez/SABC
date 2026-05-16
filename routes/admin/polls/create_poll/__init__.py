@@ -8,8 +8,8 @@ router = APIRouter()
 
 
 @router.get("/admin/polls/create")
-async def get_create_poll_form(request: Request, event_id: int = Query(None)) -> Response:
-    return await create_poll_form(request, event_id)
+def get_create_poll_form(request: Request, event_id: int = Query(None)) -> Response:
+    return create_poll_form(request, event_id)
 
 
 @router.post("/admin/polls/create")

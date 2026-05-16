@@ -24,7 +24,7 @@ def _is_dues_current(dues_paid_through: object) -> bool:
 
 
 @router.get("/admin/users")
-async def admin_users(request: Request, user: AdminUser) -> Response:
+def admin_users(request: Request, user: AdminUser) -> Response:
     users = get_admin_anglers_list()
     members = [u for u in users if u.get("member")]
     active_member_count = sum(1 for u in members if _is_dues_current(u.get("dues_paid_through")))

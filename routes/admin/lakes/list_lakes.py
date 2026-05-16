@@ -12,7 +12,7 @@ router = APIRouter()
 
 
 @router.get("/admin/lakes")
-async def admin_lakes(request: Request) -> Response:
+def admin_lakes(request: Request) -> Response:
     user = require_admin(request)
     with get_session() as session:
         lake_objs = session.query(Lake).order_by(Lake.display_name).all()
@@ -29,7 +29,7 @@ async def admin_lakes(request: Request) -> Response:
 
 
 @router.get("/admin/lakes/{lake_id}/edit")
-async def edit_lake_page(request: Request, lake_id: int) -> Response:
+def edit_lake_page(request: Request, lake_id: int) -> Response:
     user = require_admin(request)
     with get_session() as session:
         lake_obj = session.query(Lake).filter(Lake.id == lake_id).first()

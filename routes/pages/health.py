@@ -10,7 +10,7 @@ router = APIRouter()
 
 
 @router.get("/health", response_model=None)
-async def health_check() -> Union[Dict[str, Any], JSONResponse]:
+def health_check() -> Union[Dict[str, Any], JSONResponse]:
     try:
         with get_session() as session:
             angler_count = session.query(Angler).count()

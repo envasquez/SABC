@@ -15,7 +15,7 @@ router = APIRouter()
 
 
 @router.get("/admin/tournaments/{tournament_id}/enter-results")
-async def enter_results_page(
+def enter_results_page(
     tournament_id: int,
     request: Request,
     user: UserDict = Depends(require_admin),
@@ -99,7 +99,7 @@ async def enter_results_page(
 
 
 @router.post("/admin/tournaments/{tournament_id}/enter-results")
-async def enter_results_redirect(tournament_id: int) -> RedirectResponse:
+def enter_results_redirect(tournament_id: int) -> RedirectResponse:
     # Validate tournament_id is a positive integer to prevent redirect attacks
     # FastAPI already validates this is an int, but we explicitly check for safety
     if tournament_id <= 0:

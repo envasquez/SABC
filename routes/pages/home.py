@@ -8,6 +8,8 @@ from typing import Any, Dict, List, Optional
 import httpx
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import RedirectResponse, Response
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy import case, func
 from sqlalchemy.orm import Query, Session, aliased
 
@@ -29,6 +31,7 @@ from core.db_schema import (
 from core.deps import templates
 from core.email import send_contact_email
 from core.helpers.auth import get_user_optional
+from core.helpers.forms import is_valid_email
 from core.helpers.logging import get_logger
 from core.helpers.pagination import PaginationState
 from core.helpers.poll_day_info import get_poll_day_info
@@ -41,6 +44,10 @@ from routes.dependencies import get_lakes_list
 router = APIRouter()
 
 logger = get_logger(__name__)
+
+# Rate limiter (disabled under tests, matching routes/auth/*).
+is_test_env = os.environ.get("ENVIRONMENT") == "test"
+limiter = Limiter(key_func=get_remote_address, enabled=not is_test_env)
 
 EXCLUDED_EMAIL_DOMAINS = ("@sabc.com", "@saustinbc.com")
 
@@ -683,10 +690,16 @@ async def _verify_turnstile(token: str, remote_ip: str | None = None) -> bool:
             resp = await client.post(TURNSTILE_VERIFY_URL, data=payload, timeout=5.0)
             result = resp.json()
             return bool(result.get("success", False))
-    except (httpx.HTTPError, ValueError, KeyError) as e:
-        logger.error(f"Turnstile verification failed: {e}")
-        # Fail open — don't block legitimate users if Cloudflare is down
+    except httpx.HTTPError as e:
+        # Genuine connectivity error (Cloudflare unreachable) — fail open so
+        # legitimate users aren't blocked by an outage outside our control.
+        logger.error(f"Turnstile verification failed (connectivity): {e}")
         return True
+    except (ValueError, KeyError) as e:
+        # Malformed/unparseable response derived from attacker-controlled
+        # input — fail closed so a forged token can't bypass CAPTCHA.
+        logger.error(f"Turnstile verification failed (malformed response): {e}")
+        return False
 
 
 def _is_spam_submission(
@@ -735,6 +748,7 @@ def _is_spam_submission(
 
 
 @router.post("/about/contact")
+@limiter.limit("5/hour")
 async def contact_form(request: Request) -> RedirectResponse:
     """Handle contact form submission - sends email to all admins."""
     form = await request.form()
@@ -745,6 +759,11 @@ async def contact_form(request: Request) -> RedirectResponse:
 
     if not all([sender_name, sender_email, subject_line, message]):
         return error_redirect("/about", "All fields are required.")
+
+    # Validate the sender address: it is placed into the Reply-To header,
+    # so a malformed value (or one carrying CR/LF) must never reach the email.
+    if not is_valid_email(sender_email):
+        return error_redirect("/about", "Please enter a valid email address.")
 
     # Spam protection checks
     honeypot = str(form.get("website", "")).strip()

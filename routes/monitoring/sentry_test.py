@@ -18,7 +18,7 @@ _IS_PRODUCTION = os.getenv("ENVIRONMENT", "").lower() == "production"
 if not _IS_PRODUCTION:
 
     @router.get("/sentry-test")
-    async def sentry_test() -> dict[str, str]:
+    def sentry_test() -> dict[str, str]:
         """
         Test endpoint that manually captures a message to Sentry.
 
@@ -44,7 +44,7 @@ if not _IS_PRODUCTION:
         return {"status": "This line will never be reached"}
 
     @router.get("/sentry-debug")
-    async def sentry_debug() -> dict[str, str]:
+    def sentry_debug() -> dict[str, str]:
         """
         Debug endpoint to check Sentry configuration status.
 
@@ -61,7 +61,7 @@ if not _IS_PRODUCTION:
         }
 
     @router.get("/sentry-test-http")
-    async def sentry_test_http() -> None:
+    def sentry_test_http() -> None:
         """
         Test endpoint that raises an HTTP exception.
 

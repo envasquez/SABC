@@ -17,7 +17,7 @@ logger = get_logger("auth.profile")
 
 
 @router.get("/profile")
-async def profile_page(request: Request) -> Response:
+def profile_page(request: Request) -> Response:
     if not (user := get_current_user(request)):
         return RedirectResponse("/login")
 
