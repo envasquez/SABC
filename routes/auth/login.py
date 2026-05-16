@@ -142,11 +142,13 @@ async def login(
                 stored_hash = angler.password_hash.encode()
                 user_id = angler.id
                 user_name = angler.name
+                user_session_version = angler.session_version
             else:
                 # User doesn't exist - perform dummy hash to prevent timing attack
                 stored_hash = bcrypt.hashpw(b"dummy_password", bcrypt.gensalt())
                 user_id = None
                 user_name = None
+                user_session_version = 1
 
         # Always perform comparison (constant time regardless of user existence)
         password_valid = bcrypt.checkpw(password.encode(), stored_hash)
@@ -154,7 +156,7 @@ async def login(
         # Successful login
         if password_valid and user_id:
             _clear_failed_attempts(email)
-            set_user_session(request, user_id)
+            set_user_session(request, user_id, user_session_version)
             log_security_event(
                 SecurityEvent.AUTH_LOGIN_SUCCESS,
                 user_id=user_id,

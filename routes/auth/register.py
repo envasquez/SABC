@@ -10,6 +10,7 @@ from core.db_schema import Angler, get_session
 from core.helpers.forms import normalize_email
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
 from core.helpers.password_validator import validate_password_strength
+from core.helpers.response import set_user_session
 from routes.dependencies import bcrypt, get_current_user, templates
 
 router = APIRouter()
@@ -99,10 +100,12 @@ async def register(
             session.add(new_angler)
             session.flush()  # Get the ID before commit
             user_id = new_angler.id
+            user_session_version = new_angler.session_version
 
-        # Clear session to prevent session fixation attacks
-        request.session.clear()
-        request.session["user_id"] = user_id
+        # Clear session to prevent session fixation attacks and embed
+        # the new angler's session_version (default 1) so subsequent
+        # requests pass the version check in get_current_user.
+        set_user_session(request, user_id, user_session_version)
         log_security_event(
             SecurityEvent.AUTH_REGISTER,
             user_id=user_id,

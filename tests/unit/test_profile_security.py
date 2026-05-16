@@ -38,7 +38,7 @@ class TestHandlePasswordChange:
         mock_get_session.return_value.__enter__.return_value = mock_session
 
         user: UserDict = {"id": 1, "email": "test@example.com"}
-        success, error = handle_password_change(
+        success, error, _ = handle_password_change(
             user, "current123", "NewPass123!", "NewPass123!", "192.168.1.1"
         )
 
@@ -53,19 +53,21 @@ class TestHandlePasswordChange:
         user: UserDict = {"id": 1, "email": "test@example.com"}
 
         # Missing current password
-        success, error = handle_password_change(user, "", "NewPass123!", "NewPass123!", "1.1.1.1")
+        success, error, _ = handle_password_change(
+            user, "", "NewPass123!", "NewPass123!", "1.1.1.1"
+        )
         assert success is False
         assert error is not None
         assert "All password fields are required" in error
 
         # Missing new password
-        success, error = handle_password_change(user, "current123", "", "NewPass123!", "1.1.1.1")
+        success, error, _ = handle_password_change(user, "current123", "", "NewPass123!", "1.1.1.1")
         assert success is False
         assert error is not None
         assert "All password fields are required" in error
 
         # Missing confirm password
-        success, error = handle_password_change(user, "current123", "NewPass123!", "", "1.1.1.1")
+        success, error, _ = handle_password_change(user, "current123", "NewPass123!", "", "1.1.1.1")
         assert success is False
         assert error is not None
         assert "All password fields are required" in error
@@ -76,7 +78,7 @@ class TestHandlePasswordChange:
         mock_validate.return_value = (False, "Password must be at least 8 characters")
 
         user: UserDict = {"id": 1, "email": "test@example.com"}
-        success, error = handle_password_change(user, "current123", "weak", "weak", "1.1.1.1")
+        success, error, _ = handle_password_change(user, "current123", "weak", "weak", "1.1.1.1")
 
         assert success is False
         assert error == "Password must be at least 8 characters"
@@ -88,7 +90,7 @@ class TestHandlePasswordChange:
         mock_validate.return_value = (True, None)
 
         user: UserDict = {"id": 1, "email": "test@example.com"}
-        success, error = handle_password_change(
+        success, error, _ = handle_password_change(
             user, "current123", "NewPass123!", "Different123!", "1.1.1.1"
         )
 
@@ -107,7 +109,7 @@ class TestHandlePasswordChange:
         mock_get_session.return_value.__enter__.return_value = mock_session
 
         user: UserDict = {"id": 999, "email": "test@example.com"}
-        success, error = handle_password_change(
+        success, error, _ = handle_password_change(
             user, "current123", "NewPass123!", "NewPass123!", "1.1.1.1"
         )
 
@@ -130,7 +132,7 @@ class TestHandlePasswordChange:
         mock_get_session.return_value.__enter__.return_value = mock_session
 
         user: UserDict = {"id": 1, "email": "test@example.com"}
-        success, error = handle_password_change(
+        success, error, _ = handle_password_change(
             user, "current123", "NewPass123!", "NewPass123!", "1.1.1.1"
         )
 
@@ -156,7 +158,7 @@ class TestHandlePasswordChange:
         mock_get_session.return_value.__enter__.return_value = mock_session
 
         user: UserDict = {"id": 1, "email": "test@example.com"}
-        success, error = handle_password_change(
+        success, error, _ = handle_password_change(
             user, "wrongpassword", "NewPass123!", "NewPass123!", "1.1.1.1"
         )
 
@@ -226,7 +228,7 @@ class TestHandlePasswordChange:
         mock_get_session.return_value.__enter__.return_value = mock_session
 
         user: UserDict = {"id": 1, "email": "test@example.com"}
-        success, error = handle_password_change(
+        success, error, _ = handle_password_change(
             user, "current123", "NewPass123!", "NewPass123!", "1.1.1.1"
         )
 
