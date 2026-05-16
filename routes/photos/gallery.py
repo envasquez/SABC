@@ -463,7 +463,7 @@ async def upload_photo(
                 is_big_bass=is_big_bass,
             )
             session.add(photo_record)
-            session.commit()
+            # get_session() commits on __exit__; no inner commit needed.
         logger.info(
             f"Photo upload: success! filename={filename}, "
             f"thumbnail={thumbnail_filename}, placeholder={placeholder_filename}"
@@ -525,9 +525,8 @@ async def delete_photo(request: Request, photo_id: int) -> RedirectResponse:
                 except OSError as e:
                     logger.error(f"Failed to delete placeholder: {e}")
 
-        # Delete database record
+        # Delete database record (get_session() commits on __exit__)
         session.delete(photo)
-        session.commit()
 
     return success_redirect("/photos", "Photo deleted successfully!")
 
@@ -599,11 +598,9 @@ async def edit_photo(
         if not can_edit_photo(user, photo):
             return error_redirect("/photos", "You don't have permission to edit this photo.")
 
-        # Update photo fields
+        # Update photo fields (get_session() commits on __exit__)
         photo.caption = caption[:200] if caption else None
         photo.tournament_id = tournament_id_int
         photo.is_big_bass = is_big_bass
-
-        session.commit()
 
     return success_redirect("/photos", "Photo updated successfully!")

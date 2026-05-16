@@ -68,8 +68,9 @@ async def polls(
         )
 
         # Build status case expression
-        # Use naive datetime for database comparison (DB stores naive datetimes)
-        now = now_local().replace(tzinfo=None)
+        # Poll.starts_at / Poll.closes_at are TIMESTAMPTZ (migration d2195fd0305e),
+        # so compare against an aware datetime.
+        now = now_local()
         status_case = case(
             (Poll.starts_at > now, "upcoming"),
             (

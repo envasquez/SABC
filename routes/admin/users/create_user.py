@@ -51,8 +51,9 @@ async def create_user(request: Request):
                 member=member,
             )
             session.add(new_angler)
-            session.commit()
-            session.refresh(new_angler)
+            # get_session() commits on __exit__; flush here just to populate the
+            # auto-assigned primary key without prematurely ending the txn.
+            session.flush()
             angler_id = new_angler.id
 
         logger.info(

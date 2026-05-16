@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
 from sqlalchemy.exc import SQLAlchemyError
 
 from routes.voting.helpers import get_poll_options, process_closed_polls
@@ -53,14 +54,15 @@ class TestProcessClosedPolls:
 
         assert result == 0
 
-    def test_process_closed_polls_handles_exceptions(self, db_session):
-        """Test process_closed_polls returns 0 on database errors."""
+    def test_process_closed_polls_reraises_on_database_error(self, db_session):
+        """process_closed_polls now re-raises SQLAlchemyError so background
+        schedulers can see and react to failures (instead of silently
+        swallowing them and returning 0)."""
         with patch("routes.voting.helpers.get_session") as mock_get_session:
             mock_get_session.side_effect = SQLAlchemyError("Database error")
 
-            result = process_closed_polls()
-
-            assert result == 0
+            with pytest.raises(SQLAlchemyError):
+                process_closed_polls()
 
     # NOTE: More complex database integration tests for process_closed_polls
     # would provide better value than mocking the entire SQLAlchemy query chain.

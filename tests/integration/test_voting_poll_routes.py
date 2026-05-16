@@ -54,9 +54,14 @@ class TestCreatePollRoute:
 class TestPollHelpers:
     """Test poll helper functions."""
 
-    def test_process_closed_polls(self):
-        """Test closed polls processing."""
+    def test_process_closed_polls(self, db_session: Session):
+        """Test closed polls processing.
+
+        The db_session fixture creates the schema; without it the
+        underlying SELECT raises since process_closed_polls now
+        re-raises SQLAlchemyError instead of silently returning 0.
+        """
         from routes.voting.helpers import process_closed_polls
 
         # Should complete without error even with no polls
-        process_closed_polls()
+        assert process_closed_polls() == 0

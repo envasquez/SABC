@@ -129,7 +129,7 @@ class TestPollVotingEndToEnd:
         # Create a closed poll
         from core.helpers.timezone import now_local
 
-        now = now_local().replace(tzinfo=None)
+        now = now_local()
         closed_poll = Poll(
             title="Closed Poll",
             description="This poll is closed",
@@ -193,7 +193,7 @@ class TestPollVotingEndToEnd:
         # Create a future poll
         from core.helpers.timezone import now_local
 
-        now = now_local().replace(tzinfo=None)
+        now = now_local()
         future_poll = Poll(
             title="Future Poll",
             description="This poll starts tomorrow",
@@ -260,11 +260,11 @@ class TestTournamentLocationPollVoting:
         db_session: Session,
     ):
         """Test member can vote on tournament location polls."""
-        # Create tournament location poll
-        # Use naive datetime for SQLite compatibility
+        # Create tournament location poll (TIMESTAMPTZ in prod after
+        # migration d2195fd0305e — use aware datetimes).
         from core.helpers.timezone import now_local
 
-        now = now_local().replace(tzinfo=None)
+        now = now_local()
         tournament_poll = Poll(
             title="Tournament Location Vote",
             description="Vote for next tournament location",
