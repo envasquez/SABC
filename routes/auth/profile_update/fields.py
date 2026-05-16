@@ -39,12 +39,17 @@ async def update_profile_fields(
         password_changed = False
         if current_password or new_password or confirm_password:
             ip_address = request.client.host if request.client else "unknown"
-            success, error = handle_password_change(
+            success, error, new_session_version = handle_password_change(
                 user, current_password, new_password, confirm_password, ip_address
             )
             if not success:
                 return RedirectResponse(f"/profile?error={error}", status_code=303)
             password_changed = True
+            # Refresh the current request's session_version in place so the
+            # user changing their own password does not get logged out by
+            # the session_version mismatch check in get_current_user.
+            if new_session_version is not None:
+                request.session["session_version"] = new_session_version
 
         # Use single session for both email check and update to prevent race condition
         with get_session() as session:

@@ -23,3 +23,4 @@ class UserDict(TypedDict, total=False):
     created_at: datetime | None
     dues_paid_through: date | None
     dues_banner_dismissed_at: datetime | None
+    session_version: int

@@ -141,13 +141,19 @@ def get_client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-def set_user_session(request: Request, user_id: int) -> None:
+def set_user_session(request: Request, user_id: int, session_version: int = 1) -> None:
     """
     Set user session safely (clears old session first to prevent fixation).
+
+    Embeds the angler's current session_version so that bumping it on the
+    server (e.g. on password change) invalidates older cookies that still
+    carry the previous value.
 
     Args:
         request: FastAPI request object
         user_id: User ID to set in session
+        session_version: Current value of anglers.session_version for this user
     """
     request.session.clear()
     request.session["user_id"] = user_id
+    request.session["session_version"] = session_version

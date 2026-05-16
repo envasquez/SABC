@@ -51,17 +51,36 @@ def get_current_user(request: Request) -> Optional[UserDict]:
     """
     Get current user from session.
 
+    Validates the embedded session_version against the angler row. If the
+    session predates this field, or the DB has been bumped (e.g. on a
+    password change from another device), the cookie is treated as
+    revoked: the session is cleared and None is returned, forcing a
+    re-login.
+
     Args:
         request: FastAPI Request object
 
     Returns:
         User dictionary if authenticated, None otherwise
     """
-    if uid := request.session.get("user_id"):
-        with engine.connect() as conn:
-            qs = QueryService(conn)
-            return qs.get_user_by_id(uid)
-    return None
+    uid = request.session.get("user_id")
+    if not uid:
+        return None
+    with engine.connect() as conn:
+        qs = QueryService(conn)
+        user = qs.get_user_by_id(uid)
+    if user is None:
+        # User deleted out from under the session
+        request.session.clear()
+        return None
+    session_ver = request.session.get("session_version")
+    db_ver = user.get("session_version")
+    if session_ver != db_ver:
+        # Cookie was issued before this revision was bumped (or pre-dates
+        # the session_version field entirely) -> force re-login.
+        request.session.clear()
+        return None
+    return user
 
 
 def require_auth(request: Request) -> UserDict:
