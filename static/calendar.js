@@ -3,6 +3,9 @@
  * Handles event details modal display
  */
 
+(function() {
+    'use strict';
+
 // Event data will be populated from data attributes
 let currentEventDetails = {};
 let nextEventDetails = {};
@@ -29,6 +32,12 @@ document.addEventListener('DOMContentLoaded', function() {
         nextEventDetails = JSON.parse(calendarDataElement.dataset.nextEvents || '{}');
         currentYear = calendarDataElement.dataset.currentYear || '';
     }
+
+    // Delegated handler for clicking an event day in the calendar grid
+    document.addEventListener('click', function(e) {
+        const cell = e.target.closest('.cal-event-day');
+        if (cell) showEventDetails(cell);
+    });
 });
 
 function showEventDetails(element) {
@@ -152,3 +161,5 @@ function showEventDetails(element) {
         showModal('eventModal');
     }
 }
+
+})();

@@ -25,7 +25,7 @@ class QueryService(
 ):
     """Centralized database query service combining all query categories."""
 
-    def __init__(self, conn: Connection):
+    def __init__(self, conn: Connection) -> None:
         super().__init__(conn)
 
 

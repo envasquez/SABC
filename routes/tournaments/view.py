@@ -1,7 +1,8 @@
 import logging
+from typing import Union
 
 from fastapi import APIRouter, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 
 from core.db_schema import engine
 from core.deps import templates
@@ -15,15 +16,17 @@ logger = logging.getLogger(__name__)
 
 
 @router.get("/tournaments")
-async def tournaments_list(request: Request, user: OptionalUser):
+async def tournaments_list(request: Request, user: OptionalUser) -> RedirectResponse:
     """Display list of all tournaments."""
     # For now, redirect to home page which shows tournaments
     # This route exists to satisfy tests and can be enhanced later with a dedicated template
     return RedirectResponse("/", status_code=303)
 
 
-@router.get("/tournaments/{tournament_id}")
-async def tournament_results(request: Request, tournament_id: int, user: OptionalUser):
+@router.get("/tournaments/{tournament_id}", response_model=None)
+async def tournament_results(
+    request: Request, tournament_id: int, user: OptionalUser
+) -> Union[Response, RedirectResponse]:
     try:
         # Auto-complete this tournament only (single-row write on index lookup
         # instead of a full-table scan).
@@ -41,22 +44,22 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
                 disqualified_results,
                 payouts,
             ) = fetch_tournament_data(qs, tournament_id)
-            tournament_tuple = (
-                tournament.id,  # 0
-                tournament.event_id,  # 1
-                tournament.event_date,  # 2
-                tournament.event_name,  # 3
-                tournament.event_description,  # 4
-                tournament.lake_name,  # 5
-                tournament.ramp_name,  # 6
-                tournament.entry_fee,  # 7
-                tournament.fish_limit,  # 8
-                tournament.complete,  # 9
-                tournament.event_type,  # 10
-                tournament.aoy_points,  # 11
-                tournament.start_time,  # 12
-                tournament.end_time,  # 13
-            )
+            tournament_view = {
+                "id": tournament.id,
+                "event_id": tournament.event_id,
+                "event_date": tournament.event_date,
+                "event_name": tournament.event_name,
+                "event_description": tournament.event_description,
+                "lake_name": tournament.lake_name,
+                "ramp_name": tournament.ramp_name,
+                "entry_fee": tournament.entry_fee,
+                "fish_limit": tournament.fish_limit,
+                "complete": tournament.complete,
+                "event_type": tournament.event_type,
+                "aoy_points": tournament.aoy_points,
+                "start_time": tournament.start_time,
+                "end_time": tournament.end_time,
+            }
             stats_tuple = (
                 stats.total_anglers,
                 stats.total_fish,
@@ -75,7 +78,7 @@ async def tournament_results(request: Request, tournament_id: int, user: Optiona
                 "tournament_results.html",
                 {
                     "user": user,
-                    "tournament": tournament_tuple,
+                    "tournament": tournament_view,
                     "tournament_stats": stats_tuple,
                     "team_results": team_results,
                     "individual_results": individual_results,

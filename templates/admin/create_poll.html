@@ -9,7 +9,7 @@
 <div id="poll-data" data-event-date="{{ selected_event[1] if selected_event else '' }}"></div>
 
 <div style="margin-bottom:1.4rem">
-    <div class="sh"><div class="st"><i class="bi bi-plus-circle"></i> Create a New Poll</div></div>
+    <div class="sh"><h1 class="st"><i class="bi bi-plus-circle"></i> Create a New Poll</h1></div>
     {% if selected_event %}
     <p style="font-size:1rem;color:var(--t3)">Create a new poll for {% if selected_event[2] %}{{ selected_event[2] }}{% else %}tournament event{% endif %}</p>
     <div style="font-size:.85rem;color:var(--t3)">
@@ -70,14 +70,14 @@
                                 <i class="bi bi-play-circle" style="margin-right:.25rem;color:var(--ok)"></i>Poll Starts
                             </label>
                             <input type="datetime-local" class="fi" id="starts_at" name="starts_at">
-                            <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">When members can start voting (auto-calculated based on tournament date)</div>
+                            <div class="help-text">When members can start voting (auto-calculated based on tournament date)</div>
                         </div>
                         <div class="fg">
                             <label class="fl" for="closes_at">
-                                <i class="bi bi-stop-circle" style="margin-right:.25rem;color:var(--warn)"></i>Poll Closes <span style="color:var(--err)">*</span>
+                                <i class="bi bi-stop-circle" style="margin-right:.25rem;color:var(--warn)"></i>Poll Closes <span class="req">*</span>
                             </label>
                             <input type="datetime-local" class="fi" id="closes_at" name="closes_at" required>
-                            <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">Deadline for voting (allows time for planning and preparation)</div>
+                            <div class="help-text">Deadline for voting (allows time for planning and preparation)</div>
                         </div>
                     </div>
 
@@ -103,10 +103,10 @@
                         </div>
 
                         <div style="margin-top:.75rem;display:flex;gap:.5rem">
-                            <button type="button" class="btn-m btn-g" onclick="selectAll()" style="font-size:.8rem">
+                            <button type="button" class="btn-m btn-g js-select-all" style="font-size:.8rem">
                                 <i class="bi bi-check-all" style="margin-right:.25rem"></i>Select All
                             </button>
-                            <button type="button" class="btn-m btn-g" onclick="selectNone()" style="font-size:.8rem">
+                            <button type="button" class="btn-m btn-g js-select-none" style="font-size:.8rem">
                                 <i class="bi bi-x-square" style="margin-right:.25rem"></i>Select None
                             </button>
                         </div>
@@ -146,12 +146,12 @@
                         <div class="fg">
                             <label class="fl" for="generic_starts_at">Poll Starts</label>
                             <input type="datetime-local" class="fi" id="generic_starts_at" name="starts_at">
-                            <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">When members can start voting</div>
+                            <div class="help-text">When members can start voting</div>
                         </div>
                         <div class="fg">
-                            <label class="fl" for="generic_closes_at">Poll Closes <span style="color:var(--err)">*</span></label>
+                            <label class="fl" for="generic_closes_at">Poll Closes <span class="req">*</span></label>
                             <input type="datetime-local" class="fi" id="generic_closes_at" name="closes_at" required>
-                            <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">When voting will end</div>
+                            <div class="help-text">When voting will end</div>
                         </div>
                     </div>
 
@@ -164,15 +164,15 @@
                         <div id="poll-options-container">
                             <div class="poll-option-row" style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem">
                                 <input type="text" class="fi" name="poll_options[]" placeholder="Option 1" style="flex:1" required>
-                                <button class="btn-icon btn-icon-danger" type="button" onclick="removeOption(this)" disabled aria-label="Remove option"><i class="bi bi-x"></i></button>
+                                <button class="btn-icon btn-icon-danger js-remove-option" type="button" disabled aria-label="Remove option"><i class="bi bi-x"></i></button>
                             </div>
                             <div class="poll-option-row" style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem">
                                 <input type="text" class="fi" name="poll_options[]" placeholder="Option 2" style="flex:1" required>
-                                <button class="btn-icon btn-icon-danger" type="button" onclick="removeOption(this)" disabled aria-label="Remove option"><i class="bi bi-x"></i></button>
+                                <button class="btn-icon btn-icon-danger js-remove-option" type="button" disabled aria-label="Remove option"><i class="bi bi-x"></i></button>
                             </div>
                         </div>
 
-                        <button type="button" class="btn-m btn-s" onclick="addOption()" style="font-size:.8rem">
+                        <button type="button" class="btn-m btn-s js-add-option" style="font-size:.8rem">
                             <i class="bi bi-plus-circle" style="margin-right:.25rem" aria-hidden="true"></i>Add Option
                         </button>
                     </div>
@@ -192,8 +192,8 @@
 </div>
 
 {% block extra_js %}
-<script src="/static/admin.js"></script>
-<script src="/static/poll-management.js"></script>
-<script src="/static/admin-create-poll.js"></script>
+<script src="{{ url_for('static', path='/admin.js') }}?v={{ asset_v }}"></script>
+<script src="{{ url_for('static', path='/poll-management.js') }}?v={{ asset_v }}"></script>
+<script src="{{ url_for('static', path='/admin-create-poll.js') }}?v={{ asset_v }}"></script>
 {% endblock extra_js %}
 {% endblock %}

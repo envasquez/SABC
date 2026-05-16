@@ -4,7 +4,7 @@
 {% block title %}Manage News - Admin{% endblock %}
 
 {% block admin_content %}
-<div class="sh"><div class="st"><i class="bi bi-newspaper"></i> Manage Club News</div></div>
+<div class="sh"><h1 class="st"><i class="bi bi-newspaper"></i> Manage Club News</h1></div>
 
 {{ alert('success', request.query_params.get('success')) }}
 {{ alert('danger', request.query_params.get('error')) }}
@@ -17,7 +17,7 @@
             {{ csrf_token(request) }}
             <div style="display:grid;grid-template-columns:2.5fr 1fr 1.5fr auto;gap:1rem;align-items:end">
                 <div class="fg">
-                    <label class="fl" for="title">Title <span style="color:var(--err)">*</span></label>
+                    <label class="fl" for="title">Title <span class="req">*</span></label>
                     <input class="fi" type="text" id="title" name="title" required maxlength="200">
                 </div>
                 <div class="fg">
@@ -35,11 +35,11 @@
                 <button class="btn-m btn-p" type="submit" style="margin-bottom:1rem"><i class="bi bi-plus-circle" aria-hidden="true"></i> Create</button>
             </div>
             <div class="fg">
-                <label class="fl" for="content">Content <span style="color:var(--err)">*</span></label>
+                <label class="fl" for="content">Content <span class="req">*</span></label>
                 <textarea class="fi" id="content" name="content" required maxlength="1000" rows="3" style="resize:vertical"></textarea>
-                <div style="font-size:.72rem;color:var(--t4);margin-top:.25rem">Maximum 1000 characters</div>
+                <div class="help-text">Maximum 1000 characters</div>
             </div>
-            <button type="button" class="btn-m btn-g" style="font-size:.78rem" onclick="sendTestEmail()"><i class="bi bi-envelope-check" aria-hidden="true"></i> Send Test Email</button>
+            <button type="button" class="btn-m btn-g" style="font-size:.78rem" id="sendTestEmailBtn"><i class="bi bi-envelope-check" aria-hidden="true"></i> Send Test Email</button>
         </form>
     </div>
 </div>
@@ -210,5 +210,5 @@
     </div>
 </div>
 
-<script src="/static/admin-news.js"></script>
+<script src="{{ url_for('static', path='/admin-news.js') }}?v={{ asset_v }}"></script>
 {% endblock %}

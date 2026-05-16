@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Request
+from fastapi.responses import Response
 
 from core.db_schema import Angler, OfficerPosition, get_session
 from core.helpers.auth import require_admin
@@ -9,7 +10,7 @@ router = APIRouter()
 
 
 @router.get("/admin/users/{user_id}/edit")
-async def edit_user_page(request: Request, user_id: int):
+async def edit_user_page(request: Request, user_id: int) -> Response:
     user = require_admin(request)
 
     with get_session() as session:

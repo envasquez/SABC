@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from 'macros.html' import calendar_year %}
 {% block title %}Calendar - South Austin Bass Club{% endblock %}
 {% block content %}
 
@@ -9,106 +10,20 @@
      data-current-year="{{ current_year }}"></div>
 
 <div class="sh">
-    <div class="st"><i class="bi bi-calendar3"></i> Club Calendar</div>
+    <h1 class="st"><i class="bi bi-calendar3"></i> Club Calendar</h1>
     <div class="pt" style="margin-bottom:0" id="yearTabs">
-        <button class="ptb on" onclick="switchCalTab('current-year', this)">{{ current_year }}</button>
-        <button class="ptb" onclick="switchCalTab('next-year', this)">{{ next_year }}</button>
+        <button class="ptb on tab-trigger" data-tab-target="#current-year" data-tab-panes=".cal-tab">{{ current_year }}</button>
+        <button class="ptb tab-trigger" data-tab-target="#next-year" data-tab-panes=".cal-tab">{{ next_year }}</button>
     </div>
 </div>
 
-<!-- Current Year -->
-<div class="cal-tab active" id="current-year">
-    <div class="cal-grid">
-        {% for m in current_calendar_data %}
-        {% set month_num = loop.index %}
-        <div class="cal-mo">
-            <div class="cal-mh">{{ m[0] }}</div>
-            <table class="cal-tb">
-                <thead><tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr></thead>
-                <tbody>
-                    {% for w in m[1] %}
-                    <tr>
-                        {% for d in w %}
-                        <td class="{% if '†' in d %}ev ev-t{% elif '§' in d %}ev ev-c{% elif '‡' in d %}ev ev-o{% elif '*' in d %}ev ev-h{% endif %}"
-                            {% if '†' in d or '§' in d or '‡' in d or '*' in d %}
-                            data-year="{{ current_year }}"
-                            data-month="{{ month_num }}"
-                            data-day="{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}"
-                            onclick="showEventDetails(this)"
-                            {% endif %}>
-                            {% if d %}{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}{% endif %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% endfor %}
-    </div>
-
-    <div class="cal-legend">
-        {% if 'sabc_tournament' in event_types_present %}
-        <span class="cal-leg-item"><span class="cal-leg-dot" style="background:var(--brand)"></span> SABC Tournaments</span>
-        {% endif %}
-        {% if 'other_tournament' in event_types_present %}
-        <span class="cal-leg-item"><span class="cal-leg-dot" style="background:var(--warn)"></span> Other Tournaments</span>
-        {% endif %}
-        {% if 'holiday' in event_types_present %}
-        <span class="cal-leg-item"><span class="cal-leg-dot" style="background:var(--err)"></span> Holidays</span>
-        {% endif %}
-        {% if 'club_event' in event_types_present %}
-        <span class="cal-leg-item"><span class="cal-leg-dot" style="background:var(--ok)"></span> Club Events</span>
-        {% endif %}
-    </div>
-</div>
-
-<!-- Next Year -->
-<div class="cal-tab" id="next-year">
-    <div class="cal-grid">
-        {% for m in next_calendar_data %}
-        {% set month_num = loop.index %}
-        <div class="cal-mo">
-            <div class="cal-mh">{{ m[0] }}</div>
-            <table class="cal-tb">
-                <thead><tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr></thead>
-                <tbody>
-                    {% for w in m[1] %}
-                    <tr>
-                        {% for d in w %}
-                        <td class="{% if '†' in d %}ev ev-t{% elif '§' in d %}ev ev-c{% elif '‡' in d %}ev ev-o{% elif '*' in d %}ev ev-h{% endif %}"
-                            {% if '†' in d or '§' in d or '‡' in d or '*' in d %}
-                            data-year="{{ next_year }}"
-                            data-month="{{ month_num }}"
-                            data-day="{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}"
-                            onclick="showEventDetails(this)"
-                            {% endif %}>
-                            {% if d %}{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}{% endif %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% endfor %}
-    </div>
-
-    <div class="cal-legend">
-        {% if 'sabc_tournament' in event_types_present %}
-        <span class="cal-leg-item"><span class="cal-leg-dot" style="background:var(--brand)"></span> SABC Tournaments</span>
-        {% endif %}
-        {% if 'other_tournament' in event_types_present %}
-        <span class="cal-leg-item"><span class="cal-leg-dot" style="background:var(--warn)"></span> Other Tournaments</span>
-        {% endif %}
-        {% if 'holiday' in event_types_present %}
-        <span class="cal-leg-item"><span class="cal-leg-dot" style="background:var(--err)"></span> Holidays</span>
-        {% endif %}
-        {% if 'club_event' in event_types_present %}
-        <span class="cal-leg-item"><span class="cal-leg-dot" style="background:var(--ok)"></span> Club Events</span>
-        {% endif %}
-    </div>
-</div>
+{# Year panes — looped to avoid duplicating identical month-grid markup. #}
+{% for cal in [
+    {'pane_id': 'current-year', 'active': true, 'year': current_year, 'data': current_calendar_data},
+    {'pane_id': 'next-year', 'active': false, 'year': next_year, 'data': next_calendar_data}
+] %}
+{{ calendar_year(cal.pane_id, cal.active, cal.year, cal.data, event_types_present) }}
+{% endfor %}
 
 <!-- Event Details Modal -->
 <div class="modal fade" id="eventModal" tabindex="-1">
@@ -126,18 +41,6 @@
     </div>
 </div>
 
-<style>
-.cal-tab { display: none; }
-.cal-tab.active { display: block; }
-</style>
-<script>
-function switchCalTab(paneId, btn) {
-    document.querySelectorAll('.cal-tab').forEach(function(p) { p.classList.remove('active'); });
-    document.getElementById(paneId).classList.add('active');
-    document.querySelectorAll('#yearTabs .ptb').forEach(function(b) { b.classList.remove('on'); });
-    btn.classList.add('on');
-}
-</script>
-<script src="/static/calendar.js"></script>
+<script src="{{ url_for('static', path='/calendar.js') }}?v={{ asset_v }}"></script>
 
 {% endblock %}

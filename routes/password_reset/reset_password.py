@@ -2,7 +2,7 @@ from urllib.parse import quote
 
 import bcrypt
 from fastapi import APIRouter, Form, Query, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Angler, get_session
@@ -23,7 +23,7 @@ logger = get_logger("password_reset")
 @router.get("/reset-password")
 async def reset_password_form(
     request: Request, token: str = Query(..., description="Password reset token")
-):
+) -> Response:
     try:
         token_data = verify_reset_token(token)
 
@@ -60,7 +60,7 @@ async def process_password_reset(
     token: str = Form(..., description="Password reset token"),
     password: str = Form(..., min_length=8, description="New password"),
     password_confirm: str = Form(..., description="Confirm new password"),
-):
+) -> RedirectResponse:
     try:
         error_msg = validate_password_reset(password, password_confirm)
         if error_msg:

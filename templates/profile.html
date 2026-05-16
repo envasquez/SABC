@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from 'macros.html' import csrf_token, alert %}
 {% block content %}
-<div class="sh"><div class="st"><i class="bi bi-person-circle"></i> Member Profile</div></div>
+<div class="sh"><h1 class="st"><i class="bi bi-person-circle"></i> Member Profile</h1></div>
 {{ alert('success', success) }}
 {% if request.query_params.get('welcome') == 'true' and not user.member %}
 <div class="cc" style="margin-bottom:1.25rem;border-color:rgba(6,182,212,.2)">
@@ -27,7 +27,7 @@
         <div class="ci">
             <div class="ct-row">
                 <div class="ct"><i class="bi bi-info-circle"></i> Account Information</div>
-                <button class="btn-m btn-g" style="padding:.35rem .75rem;font-size:.78rem" onclick="toggleEdit()" id="editBtn"><i class="bi bi-pencil" aria-hidden="true"></i> Edit</button>
+                <button class="btn-m btn-g" style="padding:.35rem .75rem;font-size:.78rem" id="editBtn"><i class="bi bi-pencil" aria-hidden="true"></i> Edit</button>
             </div>
 
             <!-- View Mode -->
@@ -84,7 +84,7 @@
 
                     <div style="display:flex;gap:.5rem;margin-top:1rem">
                         <button type="submit" class="btn-m btn-p"><i class="bi bi-check-lg" aria-hidden="true"></i> Save Changes</button>
-                        <button type="button" class="btn-m btn-g" onclick="cancelEdit()"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</button>
+                        <button type="button" class="btn-m btn-g" id="cancelEditBtn"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</button>
                     </div>
                 </form>
 
@@ -92,7 +92,7 @@
                 <div class="dz" style="margin-top:1.5rem">
                     <div class="dz-t"><i class="bi bi-exclamation-triangle"></i> Danger Zone</div>
                     <div class="dz-d">Permanently delete your account and all data. Tournament results will be retained for record-keeping. This action cannot be undone.</div>
-                    <button type="button" class="btn-m btn-d" style="font-size:.78rem;padding:.4rem .8rem" onclick="startDeleteProcess()"><i class="bi bi-trash" aria-hidden="true"></i> Delete Account</button>
+                    <button type="button" class="btn-m btn-d" style="font-size:.78rem;padding:.4rem .8rem" id="startDeleteBtn"><i class="bi bi-trash" aria-hidden="true"></i> Delete Account</button>
                 </div>
             </div>
         </div>
@@ -137,14 +137,14 @@
             <!-- Year Tabs -->
             <div class="pt" id="finishTabs">
                 {% for year in stats.year_finishes.keys()|sort(reverse=True) %}
-                <button class="ptb {% if loop.first %}on{% endif %}" onclick="showFinishTab('year-{{year}}', this)">{{year}}</button>
+                <button class="ptb tab-trigger {% if loop.first %}on{% endif %}" data-tab-target="#year-{{year}}" data-tab-panes=".finish-tab">{{year}}</button>
                 {% endfor %}
-                <button class="ptb" onclick="showFinishTab('all-time', this)">All</button>
+                <button class="ptb tab-trigger" data-tab-target="#all-time" data-tab-panes=".finish-tab">All</button>
             </div>
 
             <!-- Year Tab Content -->
             {% for year, finishes in stats.year_finishes.items()|sort(reverse=True) %}
-            <div class="finish-tab {% if loop.first %}active{% endif %}" id="year-{{year}}">
+            <div class="tab-pane finish-tab {% if loop.first %}active{% endif %}" id="year-{{year}}">
                 <div class="medal-row">
                     <div class="medal m-g"><div class="medal-icon">&#129351;</div><div class="medal-v">{{finishes.first}}</div><div class="medal-l">1st</div></div>
                     <div class="medal m-s"><div class="medal-icon">&#129352;</div><div class="medal-v">{{finishes.second}}</div><div class="medal-l">2nd</div></div>
@@ -155,7 +155,7 @@
             {% endfor %}
 
             <!-- All-Time Tab -->
-            <div class="finish-tab" id="all-time">
+            <div class="tab-pane finish-tab" id="all-time">
                 <div class="medal-row">
                     <div class="medal m-g"><div class="medal-icon">&#129351;</div><div class="medal-v">{{stats.all_time_first}}</div><div class="medal-l">1st</div></div>
                     <div class="medal m-s"><div class="medal-icon">&#129352;</div><div class="medal-v">{{stats.all_time_second}}</div><div class="medal-l">2nd</div></div>
@@ -195,17 +195,5 @@
 
 <!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="/static/profile.js"></script>
-<script>
-function showFinishTab(tabId, btn) {
-    document.querySelectorAll('.finish-tab').forEach(function(t) { t.classList.remove('active'); });
-    document.querySelectorAll('#finishTabs .ptb').forEach(function(b) { b.classList.remove('on'); });
-    document.getElementById(tabId).classList.add('active');
-    btn.classList.add('on');
-}
-</script>
-<style>
-.finish-tab { display: none; }
-.finish-tab.active { display: block; }
-</style>
+<script src="{{ url_for('static', path='/profile.js') }}?v={{ asset_v }}"></script>
 {% endblock %}

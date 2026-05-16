@@ -1,3 +1,5 @@
+from typing import Any, Dict, Union
+
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
@@ -7,8 +9,8 @@ from core.db_schema import Angler, get_session, utc_now
 router = APIRouter()
 
 
-@router.get("/health")
-async def health_check():
+@router.get("/health", response_model=None)
+async def health_check() -> Union[Dict[str, Any], JSONResponse]:
     try:
         with get_session() as session:
             angler_count = session.query(Angler).count()

@@ -4,7 +4,7 @@
 {% block content %}
 {{ alert('success', request.query_params.get('success')) }}
 {{ alert('danger', request.query_params.get('error')) }}
-<div class="sh"><div class="st"><i class="bi bi-people-fill"></i> About</div></div>
+<div class="sh"><h1 class="st"><i class="bi bi-people-fill"></i> About</h1></div>
 
 <!-- Hero -->
 <div class="cc" style="margin-bottom:1.4rem;border-color:rgba(59,130,246,.2);overflow:hidden">
@@ -63,11 +63,11 @@
             </div>
             <input type="hidden" name="form_loaded_at" value="{{ form_loaded_at }}">
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-                <div class="fg"><label class="fl" for="name">Name <span style="color:var(--err)">*</span></label><input class="fi" type="text" id="name" name="name" required placeholder="Your name" maxlength="100"></div>
-                <div class="fg"><label class="fl" for="email">Email <span style="color:var(--err)">*</span></label><input class="fi" type="email" id="email" name="email" required placeholder="your@email.com" maxlength="255"></div>
+                <div class="fg"><label class="fl" for="name">Name <span class="req">*</span></label><input class="fi" type="text" id="name" name="name" required placeholder="Your name" maxlength="100"></div>
+                <div class="fg"><label class="fl" for="email">Email <span class="req">*</span></label><input class="fi" type="email" id="email" name="email" required placeholder="your@email.com" maxlength="255"></div>
             </div>
-            <div class="fg"><label class="fl" for="subject">Subject <span style="color:var(--err)">*</span></label><input class="fi" type="text" id="subject" name="subject" required placeholder="What is this about?" maxlength="200"></div>
-            <div class="fg"><label class="fl" for="message">Message <span style="color:var(--err)">*</span></label><textarea class="fi" id="message" name="message" required placeholder="Your message..." rows="5" maxlength="2000" style="resize:vertical"></textarea></div>
+            <div class="fg"><label class="fl" for="subject">Subject <span class="req">*</span></label><input class="fi" type="text" id="subject" name="subject" required placeholder="What is this about?" maxlength="200"></div>
+            <div class="fg"><label class="fl" for="message">Message <span class="req">*</span></label><textarea class="fi" id="message" name="message" required placeholder="Your message..." rows="5" maxlength="2000" style="resize:vertical"></textarea></div>
             {% if turnstile_site_key %}
             <div class="fg">
                 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
@@ -76,34 +76,10 @@
             </div>
             {% endif %}
             <button class="btn-m btn-p" type="submit" id="contact-submit"{% if turnstile_site_key %} disabled style="opacity:.5;cursor:not-allowed"{% endif %}><i class="bi bi-send" aria-hidden="true"></i> Send Message</button>
-            {% if turnstile_site_key %}
-            <script>
-            function onTurnstileSuccess(token) {
-                var btn = document.getElementById('contact-submit');
-                btn.disabled = false;
-                btn.style.opacity = '';
-                btn.style.cursor = '';
-                document.getElementById('turnstile-msg').style.display = 'none';
-            }
-            function onTurnstileExpired() {
-                var btn = document.getElementById('contact-submit');
-                btn.disabled = true;
-                btn.style.opacity = '.5';
-                btn.style.cursor = 'not-allowed';
-            }
-            function onTurnstileError() {
-                onTurnstileExpired();
-            }
-            document.querySelector('form[action="/about/contact"]').addEventListener('submit', function(e) {
-                var resp = document.querySelector('input[name="cf-turnstile-response"]');
-                if (!resp || !resp.value) {
-                    e.preventDefault();
-                    document.getElementById('turnstile-msg').style.display = 'block';
-                }
-            });
-            </script>
-            {% endif %}
         </form>
     </div>
 </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{{ url_for('static', path='/about.js') }}?v={{ asset_v }}"></script>
 {% endblock %}

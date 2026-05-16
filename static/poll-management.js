@@ -5,138 +5,165 @@
  * NOTE: formatDateTimeLocal is now defined in utils.js
  */
 
-/**
- * Add a new poll option to the container
- * @param {string} containerId - ID of the poll options container (default: 'poll-options-container')
- * @param {boolean} includeHiddenId - Whether to include a hidden option_id field (for edit mode)
- */
-function addOption(containerId = 'poll-options-container', includeHiddenId = false) {
-    const container = document.getElementById(containerId);
-    const optionCount = container.children.length + 1;
+(function() {
+    'use strict';
 
-    const optionRow = document.createElement('div');
-    optionRow.className = 'poll-option-row';
-    optionRow.style.cssText = 'display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem';
+    /**
+     * Add a new poll option to the container
+     * @param {string} containerId - ID of the poll options container (default: 'poll-options-container')
+     * @param {boolean} includeHiddenId - Whether to include a hidden option_id field (for edit mode)
+     */
+    function addOption(containerId = 'poll-options-container', includeHiddenId = false) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const optionCount = container.children.length + 1;
 
-    const hiddenField = includeHiddenId
-        ? '<input type="hidden" name="option_ids[]" value="">'
-        : '';
+        const optionRow = document.createElement('div');
+        optionRow.className = 'poll-option-row';
+        optionRow.style.cssText = 'display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem';
 
-    optionRow.innerHTML = `
-        <input type="text" class="fi" name="poll_options[]" placeholder="Option ${optionCount}" style="flex:1" required>
-        ${hiddenField}
-        <button class="btn-icon btn-icon-danger" type="button" onclick="removeOption(this)" aria-label="Remove option">
-            <i class="bi bi-x"></i>
-        </button>
-    `;
+        const hiddenField = includeHiddenId
+            ? '<input type="hidden" name="option_ids[]" value="">'
+            : '';
 
-    container.appendChild(optionRow);
-    updateRemoveButtons(containerId);
-}
+        optionRow.innerHTML = `
+            <input type="text" class="fi" name="poll_options[]" placeholder="Option ${optionCount}" style="flex:1" required>
+            ${hiddenField}
+            <button class="btn-icon btn-icon-danger js-remove-option" type="button" aria-label="Remove option">
+                <i class="bi bi-x"></i>
+            </button>
+        `;
 
-/**
- * Remove a poll option
- * @param {HTMLElement} button - The remove button that was clicked
- * @param {boolean} checkVotes - Whether to confirm if option has votes
- */
-function removeOption(button, checkVotes = true) {
-    const row = button.closest('.poll-option-row');
+        container.appendChild(optionRow);
+        updateRemoveButtons(containerId);
+    }
 
-    // Check if this option has votes (only in edit mode)
-    if (checkVotes) {
-        const votesBadge = row.querySelector('.input-group-text');
-        if (votesBadge) {
-            if (!confirm('This option has votes. Are you sure you want to remove it? All votes for this option will be deleted.')) {
-                return;
+    /**
+     * Remove a poll option
+     * @param {HTMLElement} button - The remove button that was clicked
+     * @param {boolean} checkVotes - Whether to confirm if option has votes
+     */
+    function removeOption(button, checkVotes = true) {
+        const row = button.closest('.poll-option-row');
+
+        // Check if this option has votes (only in edit mode)
+        if (checkVotes) {
+            const votesBadge = row.querySelector('.input-group-text');
+            if (votesBadge) {
+                if (!confirm('This option has votes. Are you sure you want to remove it? All votes for this option will be deleted.')) {
+                    return;
+                }
             }
         }
+
+        row.remove();
+
+        const container = button.closest('.poll-option-row').parentElement || document.getElementById('poll-options-container');
+        if (container) {
+            updateRemoveButtons(container.id);
+            updatePlaceholders(container.id);
+        }
     }
 
-    row.remove();
+    /**
+     * Update remove button states (disable if only 2 options remain)
+     * @param {string} containerId - ID of the poll options container
+     */
+    function updateRemoveButtons(containerId = 'poll-options-container') {
+        const container = document.getElementById(containerId);
+        if (!container) return;
 
-    const container = button.closest('.poll-option-row').parentElement || document.getElementById('poll-options-container');
-    if (container) {
-        updateRemoveButtons(container.id);
-        updatePlaceholders(container.id);
+        const removeButtons = container.querySelectorAll('.js-remove-option');
+
+        // Disable remove buttons if only 2 options remain
+        removeButtons.forEach(button => {
+            button.disabled = container.children.length <= 2;
+        });
     }
-}
 
-/**
- * Update remove button states (disable if only 2 options remain)
- * @param {string} containerId - ID of the poll options container
- */
-function updateRemoveButtons(containerId = 'poll-options-container') {
-    const container = document.getElementById(containerId);
-    if (!container) return;
+    /**
+     * Update option placeholders based on current index
+     * @param {string} containerId - ID of the poll options container
+     */
+    function updatePlaceholders(containerId = 'poll-options-container') {
+        const container = document.getElementById(containerId);
+        if (!container) return;
 
-    const removeButtons = container.querySelectorAll('button[onclick*="removeOption"]');
+        const inputs = container.querySelectorAll('input[name="poll_options[]"]');
 
-    // Disable remove buttons if only 2 options remain
-    removeButtons.forEach(button => {
-        button.disabled = container.children.length <= 2;
-    });
-}
+        inputs.forEach((input, index) => {
+            if (!input.value) {
+                input.placeholder = `Option ${index + 1}`;
+            }
+        });
+    }
 
-/**
- * Update option placeholders based on current index
- * @param {string} containerId - ID of the poll options container
- */
-function updatePlaceholders(containerId = 'poll-options-container') {
-    const container = document.getElementById(containerId);
-    if (!container) return;
+    /**
+     * Set intelligent poll timing defaults based on event date
+     * @param {string|Date} eventDate - The event date
+     * @param {string} startsAtId - ID of the starts_at input
+     * @param {string} closesAtId - ID of the closes_at input
+     */
+    function setOptimalPollTiming(eventDate, startsAtId, closesAtId) {
+        const event = new Date(eventDate);
+        const today = new Date();
 
-    const inputs = container.querySelectorAll('input[name="poll_options[]"]');
+        // Calculate optimal poll timing
+        const daysBetween = Math.ceil((event - today) / (1000 * 60 * 60 * 24));
 
-    inputs.forEach((input, index) => {
-        if (!input.value) {
-            input.placeholder = `Option ${index + 1}`;
+        let pollStart, pollClose;
+
+        if (daysBetween > 14) {
+            // For events more than 2 weeks out, start poll 10 days before event
+            pollStart = new Date(event);
+            pollStart.setDate(pollStart.getDate() - 10);
+            pollClose = new Date(event);
+            pollClose.setDate(pollClose.getDate() - 7);
+        } else if (daysBetween > 7) {
+            // For events 1-2 weeks out, start poll 7 days before event
+            pollStart = new Date(event);
+            pollStart.setDate(pollStart.getDate() - 7);
+            pollClose = new Date(event);
+            pollClose.setDate(pollClose.getDate() - 5);
+        } else {
+            // For events less than a week out, start poll today
+            pollStart = new Date(today);
+            pollStart.setDate(pollStart.getDate() + 1); // Tomorrow
+            pollClose = new Date(event);
+            pollClose.setDate(pollClose.getDate() - 2); // 2 days before event
+        }
+
+        // Set optimal times (poll starts at 6am for visibility, closes at 6pm for decisions)
+        pollStart.setHours(6, 0, 0, 0);
+        pollClose.setHours(18, 0, 0, 0);
+
+        // Set the input values
+        const startsAtInput = document.getElementById(startsAtId);
+        const closesAtInput = document.getElementById(closesAtId);
+
+        if (startsAtInput) startsAtInput.value = formatDateTimeLocal(pollStart);
+        if (closesAtInput) closesAtInput.value = formatDateTimeLocal(pollClose);
+    }
+
+    // Delegated handlers for add/remove poll-option buttons.
+    // Add button:    class="js-add-option" [data-options-container] [data-include-hidden-id]
+    // Remove button: class="js-remove-option"
+    document.addEventListener('click', function(e) {
+        const addBtn = e.target.closest('.js-add-option');
+        if (addBtn) {
+            const containerId = addBtn.dataset.optionsContainer || 'poll-options-container';
+            const includeHiddenId = addBtn.dataset.includeHiddenId === 'true';
+            addOption(containerId, includeHiddenId);
+            return;
+        }
+        const removeBtn = e.target.closest('.js-remove-option');
+        if (removeBtn && !removeBtn.disabled) {
+            removeOption(removeBtn);
         }
     });
-}
 
-/**
- * Set intelligent poll timing defaults based on event date
- * @param {string|Date} eventDate - The event date
- * @param {string} startsAtId - ID of the starts_at input
- * @param {string} closesAtId - ID of the closes_at input
- */
-function setOptimalPollTiming(eventDate, startsAtId, closesAtId) {
-    const event = new Date(eventDate);
-    const today = new Date();
-
-    // Calculate optimal poll timing
-    const daysBetween = Math.ceil((event - today) / (1000 * 60 * 60 * 24));
-
-    let pollStart, pollClose;
-
-    if (daysBetween > 14) {
-        // For events more than 2 weeks out, start poll 10 days before event
-        pollStart = new Date(event);
-        pollStart.setDate(pollStart.getDate() - 10);
-        pollClose = new Date(event);
-        pollClose.setDate(pollClose.getDate() - 7);
-    } else if (daysBetween > 7) {
-        // For events 1-2 weeks out, start poll 7 days before event
-        pollStart = new Date(event);
-        pollStart.setDate(pollStart.getDate() - 7);
-        pollClose = new Date(event);
-        pollClose.setDate(pollClose.getDate() - 5);
-    } else {
-        // For events less than a week out, start poll today
-        pollStart = new Date(today);
-        pollStart.setDate(pollStart.getDate() + 1); // Tomorrow
-        pollClose = new Date(event);
-        pollClose.setDate(pollClose.getDate() - 2); // 2 days before event
-    }
-
-    // Set optimal times (poll starts at 6am for visibility, closes at 6pm for decisions)
-    pollStart.setHours(6, 0, 0, 0);
-    pollClose.setHours(18, 0, 0, 0);
-
-    // Set the input values
-    const startsAtInput = document.getElementById(startsAtId);
-    const closesAtInput = document.getElementById(closesAtId);
-
-    if (startsAtInput) startsAtInput.value = formatDateTimeLocal(pollStart);
-    if (closesAtInput) closesAtInput.value = formatDateTimeLocal(pollClose);
-}
+    // Consumed cross-file by admin-create-poll.js / admin-edit-poll.js for init.
+    window.updateRemoveButtons = updateRemoveButtons;
+    window.updatePlaceholders = updatePlaceholders;
+    window.setOptimalPollTiming = setOptimalPollTiming;
+})();

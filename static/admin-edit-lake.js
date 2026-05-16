@@ -3,6 +3,9 @@
  * Handles ramp CRUD operations and delete confirmation
  */
 
+(function() {
+    'use strict';
+
 // Initialize delete confirmation manager for ramps
 let rampDeleteManager;
 
@@ -46,3 +49,4 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+})();

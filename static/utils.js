@@ -72,16 +72,6 @@ var CHART_LINE_COLORS = [
  * Shared Chart.js configuration for beautiful charts
  */
 const CHART_CONFIG = {
-    // Animation settings
-    animation: {
-        duration: 800,
-        easing: 'easeOutQuart',
-        delay: function(context) {
-            // Stagger animation by bar index
-            return context.dataIndex * 100;
-        }
-    },
-
     // Common tooltip styling
     tooltip: {
         backgroundColor: 'rgba(15, 23, 42, 0.95)',
@@ -120,14 +110,6 @@ const CHART_CONFIG = {
                 color: '#e2e8f0'  // Light text for dark backgrounds
             }
         }
-    },
-
-    // Bar styling
-    bar: {
-        borderRadius: 6,
-        borderSkipped: false,
-        barThickness: 28,
-        maxBarThickness: 35
     }
 };
 
@@ -813,6 +795,138 @@ function formatTime12Hour(time24) {
 }
 
 /**
+ * Wrap a long chart label into multiple lines at word boundaries
+ * Shared by stacked bar charts (utils.js) and club poll charts (polls-page.js)
+ *
+ * @param {string} text - Label text to wrap
+ * @param {number} limit - Maximum characters per line
+ * @returns {string|string[]} Original string if short enough, otherwise array of lines
+ */
+function wrapChartLabel(text, limit) {
+    if (!text || text.length <= limit) return text;
+    const words = text.split(' ');
+    const lines = [];
+    let currentLine = '';
+    for (const word of words) {
+        if (currentLine && (currentLine + ' ' + word).length > limit) {
+            lines.push(currentLine);
+            currentLine = word;
+        } else {
+            currentLine = currentLine ? currentLine + ' ' + word : word;
+        }
+    }
+    if (currentLine) lines.push(currentLine);
+    return lines;
+}
+
+/**
+ * Responsive wrap-limit breakpoint ladder for chart labels
+ * Returns the max characters per line based on current viewport width
+ *
+ * @param {Object} [limits] - Optional custom breakpoint limits
+ * @param {number} [limits.xs=14] - Limit for screens < 400px
+ * @param {number} [limits.sm=20] - Limit for screens < 576px
+ * @param {number} [limits.md=28] - Limit for screens < 768px
+ * @param {number} [limits.lg=35] - Limit for larger screens
+ * @returns {number} Wrap limit (characters per line)
+ */
+function getChartWrapLimit(limits = {}) {
+    const { xs = 14, sm = 20, md = 28, lg = 35 } = limits;
+    const screenWidth = window.innerWidth;
+    if (screenWidth < 400) return xs;
+    if (screenWidth < 576) return sm;
+    if (screenWidth < 768) return md;
+    return lg;
+}
+
+/**
+ * Build shared Chart.js options for monthly weight line charts
+ * Used by profile.js (initMonthlyWeightChart) and roster.js (initMemberChart)
+ *
+ * @param {Object} [opts] - Options
+ * @param {boolean} [opts.maintainAspectRatio=true] - Chart.js maintainAspectRatio
+ * @param {boolean} [opts.axisTitles=false] - Whether to show x/y axis titles
+ * @param {Function} [opts.tooltipLabel] - Custom tooltip label callback
+ * @returns {Object} Chart.js options object
+ */
+function lineChartOptions(opts = {}) {
+    const {
+        maintainAspectRatio = true,
+        axisTitles = false,
+        tooltipLabel
+    } = opts;
+
+    const defaultTooltipLabel = function(context) {
+        let label = context.dataset.label || '';
+        if (label) {
+            label += ': ';
+        }
+        if (context.parsed.y !== null) {
+            label += context.parsed.y.toFixed(2) + ' lbs';
+        }
+        return label;
+    };
+
+    const yScale = {
+        beginAtZero: true,
+        ticks: {
+            color: '#ffffff',
+            callback: function(value) {
+                return value + ' lbs';
+            }
+        },
+        grid: {
+            color: 'rgba(255, 255, 255, 0.1)'
+        }
+    };
+
+    const xScale = {
+        ticks: {
+            color: '#ffffff'
+        },
+        grid: {
+            color: 'rgba(255, 255, 255, 0.1)'
+        }
+    };
+
+    if (axisTitles) {
+        yScale.title = { display: true, text: 'Total Weight (lbs)', color: '#ffffff' };
+        xScale.title = { display: true, text: 'Month', color: '#ffffff' };
+    }
+
+    return {
+        responsive: true,
+        maintainAspectRatio: maintainAspectRatio,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                    color: '#ffffff',
+                    font: { size: 12 }
+                }
+            },
+            tooltip: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                    label: tooltipLabel || defaultTooltipLabel
+                }
+            }
+        },
+        scales: {
+            y: yScale,
+            x: xScale
+        },
+        interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false
+        }
+    };
+}
+
+/**
  * Get lake name by ID from lakes data array
  * Used for poll result visualization to display lake names
  *
@@ -869,7 +983,7 @@ function getRampName(lakesData, rampId) {
  *     lakesData: lakesData,
  *     containerSelector: '.tournament-results-container',
  *     idAttribute: 'pollId',  // data-poll-id attribute
- *     onLakeSelect: (id, lakeId) => console.log('Lake selected:', lakeId)
+ *     onLakeSelect: (id, lakeId) => handleLakeSelection(id, lakeId)
  * });
  * renderer.renderAll();
  */
@@ -1070,36 +1184,11 @@ class PollResultsRenderer {
         // Build color map for ramps
         const rampColorMap = this.buildRampColorMap(rampsByLake);
 
-        // Wrap long labels on narrow screens (same logic as club poll charts)
-        function wrapLabel(text, limit) {
-            if (text.length <= limit) return text;
-            const words = text.split(' ');
-            const lines = [];
-            let currentLine = '';
-            for (const word of words) {
-                if (currentLine && (currentLine + ' ' + word).length > limit) {
-                    lines.push(currentLine);
-                    currentLine = word;
-                } else {
-                    currentLine = currentLine ? currentLine + ' ' + word : word;
-                }
-            }
-            if (currentLine) lines.push(currentLine);
-            return lines;
-        }
-
-        const screenWidth = window.innerWidth;
-        let wrapLimit = 35;
-        if (screenWidth < 400) {
-            wrapLimit = 14;
-        } else if (screenWidth < 576) {
-            wrapLimit = 20;
-        } else if (screenWidth < 768) {
-            wrapLimit = 28;
-        }
+        // Wrap long labels on narrow screens (shared helper, same logic as club poll charts)
+        const wrapLimit = getChartWrapLimit();
 
         // Prepare data for Chart.js stacked bar
-        const labels = lakesArray.map(lake => wrapLabel(lake.name, wrapLimit));
+        const labels = lakesArray.map(lake => wrapChartLabel(lake.name, wrapLimit));
 
         // Create datasets with gradient colors - one per unique ramp
         const datasets = rampColorMap.map((ramp) => {
@@ -1444,7 +1533,60 @@ class DeleteConfirmationManager {
     }
 }
 
+// ============================================================================
+// GENERIC TAB SWITCHER
+// Unifies the previously-duplicated tab show/hide handlers (calendar, profile,
+// roster finishes/guests, admin users). Delegated, data-attribute driven.
+//
+// Markup contract:
+//   Tab button:  class="tab-trigger" data-tab-target="#paneId"
+//                [data-tab-panes=".selector"]  panes to deactivate (default ".tab-pane")
+//                [data-tab-scope=".selector"]   closest-ancestor scope for panes/buttons
+//   Active classes: button group toggles "on" (matches existing .ptb.on style);
+//                    panes toggle "active" (and "show" if they already carry "show").
+// ============================================================================
+function tabSwitch(btn) {
+    if (!btn) return;
+    var targetSel = btn.getAttribute('data-tab-target');
+    if (!targetSel) return;
+
+    var scopeSel = btn.getAttribute('data-tab-scope');
+    var paneSel = btn.getAttribute('data-tab-panes') || '.tab-pane';
+    var scope = scopeSel ? btn.closest(scopeSel) : document;
+    if (!scope) scope = document;
+
+    var target = scope.querySelector(targetSel) || document.querySelector(targetSel);
+
+    // Deactivate sibling panes
+    scope.querySelectorAll(paneSel).forEach(function(p) {
+        p.classList.remove('active');
+        if (p.classList.contains('show')) p.classList.remove('show');
+    });
+    if (target) {
+        target.classList.add('active');
+        // Bootstrap-style tab-content panes also need "show"
+        if (target.parentElement && target.parentElement.classList.contains('tab-content')) {
+            target.classList.add('show');
+        }
+    }
+
+    // Deactivate sibling tab buttons (within the same button group)
+    var group = btn.parentElement;
+    if (group) {
+        group.querySelectorAll('.tab-trigger').forEach(function(b) {
+            b.classList.remove('on');
+        });
+    }
+    btn.classList.add('on');
+}
+
+document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.tab-trigger');
+    if (btn) tabSwitch(btn);
+});
+
 // Export everything to window for global access
+window.tabSwitch = tabSwitch;
 window.voteLabelsPlugin = voteLabelsPlugin;
 window.stackedTotalsPlugin = stackedTotalsPlugin;
 window.CHART_COLORS = CHART_COLORS;
@@ -1454,17 +1596,15 @@ window.escapeHtml = escapeHtml;
 window.formatDateTimeLocal = formatDateTimeLocal;
 window.getCsrfToken = getCsrfToken;
 window.showToast = showToast;
-window.fetchWithRetry = fetchWithRetry;
 window.deleteRequest = deleteRequest;
-window.handleApiError = handleApiError;
 window.LakeRampSelector = LakeRampSelector;
 window.showModal = showModal;
 window.hideModal = hideModal;
 window.formatTime12Hour = formatTime12Hour;
-window.getLakeName = getLakeName;
-window.getRampName = getRampName;
+window.wrapChartLabel = wrapChartLabel;
+window.getChartWrapLimit = getChartWrapLimit;
+window.lineChartOptions = lineChartOptions;
 window.PollResultsRenderer = PollResultsRenderer;
 window.DeleteConfirmationManager = DeleteConfirmationManager;
-window.checkBrowserCompatibility = checkBrowserCompatibility;
 
 })(); // End IIFE

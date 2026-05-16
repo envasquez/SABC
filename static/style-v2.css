@@ -1749,7 +1749,7 @@ a:hover {
 }
 
 .color-silver-dark {
-  color: #94a3b8;
+  color: var(--t2);
 }
 
 .medal-bronze {
@@ -2599,6 +2599,24 @@ textarea.fi { resize: vertical; min-height: 100px; }
     display: none;
   }
 }
+
+/* ==========================================
+   REUSABLE UTILITY CLASSES
+   Generic helpers shared across templates.
+   .tab-pane replaces page-specific inline <style> tab
+   variants (.cal-tab / .finish-tab / .guest-tab /
+   .finishes-pane) in calendar.html, profile.html, roster.html.
+   ========================================== */
+
+/* Generic tab show/hide */
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* Small muted helper text below form fields */
+.help-text { font-size: 0.72rem; color: var(--t4); margin-top: 0.2rem; }
+
+/* Required-field asterisk */
+.req { color: var(--err); }
 
 /* ==========================================
    PRINT STYLES

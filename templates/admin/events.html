@@ -5,7 +5,7 @@
 
 {% block admin_content %}
 <div class="sh">
-    <div class="st"><i class="bi bi-calendar3"></i> Manage Events</div>
+    <h1 class="st"><i class="bi bi-calendar3"></i> Manage Events</h1>
 </div>
 
 <!-- Add Event Form -->
@@ -20,11 +20,11 @@
             {{ csrf_token(request) }}
             <div style="display:grid;grid-template-columns:1.5fr 1fr 2fr 1.5fr;gap:1rem">
                 <div class="fg">
-                    <label class="fl" for="date">Event Date <span style="color:var(--err)">*</span></label>
+                    <label class="fl" for="date">Event Date <span class="req">*</span></label>
                     <input class="fi" type="date" id="date" name="date" required>
                 </div>
                 <div class="fg">
-                    <label class="fl" for="event_type">Event Type <span style="color:var(--err)">*</span></label>
+                    <label class="fl" for="event_type">Event Type <span class="req">*</span></label>
                     <select class="fi" id="event_type" name="event_type" required>
                         <option value="sabc_tournament">SABC Tournament</option>
                         <option value="holiday">Holiday</option>
@@ -32,7 +32,7 @@
                     </select>
                 </div>
                 <div class="fg">
-                    <label class="fl" for="name">Event Name <span id="name-required" style="color:var(--err)">*</span></label>
+                    <label class="fl" for="name">Event Name <span id="name-required" class="req">*</span></label>
                     <input class="fi" type="text" id="name" name="name" placeholder="e.g., August Tournament" required>
                 </div>
                 <div class="fg">
@@ -118,7 +118,7 @@
             <!-- Description for Other Tournaments -->
             <div id="other-tournament-description" style="display:none;margin-top:1rem">
                 <div class="fg">
-                    <label class="fl" for="other_description">Description <span style="color:var(--err)">*</span></label>
+                    <label class="fl" for="other_description">Description <span class="req">*</span></label>
                     <textarea class="fi" id="other_description" name="description" rows="2" placeholder="Additional details..." required></textarea>
                 </div>
             </div>
@@ -165,27 +165,27 @@
                 </div>
                 <div style="padding:.75rem 1.4rem;border-bottom:1px solid var(--b0)">
                     <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:.5rem;align-items:center">
-                        <div class="sw"><i class="bi bi-search"></i><input class="si" id="sabc-search" placeholder="Search tournaments..." onkeyup="filterEvents('sabc')" style="width:100%"></div>
-                        <select class="fi" id="sabc-year-filter" onchange="filterEvents('sabc')" style="margin:0">
+                        <div class="sw"><i class="bi bi-search"></i><input class="si" id="sabc-search" placeholder="Search tournaments..." data-filter-events="sabc" style="width:100%"></div>
+                        <select class="fi" id="sabc-year-filter" data-filter-events="sabc" style="margin:0">
                             <option value="">All Years</option>
                             {% for year in range(2023, current_year + 2) %}
                             <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
                             {% endfor %}
                         </select>
-                        <select class="fi" id="sabc-status-filter" onchange="filterEvents('sabc')" style="margin:0">
+                        <select class="fi" id="sabc-status-filter" data-filter-events="sabc" style="margin:0">
                             <option value="">All Status</option>
                             <option value="complete">Complete</option>
                             <option value="upcoming">Upcoming</option>
                             <option value="no-poll">No Poll</option>
                             <option value="poll-active">Poll Active</option>
                         </select>
-                        <select class="fi" id="sabc-lake-filter" onchange="filterEvents('sabc')" style="margin:0">
+                        <select class="fi" id="sabc-lake-filter" data-filter-events="sabc" style="margin:0">
                             <option value="">All Lakes</option>
                             {% for lake in past_tournament_lakes %}
                             <option value="{{ lake }}">{{ lake }}</option>
                             {% endfor %}
                         </select>
-                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" onclick="clearFilters('sabc')"><i class="bi bi-x-circle" aria-hidden="true"></i> Clear</button>
+                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" data-clear-filters="sabc"><i class="bi bi-x-circle" aria-hidden="true"></i> Clear</button>
                     </div>
                 </div>
                 {% set sabc_events = upcoming_sabc_tournaments|default(events|selectattr('event_type', 'equalto', 'sabc_tournament')|list) %}
@@ -200,7 +200,7 @@
                             <td data-label="Lake">{{ event.lake_name or '-' }}</td>
                             <td style="text-align:right">
                                 <div style="display:flex;gap:.35rem;justify-content:flex-end">
-                                    <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn-icon btn-icon-ghost js-edit-event" data-event-id="{{ event.id }}" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
                                     <button class="btn-icon btn-icon-danger js-delete-event"
                                             data-event-id="{{ event.id }}"
                                             data-event-name="{{ event.name }}"
@@ -224,30 +224,30 @@
                 </div>
                 <div style="padding:.75rem 1.4rem;border-bottom:1px solid var(--b0)">
                     <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:.5rem;align-items:center">
-                        <div class="sw"><i class="bi bi-search"></i><input class="si" id="past-tournaments-search" placeholder="Search..." onkeyup="filterEvents('past-tournaments')" style="width:100%"></div>
-                        <select class="fi" id="past-tournaments-year-filter" onchange="filterEvents('past-tournaments')" style="margin:0">
+                        <div class="sw"><i class="bi bi-search"></i><input class="si" id="past-tournaments-search" placeholder="Search..." data-filter-events="past-tournaments" style="width:100%"></div>
+                        <select class="fi" id="past-tournaments-year-filter" data-filter-events="past-tournaments" style="margin:0">
                             <option value="">All Years</option>
                             {% for year in past_tournament_years %}
                             <option value="{{ year }}">{{ year }}</option>
                             {% endfor %}
                         </select>
-                        <select class="fi" id="past-tournaments-type-filter" onchange="filterEvents('past-tournaments')" style="margin:0">
+                        <select class="fi" id="past-tournaments-type-filter" data-filter-events="past-tournaments" style="margin:0">
                             <option value="">All Types</option>
                             <option value="sabc_tournament">SABC</option>
                             <option value="other_tournament">Other</option>
                         </select>
-                        <select class="fi" id="past-tournaments-lake-filter" onchange="filterEvents('past-tournaments')" style="margin:0">
+                        <select class="fi" id="past-tournaments-lake-filter" data-filter-events="past-tournaments" style="margin:0">
                             <option value="">All Lakes</option>
                             {% for lake in past_tournament_lakes %}
                             <option value="{{ lake }}">{{ lake }}</option>
                             {% endfor %}
                         </select>
-                        <select class="fi" id="past-tournaments-results-filter" onchange="filterEvents('past-tournaments')" style="margin:0">
+                        <select class="fi" id="past-tournaments-results-filter" data-filter-events="past-tournaments" style="margin:0">
                             <option value="">All Results</option>
                             <option value="has-results">Has Results</option>
                             <option value="no-results">No Results</option>
                         </select>
-                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" onclick="clearFilters('past-tournaments')"><i class="bi bi-x-circle" aria-hidden="true"></i> Clear</button>
+                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" data-clear-filters="past-tournaments"><i class="bi bi-x-circle" aria-hidden="true"></i> Clear</button>
                     </div>
                 </div>
                 <div class="mt-wrap">
@@ -262,7 +262,7 @@
                             <td data-label="Lake">{{ event.lake_name or '-' }}</td>
                             <td style="text-align:right">
                                 <div style="display:flex;gap:.35rem;justify-content:flex-end">
-                                    <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn-icon btn-icon-ghost js-edit-event" data-event-id="{{ event.id }}" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
                                     <button class="btn-icon btn-icon-danger js-delete-event"
                                             data-event-id="{{ event.id }}"
                                             data-event-name="{{ event.name }}"
@@ -286,14 +286,14 @@
                 </div>
                 <div style="padding:.75rem 1.4rem;border-bottom:1px solid var(--b0)">
                     <div style="display:grid;grid-template-columns:3fr 1fr auto;gap:.5rem;align-items:center">
-                        <div class="sw"><i class="bi bi-search"></i><input class="si" id="holidays-search" placeholder="Search holidays..." onkeyup="filterEvents('holidays')" style="width:100%"></div>
-                        <select class="fi" id="holidays-year-filter" onchange="filterEvents('holidays')" style="margin:0">
+                        <div class="sw"><i class="bi bi-search"></i><input class="si" id="holidays-search" placeholder="Search holidays..." data-filter-events="holidays" style="width:100%"></div>
+                        <select class="fi" id="holidays-year-filter" data-filter-events="holidays" style="margin:0">
                             <option value="">All Years</option>
                             {% for year in range(current_year, current_year + 5) %}
                             <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
                             {% endfor %}
                         </select>
-                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" onclick="clearFilters('holidays')"><i class="bi bi-x-circle" aria-hidden="true"></i> Clear</button>
+                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" data-clear-filters="holidays"><i class="bi bi-x-circle" aria-hidden="true"></i> Clear</button>
                     </div>
                 </div>
                 {% set holiday_events = events|selectattr('event_type', 'equalto', 'holiday')|list %}
@@ -308,7 +308,7 @@
                             <td data-label="Lake">{{ event.lake_name or '-' }}</td>
                             <td style="text-align:right">
                                 <div style="display:flex;gap:.35rem;justify-content:flex-end">
-                                    <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn-icon btn-icon-ghost js-edit-event" data-event-id="{{ event.id }}" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
                                     <button class="btn-icon btn-icon-danger js-delete-event"
                                             data-event-id="{{ event.id }}"
                                             data-event-name="{{ event.name }}"
@@ -332,18 +332,18 @@
                 </div>
                 <div style="padding:.75rem 1.4rem;border-bottom:1px solid var(--b0)">
                     <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:.5rem;align-items:center">
-                        <div class="sw"><i class="bi bi-search"></i><input class="si" id="other-search" placeholder="Search events..." onkeyup="filterEvents('other')" style="width:100%"></div>
-                        <select class="fi" id="other-year-filter" onchange="filterEvents('other')" style="margin:0">
+                        <div class="sw"><i class="bi bi-search"></i><input class="si" id="other-search" placeholder="Search events..." data-filter-events="other" style="width:100%"></div>
+                        <select class="fi" id="other-year-filter" data-filter-events="other" style="margin:0">
                             <option value="">All Years</option>
                             {% for year in range(2023, current_year + 2) %}
                             <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
                             {% endfor %}
                         </select>
-                        <select class="fi" id="other-type-filter" onchange="filterEvents('other')" style="margin:0">
+                        <select class="fi" id="other-type-filter" data-filter-events="other" style="margin:0">
                             <option value="">All Types</option>
                             <option value="other_tournament">Other Tournaments</option>
                         </select>
-                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" onclick="clearFilters('other')"><i class="bi bi-x-circle" aria-hidden="true"></i> Clear</button>
+                        <button class="btn-m btn-g" style="padding:.4rem .75rem;font-size:.78rem" data-clear-filters="other"><i class="bi bi-x-circle" aria-hidden="true"></i> Clear</button>
                     </div>
                 </div>
                 {% set other_events = events|selectattr('event_type', 'equalto', 'other_tournament')|list %}
@@ -358,7 +358,7 @@
                             <td data-label="Lake">{{ event.lake_name or '-' }}</td>
                             <td style="text-align:right">
                                 <div style="display:flex;gap:.35rem;justify-content:flex-end">
-                                    <button class="btn-icon btn-icon-ghost" onclick="editEvent({{ event.id }})" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
+                                    <button class="btn-icon btn-icon-ghost js-edit-event" data-event-id="{{ event.id }}" aria-label="Edit event"><i class="bi bi-pencil"></i></button>
                                     <button class="btn-icon btn-icon-danger js-delete-event"
                                             data-event-id="{{ event.id }}"
                                             data-event-name="{{ event.name }}"
@@ -477,7 +477,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn-m btn-d" onclick="confirmDeleteCurrentEvent()"><i class="bi bi-trash me-1"></i>Delete Event</button>
+                <button type="button" class="btn-m btn-d" id="confirmDeleteCurrentEventBtn"><i class="bi bi-trash me-1"></i>Delete Event</button>
             </div>
         </div>
     </div>
@@ -504,14 +504,14 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn-m btn-d" onclick="confirmDeletePastEvent()"><i class="bi bi-trash me-1"></i>Delete Event</button>
+                <button type="button" class="btn-m btn-d" id="confirmDeletePastEventBtn"><i class="bi bi-trash me-1"></i>Delete Event</button>
             </div>
         </div>
     </div>
 </div>
 
-<script src="/static/admin-events-lakes.js"></script>
-<script src="/static/admin-events-forms.js"></script>
-<script src="/static/admin-events-filters.js"></script>
-<script src="/static/admin-events.js"></script>
+<script src="{{ url_for('static', path='/admin-events-lakes.js') }}?v={{ asset_v }}"></script>
+<script src="{{ url_for('static', path='/admin-events-forms.js') }}?v={{ asset_v }}"></script>
+<script src="{{ url_for('static', path='/admin-events-filters.js') }}?v={{ asset_v }}"></script>
+<script src="{{ url_for('static', path='/admin-events.js') }}?v={{ asset_v }}"></script>
 {% endblock %}

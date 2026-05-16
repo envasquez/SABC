@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% block title %}{{ tournament[5] | title if tournament[5] else (tournament[4] | title if tournament[4] else "Tournament") }} {{ tournament[2] | date_format }} Results{% endblock %}
+{% block title %}{{ tournament.lake_name | title if tournament.lake_name else (tournament.event_name | title if tournament.event_name else "Tournament") }} {{ tournament.event_date | date_format }} Results{% endblock %}
 
 {% block content %}
 <div style="margin-bottom:1.4rem">
-    <div style="font-size:.86rem;color:var(--t3);margin-bottom:.5rem">{{ tournament[2] | date_format }}</div>
+    <div style="font-size:.86rem;color:var(--t3);margin-bottom:.5rem">{{ tournament.event_date | date_format }}</div>
     <div class="sh">
-        <div class="st">{{ tournament[5] | upper if tournament[5] else "TOURNAMENT" }} &mdash; Results</div>
+        <h1 class="st">{{ tournament.lake_name | upper if tournament.lake_name else "TOURNAMENT" }} &mdash; Results</h1>
         {% if user and user.is_admin %}
-        <a href="/admin/tournaments/{{ tournament[0] }}/enter-results" class="btn-m btn-s" style="text-decoration:none">
+        <a href="/admin/tournaments/{{ tournament.id }}/enter-results" class="btn-m btn-s" style="text-decoration:none">
             <i class="bi bi-plus-circle"></i> {{ "Add More Results" if team_results or individual_results else "Add Results" }}
         </a>
         {% endif %}
@@ -23,27 +23,27 @@
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem">
             <div>
                 <div style="font-size:.7rem;color:var(--t3);text-transform:uppercase;letter-spacing:.04em">Date</div>
-                <div style="font-size:.88rem;font-weight:600;color:var(--t1)">{{ tournament[2] | date_format }}</div>
+                <div style="font-size:.88rem;font-weight:600;color:var(--t1)">{{ tournament.event_date | date_format }}</div>
             </div>
             <div>
                 <div style="font-size:.7rem;color:var(--t3);text-transform:uppercase;letter-spacing:.04em">Entry Fee</div>
-                <div style="font-size:.88rem;font-weight:600;color:var(--t1)">${{ "%.2f"|format(tournament[7] or 50.00) }}/{% if tournament[11] %}angler{% else %}boat{% endif %}</div>
+                <div style="font-size:.88rem;font-weight:600;color:var(--t1)">${{ "%.2f"|format(tournament.entry_fee or 50.00) }}/{% if tournament.aoy_points %}angler{% else %}boat{% endif %}</div>
             </div>
             <div>
                 <div style="font-size:.7rem;color:var(--t3);text-transform:uppercase;letter-spacing:.04em">Tournament Format</div>
-                <div style="font-size:.88rem;font-weight:600;color:var(--t1)">{% if tournament[11] %}Individual{% else %}Team{% endif %}</div>
+                <div style="font-size:.88rem;font-weight:600;color:var(--t1)">{% if tournament.aoy_points %}Individual{% else %}Team{% endif %}</div>
             </div>
             <div>
                 <div style="font-size:.7rem;color:var(--t3);text-transform:uppercase;letter-spacing:.04em">Limit</div>
-                <div style="font-size:.88rem;font-weight:600;color:var(--t1)">{{ tournament[8] or 5 }} fish/{% if tournament[11] %}angler{% else %}boat{% endif %}</div>
+                <div style="font-size:.88rem;font-weight:600;color:var(--t1)">{{ tournament.fish_limit or 5 }} fish/{% if tournament.aoy_points %}angler{% else %}boat{% endif %}</div>
             </div>
             <div>
                 <div style="font-size:.7rem;color:var(--t3);text-transform:uppercase;letter-spacing:.04em">Time</div>
-                <div style="font-size:.88rem;font-weight:600;color:var(--t1)">{% if tournament[12] and tournament[13] %}{{ tournament[12].strftime('%-I:%M %p') }} &ndash; {{ tournament[13].strftime('%-I:%M %p') }}{% elif tournament[12] %}{{ tournament[12].strftime('%-I:%M %p') }}{% else %}&mdash;{% endif %}</div>
+                <div style="font-size:.88rem;font-weight:600;color:var(--t1)">{% if tournament.start_time and tournament.end_time %}{{ tournament.start_time.strftime('%-I:%M %p') }} &ndash; {{ tournament.end_time.strftime('%-I:%M %p') }}{% elif tournament.start_time %}{{ tournament.start_time.strftime('%-I:%M %p') }}{% else %}&mdash;{% endif %}</div>
             </div>
             <div>
                 <div style="font-size:.7rem;color:var(--t3);text-transform:uppercase;letter-spacing:.04em">Location</div>
-                <div style="font-size:.88rem;font-weight:600;color:var(--t1)">{{ tournament[6] | title if tournament[6] else "" }}</div>
+                <div style="font-size:.88rem;font-weight:600;color:var(--t1)">{{ tournament.ramp_name | title if tournament.ramp_name else "" }}</div>
             </div>
         </div>
     </div>
@@ -195,11 +195,11 @@
                     {% if user and user.is_admin %}
                     <td style="text-align:right">
                         <div style="display:flex;gap:.25rem;justify-content:flex-end">
-                            <a href="/admin/tournaments/{{ tournament[0] }}/enter-results?edit_team_result={{ result[6] }}" class="btn-icon btn-icon-ghost" title="Edit team result" style="text-decoration:none" aria-label="Edit team result">
+                            <a href="/admin/tournaments/{{ tournament.id }}/enter-results?edit_team_result={{ result[6] }}" class="btn-icon btn-icon-ghost" title="Edit team result" style="text-decoration:none" aria-label="Edit team result">
                                 <i class="bi bi-pencil"></i>
                             </a>
                             <button type="button" class="btn-icon btn-icon-danger js-delete-team-result"
-                                    data-tournament-id="{{ tournament[0] }}"
+                                    data-tournament-id="{{ tournament.id }}"
                                     data-team-result-id="{{ result[6] }}"
                                     data-team-name="{{ result[1] }}"
                                     data-is-solo="{{ result[7] }}"
@@ -218,7 +218,7 @@
 {% endif %}
 
 <!-- Individual Results Card - Only show for AoY tournaments -->
-{% if tournament[11] %}
+{% if tournament.aoy_points %}
 <div class="cc" style="margin-bottom:1.4rem">
     <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
         <div style="font-size:.88rem;font-weight:600;color:var(--warn)"><i class="bi bi-person" style="margin-right:.35rem"></i>Individual Results</div>
@@ -257,7 +257,7 @@
                     {% if user and user.is_admin %}
                     <td style="text-align:right">
                         <button type="button" class="btn-icon btn-icon-danger js-delete-individual-result"
-                                data-tournament-id="{{ tournament[0] }}"
+                                data-tournament-id="{{ tournament.id }}"
                                 data-result-id="{{ result[7] }}"
                                 data-angler-name="{{ result[1] }}"
                                 title="Delete result" aria-label="Delete result">
@@ -273,7 +273,7 @@
 </div>
 {% endif %}
 
-{% if not team_results and (not tournament[11] or not individual_results) %}
+{% if not team_results and (not tournament.aoy_points or not individual_results) %}
 <div class="cc" style="margin-bottom:1.4rem">
     <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
         <div style="font-size:.88rem;font-weight:600;color:var(--t3)"><i class="bi bi-info-circle" style="margin-right:.35rem"></i>No Results Available</div>
@@ -313,7 +313,7 @@
                     {% if user and user.is_admin %}
                     <td style="text-align:right">
                         <button type="button" class="btn-icon btn-icon-danger js-delete-buy-in-result"
-                                data-tournament-id="{{ tournament[0] }}"
+                                data-tournament-id="{{ tournament.id }}"
                                 data-result-id="{{ result[4] }}"
                                 data-angler-name="{{ result[0] }}"
                                 title="Delete buy-in result" aria-label="Delete buy-in result">
@@ -382,6 +382,6 @@
 </div>
 {% endif %}
 
-<script src="/static/tournament-results.js"></script>
+<script src="{{ url_for('static', path='/tournament-results.js') }}?v={{ asset_v }}"></script>
 
 {% endblock %}

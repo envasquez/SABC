@@ -3,6 +3,9 @@
  * Handles event type-specific form field visibility and validation
  */
 
+(function() {
+    'use strict';
+
 /**
  * Base configuration for tournament events
  * Provides default times and field clearing for tournament-type events
@@ -303,3 +306,8 @@ function initYearBasedDefaults() {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', initYearBasedDefaults);
+
+// Export functions consumed by admin-events.js (cross-file dependency)
+window.toggleEventFields = toggleEventFields;
+window.toggleEditEventFields = toggleEditEventFields;
+})();

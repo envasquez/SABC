@@ -4,7 +4,7 @@
 {% block title %}Manage Lakes - Admin{% endblock %}
 
 {% block admin_content %}
-<div class="sh"><div class="st"><i class="bi bi-water"></i> Manage Lakes</div></div>
+<div class="sh"><h1 class="st"><i class="bi bi-water"></i> Manage Lakes</h1></div>
 
 {{ alert('success', request.query_params.get('success')) }}
 {{ alert('danger', request.query_params.get('error')) }}
@@ -81,5 +81,5 @@
 </ul>
 {% endcall %}
 
-<script src="/static/admin-lakes.js"></script>
+<script src="{{ url_for('static', path='/admin-lakes.js') }}?v={{ asset_v }}"></script>
 {% endblock %}

@@ -1,6 +1,7 @@
 """Profile update routes."""
 
 from fastapi import APIRouter, Form, Request
+from fastapi.responses import RedirectResponse
 
 from routes.auth.profile_update.delete import delete_account
 from routes.auth.profile_update.fields import update_profile_fields
@@ -17,7 +18,7 @@ async def update_profile(
     current_password: str = Form(""),
     new_password: str = Form(""),
     confirm_password: str = Form(""),
-):
+) -> RedirectResponse:
     """Update user profile including optional password change."""
     return await update_profile_fields(
         request, email, phone, year_joined, current_password, new_password, confirm_password
@@ -25,6 +26,6 @@ async def update_profile(
 
 
 @router.post("/profile/delete")
-async def delete_profile(request: Request, confirm: str = Form(...)):
+async def delete_profile(request: Request, confirm: str = Form(...)) -> RedirectResponse:
     """Delete user account with confirmation."""
     return await delete_account(request, confirm)

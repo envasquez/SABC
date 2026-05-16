@@ -4,7 +4,7 @@
 {% block admin_content %}
 <div style="margin-bottom:1.4rem">
     <div class="sh">
-        <div class="st"><i class="bi bi-arrow-left-right"></i> Merge Duplicate Accounts</div>
+        <h1 class="st"><i class="bi bi-arrow-left-right"></i> Merge Duplicate Accounts</h1>
         <a href="/admin/users" class="btn-m btn-g"><i class="bi bi-arrow-left"></i> Back to Users</a>
     </div>
 
@@ -129,5 +129,5 @@
     </div>
 </div>
 
-<script src="/static/admin-merge-users.js"></script>
+<script src="{{ url_for('static', path='/admin-merge-users.js') }}?v={{ asset_v }}"></script>
 {% endblock %}

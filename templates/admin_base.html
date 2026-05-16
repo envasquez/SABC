@@ -4,7 +4,7 @@
     <aside class="as">
         <div class="as-s">
             <div class="as-l">Overview</div>
-            <a href="/admin/events" class="as-a {% if request.url.path == '/admin/events' %}on{% endif %}">
+            <a href="/admin" class="as-a {% if request.url.path == '/admin' %}on{% endif %}">
                 <i class="bi bi-grid-1x2" aria-hidden="true"></i> Dashboard
             </a>
         </div>
@@ -18,7 +18,7 @@
                 <i class="bi bi-people" aria-hidden="true"></i> Anglers
                 {% if admin_counts is defined and admin_counts.anglers %}<span class="cnt">{{ admin_counts.anglers }}</span>{% endif %}
             </a>
-            <a href="/admin/polls/create" class="as-a {% if '/polls' in request.url.path and '/admin' in request.url.path %}on{% endif %}">
+            <a href="/admin/polls/create" class="as-a {% if request.url.path.startswith('/admin/polls') %}on{% endif %}">
                 <i class="bi bi-hand-index" aria-hidden="true"></i> Polls
                 {% if admin_counts is defined and admin_counts.polls %}<span class="cnt">{{ admin_counts.polls }}</span>{% endif %}
             </a>

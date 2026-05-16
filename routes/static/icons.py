@@ -6,5 +6,5 @@ router = APIRouter()
 
 @router.get("/favicon.ico")
 @router.get("/apple-touch-icon{path:path}.png")
-async def icons():
+async def icons() -> Response:
     return Response(open("static/favicon.svg").read(), media_type="image/svg+xml")

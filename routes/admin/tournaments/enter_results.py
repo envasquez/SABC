@@ -2,12 +2,13 @@ import json
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from sqlalchemy import Connection
 
 from core.deps import get_db, templates
 from core.helpers.auth import require_admin
 from core.query_service import QueryService
+from core.types import UserDict
 from routes.tournaments.helpers import auto_complete_past_tournaments
 
 router = APIRouter()
@@ -17,9 +18,9 @@ router = APIRouter()
 async def enter_results_page(
     tournament_id: int,
     request: Request,
-    user=Depends(require_admin),
+    user: UserDict = Depends(require_admin),
     conn: Connection = Depends(get_db),
-):
+) -> Response:
     # Auto-complete this tournament only (single-row write on index lookup
     # instead of a full-table scan).
     auto_complete_past_tournaments(tournament_id)
@@ -98,7 +99,7 @@ async def enter_results_page(
 
 
 @router.post("/admin/tournaments/{tournament_id}/enter-results")
-async def enter_results_redirect(tournament_id: int):
+async def enter_results_redirect(tournament_id: int) -> RedirectResponse:
     # Validate tournament_id is a positive integer to prevent redirect attacks
     # FastAPI already validates this is an int, but we explicitly check for safety
     if tournament_id <= 0:

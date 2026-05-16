@@ -413,6 +413,13 @@ async def upload_photo(
             f"Invalid file type. Allowed: {', '.join(ALLOWED_EXTENSIONS)}",
         )
 
+    # Validate the client-provided Content-Type is an image type
+    if not (photo.content_type or "").lower().startswith("image/"):
+        return error_redirect(
+            "/photos/upload",
+            "Invalid file type. Please upload an image.",
+        )
+
     # Check upload limit
     if not can_upload_photo(user, tournament_id_int):
         return error_redirect(
@@ -430,6 +437,18 @@ async def upload_photo(
             f"File too large. Maximum size is {MAX_FILE_SIZE // (1024 * 1024)}MB.",
         )
 
+    # Verify the bytes are a genuine image before writing anything to disk.
+    # Extension/Content-Type are client-controlled and easily spoofed.
+    try:
+        with Image.open(io.BytesIO(contents)) as probe:
+            probe.verify()
+    except (OSError, ValueError, SyntaxError) as e:
+        logger.warning(f"Photo upload rejected: not a valid image: {e}")
+        return error_redirect(
+            "/photos/upload",
+            "Invalid or corrupt image file. Please upload a valid image.",
+        )
+
     # Generate unique filename
     filename = f"{uuid.uuid4()}{ext}"
     ensure_upload_dir()
@@ -445,9 +464,23 @@ async def upload_photo(
         logger.error(f"Failed to save photo: {e}")
         return error_redirect("/photos/upload", "Failed to save photo. Please try again.")
 
-    # Generate thumbnail and blur placeholder
+    # Generate thumbnail and blur placeholder. A failure here means the image
+    # could not be processed, so abort the upload rather than leaving an
+    # orphaned original on disk with no thumbnail.
     logger.info("Photo upload: generating thumbnail and placeholder...")
     thumbnail_filename, placeholder_filename = generate_thumbnail(contents, filename)
+    if not thumbnail_filename:
+        logger.error("Photo upload: thumbnail generation failed; aborting upload")
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        if placeholder_filename:
+            placeholder_path = os.path.join(PLACEHOLDER_DIR, placeholder_filename)
+            if os.path.exists(placeholder_path):
+                os.remove(placeholder_path)
+        return error_redirect(
+            "/photos/upload",
+            "Failed to process image. Please try a different photo.",
+        )
 
     # Create database record
     logger.info("Photo upload: creating database record...")

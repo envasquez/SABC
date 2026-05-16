@@ -1,6 +1,7 @@
 """Data dashboard page showing club statistics and analytics."""
 
 from fastapi import APIRouter, Depends, Request
+from fastapi.responses import Response
 
 from core.deps import get_query_service, templates
 from core.helpers.auth import get_user_optional
@@ -13,7 +14,7 @@ router = APIRouter()
 async def data_dashboard(
     request: Request,
     qs: QueryService = Depends(get_query_service),
-):
+) -> Response:
     """Display the club data dashboard with statistics and charts."""
     user = get_user_optional(request)
 

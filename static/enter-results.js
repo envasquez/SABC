@@ -3,6 +3,9 @@
  * Handles autocomplete, team management, and result submission for tournament results entry page
  */
 
+(function() {
+    'use strict';
+
 /**
  * Module state - encapsulated to avoid global namespace pollution
  * @type {Object}
@@ -46,12 +49,11 @@ function initializeResultsEntry(config) {
         }
     }
 
-    // Update "Add Team" button to use appropriate function
-    if (ResultsEntryState.isTeamFormat) {
-        const addTeamBtn = document.querySelector('button[onclick="addTeam()"]');
-        if (addTeamBtn) {
-            addTeamBtn.setAttribute('onclick', 'addTeamFormatTeam()');
-        }
+    // Wire the "Add Team" button to the format-appropriate handler.
+    const addTeamButton = document.getElementById('addTeamBtn');
+    if (addTeamButton) {
+        addTeamButton.addEventListener('click',
+            ResultsEntryState.isTeamFormat ? addTeamFormatTeam : addTeam);
     }
 
     // Add first team on page load
@@ -116,10 +118,8 @@ function initializeResultsEntry(config) {
         }
 
         // Hide the "Add Team" button since we're editing one specific team
-        const addTeamBtn = document.querySelector('button[onclick="addTeam()"]');
+        const addTeamBtn = document.getElementById('addTeamBtn');
         if (addTeamBtn) addTeamBtn.style.display = 'none';
-        const addTeamFormatBtn = document.querySelector('button[onclick="addTeamFormatTeam()"]');
-        if (addTeamFormatBtn) addTeamFormatBtn.style.display = 'none';
     } else {
         // Default mode - add empty team based on format
         if (ResultsEntryState.isTeamFormat) {
@@ -774,7 +774,6 @@ async function handleFormSubmit(e) {
 
             // Save angler1 (boater) result
             const angler1Id = formData.get(`angler1_id_${teamId}`);
-            console.log(`Team ${teamId}: angler1_id =`, angler1Id);
             if (angler1Id) {
                 const angler1Data = new FormData();
                 angler1Data.append('csrf_token', formData.get('csrf_token'));
@@ -804,7 +803,6 @@ async function handleFormSubmit(e) {
 
             // Save angler2 (co-angler) result if exists
             const angler2Id = formData.get(`angler2_id_${teamId}`);
-            console.log(`Team ${teamId}: angler2_id =`, angler2Id);
             if (angler2Id) {
                 const angler2Data = new FormData();
                 angler2Data.append('csrf_token', formData.get('csrf_token'));
@@ -959,9 +957,13 @@ function onAnglerChange() {
     updateAllAnglerDropdowns();
 }
 
-// Make functions available globally for onclick handlers
-window.addTeam = addTeam;
-window.addTeamFormatTeam = addTeamFormatTeam;
+// Exports.
+// - removeTeam / clearAnglerSelection / handleBuyInChange: referenced by inline
+//   on* handlers in HTML generated dynamically inside this file.
+// - showCreateGuestModal / createGuest / initializeResultsEntry: consumed
+//   cross-file by enter-results-init.js.
+// (addTeam / addTeamFormatTeam are now bound in-scope via addEventListener and
+//  no longer need a window export.)
 window.removeTeam = removeTeam;
 window.clearAnglerSelection = clearAnglerSelection;
 window.handleBuyInChange = handleBuyInChange;
@@ -970,3 +972,4 @@ window.createGuest = createGuest;
 window.initializeResultsEntry = initializeResultsEntry;
 window.updateAllAnglerDropdowns = updateAllAnglerDropdowns;
 window.onAnglerChange = onAnglerChange;
+})();

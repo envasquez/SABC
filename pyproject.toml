@@ -24,6 +24,14 @@ warn_unused_ignores = false
 exclude = ["scripts/"]
 # Type check all Python files
 
+# Enforce full type annotations (return + params) for the application code.
+# Scoped to routes.* and core.* — the test suite (tests/*) is intentionally
+# left untyped for now and would surface ~1000 unrelated errors if included.
+[[tool.mypy.overrides]]
+module = ["routes.*", "core.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
 [tool.coverage.run]
 source = ["."]
 omit = [

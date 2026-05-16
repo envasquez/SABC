@@ -3,7 +3,7 @@
 {% block title %}Edit Lake - South Austin Bass Club{% endblock %}
 {% block admin_content %}
 <div class="sh">
-    <div class="st"><i class="bi bi-water"></i> Edit Lake: {{ lake.display_name }}</div>
+    <h1 class="st"><i class="bi bi-water"></i> Edit Lake: {{ lake.display_name }}</h1>
     <a href="/admin/lakes" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-arrow-left"></i> Back to Lakes</a>
 </div>
 
@@ -27,13 +27,13 @@
                 <div class="fg">
                     <label class="fl" for="name">Database Name</label>
                     <input type="text" class="fi" id="name" name="name" value="{{ lake.yaml_key }}" required>
-                    <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">Lowercase, no spaces</div>
+                    <div class="help-text">Lowercase, no spaces</div>
                 </div>
 
                 <div class="fg">
                     <label class="fl" for="google_maps_embed">Google Maps Embed Code</label>
                     <textarea class="fi" id="google_maps_embed" name="google_maps_embed" rows="3" style="resize:vertical">{{ lake.google_maps_iframe or '' }}</textarea>
-                    <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">Full iframe embed code (optional)</div>
+                    <div class="help-text">Full iframe embed code (optional)</div>
                 </div>
 
                 <button type="submit" class="btn-m btn-p" style="width:100%">
@@ -108,7 +108,7 @@
                     <div class="fg">
                         <label class="fl" for="google_maps_iframe">Google Maps Embed Code</label>
                         <textarea class="fi" id="google_maps_iframe" name="google_maps_iframe" rows="3" style="resize:vertical" placeholder="<iframe src='...' ...></iframe>"></textarea>
-                        <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">Full iframe embed code from Google Maps (optional)</div>
+                        <div class="help-text">Full iframe embed code from Google Maps (optional)</div>
                     </div>
 
                     <button type="submit" class="btn-m btn-s" style="width:100%">
@@ -139,7 +139,7 @@
                     <div class="fg">
                         <label class="fl" for="edit_google_maps_iframe">Google Maps Embed Code</label>
                         <textarea class="fi" id="edit_google_maps_iframe" name="google_maps_iframe" rows="3" style="resize:vertical"></textarea>
-                        <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">Full iframe embed code from Google Maps (optional)</div>
+                        <div class="help-text">Full iframe embed code from Google Maps (optional)</div>
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--b0)">
@@ -183,5 +183,5 @@
     </div>
 </div>
 
-<script src="/static/admin-edit-lake.js"></script>
+<script src="{{ url_for('static', path='/admin-edit-lake.js') }}?v={{ asset_v }}"></script>
 {% endblock %}

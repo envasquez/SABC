@@ -20,7 +20,7 @@ router = APIRouter()
 
 
 @router.get("/admin/news")
-async def admin_news(request: Request, show_archived: bool = False):
+async def admin_news(request: Request, show_archived: bool = False) -> Response:
     user = require_admin(request)
 
     with get_session() as session:
@@ -64,7 +64,7 @@ async def create_news(
     content: str = Form(...),
     priority: int = Form(0),
     auto_archive_at: Optional[str] = Form(default=None),
-):
+) -> RedirectResponse:
     user = require_admin(request)
 
     # Validate inputs
@@ -144,7 +144,7 @@ async def create_news(
 
 
 @router.get("/admin/news/{news_id}/edit")
-async def edit_news_form(request: Request, news_id: int):
+async def edit_news_form(request: Request, news_id: int) -> Response:
     """GET endpoint for editing news - returns the edit form."""
     user = require_admin(request)
 
@@ -174,7 +174,7 @@ async def update_news(
     content: str = Form(...),
     priority: int = Form(0),
     auto_archive_at: Optional[str] = Form(default=None),
-):
+) -> RedirectResponse:
     user = require_admin(request)
 
     # Validate inputs
@@ -221,7 +221,9 @@ async def update_news(
 
 
 @router.post("/admin/news/test-email")
-async def test_news_email(request: Request, title: str = Form(...), content: str = Form(...)):
+async def test_news_email(
+    request: Request, title: str = Form(...), content: str = Form(...)
+) -> RedirectResponse:
     """Send a test email notification to the currently logged-in admin."""
     user = require_admin(request)
 

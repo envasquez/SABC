@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="sh">
-    <div class="st"><i class="bi bi-images"></i> Photo Gallery</div>
+    <h1 class="st"><i class="bi bi-images"></i> Photo Gallery</h1>
     {% if user and user.member %}
     <a href="/photos/upload" class="btn-m btn-p" style="text-decoration:none">
         <i class="bi bi-upload" aria-hidden="true"></i> Upload Photo
@@ -88,26 +88,13 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" style="text-align:center;padding:0">
-                <img id="lightboxImage" src="" style="max-height:80vh;max-width:100%">
+                <img id="lightboxImage" src="" alt="" style="max-height:80vh;max-width:100%">
             </div>
         </div>
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const modal = new bootstrap.Modal(document.getElementById('lightboxModal'));
-    const lightboxImage = document.getElementById('lightboxImage');
-    const lightboxCaption = document.getElementById('lightboxCaption');
-
-    document.querySelectorAll('.gallery-link').forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            lightboxImage.src = this.href;
-            lightboxCaption.textContent = this.dataset.caption || '';
-            modal.show();
-        });
-    });
-});
-</script>
+{% endblock %}
+{% block extra_js %}
+<script src="{{ url_for('static', path='/photos-gallery.js') }}?v={{ asset_v }}"></script>
 {% endblock %}
