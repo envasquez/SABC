@@ -60,20 +60,6 @@
 </div>
 {% endmacro %}
 
-{# Card macro #}
-{% macro card(title='', header_class='', show_header=True) %}
-<div class="cc" style="margin-bottom:1.4rem">
-    {% if show_header and title %}
-    <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
-        <div style="font-size:.88rem;font-weight:600;color:var(--t1)">{{ title }}</div>
-    </div>
-    {% endif %}
-    <div class="ci">
-        {{ caller() }}
-    </div>
-</div>
-{% endmacro %}
-
 {# Modal macro #}
 {% macro modal(id, title, size='') %}
 <div class="modal fade" id="{{ id }}" tabindex="-1" aria-labelledby="{{ id }}-label" aria-hidden="true">
@@ -98,35 +84,6 @@
     {% if icon %}<i class="bi bi-{{ icon }}" style="margin-right:.2rem"></i>{% endif %}
     {{ text }}
 </span>
-{% endmacro %}
-
-{# Officer badge macro #}
-{% macro officer_badge(position) %}
-<span class="tg tg-i" style="margin-right:.25rem">
-    <i class="bi bi-star-fill" style="margin-right:.2rem"></i>{{ position }}
-</span>
-{% endmacro %}
-
-{# Member badge macro #}
-{% macro member_badge(is_member) %}
-{% if is_member %}
-    {{ badge('Member', 'success', 'person-check-fill') }}
-{% else %}
-    {{ badge('Guest', 'secondary', 'person') }}
-{% endif %}
-{% endmacro %}
-
-{# Stat card macro #}
-{% macro stat_card(icon, title, value, color='primary') %}
-{% set color_map = {'primary': '--brand', 'success': '--ok', 'warning': '--warn', 'danger': '--err', 'info': '--info'} %}
-{% set css_color = color_map.get(color, '--brand') %}
-<div class="cc"><div class="ci" style="display:flex;align-items:center;gap:.75rem;padding:1rem">
-    <i class="bi bi-{{ icon }}" style="font-size:1.8rem;color:var({{ css_color }});opacity:.7"></i>
-    <div>
-        <div style="font-size:.78rem;color:var(--t3)">{{ title }}</div>
-        <div style="font-size:1.5rem;font-weight:800;color:var(--t1)">{{ value }}</div>
-    </div>
-</div></div>
 {% endmacro %}
 
 {# Delete confirmation modal macro #}
@@ -159,22 +116,6 @@
         </div>
     </div>
 </div>
-{% endmacro %}
-
-{# Data table macro #}
-{% macro data_table(headers, table_class='', id='', responsive=true) %}
-<table class="mt"{% if id %} id="{{ id }}"{% endif %}>
-    <thead>
-        <tr>
-            {% for header in headers %}
-            <th>{{ header }}</th>
-            {% endfor %}
-        </tr>
-    </thead>
-    <tbody>
-        {{ caller() }}
-    </tbody>
-</table>
 {% endmacro %}
 
 {# Time select options macro - generates time options for dropdowns #}
@@ -235,36 +176,6 @@
 </div>
 {% endmacro %}
 
-{# Tournament card header - reusable header with location #}
-{% macro tournament_card_header(tournament, header_class, badge_text, badge_class='bg-warning text-dark') %}
-<div class="card-header {{ header_class }} text-white">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <h5 class="mb-0{% if tournament.is_cancelled %} text-decoration-line-through{% endif %}">
-                {% if tournament.lake_display_name %}
-                    {{ tournament.lake_display_name|upper }}
-                {% else %}
-                    Location TBD
-                {% endif %}
-            </h5>
-            {% if tournament.ramp_name %}
-                <small class="text-white-50">
-                    {% if tournament.ramp_google_maps %}
-                        <a href="#" class="text-white-50 text-decoration-none"
-                           data-bs-toggle="modal" data-bs-target="#rampModal{{ tournament.id }}">
-                            <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>{{ tournament.ramp_name|title }}
-                        </a>
-                    {% else %}
-                        {{ tournament.ramp_name|title }}
-                    {% endif %}
-                </small>
-            {% endif %}
-        </div>
-        <span class="badge {{ badge_class }}">{{ badge_text }}</span>
-    </div>
-</div>
-{% endmacro %}
-
 {# Tournament description row #}
 {% macro tournament_description_row(tournament) %}
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
@@ -274,19 +185,6 @@
         {% if tournament.aoy_points %}
             <span class="tg tg-i">AoY Points</span>
         {% endif %}
-    </div>
-</div>
-{% endmacro %}
-
-{# Location TBD placeholder #}
-{% macro location_tbd_placeholder() %}
-<div style="margin-bottom:1rem">
-    <div style="background:var(--bg-elevated);border:1px solid var(--b1);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;padding:2rem;min-height:150px">
-        <div style="text-align:center">
-            <i class="bi bi-geo-alt" style="font-size:2rem;color:var(--t4);display:block;margin-bottom:.5rem"></i>
-            <div style="font-weight:700;font-size:1.1rem;color:var(--t2)">Location TBD</div>
-            <div style="font-size:.85rem;color:var(--t3);margin-top:.25rem">Will be determined by poll vote</div>
-        </div>
     </div>
 </div>
 {% endmacro %}

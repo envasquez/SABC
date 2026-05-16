@@ -1,7 +1,7 @@
 import logging
 
 from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse
 from sqlalchemy import Connection
 
 from core.deps import get_db
@@ -19,10 +19,6 @@ async def delete_result(
     user=Depends(require_admin),
     conn: Connection = Depends(get_db),
 ):
-    if isinstance(user, RedirectResponse):
-        logger.warning(f"Unauthorized delete attempt for result {result_id}")
-        return JSONResponse({"error": "Unauthorized"}, status_code=403)
-
     logger.info(f"Deleting result {result_id} from tournament {tournament_id}")
     qs = QueryService(conn)
 
@@ -67,9 +63,6 @@ async def delete_team_result(
     user=Depends(require_admin),
     conn: Connection = Depends(get_db),
 ):
-    if isinstance(user, RedirectResponse):
-        return JSONResponse({"error": "Unauthorized"}, status_code=403)
-
     qs = QueryService(conn)
 
     # First get the angler IDs from the team result
@@ -111,9 +104,6 @@ async def toggle_tournament_complete(
     conn: Connection = Depends(get_db),
 ):
     """Toggle tournament complete status (legacy endpoint - complete status is mostly informational now)."""
-    if isinstance(user, RedirectResponse):
-        return JSONResponse({"error": "Unauthorized"}, status_code=403)
-
     qs = QueryService(conn)
 
     current = qs.fetch_one(

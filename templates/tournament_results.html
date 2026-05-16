@@ -198,7 +198,12 @@
                             <a href="/admin/tournaments/{{ tournament[0] }}/enter-results?edit_team_result={{ result[6] }}" class="btn-icon btn-icon-ghost" title="Edit team result" style="text-decoration:none" aria-label="Edit team result">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <button type="button" class="btn-icon btn-icon-danger" onclick="deleteTeamResult({{ tournament[0] }}, {{ result[6] }}, '{{ result[1] }}', {{ result[7] }})" title="Delete team result" aria-label="Delete team result">
+                            <button type="button" class="btn-icon btn-icon-danger js-delete-team-result"
+                                    data-tournament-id="{{ tournament[0] }}"
+                                    data-team-result-id="{{ result[6] }}"
+                                    data-team-name="{{ result[1] }}"
+                                    data-is-solo="{{ result[7] }}"
+                                    title="Delete team result" aria-label="Delete team result">
                                 <i class="bi bi-trash"></i>
                             </button>
                         </div>
@@ -251,7 +256,11 @@
                     </td>
                     {% if user and user.is_admin %}
                     <td style="text-align:right">
-                        <button type="button" class="btn-icon btn-icon-danger" onclick="deleteIndividualResult({{ tournament[0] }}, {{ result[7] }}, '{{ result[1] }}')" title="Delete result" aria-label="Delete result">
+                        <button type="button" class="btn-icon btn-icon-danger js-delete-individual-result"
+                                data-tournament-id="{{ tournament[0] }}"
+                                data-result-id="{{ result[7] }}"
+                                data-angler-name="{{ result[1] }}"
+                                title="Delete result" aria-label="Delete result">
                             <i class="bi bi-trash"></i>
                         </button>
                     </td>
@@ -303,7 +312,11 @@
                     <td>{{ result[2] }}</td>
                     {% if user and user.is_admin %}
                     <td style="text-align:right">
-                        <button type="button" class="btn-icon btn-icon-danger" onclick="deleteBuyInResult({{ tournament[0] }}, {{ result[4] }}, '{{ result[0] }}')" title="Delete buy-in result" aria-label="Delete buy-in result">
+                        <button type="button" class="btn-icon btn-icon-danger js-delete-buy-in-result"
+                                data-tournament-id="{{ tournament[0] }}"
+                                data-result-id="{{ result[4] }}"
+                                data-angler-name="{{ result[0] }}"
+                                title="Delete buy-in result" aria-label="Delete buy-in result">
                             <i class="bi bi-trash"></i>
                         </button>
                     </td>

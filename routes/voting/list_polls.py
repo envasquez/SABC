@@ -12,7 +12,7 @@ from core.helpers.poll_day_info import get_poll_day_info
 from core.helpers.timezone import now_local
 from core.query_service import QueryService
 from core.types import UserDict
-from routes.dependencies import get_lakes_list, get_ramps_for_lake
+from routes.dependencies import get_lakes_list
 from routes.voting.helpers import (
     get_poll_options,
     get_seasonal_tournament_history,
@@ -196,27 +196,59 @@ async def polls(
         vote_counts_data = session.execute(vote_counts_query).all()
         vote_counts = {row[0]: row[1] for row in vote_counts_data}
 
+        # Batch-fetch the Events referenced by these polls so we don't issue a
+        # per-poll Event lookup inside the loop. Poll metadata is already in
+        # poll_row, so the redundant per-poll `session.query(Poll)...first()`
+        # is dropped entirely.
+        event_ids = [poll_row.event_id for poll_row in polls_data if poll_row.event_id is not None]
+        events_by_id: Dict[int, Event] = {}
+        if event_ids:
+            events_by_id = {
+                e.id: e for e in session.query(Event).filter(Event.id.in_(event_ids)).all()
+            }
+
+        # Build a minimal Poll-shaped object for the seasonal helper. The
+        # helper only uses .event_id, so reusing a real Poll fetch would be
+        # wasteful. We pass through the already-loaded `events_by_id` so the
+        # helper doesn't re-query Event either. To do that without changing
+        # the helper signature, we feed the helper a Poll instance with
+        # event_id pre-set and rely on its existing event lookup — but since
+        # we already have the Event, we just call get_seasonal_tournament_history
+        # once per unique (event.date.month, event.date.year) tuple and cache
+        # the result.
+        seasonal_cache: Dict[int, List[Dict[str, Any]]] = {}
+
         # Build polls list with vote counts
         polls: List[Dict[str, Any]] = []
+        is_admin_flag = bool(user.get("is_admin"))
         for poll_row in polls_data:
             # Get vote count from pre-fetched data
             unique_voters = vote_counts.get(poll_row.id, 0)
 
             # Get seasonal history + day-of info (sunrise/weather) for tournament polls
-            seasonal_history = []
+            seasonal_history: List[Dict[str, Any]] = []
             day_info: Optional[Dict[str, Any]] = None
-            if poll_row.poll_type == "tournament_location":
-                poll_obj = session.query(Poll).filter(Poll.id == poll_row.id).first()
-                if poll_obj:
-                    seasonal_history = get_seasonal_tournament_history(session, poll_obj)
-                    if poll_obj.event_id:
-                        event = session.query(Event).filter(Event.id == poll_obj.event_id).first()
-                        if event and event.date:
-                            try:
-                                day_info = get_poll_day_info(event.date)
-                            except Exception as e:
-                                # Never let sunrise/weather lookup break the poll page.
-                                logger.warning(f"poll_day_info failed for poll {poll_row.id}: {e}")
+            if poll_row.poll_type == "tournament_location" and poll_row.event_id is not None:
+                event_obj = events_by_id.get(poll_row.event_id)
+                if event_obj is not None:
+                    # Cache seasonal history per-event so multiple polls
+                    # against the same event (rare, but possible) don't
+                    # re-query.
+                    cached = seasonal_cache.get(poll_row.event_id)
+                    if cached is None:
+                        # Construct a thin Poll object so the helper signature
+                        # remains stable. The helper only reads .event_id.
+                        thin_poll = Poll(id=poll_row.id, event_id=poll_row.event_id)
+                        cached = get_seasonal_tournament_history(session, thin_poll)
+                        seasonal_cache[poll_row.event_id] = cached
+                    seasonal_history = cached
+
+                    if event_obj.date:
+                        try:
+                            day_info = get_poll_day_info(event_obj.date)
+                        except Exception as e:
+                            # Never let sunrise/weather lookup break the poll page.
+                            logger.warning(f"poll_day_info failed for poll {poll_row.id}: {e}")
 
             polls.append(
                 {
@@ -230,7 +262,7 @@ async def polls(
                     "event_id": poll_row.event_id,
                     "status": poll_row.status,
                     "user_has_voted": bool(poll_row.user_has_voted),
-                    "options": get_poll_options(poll_row.id, bool(user.get("is_admin"))),
+                    "options": get_poll_options(poll_row.id, is_admin_flag, session=session),
                     "member_count": member_count,
                     "unique_voters": unique_voters,
                     "participation_percent": round(
@@ -274,15 +306,14 @@ async def polls(
         )
         members_list = [{"id": m.id, "name": m.name} for m in all_members]
 
+    # Single LEFT JOIN query — was 1 + N_lakes connections per request.
     lakes_data = [
         {
             "id": lake["id"],
             "name": lake["display_name"],
-            "ramps": [
-                {"id": r["id"], "name": r["name"].title()} for r in get_ramps_for_lake(lake["id"])
-            ],
+            "ramps": [{"id": r["id"], "name": r["name"].title()} for r in lake["ramps"]],
         }
-        for lake in get_lakes_list()
+        for lake in get_lakes_list(with_ramps=True)
     ]
     return templates.TemplateResponse(
         request,

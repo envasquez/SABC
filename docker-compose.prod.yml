@@ -34,22 +34,19 @@ services:
       sh -c "
         echo 'Setting up uploads directory...';
         mkdir -p /app/uploads/photos;
-        echo 'Waiting for database...';
-        sleep 15;
-        echo 'Applying database migrations...';
-        alembic upgrade head;
         echo 'Starting server...';
-        exec uvicorn app:app --host 0.0.0.0 --port 8000
+        exec uvicorn app:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'
       "
 
   postgres:
     image: postgres:17-alpine
     container_name: sabc-postgres
     restart: always
-    # Bump max_connections above the default 100. With workers=4 and a per-
-    # worker pool budget of 5+10, we max at 60 — but multiple gunicorn workers
-    # plus migration tasks plus the occasional pg_dump backup can spike higher.
-    # 200 leaves comfortable headroom on a 2GB+ droplet (each conn ~10MB).
+    # Bump max_connections above the default 100. The web container runs a
+    # single uvicorn worker with a pool budget of 5+10 = 15 conns per container.
+    # 200 leaves comfortable headroom for ad-hoc psql sessions, pg_dump backups,
+    # and alembic migrations running alongside the live web container on a
+    # 2GB+ droplet (each conn ~10MB).
     command:
       - "postgres"
       - "-c"

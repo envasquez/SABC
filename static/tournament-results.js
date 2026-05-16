@@ -72,3 +72,42 @@ async function deleteTeamResult(tournamentId, teamResultId, teamName, isSolo) {
         }
     }
 }
+
+// Wire up delegated event listeners for delete buttons.
+// Using data-* attributes + addEventListener avoids the HTML-attribute -> JS string
+// breakout vector that inline onclick="fn('{{ name }}')" exposes.
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.js-delete-team-result').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const d = btn.dataset;
+            deleteTeamResult(
+                parseInt(d.tournamentId, 10),
+                parseInt(d.teamResultId, 10),
+                d.teamName,
+                parseInt(d.isSolo, 10)
+            );
+        });
+    });
+
+    document.querySelectorAll('.js-delete-individual-result').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const d = btn.dataset;
+            deleteIndividualResult(
+                parseInt(d.tournamentId, 10),
+                parseInt(d.resultId, 10),
+                d.anglerName
+            );
+        });
+    });
+
+    document.querySelectorAll('.js-delete-buy-in-result').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            const d = btn.dataset;
+            deleteBuyInResult(
+                parseInt(d.tournamentId, 10),
+                parseInt(d.resultId, 10),
+                d.anglerName
+            );
+        });
+    });
+});
