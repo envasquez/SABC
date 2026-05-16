@@ -34,7 +34,7 @@ async def forgot_password_form(request: Request):
 @router.post("/forgot-password")
 @limiter.limit("5/hour")
 async def request_password_reset(
-    request: Request, email: str = Form(..., description="Your email address")
+    request: Request, email: str = Form(default="", description="Your email address")
 ):
     try:
         email = normalize_email(email)

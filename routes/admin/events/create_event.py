@@ -43,8 +43,8 @@ async def create_event_page(request: Request):
 @router.post("/admin/events/create")
 async def create_event(
     request: Request,
-    date: str = Form(),
-    name: str = Form(),
+    date: str = Form(default=""),
+    name: str = Form(default=""),
     event_type: str = Form(default="sabc_tournament"),
     description: str = Form(default=""),
     start_time: str = Form(default=""),
