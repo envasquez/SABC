@@ -16,7 +16,7 @@ async def create_lake(
     name: str = Form(...),
     display_name: str = Form(...),
     google_maps_embed: str = Form(""),
-):
+) -> RedirectResponse:
     _user = require_admin(request)
     try:
         yaml_key = name.strip().lower().replace(" ", "_")
@@ -55,7 +55,7 @@ async def update_lake(
     name: str = Form(...),
     display_name: str = Form(...),
     google_maps_embed: str = Form(""),
-):
+) -> RedirectResponse:
     _user = require_admin(request)
     try:
         with get_session() as session:

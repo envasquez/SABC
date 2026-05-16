@@ -15,7 +15,7 @@ logger = get_logger("admin.users.create")
 
 
 @router.post("/admin/users")
-async def create_user(request: Request):
+async def create_user(request: Request) -> JSONResponse:
     user = require_admin(request)
     try:
         body = await request.body()

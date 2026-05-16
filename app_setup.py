@@ -1,3 +1,5 @@
+import html as _html
+import json
 import os
 from typing import Any, Dict, List, Sequence, Union
 
@@ -5,6 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from markupsafe import Markup as _Markup
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
@@ -27,9 +30,14 @@ from core.deps import (
     to_local_datetime_filter,
 )
 from core.helpers.logging import configure_logging, get_logger
+from core.helpers.sanitize import sanitize_iframe as _sanitize_iframe
 from core.monitoring import init_sentry
 from core.monitoring.middleware import MetricsMiddleware
 from core.security_middleware import SecurityHeadersMiddleware
+
+# Asset version string for cache-busting static assets in templates.
+# Bump this whenever bundled CSS/JS changes so browsers fetch the new files.
+ASSET_VERSION = "13"
 
 
 def get_csrf_token(request: Request) -> str:
@@ -72,8 +80,6 @@ def create_app() -> FastAPI:
 
     class CustomJSONResponse(JSONResponse):
         def render(self, content: Any) -> bytes:
-            import json
-
             return json.dumps(content, cls=CustomJSONEncoder, ensure_ascii=False).encode("utf-8")
 
     app.default_response_class = CustomJSONResponse  # type: ignore[attr-defined]
@@ -145,12 +151,6 @@ def create_app() -> FastAPI:
     templates.env.filters["is_dues_current"] = is_dues_current_filter
 
     # Sanitize iframe filter — applies sanitize_iframe at render time for defense-in-depth
-    import html as _html
-
-    from markupsafe import Markup as _Markup
-
-    from core.helpers.sanitize import sanitize_iframe as _sanitize_iframe
-
     def _sanitize_iframe_filter(value: Any) -> _Markup:
         if not value:
             return _Markup("")
@@ -163,6 +163,9 @@ def create_app() -> FastAPI:
 
     # Add CSRF token to global template context
     templates.env.globals["get_csrf_token"] = get_csrf_token
+
+    # Expose the asset cache-bust version to every template render as {{ asset_v }}.
+    templates.env.globals["asset_v"] = ASSET_VERSION
 
     # Logger for exception handlers
     error_logger = get_logger("exception_handler")

@@ -2,7 +2,7 @@
 
 import json
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 
 def sanitize_html(text: str) -> str:
@@ -129,7 +129,9 @@ def sanitize_lakes_data(lakes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     ]
 
 
-def sanitize_event_data(events):
+def sanitize_event_data(
+    events: Union[Dict[str, Any], List[Dict[str, Any]]],
+) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
     """Sanitize event data for safe template rendering.
 
     Args:

@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import Union
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -9,17 +10,18 @@ from core.deps import get_db
 from core.helpers.auth import require_admin
 from core.helpers.forms import get_form_bool, get_form_float, get_form_int
 from core.query_service import QueryService
+from core.types import UserDict
 
 router = APIRouter()
 
 
-@router.post("/admin/tournaments/{tournament_id}/results")
+@router.post("/admin/tournaments/{tournament_id}/results", response_model=None)
 async def save_result(
     tournament_id: int,
     request: Request,
-    user=Depends(require_admin),
+    user: UserDict = Depends(require_admin),
     conn: Connection = Depends(get_db),
-):
+) -> Union[JSONResponse, RedirectResponse]:
     """Save or update individual tournament result."""
     form_data = await request.form()
     qs = QueryService(conn)
@@ -138,14 +140,14 @@ async def save_result(
         raise
 
 
-@router.post("/admin/tournaments/{tournament_id}/delete-result/{result_id}")
+@router.post("/admin/tournaments/{tournament_id}/delete-result/{result_id}", response_model=None)
 async def delete_result(
     tournament_id: int,
     result_id: int,
     request: Request,
-    user=Depends(require_admin),
+    user: UserDict = Depends(require_admin),
     conn: Connection = Depends(get_db),
-):
+) -> Union[JSONResponse, RedirectResponse]:
     """Delete an individual tournament result."""
     qs = QueryService(conn)
 

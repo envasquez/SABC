@@ -33,7 +33,7 @@ async def delete_poll(request: Request, poll_id: int) -> Response:
 
 
 @router.delete("/admin/votes/{vote_id}")
-async def delete_vote(request: Request, vote_id: int):
+async def delete_vote(request: Request, vote_id: int) -> JSONResponse:
     _user = require_admin(request)
     try:
         with get_session() as session:

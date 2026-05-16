@@ -6,7 +6,7 @@
 {% block admin_content %}
 <div style="margin-bottom:1.4rem">
     <div class="sh">
-        <div class="st"><i class="bi bi-pencil-square"></i> Edit Poll</div>
+        <h1 class="st"><i class="bi bi-pencil-square"></i> Edit Poll</h1>
         <a href="/polls" class="btn-m btn-g">
             <i class="bi bi-arrow-left" style="margin-right:.4rem"></i>Back to Polls
         </a>
@@ -48,15 +48,15 @@
                     </label>
                     <input type="datetime-local" class="fi" id="starts_at" name="starts_at"
                            value="{{ (poll[4] | to_local).strftime('%Y-%m-%dT%H:%M') if poll[4] else '' }}">
-                    <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">When members can start voting</div>
+                    <div class="help-text">When members can start voting</div>
                 </div>
                 <div class="fg">
                     <label class="fl" for="closes_at">
-                        <i class="bi bi-stop-circle" style="margin-right:.25rem;color:var(--warn)"></i>Poll Closes <span style="color:var(--err)">*</span>
+                        <i class="bi bi-stop-circle" style="margin-right:.25rem;color:var(--warn)"></i>Poll Closes <span class="req">*</span>
                     </label>
                     <input type="datetime-local" class="fi" id="closes_at" name="closes_at"
                            value="{{ (poll[2] | to_local).strftime('%Y-%m-%dT%H:%M') }}" required>
-                    <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">When voting will end</div>
+                    <div class="help-text">When voting will end</div>
                 </div>
             </div>
 
@@ -72,7 +72,7 @@
                         <input type="text" class="fi" name="poll_options[]"
                                value="{{ option.text }}" placeholder="Option {{ loop.index }}" style="flex:1" required>
                         <input type="hidden" name="option_ids[]" value="{{ option.id }}">
-                        <button class="btn-icon btn-icon-danger" type="button" onclick="removeOption(this)" aria-label="Remove option">
+                        <button class="btn-icon btn-icon-danger js-remove-option" type="button" aria-label="Remove option">
                             <i class="bi bi-x"></i>
                         </button>
                         {% if option.votes %}
@@ -82,7 +82,7 @@
                     {% endfor %}
                 </div>
 
-                <button type="button" class="btn-m btn-s" onclick="addOption()" style="font-size:.8rem">
+                <button type="button" class="btn-m btn-s js-add-option" data-include-hidden-id="true" style="font-size:.8rem">
                     <i class="bi bi-plus-circle" style="margin-right:.25rem"></i>Add Option
                 </button>
             </div>
@@ -129,8 +129,9 @@
                                 <i class="bi bi-check-circle" style="margin-right:.25rem"></i>{{ option.text }}
                             </span>
                         </div>
-                        <button class="btn-icon btn-icon-danger"
-                                onclick="if(confirm('Delete vote by {{ vote.voter_name }}?')) deleteVote({{ vote.vote_id }})"
+                        <button class="btn-icon btn-icon-danger js-delete-vote"
+                                data-vote-id="{{ vote.vote_id }}"
+                                data-voter-name="{{ vote.voter_name }}"
                                 title="Delete this vote"
                                 aria-label="Delete vote">
                             <i class="bi bi-trash"></i>
@@ -150,9 +151,9 @@
 </div>
 
 {% block extra_js %}
-<script src="/static/admin.js"></script>
-<script src="/static/poll-management.js"></script>
-<script src="/static/admin-edit-poll.js"></script>
+<script src="{{ url_for('static', path='/admin.js') }}?v={{ asset_v }}"></script>
+<script src="{{ url_for('static', path='/poll-management.js') }}?v={{ asset_v }}"></script>
+<script src="{{ url_for('static', path='/admin-edit-poll.js') }}?v={{ asset_v }}"></script>
 {% endblock %}
 
 {% endblock %}

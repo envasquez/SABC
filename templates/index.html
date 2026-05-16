@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros.html" import tournament_card_header, tournament_description_row, tournament_info_row, location_tbd_placeholder, tournament_day_info_strip %}
+{% from "macros.html" import tournament_description_row, tournament_info_row, tournament_day_info_strip %}
 {% block content %}
 
 <!-- Data passed to JavaScript -->
@@ -17,7 +17,7 @@
         has been cancelled.
         {% if cancelled.description %}<span style="color:var(--t3)">({{ cancelled.name }})</span>{% endif %}
     </div>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissCancelledAlert({{ cancelled.id }})"></button>
+    <button type="button" class="btn-close js-dismiss-cancelled-alert" data-bs-dismiss="alert" aria-label="Close" data-event-id="{{ cancelled.id }}"></button>
 </div>
 {% endfor %}
 {% endif %}
@@ -108,7 +108,7 @@
     {% endif %}
 
     <div class="sh">
-        <div class="st"><i class="bi bi-calendar-event"></i> Tournaments</div>
+        <h1 class="st"><i class="bi bi-calendar-event"></i> Tournaments</h1>
     </div>
 
     <div>
@@ -297,38 +297,9 @@
 
 <!-- Chart.js for poll results -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{{ url_for('static', path='/utils.js') }}"></script>
-<script src="{{ url_for('static', path='/home-polls.js') }}"></script>
-<script src="{{ url_for('static', path='/home-init.js') }}"></script>
-
-<!-- News Pagination -->
-<script>
-(function() {
-    var NEWS_PER_PAGE = 3;
-    var currentPage = 1;
-    var items = document.querySelectorAll('.news-item');
-    var totalItems = items.length;
-    var totalPages = Math.ceil(totalItems / NEWS_PER_PAGE);
-    var pagination = document.getElementById('news-pagination');
-    var pageInfo = document.getElementById('news-page-info');
-    var prevBtn = document.getElementById('news-prev');
-    var nextBtn = document.getElementById('news-next');
-    if (totalItems <= NEWS_PER_PAGE) return;
-    if (pagination) pagination.style.display = 'flex';
-    function showPage(page) {
-        currentPage = page;
-        var start = (page - 1) * NEWS_PER_PAGE;
-        var end = Math.min(start + NEWS_PER_PAGE, totalItems);
-        items.forEach(function(item, i) { item.style.display = (i >= start && i < end) ? 'block' : 'none'; });
-        if (pageInfo) pageInfo.textContent = 'Showing ' + (start+1) + '-' + end + ' of ' + totalItems;
-        if (prevBtn) prevBtn.disabled = (page === 1);
-        if (nextBtn) nextBtn.disabled = (page === totalPages);
-    }
-    if (prevBtn) prevBtn.addEventListener('click', function() { if (currentPage > 1) showPage(currentPage - 1); });
-    if (nextBtn) nextBtn.addEventListener('click', function() { if (currentPage < totalPages) showPage(currentPage + 1); });
-    showPage(1);
-})();
-</script>
+<script src="{{ url_for('static', path='/utils.js') }}?v={{ asset_v }}"></script>
+<script src="{{ url_for('static', path='/home-polls.js') }}?v={{ asset_v }}"></script>
+<script src="{{ url_for('static', path='/home-init.js') }}?v={{ asset_v }}"></script>
 
 <!-- Ramp Location Modals -->
 {% for tournament in all_tournaments %}
@@ -352,11 +323,4 @@
     </div>
     {% endif %}
 {% endfor %}
-
-<script>
-function dismissCancelledAlert(eventId) {
-    var dismissed = JSON.parse(localStorage.getItem('dismissedCancelledAlerts') || '[]');
-    if (dismissed.indexOf(eventId) === -1) { dismissed.push(eventId); localStorage.setItem('dismissedCancelledAlerts', JSON.stringify(dismissed)); }
-}
-</script>
 {% endblock content %}

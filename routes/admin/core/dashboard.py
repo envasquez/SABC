@@ -1,7 +1,7 @@
 from typing import Any, Dict
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from sqlalchemy import Date, Integer, cast, func
 
 from core.db_schema import Event, Poll, get_session
@@ -19,13 +19,15 @@ VALID_ADMIN_PAGES = {"events", "users", "tournaments"}
 
 
 @router.get("/admin")
-async def admin_root(request: Request):
+async def admin_root(request: Request) -> RedirectResponse:
     _user = require_admin(request)
     return RedirectResponse("/admin/events", status_code=303)
 
 
 @router.get("/admin/{page}")
-async def admin_page(request: Request, page: str, upcoming_page: int = 1, past_page: int = 1):
+async def admin_page(
+    request: Request, page: str, upcoming_page: int = 1, past_page: int = 1
+) -> Response:
     user = require_admin(request)
 
     # Validate page parameter

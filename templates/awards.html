@@ -1,8 +1,9 @@
 {% extends "base.html" %}
+{% from 'macros.html' import awards_season_records %}
 
 {% block content %}
 <div class="sh">
-    <div class="st"><i class="bi bi-trophy"></i> {{ current_year }} Season Standings</div>
+    <h1 class="st"><i class="bi bi-trophy"></i> {{ current_year }} Season Standings</h1>
     <div class="pt" style="margin-bottom:0">
         {% for year in available_years %}
         <a href="/awards/{{ year }}" class="ptb {% if year == current_year %}on{% endif %}" style="text-decoration:none">{{ year }}</a>
@@ -94,62 +95,7 @@
 
     <!-- Season Records Sidebar -->
     <div>
-        <!-- Heavy Stringer -->
-        <div class="cc" style="margin-bottom:1rem"><div class="ci">
-            <div class="ct-row"><div class="ct"><i class="bi bi-award"></i> Big Stringer of the Year</div></div>
-            <div style="font-size:.75rem;color:var(--t3);margin-bottom:.75rem">Best single tournament weight (5-fish team limit)</div>
-            {% if heavy_stringer %}
-            <div style="display:flex;justify-content:space-between;align-items:center">
-                <div>
-                    <div style="font-weight:600">{{ heavy_stringer['team_name'] }}</div>
-                    <div style="font-size:.78rem;color:var(--t3)">{{ heavy_stringer['tournament_name'] or "Tournament" }}</div>
-                </div>
-                <span class="tg tg-s" style="font-size:.8rem">{{ "%.2f"|format(heavy_stringer['total_weight']) }} lbs</span>
-            </div>
-            {% else %}
-            <div style="font-size:.82rem;color:var(--t4)">No heavy stringer recorded</div>
-            {% endif %}
-        </div></div>
-
-        <!-- Big Bass -->
-        <div class="cc" style="margin-bottom:1rem"><div class="ci">
-            <div class="ct-row"><div class="ct"><i class="bi bi-star"></i> Big Bass of the Year</div></div>
-            <div style="font-size:.75rem;color:var(--t3);margin-bottom:.75rem">Minimum 5.0 lbs required per club bylaws</div>
-            {% if big_bass %}
-            <div style="display:flex;justify-content:space-between;align-items:center">
-                <div>
-                    <div style="font-weight:600">{{ big_bass['team_name'] }}</div>
-                    <div style="font-size:.78rem;color:var(--t3)">{{ big_bass['tournament_name'] or "Tournament" }}</div>
-                </div>
-                <span class="tg tg-a" style="font-size:.8rem">{{ "%.2f"|format(big_bass['big_bass_weight']) }} lbs</span>
-            </div>
-            {% else %}
-            <div style="font-size:.82rem;color:var(--t4)">No qualifying big bass (min 5.0 lbs)</div>
-            {% endif %}
-        </div></div>
-
-        <!-- Award Criteria -->
-        <div class="cc"><div class="ci">
-            <div class="ct-row"><div class="ct"><i class="bi bi-info-circle"></i> Award Criteria</div></div>
-            <div style="display:flex;flex-direction:column;gap:.7rem;font-size:.8rem">
-                <div style="padding:.45rem 0;border-bottom:1px solid var(--b0)">
-                    <div style="color:var(--warn);font-weight:600;margin-bottom:.2rem">Most Wins</div>
-                    <div style="color:var(--t3)">Team with most 1st place finishes. At least one member required.</div>
-                </div>
-                <div style="padding:.45rem 0;border-bottom:1px solid var(--b0)">
-                    <div style="color:var(--ok);font-weight:600;margin-bottom:.2rem">Big Stringer</div>
-                    <div style="color:var(--t3)">Heaviest 5-fish team bag from any tournament.</div>
-                </div>
-                <div style="padding:.45rem 0;border-bottom:1px solid var(--b0)">
-                    <div style="color:var(--info);font-weight:600;margin-bottom:.2rem">Big Bass</div>
-                    <div style="color:var(--t3)">Largest bass (min 5.00 lbs) during any tournament.</div>
-                </div>
-                <div style="padding:.45rem 0">
-                    <div style="color:var(--t1);font-weight:600;margin-bottom:.2rem">Payout (per $50 boat entry)</div>
-                    <div style="color:var(--t3)">1st: $20 &middot; 2nd: $14 &middot; 3rd: $8 &middot; Big Bass: $8</div>
-                </div>
-            </div>
-        </div></div>
+        {{ awards_season_records(true, heavy_stringer, big_bass) }}
     </div>
 </div>
 
@@ -220,62 +166,7 @@
 
     <!-- Season Records Sidebar -->
     <div>
-        <!-- Heavy Stringer -->
-        <div class="cc" style="margin-bottom:1rem"><div class="ci">
-            <div class="ct-row"><div class="ct"><i class="bi bi-award"></i> Heavy Stringer</div></div>
-            <div style="font-size:.75rem;color:var(--t3);margin-bottom:.75rem">Best single tournament weight</div>
-            {% if heavy_stringer %}
-            <div style="display:flex;justify-content:space-between;align-items:center">
-                <div>
-                    <div style="font-weight:600">{{ heavy_stringer['name'] }}</div>
-                    <div style="font-size:.78rem;color:var(--t3)">{{ heavy_stringer['tournament_name'] or "Tournament" }} &middot; {{ heavy_stringer['num_fish'] }} fish</div>
-                </div>
-                <span class="tg tg-s" style="font-size:.8rem">{{ "%.2f"|format(heavy_stringer['total_weight']) }} lbs</span>
-            </div>
-            {% else %}
-            <div style="font-size:.82rem;color:var(--t4)">No heavy stringer recorded</div>
-            {% endif %}
-        </div></div>
-
-        <!-- Big Bass -->
-        <div class="cc" style="margin-bottom:1rem"><div class="ci">
-            <div class="ct-row"><div class="ct"><i class="bi bi-star"></i> Big Bass of the Year</div></div>
-            <div style="font-size:.75rem;color:var(--t3);margin-bottom:.75rem">Minimum 5.0 lbs required per club bylaws</div>
-            {% if big_bass %}
-            <div style="display:flex;justify-content:space-between;align-items:center">
-                <div>
-                    <div style="font-weight:600">{{ big_bass['name'] }}</div>
-                    <div style="font-size:.78rem;color:var(--t3)">{{ big_bass['tournament_name'] or "Tournament" }}</div>
-                </div>
-                <span class="tg tg-a" style="font-size:.8rem">{{ "%.2f"|format(big_bass['big_bass_weight']) }} lbs</span>
-            </div>
-            {% else %}
-            <div style="font-size:.82rem;color:var(--t4)">No qualifying big bass (min 5.0 lbs)</div>
-            {% endif %}
-        </div></div>
-
-        <!-- Award Criteria -->
-        <div class="cc"><div class="ci">
-            <div class="ct-row"><div class="ct"><i class="bi bi-info-circle"></i> Award Criteria</div></div>
-            <div style="display:flex;flex-direction:column;gap:.7rem;font-size:.8rem">
-                <div style="padding:.45rem 0;border-bottom:1px solid var(--b0)">
-                    <div style="color:var(--warn);font-weight:600;margin-bottom:.2rem">Angler of the Year</div>
-                    <div style="color:var(--t3)">Min 6 tournaments. Total points, tiebreaker by weight.</div>
-                </div>
-                <div style="padding:.45rem 0;border-bottom:1px solid var(--b0)">
-                    <div style="color:var(--ok);font-weight:600;margin-bottom:.2rem">Heavy Stringer</div>
-                    <div style="color:var(--t3)">Heaviest single tournament bag. Must be a member.</div>
-                </div>
-                <div style="padding:.45rem 0;border-bottom:1px solid var(--b0)">
-                    <div style="color:var(--info);font-weight:600;margin-bottom:.2rem">Big Bass</div>
-                    <div style="color:var(--t3)">Largest bass (min 5.00 lbs). Must be a member.</div>
-                </div>
-                <div style="padding:.45rem 0">
-                    <div style="color:var(--t1);font-weight:600;margin-bottom:.2rem">Points System</div>
-                    <div style="color:var(--t3)">100 pts for 1st, 99 for 2nd, etc. Zero fish: -2 from last. Buy-ins: -4 from last.</div>
-                </div>
-            </div>
-        </div></div>
+        {{ awards_season_records(false, heavy_stringer, big_bass) }}
     </div>
 </div>
 {% endif %}

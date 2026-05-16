@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from sqlalchemy import case, exists, false, func, select, true
 
 from core.db_schema import Angler, Event, Poll, PollVote, engine, get_session
@@ -30,7 +30,7 @@ async def polls(
     user: UserDict = Depends(require_auth),
     tab: Optional[str] = None,
     p: int = 1,
-):
+) -> Response:
     # Only members can view polls
     if not user.get("member"):
         from fastapi import HTTPException

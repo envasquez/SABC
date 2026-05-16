@@ -4,6 +4,7 @@ Generates or extracts a unique correlation ID for each request to enable
 tracing requests across logs and services.
 """
 
+import re
 import uuid
 from contextvars import ContextVar
 from typing import Any, Callable, Optional
@@ -16,6 +17,11 @@ correlation_id_var: ContextVar[Optional[str]] = ContextVar("correlation_id", def
 
 # Header name for correlation ID (standard header)
 CORRELATION_ID_HEADER = "X-Request-ID"
+
+# Safe pattern for an incoming correlation ID. An ID from an untrusted client
+# is only honored if it matches this; otherwise a fresh ID is generated. This
+# prevents header/log injection via the X-Request-ID header.
+_CORRELATION_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
 
 
 def get_correlation_id() -> Optional[str]:
@@ -47,9 +53,11 @@ class CorrelationIDMiddleware(BaseHTTPMiddleware):
     """
 
     async def dispatch(self, request: Request, call_next: Callable[[Request], Any]) -> Response:
-        # Extract existing correlation ID from header or generate new one
+        # Extract existing correlation ID from header or generate new one.
+        # Only honor a client-provided ID if it matches the safe pattern,
+        # otherwise generate a fresh one (defends against header/log injection).
         correlation_id = request.headers.get(CORRELATION_ID_HEADER)
-        if not correlation_id:
+        if not correlation_id or not _CORRELATION_ID_PATTERN.match(correlation_id):
             correlation_id = generate_correlation_id()
 
         # Store in context variable for logging and other uses

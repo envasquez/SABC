@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Request
+from fastapi.responses import Response
 from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import engine
@@ -24,7 +25,7 @@ router = APIRouter()
 
 @router.get("/awards")
 @router.get("/awards/{year}")
-async def awards(request: Request, year: Optional[int] = None):
+async def awards(request: Request, year: Optional[int] = None) -> Response:
     from core.helpers.timezone import now_local
 
     user = get_user_optional(request)

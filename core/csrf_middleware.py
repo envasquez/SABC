@@ -9,7 +9,7 @@ from typing import Optional
 
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse, Response
-from starlette.types import Receive, Scope, Send
+from starlette.types import Message, Receive, Scope, Send
 from starlette_csrf.middleware import CSRFMiddleware as BaseCSRFMiddleware
 
 # Cap the request body we'll drain into memory looking for the CSRF token.
@@ -132,7 +132,7 @@ class CSRFMiddleware(BaseCSRFMiddleware):
                         submitted_csrf_token = _extract_multipart_csrf_token(body, content_type)
 
                     # Create a new receive callable that replays the cached body
-                    async def receive_with_cached_body():
+                    async def receive_with_cached_body() -> Message:
                         return {"type": "http.request", "body": body, "more_body": False}
 
                     receive = receive_with_cached_body

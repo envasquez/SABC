@@ -3,6 +3,9 @@
  * Handles user CRUD operations, add modal, and delete confirmation
  */
 
+(function() {
+    'use strict';
+
 /**
  * Show the Add User modal
  */
@@ -74,8 +77,30 @@ document.addEventListener('DOMContentLoaded', function() {
         onSuccess: () => location.reload(),
         onError: (error) => showToast(`Error deleting user: ${error}`, 'error')
     });
+
+    // Add User modal trigger
+    const addUserBtn = document.getElementById('addUserBtn');
+    if (addUserBtn) addUserBtn.addEventListener('click', showAddUserModal);
+
+    // Submit Add User
+    const submitAddUserBtn = document.getElementById('submitAddUserBtn');
+    if (submitAddUserBtn) submitAddUserBtn.addEventListener('click', submitAddUser);
+
+    // Delegated edit / delete handlers for user rows
+    document.addEventListener('click', function(e) {
+        const editBtn = e.target.closest('.js-edit-user');
+        if (editBtn) {
+            location = `/admin/users/${editBtn.dataset.userId}/edit`;
+            return;
+        }
+        const delBtn = e.target.closest('.js-delete-user');
+        if (delBtn && delBtn.dataset.userId) {
+            deleteUser(delBtn.dataset.userId, delBtn.dataset.userName);
+        }
+    });
 });
 
 function deleteUser(userId, userName) {
     userDeleteManager.confirm(userId, userName);
 }
+})();

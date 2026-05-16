@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="sh">
-    <div class="st"><i class="bi bi-pencil"></i> Edit Photo</div>
+    <h1 class="st"><i class="bi bi-pencil"></i> Edit Photo</h1>
     <a href="/photos" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-arrow-left"></i> Back to Gallery</a>
 </div>
 
@@ -17,7 +17,7 @@
     <div class="ci">
         <!-- Photo Preview -->
         <div style="text-align:center;margin-bottom:1.25rem">
-            <img src="{{ photo.url }}" style="max-height:300px;max-width:100%;border-radius:var(--r-md)">
+            <img src="{{ photo.url }}" alt="{{ photo.caption or 'Photo' }}" style="max-height:300px;max-width:100%;border-radius:var(--r-md)">
         </div>
 
         <form method="post" action="/photos/{{ photo.id }}/edit">
@@ -40,7 +40,7 @@
                 <input type="text" class="fi" id="caption" name="caption"
                        maxlength="200" placeholder="Describe your catch..."
                        value="{{ photo.caption }}">
-                <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">Optional, max 200 characters</div>
+                <div class="help-text">Optional, max 200 characters</div>
             </div>
 
             <div style="margin-bottom:1rem">

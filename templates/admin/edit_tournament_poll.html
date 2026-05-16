@@ -6,7 +6,7 @@
 {% block admin_content %}
 <div style="margin-bottom:1.4rem">
     <div class="sh">
-        <div class="st"><i class="bi bi-trophy"></i> Edit Tournament Poll</div>
+        <h1 class="st"><i class="bi bi-trophy"></i> Edit Tournament Poll</h1>
     </div>
 </div>
 
@@ -67,10 +67,10 @@
             </p>
 
             <div style="margin-bottom:.75rem;display:flex;gap:.5rem">
-                <button type="button" class="btn-m btn-g" onclick="selectAll('lake_ids')" style="font-size:.8rem">
+                <button type="button" class="btn-m btn-g js-select-all" data-checkbox-name="lake_ids" style="font-size:.8rem">
                     <i class="bi bi-check-all" style="margin-right:.25rem"></i>Select All
                 </button>
-                <button type="button" class="btn-m btn-g" onclick="selectNone('lake_ids')" style="font-size:.8rem">
+                <button type="button" class="btn-m btn-g js-select-none" data-checkbox-name="lake_ids" style="font-size:.8rem">
                     <i class="bi bi-x-square" style="margin-right:.25rem"></i>Deselect All
                 </button>
             </div>
@@ -134,8 +134,9 @@
                                 <i class="bi bi-check-circle" style="margin-right:.25rem"></i>{{ option.text }}
                             </span>
                         </div>
-                        <button class="btn-icon btn-icon-danger"
-                                onclick="if(confirm('Delete vote by {{ vote.voter_name }}?')) deleteVote({{ vote.vote_id }})"
+                        <button class="btn-icon btn-icon-danger js-delete-vote"
+                                data-vote-id="{{ vote.vote_id }}"
+                                data-voter-name="{{ vote.voter_name }}"
                                 title="Delete this vote"
                                 aria-label="Delete vote">
                             <i class="bi bi-trash"></i>
@@ -154,6 +155,6 @@
     </div>
 </div>
 
-<script src="/static/admin.js"></script>
+<script src="{{ url_for('static', path='/admin.js') }}?v={{ asset_v }}"></script>
 
 {% endblock %}

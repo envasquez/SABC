@@ -3,10 +3,10 @@
 {% block title %}Manage Anglers - South Austin Bass Club{% endblock %}
 {% block admin_content %}
 <div class="sh">
-    <div class="st"><i class="bi bi-people"></i> Manage Anglers</div>
+    <h1 class="st"><i class="bi bi-people"></i> Manage Anglers</h1>
     <div style="display:flex;gap:.5rem">
         <a href="/admin/users/merge" class="btn-m btn-w"><i class="bi bi-arrow-left-right" aria-hidden="true"></i> Merge Accounts</a>
-        <button class="btn-m btn-p" onclick="showAddUserModal()"><i class="bi bi-person-plus" aria-hidden="true"></i> Add User</button>
+        <button class="btn-m btn-p" id="addUserBtn"><i class="bi bi-person-plus" aria-hidden="true"></i> Add User</button>
     </div>
 </div>
 
@@ -32,21 +32,13 @@
 
 <!-- Tab Navigation -->
 <div class="pt" style="margin-bottom:1rem" id="userTabs">
-    <button class="ptb on" type="button" onclick="switchUserTab('members-pane', this)">
+    <button class="ptb on tab-trigger" type="button" data-tab-target="#members-pane" data-tab-scope="#userTabsContent">
         <i class="bi bi-person-check" aria-hidden="true"></i> Members <span class="tg tg-s" style="margin-left:.3rem">{{ active_member_count + overdue_member_count }}</span>
     </button>
-    <button class="ptb" type="button" onclick="switchUserTab('guests-pane', this)">
+    <button class="ptb tab-trigger" type="button" data-tab-target="#guests-pane" data-tab-scope="#userTabsContent">
         <i class="bi bi-person" aria-hidden="true"></i> Guests <span class="tg tg-g" style="margin-left:.3rem">{{ guest_count }}</span>
     </button>
 </div>
-<script>
-function switchUserTab(paneId, btn) {
-    document.querySelectorAll('#userTabsContent > .tab-pane').forEach(function(p) { p.classList.remove('show', 'active'); });
-    document.getElementById(paneId).classList.add('show', 'active');
-    document.querySelectorAll('#userTabs .ptb').forEach(function(b) { b.classList.remove('on'); });
-    btn.classList.add('on');
-}
-</script>
 
 <!-- Tab Content -->
 <div class="tab-content" id="userTabsContent">
@@ -80,9 +72,9 @@ function switchUserTab(paneId, btn) {
                     </td>
                     <td style="text-align:right">
                         <div style="display:flex;gap:.35rem;justify-content:flex-end">
-                            <button class="btn-icon btn-icon-ghost" onclick="location='/admin/users/{{ u.id }}/edit'" aria-label="Edit user"><i class="bi bi-pencil"></i></button>
-                            <button class="btn-icon btn-icon-danger"
-                                    {% if u.id == user.id %}disabled{% else %}onclick="deleteUser({{ u.id }}, '{{ u.name|e }}')"{% endif %}
+                            <button class="btn-icon btn-icon-ghost js-edit-user" data-user-id="{{ u.id }}" aria-label="Edit user"><i class="bi bi-pencil"></i></button>
+                            <button class="btn-icon btn-icon-danger js-delete-user"
+                                    {% if u.id == user.id %}disabled{% else %}data-user-id="{{ u.id }}" data-user-name="{{ u.name|e }}"{% endif %}
                                     aria-label="Delete user">
                                 <i class="bi bi-trash"></i>
                             </button>
@@ -113,9 +105,9 @@ function switchUserTab(paneId, btn) {
                     <td data-label="Phone">{{ u.phone or '-' }}</td>
                     <td style="text-align:right">
                         <div style="display:flex;gap:.35rem;justify-content:flex-end">
-                            <button class="btn-icon btn-icon-ghost" onclick="location='/admin/users/{{ u.id }}/edit'" aria-label="Edit user"><i class="bi bi-pencil"></i></button>
-                            <button class="btn-icon btn-icon-danger"
-                                    {% if u.id == user.id %}disabled{% else %}onclick="deleteUser({{ u.id }}, '{{ u.name|e }}')"{% endif %}
+                            <button class="btn-icon btn-icon-ghost js-edit-user" data-user-id="{{ u.id }}" aria-label="Edit user"><i class="bi bi-pencil"></i></button>
+                            <button class="btn-icon btn-icon-danger js-delete-user"
+                                    {% if u.id == user.id %}disabled{% else %}data-user-id="{{ u.id }}" data-user-name="{{ u.name|e }}"{% endif %}
                                     aria-label="Delete user">
                                 <i class="bi bi-trash"></i>
                             </button>
@@ -143,20 +135,20 @@ function switchUserTab(paneId, btn) {
             <div class="modal-body">
                 <form id="addUserForm">
                     <div class="fg">
-                        <label class="fl" for="addUserName">Name <span style="color:var(--err)">*</span></label>
+                        <label class="fl" for="addUserName">Name <span class="req">*</span></label>
                         <input class="fi" type="text" id="addUserName" required placeholder="Enter full name">
                     </div>
                     <div class="fg">
                         <label class="fl" for="addUserEmail">Email</label>
                         <input class="fi" type="email" id="addUserEmail" placeholder="email@example.com (optional)">
-                        <div style="font-size:.72rem;color:var(--t4);margin-top:.25rem">If left blank for guests, a placeholder email will be generated</div>
+                        <div class="help-text">If left blank for guests, a placeholder email will be generated</div>
                     </div>
                     <div class="fg">
                         <label class="fl" for="addUserPhone">Phone</label>
                         <input class="fi" type="tel" id="addUserPhone" placeholder="(512) 555-1234 (optional)">
                     </div>
                     <div class="fg">
-                        <label class="fl">User Type <span style="color:var(--err)">*</span></label>
+                        <label class="fl">User Type <span class="req">*</span></label>
                         <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:.25rem">
                             <label style="display:flex;align-items:flex-start;gap:.5rem;cursor:pointer;padding:.5rem;border-radius:var(--r-md);border:1px solid var(--b0)">
                                 <input type="radio" name="userType" id="userTypeGuest" value="guest" checked style="margin-top:3px">
@@ -172,7 +164,7 @@ function switchUserTab(paneId, btn) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn-m btn-p" onclick="submitAddUser()"><i class="bi bi-check-circle" aria-hidden="true"></i> Create User</button>
+                <button type="button" class="btn-m btn-p" id="submitAddUserBtn"><i class="bi bi-check-circle" aria-hidden="true"></i> Create User</button>
             </div>
         </div>
     </div>
@@ -183,5 +175,5 @@ function switchUserTab(paneId, btn) {
 <p style="color:var(--t3)">This will remove all user data and cannot be reversed.</p>
 {% endcall %}
 
-<script src="/static/admin-users.js"></script>
+<script src="{{ url_for('static', path='/admin-users.js') }}?v={{ asset_v }}"></script>
 {% endblock %}

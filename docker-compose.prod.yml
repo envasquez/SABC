@@ -19,8 +19,11 @@ services:
       RELEASE_VERSION: ${RELEASE_VERSION:-}
       TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
       TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+    # Bind only to host loopback: nginx (running on the host or reaching the
+    # container network) is the only thing that should reach the app. Other
+    # containers still reach it by service name on sabc-network.
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -56,8 +59,8 @@ services:
       POSTGRES_USER: sabc_user
       POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in .env.production}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.utf8"
-    ports:
-      - "5432:5432"
+    # No published ports: postgres is reachable only by other services on the
+    # shared sabc-network via the "postgres" service name. Not exposed to the host.
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init_postgres.sql:/docker-entrypoint-initdb.d/01-init.sql:ro

@@ -2,12 +2,14 @@ from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse, Response
-from sqlalchemy import case, desc, func, literal
+from sqlalchemy import case, desc, func, literal, text
 from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Angler, Event, Result, TeamResult, Tournament, get_session
 from core.enums import TOURNAMENT_DATA_START_YEAR
 from core.helpers.logging import get_logger
+from core.helpers.timezone import now_local
+from core.query_service.dialect_helpers import DialectName, month_extract, year_extract
 from routes.dependencies import get_current_user, templates
 
 router = APIRouter()
@@ -35,8 +37,6 @@ async def profile_page(request: Request) -> Response:
             "year_joined": angler.year_joined,
             "created_at": angler.created_at,
         }
-
-        from core.helpers.timezone import now_local
 
         current_year = now_local().year
 
@@ -184,10 +184,6 @@ async def profile_page(request: Request) -> Response:
         # Monthly weight aggregation for chart (since data start through current year)
         # Uses individual results as primary source
         # Falls back to team_results for tournaments without individual data
-        from sqlalchemy import text
-
-        from core.query_service.dialect_helpers import DialectName, month_extract, year_extract
-
         # Detect database dialect for compatibility
         bind = session.bind
         dialect_name: DialectName = (

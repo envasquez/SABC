@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from fastapi import APIRouter, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from sqlalchemy.exc import SQLAlchemyError
 
 from core.helpers.auth import require_admin
@@ -21,7 +21,7 @@ router = APIRouter()
 
 
 @router.get("/admin/events/create")
-async def create_event_page(request: Request):
+async def create_event_page(request: Request) -> Response:
     """Display event creation form."""
     from routes.dependencies import templates
 
@@ -55,7 +55,7 @@ async def create_event(
     fish_limit: int = Form(default=5),
     aoy_points: str = Form(default="true"),
     create_poll: str = Form(default="true"),
-):
+) -> RedirectResponse:
     user = require_admin(request)
     try:
         validation = validate_event_data(

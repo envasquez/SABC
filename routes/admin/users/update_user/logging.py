@@ -8,7 +8,7 @@ logger = get_logger("admin.users.update")
 
 def log_update_initiated(
     admin_user: UserDict, user_id: int, update_params: Dict[str, Any], before: Tuple
-):
+) -> None:
     logger.info(
         "Admin user update initiated",
         extra={
@@ -27,7 +27,7 @@ def log_update_completed(
     update_params: Dict[str, Any],
     before: Tuple,
     after: Tuple,
-):
+) -> None:
     log_security_event(
         SecurityEvent.ADMIN_USER_UPDATE,
         user_id=admin_user.get("id"),
@@ -50,7 +50,7 @@ def log_update_completed(
     )
 
 
-def log_update_failed(admin_user: UserDict, user_id: int, update_params: Dict[str, Any]):
+def log_update_failed(admin_user: UserDict, user_id: int, update_params: Dict[str, Any]) -> None:
     logger.warning(
         "User update failed - no changes detected",
         extra={
@@ -63,7 +63,7 @@ def log_update_failed(admin_user: UserDict, user_id: int, update_params: Dict[st
 
 def log_update_exception(
     admin_user: UserDict, user_id: int, error: Exception, update_params: Dict[str, Any]
-):
+) -> None:
     logger.error(
         "User update exception",
         extra={

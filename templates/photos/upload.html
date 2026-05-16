@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="sh">
-    <div class="st"><i class="bi bi-upload"></i> Upload Photo</div>
+    <h1 class="st"><i class="bi bi-upload"></i> Upload Photo</h1>
     <a href="/photos" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-arrow-left"></i> Back to Gallery</a>
 </div>
 
@@ -19,16 +19,16 @@
             {{ csrf_token(request) }}
 
             <div class="fg">
-                <label class="fl" for="photo">Photo <span style="color:var(--err)">*</span></label>
+                <label class="fl" for="photo">Photo <span class="req">*</span></label>
                 <input type="file" class="fi" id="photo" name="photo"
                        accept=".jpg,.jpeg,.png,.gif,.webp" required>
-                <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">Max 10MB. Formats: JPG, PNG, GIF, WebP</div>
+                <div class="help-text">Max 10MB. Formats: JPG, PNG, GIF, WebP</div>
             </div>
 
             <div class="fg">
                 <label class="fl">Preview</label>
                 <div id="previewContainer" style="border:1px solid var(--b0);border-radius:var(--r-md);padding:.75rem;text-align:center;background:var(--bg-base);min-height:150px;display:flex;align-items:center;justify-content:center">
-                    <img id="preview" src="" style="max-height:300px;max-width:100%;display:none;border-radius:var(--r-sm)">
+                    <img id="preview" src="" alt="Image preview" style="max-height:300px;max-width:100%;display:none;border-radius:var(--r-sm)">
                     <span id="previewPlaceholder" style="color:var(--t4)">
                         <i class="bi bi-image" style="font-size:2.5rem;opacity:.4"></i>
                         <div style="margin-top:.25rem;font-size:.82rem">Select a photo to preview</div>
@@ -45,7 +45,7 @@
                     {% endfor %}
                 </select>
                 {% if not user.is_admin %}
-                <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">You can upload up to 2 photos per tournament.</div>
+                <div class="help-text">You can upload up to 2 photos per tournament.</div>
                 {% endif %}
             </div>
 
@@ -53,7 +53,7 @@
                 <label class="fl" for="caption">Caption</label>
                 <input type="text" class="fi" id="caption" name="caption"
                        maxlength="200" placeholder="Describe your catch...">
-                <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem">Optional, max 200 characters</div>
+                <div class="help-text">Optional, max 200 characters</div>
             </div>
 
             <div style="margin-bottom:1rem">
@@ -76,39 +76,7 @@
 </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const photoInput = document.getElementById('photo');
-    const preview = document.getElementById('preview');
-    const previewPlaceholder = document.getElementById('previewPlaceholder');
-    const submitBtn = document.getElementById('submitBtn');
-    const form = document.getElementById('uploadForm');
-
-    photoInput.addEventListener('change', function() {
-        const file = this.files[0];
-        if (file) {
-            if (file.size > 10 * 1024 * 1024) {
-                alert('File is too large. Maximum size is 10MB.');
-                this.value = '';
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-                previewPlaceholder.style.display = 'none';
-            };
-            reader.readAsDataURL(file);
-        } else {
-            preview.style.display = 'none';
-            previewPlaceholder.style.display = 'block';
-        }
-    });
-
-    form.addEventListener('submit', function() {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" style="margin-right:.25rem"></span> Uploading...';
-    });
-});
-</script>
+{% endblock %}
+{% block extra_js %}
+<script src="{{ url_for('static', path='/photos-upload.js') }}?v={{ asset_v }}"></script>
 {% endblock %}

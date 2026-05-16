@@ -4,7 +4,20 @@ from datetime import datetime, timezone
 
 
 def _get_correlation_id() -> str | None:
-    """Safely get correlation ID, returning None if not available."""
+    """Safely get correlation ID, returning None if not available.
+
+    INTENTIONAL CIRCULAR-IMPORT GUARD (exemption from CLAUDE.md's
+    "no conditional imports" rule):
+
+    `core.correlation_middleware` imports the logging package, and the logging
+    package configures formatters — importing the middleware at module scope
+    here would create an import cycle during application startup. The import is
+    therefore deferred into this function (called only at log-emission time,
+    well after startup) and wrapped in `try/except ImportError` so that logging
+    degrades gracefully (correlation_id simply omitted) if the middleware is
+    not importable. This is a deliberate, reviewed exception — not general
+    feature-detection.
+    """
     try:
         from core.correlation_middleware import get_correlation_id
 

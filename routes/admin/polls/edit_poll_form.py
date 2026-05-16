@@ -1,7 +1,7 @@
 import json
 
 from fastapi import APIRouter, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Poll, PollOption, engine, get_session
@@ -17,7 +17,7 @@ router = APIRouter()
 
 
 @router.get("/admin/polls/{poll_id}/edit")
-async def edit_poll_form(request: Request, poll_id: int):
+async def edit_poll_form(request: Request, poll_id: int) -> Response:
     """Display poll editing form with current data."""
     user = require_admin(request)
     try:

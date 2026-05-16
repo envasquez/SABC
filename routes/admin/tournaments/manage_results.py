@@ -7,6 +7,7 @@ from sqlalchemy import Connection
 from core.deps import get_db
 from core.helpers.auth import require_admin
 from core.query_service import QueryService
+from core.types import UserDict
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -16,9 +17,9 @@ logger = logging.getLogger(__name__)
 async def delete_result(
     tournament_id: int,
     result_id: int,
-    user=Depends(require_admin),
+    user: UserDict = Depends(require_admin),
     conn: Connection = Depends(get_db),
-):
+) -> JSONResponse:
     logger.info(f"Deleting result {result_id} from tournament {tournament_id}")
     qs = QueryService(conn)
 
@@ -60,9 +61,9 @@ async def delete_result(
 async def delete_team_result(
     tournament_id: int,
     team_result_id: int,
-    user=Depends(require_admin),
+    user: UserDict = Depends(require_admin),
     conn: Connection = Depends(get_db),
-):
+) -> JSONResponse:
     qs = QueryService(conn)
 
     # First get the angler IDs from the team result
@@ -100,9 +101,9 @@ async def delete_team_result(
 @router.post("/admin/tournaments/{tournament_id}/toggle-complete")
 async def toggle_tournament_complete(
     tournament_id: int,
-    user=Depends(require_admin),
+    user: UserDict = Depends(require_admin),
     conn: Connection = Depends(get_db),
-):
+) -> JSONResponse:
     """Toggle tournament complete status (legacy endpoint - complete status is mostly informational now)."""
     qs = QueryService(conn)
 

@@ -16,7 +16,7 @@ async def create_ramp(
     lake_id: int,
     name: str = Form(...),
     google_maps_iframe: str = Form(""),
-):
+) -> RedirectResponse:
     _user = require_admin(request)
     try:
         with get_session() as session:
@@ -39,7 +39,7 @@ async def update_ramp(
     ramp_id: int,
     name: str = Form(...),
     google_maps_iframe: str = Form(""),
-):
+) -> RedirectResponse:
     _user = require_admin(request)
     lake_id: int | None = None
     try:

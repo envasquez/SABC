@@ -1,6 +1,7 @@
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, Request
+from fastapi.responses import Response
 
 from core.db_schema import Lake, Ramp, get_session
 from core.helpers.auth import require_admin
@@ -11,7 +12,7 @@ router = APIRouter()
 
 
 @router.get("/admin/lakes")
-async def admin_lakes(request: Request):
+async def admin_lakes(request: Request) -> Response:
     user = require_admin(request)
     with get_session() as session:
         lake_objs = session.query(Lake).order_by(Lake.display_name).all()
@@ -28,7 +29,7 @@ async def admin_lakes(request: Request):
 
 
 @router.get("/admin/lakes/{lake_id}/edit")
-async def edit_lake_page(request: Request, lake_id: int):
+async def edit_lake_page(request: Request, lake_id: int) -> Response:
     user = require_admin(request)
     with get_session() as session:
         lake_obj = session.query(Lake).filter(Lake.id == lake_id).first()
