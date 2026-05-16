@@ -83,28 +83,38 @@ class PollQueries(QueryServiceBase):
         """,
             {"poll_id": poll_id},
         )
-        if include_details:
-            for option in options:
-                votes = self.fetch_all(
-                    """
-                    SELECT
-                        pv.id as vote_id,
-                        pv.voted_at,
-                        a.name as voter_name,
-                        a.id as voter_id,
-                        pv.cast_by_admin,
-                        pv.cast_by_admin_id,
-                        admin.name as admin_name
-                    FROM poll_votes pv
-                    JOIN anglers a ON pv.angler_id = a.id
-                    LEFT JOIN anglers admin ON pv.cast_by_admin_id = admin.id
-                    WHERE pv.option_id = :option_id
-                    ORDER BY pv.voted_at DESC
+        if include_details and options:
+            # One query for ALL votes across ALL options for this poll, instead of
+            # an N+1 fetch (one query per option). Group client-side by option_id.
+            option_ids = [opt["id"] for opt in options]
+            placeholders = ", ".join(f":opt_{i}" for i in range(len(option_ids)))
+            params: Dict[str, Any] = {f"opt_{i}": oid for i, oid in enumerate(option_ids)}
+            all_votes = self.fetch_all(
+                f"""
+                SELECT
+                    pv.id as vote_id,
+                    pv.option_id as option_id,
+                    pv.voted_at,
+                    a.name as voter_name,
+                    a.id as voter_id,
+                    pv.cast_by_admin,
+                    pv.cast_by_admin_id,
+                    admin.name as admin_name
+                FROM poll_votes pv
+                JOIN anglers a ON pv.angler_id = a.id
+                LEFT JOIN anglers admin ON pv.cast_by_admin_id = admin.id
+                WHERE pv.option_id IN ({placeholders})
+                ORDER BY pv.option_id, pv.voted_at DESC
                 """,
-                    {"option_id": option["id"]},
-                )
-                option["votes"] = votes
-                option["voters"] = [v["voter_name"] for v in votes]
+                params,
+            )
+            votes_by_option: Dict[int, List[Dict[str, Any]]] = {oid: [] for oid in option_ids}
+            for v in all_votes:
+                votes_by_option[v["option_id"]].append(v)
+            for option in options:
+                option_votes = votes_by_option.get(option["id"], [])
+                option["votes"] = option_votes
+                option["voters"] = [v["voter_name"] for v in option_votes]
         return options
 
     def get_latest_poll_created_at(self) -> Optional[datetime]:

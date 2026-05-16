@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy import case, distinct, exists, extract, false, func, select
 from sqlalchemy.exc import SQLAlchemyError
@@ -23,7 +23,24 @@ from core.helpers.timezone import now_local
 from core.query_service import QueryService
 
 
-def get_poll_options(poll_id: int, is_admin: bool = False) -> List[Dict[str, Any]]:
+def get_poll_options(
+    poll_id: int,
+    is_admin: bool = False,
+    session: Optional[Session] = None,
+) -> List[Dict[str, Any]]:
+    """Fetch poll options with vote counts.
+
+    If ``session`` is provided we re-use its bind connection rather than
+    opening a fresh ``engine.connect()`` per call. This is critical when
+    called inside a loop (see ``list_polls.py``) — opening a new connection
+    each iteration was previously the single largest source of connection
+    churn on the /polls page.
+    """
+    if session is not None:
+        bind = session.connection()
+        qs = QueryService(bind)
+        return qs.get_poll_options_with_votes(poll_id, include_details=is_admin)
+
     with engine.connect() as conn:
         qs = QueryService(conn)
         return qs.get_poll_options_with_votes(poll_id, include_details=is_admin)
@@ -37,6 +54,10 @@ def get_seasonal_tournament_history(
 
     For a November 2025 poll, returns data for November tournaments
     from previous years (2024, 2023, 2022, 2021).
+
+    Uses a single windowed query to fetch all ``years_back`` years at
+    once (previously fired 3 queries × years_back per poll = an N+1 of
+    12+ round trips on the /polls page).
 
     Args:
         session: Database session
@@ -58,89 +79,130 @@ def get_seasonal_tournament_history(
     target_year = event.date.year
     month_name = event.date.strftime("%B")  # "November"
 
-    # Query tournaments from the same month in previous years
-    history = []
-    for year_offset in range(1, years_back + 1):
-        past_year = target_year - year_offset
+    # Build the year range we care about: [target_year - years_back, ..., target_year - 1].
+    past_years = [target_year - i for i in range(1, years_back + 1)]
+    if not past_years:
+        return []
 
-        # Find completed tournament(s) in that month/year
-        tournament_query = (
-            session.query(
-                Tournament.id,
-                Tournament.fish_limit,
-                Tournament.start_time,
-                Tournament.end_time,
-                Event.date,
-                Lake.display_name.label("lake_name"),
-                Ramp.name.label("ramp_name"),
-                func.count(distinct(Result.angler_id)).label("num_anglers"),
-                func.sum(case((Result.total_weight == 0, 1), else_=0)).label("num_zeros"),
-            )
-            .join(Event, Tournament.event_id == Event.id)
-            .outerjoin(Lake, Tournament.lake_id == Lake.id)
-            .outerjoin(Ramp, Tournament.ramp_id == Ramp.id)
-            .outerjoin(Result, Tournament.id == Result.tournament_id)
-            .filter(
-                Tournament.complete.is_(True),
-                extract("year", Event.date) == past_year,
-                extract("month", Event.date) == target_month,
-            )
-            .group_by(
-                Tournament.id,
-                Tournament.fish_limit,
-                Tournament.start_time,
-                Tournament.end_time,
-                Event.date,
-                Lake.display_name,
-                Ramp.name,
-            )
-            .order_by(Event.date.desc())
-            .first()
-        )
-
-        if tournament_query:
-            tournament_id = tournament_query.id
-            fish_limit = tournament_query.fish_limit or 5
-
-            # Calculate number of limits for this tournament
-            num_limits = (
-                session.query(func.count(Result.id))
-                .filter(
-                    Result.tournament_id == tournament_id,
-                    Result.num_fish >= fish_limit,
-                    Result.disqualified.is_(False),
+    # 1) One query: tournament-level rollup for each (month=target_month, year in past_years).
+    #    Aggregates num_anglers, num_zeros, num_limits (filtered count). The fish_limit
+    #    threshold is applied as a CASE WHEN so we don't need a second pass.
+    fish_limit_threshold = func.coalesce(Tournament.fish_limit, 5)
+    tournament_rows = (
+        session.query(
+            Tournament.id.label("tournament_id"),
+            Tournament.fish_limit,
+            Tournament.start_time,
+            Tournament.end_time,
+            Event.date,
+            extract("year", Event.date).label("event_year"),
+            Lake.display_name.label("lake_name"),
+            Ramp.name.label("ramp_name"),
+            func.count(distinct(Result.angler_id)).label("num_anglers"),
+            func.sum(case((Result.total_weight == 0, 1), else_=0)).label("num_zeros"),
+            func.sum(
+                case(
+                    (
+                        (Result.num_fish >= fish_limit_threshold)
+                        & (Result.disqualified.is_(False)),
+                        1,
+                    ),
+                    else_=0,
                 )
-                .scalar()
-                or 0
-            )
+            ).label("num_limits"),
+        )
+        .join(Event, Tournament.event_id == Event.id)
+        .outerjoin(Lake, Tournament.lake_id == Lake.id)
+        .outerjoin(Ramp, Tournament.ramp_id == Ramp.id)
+        .outerjoin(Result, Tournament.id == Result.tournament_id)
+        .filter(
+            Tournament.complete.is_(True),
+            extract("month", Event.date) == target_month,
+            extract("year", Event.date).in_(past_years),
+        )
+        .group_by(
+            Tournament.id,
+            Tournament.fish_limit,
+            Tournament.start_time,
+            Tournament.end_time,
+            Event.date,
+            Lake.display_name,
+            Ramp.name,
+        )
+        .order_by(Event.date.desc())
+        .all()
+    )
 
-            # Get top 3 weights for this tournament
-            top_3_results = (
-                session.query(Result.total_weight)
-                .filter(Result.tournament_id == tournament_id, Result.disqualified.is_(False))
-                .order_by(Result.total_weight.desc())
-                .limit(3)
-                .all()
-            )
+    if not tournament_rows:
+        return []
 
-            history.append(
-                {
-                    "tournament_id": tournament_id,
-                    "year": past_year,
-                    "month_name": month_name,
-                    "date": tournament_query.date,
-                    "start_time": tournament_query.start_time,
-                    "end_time": tournament_query.end_time,
-                    "lake_name": tournament_query.lake_name or "TBD",
-                    "ramp_name": tournament_query.ramp_name or "TBD",
-                    "num_anglers": tournament_query.num_anglers or 0,
-                    "num_limits": num_limits,
-                    "num_zeros": tournament_query.num_zeros or 0,
-                    "top_3_weights": [float(r.total_weight) for r in top_3_results]
-                    if top_3_results
-                    else [],
-                }
+    # Pick one tournament per year (matches previous .first() with order_by date desc).
+    tournament_by_year: Dict[int, Any] = {}
+    for row in tournament_rows:
+        yr = int(row.event_year)
+        if yr not in tournament_by_year:
+            tournament_by_year[yr] = row
+
+    tournament_ids = [row.tournament_id for row in tournament_by_year.values()]
+
+    # 2) One query: top-3 weights per tournament using ROW_NUMBER(). Group client-side.
+    top_weights_by_tid: Dict[int, List[float]] = {tid: [] for tid in tournament_ids}
+    if tournament_ids:
+        row_num = (
+            func.row_number()
+            .over(
+                partition_by=Result.tournament_id,
+                order_by=Result.total_weight.desc(),
             )
+            .label("rn")
+        )
+        ranked_subq = (
+            session.query(
+                Result.tournament_id.label("tournament_id"),
+                Result.total_weight.label("total_weight"),
+                row_num,
+            )
+            .filter(
+                Result.tournament_id.in_(tournament_ids),
+                Result.disqualified.is_(False),
+            )
+            .subquery()
+        )
+        top_rows = (
+            session.query(
+                ranked_subq.c.tournament_id,
+                ranked_subq.c.total_weight,
+            )
+            .filter(ranked_subq.c.rn <= 3)
+            .order_by(ranked_subq.c.tournament_id.asc(), ranked_subq.c.rn.asc())
+            .all()
+        )
+        for tid, weight in top_rows:
+            top_weights_by_tid[tid].append(float(weight))
+
+    # Assemble the history list in the same order/shape as before
+    # (most recent past year first).
+    history: List[Dict[str, Any]] = []
+    for past_year in past_years:
+        row = tournament_by_year.get(past_year)
+        if not row:
+            continue
+        history.append(
+            {
+                "tournament_id": row.tournament_id,
+                "year": past_year,
+                "month_name": month_name,
+                "date": row.date,
+                "start_time": row.start_time,
+                "end_time": row.end_time,
+                "lake_name": row.lake_name or "TBD",
+                "ramp_name": row.ramp_name or "TBD",
+                "num_anglers": row.num_anglers or 0,
+                "num_limits": int(row.num_limits or 0),
+                "num_zeros": row.num_zeros or 0,
+                "top_3_weights": top_weights_by_tid.get(row.tournament_id, []),
+            }
+        )
 
     return history
 
