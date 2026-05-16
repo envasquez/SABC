@@ -22,7 +22,7 @@ class DateTimeEncoder(json.JSONEncoder):
 
 
 @router.get("/calendar")
-async def calendar_page(request: Request) -> Response:
+def calendar_page(request: Request) -> Response:
     """Display calendar page with current and next year events."""
     user = get_user_optional(request)
     current_year = now_local().year

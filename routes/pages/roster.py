@@ -341,7 +341,7 @@ def get_member_monthly_weights(
 
 
 @router.get("/roster")
-async def roster(request: Request) -> Any:
+def roster(request: Request) -> Any:
     from core.helpers.timezone import now_local
 
     current_year = now_local().year

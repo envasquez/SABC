@@ -87,7 +87,7 @@ def _do_event_update(
 
 
 @router.get("/admin/events/{event_id}/edit")
-async def get_edit_event(request: Request, event_id: int) -> Response:
+def get_edit_event(request: Request, event_id: int) -> Response:
     """GET endpoint for editing an event - returns the edit form."""
     user = require_admin(request)
 
@@ -110,7 +110,7 @@ async def get_edit_event(request: Request, event_id: int) -> Response:
 
 
 @router.post("/admin/events/{event_id}/update")
-async def update_event_by_id(
+def update_event_by_id(
     request: Request,
     event_id: int,
     date: str = Form(default=""),
@@ -151,7 +151,7 @@ async def update_event_by_id(
 
 
 @router.post("/admin/events/edit")
-async def edit_event(
+def edit_event(
     request: Request,
     event_id: int = Form(),
     date: str = Form(default=""),

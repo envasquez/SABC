@@ -17,7 +17,7 @@ router = APIRouter()
 
 
 @router.get("/admin/polls/{poll_id}/edit")
-async def edit_poll_form(request: Request, poll_id: int) -> Response:
+def edit_poll_form(request: Request, poll_id: int) -> Response:
     """Display poll editing form with current data."""
     user = require_admin(request)
     try:

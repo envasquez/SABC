@@ -97,9 +97,9 @@ def send_news_notification(
             server.starttls()
             server.login(SMTP_USERNAME, SMTP_PASSWORD)
 
-            # Send to all members (CC so members can reply-all)
+            # Send to all members (BCC so recipients don't see the roster)
             msg["To"] = FROM_EMAIL  # Send to self
-            msg["Cc"] = ", ".join(emails)
+            msg["Bcc"] = ", ".join(emails)
             server.send_message(msg)
 
         logger.info(f"News notification sent to {len(emails)} members: {title}")

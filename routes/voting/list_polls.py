@@ -24,7 +24,7 @@ router = APIRouter()
 
 
 @router.get("/polls")
-async def polls(
+def polls(
     request: Request,
     background_tasks: BackgroundTasks,
     user: UserDict = Depends(require_auth),

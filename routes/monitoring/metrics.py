@@ -8,7 +8,7 @@ from routes.monitoring import router
 
 
 @router.get("/metrics")
-async def metrics_endpoint(request: Request) -> Response:
+def metrics_endpoint(request: Request) -> Response:
     """
     Prometheus metrics endpoint.
 

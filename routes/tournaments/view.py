@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 @router.get("/tournaments")
-async def tournaments_list(request: Request, user: OptionalUser) -> RedirectResponse:
+def tournaments_list(request: Request, user: OptionalUser) -> RedirectResponse:
     """Display list of all tournaments."""
     # For now, redirect to home page which shows tournaments
     # This route exists to satisfy tests and can be enhanced later with a dedicated template
@@ -24,7 +24,7 @@ async def tournaments_list(request: Request, user: OptionalUser) -> RedirectResp
 
 
 @router.get("/tournaments/{tournament_id}", response_model=None)
-async def tournament_results(
+def tournament_results(
     request: Request, tournament_id: int, user: OptionalUser
 ) -> Union[Response, RedirectResponse]:
     try:

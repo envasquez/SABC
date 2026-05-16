@@ -82,7 +82,7 @@ def _clear_failed_attempts(email: str) -> None:
 
 
 @router.get("/login")
-async def login_page(request: Request) -> Response:
+def login_page(request: Request) -> Response:
     if get_current_user(request):
         return RedirectResponse("/")
 
@@ -104,7 +104,7 @@ async def login_page(request: Request) -> Response:
 
 @router.post("/login")
 @limiter.limit("5/minute")
-async def login(
+def login(
     request: Request,
     email: str = Form(...),
     password: str = Form(...),
@@ -219,7 +219,7 @@ async def login(
 
 
 @router.post("/logout")
-async def logout(request: Request) -> RedirectResponse:
+def logout(request: Request) -> RedirectResponse:
     user_id = request.session.get("user_id")
     ip_address = get_client_ip(request)
 

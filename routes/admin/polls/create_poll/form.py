@@ -9,7 +9,7 @@ from core.helpers.response import error_redirect
 from routes.dependencies import get_all_ramps, get_lakes_list, templates
 
 
-async def create_poll_form(request: Request, event_id: int = Query(None)) -> Response:
+def create_poll_form(request: Request, event_id: int = Query(None)) -> Response:
     user = require_admin(request)
     try:
         with get_session() as session:

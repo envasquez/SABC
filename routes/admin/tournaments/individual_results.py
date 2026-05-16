@@ -141,7 +141,7 @@ async def save_result(
 
 
 @router.post("/admin/tournaments/{tournament_id}/delete-result/{result_id}", response_model=None)
-async def delete_result(
+def delete_result(
     tournament_id: int,
     result_id: int,
     request: Request,

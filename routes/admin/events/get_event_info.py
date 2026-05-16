@@ -12,7 +12,7 @@ router = APIRouter()
 
 
 @router.get("/admin/events/{event_id}/info")
-async def get_event_info(request: Request, event_id: int) -> JSONResponse:
+def get_event_info(request: Request, event_id: int) -> JSONResponse:
     """Get event information as JSON for editing forms."""
     _user = require_admin(request)
     try:

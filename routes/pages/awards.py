@@ -25,7 +25,7 @@ router = APIRouter()
 
 @router.get("/awards")
 @router.get("/awards/{year}")
-async def awards(request: Request, year: Optional[int] = None) -> Response:
+def awards(request: Request, year: Optional[int] = None) -> Response:
     from core.helpers.timezone import now_local
 
     user = get_user_optional(request)

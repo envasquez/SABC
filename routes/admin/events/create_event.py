@@ -21,7 +21,7 @@ router = APIRouter()
 
 
 @router.get("/admin/events/create")
-async def create_event_page(request: Request) -> Response:
+def create_event_page(request: Request) -> Response:
     """Display event creation form."""
     from routes.dependencies import templates
 
@@ -41,7 +41,7 @@ async def create_event_page(request: Request) -> Response:
 
 
 @router.post("/admin/events/create")
-async def create_event(
+def create_event(
     request: Request,
     date: str = Form(default=""),
     name: str = Form(default=""),
