@@ -1,7 +1,7 @@
 """Add session_version to anglers
 
 Revision ID: j7k8l9m0n1o2
-Revises: i6j7k8l9m0n1
+Revises: 1fee957f8379
 Create Date: 2026-05-13
 
 Adds a per-user session_version counter used to invalidate previously
@@ -19,7 +19,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "j7k8l9m0n1o2"
-down_revision: Union[str, None] = "i6j7k8l9m0n1"
+down_revision: Union[str, None] = "1fee957f8379"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
