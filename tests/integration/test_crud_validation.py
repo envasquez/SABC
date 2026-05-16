@@ -100,7 +100,7 @@ class TestUserValidation:
     """Test User validation rules."""
 
     def test_create_user_with_duplicate_email(self, admin_client: TestClient, db_session: Session):
-        """Test creating user with existing email - currently allowed."""
+        """Duplicate email creation must be rejected (UNIQUE constraint)."""
         # Create first user
         user1 = Angler(name="First User", email="duplicate@test.com", member=True, is_admin=False)
         db_session.add(user1)
@@ -116,11 +116,17 @@ class TestUserValidation:
             },
         )
 
-        # Currently allows duplicate emails (no unique constraint enforced)
-        # This documents current behavior - may want to add validation later
-        assert response.status_code == 200
-        data = response.json()
-        assert data["success"] is True  # Currently succeeds
+        # anglers_email_key enforces uniqueness at the DB level; the route
+        # catches the IntegrityError and returns a generic 500. We just
+        # assert the duplicate was NOT persisted.
+        assert response.status_code in (400, 409, 500)
+        body = response.json()
+        assert body.get("success") is False
+        # Confirm only the original row exists.
+        same_email_count = (
+            db_session.query(Angler).filter(Angler.email == "duplicate@test.com").count()
+        )
+        assert same_email_count == 1
 
     def test_create_user_with_missing_name(self, admin_client: TestClient):
         """Test creating user without required name field - should fail."""

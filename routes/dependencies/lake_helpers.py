@@ -24,11 +24,64 @@ def find_lake_by_id(lake_id: int, field: str = "name") -> Optional[str]:
         return lake.get(field)
 
 
-def get_lakes_list() -> List[Dict[str, Any]]:
-    """Get list of all lakes."""
+def get_lakes_list(with_ramps: bool = False) -> List[Dict[str, Any]]:
+    """Get list of all lakes.
+
+    Args:
+        with_ramps: When True, each lake dict includes a ``ramps`` key
+            populated via a single LEFT JOIN. This avoids the
+            ``1 + N_lakes`` connection-per-request pattern that callers
+            previously used (``[get_ramps_for_lake(l["id"]) for l in
+            get_lakes_list()]``).
+    """
     with engine.connect() as conn:
         qs = QueryService(conn)
-        return qs.get_lakes_list()
+        if not with_ramps:
+            return qs.get_lakes_list()
+
+        # Single LEFT JOIN: pulls all lakes and their ramps in one round trip.
+        # Columns listed explicitly (rather than ``l.*``/``r.*``) so we control
+        # the alias mapping and don't blow up if schemas evolve.
+        rows = qs.fetch_all(
+            """
+            SELECT l.id           AS lake_id,
+                   l.yaml_key     AS lake_yaml_key,
+                   l.display_name AS lake_display_name,
+                   l.google_maps_iframe AS lake_google_maps_iframe,
+                   r.id           AS ramp_id,
+                   r.name         AS ramp_name,
+                   r.google_maps_iframe AS ramp_google_maps_iframe
+            FROM lakes l
+            LEFT JOIN ramps r ON r.lake_id = l.id
+            ORDER BY l.display_name, r.name
+            """
+        )
+
+        lakes_by_id: Dict[int, Dict[str, Any]] = {}
+        for row in rows:
+            lake_id = row["lake_id"]
+            lake = lakes_by_id.get(lake_id)
+            if lake is None:
+                lake = {
+                    "id": lake_id,
+                    "yaml_key": row.get("lake_yaml_key"),
+                    "display_name": row.get("lake_display_name"),
+                    "google_maps_iframe": row.get("lake_google_maps_iframe"),
+                    "ramps": [],
+                }
+                lakes_by_id[lake_id] = lake
+            if row.get("ramp_id") is not None:
+                lake["ramps"].append(
+                    {
+                        "id": row["ramp_id"],
+                        "name": row.get("ramp_name"),
+                        "lake_id": lake_id,
+                        "google_maps_iframe": row.get("ramp_google_maps_iframe"),
+                    }
+                )
+
+        # Preserve the same display_name ordering as ``get_lakes_list()``.
+        return list(lakes_by_id.values())
 
 
 def find_ramp_name_by_id(ramp_id: int) -> Optional[str]:

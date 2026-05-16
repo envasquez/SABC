@@ -70,8 +70,9 @@
                         aria-label="Edit poll">
                     <i class="bi bi-pencil"></i>
                 </button>
-                <button class="btn-icon btn-icon-danger"
-                        onclick="deletePoll({{ poll.id }}, '{{ poll.title|e }}')"
+                <button class="btn-icon btn-icon-danger js-delete-poll"
+                        data-poll-id="{{ poll.id }}"
+                        data-poll-title="{{ poll.title }}"
                         aria-label="Delete poll">
                     <i class="bi bi-trash"></i>
                 </button>

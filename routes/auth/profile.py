@@ -87,67 +87,60 @@ async def profile_page(request: Request) -> Response:
             or 0
         )
 
-        # Helper function to get team finishes for a specific year
-        def get_year_finishes(year: int) -> Dict[str, int]:
-            """Get 1st, 2nd, 3rd place team finishes for a specific year."""
-            # First, rank ALL participants within each tournament
-            all_ranked_subquery = (
-                session.query(
-                    TeamResult.tournament_id,
-                    TeamResult.angler1_id,
-                    TeamResult.angler2_id,
-                    func.dense_rank()
-                    .over(
-                        partition_by=TeamResult.tournament_id,
-                        order_by=TeamResult.total_weight.desc(),
-                    )
-                    .label("place"),
-                )
-                .select_from(TeamResult)
-                .join(Tournament, TeamResult.tournament_id == Tournament.id)
-                .join(Event, Tournament.event_id == Event.id)
-                .filter(Event.year == year)
-                .subquery()
-            )
-
-            # Then filter to user's results and count finishes
-            finishes = (
-                session.query(
-                    func.sum(case((all_ranked_subquery.c.place == 1, 1), else_=0)).label("first"),
-                    func.sum(case((all_ranked_subquery.c.place == 2, 1), else_=0)).label("second"),
-                    func.sum(case((all_ranked_subquery.c.place == 3, 1), else_=0)).label("third"),
-                )
-                .filter(
-                    (all_ranked_subquery.c.angler1_id == user["id"])
-                    | (all_ranked_subquery.c.angler2_id == user["id"])
-                )
-                .first()
-            )
-
-            # Count tournaments for this year
-            year_tournaments = (
-                session.query(func.count(func.distinct(Tournament.id)))
-                .join(TeamResult, TeamResult.tournament_id == Tournament.id)
-                .join(Event, Tournament.event_id == Event.id)
-                .filter(
-                    (TeamResult.angler1_id == user["id"]) | (TeamResult.angler2_id == user["id"]),
-                    Event.year == year,
-                )
-                .scalar()
-                or 0
-            )
-
-            return {
-                "first": finishes[0] or 0 if finishes else 0,
-                "second": finishes[1] or 0 if finishes else 0,
-                "third": finishes[2] or 0 if finishes else 0,
-                "tournaments": year_tournaments,
-            }
-
-        # Get team finishes for each year (since data start)
-        year_finishes = {}
+        # Team finishes per year — single windowed query across all years
+        # instead of 2 queries × N years. Adapted from the
+        # roster.py:get_member_stats pattern, but scoped to the current user.
+        year_finishes: Dict[int, Dict[str, int]] = {}
         for year in range(TOURNAMENT_DATA_START_YEAR, current_year + 1):
-            year_finishes[year] = get_year_finishes(year)
+            year_finishes[year] = {"first": 0, "second": 0, "third": 0, "tournaments": 0}
+
+        ranked_per_year_subq = (
+            session.query(
+                TeamResult.tournament_id.label("tournament_id"),
+                TeamResult.angler1_id.label("angler1_id"),
+                TeamResult.angler2_id.label("angler2_id"),
+                Event.year.label("event_year"),
+                func.dense_rank()
+                .over(
+                    partition_by=TeamResult.tournament_id,
+                    order_by=TeamResult.total_weight.desc(),
+                )
+                .label("place"),
+            )
+            .select_from(TeamResult)
+            .join(Tournament, TeamResult.tournament_id == Tournament.id)
+            .join(Event, Tournament.event_id == Event.id)
+            .filter(Event.year >= TOURNAMENT_DATA_START_YEAR)
+            .subquery()
+        )
+
+        # Filter to the user's rows, aggregate finishes per year. One query.
+        per_year_rows = (
+            session.query(
+                ranked_per_year_subq.c.event_year.label("event_year"),
+                func.sum(case((ranked_per_year_subq.c.place == 1, 1), else_=0)).label("first"),
+                func.sum(case((ranked_per_year_subq.c.place == 2, 1), else_=0)).label("second"),
+                func.sum(case((ranked_per_year_subq.c.place == 3, 1), else_=0)).label("third"),
+                func.count(func.distinct(ranked_per_year_subq.c.tournament_id)).label(
+                    "tournaments"
+                ),
+            )
+            .filter(
+                (ranked_per_year_subq.c.angler1_id == user["id"])
+                | (ranked_per_year_subq.c.angler2_id == user["id"])
+            )
+            .group_by(ranked_per_year_subq.c.event_year)
+            .all()
+        )
+        for row in per_year_rows:
+            yr = int(row.event_year)
+            if yr in year_finishes:
+                year_finishes[yr] = {
+                    "first": int(row.first or 0),
+                    "second": int(row.second or 0),
+                    "third": int(row.third or 0),
+                    "tournaments": int(row.tournaments or 0),
+                }
 
         # All time finishes (team results since data start)
         # First, rank ALL participants within each tournament

@@ -34,30 +34,37 @@ fi
 ls -t "$BACKUP_DIR"/sabc_*.sql.gz 2>/dev/null | tail -n +11 | xargs -r rm
 echo "🗂️  Retained $(ls "$BACKUP_DIR"/sabc_*.sql.gz 2>/dev/null | wc -l) backups"
 
-# 3. Build the new image while the old containers keep serving. Docker build
+# 3. Tag the currently running image as :prev so a failed deploy can be rolled
+#    back with `docker tag sabc-web:prev sabc-web:latest && $COMPOSE up -d`.
+#    Safe on first deploy: the tag command no-ops if :latest doesn't exist.
+echo "🏷️  Tagging current image for rollback..."
+docker tag sabc-web:latest sabc-web:prev 2>/dev/null || echo "   (no current image to tag — first deploy)"
+
+# 4. Build the new image while the old containers keep serving. Docker build
 #    doesn't touch running containers, so the site stays up during this step.
 echo "🔨 Building new image..."
 $COMPOSE build --no-cache
 
-# 4. Stop the old containers and start the new ones.
+# 5. Stop the old containers and start the new ones.
 echo "⏹️  Stopping old containers..."
 $COMPOSE down
 
 echo "▶️  Starting new containers..."
 $COMPOSE up -d
 
-# 5. Wait for the web container to be ready before we run migrations through it.
+# 6. Wait for the web container to be ready before we run migrations through it.
 echo "⏳ Waiting for web container to accept exec..."
 sleep 10
 
-# 6. Apply database migrations.
+# 7. Apply database migrations. The container command no longer runs alembic
+#    on startup — this is the single, operator-controlled migration point.
 echo "📦 Running database migrations..."
 $COMPOSE exec -T web alembic upgrade head
 
 echo "📊 Current migration version:"
 $COMPOSE exec -T web alembic current
 
-# 7. Verify the app actually serves. If this fails, the deploy reports failure
+# 8. Verify the app actually serves. If this fails, the deploy reports failure
 #    and the caller knows to roll back per docs/RUNBOOK.md.
 echo "🩺 Health check..."
 HEALTH_TRIES=10
@@ -73,9 +80,12 @@ for i in $(seq 1 "$HEALTH_TRIES"); do
     sleep 2
 done
 
-# 8. Host hygiene.
+# 9. Host hygiene. Use `docker image prune` (not `system prune`) with an
+#    "until=24h" filter so the sabc-web:prev rollback tag survives — it points
+#    at an image that is also tagged :prev, so it's not dangling, but we still
+#    want to avoid blowing away recently-tagged images by accident.
 echo "🧹 Cleaning up..."
-docker system prune -f
+docker image prune -f --filter "until=24h"
 sudo journalctl --vacuum-time=7d
 sudo apt clean
 

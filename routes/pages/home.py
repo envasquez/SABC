@@ -35,7 +35,7 @@ from core.helpers.poll_day_info import get_poll_day_info
 from core.helpers.response import error_redirect, success_redirect
 from core.helpers.timezone import now_local
 from core.query_service import QueryService
-from routes.dependencies import get_lakes_list, get_ramps_for_lake
+from routes.dependencies import get_lakes_list
 
 router = APIRouter()
 
@@ -457,16 +457,15 @@ async def home_paginated(request: Request, page: int = 1):
         qs = QueryService(conn)
         year_links = qs.get_tournament_years_with_first_id(items_per_page)
 
-    # Get lakes data for poll results rendering
+    # Get lakes data for poll results rendering. Single LEFT JOIN query;
+    # was previously 1 + N_lakes connections per home-page render.
     lakes_data = [
         {
             "id": lake["id"],
             "name": lake["display_name"],
-            "ramps": [
-                {"id": r["id"], "name": r["name"].title()} for r in get_ramps_for_lake(lake["id"])
-            ],
+            "ramps": [{"id": r["id"], "name": r["name"].title()} for r in lake["ramps"]],
         }
-        for lake in get_lakes_list()
+        for lake in get_lakes_list(with_ramps=True)
     ]
 
     return templates.TemplateResponse(

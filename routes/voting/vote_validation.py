@@ -1,51 +1,13 @@
 import json
-from datetime import datetime, timezone
 from typing import Optional, Tuple
 
-from sqlalchemy import exists, select
-
-from core.db_schema import Angler, Poll, PollOption, PollVote, get_session
+from core.db_schema import Angler, PollOption, PollVote, get_session
 from routes.dependencies import (
     find_lake_by_id,
     find_ramp_name_by_id,
     time_format_filter,
     validate_lake_ramp_combo,
 )
-
-
-def validate_poll_state(poll_id: int, user_id: int) -> Optional[str]:
-    with get_session() as session:
-        # Check if user already voted
-        already_voted = session.query(
-            exists(
-                select(1).where(PollVote.poll_id == poll_id).where(PollVote.angler_id == user_id)
-            )
-        ).scalar()
-
-        # Get poll details
-        poll = session.query(Poll).filter(Poll.id == poll_id).first()
-
-        if not poll:
-            return "Poll not found"
-
-        if already_voted or poll.closed:
-            return "Poll not found, already voted, or closed"
-
-        # Use timezone-aware datetime comparison to avoid timing attacks
-        now = datetime.now(timezone.utc)
-        poll_start = poll.starts_at
-        poll_end = poll.closes_at
-
-        # Make naive datetimes timezone-aware if needed
-        if poll_start.tzinfo is None:
-            poll_start = poll_start.replace(tzinfo=timezone.utc)
-        if poll_end.tzinfo is None:
-            poll_end = poll_end.replace(tzinfo=timezone.utc)
-
-        if not (poll_start <= now <= poll_end):
-            return "Poll not accepting votes"
-
-        return None
 
 
 def validate_tournament_location_vote(vote_data: dict) -> Tuple[Optional[str], Optional[str]]:

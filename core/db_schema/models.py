@@ -38,6 +38,7 @@ class Angler(Base):
     """Angler/User model."""
 
     __tablename__ = "anglers"
+    __table_args__ = (UniqueConstraint("email", name="anglers_email_key"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(Text, nullable=False)
@@ -75,6 +76,7 @@ class Event(Base):
     """Event model."""
 
     __tablename__ = "events"
+    __table_args__ = (UniqueConstraint("date", name="events_date_key"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     date: Mapped[date] = mapped_column(Date, nullable=False, index=True)  # Index for date queries
@@ -144,14 +146,14 @@ class PollVote(Base):
     __table_args__ = (UniqueConstraint("poll_id", "angler_id", name="uq_poll_vote_angler"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    poll_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("polls.id", ondelete="RESTRICT"), index=True
+    poll_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("polls.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     option_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("poll_options.id", ondelete="RESTRICT"), index=True
     )
-    angler_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("anglers.id", ondelete="RESTRICT"), index=True
+    angler_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("anglers.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     voted_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=utc_now)
     cast_by_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
@@ -256,11 +258,11 @@ class Result(Base):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    tournament_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("tournaments.id", ondelete="RESTRICT"), index=True
+    tournament_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("tournaments.id", ondelete="RESTRICT"), nullable=False, index=True
     )
-    angler_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("anglers.id", ondelete="RESTRICT"), index=True
+    angler_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("anglers.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     num_fish: Mapped[Optional[int]] = mapped_column(Integer, default=0)
     total_weight: Mapped[Optional[Decimal]] = mapped_column(Numeric, default=0.0)
@@ -280,14 +282,20 @@ class TeamResult(Base):
         CheckConstraint("total_weight >= 0", name="ck_team_result_total_weight_positive"),
         CheckConstraint("num_fish >= 0", name="ck_team_result_num_fish_positive"),
         CheckConstraint("big_bass_weight >= 0", name="ck_team_result_big_bass_weight_positive"),
+        UniqueConstraint(
+            "tournament_id",
+            "angler1_id",
+            "angler2_id",
+            name="unique_tournament_team",
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    tournament_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("tournaments.id", ondelete="RESTRICT"), index=True
+    tournament_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("tournaments.id", ondelete="RESTRICT"), nullable=False, index=True
     )
-    angler1_id: Mapped[Optional[int]] = mapped_column(
-        Integer, ForeignKey("anglers.id", ondelete="RESTRICT"), index=True
+    angler1_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("anglers.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     angler2_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("anglers.id", ondelete="RESTRICT"), index=True
@@ -302,6 +310,9 @@ class OfficerPosition(Base):
     """Officer position model."""
 
     __tablename__ = "officer_positions"
+    __table_args__ = (
+        UniqueConstraint("position", "year", name="officer_positions_position_year_key"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     angler_id: Mapped[Optional[int]] = mapped_column(
