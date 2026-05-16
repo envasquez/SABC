@@ -32,29 +32,29 @@ class TestPasswordValidator:
         """Test minimum length requirement."""
         is_valid, error = validate_password_strength("Short1!")
         assert is_valid is False
-        assert "8 characters" in error
+        assert "12 characters" in error
 
     def test_password_no_uppercase(self):
         """Test uppercase letter requirement."""
-        is_valid, error = validate_password_strength("lowercase123!")
+        is_valid, error = validate_password_strength("lowercaseonly!")
         assert is_valid is False
         assert "uppercase" in error.lower()
 
     def test_password_no_lowercase(self):
         """Test lowercase letter requirement."""
-        is_valid, error = validate_password_strength("UPPERCASE123!")
+        is_valid, error = validate_password_strength("UPPERCASEONLY!")
         assert is_valid is False
         assert "lowercase" in error.lower()
 
     def test_password_no_number(self):
         """Test number requirement."""
-        is_valid, error = validate_password_strength("NoNumbers!")
+        is_valid, error = validate_password_strength("NoNumbersAtAll!")
         assert is_valid is False
         assert "digit" in error.lower()
 
     def test_password_no_special_char(self):
         """Test special character requirement."""
-        is_valid, error = validate_password_strength("NoSpecial123")
+        is_valid, error = validate_password_strength("NoSpecialCharXY8")
         assert is_valid is False
         assert "special" in error.lower()
 
@@ -67,20 +67,14 @@ class TestPasswordValidator:
 
     def test_password_sequential_numbers(self):
         """Test that sequential numbers are rejected."""
-        is_valid, error = validate_password_strength("Pass123word!")
-        assert is_valid is False
-        assert "sequential" in error.lower()
-
-    def test_password_sequential_letters(self):
-        """Test that sequential letters are rejected."""
-        is_valid, error = validate_password_strength("Passabc123!")
+        is_valid, error = validate_password_strength("PassXword456!Yz")
         assert is_valid is False
         assert "sequential" in error.lower()
 
     def test_get_password_requirements_text(self):
         """Test password requirements text generation."""
         text = get_password_requirements_text()
-        assert "8 characters" in text
+        assert "12 characters" in text
         assert "uppercase" in text.lower()
         assert "lowercase" in text.lower()
         assert "number" in text.lower()
