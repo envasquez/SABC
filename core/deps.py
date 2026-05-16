@@ -3,6 +3,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Generator
 
+from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from markupsafe import Markup
 from sqlalchemy import Connection
@@ -212,7 +213,25 @@ def nl2br_filter(value: Any) -> Markup:
     return Markup(str(escaped).replace("\n", "<br>\n"))
 
 
-templates = Jinja2Templates(directory="templates")
+def _flash_messages(request: Request) -> dict[str, Any]:
+    """Surface ?error= / ?success= query params as template variables.
+
+    base.html renders {% if error %} / {% if success %} alert blocks, but only
+    if those names are in the template context. Routes do a POST-redirect-GET
+    with ?error=/?success=, but almost no destination route forwarded those
+    params into the context — so the messages were silently dropped. Injecting
+    them here makes them render on every page.
+
+    A route that passes its own error/success in the TemplateResponse context
+    still overrides these (explicit context wins over context processors).
+    """
+    return {
+        "error": request.query_params.get("error"),
+        "success": request.query_params.get("success"),
+    }
+
+
+templates = Jinja2Templates(directory="templates", context_processors=[_flash_messages])
 templates.env.filters["time_format"] = time_format_filter
 templates.env.filters["tojson_attr"] = tojson_attr_filter
 templates.env.filters["from_json"] = from_json_filter
