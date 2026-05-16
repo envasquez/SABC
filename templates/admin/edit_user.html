@@ -13,8 +13,8 @@
         <form method="POST" action="/admin/users/{{ edit_user.id }}/edit">
             {{ csrf_token(request) }}
             {{ form_field('Name', 'name', required=true, value=edit_user.name) }}
-            {{ form_field('Email <small style="color:var(--t3)">(optional for guests)</small>', 'email', type='email', value=edit_user.email or '', placeholder='Leave empty or use first.last@sabc.com', help_text='If left empty for guests, a default email will be generated (first.last@sabc.com)') }}
-            {{ form_field('Phone Number <small style="color:var(--t3)">(optional)</small>', 'phone', type='tel', value=edit_user.phone or '', placeholder='+1234567890', help_text='Include country code (e.g., +1 for US)') }}
+            {{ form_field('Email', 'email', type='email', value=edit_user.email or '', placeholder='Leave empty or use first.last@sabc.com', help_text='Optional for guests. If left empty for guests, a default email is generated (first.last@sabc.com).') }}
+            {{ form_field('Phone Number', 'phone', type='tel', value=edit_user.phone or '', placeholder='+1234567890', help_text='Optional. Include country code (e.g., +1 for US).') }}
 
             <!-- Checkboxes -->
             <div style="display:flex;flex-direction:column;gap:.75rem;margin-bottom:1.25rem">

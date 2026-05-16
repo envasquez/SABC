@@ -3,6 +3,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Generator
 
+from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from markupsafe import Markup
 from sqlalchemy import Connection
@@ -212,7 +213,31 @@ def nl2br_filter(value: Any) -> Markup:
     return Markup(str(escaped).replace("\n", "<br>\n"))
 
 
-templates = Jinja2Templates(directory="templates")
+def _flash_messages(request: Request) -> dict[str, Any]:
+    """Surface ?error= / ?success= query params as template variables.
+
+    base.html renders {% if error %} / {% if success %} alert blocks, but only
+    if those names are in the template context. Routes do a POST-redirect-GET
+    with ?error=/?success=, but almost no destination route forwarded those
+    params into the context — so the messages were silently dropped. Injecting
+    them here makes them render on every page.
+
+    Only keys whose query param is actually present are returned. Starlette
+    merges context processors *over* the explicitly-passed context, so
+    returning error=None unconditionally would clobber a route that set its
+    own error (e.g. a form re-rendered inline with a validation message).
+    """
+    flash: dict[str, Any] = {}
+    error = request.query_params.get("error")
+    if error is not None:
+        flash["error"] = error
+    success = request.query_params.get("success")
+    if success is not None:
+        flash["success"] = success
+    return flash
+
+
+templates = Jinja2Templates(directory="templates", context_processors=[_flash_messages])
 templates.env.filters["time_format"] = time_format_filter
 templates.env.filters["tojson_attr"] = tojson_attr_filter
 templates.env.filters["from_json"] = from_json_filter
