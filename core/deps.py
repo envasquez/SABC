@@ -222,13 +222,19 @@ def _flash_messages(request: Request) -> dict[str, Any]:
     params into the context — so the messages were silently dropped. Injecting
     them here makes them render on every page.
 
-    A route that passes its own error/success in the TemplateResponse context
-    still overrides these (explicit context wins over context processors).
+    Only keys whose query param is actually present are returned. Starlette
+    merges context processors *over* the explicitly-passed context, so
+    returning error=None unconditionally would clobber a route that set its
+    own error (e.g. a form re-rendered inline with a validation message).
     """
-    return {
-        "error": request.query_params.get("error"),
-        "success": request.query_params.get("success"),
-    }
+    flash: dict[str, Any] = {}
+    error = request.query_params.get("error")
+    if error is not None:
+        flash["error"] = error
+    success = request.query_params.get("success")
+    if success is not None:
+        flash["success"] = success
+    return flash
 
 
 templates = Jinja2Templates(directory="templates", context_processors=[_flash_messages])
