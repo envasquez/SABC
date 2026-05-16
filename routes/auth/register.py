@@ -10,6 +10,7 @@ from core.db_schema import Angler, get_session
 from core.helpers.forms import normalize_email
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
 from core.helpers.password_validator import validate_password_strength
+from core.helpers.passwords import bcrypt_gensalt
 from core.helpers.response import set_user_session
 from routes.dependencies import bcrypt, get_current_user, templates
 
@@ -89,7 +90,7 @@ async def register(
                 )
 
             # Create new angler
-            password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+            password_hash = bcrypt.hashpw(password.encode(), bcrypt_gensalt()).decode()
             new_angler = Angler(
                 name=name,
                 email=email,
