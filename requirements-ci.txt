@@ -28,7 +28,7 @@ itsdangerous==2.2.0
 Jinja2==3.1.6
 limits==5.8.0
 MarkupSafe==3.0.3
-mirakuru==2.6.1
+mirakuru==3.0.2
 mypy==1.18.2
 mypy_extensions==1.1.0
 numpy==2.4.4
