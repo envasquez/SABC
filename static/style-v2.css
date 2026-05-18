@@ -162,6 +162,15 @@
 
 /* ==========================================
    RESET & BASE STYLES
+   ------------------------------------------
+   Bootstrap-migration note: this section loads AFTER Bootstrap's Reboot and
+   deliberately overrides it — the hard `* { margin:0; padding:0 }` reset plus
+   the explicit body line-height (1.6) and heading/paragraph margins below are
+   the SABC typography baseline. Reboot only shows through for properties this
+   section does not set; that residual was visually reviewed and accepted as
+   the migration baseline (see the Bootstrap theme mapping above). Keep this
+   section until the inline-style conversion is complete — do not delete it
+   expecting Reboot to be equivalent.
    ========================================== */
 *, ::before, ::after {
   margin: 0;
