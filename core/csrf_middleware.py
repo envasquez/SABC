@@ -1,16 +1,22 @@
 """Custom CSRF middleware that supports both headers and form data."""
 
 import functools
+import http.cookies
 import os
 from email import policy
 from email.message import EmailMessage
 from email.parser import BytesParser
 from typing import Optional
 
+from starlette.datastructures import MutableHeaders
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse, Response
 from starlette.types import Message, Receive, Scope, Send
 from starlette_csrf.middleware import CSRFMiddleware as BaseCSRFMiddleware
+
+# ASGI scope key under which we stash a freshly generated CSRF token on a
+# cookie-less first request, so get_csrf_token() and send() agree on its value.
+_SCOPE_TOKEN_KEY = "sabc_csrf_token"
 
 # Cap the request body we'll drain into memory looking for the CSRF token.
 # nginx already enforces client_max_body_size 15m upstream; we leave a small
@@ -63,6 +69,17 @@ class CSRFMiddleware(BaseCSRFMiddleware):
 
         request = Request(scope, receive)
         csrf_cookie = request.cookies.get(self.cookie_name)
+
+        # First visit: no CSRF cookie exists yet. The base middleware only
+        # generates the cookie token at response time — too late for the
+        # template, which renders the form's hidden csrf_token field during
+        # request handling. Generate the token up front and stash it on the
+        # ASGI scope so get_csrf_token() can embed it in forms AND our send()
+        # below sets the *same* token as the cookie. Without this the form
+        # token is empty on a cookie-less first request and the first POST
+        # (e.g. login) fails CSRF validation with a 403.
+        if csrf_cookie is None:
+            scope[_SCOPE_TOKEN_KEY] = self._generate_csrf_token()
 
         # Check if CSRF validation is required
         should_validate = self._url_is_required(request.url) or (
@@ -150,3 +167,28 @@ class CSRFMiddleware(BaseCSRFMiddleware):
         # Continue processing with cached body if we read it
         send = functools.partial(self.send, send=send, scope=scope)
         await self.app(scope, receive, send)
+
+    async def send(self, message: Message, send: Send, scope: Scope) -> None:
+        """Set the CSRF cookie, reusing the token pre-generated in __call__.
+
+        The base implementation generates a fresh token here at response time;
+        on a cookie-less first request that token would not match the one
+        already rendered into the page's forms. We reuse the scope-stashed
+        token (see __call__) so the cookie and the form token agree.
+        """
+        if message["type"] == "http.response.start":
+            request = Request(scope)
+            if request.cookies.get(self.cookie_name) is None:
+                token = scope.get(_SCOPE_TOKEN_KEY) or self._generate_csrf_token()
+                cookie: http.cookies.BaseCookie = http.cookies.SimpleCookie()
+                cookie[self.cookie_name] = token
+                cookie[self.cookie_name]["path"] = self.cookie_path
+                cookie[self.cookie_name]["secure"] = self.cookie_secure
+                cookie[self.cookie_name]["httponly"] = self.cookie_httponly
+                cookie[self.cookie_name]["samesite"] = self.cookie_samesite
+                if self.cookie_domain is not None:  # pragma: no cover
+                    cookie[self.cookie_name]["domain"] = self.cookie_domain
+                message.setdefault("headers", [])
+                headers = MutableHeaders(scope=message)
+                headers.append("set-cookie", cookie.output(header="").strip())
+        await send(message)
