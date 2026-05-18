@@ -187,3 +187,9 @@ test_sabc.db
 # Alembic - only ignore bytecode, not migration files
 alembic/__pycache__/
 alembic/versions/__pycache__/
+tests/e2e/.auth/
+
+# Node / Playwright
+node_modules/
+playwright-report/
+test-results/
