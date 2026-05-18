@@ -59,7 +59,7 @@ def reset_password_form(
 def process_password_reset(
     request: Request,
     token: str = Form(..., description="Password reset token"),
-    password: str = Form(..., min_length=8, description="New password"),
+    password: str = Form(..., min_length=12, description="New password"),
     password_confirm: str = Form(..., description="Confirm new password"),
 ) -> RedirectResponse:
     try:

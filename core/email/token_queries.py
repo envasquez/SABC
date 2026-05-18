@@ -1,5 +1,6 @@
 """Database queries for password reset tokens."""
 
+import hashlib
 from datetime import datetime
 from typing import Optional
 
@@ -7,6 +8,16 @@ from core.db_schema import Angler, PasswordResetToken, get_session
 from core.helpers.timezone import now_utc
 
 from .config import logger
+
+
+def _hash_token(token: str) -> str:
+    """Return the SHA-256 hex digest of a reset token.
+
+    Tokens are stored and queried as hashes so that a database disclosure
+    cannot be used to forge a valid reset link. The plaintext token is only
+    ever sent to the user via email.
+    """
+    return hashlib.sha256(token.encode()).hexdigest()
 
 
 def check_rate_limit(user_id: int, since: datetime) -> Optional[int]:
@@ -28,10 +39,11 @@ def check_rate_limit(user_id: int, since: datetime) -> Optional[int]:
 
 def insert_token(user_id: int, token: str, expires_at: datetime) -> bool:
     try:
+        token_hash = _hash_token(token)
         with get_session() as session:
             reset_token = PasswordResetToken(
                 user_id=user_id,
-                token=token,
+                token=token_hash,
                 expires_at=expires_at,
                 created_at=now_utc(),
             )
@@ -44,6 +56,7 @@ def insert_token(user_id: int, token: str, expires_at: datetime) -> bool:
 
 def fetch_token_data(token: str) -> Optional[tuple]:
     try:
+        token_hash = _hash_token(token)
         with get_session() as session:
             result = (
                 session.query(
@@ -54,7 +67,7 @@ def fetch_token_data(token: str) -> Optional[tuple]:
                     Angler.name,
                 )
                 .join(Angler, PasswordResetToken.user_id == Angler.id)
-                .filter(PasswordResetToken.token == token)
+                .filter(PasswordResetToken.token == token_hash)
                 .first()
             )
             return result  # type: ignore[return-value]
@@ -65,13 +78,14 @@ def fetch_token_data(token: str) -> Optional[tuple]:
 
 def mark_token_used(token: str) -> int:
     try:
+        token_hash = _hash_token(token)
         with get_session() as session:
             from sqlalchemy import false
 
             rowcount = (
                 session.query(PasswordResetToken)
                 .filter(
-                    PasswordResetToken.token == token,
+                    PasswordResetToken.token == token_hash,
                     PasswordResetToken.used.is_(false()),
                 )
                 .update({"used": True, "used_at": now_utc()})

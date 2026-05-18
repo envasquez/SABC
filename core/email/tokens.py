@@ -42,7 +42,7 @@ def verify_reset_token(token: str) -> Optional[dict]:
     try:
         result = fetch_token_data(token)
         if not result:
-            logger.warning(f"Invalid password reset token: {token[:10]}...")
+            logger.warning("Invalid password reset token")
             return None
 
         user_id, expires_at, used, email, name = result

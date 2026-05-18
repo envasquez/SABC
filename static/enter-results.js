@@ -56,6 +56,39 @@ function initializeResultsEntry(config) {
             ResultsEntryState.isTeamFormat ? addTeamFormatTeam : addTeam);
     }
 
+    // Delegated handlers for dynamically generated team-card controls.
+    // Replaces inline onclick/onchange attributes:
+    //   .js-remove-team   [data-team]                       -> removeTeam
+    //   .js-clear-angler  [data-team] [data-angler]         -> clearAnglerSelection
+    //   .js-buy-in        [data-team] [data-angler-type]    -> handleBuyInChange
+    const teamsContainer = document.getElementById('teams-container');
+    if (teamsContainer) {
+        teamsContainer.addEventListener('click', function(e) {
+            const removeBtn = e.target.closest('.js-remove-team');
+            if (removeBtn) {
+                removeTeam(parseInt(removeBtn.dataset.team, 10));
+                return;
+            }
+            const clearBtn = e.target.closest('.js-clear-angler');
+            if (clearBtn) {
+                clearAnglerSelection(
+                    parseInt(clearBtn.dataset.team, 10),
+                    parseInt(clearBtn.dataset.angler, 10)
+                );
+            }
+        });
+        teamsContainer.addEventListener('change', function(e) {
+            const buyIn = e.target.closest('.js-buy-in');
+            if (buyIn) {
+                handleBuyInChange(
+                    buyIn,
+                    parseInt(buyIn.dataset.team, 10),
+                    buyIn.dataset.anglerType
+                );
+            }
+        });
+    }
+
     // Add first team on page load
     const editData = ResultsEntryState.editData;
     const editTeamResultData = ResultsEntryState.editTeamResultData;
@@ -292,7 +325,7 @@ function addTeam() {
         <div class="cc team-card" id="team-${teamCount}" style="margin-bottom:1rem">
             <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;background:var(--bg-alt);border-bottom:1px solid var(--b1);border-radius:var(--r-md) var(--r-md) 0 0">
                 <strong style="font-size:.9rem">Team ${teamCount}</strong>
-                <button type="button" class="btn-icon btn-icon-danger" onclick="removeTeam(${teamCount})" aria-label="Remove team">
+                <button type="button" class="btn-icon btn-icon-danger js-remove-team" data-team="${teamCount}" aria-label="Remove team">
                     <i class="bi bi-trash"></i>
                 </button>
             </div>
@@ -311,7 +344,7 @@ function addTeam() {
                                        placeholder="Start typing angler name..."
                                        autocomplete="off"
                                        required>
-                                <span class="clear-selection" style="display:none;" onclick="clearAnglerSelection(${teamCount}, 1)">&times;</span>
+                                <span class="clear-selection js-clear-angler" data-team="${teamCount}" data-angler="1" style="display:none;">&times;</span>
                                 <div class="autocomplete-dropdown"></div>
                                 <input type="hidden" name="angler1_id_${teamCount}" class="angler1-id">
                             </div>
@@ -335,7 +368,7 @@ function addTeam() {
                                 <input type="checkbox" name="angler1_disqualified_${teamCount}" value="1"> Disqualified
                             </label>
                             <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
-                                <input type="checkbox" name="angler1_buyIn_${teamCount}" value="1" onchange="handleBuyInChange(this, ${teamCount}, 'angler1')"> Buy-in
+                                <input type="checkbox" name="angler1_buyIn_${teamCount}" value="1" class="js-buy-in" data-team="${teamCount}" data-angler-type="angler1"> Buy-in
                             </label>
                             <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
                                 <input type="checkbox" name="angler1_was_member_${teamCount}" value="1" checked> Member
@@ -357,7 +390,7 @@ function addTeam() {
                                        data-angler="2"
                                        placeholder="Start typing angler name..."
                                        autocomplete="off">
-                                <span class="clear-selection" style="display:none;" onclick="clearAnglerSelection(${teamCount}, 2)">&times;</span>
+                                <span class="clear-selection js-clear-angler" data-team="${teamCount}" data-angler="2" style="display:none;">&times;</span>
                                 <div class="autocomplete-dropdown"></div>
                                 <input type="hidden" name="angler2_id_${teamCount}" class="angler2-id">
                             </div>
@@ -381,7 +414,7 @@ function addTeam() {
                                 <input type="checkbox" name="angler2_disqualified_${teamCount}" value="1"> Disqualified
                             </label>
                             <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
-                                <input type="checkbox" name="angler2_buyIn_${teamCount}" value="1" onchange="handleBuyInChange(this, ${teamCount}, 'angler2')"> Buy-in
+                                <input type="checkbox" name="angler2_buyIn_${teamCount}" value="1" class="js-buy-in" data-team="${teamCount}" data-angler-type="angler2"> Buy-in
                             </label>
                             <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer">
                                 <input type="checkbox" name="angler2_was_member_${teamCount}" value="1" checked> Member
@@ -430,7 +463,7 @@ function addTeamFormatTeam() {
         <div class="cc team-card" id="team-${teamCount}" style="margin-bottom:1rem">
             <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;background:var(--bg-alt);border-bottom:1px solid var(--b1);border-radius:var(--r-md) var(--r-md) 0 0">
                 <strong style="font-size:.9rem">Team ${teamCount}</strong>
-                <button type="button" class="btn-icon btn-icon-danger" onclick="removeTeam(${teamCount})" aria-label="Remove team">
+                <button type="button" class="btn-icon btn-icon-danger js-remove-team" data-team="${teamCount}" aria-label="Remove team">
                     <i class="bi bi-trash"></i>
                 </button>
             </div>
@@ -441,7 +474,7 @@ function addTeamFormatTeam() {
                         <input type="text" class="fi autocomplete-input angler1-input"
                                data-team="${teamCount}" data-angler="1"
                                placeholder="Start typing angler name..." autocomplete="off" required>
-                        <span class="clear-selection" style="display:none;" onclick="clearAnglerSelection(${teamCount}, 1)">&times;</span>
+                        <span class="clear-selection js-clear-angler" data-team="${teamCount}" data-angler="1" style="display:none;">&times;</span>
                         <div class="autocomplete-dropdown"></div>
                         <input type="hidden" name="angler1_id_${teamCount}" class="angler1-id">
                     </div>
@@ -452,7 +485,7 @@ function addTeamFormatTeam() {
                         <input type="text" class="fi autocomplete-input angler2-input"
                                data-team="${teamCount}" data-angler="2"
                                placeholder="Start typing angler name..." autocomplete="off">
-                        <span class="clear-selection" style="display:none;" onclick="clearAnglerSelection(${teamCount}, 2)">&times;</span>
+                        <span class="clear-selection js-clear-angler" data-team="${teamCount}" data-angler="2" style="display:none;">&times;</span>
                         <div class="autocomplete-dropdown"></div>
                         <input type="hidden" name="angler2_id_${teamCount}" class="angler2-id">
                     </div>
@@ -513,7 +546,7 @@ function addTeamFormatTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_
                                data-team="${teamCount}" data-angler="1"
                                placeholder="Start typing angler name..." autocomplete="off"
                                value="${escapeHtml(angler1_name)}" required>
-                        <span class="clear-selection" style="display:${angler1_id ? 'block' : 'none'};" onclick="clearAnglerSelection(${teamCount}, 1)">&times;</span>
+                        <span class="clear-selection js-clear-angler" data-team="${teamCount}" data-angler="1" style="display:${angler1_id ? 'block' : 'none'};">&times;</span>
                         <div class="autocomplete-dropdown"></div>
                         <input type="hidden" name="angler1_id_${teamCount}" class="angler1-id" value="${angler1_id}">
                     </div>
@@ -525,7 +558,7 @@ function addTeamFormatTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_
                                data-team="${teamCount}" data-angler="2"
                                placeholder="Start typing angler name..." autocomplete="off"
                                value="${angler2_name ? escapeHtml(angler2_name) : ''}">
-                        <span class="clear-selection" style="display:${angler2_id ? 'block' : 'none'};" onclick="clearAnglerSelection(${teamCount}, 2)">&times;</span>
+                        <span class="clear-selection js-clear-angler" data-team="${teamCount}" data-angler="2" style="display:${angler2_id ? 'block' : 'none'};">&times;</span>
                         <div class="autocomplete-dropdown"></div>
                         <input type="hidden" name="angler2_id_${teamCount}" class="angler2-id" value="${angler2_id || ''}">
                     </div>
@@ -598,7 +631,7 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
                                        data-team="${teamCount}" data-angler="1"
                                        placeholder="Start typing angler name..." autocomplete="off"
                                        value="${escapeHtml(angler1_name)}" required>
-                                <span class="clear-selection" style="display:${angler1_id ? 'block' : 'none'};" onclick="clearAnglerSelection(${teamCount}, 1)">&times;</span>
+                                <span class="clear-selection js-clear-angler" data-team="${teamCount}" data-angler="1" style="display:${angler1_id ? 'block' : 'none'};">&times;</span>
                                 <div class="autocomplete-dropdown"></div>
                                 <input type="hidden" name="angler1_id_${teamCount}" class="angler1-id" value="${angler1_id}">
                             </div>
@@ -610,7 +643,7 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
                         </div>
                         <div style="display:flex;flex-direction:row;gap:1rem;flex-wrap:wrap">
                             <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler1_disqualified_${teamCount}" value="1" ${angler1_disqualified ? 'checked' : ''}> Disqualified</label>
-                            <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler1_buyIn_${teamCount}" value="1" ${angler1_buy_in ? 'checked' : ''} onchange="handleBuyInChange(this, ${teamCount}, 'angler1')"> Buy-in</label>
+                            <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler1_buyIn_${teamCount}" value="1" ${angler1_buy_in ? 'checked' : ''} class="js-buy-in" data-team="${teamCount}" data-angler-type="angler1"> Buy-in</label>
                             <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler1_was_member_${teamCount}" value="1" ${angler1_was_member !== false ? 'checked' : ''}> Member</label>
                         </div>
                     </div>
@@ -626,7 +659,7 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
                                        data-team="${teamCount}" data-angler="2"
                                        placeholder="Start typing angler name..." autocomplete="off"
                                        value="${angler2_name ? escapeHtml(angler2_name) : ''}">
-                                <span class="clear-selection" style="display:${angler2_id ? 'block' : 'none'};" onclick="clearAnglerSelection(${teamCount}, 2)">&times;</span>
+                                <span class="clear-selection js-clear-angler" data-team="${teamCount}" data-angler="2" style="display:${angler2_id ? 'block' : 'none'};">&times;</span>
                                 <div class="autocomplete-dropdown"></div>
                                 <input type="hidden" name="angler2_id_${teamCount}" class="angler2-id" value="${angler2_id || ''}">
                             </div>
@@ -638,7 +671,7 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
                         </div>
                         <div style="display:flex;flex-direction:row;gap:1rem;flex-wrap:wrap">
                             <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler2_disqualified_${teamCount}" value="1" ${angler2_disqualified ? 'checked' : ''}> Disqualified</label>
-                            <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler2_buyIn_${teamCount}" value="1" ${angler2_buy_in ? 'checked' : ''} onchange="handleBuyInChange(this, ${teamCount}, 'angler2')"> Buy-in</label>
+                            <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler2_buyIn_${teamCount}" value="1" ${angler2_buy_in ? 'checked' : ''} class="js-buy-in" data-team="${teamCount}" data-angler-type="angler2"> Buy-in</label>
                             <label style="font-size:.8rem;display:flex;align-items:center;gap:.4rem;cursor:pointer"><input type="checkbox" name="angler2_was_member_${teamCount}" value="1" ${angler2_was_member !== false ? 'checked' : ''}> Member</label>
                         </div>
                     </div>
@@ -958,15 +991,11 @@ function onAnglerChange() {
 }
 
 // Exports.
-// - removeTeam / clearAnglerSelection / handleBuyInChange: referenced by inline
-//   on* handlers in HTML generated dynamically inside this file.
 // - showCreateGuestModal / createGuest / initializeResultsEntry: consumed
 //   cross-file by enter-results-init.js.
-// (addTeam / addTeamFormatTeam are now bound in-scope via addEventListener and
-//  no longer need a window export.)
-window.removeTeam = removeTeam;
-window.clearAnglerSelection = clearAnglerSelection;
-window.handleBuyInChange = handleBuyInChange;
+// (addTeam / addTeamFormatTeam / removeTeam / clearAnglerSelection /
+//  handleBuyInChange are bound in-scope via delegated addEventListener
+//  listeners and no longer need a window export.)
 window.showCreateGuestModal = showCreateGuestModal;
 window.createGuest = createGuest;
 window.initializeResultsEntry = initializeResultsEntry;

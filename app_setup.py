@@ -24,13 +24,14 @@ from core.deps import (
     is_dues_current_filter,
     month_number_filter,
     nl2br_filter,
-    safe_json_filter,
     templates,
     time_format_filter,
     to_local_datetime_filter,
+    tojson_attr_filter,
 )
 from core.helpers.logging import configure_logging, get_logger
 from core.helpers.sanitize import sanitize_iframe as _sanitize_iframe
+from core.helpers.timezone import now_local
 from core.monitoring import init_sentry
 from core.monitoring.middleware import MetricsMiddleware
 from core.security_middleware import SecurityHeadersMiddleware
@@ -140,12 +141,15 @@ def create_app() -> FastAPI:
     os.makedirs("uploads/photos", exist_ok=True)
     app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
+    # Single source of truth for Jinja filter/global registration. The Jinja
+    # environment itself is created in core.deps; everything is registered onto
+    # it here in create_app().
     templates.env.filters["from_json"] = from_json_filter
+    templates.env.filters["tojson_attr"] = tojson_attr_filter
     templates.env.filters["date_format"] = date_format_filter
     templates.env.filters["time_format"] = time_format_filter
     templates.env.filters["date_format_dd_mm_yyyy"] = lambda d: date_format_filter(d, "dd-mm-yyyy")
     templates.env.filters["month_number"] = month_number_filter
-    templates.env.filters["safe_json"] = safe_json_filter
     templates.env.filters["nl2br"] = nl2br_filter
     templates.env.filters["to_local"] = to_local_datetime_filter
     templates.env.filters["is_dues_current"] = is_dues_current_filter
@@ -163,6 +167,9 @@ def create_app() -> FastAPI:
 
     # Add CSRF token to global template context
     templates.env.globals["get_csrf_token"] = get_csrf_token
+
+    # Expose now_local() to templates for current-time rendering.
+    templates.env.globals["now_local"] = now_local
 
     # Expose the asset cache-bust version to every template render as {{ asset_v }}.
     templates.env.globals["asset_v"] = ASSET_VERSION

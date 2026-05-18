@@ -1,9 +1,8 @@
 """Data sanitization utilities for safe template rendering."""
 
-import json
 import re
 from html.parser import HTMLParser
-from typing import Any, Dict, List, Union
+from typing import Any, List
 
 # Elements whose *contents* are not human-readable text and must be discarded
 # entirely (not just have their tags stripped). A regex-based stripper would
@@ -120,100 +119,3 @@ def sanitize_iframe(raw_html: str) -> str:
             f"</iframe>"
         )
     return ""
-
-
-def sanitize_for_json(value: Any) -> Any:
-    """Recursively sanitize data structure for safe JSON embedding in templates.
-
-    This removes HTML and script tags from all string values in the data structure,
-    making it safe to use with |tojson|safe in templates.
-
-    Args:
-        value: Any Python data structure (dict, list, str, etc.)
-
-    Returns:
-        Sanitized data structure with same shape but cleaned strings
-    """
-    if isinstance(value, dict):
-        return {k: sanitize_for_json(v) for k, v in value.items()}
-    elif isinstance(value, list):
-        return [sanitize_for_json(item) for item in value]
-    elif isinstance(value, str):
-        return sanitize_html(value)
-    else:
-        # Numbers, booleans, None, etc. pass through unchanged
-        return value
-
-
-def safe_json_dumps(data: Any) -> str:
-    """Safely serialize data to JSON with sanitization.
-
-    Args:
-        data: Data to serialize
-
-    Returns:
-        JSON string with sanitized content
-    """
-    sanitized = sanitize_for_json(data)
-    return json.dumps(sanitized)
-
-
-def sanitize_lakes_data(lakes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Sanitize lake data for safe template rendering.
-
-    Args:
-        lakes: List of lake dictionaries
-
-    Returns:
-        Sanitized lake data
-    """
-    return [
-        {
-            "id": lake.get("id"),
-            "key": sanitize_html(str(lake.get("key", ""))),
-            "name": sanitize_html(str(lake.get("name", ""))),
-            "display_name": sanitize_html(str(lake.get("display_name", ""))),
-            "ramps": [
-                {
-                    "id": ramp.get("id"),
-                    "name": sanitize_html(str(ramp.get("name", ""))),
-                }
-                for ramp in lake.get("ramps", [])
-            ],
-        }
-        for lake in lakes
-    ]
-
-
-def sanitize_event_data(
-    events: Union[Dict[str, Any], List[Dict[str, Any]]],
-) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
-    """Sanitize event data for safe template rendering.
-
-    Args:
-        events: Either a single event dictionary or a list of event dictionaries
-
-    Returns:
-        Sanitized event data (same type as input)
-    """
-    # Handle single dict input
-    if isinstance(events, dict):
-        sanitized_event = {}
-        for key, value in events.items():
-            if isinstance(value, str):
-                sanitized_event[key] = sanitize_html(value)
-            else:
-                sanitized_event[key] = value
-        return sanitized_event
-
-    # Handle list input
-    sanitized = []
-    for event in events:
-        sanitized_event = {}
-        for key, value in event.items():
-            if isinstance(value, str):
-                sanitized_event[key] = sanitize_html(value)
-            else:
-                sanitized_event[key] = value
-        sanitized.append(sanitized_event)
-    return sanitized

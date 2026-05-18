@@ -10,7 +10,7 @@
  * Record that a cancelled-tournament alert was dismissed.
  */
 function dismissCancelledAlert(eventId) {
-    var dismissed = JSON.parse(localStorage.getItem('dismissedCancelledAlerts') || '[]');
+    const dismissed = JSON.parse(localStorage.getItem('dismissedCancelledAlerts') || '[]');
     if (dismissed.indexOf(eventId) === -1) {
         dismissed.push(eventId);
         localStorage.setItem('dismissedCancelledAlerts', JSON.stringify(dismissed));
@@ -21,21 +21,21 @@ function dismissCancelledAlert(eventId) {
  * Client-side pagination for the Club News sidebar list.
  */
 function initNewsPagination() {
-    var NEWS_PER_PAGE = 3;
-    var currentPage = 1;
-    var items = document.querySelectorAll('.news-item');
-    var totalItems = items.length;
-    var totalPages = Math.ceil(totalItems / NEWS_PER_PAGE);
-    var pagination = document.getElementById('news-pagination');
-    var pageInfo = document.getElementById('news-page-info');
-    var prevBtn = document.getElementById('news-prev');
-    var nextBtn = document.getElementById('news-next');
+    const NEWS_PER_PAGE = 3;
+    let currentPage = 1;
+    const items = document.querySelectorAll('.news-item');
+    const totalItems = items.length;
+    const totalPages = Math.ceil(totalItems / NEWS_PER_PAGE);
+    const pagination = document.getElementById('news-pagination');
+    const pageInfo = document.getElementById('news-page-info');
+    const prevBtn = document.getElementById('news-prev');
+    const nextBtn = document.getElementById('news-next');
     if (totalItems <= NEWS_PER_PAGE) return;
     if (pagination) pagination.style.display = 'flex';
     function showPage(page) {
         currentPage = page;
-        var start = (page - 1) * NEWS_PER_PAGE;
-        var end = Math.min(start + NEWS_PER_PAGE, totalItems);
+        const start = (page - 1) * NEWS_PER_PAGE;
+        const end = Math.min(start + NEWS_PER_PAGE, totalItems);
         items.forEach(function(item, i) { item.style.display = (i >= start && i < end) ? 'block' : 'none'; });
         if (pageInfo) pageInfo.textContent = 'Showing ' + (start + 1) + '-' + end + ' of ' + totalItems;
         if (prevBtn) prevBtn.disabled = (page === 1);
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cancelled-tournament alert dismissal
     document.querySelectorAll('.js-dismiss-cancelled-alert').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            var id = parseInt(btn.dataset.eventId, 10);
+            const id = parseInt(btn.dataset.eventId, 10);
             if (!isNaN(id)) dismissCancelledAlert(id);
         });
     });

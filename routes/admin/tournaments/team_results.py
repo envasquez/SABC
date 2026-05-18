@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import Connection
 from sqlalchemy.exc import SQLAlchemyError
+from starlette.concurrency import run_in_threadpool
 
 from core.deps import get_db
 from core.helpers.auth import require_admin
@@ -48,7 +49,8 @@ async def save_team_result(
         else:
             # Standard format: calculate from individual results
             total_weight = Decimal("0")
-            angler1_data = qs.fetch_one(
+            angler1_data = await run_in_threadpool(
+                qs.fetch_one,
                 """SELECT total_weight, num_fish, big_bass_weight
                    FROM results WHERE tournament_id = :tid AND angler_id = :aid""",
                 {"tid": tournament_id, "aid": angler1_id},
@@ -60,7 +62,8 @@ async def save_team_result(
                 if angler1_bb > big_bass_weight:
                     big_bass_weight = angler1_bb
             if angler2_id:
-                angler2_data = qs.fetch_one(
+                angler2_data = await run_in_threadpool(
+                    qs.fetch_one,
                     """SELECT total_weight, num_fish, big_bass_weight
                        FROM results WHERE tournament_id = :tid AND angler_id = :aid""",
                     {"tid": tournament_id, "aid": angler2_id},
@@ -74,7 +77,8 @@ async def save_team_result(
         # Check if team_result_id was provided (edit mode)
         team_result_id = get_form_int(form_data, "team_result_id")
         if team_result_id:
-            existing = qs.fetch_one(
+            existing = await run_in_threadpool(
+                qs.fetch_one,
                 "SELECT id FROM team_results WHERE id = :id",
                 {"id": team_result_id},
             )
@@ -82,7 +86,8 @@ async def save_team_result(
             # Check for existing team by angler combination
             if angler2_id is None:
                 # Solo angler - check for NULL angler2_id
-                existing = qs.fetch_one(
+                existing = await run_in_threadpool(
+                    qs.fetch_one,
                     """SELECT id FROM team_results
                        WHERE tournament_id = :tid
                        AND angler1_id = :a1 AND angler2_id IS NULL""",
@@ -90,7 +95,8 @@ async def save_team_result(
                 )
             else:
                 # Team - check both angler combinations
-                existing = qs.fetch_one(
+                existing = await run_in_threadpool(
+                    qs.fetch_one,
                     """SELECT id FROM team_results
                        WHERE tournament_id = :tid
                        AND ((angler1_id = :a1 AND angler2_id = :a2)
@@ -98,7 +104,8 @@ async def save_team_result(
                     {"tid": tournament_id, "a1": angler1_id, "a2": angler2_id},
                 )
         if existing:
-            qs.execute(
+            await run_in_threadpool(
+                qs.execute,
                 """UPDATE team_results
                    SET angler1_id = :a1, angler2_id = :a2,
                        total_weight = :total_weight, num_fish = :num_fish,
@@ -114,7 +121,8 @@ async def save_team_result(
                 },
             )
         else:
-            qs.execute(
+            await run_in_threadpool(
+                qs.execute,
                 """INSERT INTO team_results
                    (tournament_id, angler1_id, angler2_id, total_weight, num_fish, big_bass_weight)
                    VALUES (:tid, :a1, :a2, :total_weight, :num_fish, :big_bass_weight)""",
@@ -127,12 +135,13 @@ async def save_team_result(
                     "big_bass_weight": big_bass_weight,
                 },
             )
-        conn.commit()
+        await run_in_threadpool(conn.commit)
 
         # Recalculate place_finish
         if is_team_format:
             # Team format: use stored total_weight directly
-            qs.execute(
+            await run_in_threadpool(
+                qs.execute,
                 """UPDATE team_results
                    SET place_finish = (
                        SELECT place FROM (
@@ -148,7 +157,8 @@ async def save_team_result(
             )
         else:
             # Standard format: calculate weights from individual results
-            qs.execute(
+            await run_in_threadpool(
+                qs.execute,
                 """UPDATE team_results
                    SET place_finish = (
                        SELECT place FROM (
@@ -171,7 +181,7 @@ async def save_team_result(
                    WHERE tournament_id = :tid""",
                 {"tid": tournament_id},
             )
-        conn.commit()
+        await run_in_threadpool(conn.commit)
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
             return JSONResponse({"success": True, "message": "Team result saved successfully"})
         # Construct safe redirect URL using validated integer ID
