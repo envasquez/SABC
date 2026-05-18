@@ -49,6 +49,23 @@ test.describe('anonymous pages', () => {
       await shot(page, url, `anon-${name}`);
     });
   }
+
+  // Interaction state: modals are only rendered open via Bootstrap's Modal JS,
+  // so the static page shots never exercise the .modal* CSS. The home page
+  // carries a per-tournament ramp modal.
+  test('home ramp modal open', async ({ page }) => {
+    await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
+    const modalId = await page.locator('.modal').first().getAttribute('id');
+    await page.evaluate((id) => window.showModal(id), modalId);
+    await expect(page.locator(`#${modalId}`)).toBeVisible();
+    await page.waitForTimeout(1000);
+    await expect(page).toHaveScreenshot('home-ramp-modal-open.png', {
+      animations: 'disabled',
+      mask: [page.locator('iframe'), page.locator('canvas')],
+      maxDiffPixelRatio: 0.01,
+      timeout: 20000,
+    });
+  });
 });
 
 test.describe('member pages', () => {
@@ -65,10 +82,12 @@ test.describe('member pages', () => {
 test.describe('admin pages', () => {
   test.use({ storageState: 'tests/e2e/.auth/admin.json' });
 
+  // Note: /admin/users (1000+ row table) is intentionally not screenshotted —
+  // a ~50k-px full-page capture is flaky to stabilize and not worth ~9 MB in
+  // git. The other admin pages cover the same shared chrome/components.
   const pages = [
     ['/admin', 'admin-dashboard'],
     ['/admin/events', 'admin-events'],
-    ['/admin/users', 'admin-users'],
     ['/polls?tab=tournament&p=1', 'admin-polls-tournament'],
   ];
   for (const [url, name] of pages) {
