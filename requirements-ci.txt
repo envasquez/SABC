@@ -28,13 +28,13 @@ itsdangerous==2.2.0
 Jinja2==3.1.6
 limits==5.8.0
 MarkupSafe==3.0.3
-mirakuru==2.6.1
+mirakuru==3.0.2
 mypy==1.18.2
 mypy_extensions==1.1.0
-numpy==2.4.5
-packaging==25.0
+numpy==2.4.4
+packaging==26.2
 pandas==2.2.3
-pathspec==0.12.1
+pathspec==1.1.1
 Pillow==12.2.0
 pluggy==1.6.0
 port-for==0.7.4
@@ -48,7 +48,7 @@ pytest==9.0.3
 pytest-asyncio==1.3.0
 pytest-base-url==2.1.0
 pytest-benchmark==4.0.0
-pytest-cov==6.0.0
+pytest-cov==7.1.0
 pytest-html==4.2.0
 pytest-metadata==3.1.1
 pytest-mock==3.15.1
