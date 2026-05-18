@@ -10,7 +10,7 @@ from sqlalchemy import Connection
 
 from core.db_schema import engine
 from core.helpers.logging import get_logger
-from core.helpers.timezone import now_local, to_local
+from core.helpers.timezone import to_local
 from core.query_service import QueryService
 
 _filter_logger = get_logger(__name__)
@@ -32,36 +32,6 @@ def from_json_filter(value: Any) -> Any:
         except (json.JSONDecodeError, TypeError):
             return {}
     return value
-
-
-def safe_json_filter(value: Any) -> Markup:
-    """Safely convert value to JSON and mark as safe for templates.
-
-    This uses JSON encoding plus explicit escaping of HTML special characters
-    (<, >, &) to prevent XSS attacks when embedded in HTML.
-
-    Security Note: Python's json.dumps() doesn't escape <, >, & by default.
-    We explicitly escape these characters after JSON encoding to prevent XSS.
-    The result is safe for embedding in HTML <script> tags.
-
-    Example:
-        Input: {"name": "<script>alert('xss')</script>"}
-        Output: {"name": "\\u003cscript\\u003ealert('xss')\\u003c\\/script\\u003e"}
-
-    Use this instead of |tojson|safe in templates.
-    """
-    # First, convert to JSON
-    json_str = json.dumps(value, cls=CustomJSONEncoder, ensure_ascii=True)
-
-    # Then escape HTML special characters to prevent XSS
-    # Replace < with \u003c, > with \u003e, & with \u0026
-    json_str = json_str.replace("<", "\\u003c")
-    json_str = json_str.replace(">", "\\u003e")
-    json_str = json_str.replace("&", "\\u0026")
-
-    # nosec B704: We explicitly escape all dangerous HTML characters (<, >, &)
-    # This prevents XSS by ensuring <script>, </script>, etc. cannot appear in output
-    return Markup(json_str)  # nosec
 
 
 def tojson_attr_filter(value: Any) -> Markup:
@@ -237,13 +207,9 @@ def _flash_messages(request: Request) -> dict[str, Any]:
     return flash
 
 
+# The Jinja environment is created here, but ALL filter/global registration
+# lives in app_setup.create_app() so there is a single source of truth.
 templates = Jinja2Templates(directory="templates", context_processors=[_flash_messages])
-templates.env.filters["time_format"] = time_format_filter
-templates.env.filters["tojson_attr"] = tojson_attr_filter
-templates.env.filters["from_json"] = from_json_filter
-
-# Add now_local as a global function for templates
-templates.env.globals["now_local"] = now_local
 
 
 def get_db() -> Generator[Connection, None, None]:

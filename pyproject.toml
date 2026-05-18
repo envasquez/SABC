@@ -32,6 +32,13 @@ module = ["routes.*", "core.*"]
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 
+[tool.bandit]
+# Consumed by the pre-commit bandit hook (`bandit -c pyproject.toml`).
+# Skip test code and the local nix package cache.
+exclude_dirs = ["tests", ".venv", ".nix-python-packages"]
+# B101 = assert_used. Asserts are fine in tests and non-security paths.
+skips = ["B101"]
+
 [tool.coverage.run]
 source = ["."]
 omit = [

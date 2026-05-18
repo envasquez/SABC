@@ -24,6 +24,18 @@ is_test_env = os.environ.get("ENVIRONMENT") == "test"
 limiter = Limiter(key_func=get_remote_address, enabled=not is_test_env)
 
 # --- Account lockout (defense-in-depth alongside rate limiting) ---
+#
+# DEPLOYMENT CONSTRAINT: this lockout state — and slowapi's per-IP rate-limit
+# state — lives in-process. It is correct ONLY because production runs a
+# single uvicorn worker per container (see core/db_schema/engine.py, which
+# sizes the connection pool on that same assumption). With N workers the
+# effective lockout threshold becomes N * _MAX_FAILED_ATTEMPTS and a restart
+# clears all counters.
+#
+# If this app is ever scaled to multiple workers/containers, this state MUST
+# move to a shared store (Redis, or a small failed_login_attempts table) and
+# slowapi must be given a matching storage backend. Until then, keep the
+# single-worker deployment invariant.
 _MAX_FAILED_ATTEMPTS = 10
 _LOCKOUT_SECONDS = 900  # 15 minutes
 # Cap total number of tracked emails to bound memory growth from attackers

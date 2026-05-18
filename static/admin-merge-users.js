@@ -70,6 +70,7 @@ function loadPreview() {
 
     fetch('/admin/users/merge/preview', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: {
             'x-csrf-token': csrfToken
         },

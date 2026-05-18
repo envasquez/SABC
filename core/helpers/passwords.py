@@ -14,4 +14,13 @@ def bcrypt_gensalt() -> bytes:
     verify. This must never be lowered in a production environment.
     """
     rounds = int(os.environ.get("BCRYPT_ROUNDS", "12"))
+
+    # Only development and test environments may use a sub-12 work factor
+    # (the test suite relies on BCRYPT_ROUNDS=4 for speed). Mirrors the
+    # ENVIRONMENT allowlist used in app_setup.py (_DEV_SECRET_FALLBACK_ENVS).
+    # Any other environment (production, staging, unset) enforces a floor of 12.
+    env = os.environ.get("ENVIRONMENT", "development")
+    if env not in ("development", "test"):
+        rounds = max(rounds, 12)
+
     return bcrypt.gensalt(rounds=rounds)

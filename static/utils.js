@@ -36,7 +36,7 @@
  * Outdoor/fishing-themed color palette
  * Deep blues, teals, and earth tones inspired by lakes and nature
  */
-var CHART_COLORS = {
+const CHART_COLORS = {
     // Primary palette - water/nature inspired
     palette: [
         { base: '#0077B6', light: '#00B4D8', name: 'Ocean Blue' },
@@ -60,7 +60,7 @@ var CHART_COLORS = {
  * Line chart color palette for multi-year data visualization
  * Used in profile.js and roster.js for consistent line chart styling
  */
-var CHART_LINE_COLORS = [
+const CHART_LINE_COLORS = [
     { border: 'rgb(54, 162, 235)', bg: 'rgba(54, 162, 235, 0.1)' },    // Blue
     { border: 'rgb(75, 192, 192)', bg: 'rgba(75, 192, 192, 0.1)' },    // Teal
     { border: 'rgb(255, 205, 86)', bg: 'rgba(255, 205, 86, 0.1)' },    // Gold
@@ -409,9 +409,12 @@ function createToastContainer() {
  * }
  */
 async function fetchWithRetry(url, options = {}, retries = 3) {
+    // Ensure cookies are sent uniformly for all retry-based requests.
+    const fetchOptions = { credentials: 'same-origin', ...options };
+    let lastError = null;
     for (let i = 0; i < retries; i++) {
         try {
-            const response = await fetch(url, options);
+            const response = await fetch(url, fetchOptions);
 
             // Success - return immediately
             if (response.ok) return response;
@@ -429,6 +432,7 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
             console.warn(`Request failed with status ${response.status}, retrying (${i + 1}/${retries})...`);
         } catch (error) {
             // Network error or timeout
+            lastError = error;
             if (i === retries - 1) {
                 console.error('Request failed after all retries:', error);
                 throw error;
@@ -440,6 +444,11 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
         // Wait before retry: 1s, 2s, 4s (exponential backoff)
         await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
     }
+
+    // Loop fell through without returning (e.g. retries <= 0). Never return
+    // undefined - surface an explicit error instead.
+    if (lastError) throw lastError;
+    throw new Error(`fetchWithRetry: no attempts made for ${url} (retries=${retries})`);
 }
 
 /**
@@ -1547,15 +1556,15 @@ class DeleteConfirmationManager {
 // ============================================================================
 function tabSwitch(btn) {
     if (!btn) return;
-    var targetSel = btn.getAttribute('data-tab-target');
+    const targetSel = btn.getAttribute('data-tab-target');
     if (!targetSel) return;
 
-    var scopeSel = btn.getAttribute('data-tab-scope');
-    var paneSel = btn.getAttribute('data-tab-panes') || '.tab-pane';
-    var scope = scopeSel ? btn.closest(scopeSel) : document;
+    const scopeSel = btn.getAttribute('data-tab-scope');
+    const paneSel = btn.getAttribute('data-tab-panes') || '.tab-pane';
+    let scope = scopeSel ? btn.closest(scopeSel) : document;
     if (!scope) scope = document;
 
-    var target = scope.querySelector(targetSel) || document.querySelector(targetSel);
+    const target = scope.querySelector(targetSel) || document.querySelector(targetSel);
 
     // Deactivate sibling panes
     scope.querySelectorAll(paneSel).forEach(function(p) {
@@ -1571,7 +1580,7 @@ function tabSwitch(btn) {
     }
 
     // Deactivate sibling tab buttons (within the same button group)
-    var group = btn.parentElement;
+    const group = btn.parentElement;
     if (group) {
         group.querySelectorAll('.tab-trigger').forEach(function(b) {
             b.classList.remove('on');
@@ -1581,7 +1590,7 @@ function tabSwitch(btn) {
 }
 
 document.addEventListener('click', function(e) {
-    var btn = e.target.closest('.tab-trigger');
+    const btn = e.target.closest('.tab-trigger');
     if (btn) tabSwitch(btn);
 });
 

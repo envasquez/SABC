@@ -202,8 +202,25 @@ print('Database reset complete!')
           ];
 
           shellHook = ''
-            # Note: slowapi, starlette-csrf, and astral should be installed manually to .nix-python-packages
-            # Run: python3.12 -m pip install --target .nix-python-packages starlette-csrf==3.0.0 slowapi==0.1.9 astral==3.2
+            # A few packages (slowapi, starlette-csrf, astral) are not reliably
+            # available as nixpkgs attrs, so they are vendored into
+            # .nix-python-packages (which is on PYTHONPATH below). This step
+            # bootstraps them automatically and is idempotent: if the marker
+            # file matches the current pin set, it is skipped on subsequent
+            # `nix develop` invocations. Delete .nix-python-packages/.pip-marker
+            # (or the whole dir) to force a reinstall.
+            EXTRA_PIP_PKGS="starlette-csrf==3.0.0 slowapi==0.1.9 astral==3.2"
+            PIP_MARKER=".nix-python-packages/.pip-marker"
+            if [ "$(cat "$PIP_MARKER" 2>/dev/null)" != "$EXTRA_PIP_PKGS" ]; then
+              echo "📦 Installing vendored pip packages into .nix-python-packages ..."
+              if python3.12 -m pip install --quiet --target .nix-python-packages $EXTRA_PIP_PKGS; then
+                echo "$EXTRA_PIP_PKGS" > "$PIP_MARKER"
+                echo "✓ Vendored packages ready."
+              else
+                echo "⚠️  pip install failed — run manually:"
+                echo "   python3.12 -m pip install --target .nix-python-packages $EXTRA_PIP_PKGS"
+              fi
+            fi
 
             echo "🎣 SABC FastAPI Development Environment"
             echo "======================================"

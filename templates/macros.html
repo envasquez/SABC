@@ -115,6 +115,136 @@
 {% endfor %}
 {% endmacro %}
 
+{# Tournament-location / generic poll voting form.
+
+   Renders the complete <form> for casting a vote in a poll. Extracted from the
+   three near-identical blocks that previously lived in polls.html (admin_own,
+   admin_proxy, nonadmin). The three contexts differ in element-ID schemes,
+   button styling, captions and the optional admin member-select, so every one
+   of those differences is an explicit parameter — the rendered HTML stays
+   byte-for-byte identical to the hand-written blocks.
+
+   Parameters:
+     poll, request          - poll object and request (for csrf_token)
+     context                - 'admin_own' | 'admin_proxy' | 'nonadmin' (data-context)
+     lake_id, ramp_id,
+     start_id, end_id,
+     option_id_id           - exact element IDs (sans poll.id suffix) for each
+                              control; differ per context (see polls.js)
+     opt_radio_prefix       - id prefix for regular-poll radio inputs
+     lake_label_for         - True to emit `for=` on lake/ramp <label>s
+     start_selected         - value pre-selected in the start-time <select>
+     end_caption            - caption under the end-time select ("End"/"Weigh-in")
+     end_extra              - True to append the 8:30PM-10:00PM end-time options
+     submit_class           - extra class on the submit button ("btn-p"/"btn-w")
+     submit_text            - submit button label
+     submit_margin          - True to add margin-top:.75rem to the submit button
+     member_select          - True to render the admin "vote for member" select
+     members                - member list (only used when member_select) #}
+{% macro vote_form(poll, request, context, lake_id, ramp_id, start_id, end_id,
+                   option_id_id, opt_radio_prefix, lake_label_for=True,
+                   start_selected='05:00', end_caption='Weigh-in', end_extra=True,
+                   submit_class='btn-p', submit_text='Cast Your Vote',
+                   submit_margin=False, member_select=False, members=None) %}
+<form method="POST" action="/polls/{{ poll.id }}/vote" data-poll-vote="true" data-poll-id="{{ poll.id }}" data-poll-type="{{ poll.poll_type }}" data-context="{{ context }}">
+    {{ csrf_token(request) }}
+    {% if member_select %}
+    <div class="fg" style="margin-bottom:.75rem">
+        <label for="vote_as_angler_{{ poll.id }}" class="fl">
+            <i class="bi bi-person-check"></i> Select Member to Vote For:
+        </label>
+        <select name="vote_as_angler_id" id="vote_as_angler_{{ poll.id }}" class="fi" required>
+            <option value="">Choose a member...</option>
+            {% for member in members %}
+                <option value="{{ member.id }}">{{ member.name }}</option>
+            {% endfor %}
+        </select>
+        <div style="font-size:.75rem;color:var(--t4);margin-top:.25rem">Select which member you are casting a vote for</div>
+    </div>
+    {% else %}
+    <div style="margin-bottom:.75rem">
+        <p style="font-weight:600;color:var(--brand);margin-bottom:.5rem">
+            <i class="bi bi-check-circle" style="margin-right:.35rem"></i>Cast your vote:
+        </p>
+    {% endif %}
+    {% if poll.poll_type == 'tournament_location' %}
+    <!-- Tournament location polls - interactive selection -->
+    <div class="cc" style="margin-bottom:.75rem">
+        <div class="ci">
+            <!-- Three Column Layout -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+                <!-- Lake Selection -->
+                <div class="fg">
+                    <label {% if lake_label_for %}for="{{ lake_id }}_{{ poll.id }}" {% endif %}class="fl">
+                        <i class="bi bi-geo-alt"></i> Lake
+                    </label>
+                    <select id="{{ lake_id }}_{{ poll.id }}" class="fi" required data-poll-id="{{ poll.id }}" data-context="{{ context }}" data-poll-lake="true">
+                        <option value="">Choose a lake...</option>
+                    </select>
+                </div>
+
+                <!-- Ramp Selection -->
+                <div class="fg">
+                    <label {% if lake_label_for %}for="{{ ramp_id }}_{{ poll.id }}" {% endif %}class="fl">
+                        <i class="bi bi-signpost"></i> Ramp
+                    </label>
+                    <select id="{{ ramp_id }}_{{ poll.id }}" class="fi" required disabled>
+                        <option value="">First select a lake</option>
+                    </select>
+                </div>
+
+                <!-- Time Selection -->
+                <div class="fg">
+                    <label class="fl">
+                        <i class="bi bi-clock"></i> Times
+                    </label>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+                        <div>
+                            <select id="{{ start_id }}_{{ poll.id }}" class="fi" required title="Start Time">
+                                <option value="">Start...</option>
+{{ time_select_options(5, 20, 30, start_selected) }}
+                            </select>
+                            <div style="font-size:.7rem;color:var(--t3);text-align:center;margin-top:.25rem">Start</div>
+                        </div>
+                        <div>
+                            <select id="{{ end_id }}_{{ poll.id }}" class="fi" required title="End Time">
+                                <option value="">End...</option>
+{{ time_select_options(5, 20, 30, "15:00") }}
+{% if end_extra %}                                <option value="20:30">8:30 PM</option>
+                                <option value="21:00">9:00 PM</option>
+                                <option value="21:30">9:30 PM</option>
+                                <option value="22:00">10:00 PM</option>
+{% endif %}                            </select>
+                            <div style="font-size:.7rem;color:var(--t3);text-align:center;margin-top:.25rem">{{ end_caption }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <input type="hidden" name="option_id" id="{{ option_id_id }}_{{ poll.id }}" required>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Regular polls - single column -->
+    <div style="display:flex;flex-direction:column;gap:.5rem">
+        {% for option in poll.options %}
+        <label style="display:flex;align-items:center;gap:.5rem;padding:.5rem .75rem;border-radius:var(--r-md);border:1px solid var(--b0);cursor:pointer;font-size:.88rem;color:var(--t2)">
+            <input type="radio" name="option_id" id="{{ opt_radio_prefix }}{{ option.id }}" value="{{ option.id }}" required style="accent-color:var(--brand)">
+            {{ option.text }}
+        </label>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% if not member_select %}
+    </div>
+    {% endif %}
+    <button type="submit" class="btn-m {{ submit_class }}"{% if submit_margin %} style="margin-top:.75rem"{% endif %}>
+        <i class="bi bi-check-square" style="margin-right:.35rem"></i>{{ submit_text }}
+    </button>
+</form>
+{% endmacro %}
+
 {# Calendar event-type legend - shared by both year panes on the calendar page #}
 {% macro calendar_legend(event_types_present) %}
 <div class="cal-legend">

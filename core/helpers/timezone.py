@@ -48,22 +48,6 @@ def to_local(dt: datetime) -> datetime:
     return dt.astimezone(CLUB_TIMEZONE)
 
 
-def to_utc(dt: datetime) -> datetime:
-    """
-    Convert a datetime to UTC.
-
-    Args:
-        dt: Datetime to convert (can be naive or aware)
-
-    Returns:
-        Timezone-aware datetime in UTC
-    """
-    if dt.tzinfo is None:
-        # Assume naive datetime is in club timezone
-        dt = dt.replace(tzinfo=CLUB_TIMEZONE)
-    return dt.astimezone(timezone.utc)
-
-
 def make_aware(dt: datetime, tz: Optional[ZoneInfo] = None) -> datetime:
     """
     Make a naive datetime timezone-aware.
@@ -85,24 +69,3 @@ def make_aware(dt: datetime, tz: Optional[ZoneInfo] = None) -> datetime:
         tz = CLUB_TIMEZONE
 
     return dt.replace(tzinfo=tz)
-
-
-def is_dst(dt: Optional[datetime] = None) -> bool:
-    """
-    Check if Daylight Saving Time is in effect.
-
-    Args:
-        dt: Datetime to check (defaults to now)
-
-    Returns:
-        True if DST is in effect, False otherwise
-    """
-    if dt is None:
-        dt = now_local()
-    elif dt.tzinfo is None:
-        dt = make_aware(dt)
-    else:
-        dt = to_local(dt)
-
-    # DST offset is -5 hours, standard offset is -6 hours
-    return dt.utcoffset().total_seconds() == -5 * 3600  # type: ignore

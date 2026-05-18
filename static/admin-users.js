@@ -34,6 +34,7 @@ async function submitAddUser() {
     try {
         const response = await fetch('/admin/users', {
             method: 'POST',
+            credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
                 'x-csrf-token': getCsrfToken(),
