@@ -42,8 +42,15 @@ ASSET_VERSION = "13"
 
 
 def get_csrf_token(request: Request) -> str:
-    """Extract CSRF token from request cookies."""
-    return request.cookies.get("csrf_token", "")
+    """Return the CSRF token to embed in a form's hidden field.
+
+    Normally this is the value of the csrf_token cookie. On a cookie-less
+    first request the cookie does not exist yet, so we fall back to the token
+    the CSRF middleware stashed on the request scope (see
+    core/csrf_middleware.py) — that same token is set as the cookie on the
+    response, so the rendered form and the cookie stay in agreement.
+    """
+    return request.cookies.get("csrf_token", "") or request.scope.get("sabc_csrf_token", "")
 
 
 _DEV_SECRET_FALLBACK_ENVS = {"development", "test"}
