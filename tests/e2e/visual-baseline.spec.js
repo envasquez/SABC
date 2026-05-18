@@ -76,4 +76,18 @@ test.describe('admin pages', () => {
       await shot(page, url, `admin-${name}`);
     });
   }
+
+  // Interaction state: the navbar user dropdown is only rendered when open,
+  // so the static page screenshots never exercise the .dropdown-menu CSS.
+  test('admin navbar dropdown open', async ({ page }) => {
+    await page.goto(`${BASE_URL}/`, { waitUntil: 'networkidle' });
+    await page.click('.sn-user');
+    await expect(page.locator('.dropdown-menu.show')).toBeVisible();
+    await page.waitForTimeout(500);
+    await expect(page).toHaveScreenshot('admin-navbar-dropdown-open.png', {
+      animations: 'disabled',
+      maxDiffPixelRatio: 0.01,
+      timeout: 20000,
+    });
+  });
 });
