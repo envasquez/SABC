@@ -109,6 +109,105 @@
 }
 
 /* ==========================================
+   SABC UTILITY CLASSES (inline-style migration)
+   ------------------------------------------
+   Small reusable utilities/components created while converting inline
+   `style=` attributes in templates to classes. Token colors, off-scale
+   spacing, and font sizes that have no Bootstrap equivalent live here.
+   ========================================== */
+
+/* Token text colors */
+.text-t1 { color: var(--t1) !important; }
+.text-t2 { color: var(--t2) !important; }
+.text-t3 { color: var(--t3) !important; }
+.text-t4 { color: var(--t4) !important; }
+.text-brand { color: var(--brand) !important; }
+.text-ok { color: var(--ok) !important; }
+.text-warn { color: var(--warn) !important; }
+.text-err { color: var(--err) !important; }
+.text-info { color: var(--info) !important; }
+
+/* Off-scale font sizes (Bootstrap has no equivalents) */
+.fs-3xs { font-size: 0.6rem !important; }
+.fs-2xs { font-size: 0.7rem !important; }
+.fs-xs { font-size: 0.75rem !important; }
+.fs-xs2 { font-size: 0.78rem !important; }
+.fs-sm { font-size: 0.82rem !important; }
+.fs-md { font-size: 0.85rem !important; }
+.fs-lg { font-size: 0.88rem !important; }
+.fs-xl { font-size: 0.95rem !important; }
+
+/* Off-scale spacing (Bootstrap scale is 0/.25/.5/1/1.5/3rem only) */
+.me-icon { margin-right: 0.35rem !important; }
+.ms-tag { margin-left: 0.3rem !important; }
+.ms-tag-sm { margin-left: 0.2rem !important; }
+.ms-tag-md { margin-left: 0.35rem !important; }
+.ms-indent { margin-left: 0.75rem !important; }
+.mb-4half { margin-bottom: 1.4rem !important; }
+.mt-tiny { margin-top: 0.35rem !important; }
+.gap-tiny { gap: 0.35rem !important; }
+.gap-half3 { gap: 0.75rem !important; }
+.mb-half2 { margin-bottom: 0.4rem !important; }
+.mb-half3 { margin-bottom: 0.75rem !important; }
+.mt-half3 { margin-top: 0.75rem !important; }
+.p-half3 { padding: 0.75rem !important; }
+
+/* Colored callout boxes */
+.notice {
+  padding: 0.75rem 1rem;
+  border-radius: var(--r-md);
+  font-size: 0.85rem;
+}
+.notice-warn { background: var(--warn-m); color: var(--warn); }
+.notice-ok { background: var(--ok-m); color: var(--ok); }
+.notice-info { background: var(--info-m); color: var(--info); }
+
+/* Card section header / list-row pattern */
+.list-row {
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--b0);
+}
+.list-row-warn-bg { background: var(--warn-m); }
+.cc-warn-border { border: 1px solid var(--warn); }
+
+/* Poll card header */
+.poll-header {
+  padding: 0.8rem 1.2rem;
+  border-bottom: 1px solid var(--b0);
+}
+.poll-header-info { flex: 0 1 auto; }
+.poll-header-sunrise { flex: 1 1 auto; min-width: 0; }
+.poll-header-actions { flex: 0 0 auto; }
+
+/* Single-purpose helpers */
+.poll-option-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--r-md);
+  border: 1px solid var(--b0);
+  font-size: 0.88rem;
+  color: var(--t2);
+}
+.hist-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+.hist-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.25rem;
+  font-size: 0.78rem;
+}
+.chart-min-height { min-height: 150px; }
+.empty-state { padding: 3rem 1rem; }
+.pager-btn { padding: 0.35rem 0.65rem !important; font-size: 0.82rem !important; }
+.empty-icon { font-size: 3rem; opacity: 0.3; }
+.modal-header-brand { background: var(--brand); color: #fff; }
+
+/* ==========================================
    RESET & BASE STYLES
    ------------------------------------------
    Bootstrap-migration note: this section loads AFTER Bootstrap's Reboot and
