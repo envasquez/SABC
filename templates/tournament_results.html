@@ -5,12 +5,12 @@
 <div class="page-header">
     <div class="row align-items-center">
         <div class="col">
-            <div class="page-pretitle"><i class="ti ti-calendar me-1"></i>{{ tournament[2] | date_format }}</div>
-            <h2 class="page-title"><i class="ti ti-fish me-2"></i>{{ tournament[5] | title if tournament[5] else "Tournament" }} &mdash; Results</h2>
+            <div class="page-pretitle"><i class="ti ti-calendar me-1"></i>{{ tournament.event_date | date_format }}</div>
+            <h2 class="page-title"><i class="ti ti-fish me-2"></i>{{ tournament.lake_name | title if tournament.lake_name else "Tournament" }} &mdash; Results</h2>
         </div>
         {% if user and user.is_admin %}
         <div class="col-auto">
-            <a href="/admin/tournaments/{{ tournament[0] }}/enter-results" class="btn btn-primary">
+            <a href="/admin/tournaments/{{ tournament.id }}/enter-results" class="btn btn-primary">
                 <i class="ti ti-circle-plus me-1"></i>{{ "Add More Results" if team_results or individual_results else "Add Results" }}
             </a>
         </div>
@@ -25,37 +25,45 @@
         <div class="datagrid">
             <div class="datagrid-item">
                 <div class="datagrid-title">Date</div>
-                <div class="datagrid-content">{{ tournament[2] | date_format }}</div>
+                <div class="datagrid-content">{{ tournament.event_date | date_format }}</div>
             </div>
             <div class="datagrid-item">
                 <div class="datagrid-title">Entry Fee</div>
-                <div class="datagrid-content">${{ "%.2f"|format(tournament[7] or 50.00) }}/{% if tournament[11] %}angler{% else %}boat{% endif %}</div>
+                <div class="datagrid-content">${{ "%.2f"|format(tournament.entry_fee or 50.00) }}/{% if tournament.aoy_points %}angler{% else %}boat{% endif %}</div>
             </div>
             <div class="datagrid-item">
                 <div class="datagrid-title">Format</div>
-                <div class="datagrid-content">{% if tournament[11] %}Individual{% else %}Team{% endif %}</div>
+                <div class="datagrid-content">{% if tournament.aoy_points %}Individual{% else %}Team{% endif %}</div>
             </div>
             <div class="datagrid-item">
                 <div class="datagrid-title">Limit</div>
-                <div class="datagrid-content">{{ tournament[8] or 5 }} fish/{% if tournament[11] %}angler{% else %}boat{% endif %}</div>
+                <div class="datagrid-content">{{ tournament.fish_limit or 5 }} fish/{% if tournament.aoy_points %}angler{% else %}boat{% endif %}</div>
             </div>
             <div class="datagrid-item">
                 <div class="datagrid-title">Time</div>
-                <div class="datagrid-content">{% if tournament[12] and tournament[13] %}{{ tournament[12].strftime('%-I:%M %p') }} &ndash; {{ tournament[13].strftime('%-I:%M %p') }}{% elif tournament[12] %}{{ tournament[12].strftime('%-I:%M %p') }}{% else %}&mdash;{% endif %}</div>
+                <div class="datagrid-content">{% if tournament.start_time and tournament.end_time %}{{ tournament.start_time.strftime('%-I:%M %p') }} &ndash; {{ tournament.end_time.strftime('%-I:%M %p') }}{% elif tournament.start_time %}{{ tournament.start_time.strftime('%-I:%M %p') }}{% else %}&mdash;{% endif %}</div>
             </div>
             <div class="datagrid-item">
                 <div class="datagrid-title">Location</div>
-                <div class="datagrid-content">{{ tournament[6] | title if tournament[6] else "—" }}</div>
+                <div class="datagrid-content">{{ tournament.ramp_name | title if tournament.ramp_name else "—" }}</div>
             </div>
         </div>
     </div>
 </div>
 
 {# ===== Tournament Statistics ===== #}
+{% block extra_css %}
+<style>
+  /* Belt-and-braces: force every stat card to the same height regardless of
+     content (number-only vs number+unit vs em-dash) so the grid is symmetric. */
+  .stats-grid .card-body { min-height: 116px; }
+  .stats-grid .h2 { min-height: 2.25rem; line-height: 2.25rem; }
+</style>
+{% endblock %}
 <div class="card mb-3">
     <div class="card-header"><h3 class="card-title"><i class="ti ti-chart-bar me-2 text-primary"></i>Tournament Statistics</h3></div>
     <div class="card-body">
-        <div class="row row-cards g-2">
+        <div class="row row-cards g-2 stats-grid">
             <div class="col-6 col-sm-4 col-lg-3">
                 <div class="card card-sm"><div class="card-body text-center py-3">
                     <i class="ti ti-users icon text-secondary mb-1"></i>
@@ -91,6 +99,7 @@
                     <div class="text-secondary small">Zeros</div>
                 </div></div>
             </div>
+            {% if tournament.event_date and tournament.event_date.year < 2026 %}
             <div class="col-6 col-sm-4 col-lg-3">
                 <div class="card card-sm"><div class="card-body text-center py-3">
                     <i class="ti ti-coin icon text-yellow mb-1"></i>
@@ -98,12 +107,11 @@
                     <div class="text-secondary small">Buy-ins</div>
                 </div></div>
             </div>
+            {% endif %}
             <div class="col-6 col-sm-4 col-lg-3">
                 <div class="card card-sm"><div class="card-body text-center py-3">
                     <i class="ti ti-star-filled icon text-yellow mb-1"></i>
-                    <div class="h2 mb-0">
-                        {% if tournament_stats[6] and tournament_stats[6] > 0 %}{{ "%.2f"|format(tournament_stats[6]) }}<span class="fs-5 text-secondary"> lbs</span>{% else %}&mdash;{% endif %}
-                    </div>
+                    <div class="h2 mb-0">{{ "%.2f"|format(tournament_stats[6] or 0) }}<span class="fs-5 text-secondary"> lbs</span></div>
                     <div class="text-secondary small">
                         Big Bass
                         {% if payouts.big_bass_caught_by_guest %}<span class="badge bg-azure-lt ms-1">Guest</span>{% endif %}
@@ -155,9 +163,9 @@
                     <div class="text-green small">
                         Big Bass Pot
                         {% if payouts.big_bass_won %}
-                            <span class="badge bg-green ms-1" title="Big bass was caught and pot was paid out"><i class="ti ti-trophy"></i> Paid</span>
+                            <span class="badge bg-green-lt ms-1" title="Big bass was caught and pot was paid out"><i class="ti ti-trophy me-1"></i>Paid</span>
                         {% else %}
-                            <span class="badge bg-secondary ms-1" title="No member caught bass > 5lbs - pot rolls over"><i class="ti ti-rotate"></i> Rolls Over</span>
+                            <span class="badge bg-secondary-lt ms-1" title="No member caught bass > 5lbs - pot rolls over"><i class="ti ti-rotate me-1"></i>Rolls Over</span>
                         {% endif %}
                     </div>
                     <div class="h2 mb-0 text-green">
@@ -216,11 +224,11 @@
                     {% if user and user.is_admin %}
                     <td class="text-end">
                         <div class="btn-list justify-content-end flex-nowrap">
-                            <a href="/admin/tournaments/{{ tournament[0] }}/enter-results?edit_team_result={{ result[6] }}" class="btn btn-icon btn-ghost-secondary btn-sm" title="Edit team result" aria-label="Edit team result">
+                            <a href="/admin/tournaments/{{ tournament.id }}/enter-results?edit_team_result={{ result[6] }}" class="btn btn-icon btn-ghost-secondary btn-sm" title="Edit team result" aria-label="Edit team result">
                                 <i class="ti ti-pencil"></i>
                             </a>
                             <button type="button" class="btn btn-icon btn-ghost-danger btn-sm js-delete-team-result"
-                                    data-tournament-id="{{ tournament[0] }}"
+                                    data-tournament-id="{{ tournament.id }}"
                                     data-team-result-id="{{ result[6] }}"
                                     data-team-name="{{ result[1] }}"
                                     data-is-solo="{{ result[7] }}"
@@ -239,7 +247,7 @@
 {% endif %}
 
 {# ===== Individual Results — Only for AoY tournaments ===== #}
-{% if tournament[11] %}
+{% if tournament.aoy_points %}
 <div class="card mb-3">
     <div class="card-header"><h3 class="card-title"><i class="ti ti-user me-2 text-yellow"></i>Individual Results</h3></div>
     <div class="table-responsive">
@@ -270,7 +278,7 @@
                     {% if user and user.is_admin %}
                     <td class="text-end">
                         <button type="button" class="btn btn-icon btn-ghost-danger btn-sm js-delete-individual-result"
-                                data-tournament-id="{{ tournament[0] }}"
+                                data-tournament-id="{{ tournament.id }}"
                                 data-result-id="{{ result[7] }}"
                                 data-angler-name="{{ result[1] }}"
                                 title="Delete result" aria-label="Delete result">
@@ -287,7 +295,7 @@
 {% endif %}
 
 {# ===== No Results ===== #}
-{% if not team_results and (not tournament[11] or not individual_results) %}
+{% if not team_results and (not tournament.aoy_points or not individual_results) %}
 <div class="card mb-3">
     <div class="card-body">
         <div class="empty">
@@ -327,7 +335,7 @@
                     {% if user and user.is_admin %}
                     <td class="text-end">
                         <button type="button" class="btn btn-icon btn-ghost-danger btn-sm js-delete-buy-in-result"
-                                data-tournament-id="{{ tournament[0] }}"
+                                data-tournament-id="{{ tournament.id }}"
                                 data-result-id="{{ result[4] }}"
                                 data-angler-name="{{ result[0] }}"
                                 title="Delete buy-in result" aria-label="Delete buy-in result">
