@@ -1,223 +1,270 @@
 {% extends "base.html" %}
+{% block title %}Club Data - South Austin Bass Club{% endblock %}
 
-{% block title %}Club Data - SABC{% endblock %}
+{% block extra_css %}
+<style>
+.chart-scroll-container { position: relative; }
+.chart-scroll-inner { position: relative; height: 320px; }
+.chart-scrollable .chart-scroll-inner { min-width: 100%; }
+.trend-up { color: var(--tblr-green); }
+.trend-down { color: var(--tblr-red); }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="sh"><div class="st"><i class="bi bi-bar-chart-line"></i> Club Data Dashboard</div></div>
-
-<!-- Section 1: Club Overview Stats -->
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.4rem">
-    <div class="cc"><div class="ci" style="text-align:center;padding:1rem">
-        <div style="font-size:1.5rem;font-weight:800;color:var(--brand)" id="statTournaments">{{ overview_stats.total_tournaments }}</div>
-        <div style="font-size:.75rem;color:var(--t3)">Tournaments</div>
-    </div></div>
-    <div class="cc"><div class="ci" style="text-align:center;padding:1rem">
-        <div style="font-size:1.5rem;font-weight:800;color:var(--ok)" id="statAnglers">{{ overview_stats.unique_anglers }}</div>
-        <div style="font-size:.75rem;color:var(--t3)">Unique Anglers</div>
-    </div></div>
-    <div class="cc"><div class="ci" style="text-align:center;padding:1rem">
-        <div style="font-size:1.5rem;font-weight:800;color:var(--info)" id="statFish">{{ overview_stats.total_fish }}</div>
-        <div style="font-size:.75rem;color:var(--t3)">Total Fish</div>
-    </div></div>
-    <div class="cc"><div class="ci" style="text-align:center;padding:1rem">
-        <div style="font-size:1.5rem;font-weight:800;color:var(--warn)" id="statWeight">{{ "%.1f"|format(overview_stats.total_weight) }}</div>
-        <div style="font-size:.75rem;color:var(--t3)">Total lbs</div>
-    </div></div>
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <div class="page-pretitle">Analytics</div>
+            <h2 class="page-title"><i class="ti ti-chart-histogram me-2"></i>Club Data Dashboard</h2>
+        </div>
+    </div>
 </div>
 
-<!-- Year-over-Year Trend Cards (Compact Superset-style) -->
+{# ===== Overview Stats ===== #}
+<div class="row row-cards mb-3">
+    <div class="col-6 col-md-3">
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto"><span class="bg-primary text-white avatar"><i class="ti ti-flag"></i></span></div>
+                    <div class="col">
+                        <div class="h2 mb-0" id="statTournaments">{{ overview_stats.total_tournaments }}</div>
+                        <div class="text-secondary">Tournaments</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto"><span class="bg-green text-white avatar"><i class="ti ti-users"></i></span></div>
+                    <div class="col">
+                        <div class="h2 mb-0" id="statAnglers">{{ overview_stats.unique_anglers }}</div>
+                        <div class="text-secondary">Unique Anglers</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto"><span class="bg-azure text-white avatar"><i class="ti ti-fish"></i></span></div>
+                    <div class="col">
+                        <div class="h2 mb-0" id="statFish">{{ overview_stats.total_fish }}</div>
+                        <div class="text-secondary">Total Fish</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto"><span class="bg-yellow text-white avatar"><i class="ti ti-scale"></i></span></div>
+                    <div class="col">
+                        <div class="h2 mb-0" id="statWeight">{{ "%.1f"|format(overview_stats.total_weight) }}</div>
+                        <div class="text-secondary">Total lbs</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ===== Year-over-Year Trend Cards ===== #}
 {% if year_comparison.current_year %}
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1.4rem">
-    <!-- Unique Anglers YTD -->
-    <div class="cc"><div class="ci" style="text-align:center;padding:.75rem">
-        <div style="font-size:.7rem;color:var(--t3)">Anglers YTD</div>
-        <div style="font-size:1.3rem;font-weight:800;color:var(--ok)">{{ year_comparison.current_anglers or 0 }}</div>
-        {% set prev = year_comparison.prev_anglers or 0 %}
-        {% set curr = year_comparison.current_anglers or 0 %}
-        {% if prev > 0 %}
-            {% set change = ((curr - prev) / prev * 100)|round(1) %}
-            <div style="font-size:.72rem;display:flex;justify-content:center;align-items:center;gap:.25rem">
-                {% if change > 0 %}
-                    <span style="color:var(--ok)"><i class="bi bi-caret-up-fill"></i>{{ change }}%</span>
-                {% elif change < 0 %}
-                    <span style="color:var(--err)"><i class="bi bi-caret-down-fill"></i>{{ change|abs }}%</span>
-                {% else %}
-                    <span style="color:var(--t4)">0%</span>
-                {% endif %}
-                <span style="color:var(--t4);margin-left:.25rem">vs {{ prev }}</span>
+{% macro trend(prev, curr, fmt='int') %}
+{% if prev > 0 %}
+{% set change = ((curr - prev) / prev * 100)|round(1) %}
+<div class="d-flex align-items-center justify-content-center gap-1 small mt-1">
+    {% if change > 0 %}
+        <span class="trend-up"><i class="ti ti-trending-up"></i> {{ change }}%</span>
+    {% elif change < 0 %}
+        <span class="trend-down"><i class="ti ti-trending-down"></i> {{ change|abs }}%</span>
+    {% else %}
+        <span class="text-secondary">0%</span>
+    {% endif %}
+    <span class="text-secondary">vs {% if fmt == 'int' %}{{ prev }}{% elif fmt == 'd0' %}{{ "%.0f"|format(prev) }}{% else %}{{ "%.2f"|format(prev) }}{% endif %}</span>
+</div>
+{% endif %}
+{% endmacro %}
+<div class="row row-cards mb-3">
+    <div class="col-6 col-md-3">
+        <div class="card card-sm">
+            <div class="card-body text-center">
+                <div class="subheader">Anglers YTD</div>
+                <div class="h1 my-1 text-green">{{ year_comparison.current_anglers or 0 }}</div>
+                {{ trend(year_comparison.prev_anglers or 0, year_comparison.current_anglers or 0) }}
             </div>
-        {% endif %}
-    </div></div>
-    <!-- Total Fish YTD -->
-    <div class="cc"><div class="ci" style="text-align:center;padding:.75rem">
-        <div style="font-size:.7rem;color:var(--t3)">Fish YTD</div>
-        <div style="font-size:1.3rem;font-weight:800;color:var(--info)">{{ year_comparison.current_fish or 0 }}</div>
-        {% set prev = year_comparison.prev_fish or 0 %}
-        {% set curr = year_comparison.current_fish or 0 %}
-        {% if prev > 0 %}
-            {% set change = ((curr - prev) / prev * 100)|round(1) %}
-            <div style="font-size:.72rem;display:flex;justify-content:center;align-items:center;gap:.25rem">
-                {% if change > 0 %}
-                    <span style="color:var(--ok)"><i class="bi bi-caret-up-fill"></i>{{ change }}%</span>
-                {% elif change < 0 %}
-                    <span style="color:var(--err)"><i class="bi bi-caret-down-fill"></i>{{ change|abs }}%</span>
-                {% else %}
-                    <span style="color:var(--t4)">0%</span>
-                {% endif %}
-                <span style="color:var(--t4);margin-left:.25rem">vs {{ prev }}</span>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card card-sm">
+            <div class="card-body text-center">
+                <div class="subheader">Fish YTD</div>
+                <div class="h1 my-1 text-azure">{{ year_comparison.current_fish or 0 }}</div>
+                {{ trend(year_comparison.prev_fish or 0, year_comparison.current_fish or 0) }}
             </div>
-        {% endif %}
-    </div></div>
-    <!-- Total Weight YTD -->
-    <div class="cc"><div class="ci" style="text-align:center;padding:.75rem">
-        <div style="font-size:.7rem;color:var(--t3)">Weight YTD</div>
-        <div style="font-size:1.3rem;font-weight:800;color:var(--warn)">{{ "%.0f"|format(year_comparison.current_weight or 0) }}<span style="font-size:.6em"> lbs</span></div>
-        {% set prev = year_comparison.prev_weight or 0 %}
-        {% set curr = year_comparison.current_weight or 0 %}
-        {% if prev > 0 %}
-            {% set change = ((curr - prev) / prev * 100)|round(1) %}
-            <div style="font-size:.72rem;display:flex;justify-content:center;align-items:center;gap:.25rem">
-                {% if change > 0 %}
-                    <span style="color:var(--ok)"><i class="bi bi-caret-up-fill"></i>{{ change }}%</span>
-                {% elif change < 0 %}
-                    <span style="color:var(--err)"><i class="bi bi-caret-down-fill"></i>{{ change|abs }}%</span>
-                {% else %}
-                    <span style="color:var(--t4)">0%</span>
-                {% endif %}
-                <span style="color:var(--t4);margin-left:.25rem">vs {{ "%.0f"|format(prev) }}</span>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card card-sm">
+            <div class="card-body text-center">
+                <div class="subheader">Weight YTD</div>
+                <div class="h1 my-1 text-yellow">{{ "%.0f"|format(year_comparison.current_weight or 0) }}<span class="fs-4 text-secondary"> lbs</span></div>
+                {{ trend(year_comparison.prev_weight or 0, year_comparison.current_weight or 0, 'd0') }}
             </div>
-        {% endif %}
-    </div></div>
-    <!-- Avg Weight/Angler YTD -->
-    <div class="cc"><div class="ci" style="text-align:center;padding:.75rem">
-        <div style="font-size:.7rem;color:var(--t3)">Avg/Angler YTD</div>
-        <div style="font-size:1.3rem;font-weight:800;color:var(--err)">{{ "%.2f"|format(year_comparison.current_avg_weight or 0) }}<span style="font-size:.6em"> lbs</span></div>
-        {% set prev = year_comparison.prev_avg_weight or 0 %}
-        {% set curr = year_comparison.current_avg_weight or 0 %}
-        {% if prev > 0 %}
-            {% set change = ((curr - prev) / prev * 100)|round(1) %}
-            <div style="font-size:.72rem;display:flex;justify-content:center;align-items:center;gap:.25rem">
-                {% if change > 0 %}
-                    <span style="color:var(--ok)"><i class="bi bi-caret-up-fill"></i>{{ change }}%</span>
-                {% elif change < 0 %}
-                    <span style="color:var(--err)"><i class="bi bi-caret-down-fill"></i>{{ change|abs }}%</span>
-                {% else %}
-                    <span style="color:var(--t4)">0%</span>
-                {% endif %}
-                <span style="color:var(--t4);margin-left:.25rem">vs {{ "%.2f"|format(prev) }}</span>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card card-sm">
+            <div class="card-body text-center">
+                <div class="subheader">Avg/Angler YTD</div>
+                <div class="h1 my-1 text-red">{{ "%.2f"|format(year_comparison.current_avg_weight or 0) }}<span class="fs-4 text-secondary"> lbs</span></div>
+                {{ trend(year_comparison.prev_avg_weight or 0, year_comparison.current_avg_weight or 0, 'd2') }}
             </div>
-        {% endif %}
-    </div></div>
+        </div>
+    </div>
 </div>
 {% endif %}
 
-<!-- Section 2: Participation Chart -->
-<div class="cc" style="margin-bottom:1.4rem"><div class="ci">
-    <div class="ct" style="margin-bottom:1rem"><i class="bi bi-people"></i> Tournament Participation by Year</div>
-    <div class="chart-scroll-container">
-        <div class="chart-scroll-inner">
-            <canvas id="membershipParticipationChart"></canvas>
+{# ===== Participation Chart ===== #}
+<div class="card mb-3">
+    <div class="card-header"><h3 class="card-title"><i class="ti ti-users me-2 text-primary"></i>Tournament Participation by Year</h3></div>
+    <div class="card-body">
+        <div class="chart-scroll-container">
+            <div class="chart-scroll-inner">
+                <canvas id="membershipParticipationChart"></canvas>
+            </div>
         </div>
     </div>
-</div></div>
-
-<!-- Winning Weights + Limits/Zeros (two columns) -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;margin-bottom:1.4rem">
-    <div class="cc"><div class="ci">
-        <div class="ct" style="margin-bottom:1rem"><i class="bi bi-trophy"></i> Avg Winning Weight</div>
-        <div class="chart-scroll-container">
-            <div class="chart-scroll-inner">
-                <canvas id="winningWeightsByYearChart"></canvas>
-            </div>
-        </div>
-    </div></div>
-    <div class="cc"><div class="ci">
-        <div class="ct" style="margin-bottom:1rem"><i class="bi bi-check2-circle"></i> Limits vs Zeros</div>
-        <div class="chart-scroll-container">
-            <div class="chart-scroll-inner">
-                <canvas id="limitsZerosChart"></canvas>
-            </div>
-        </div>
-    </div></div>
 </div>
 
-<!-- Winning Weights by Lake -->
-<div class="cc" style="margin-bottom:1.4rem"><div class="ci">
-    <div class="ct" style="margin-bottom:1rem">
-        <i class="bi bi-water"></i> Winning Weights by Lake
-        <span class="tg tg-p" style="margin-left:.5rem" id="selectedYearBadge"></span>
-    </div>
-    <!-- Year tabs -->
-    <div class="pt" style="margin-bottom:.75rem" id="lakeYearTabs">
-        <button class="ptb lake-year-btn on" data-year="all">All Years</button>
-        {% for year in available_years %}
-        <button class="ptb lake-year-btn" data-year="{{ year }}">{{ year }}</button>
-        {% endfor %}
-    </div>
-    <div class="chart-scroll-container chart-scrollable">
-        <div class="chart-scroll-inner">
-            <canvas id="winningWeightsByLakeChart"></canvas>
+{# ===== Winning Weights + Limits/Zeros ===== #}
+<div class="row row-cards mb-3">
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><h3 class="card-title"><i class="ti ti-trophy me-2 text-yellow"></i>Avg Winning Weight</h3></div>
+            <div class="card-body">
+                <div class="chart-scroll-container">
+                    <div class="chart-scroll-inner">
+                        <canvas id="winningWeightsByYearChart"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div></div>
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header"><h3 class="card-title"><i class="ti ti-checks me-2 text-green"></i>Limits vs Zeros</h3></div>
+            <div class="card-body">
+                <div class="chart-scroll-container">
+                    <div class="chart-scroll-inner">
+                        <canvas id="limitsZerosChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-<!-- Section 4: Lake Analytics -->
-<div class="cc" style="margin-bottom:1.4rem"><div class="ci">
-    <div class="ct" style="margin-bottom:1rem"><i class="bi bi-water"></i> Lake Statistics</div>
-    <table class="mt" id="lakeTable">
-        <thead>
-            <tr>
-                <th>Lake</th>
-                <th style="text-align:center">Times Fished</th>
-                <th style="text-align:center">Last Fished</th>
-                <th style="text-align:center">Avg Weight/Angler</th>
-                <th style="text-align:center">Limits</th>
-                <th style="text-align:center">Zeros</th>
-                <th style="text-align:center">Best Big Bass</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for lake in lake_statistics %}
-            <tr>
-                <td style="font-weight:700">{{ lake.lake_name }}</td>
-                <td style="text-align:center">{{ lake.times_fished }}</td>
-                <td style="text-align:center">{{ lake.last_fished.strftime('%b %Y') if lake.last_fished else 'N/A' }}</td>
-                <td style="text-align:center">{{ "%.2f"|format(lake.avg_weight_per_angler) }} lbs</td>
-                <td style="text-align:center;color:var(--ok)">{{ lake.total_limits }}</td>
-                <td style="text-align:center;color:var(--err)">{{ lake.total_zeros }}</td>
-                <td style="text-align:center;color:var(--info)">{{ "%.2f"|format(lake.biggest_bass) if lake.biggest_bass else 'N/A' }} lbs</td>
-            </tr>
+{# ===== Winning Weights by Lake ===== #}
+<div class="card mb-3">
+    <div class="card-header d-flex flex-wrap align-items-center gap-2">
+        <h3 class="card-title mb-0"><i class="ti ti-droplet me-2 text-azure"></i>Winning Weights by Lake</h3>
+        <span class="badge bg-primary-lt" id="selectedYearBadge"></span>
+        <ul class="nav nav-pills ms-auto" id="lakeYearTabs">
+            <li class="nav-item">
+                <button class="nav-link active lake-year-btn" data-year="all">All Years</button>
+            </li>
+            {% for year in available_years %}
+            <li class="nav-item">
+                <button class="nav-link lake-year-btn" data-year="{{ year }}">{{ year }}</button>
+            </li>
             {% endfor %}
-        </tbody>
-    </table>
-</div></div>
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="chart-scroll-container chart-scrollable">
+            <div class="chart-scroll-inner">
+                <canvas id="winningWeightsByLakeChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
 
-<!-- Section 5: Big Bass Records -->
-<div class="cc" style="margin-bottom:1.4rem"><div class="ci">
-    <div class="ct" style="margin-bottom:1rem"><i class="bi bi-award"></i> Top 10 Big Bass All-Time</div>
-    <table class="mt">
-        <thead>
-            <tr>
-                <th>Rank</th>
-                <th>Angler</th>
-                <th>Weight</th>
-                <th>Lake</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for bass in big_bass_records %}
-            <tr{% if loop.index <= 3 %} style="background:color-mix(in srgb,var(--warn) 15%,transparent)"{% endif %}>
-                <td style="font-weight:700">{{ loop.index }}</td>
-                <td>{{ bass.angler_name }}</td>
-                <td style="font-weight:700;color:var(--info)">{{ "%.2f"|format(bass.big_bass_weight) }} lbs</td>
-                <td>{{ bass.lake_name }}</td>
-                <td>{{ bass.tournament_date.strftime('%b %d, %Y') if bass.tournament_date else 'N/A' }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div></div>
+{# ===== Lake Statistics ===== #}
+<div class="card mb-3">
+    <div class="card-header"><h3 class="card-title"><i class="ti ti-droplet me-2 text-azure"></i>Lake Statistics</h3></div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table" id="lakeTable">
+            <thead>
+                <tr>
+                    <th>Lake</th>
+                    <th class="text-center">Times Fished</th>
+                    <th class="text-center">Last Fished</th>
+                    <th class="text-center">Avg Weight/Angler</th>
+                    <th class="text-center">Limits</th>
+                    <th class="text-center">Zeros</th>
+                    <th class="text-center">Best Big Bass</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lake in lake_statistics %}
+                <tr>
+                    <td class="fw-bold">{{ lake.lake_name }}</td>
+                    <td class="text-center">{{ lake.times_fished }}</td>
+                    <td class="text-center text-secondary">{{ lake.last_fished.strftime('%b %Y') if lake.last_fished else 'N/A' }}</td>
+                    <td class="text-center">{{ "%.2f"|format(lake.avg_weight_per_angler) }} lbs</td>
+                    <td class="text-center"><span class="badge bg-green-lt">{{ lake.total_limits }}</span></td>
+                    <td class="text-center"><span class="badge bg-red-lt">{{ lake.total_zeros }}</span></td>
+                    <td class="text-center text-azure">{{ "%.2f"|format(lake.biggest_bass) if lake.biggest_bass else 'N/A' }} lbs</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{# ===== Big Bass Records ===== #}
+<div class="card mb-3">
+    <div class="card-header"><h3 class="card-title"><i class="ti ti-award me-2 text-yellow"></i>Top 10 Big Bass All-Time</h3></div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th class="w-1">Rank</th>
+                    <th>Angler</th>
+                    <th>Weight</th>
+                    <th>Lake</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bass in big_bass_records %}
+                <tr>
+                    <td>
+                        {% if loop.index == 1 %}<span class="badge bg-yellow text-dark">{{ loop.index }}</span>
+                        {% elif loop.index == 2 %}<span class="badge bg-secondary">{{ loop.index }}</span>
+                        {% elif loop.index == 3 %}<span class="badge bg-orange">{{ loop.index }}</span>
+                        {% else %}<span class="badge bg-secondary-lt">{{ loop.index }}</span>{% endif %}
+                    </td>
+                    <td class="fw-bold">{{ bass.angler_name }}</td>
+                    <td><span class="badge bg-azure-lt">{{ "%.2f"|format(bass.big_bass_weight) }} lbs</span></td>
+                    <td>{{ bass.lake_name }}</td>
+                    <td class="text-secondary">{{ bass.tournament_date.strftime('%b %d, %Y') if bass.tournament_date else 'N/A' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -645,8 +692,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.lake-year-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             // Update active state
-            document.querySelectorAll('.lake-year-btn').forEach(b => b.classList.remove('on'));
-            this.classList.add('on');
+            document.querySelectorAll('.lake-year-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
 
             // Render chart for selected year or all years
             const yearValue = this.dataset.year;

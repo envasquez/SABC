@@ -1,76 +1,114 @@
 {% extends "admin_base.html" %}
-{% from 'macros.html' import csrf_token, form_field %}
+{% from 'macros.html' import csrf_token %}
 {% block title %}Edit User - South Austin Bass Club{% endblock %}
 {% block admin_content %}
-<div class="sh">
-    <div class="st"><i class="bi bi-person-gear"></i> Edit User</div>
-    <a href="/admin/users" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-arrow-left"></i> Back</a>
-</div>
-
-<div style="max-width:600px">
-<div class="cc">
-    <div class="ci">
-        <form method="POST" action="/admin/users/{{ edit_user.id }}/edit">
-            {{ csrf_token(request) }}
-            {{ form_field('Name', 'name', required=true, value=edit_user.name) }}
-            {{ form_field('Email <small style="color:var(--t3)">(optional for guests)</small>', 'email', type='email', value=edit_user.email or '', placeholder='Leave empty or use first.last@sabc.com', help_text='If left empty for guests, a default email will be generated (first.last@sabc.com)') }}
-            {{ form_field('Phone Number <small style="color:var(--t3)">(optional)</small>', 'phone', type='tel', value=edit_user.phone or '', placeholder='+1234567890', help_text='Include country code (e.g., +1 for US)') }}
-
-            <!-- Checkboxes -->
-            <div style="display:flex;flex-direction:column;gap:.75rem;margin-bottom:1.25rem">
-                {% for field, label in [('member', 'Club Member'), ('is_admin', 'Administrator')] %}
-                <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.88rem;color:var(--t2)">
-                    <input type="checkbox" id="{{ field }}" name="{{ field }}" {% if edit_user[field] %}checked{% endif %} style="accent-color:var(--brand);width:16px;height:16px">
-                    {{ label }}
-                </label>
-                {% endfor %}
-            </div>
-
-            <!-- Dues Management -->
-            <div class="fg">
-                <label class="fl" for="dues_paid_through"><i class="bi bi-calendar-check"></i> Dues Paid Through</label>
-                <input type="date" class="fi" id="dues_paid_through" name="dues_paid_through"
-                       value="{{ edit_user.dues_paid_through.isoformat() if edit_user.dues_paid_through else '' }}">
-                <div style="font-size:.75rem;margin-top:.3rem">
-                    {% if edit_user.dues_paid_through %}
-                        {% set today = now_local().date() %}
-                        {% if edit_user.dues_paid_through >= today %}
-                            <span style="color:var(--ok)"><i class="bi bi-check-circle"></i> Dues are current (expires {{ edit_user.dues_paid_through.strftime('%B %d, %Y') }})</span>
-                        {% else %}
-                            <span style="color:var(--err)"><i class="bi bi-x-circle"></i> Dues have expired ({{ edit_user.dues_paid_through.strftime('%B %d, %Y') }})</span>
-                        {% endif %}
-                    {% else %}
-                        <span style="color:var(--t4)">No dues payment recorded</span>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Officer Positions -->
-            <div class="fg">
-                <label class="fl">Officer Positions <small style="color:var(--t3)">(optional - select all that apply)</small></label>
-                <div style="font-size:.75rem;color:var(--t3);margin-bottom:.5rem">Officer positions are tracked per year. Changes will apply to the current year ({{ current_year }}).</div>
-                <div style="display:flex;flex-direction:column;gap:.5rem">
-                    {% set positions = [
-                        'President/Secretary',
-                        'Treasurer',
-                        'Weighmaster',
-                        'Assistant Weighmaster'
-                    ] %}
-                    {% for position in positions %}
-                    <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.88rem;color:var(--t2)">
-                        <input type="checkbox" name="officer_positions" value="{{ position }}" id="position_{{ loop.index }}" {% if position in current_officer_positions %}checked{% endif %} style="accent-color:var(--brand);width:16px;height:16px">
-                        {{ position }}
-                    </label>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-top:1.5rem">
-                <a href="/admin/users" class="btn-m btn-g" style="text-decoration:none">Cancel</a>
-                <button type="submit" class="btn-m btn-w"><i class="bi bi-save" aria-hidden="true"></i> Save Changes</button>
-            </div>
-        </form>
+<div class="page-header mb-3">
+    <div class="row align-items-center">
+        <div class="col">
+            <div class="page-pretitle">Anglers</div>
+            <h2 class="page-title"><i class="ti ti-user-edit me-2 text-primary"></i>Edit User</h2>
+        </div>
+        <div class="col-auto">
+            <a href="/admin/users" class="btn"><i class="ti ti-arrow-left me-1"></i>Back</a>
+        </div>
     </div>
 </div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="avatar bg-primary-lt">{{ edit_user.name[0]|upper }}</span>
+                    <div>
+                        <h3 class="card-title mb-0">{{ edit_user.name }}</h3>
+                        <div class="text-secondary small">Angler ID {{ edit_user.id }}</div>
+                    </div>
+                </div>
+            </div>
+            <form method="POST" action="/admin/users/{{ edit_user.id }}/edit">
+                <div class="card-body">
+                    {{ csrf_token(request) }}
+
+                    <div class="mb-3">
+                        <label class="form-label required" for="name">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ edit_user.name }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="email">Email <span class="text-secondary">(optional for guests)</span></label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ edit_user.email or '' }}" placeholder="Leave empty or use first.last@sabc.com">
+                        <small class="form-hint">If left empty for guests, a default email will be generated (first.last@sabc.com)</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="phone">Phone Number <span class="text-secondary">(optional)</span></label>
+                        <input type="tel" class="form-control" id="phone" name="phone" value="{{ edit_user.phone or '' }}" placeholder="+1234567890">
+                        <small class="form-hint">Include country code (e.g., +1 for US)</small>
+                    </div>
+
+                    <!-- Roles -->
+                    <div class="mb-3">
+                        <label class="form-label">Roles</label>
+                        <div>
+                            {% for field, label, hint in [
+                                ('member', 'Club Member', 'Verified member — can vote in polls'),
+                                ('is_admin', 'Administrator', 'Full access to management functions')
+                            ] %}
+                            <label class="form-check">
+                                <input class="form-check-input" type="checkbox" id="{{ field }}" name="{{ field }}" {% if edit_user[field] %}checked{% endif %}>
+                                <span class="form-check-label">{{ label }}</span>
+                                <span class="form-check-description">{{ hint }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Dues Management -->
+                    <div class="mb-3">
+                        <label class="form-label" for="dues_paid_through"><i class="ti ti-calendar-check me-1"></i>Dues Paid Through</label>
+                        <input type="date" class="form-control" id="dues_paid_through" name="dues_paid_through"
+                               value="{{ edit_user.dues_paid_through.isoformat() if edit_user.dues_paid_through else '' }}">
+                        <div class="mt-2">
+                            {% if edit_user.dues_paid_through %}
+                                {% set today = now_local().date() %}
+                                {% if edit_user.dues_paid_through >= today %}
+                                    <span class="badge bg-green-lt"><i class="ti ti-circle-check me-1"></i>Dues are current (expires {{ edit_user.dues_paid_through.strftime('%B %d, %Y') }})</span>
+                                {% else %}
+                                    <span class="badge bg-red-lt"><i class="ti ti-circle-x me-1"></i>Dues have expired ({{ edit_user.dues_paid_through.strftime('%B %d, %Y') }})</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary-lt">No dues payment recorded</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Officer Positions -->
+                    <div class="mb-0">
+                        <label class="form-label">Officer Positions <span class="text-secondary">(optional - select all that apply)</span></label>
+                        <small class="form-hint d-block mb-2">Officer positions are tracked per year. Changes will apply to the current year ({{ current_year }}).</small>
+                        <div>
+                            {% set positions = [
+                                'President/Secretary',
+                                'Treasurer',
+                                'Weighmaster',
+                                'Assistant Weighmaster'
+                            ] %}
+                            {% for position in positions %}
+                            <label class="form-check">
+                                <input class="form-check-input" type="checkbox" name="officer_positions" value="{{ position }}" id="position_{{ loop.index }}" {% if position in current_officer_positions %}checked{% endif %}>
+                                <span class="form-check-label">{{ position }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-end gap-2">
+                    <a href="/admin/users" class="btn">Cancel</a>
+                    <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy me-1"></i>Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}

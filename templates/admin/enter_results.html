@@ -5,6 +5,68 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', path='/enter-results.css') }}">
+<style>
+/* ---------------------------------------------------------------------------
+   enter-results.js injects team rows with legacy class names + CSS vars.
+   Those classes/vars no longer exist globally, so map them onto Tabler tokens
+   here (scoped to this page) so the dynamically-added markup renders cleanly.
+   --------------------------------------------------------------------------- */
+#teams-container {
+    --brand: var(--tblr-primary);
+    --err: var(--tblr-danger);
+    --t3: var(--tblr-secondary);
+    --b1: var(--tblr-border-color);
+    --bg-alt: var(--tblr-bg-surface-secondary);
+    --r-md: var(--tblr-border-radius);
+}
+#teams-container .cc {
+    background: var(--tblr-bg-surface);
+    border: 1px solid var(--tblr-border-color);
+    border-radius: var(--tblr-border-radius);
+}
+#teams-container .ci { padding: 1rem; }
+#teams-container .fl {
+    display: block;
+    font-size: .75rem;
+    font-weight: 500;
+    color: var(--tblr-secondary);
+    margin-bottom: .25rem;
+}
+#teams-container .fi {
+    display: block;
+    width: 100%;
+    padding: .4375rem .75rem;
+    font-size: .875rem;
+    line-height: 1.4285714;
+    color: var(--tblr-body-color);
+    background-color: var(--tblr-bg-forms);
+    border: 1px solid var(--tblr-border-color);
+    border-radius: var(--tblr-border-radius);
+}
+#teams-container .fi:focus {
+    border-color: var(--tblr-primary);
+    box-shadow: 0 0 0 .25rem rgba(var(--tblr-primary-rgb), .25);
+    outline: 0;
+}
+#teams-container .btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border-radius: var(--tblr-border-radius);
+    border: 1px solid var(--tblr-border-color);
+    background: transparent;
+    color: var(--tblr-secondary);
+    cursor: pointer;
+}
+#teams-container .btn-icon-danger { color: var(--tblr-danger); }
+#teams-container .btn-icon:hover { background: var(--tblr-bg-surface-secondary); }
+#teams-container input[type="checkbox"] { accent-color: var(--tblr-primary); }
+#teams-container h6 { margin-bottom: .5rem; }
+.autocomplete-input.fi { padding-right: 2rem; }
+</style>
 {% endblock %}
 
 {% block admin_content %}
@@ -18,99 +80,130 @@
      data-tournament-id="{{ tournament.id }}"
      data-is-team-format="{{ 'true' if is_team_format else 'false' }}"></div>
 
-<a href="/tournaments/{{ tournament.id }}" style="font-size:.82rem;color:var(--t3);text-decoration:none"><i class="bi bi-arrow-left"></i> {{ tournament.name }}</a>
-
-<div class="sh" style="margin-top:.75rem"><div class="st"><i class="bi bi-pencil-square"></i> Enter Tournament Results</div></div>
-<div style="font-size:.9rem;color:var(--t3);margin-bottom:.75rem">{{ tournament.name }} - {{ tournament.date }}</div>
-{% if tournament.aoy_points %}
-    <span class="tg tg-i">AoY Points</span>
-{% else %}
-    <span class="tg tg-s">Team Format</span>
-{% endif %}
+<div class="page-header mb-3">
+    <div class="row align-items-center">
+        <div class="col">
+            <div class="page-pretitle">
+                <a href="/tournaments/{{ tournament.id }}" class="text-secondary text-decoration-none">
+                    <i class="ti ti-arrow-left me-1"></i>{{ tournament.name }}
+                </a>
+            </div>
+            <h2 class="page-title"><i class="ti ti-clipboard-plus me-2 text-primary"></i>Enter Tournament Results</h2>
+            <div class="text-secondary mt-1">
+                {{ tournament.name }} &mdash; {{ tournament.date }}
+                {% if tournament.aoy_points %}
+                    <span class="badge bg-azure-lt ms-1">AoY Points</span>
+                {% else %}
+                    <span class="badge bg-secondary-lt ms-1">Team Format</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Tournament Info Summary -->
-<div class="cc" style="margin-top:1rem;margin-bottom:1.4rem">
-    <div class="ci">
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem">
-            <div><strong>Location:</strong> {{ tournament.lake_name }}</div>
-            <div><strong>Ramp:</strong> {{ tournament.ramp_name }}</div>
-            <div><strong>Fish Limit:</strong> {{ tournament.fish_limit }} per angler</div>
-            <div><strong>Entry Fee:</strong> ${{ tournament.entry_fee }}</div>
+<div class="row row-cards mb-3">
+    <div class="col-6 col-md-3">
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="subheader"><i class="ti ti-map-pin me-1"></i>Location</div>
+                <div class="h3 mb-0">{{ tournament.lake_name }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="subheader"><i class="ti ti-anchor me-1"></i>Ramp</div>
+                <div class="h3 mb-0">{{ tournament.ramp_name }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="subheader"><i class="ti ti-fish me-1"></i>Fish Limit</div>
+                <div class="h3 mb-0">{{ tournament.fish_limit }} per angler</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="subheader"><i class="ti ti-cash me-1"></i>Entry Fee</div>
+                <div class="h3 mb-0">${{ tournament.entry_fee }}</div>
+            </div>
         </div>
     </div>
 </div>
 
 <form method="POST" action="{% if edit_data %}/admin/{{ 'results/' + edit_data.result_id|string + '/edit' if edit_data.type == 'individual' else 'team-results/' + edit_data.team_result_id|string + '/edit' }}{% else %}/admin/tournaments/{{ tournament.id }}/enter-results{% endif %}" id="resultsForm">
     {{ csrf_token(request) }}
-    <div class="cc">
-        <div style="padding:.75rem 1.4rem;background:var(--brand);color:#fff;border-radius:var(--radius) var(--radius) 0 0">
-            <strong style="font-size:.95rem">
-                <i class="bi bi-people" style="margin-right:.5rem"></i>{% if edit_data %}Edit {% if edit_data.type == 'individual' %}Individual{% else %}Team{% endif %} Result{% else %}Tournament Participants{% endif %}
-            </strong>
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">
+                <i class="ti ti-users me-2"></i>{% if edit_data %}Edit {% if edit_data.type == 'individual' %}Individual{% else %}Team{% endif %} Result{% else %}Tournament Participants{% endif %}
+            </h3>
         </div>
-        <div class="ci">
+        <div class="card-body">
             {% if not edit_data %}
-            <div style="margin-bottom:1rem">
+            <p class="text-secondary">
                 {% if is_team_format %}
-                <p style="color:var(--t3)">Enter team results. Only one combined weight per team is needed.</p>
+                Enter team results. Only one combined weight per team is needed.
                 {% else %}
-                <p style="color:var(--t3)">Enter results for each team. Both anglers' individual results will be recorded, and team totals will be calculated automatically.</p>
+                Enter results for each team. Both anglers' individual results will be recorded, and team totals will be calculated automatically.
                 {% endif %}
-            </div>
+            </p>
             {% endif %}
 
-            <div id="teams-container">
+            <div id="teams-container"></div>
+        </div>
+        <div class="card-footer d-flex flex-wrap justify-content-between gap-2">
+            <div class="btn-list">
+                <button type="button" class="btn btn-success" onclick="addTeam()">
+                    <i class="ti ti-circle-plus me-1"></i>Add Team
+                </button>
+                <button type="button" class="btn btn-primary" onclick="showCreateGuestModal()">
+                    <i class="ti ti-user-plus me-1"></i>Create Guest
+                </button>
             </div>
-
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.5rem">
-                <div style="display:flex;gap:.5rem">
-                    <button type="button" class="btn-m btn-s" onclick="addTeam()">
-                        <i class="bi bi-plus-circle" style="margin-right:.5rem"></i>Add Team
-                    </button>
-                    <button type="button" class="btn-m btn-p" onclick="showCreateGuestModal()">
-                        <i class="bi bi-person-plus" style="margin-right:.5rem"></i>Create Guest
-                    </button>
-                </div>
-                <div style="display:flex;gap:.5rem;justify-content:flex-end">
-                    <a href="/tournaments/{{ tournament.id }}" class="btn-m btn-g" style="text-decoration:none">
-                        Cancel
-                    </a>
-                    <button type="submit" class="btn-m btn-p">
-                        <i class="bi bi-save" style="margin-right:.5rem"></i>{% if edit_data %}Update{% else %}Save{% endif %} Results
-                    </button>
-                </div>
+            <div class="btn-list">
+                <a href="/tournaments/{{ tournament.id }}" class="btn">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="ti ti-device-floppy me-1"></i>{% if edit_data %}Update{% else %}Save{% endif %} Results
+                </button>
             </div>
         </div>
     </div>
 </form>
 
 <!-- Create Guest Modal -->
-<div class="modal fade" id="createGuestModal" tabindex="-1" aria-labelledby="createGuestModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content" style="background:var(--bg-surface);border:1px solid var(--b1)">
+<div class="modal modal-blur fade" id="createGuestModal" tabindex="-1" aria-labelledby="createGuestModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="createGuestModalLabel">Create Guest User</h5>
+                <h5 class="modal-title" id="createGuestModalLabel"><i class="ti ti-user-plus me-2 text-primary"></i>Create Guest User</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="createGuestForm">
-                    <div class="fg">
-                        <label for="guestName" class="fl">Guest Name</label>
-                        <input type="text" class="fi" id="guestName" required>
+                    <div class="mb-3">
+                        <label for="guestName" class="form-label required">Guest Name</label>
+                        <input type="text" class="form-control" id="guestName" required>
                     </div>
-                    <div class="fg">
-                        <label for="guestEmail" class="fl">Email (optional)</label>
-                        <input type="email" class="fi" id="guestEmail">
+                    <div class="mb-3">
+                        <label for="guestEmail" class="form-label">Email <span class="text-secondary">(optional)</span></label>
+                        <input type="email" class="form-control" id="guestEmail">
                     </div>
-                    <div class="fg">
-                        <label for="guestPhone" class="fl">Phone (optional)</label>
-                        <input type="tel" class="fi" id="guestPhone">
+                    <div class="mb-0">
+                        <label for="guestPhone" class="form-label">Phone <span class="text-secondary">(optional)</span></label>
+                        <input type="tel" class="form-control" id="guestPhone">
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn-m btn-p" onclick="createGuest()">Create Guest</button>
+                <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="createGuest()"><i class="ti ti-user-plus me-1"></i>Create Guest</button>
             </div>
         </div>
     </div>

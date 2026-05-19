@@ -4,151 +4,150 @@
 {% block title %}Edit Tournament Poll - South Austin Bass Club{% endblock %}
 
 {% block admin_content %}
-<div style="margin-bottom:1.4rem">
-    <div class="sh">
-        <div class="st"><i class="bi bi-trophy"></i> Edit Tournament Poll</div>
+<div class="page-header mb-3">
+    <div class="row align-items-center">
+        <div class="col">
+            <div class="page-pretitle">Voting</div>
+            <h2 class="page-title"><i class="ti ti-trophy me-2 text-primary"></i>Edit Tournament Poll</h2>
+        </div>
+        <div class="col-auto">
+            <a href="/polls" class="btn"><i class="ti ti-arrow-left me-1"></i>Back to Polls</a>
+        </div>
     </div>
 </div>
 
-<!-- Success/Error Messages -->
-{% if request.query_params.get('error') %}
-<div style="padding:.75rem 1rem;border-radius:var(--r-md);background:var(--err-m);color:var(--err);font-size:.85rem;margin-bottom:1rem">
-    <i class="bi bi-exclamation-triangle" style="margin-right:.4rem"></i>{{ request.query_params.get('error') }}
-</div>
-{% endif %}
+{{ alert('danger', request.query_params.get('error')) }}
+{{ alert('success', request.query_params.get('success')) }}
 
-{% if request.query_params.get('success') %}
-<div style="padding:.75rem 1rem;border-radius:var(--r-md);background:var(--ok-m);color:var(--ok);font-size:.85rem;margin-bottom:1rem">
-    <i class="bi bi-check-circle" style="margin-right:.4rem"></i>{{ request.query_params.get('success') }}
-</div>
-{% endif %}
-
-<!-- Poll Configuration Form -->
 <form method="POST" action="/admin/polls/{{ poll[0] }}/edit">
     {{ csrf_token(request) }}
-    <div class="cc" style="margin-bottom:1.2rem">
-        <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
-            <div style="font-size:.88rem;font-weight:600;color:var(--t1)"><i class="bi bi-info-circle" style="margin-right:.4rem"></i>Poll Information</div>
+    <input type="hidden" name="update_tournament_poll" value="1">
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <h3 class="card-title"><i class="ti ti-info-circle me-2"></i>Poll Information</h3>
         </div>
-        <div class="ci">
-            <div class="fg">
-                <label class="fl" for="title">Poll Title</label>
-                <input type="text" class="fi" id="title" name="title"
-                       value="{{ poll[1] }}" required>
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label required" for="title">Poll Title</label>
+                <input type="text" class="form-control" id="title" name="title" value="{{ poll[1] }}" required>
             </div>
-            <div class="fg">
-                <label class="fl" for="description">Description</label>
-                <textarea class="fi" id="description" name="description"
-                          rows="2" placeholder="Optional poll description...">{{ poll[5] if poll|length > 5 else '' }}</textarea>
+            <div class="mb-3">
+                <label class="form-label" for="description">Description</label>
+                <textarea class="form-control" id="description" name="description" rows="2" placeholder="Optional poll description...">{{ poll[5] if poll|length > 5 else '' }}</textarea>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-                <div class="fg">
-                    <label class="fl" for="starts_at">Poll Opens</label>
-                    <input type="datetime-local" class="fi" id="starts_at"
-                           name="starts_at" value="{{ (poll[4] | to_local).strftime('%Y-%m-%dT%H:%M') if poll[4] else '' }}" required>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label required" for="starts_at">
+                        <i class="ti ti-player-play me-1 text-green"></i>Poll Opens
+                    </label>
+                    <input type="datetime-local" class="form-control" id="starts_at" name="starts_at"
+                           value="{{ (poll[4] | to_local).strftime('%Y-%m-%dT%H:%M') if poll[4] else '' }}" required>
                 </div>
-                <div class="fg">
-                    <label class="fl" for="closes_at">Poll Closes</label>
-                    <input type="datetime-local" class="fi" id="closes_at"
-                           name="closes_at" value="{{ (poll[2] | to_local).strftime('%Y-%m-%dT%H:%M') if poll[2] else '' }}" required>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label required" for="closes_at">
+                        <i class="ti ti-player-stop me-1 text-orange"></i>Poll Closes
+                    </label>
+                    <input type="datetime-local" class="form-control" id="closes_at" name="closes_at"
+                           value="{{ (poll[2] | to_local).strftime('%Y-%m-%dT%H:%M') if poll[2] else '' }}" required>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="cc">
-        <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
-            <div style="font-size:.88rem;font-weight:600;color:var(--t1)"><i class="bi bi-geo-alt" style="margin-right:.4rem"></i>Available Lakes</div>
+    <div class="card mb-3">
+        <div class="card-header">
+            <h3 class="card-title"><i class="ti ti-map-pin me-2"></i>Available Lakes</h3>
         </div>
-        <div class="ci">
-            <p style="color:var(--t3);font-size:.85rem;margin-bottom:.75rem">
+        <div class="card-body">
+            <p class="text-secondary">
                 Select which lakes should be available as tournament location options.
                 All lakes are selected by default.
             </p>
-
-            <div style="margin-bottom:.75rem;display:flex;gap:.5rem">
-                <button type="button" class="btn-m btn-g" onclick="selectAll('lake_ids')" style="font-size:.8rem">
-                    <i class="bi bi-check-all" style="margin-right:.25rem"></i>Select All
+            <div class="btn-list mb-3">
+                <button type="button" class="btn btn-sm" onclick="selectAll('lake_ids')">
+                    <i class="ti ti-checks me-1"></i>Select All
                 </button>
-                <button type="button" class="btn-m btn-g" onclick="selectNone('lake_ids')" style="font-size:.8rem">
-                    <i class="bi bi-x-square" style="margin-right:.25rem"></i>Deselect All
+                <button type="button" class="btn btn-sm" onclick="selectNone('lake_ids')">
+                    <i class="ti ti-square-x me-1"></i>Deselect All
                 </button>
             </div>
-
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem">
+            <div class="row g-2">
                 {% for lake in lakes %}
-                <div>
-                    <div style="display:flex;align-items:center;gap:.5rem">
-                        <input class="lake-checkbox" type="checkbox"
-                               name="lake_ids" value="{{ lake.id }}"
+                <div class="col-sm-6 col-md-4">
+                    <label class="form-check">
+                        <input class="form-check-input lake-checkbox" type="checkbox" name="lake_ids" value="{{ lake.id }}"
                                id="lake_{{ lake.id }}"
                                {% if not selected_lake_ids or lake.id in selected_lake_ids %}checked{% endif %}>
-                        <label for="lake_{{ lake.id }}">
-                            <strong style="color:var(--t1)">{{ lake.display_name }}</strong>
-                        </label>
-                    </div>
+                        <span class="form-check-label fw-bold">{{ lake.display_name }}</span>
+                    </label>
                 </div>
                 {% endfor %}
             </div>
         </div>
-    </div>
-
-    <input type="hidden" name="update_tournament_poll" value="1">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1.4rem">
-        <a href="/polls" class="btn-m btn-g">
-            <i class="bi bi-arrow-left" style="margin-right:.25rem"></i>Back to Polls
-        </a>
-        <button type="submit" class="btn-m btn-p">
-            <i class="bi bi-save" style="margin-right:.25rem"></i>Save Tournament Poll
-        </button>
+        <div class="card-footer d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary">
+                <i class="ti ti-device-floppy me-1"></i>Save Tournament Poll
+            </button>
+        </div>
     </div>
 </form>
 
 <!-- Individual Votes Management Section -->
-<div class="cc" style="margin-top:1.4rem">
-    <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
-        <div style="font-size:.88rem;font-weight:600;color:var(--t1)"><i class="bi bi-person-gear" style="margin-right:.4rem"></i>Individual Votes Management</div>
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="ti ti-user-cog me-2"></i>Individual Votes Management</h3>
     </div>
-    <div class="ci">
+    <div class="card-body">
         {% if poll_options %}
+            {% set ns = namespace(any_votes=false) %}
             {% for option in poll_options %}
                 {% if option.votes %}
-                <div style="margin-bottom:1.2rem">
-                    <div style="color:var(--brand);border-bottom:1px solid var(--b0);padding-bottom:.5rem;margin-bottom:.5rem;font-size:.9rem;font-weight:600">
-                        {{ option.text }}
-                        <span class="tg tg-p" style="margin-left:.5rem">{{ option.votes|length }} votes</span>
+                {% set ns.any_votes = true %}
+                <div class="mb-3">
+                    <div class="d-flex align-items-center gap-2 border-bottom pb-2 mb-2">
+                        <span class="fw-bold text-primary">{{ option.text }}</span>
+                        <span class="badge bg-primary-lt">{{ option.votes|length }} votes</span>
                     </div>
 
                     {% for vote in option.votes %}
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem .75rem;border-radius:var(--r-md);margin-bottom:.35rem;background:var(--bg-elevated)">
+                    <div class="d-flex justify-content-between align-items-center p-2 mb-1 rounded bg-surface-secondary">
                         <div>
-                            <strong style="color:var(--t1)">{{ vote.voter_name }}</strong>
-                            <span style="font-size:.75rem;color:var(--t4);margin-left:.5rem">{{ vote.voted_at }}</span>
+                            <strong>{{ vote.voter_name }}</strong>
+                            <span class="text-secondary small ms-2">{{ vote.voted_at }}</span>
                             {% if vote.cast_by_admin %}
-                                <span class="tg tg-w" style="margin-left:.5rem;font-size:.7rem" title="This vote was cast by an admin on behalf of this member">
-                                    <i class="bi bi-person-badge"></i> Cast by: {{ vote.admin_name }}
+                                <span class="badge bg-orange-lt ms-2" title="This vote was cast by an admin on behalf of this member">
+                                    <i class="ti ti-id-badge-2 me-1"></i>Cast by: {{ vote.admin_name }}
                                 </span>
                             {% endif %}
-                            <br>
-                            <span class="tg tg-g" style="margin-top:.25rem;display:inline-block">
-                                <i class="bi bi-check-circle" style="margin-right:.25rem"></i>{{ option.text }}
-                            </span>
+                            <div class="mt-1">
+                                <span class="badge bg-green-lt">
+                                    <i class="ti ti-circle-check me-1"></i>{{ option.text }}
+                                </span>
+                            </div>
                         </div>
-                        <button class="btn-icon btn-icon-danger"
+                        <button class="btn btn-icon btn-ghost-danger"
                                 onclick="if(confirm('Delete vote by {{ vote.voter_name }}?')) deleteVote({{ vote.vote_id }})"
-                                title="Delete this vote"
-                                aria-label="Delete vote">
-                            <i class="bi bi-trash"></i>
+                                title="Delete this vote" aria-label="Delete vote">
+                            <i class="ti ti-trash"></i>
                         </button>
                     </div>
                     {% endfor %}
                 </div>
                 {% endif %}
             {% endfor %}
+            {% if not ns.any_votes %}
+            <div class="empty">
+                <div class="empty-icon"><i class="ti ti-mood-empty"></i></div>
+                <p class="empty-title">No votes yet</p>
+                <p class="empty-subtitle text-secondary">No votes have been cast for this poll yet.</p>
+            </div>
+            {% endif %}
         {% else %}
-            <div style="padding:.75rem 1rem;border-radius:var(--r-md);background:var(--info-m);color:var(--info);font-size:.85rem;margin-bottom:1rem">
-                <i class="bi bi-info-circle" style="margin-right:.4rem"></i>
-                No votes have been cast for this poll yet.
+            <div class="empty">
+                <div class="empty-icon"><i class="ti ti-mood-empty"></i></div>
+                <p class="empty-title">No votes yet</p>
+                <p class="empty-subtitle text-secondary">No votes have been cast for this poll yet.</p>
             </div>
         {% endif %}
     </div>

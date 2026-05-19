@@ -1,143 +1,185 @@
 {% extends "base.html" %}
 {% block title %}Calendar - South Austin Bass Club{% endblock %}
-{% block content %}
 
-<!-- Data passed to JavaScript -->
+{% block extra_css %}
+<style>
+.cal-tab { display: none; }
+.cal-tab.active { display: block; }
+.cal-month-table { table-layout: fixed; }
+.cal-month-table th {
+    font-size: .6875rem; font-weight: 600; text-align: center;
+    color: var(--tblr-secondary); padding: .25rem 0; border: 0;
+}
+.cal-month-table td {
+    text-align: center; font-size: .8125rem; padding: .3rem 0;
+    border-radius: var(--tblr-border-radius);
+    border: 1px solid transparent;
+}
+.cal-month-table td.ev {
+    cursor: pointer; font-weight: 700; color: #fff;
+    transition: filter .12s ease;
+}
+.cal-month-table td.ev:hover { filter: brightness(1.18); }
+.cal-month-table td.ev-t { background: var(--tblr-primary); }
+.cal-month-table td.ev-c { background: var(--tblr-green); }
+.cal-month-table td.ev-o { background: var(--tblr-yellow); color: #1a1d21; }
+.cal-month-table td.ev-h { background: var(--tblr-red); }
+.cal-legend-dot {
+    display: inline-block; width: .7rem; height: .7rem;
+    border-radius: 3px; vertical-align: middle; margin-right: .35rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{# Data passed to JavaScript — calendar.js reads these attributes #}
 <div id="calendar-data"
      data-current-events="{{ current_event_details_json | e }}"
      data-next-events="{{ next_event_details_json | e }}"
      data-current-year="{{ current_year }}"></div>
 
-<div class="sh">
-    <div class="st"><i class="bi bi-calendar3"></i> Club Calendar</div>
-    <div class="pt" style="margin-bottom:0" id="yearTabs">
-        <button class="ptb on" onclick="switchCalTab('current-year', this)">{{ current_year }}</button>
-        <button class="ptb" onclick="switchCalTab('next-year', this)">{{ next_year }}</button>
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <div class="page-pretitle">Schedule</div>
+            <h2 class="page-title"><i class="ti ti-calendar-event me-2"></i>Club Calendar</h2>
+        </div>
+        <div class="col-auto">
+            <ul class="nav nav-pills" id="yearTabs">
+                <li class="nav-item">
+                    <button class="nav-link active" onclick="switchCalTab('current-year', this)">{{ current_year }}</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" onclick="switchCalTab('next-year', this)">{{ next_year }}</button>
+                </li>
+            </ul>
+        </div>
     </div>
 </div>
 
-<!-- Current Year -->
+{% macro legend(event_types_present) %}
+<div class="card mt-1">
+    <div class="card-body py-2 d-flex flex-wrap gap-4">
+        {% if 'sabc_tournament' in event_types_present %}
+        <span><span class="cal-legend-dot" style="background:var(--tblr-primary)"></span><span class="small">SABC Tournaments</span></span>
+        {% endif %}
+        {% if 'other_tournament' in event_types_present %}
+        <span><span class="cal-legend-dot" style="background:var(--tblr-yellow)"></span><span class="small">Other Tournaments</span></span>
+        {% endif %}
+        {% if 'holiday' in event_types_present %}
+        <span><span class="cal-legend-dot" style="background:var(--tblr-red)"></span><span class="small">Holidays</span></span>
+        {% endif %}
+        {% if 'club_event' in event_types_present %}
+        <span><span class="cal-legend-dot" style="background:var(--tblr-green)"></span><span class="small">Club Events</span></span>
+        {% endif %}
+        <span class="text-secondary small ms-auto"><i class="ti ti-click me-1"></i>Click a highlighted day for details</span>
+    </div>
+</div>
+{% endmacro %}
+
+{# ===== Current Year ===== #}
 <div class="cal-tab active" id="current-year">
-    <div class="cal-grid">
+    <div class="row row-cards">
         {% for m in current_calendar_data %}
         {% set month_num = loop.index %}
-        <div class="cal-mo">
-            <div class="cal-mh">{{ m[0] }}</div>
-            <table class="cal-tb">
-                <thead><tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr></thead>
-                <tbody>
-                    {% for w in m[1] %}
-                    <tr>
-                        {% for d in w %}
-                        <td class="{% if '†' in d %}ev ev-t{% elif '§' in d %}ev ev-c{% elif '‡' in d %}ev ev-o{% elif '*' in d %}ev ev-h{% endif %}"
-                            {% if '†' in d or '§' in d or '‡' in d or '*' in d %}
-                            data-year="{{ current_year }}"
-                            data-month="{{ month_num }}"
-                            data-day="{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}"
-                            onclick="showEventDetails(this)"
-                            {% endif %}>
-                            {% if d %}{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}{% endif %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+            <div class="card h-100">
+                <div class="card-header py-2">
+                    <h3 class="card-title">{{ m[0] }}</h3>
+                </div>
+                <div class="card-body p-2">
+                    <table class="table cal-month-table mb-0">
+                        <thead><tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr></thead>
+                        <tbody>
+                            {% for w in m[1] %}
+                            <tr>
+                                {% for d in w %}
+                                <td class="{% if '†' in d %}ev ev-t{% elif '§' in d %}ev ev-c{% elif '‡' in d %}ev ev-o{% elif '*' in d %}ev ev-h{% endif %}"
+                                    {% if '†' in d or '§' in d or '‡' in d or '*' in d %}
+                                    data-year="{{ current_year }}"
+                                    data-month="{{ month_num }}"
+                                    data-day="{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}"
+                                    onclick="showEventDetails(this)"
+                                    {% endif %}>
+                                    {% if d %}{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}{% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
         {% endfor %}
     </div>
-
-    <div class="cal-legend">
-        {% if 'sabc_tournament' in event_types_present %}
-        <span class="cal-leg-item"><span class="cal-leg-dot" style="background:var(--brand)"></span> SABC Tournaments</span>
-        {% endif %}
-        {% if 'other_tournament' in event_types_present %}
-        <span class="cal-leg-item"><span class="cal-leg-dot" style="background:var(--warn)"></span> Other Tournaments</span>
-        {% endif %}
-        {% if 'holiday' in event_types_present %}
-        <span class="cal-leg-item"><span class="cal-leg-dot" style="background:var(--err)"></span> Holidays</span>
-        {% endif %}
-        {% if 'club_event' in event_types_present %}
-        <span class="cal-leg-item"><span class="cal-leg-dot" style="background:var(--ok)"></span> Club Events</span>
-        {% endif %}
-    </div>
+    {{ legend(event_types_present) }}
 </div>
 
-<!-- Next Year -->
+{# ===== Next Year ===== #}
 <div class="cal-tab" id="next-year">
-    <div class="cal-grid">
+    <div class="row row-cards">
         {% for m in next_calendar_data %}
         {% set month_num = loop.index %}
-        <div class="cal-mo">
-            <div class="cal-mh">{{ m[0] }}</div>
-            <table class="cal-tb">
-                <thead><tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr></thead>
-                <tbody>
-                    {% for w in m[1] %}
-                    <tr>
-                        {% for d in w %}
-                        <td class="{% if '†' in d %}ev ev-t{% elif '§' in d %}ev ev-c{% elif '‡' in d %}ev ev-o{% elif '*' in d %}ev ev-h{% endif %}"
-                            {% if '†' in d or '§' in d or '‡' in d or '*' in d %}
-                            data-year="{{ next_year }}"
-                            data-month="{{ month_num }}"
-                            data-day="{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}"
-                            onclick="showEventDetails(this)"
-                            {% endif %}>
-                            {% if d %}{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}{% endif %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
+            <div class="card h-100">
+                <div class="card-header py-2">
+                    <h3 class="card-title">{{ m[0] }}</h3>
+                </div>
+                <div class="card-body p-2">
+                    <table class="table cal-month-table mb-0">
+                        <thead><tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr></thead>
+                        <tbody>
+                            {% for w in m[1] %}
+                            <tr>
+                                {% for d in w %}
+                                <td class="{% if '†' in d %}ev ev-t{% elif '§' in d %}ev ev-c{% elif '‡' in d %}ev ev-o{% elif '*' in d %}ev ev-h{% endif %}"
+                                    {% if '†' in d or '§' in d or '‡' in d or '*' in d %}
+                                    data-year="{{ next_year }}"
+                                    data-month="{{ month_num }}"
+                                    data-day="{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}"
+                                    onclick="showEventDetails(this)"
+                                    {% endif %}>
+                                    {% if d %}{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}{% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
         {% endfor %}
     </div>
-
-    <div class="cal-legend">
-        {% if 'sabc_tournament' in event_types_present %}
-        <span class="cal-leg-item"><span class="cal-leg-dot" style="background:var(--brand)"></span> SABC Tournaments</span>
-        {% endif %}
-        {% if 'other_tournament' in event_types_present %}
-        <span class="cal-leg-item"><span class="cal-leg-dot" style="background:var(--warn)"></span> Other Tournaments</span>
-        {% endif %}
-        {% if 'holiday' in event_types_present %}
-        <span class="cal-leg-item"><span class="cal-leg-dot" style="background:var(--err)"></span> Holidays</span>
-        {% endif %}
-        {% if 'club_event' in event_types_present %}
-        <span class="cal-leg-item"><span class="cal-leg-dot" style="background:var(--ok)"></span> Club Events</span>
-        {% endif %}
-    </div>
+    {{ legend(event_types_present) }}
 </div>
 
-<!-- Event Details Modal -->
-<div class="modal fade" id="eventModal" tabindex="-1">
+{# ===== Event Details Modal ===== #}
+<div class="modal modal-blur fade" id="eventModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="background:var(--bg-surface);border:1px solid var(--b1);border-radius:var(--r-lg)">
-            <div class="modal-header" style="border-bottom:1px solid var(--b0)">
-                <h5 class="modal-title" id="eventModalTitle" style="font-size:.95rem;font-weight:600">Event Details</h5>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventModalTitle">Event Details</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="eventModalBody"></div>
-            <div class="modal-footer" style="border-top:1px solid var(--b0)">
-                <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Close</button>
+            <div class="modal-footer">
+                <button type="button" class="btn" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
-<style>
-.cal-tab { display: none; }
-.cal-tab.active { display: block; }
-</style>
+{% block extra_js %}
 <script>
 function switchCalTab(paneId, btn) {
     document.querySelectorAll('.cal-tab').forEach(function(p) { p.classList.remove('active'); });
     document.getElementById(paneId).classList.add('active');
-    document.querySelectorAll('#yearTabs .ptb').forEach(function(b) { b.classList.remove('on'); });
-    btn.classList.add('on');
+    document.querySelectorAll('#yearTabs .nav-link').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
 }
 </script>
 <script src="/static/calendar.js"></script>
-
 {% endblock %}
