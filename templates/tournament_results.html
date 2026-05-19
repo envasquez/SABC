@@ -2,209 +2,230 @@
 {% block title %}{{ tournament.lake_name | title if tournament.lake_name else (tournament.event_name | title if tournament.event_name else "Tournament") }} {{ tournament.event_date | date_format }} Results{% endblock %}
 
 {% block content %}
-<div style="margin-bottom:1.4rem">
-    <div style="font-size:.86rem;color:var(--t3);margin-bottom:.5rem">{{ tournament.event_date | date_format }}</div>
-    <div class="sh">
-        <h1 class="st">{{ tournament.lake_name | upper if tournament.lake_name else "TOURNAMENT" }} &mdash; Results</h1>
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <div class="page-pretitle"><i class="ti ti-calendar me-1"></i>{{ tournament[2] | date_format }}</div>
+            <h2 class="page-title"><i class="ti ti-fish me-2"></i>{{ tournament[5] | title if tournament[5] else "Tournament" }} &mdash; Results</h2>
+        </div>
         {% if user and user.is_admin %}
-        <a href="/admin/tournaments/{{ tournament.id }}/enter-results" class="btn-m btn-s" style="text-decoration:none">
-            <i class="bi bi-plus-circle"></i> {{ "Add More Results" if team_results or individual_results else "Add Results" }}
-        </a>
+        <div class="col-auto">
+            <a href="/admin/tournaments/{{ tournament[0] }}/enter-results" class="btn btn-primary">
+                <i class="ti ti-circle-plus me-1"></i>{{ "Add More Results" if team_results or individual_results else "Add Results" }}
+            </a>
+        </div>
         {% endif %}
     </div>
 </div>
 
-<!-- Tournament Information Card -->
-<div class="cc" style="margin-bottom:1.4rem">
-    <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
-        <div style="font-size:.88rem;font-weight:600;color:var(--info)"><i class="bi bi-info-circle" style="margin-right:.35rem"></i>Tournament Details</div>
-    </div>
-    <div class="ci">
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem">
-            <div>
-                <div style="font-size:.7rem;color:var(--t3);text-transform:uppercase;letter-spacing:.04em">Date</div>
-                <div style="font-size:.88rem;font-weight:600;color:var(--t1)">{{ tournament.event_date | date_format }}</div>
+{# ===== Tournament Details ===== #}
+<div class="card mb-3">
+    <div class="card-header"><h3 class="card-title"><i class="ti ti-info-circle me-2 text-azure"></i>Tournament Details</h3></div>
+    <div class="card-body">
+        <div class="datagrid">
+            <div class="datagrid-item">
+                <div class="datagrid-title">Date</div>
+                <div class="datagrid-content">{{ tournament[2] | date_format }}</div>
             </div>
-            <div>
-                <div style="font-size:.7rem;color:var(--t3);text-transform:uppercase;letter-spacing:.04em">Entry Fee</div>
-                <div style="font-size:.88rem;font-weight:600;color:var(--t1)">${{ "%.2f"|format(tournament.entry_fee or 50.00) }}/{% if tournament.aoy_points %}angler{% else %}boat{% endif %}</div>
+            <div class="datagrid-item">
+                <div class="datagrid-title">Entry Fee</div>
+                <div class="datagrid-content">${{ "%.2f"|format(tournament[7] or 50.00) }}/{% if tournament[11] %}angler{% else %}boat{% endif %}</div>
             </div>
-            <div>
-                <div style="font-size:.7rem;color:var(--t3);text-transform:uppercase;letter-spacing:.04em">Tournament Format</div>
-                <div style="font-size:.88rem;font-weight:600;color:var(--t1)">{% if tournament.aoy_points %}Individual{% else %}Team{% endif %}</div>
+            <div class="datagrid-item">
+                <div class="datagrid-title">Format</div>
+                <div class="datagrid-content">{% if tournament[11] %}Individual{% else %}Team{% endif %}</div>
             </div>
-            <div>
-                <div style="font-size:.7rem;color:var(--t3);text-transform:uppercase;letter-spacing:.04em">Limit</div>
-                <div style="font-size:.88rem;font-weight:600;color:var(--t1)">{{ tournament.fish_limit or 5 }} fish/{% if tournament.aoy_points %}angler{% else %}boat{% endif %}</div>
+            <div class="datagrid-item">
+                <div class="datagrid-title">Limit</div>
+                <div class="datagrid-content">{{ tournament[8] or 5 }} fish/{% if tournament[11] %}angler{% else %}boat{% endif %}</div>
             </div>
-            <div>
-                <div style="font-size:.7rem;color:var(--t3);text-transform:uppercase;letter-spacing:.04em">Time</div>
-                <div style="font-size:.88rem;font-weight:600;color:var(--t1)">{% if tournament.start_time and tournament.end_time %}{{ tournament.start_time.strftime('%-I:%M %p') }} &ndash; {{ tournament.end_time.strftime('%-I:%M %p') }}{% elif tournament.start_time %}{{ tournament.start_time.strftime('%-I:%M %p') }}{% else %}&mdash;{% endif %}</div>
+            <div class="datagrid-item">
+                <div class="datagrid-title">Time</div>
+                <div class="datagrid-content">{% if tournament[12] and tournament[13] %}{{ tournament[12].strftime('%-I:%M %p') }} &ndash; {{ tournament[13].strftime('%-I:%M %p') }}{% elif tournament[12] %}{{ tournament[12].strftime('%-I:%M %p') }}{% else %}&mdash;{% endif %}</div>
             </div>
-            <div>
-                <div style="font-size:.7rem;color:var(--t3);text-transform:uppercase;letter-spacing:.04em">Location</div>
-                <div style="font-size:.88rem;font-weight:600;color:var(--t1)">{{ tournament.ramp_name | title if tournament.ramp_name else "" }}</div>
+            <div class="datagrid-item">
+                <div class="datagrid-title">Location</div>
+                <div class="datagrid-content">{{ tournament[6] | title if tournament[6] else "—" }}</div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Tournament Statistics Card -->
-<div class="cc" style="margin-bottom:1.4rem">
-    <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
-        <div style="font-size:.88rem;font-weight:600;color:var(--brand)"><i class="bi bi-graph-up" style="margin-right:.35rem"></i>Tournament Statistics</div>
-    </div>
-    <div class="ci">
-        <div class="grid-stats">
-            <div style="text-align:center;padding:.65rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.2rem;font-weight:800;color:var(--t1)">{{ tournament_stats[0] }}</div>
-                <div style="font-size:.7rem;color:var(--t3)">Anglers</div>
+{# ===== Tournament Statistics ===== #}
+<div class="card mb-3">
+    <div class="card-header"><h3 class="card-title"><i class="ti ti-chart-bar me-2 text-primary"></i>Tournament Statistics</h3></div>
+    <div class="card-body">
+        <div class="row row-cards g-2">
+            <div class="col-6 col-sm-4 col-lg-3">
+                <div class="card card-sm"><div class="card-body text-center py-3">
+                    <i class="ti ti-users icon text-secondary mb-1"></i>
+                    <div class="h2 mb-0">{{ tournament_stats[0] }}</div>
+                    <div class="text-secondary small">Anglers</div>
+                </div></div>
             </div>
-            <div style="text-align:center;padding:.65rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.2rem;font-weight:800;color:var(--t1)">{{ tournament_stats[1] }}</div>
-                <div style="font-size:.7rem;color:var(--t3)">Total Fish</div>
+            <div class="col-6 col-sm-4 col-lg-3">
+                <div class="card card-sm"><div class="card-body text-center py-3">
+                    <i class="ti ti-fish icon text-azure mb-1"></i>
+                    <div class="h2 mb-0">{{ tournament_stats[1] }}</div>
+                    <div class="text-secondary small">Total Fish</div>
+                </div></div>
             </div>
-            <div style="text-align:center;padding:.65rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.2rem;font-weight:800;color:var(--t1)">{{ "%.2f"|format(tournament_stats[2] or 0) }} <span style="font-size:.7rem">lbs</span></div>
-                <div style="font-size:.7rem;color:var(--t3)">Total Weight</div>
+            <div class="col-6 col-sm-4 col-lg-3">
+                <div class="card card-sm"><div class="card-body text-center py-3">
+                    <i class="ti ti-scale icon text-green mb-1"></i>
+                    <div class="h2 mb-0">{{ "%.2f"|format(tournament_stats[2] or 0) }}<span class="fs-5 text-secondary"> lbs</span></div>
+                    <div class="text-secondary small">Total Weight</div>
+                </div></div>
             </div>
-            <div style="text-align:center;padding:.65rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.2rem;font-weight:800;color:var(--t1)">{{ tournament_stats[3] }}</div>
-                <div style="font-size:.7rem;color:var(--t3)">Limits</div>
+            <div class="col-6 col-sm-4 col-lg-3">
+                <div class="card card-sm"><div class="card-body text-center py-3">
+                    <i class="ti ti-checks icon text-green mb-1"></i>
+                    <div class="h2 mb-0">{{ tournament_stats[3] }}</div>
+                    <div class="text-secondary small">Limits</div>
+                </div></div>
             </div>
-            <div style="text-align:center;padding:.65rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.2rem;font-weight:800;color:var(--t1)">{{ tournament_stats[4] }}</div>
-                <div style="font-size:.7rem;color:var(--t3)">Zeros</div>
+            <div class="col-6 col-sm-4 col-lg-3">
+                <div class="card card-sm"><div class="card-body text-center py-3">
+                    <i class="ti ti-circle-x icon text-red mb-1"></i>
+                    <div class="h2 mb-0">{{ tournament_stats[4] }}</div>
+                    <div class="text-secondary small">Zeros</div>
+                </div></div>
             </div>
-            <div style="text-align:center;padding:.65rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.2rem;font-weight:800;color:var(--t1)">{{ tournament_stats[5] }}</div>
-                <div style="font-size:.7rem;color:var(--t3)">Buy-ins</div>
+            <div class="col-6 col-sm-4 col-lg-3">
+                <div class="card card-sm"><div class="card-body text-center py-3">
+                    <i class="ti ti-coin icon text-yellow mb-1"></i>
+                    <div class="h2 mb-0">{{ tournament_stats[5] }}</div>
+                    <div class="text-secondary small">Buy-ins</div>
+                </div></div>
             </div>
-            <div style="text-align:center;padding:.65rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.2rem;font-weight:800;color:var(--t1)">
-                    {% if tournament_stats[6] and tournament_stats[6] > 0 %}
-                        {{ "%.2f"|format(tournament_stats[6]) }} <span style="font-size:.7rem">lbs</span>
-                    {% else %}
-                        --
-                    {% endif %}
-                </div>
-                <div style="font-size:.7rem;color:var(--t3)">
-                    Big Bass
-                    {% if payouts.big_bass_caught_by_guest %}
-                        <span class="tg tg-i" style="font-size:.6rem;margin-left:.15rem">Guest</span>
-                    {% endif %}
-                </div>
+            <div class="col-6 col-sm-4 col-lg-3">
+                <div class="card card-sm"><div class="card-body text-center py-3">
+                    <i class="ti ti-star-filled icon text-yellow mb-1"></i>
+                    <div class="h2 mb-0">
+                        {% if tournament_stats[6] and tournament_stats[6] > 0 %}{{ "%.2f"|format(tournament_stats[6]) }}<span class="fs-5 text-secondary"> lbs</span>{% else %}&mdash;{% endif %}
+                    </div>
+                    <div class="text-secondary small">
+                        Big Bass
+                        {% if payouts.big_bass_caught_by_guest %}<span class="badge bg-azure-lt ms-1">Guest</span>{% endif %}
+                    </div>
+                </div></div>
             </div>
-            <div style="text-align:center;padding:.65rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.2rem;font-weight:800;color:var(--t1)">{{ "%.2f"|format(tournament_stats[7] or 0) }} <span style="font-size:.7rem">lbs</span></div>
-                <div style="font-size:.7rem;color:var(--t3)">Heavy Stringer</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Tournament Payouts Card -->
-<div class="cc" style="margin-bottom:1.4rem">
-    <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
-        <div style="font-size:.88rem;font-weight:600;color:var(--ok)"><i class="bi bi-cash-stack" style="margin-right:.35rem"></i>Tournament Payouts</div>
-    </div>
-    <div class="ci">
-        <div class="grid-payouts">
-            <div style="text-align:center;padding:.65rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.1rem;font-weight:800;color:var(--t1)">${{ "%.2f"|format(payouts.total_entry) }}</div>
-                <div style="font-size:.7rem;color:var(--t3)">Total Entries</div>
-            </div>
-            <div style="text-align:center;padding:.65rem;border-radius:var(--r-md);background:color-mix(in srgb,#ffd700 12%,transparent)">
-                <div style="font-size:1.1rem;font-weight:800;color:#daa520">${{ "%.2f"|format(payouts.first_place) }}</div>
-                <div style="font-size:.7rem;color:#daa520">1st Place</div>
-            </div>
-            <div style="text-align:center;padding:.65rem;border-radius:var(--r-md);background:color-mix(in srgb,#c0c0c0 12%,transparent)">
-                <div style="font-size:1.1rem;font-weight:800;color:#a0a0a0">${{ "%.2f"|format(payouts.second_place) }}</div>
-                <div style="font-size:.7rem;color:#a0a0a0">2nd Place</div>
-            </div>
-            <div style="text-align:center;padding:.65rem;border-radius:var(--r-md);background:color-mix(in srgb,#cd7f32 12%,transparent)">
-                <div style="font-size:1.1rem;font-weight:800;color:#cd7f32">${{ "%.2f"|format(payouts.third_place) }}</div>
-                <div style="font-size:.7rem;color:#cd7f32">3rd Place</div>
-            </div>
-            <div style="text-align:center;padding:.65rem;border-radius:var(--r-md);background:color-mix(in srgb,var(--ok) 12%,transparent)">
-                <div style="font-size:1.1rem;font-weight:800;color:var(--ok)">
-                    ${{ "%.2f"|format(payouts.big_bass_total) }}
-                    {% if payouts.big_bass_won %}
-                        <i class="bi bi-check-circle-fill" style="color:var(--warn);font-size:.85rem" title="Won!"></i>
-                    {% endif %}
-                </div>
-                <div style="font-size:.7rem;color:var(--ok)">
-                    Big Bass Pot
-                    {% if payouts.big_bass_won %}
-                        <span class="tg tg-w" style="font-size:.55rem;margin-left:.15rem" title="Big bass was caught and pot was paid out"><i class="bi bi-trophy-fill"></i> Paid</span>
-                    {% else %}
-                        <span class="tg tg-d" style="font-size:.55rem;margin-left:.15rem" title="No member caught bass > 5lbs - pot rolls over"><i class="bi bi-arrow-repeat"></i> Rolls Over</span>
-                    {% endif %}
-                </div>
+            <div class="col-6 col-sm-4 col-lg-3">
+                <div class="card card-sm"><div class="card-body text-center py-3">
+                    <i class="ti ti-trophy icon text-orange mb-1"></i>
+                    <div class="h2 mb-0">{{ "%.2f"|format(tournament_stats[7] or 0) }}<span class="fs-5 text-secondary"> lbs</span></div>
+                    <div class="text-secondary small">Heavy Stringer</div>
+                </div></div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Team Results Card -->
+{# ===== Tournament Payouts ===== #}
+<div class="card mb-3">
+    <div class="card-header"><h3 class="card-title"><i class="ti ti-cash me-2 text-green"></i>Tournament Payouts</h3></div>
+    <div class="card-body">
+        <div class="row row-cards g-2">
+            <div class="col-6 col-md">
+                <div class="card card-sm"><div class="card-body text-center py-3">
+                    <div class="text-secondary small">Total Entries</div>
+                    <div class="h2 mb-0">${{ "%.2f"|format(payouts.total_entry) }}</div>
+                </div></div>
+            </div>
+            <div class="col-6 col-md">
+                <div class="card card-sm" style="border-top:2px solid #f7c948"><div class="card-body text-center py-3">
+                    <div class="text-yellow small">1st Place</div>
+                    <div class="h2 mb-0 text-yellow">${{ "%.2f"|format(payouts.first_place) }}</div>
+                </div></div>
+            </div>
+            <div class="col-6 col-md">
+                <div class="card card-sm" style="border-top:2px solid #c2cdda"><div class="card-body text-center py-3">
+                    <div class="text-secondary small">2nd Place</div>
+                    <div class="h2 mb-0 text-secondary">${{ "%.2f"|format(payouts.second_place) }}</div>
+                </div></div>
+            </div>
+            <div class="col-6 col-md">
+                <div class="card card-sm" style="border-top:2px solid #d08a4f"><div class="card-body text-center py-3">
+                    <div class="text-orange small">3rd Place</div>
+                    <div class="h2 mb-0 text-orange">${{ "%.2f"|format(payouts.third_place) }}</div>
+                </div></div>
+            </div>
+            <div class="col-6 col-md">
+                <div class="card card-sm" style="border-top:2px solid var(--tblr-green)"><div class="card-body text-center py-3">
+                    <div class="text-green small">
+                        Big Bass Pot
+                        {% if payouts.big_bass_won %}
+                            <span class="badge bg-green ms-1" title="Big bass was caught and pot was paid out"><i class="ti ti-trophy"></i> Paid</span>
+                        {% else %}
+                            <span class="badge bg-secondary ms-1" title="No member caught bass > 5lbs - pot rolls over"><i class="ti ti-rotate"></i> Rolls Over</span>
+                        {% endif %}
+                    </div>
+                    <div class="h2 mb-0 text-green">
+                        ${{ "%.2f"|format(payouts.big_bass_total) }}
+                        {% if payouts.big_bass_won %}<i class="ti ti-circle-check-filled text-yellow fs-4" title="Won!"></i>{% endif %}
+                    </div>
+                </div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ===== Team Results ===== #}
 {% if team_results %}
-<div class="cc" style="margin-bottom:1.4rem">
-    <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
-        <div style="font-size:.88rem;font-weight:600;color:var(--ok)"><i class="bi bi-people" style="margin-right:.35rem"></i>Team Results</div>
-    </div>
-    <div class="ci" style="padding:0">
-        <table class="mt">
-            <thead><tr>
-                <th>Place</th>
-                <th>Team name</th>
-                <th>Fish</th>
-                <th>Total weight</th>
-                {% if user and user.is_admin %}<th style="text-align:right">Actions</th>{% endif %}
-            </tr></thead>
+<div class="card mb-3">
+    <div class="card-header"><h3 class="card-title"><i class="ti ti-users me-2 text-green"></i>Team Results</h3></div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th class="w-1">Place</th>
+                    <th>Team Name</th>
+                    <th class="text-center">Fish</th>
+                    <th class="text-end">Total Weight</th>
+                    {% if user and user.is_admin %}<th class="text-end">Actions</th>{% endif %}
+                </tr>
+            </thead>
             <tbody>
                 {% for result in team_results %}
-                <tr {% if loop.index <= 3 %}style="background:color-mix(in srgb,var(--ok) 8%,transparent)"{% endif %}>
-                    <td><span class="rb {% if loop.index == 1 %}rb-1{% elif loop.index == 2 %}rb-2{% elif loop.index == 3 %}rb-3{% else %}rb-n{% endif %}">{{ result[0] }}</span></td>
+                <tr>
+                    <td>
+                        {% if loop.index == 1 %}<span class="badge bg-yellow text-dark">{{ result[0] }}</span>
+                        {% elif loop.index == 2 %}<span class="badge bg-secondary">{{ result[0] }}</span>
+                        {% elif loop.index == 3 %}<span class="badge bg-orange">{{ result[0] }}</span>
+                        {% else %}<span class="badge bg-secondary-lt">{{ result[0] }}</span>{% endif %}
+                    </td>
                     <td>
                         {% if result[7] == 1 %}
-                            {{ result[1] }}
-                            <span class="tg tg-p" style="margin-left:.25rem">Solo</span>
-                            {% if result[4] == 0 %}
-                                <span class="tg tg-g" style="margin-left:.15rem">Guest</span>
-                            {% endif %}
+                            <span class="fw-bold">{{ result[1] }}</span>
+                            <span class="badge bg-primary-lt ms-1">Solo</span>
+                            {% if result[4] == 0 %}<span class="badge bg-azure-lt ms-1">Guest</span>{% endif %}
                         {% elif ' / ' in result[1] %}
                             {% set names = result[1].split(' / ') %}
-                            {{ names[0] }}
-                            {% if result[4] == 0 %}
-                                <span class="tg tg-g" style="margin-left:.15rem">Guest</span>
-                            {% endif %}
-                            /
-                            {{ names[1] }}
-                            {% if result[5] == 0 %}
-                                <span class="tg tg-g" style="margin-left:.15rem">Guest</span>
-                            {% endif %}
+                            <span class="fw-bold">{{ names[0] }}</span>
+                            {% if result[4] == 0 %}<span class="badge bg-azure-lt ms-1">Guest</span>{% endif %}
+                            <span class="text-secondary mx-1">/</span>
+                            <span class="fw-bold">{{ names[1] }}</span>
+                            {% if result[5] == 0 %}<span class="badge bg-azure-lt ms-1">Guest</span>{% endif %}
                         {% else %}
-                            {{ result[1] }}
-                            {% if result[4] == 0 %}
-                                <span class="tg tg-g" style="margin-left:.15rem">Guest</span>
-                            {% endif %}
+                            <span class="fw-bold">{{ result[1] }}</span>
+                            {% if result[4] == 0 %}<span class="badge bg-azure-lt ms-1">Guest</span>{% endif %}
                         {% endif %}
                     </td>
-                    <td>{{ result[2] }}</td>
-                    <td>{{ "%.2f"|format(result[3]) }}lbs</td>
+                    <td class="text-center">{{ result[2] }}</td>
+                    <td class="text-end"><span class="badge bg-green-lt">{{ "%.2f"|format(result[3]) }} lbs</span></td>
                     {% if user and user.is_admin %}
-                    <td style="text-align:right">
-                        <div style="display:flex;gap:.25rem;justify-content:flex-end">
-                            <a href="/admin/tournaments/{{ tournament.id }}/enter-results?edit_team_result={{ result[6] }}" class="btn-icon btn-icon-ghost" title="Edit team result" style="text-decoration:none" aria-label="Edit team result">
-                                <i class="bi bi-pencil"></i>
+                    <td class="text-end">
+                        <div class="btn-list justify-content-end flex-nowrap">
+                            <a href="/admin/tournaments/{{ tournament[0] }}/enter-results?edit_team_result={{ result[6] }}" class="btn btn-icon btn-ghost-secondary btn-sm" title="Edit team result" aria-label="Edit team result">
+                                <i class="ti ti-pencil"></i>
                             </a>
-                            <button type="button" class="btn-icon btn-icon-danger js-delete-team-result"
-                                    data-tournament-id="{{ tournament.id }}"
+                            <button type="button" class="btn btn-icon btn-ghost-danger btn-sm js-delete-team-result"
+                                    data-tournament-id="{{ tournament[0] }}"
                                     data-team-result-id="{{ result[6] }}"
                                     data-team-name="{{ result[1] }}"
                                     data-is-solo="{{ result[7] }}"
                                     title="Delete team result" aria-label="Delete team result">
-                                <i class="bi bi-trash"></i>
+                                <i class="ti ti-trash"></i>
                             </button>
                         </div>
                     </td>
@@ -217,51 +238,43 @@
 </div>
 {% endif %}
 
-<!-- Individual Results Card - Only show for AoY tournaments -->
-{% if tournament.aoy_points %}
-<div class="cc" style="margin-bottom:1.4rem">
-    <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
-        <div style="font-size:.88rem;font-weight:600;color:var(--warn)"><i class="bi bi-person" style="margin-right:.35rem"></i>Individual Results</div>
-    </div>
-    <div class="ci" style="padding:0">
-        <table class="mt">
-            <thead><tr>
-                <th>Place</th>
-                <th>Name</th>
-                <th>Fish</th>
-                <th>Total weight</th>
-                <th>Points</th>
-                <th>Big bass</th>
-                {% if user and user.is_admin %}<th style="text-align:right">Actions</th>{% endif %}
-            </tr></thead>
+{# ===== Individual Results — Only for AoY tournaments ===== #}
+{% if tournament[11] %}
+<div class="card mb-3">
+    <div class="card-header"><h3 class="card-title"><i class="ti ti-user me-2 text-yellow"></i>Individual Results</h3></div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th class="w-1">Place</th>
+                    <th>Name</th>
+                    <th class="text-center">Fish</th>
+                    <th class="text-end">Total Weight</th>
+                    <th class="text-end">Points</th>
+                    <th class="text-end">Big Bass</th>
+                    {% if user and user.is_admin %}<th class="text-end">Actions</th>{% endif %}
+                </tr>
+            </thead>
             <tbody>
                 {% for result in individual_results %}
                 <tr>
-                    <td>{{ result[0] }}</td>
+                    <td><span class="badge bg-secondary-lt">{{ result[0] }}</span></td>
                     <td>
-                        {{ result[1] }}
-                        {% if result[6] == 0 %}
-                            <span class="tg tg-g" style="margin-left:.25rem">Guest</span>
-                        {% endif %}
+                        <span class="fw-bold">{{ result[1] }}</span>
+                        {% if result[6] == 0 %}<span class="badge bg-azure-lt ms-1">Guest</span>{% endif %}
                     </td>
-                    <td>{{ result[2] }}</td>
-                    <td>{{ "%.2f"|format(result[3]) }}</td>
-                    <td>{{ result[5] }}</td>
-                    <td>
-                        {% if result[4] and result[4] > 0 %}
-                            {{ "%.2f"|format(result[4]) }}
-                        {% else %}
-                            0.00
-                        {% endif %}
-                    </td>
+                    <td class="text-center">{{ result[2] }}</td>
+                    <td class="text-end">{{ "%.2f"|format(result[3]) }}</td>
+                    <td class="text-end"><span class="badge bg-primary-lt">{{ result[5] }}</span></td>
+                    <td class="text-end">{% if result[4] and result[4] > 0 %}{{ "%.2f"|format(result[4]) }}{% else %}0.00{% endif %}</td>
                     {% if user and user.is_admin %}
-                    <td style="text-align:right">
-                        <button type="button" class="btn-icon btn-icon-danger js-delete-individual-result"
-                                data-tournament-id="{{ tournament.id }}"
+                    <td class="text-end">
+                        <button type="button" class="btn btn-icon btn-ghost-danger btn-sm js-delete-individual-result"
+                                data-tournament-id="{{ tournament[0] }}"
                                 data-result-id="{{ result[7] }}"
                                 data-angler-name="{{ result[1] }}"
                                 title="Delete result" aria-label="Delete result">
-                            <i class="bi bi-trash"></i>
+                            <i class="ti ti-trash"></i>
                         </button>
                     </td>
                     {% endif %}
@@ -273,51 +286,52 @@
 </div>
 {% endif %}
 
-{% if not team_results and (not tournament.aoy_points or not individual_results) %}
-<div class="cc" style="margin-bottom:1.4rem">
-    <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
-        <div style="font-size:.88rem;font-weight:600;color:var(--t3)"><i class="bi bi-info-circle" style="margin-right:.35rem"></i>No Results Available</div>
-    </div>
-    <div class="ci">
-        <div style="font-weight:600;margin-bottom:.25rem">Tournament Results Not Available</div>
-        <div style="color:var(--t3);font-size:.88rem">Results for this tournament have not been entered yet or this tournament has not been completed.</div>
+{# ===== No Results ===== #}
+{% if not team_results and (not tournament[11] or not individual_results) %}
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="empty">
+            <div class="empty-icon"><i class="ti ti-clipboard-off"></i></div>
+            <p class="empty-title">Tournament Results Not Available</p>
+            <p class="empty-subtitle text-secondary">
+                Results for this tournament have not been entered yet or this tournament has not been completed.
+            </p>
+        </div>
     </div>
 </div>
 {% endif %}
 
-<!-- Buy-in Results Card -->
+{# ===== Buy-in Results ===== #}
 {% if buy_in_results %}
-<div class="cc" style="margin-bottom:1.4rem">
-    <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
-        <div style="font-size:.88rem;font-weight:600;color:var(--err)"><i class="bi bi-currency-dollar" style="margin-right:.35rem"></i>Buy-in Results</div>
-    </div>
-    <div class="ci" style="padding:0">
-        <table class="mt">
-            <thead><tr>
-                <th>Place</th>
-                <th>Name</th>
-                <th>Points</th>
-                {% if user and user.is_admin %}<th style="text-align:right">Actions</th>{% endif %}
-            </tr></thead>
+<div class="card mb-3">
+    <div class="card-header"><h3 class="card-title"><i class="ti ti-currency-dollar me-2 text-red"></i>Buy-in Results</h3></div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th class="w-1">Place</th>
+                    <th>Name</th>
+                    <th class="text-end">Points</th>
+                    {% if user and user.is_admin %}<th class="text-end">Actions</th>{% endif %}
+                </tr>
+            </thead>
             <tbody>
                 {% for result in buy_in_results %}
                 <tr>
-                    <td>{{ result[1] }}</td>
+                    <td><span class="badge bg-secondary-lt">{{ result[1] }}</span></td>
                     <td>
-                        {{ result[0] }}
-                        {% if result[3] == 0 %}
-                            <span class="tg tg-g" style="margin-left:.25rem">Guest</span>
-                        {% endif %}
+                        <span class="fw-bold">{{ result[0] }}</span>
+                        {% if result[3] == 0 %}<span class="badge bg-azure-lt ms-1">Guest</span>{% endif %}
                     </td>
-                    <td>{{ result[2] }}</td>
+                    <td class="text-end"><span class="badge bg-primary-lt">{{ result[2] }}</span></td>
                     {% if user and user.is_admin %}
-                    <td style="text-align:right">
-                        <button type="button" class="btn-icon btn-icon-danger js-delete-buy-in-result"
-                                data-tournament-id="{{ tournament.id }}"
+                    <td class="text-end">
+                        <button type="button" class="btn btn-icon btn-ghost-danger btn-sm js-delete-buy-in-result"
+                                data-tournament-id="{{ tournament[0] }}"
                                 data-result-id="{{ result[4] }}"
                                 data-angler-name="{{ result[0] }}"
                                 title="Delete buy-in result" aria-label="Delete buy-in result">
-                            <i class="bi bi-trash"></i>
+                            <i class="ti ti-trash"></i>
                         </button>
                     </td>
                     {% endif %}
@@ -329,28 +343,26 @@
 </div>
 {% endif %}
 
-<!-- Disqualified Results Card -->
+{# ===== Disqualified Results ===== #}
 {% if disqualified_results %}
-<div class="cc" style="margin-bottom:1.4rem">
-    <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0)">
-        <div style="font-size:.88rem;font-weight:600;color:var(--t3)"><i class="bi bi-x-circle" style="margin-right:.35rem"></i>Disqualifications</div>
-    </div>
-    <div class="ci" style="padding:0">
-        <table class="mt">
-            <thead><tr>
-                <th>Name</th>
-                <th>Status</th>
-            </tr></thead>
+<div class="card mb-3">
+    <div class="card-header"><h3 class="card-title"><i class="ti ti-ban me-2 text-secondary"></i>Disqualifications</h3></div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th class="text-end">Status</th>
+                </tr>
+            </thead>
             <tbody>
                 {% for result in disqualified_results %}
                 <tr>
                     <td>
-                        {{ result[0] }}
-                        {% if result[1] == 0 %}
-                            <span class="tg tg-g" style="margin-left:.25rem">Guest</span>
-                        {% endif %}
+                        <span class="fw-bold">{{ result[0] }}</span>
+                        {% if result[1] == 0 %}<span class="badge bg-azure-lt ms-1">Guest</span>{% endif %}
                     </td>
-                    <td><span class="tg tg-d">DQ</span></td>
+                    <td class="text-end"><span class="badge bg-red">DQ</span></td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -359,29 +371,32 @@
 </div>
 {% endif %}
 
-<!-- Navigation -->
-<div style="display:flex;align-items:center;gap:.5rem;margin-top:1.5rem;flex-wrap:wrap">
-    <a href="/" class="btn-m btn-p" style="text-decoration:none"><i class="bi bi-arrow-left" aria-hidden="true"></i> Back</a>
+{# ===== Navigation ===== #}
+<div class="d-flex flex-wrap align-items-center gap-2 mt-4">
+    <a href="/" class="btn btn-primary"><i class="ti ti-arrow-left me-1"></i>Back</a>
     {% if prev_tournament_id %}
-    <a href="/tournaments/{{ prev_tournament_id }}" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-chevron-left" aria-hidden="true"></i> Previous</a>
+    <a href="/tournaments/{{ prev_tournament_id }}" class="btn"><i class="ti ti-chevron-left me-1"></i>Previous</a>
     {% endif %}
     {% if next_tournament_id %}
-    <a href="/tournaments/{{ next_tournament_id }}" class="btn-m btn-g" style="text-decoration:none">Next <i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+    <a href="/tournaments/{{ next_tournament_id }}" class="btn">Next<i class="ti ti-chevron-right ms-1"></i></a>
     {% endif %}
 </div>
 
-<!-- Year Navigation -->
+{# ===== Year Navigation ===== #}
 {% if year_links %}
-<div style="margin-top:1rem">
-    <div style="font-size:.78rem;color:var(--t3);margin-bottom:.35rem"><i class="bi bi-calendar3" style="margin-right:.25rem"></i>Jump to year:</div>
-    <div class="pt">
+<div class="mt-3">
+    <div class="text-secondary small mb-2"><i class="ti ti-calendar me-1"></i>Jump to year:</div>
+    <ul class="nav nav-pills">
         {% for year_link in year_links %}
-        <a href="/?p={{ year_link.page_number }}" class="ptb" style="text-decoration:none;font-size:.82rem">{{ year_link.year }}</a>
+        <li class="nav-item">
+            <a href="/?p={{ year_link.page_number }}" class="nav-link">{{ year_link.year }}</a>
+        </li>
         {% endfor %}
-    </div>
+    </ul>
 </div>
 {% endif %}
+{% endblock %}
 
-<script src="{{ url_for('static', path='/tournament-results.js') }}?v={{ asset_v }}"></script>
-
+{% block extra_js %}
+<script src="/static/tournament-results.js"></script>
 {% endblock %}

@@ -3,98 +3,130 @@
 
 {% block title %}Photo Gallery - SABC{% endblock %}
 
+{% block extra_css %}
+<style>
+  #photo-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+  @media (max-width: 991.98px) { #photo-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 767.98px) { #photo-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 479.98px) { #photo-grid { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="sh">
-    <h1 class="st"><i class="bi bi-images"></i> Photo Gallery</h1>
+<div class="page-header d-print-none mb-3">
+  <div class="row align-items-center">
+    <div class="col">
+      <div class="page-pretitle">South Austin Bass Club</div>
+      <h2 class="page-title"><i class="ti ti-photo me-2" aria-hidden="true"></i>Photo Gallery</h2>
+    </div>
     {% if user and user.member %}
-    <a href="/photos/upload" class="btn-m btn-p" style="text-decoration:none">
-        <i class="bi bi-upload" aria-hidden="true"></i> Upload Photo
-    </a>
+    <div class="col-auto ms-auto">
+      <a href="/photos/upload" class="btn btn-primary"><i class="ti ti-upload me-1" aria-hidden="true"></i>Upload Photo</a>
+    </div>
     {% endif %}
+  </div>
 </div>
 
 {{ alert('success', request.query_params.get('success')) }}
 {{ alert('danger', request.query_params.get('error')) }}
 
 <!-- Filters -->
-<div class="cc" style="margin-bottom:1.4rem">
-    <div class="ci" style="padding:1rem">
-        <form method="get" action="/photos" style="display:grid;grid-template-columns:1fr 1fr auto auto;gap:1rem;align-items:end">
-            <div class="fg" style="margin-bottom:0">
-                <label class="fl" for="tournament_id">Tournament</label>
-                <select class="fi" id="tournament_id" name="tournament_id">
-                    <option value="">All Tournaments</option>
-                    {% for t in tournament_options %}
-                    <option value="{{ t.id }}" {% if selected_tournament == t.id %}selected{% endif %}>
-                        {{ t.name }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="fg" style="margin-bottom:0">
-                <label class="fl" for="angler_id">Angler</label>
-                <select class="fi" id="angler_id" name="angler_id">
-                    <option value="">All Anglers</option>
-                    {% for a in angler_options %}
-                    <option value="{{ a.id }}" {% if selected_angler == a.id %}selected{% endif %}>
-                        {{ a.name }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.85rem;color:var(--t2);white-space:nowrap">
-                    <input type="checkbox" id="big_bass" name="big_bass" value="true"
-                           {% if selected_big_bass %}checked{% endif %} style="accent-color:var(--warn);width:16px;height:16px">
-                    <i class="bi bi-trophy-fill" style="color:var(--warn)"></i> Big Bass Only
-                </label>
-            </div>
-            <div style="display:flex;gap:.5rem">
-                <button type="submit" class="btn-m btn-g"><i class="bi bi-funnel" aria-hidden="true"></i> Filter</button>
-                <a href="/photos" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-x-circle" aria-hidden="true"></i> Clear</a>
-            </div>
-        </form>
-    </div>
+<div class="card mb-3">
+  <div class="card-body">
+    <form method="get" action="/photos" class="row g-3 align-items-end">
+      <div class="col-md">
+        <label class="form-label" for="tournament_id">Tournament</label>
+        <select class="form-select" id="tournament_id" name="tournament_id">
+          <option value="">All Tournaments</option>
+          {% for t in tournament_options %}
+          <option value="{{ t.id }}" {% if selected_tournament == t.id %}selected{% endif %}>{{ t.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md">
+        <label class="form-label" for="angler_id">Angler</label>
+        <select class="form-select" id="angler_id" name="angler_id">
+          <option value="">All Anglers</option>
+          {% for a in angler_options %}
+          <option value="{{ a.id }}" {% if selected_angler == a.id %}selected{% endif %}>{{ a.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-auto">
+        <label class="form-label">&nbsp;</label>
+        <label class="form-check form-switch mb-2">
+          <input type="checkbox" class="form-check-input" id="big_bass" name="big_bass" value="true" {% if selected_big_bass %}checked{% endif %}>
+          <span class="form-check-label"><i class="ti ti-trophy text-yellow me-1" aria-hidden="true"></i>Big Bass Only</span>
+        </label>
+      </div>
+      <div class="col-md-auto">
+        <div class="btn-list">
+          <button type="submit" class="btn btn-primary"><i class="ti ti-filter me-1" aria-hidden="true"></i>Filter</button>
+          <a href="/photos" class="btn"><i class="ti ti-x me-1" aria-hidden="true"></i>Clear</a>
+        </div>
+      </div>
+    </form>
+  </div>
 </div>
 
 <!-- Photo Grid -->
 {% if photos %}
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem" id="photo-grid">
-    {% include "photos/_photo_grid.html" %}
+<div id="photo-grid">
+  {% include "photos/_photo_grid.html" %}
 </div>
 {% if total_photos %}
-<div style="text-align:center;color:var(--t4);font-size:.82rem;margin-top:1rem">
-    Showing {{ photos|length }}{% if has_more %}+{% endif %} of {{ total_photos }} photos
+<div class="text-center text-secondary small mt-3">
+  Showing {{ photos|length }}{% if has_more %}+{% endif %} of {{ total_photos }} photos
 </div>
 {% endif %}
 {% else %}
-<div style="text-align:center;padding:3rem 1rem;color:var(--t3)">
-    <i class="bi bi-images" style="font-size:3rem;opacity:.3"></i>
-    <div style="margin-top:.75rem;font-weight:500">No photos yet.</div>
-    {% if user and user.member %}
-    <a href="/photos/upload" class="btn-m btn-p" style="text-decoration:none;margin-top:1rem;display:inline-flex">
-        <i class="bi bi-upload"></i> Upload the first photo!
-    </a>
-    {% endif %}
+<div class="empty">
+  <div class="empty-icon"><i class="ti ti-photo-off" style="font-size:2.5rem"></i></div>
+  <p class="empty-title">No photos yet</p>
+  <p class="empty-subtitle text-secondary">Be the first to share a catch with the club.</p>
+  {% if user and user.member %}
+  <div class="empty-action">
+    <a href="/photos/upload" class="btn btn-primary"><i class="ti ti-upload me-1" aria-hidden="true"></i>Upload the first photo!</a>
+  </div>
+  {% endif %}
 </div>
 {% endif %}
 
 <!-- Lightbox Modal -->
-<div class="modal fade" id="lightboxModal" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content" style="background:var(--bg-base);border:1px solid var(--b1)">
-            <div class="modal-header" style="border-bottom:none">
-                <span id="lightboxCaption" style="color:var(--t1)"></span>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" style="text-align:center;padding:0">
-                <img id="lightboxImage" src="" alt="" style="max-height:80vh;max-width:100%">
-            </div>
-        </div>
+<div class="modal modal-blur fade" id="lightboxModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="lightboxCaption"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center p-0">
+        <img id="lightboxImage" src="" alt="" style="max-height:80vh;max-width:100%">
+      </div>
     </div>
+  </div>
 </div>
-
 {% endblock %}
+
 {% block extra_js %}
-<script src="{{ url_for('static', path='/photos-gallery.js') }}?v={{ asset_v }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = new bootstrap.Modal(document.getElementById('lightboxModal'));
+    const lightboxImage = document.getElementById('lightboxImage');
+    const lightboxCaption = document.getElementById('lightboxCaption');
+
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('.gallery-link');
+        if (!link) return;
+        e.preventDefault();
+        lightboxImage.src = link.href;
+        lightboxCaption.textContent = link.dataset.caption || '';
+        modal.show();
+    });
+});
+</script>
 {% endblock %}

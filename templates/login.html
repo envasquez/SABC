@@ -1,33 +1,43 @@
 {% extends "base.html" %}
 {% from 'macros.html' import alert, csrf_token %}
+{% block title %}Sign In - South Austin Bass Club{% endblock %}
 {% block content %}
-<div class="auth-wrap">
-    <div class="auth-card">
-        <div class="auth-logo">
-            <img src="/static/sabc_logo.png" alt="SABC" width="64" height="64">
+<div class="row justify-content-center py-4">
+    <div class="col-12 col-sm-10 col-md-7 col-lg-5 col-xl-4">
+        <div class="text-center mb-4">
+            <img src="/static/sabc_logo.png" alt="SABC" width="72" height="72" class="mb-2">
+            <h1 class="h2 mb-0">Welcome Back</h1>
+            <p class="text-secondary">Sign in to your SABC account</p>
         </div>
-        <div class="auth-title">Welcome Back</div>
-        <div class="auth-sub">Sign in to your SABC account</div>
-        {{ alert('danger', error) }}
-        {{ alert('success', success) }}
-        <form method="post" action="/login">
-            {{ csrf_token(request) }}
-            <input type="hidden" name="next_url" value="{{ next_url }}">
-            <div class="fg">
-                <label class="fl" for="email">Email</label>
-                <input class="fi" type="email" id="email" name="email" placeholder="your@email.com" autocomplete="email" required>
+        <div class="card card-md">
+            <div class="card-body">
+                <h2 class="h3 text-center mb-4">Login to your account</h2>
+                {{ alert('danger', error) }}
+                {{ alert('success', success) }}
+                <form method="post" action="/login" autocomplete="off">
+                    {{ csrf_token(request) }}
+                    <input type="hidden" name="next_url" value="{{ next_url }}">
+                    <div class="mb-3">
+                        <label class="form-label" for="email">Email address</label>
+                        <input class="form-control" type="email" id="email" name="email" placeholder="your@email.com" autocomplete="email" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">
+                            Password
+                            <span class="form-label-description">
+                                <a href="/forgot-password">Forgot password?</a>
+                            </span>
+                        </label>
+                        <input class="form-control" type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+                    </div>
+                    <div class="form-footer">
+                        <button class="btn btn-primary w-100" type="submit"><i class="ti ti-login-2 me-1"></i>Sign In</button>
+                    </div>
+                </form>
             </div>
-            <div class="fg">
-                <label class="fl" for="password">Password</label>
-                <input class="fi" type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" required>
-            </div>
-            <button class="btn-m btn-p" type="submit" style="width:100%;justify-content:center;padding:.7rem">
-                Sign In
-            </button>
-        </form>
-        <div class="auth-links">
-            <p style="margin:.5rem 0"><a href="/register">Create an account</a></p>
-            <p style="margin:0"><a href="/forgot-password" style="color:var(--t3)">Forgot your password?</a></p>
+        </div>
+        <div class="text-center text-secondary mt-3">
+            Don't have an account yet? <a href="/register" tabindex="-1">Create one</a>
         </div>
     </div>
 </div>

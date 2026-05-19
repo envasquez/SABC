@@ -1,19 +1,25 @@
 {% extends "base.html" %}
 {% block title %}Page Not Found - SABC{% endblock %}
 {% block content %}
-<div class="auth-wrap">
-    <div style="text-align:center">
-        <i class="bi bi-water" style="font-size:5rem;color:var(--brand);opacity:.5"></i>
-        <div style="font-size:5rem;font-weight:800;color:var(--brand);line-height:1">404</div>
-        <div style="font-size:1.3rem;font-weight:600;color:var(--t2);margin-bottom:1rem">Page Not Found</div>
-        <div style="color:var(--t3);margin-bottom:2rem">Looks like this fish got away!<br>The page you're looking for doesn't exist or has been moved.</div>
-        <div style="display:flex;gap:.75rem;justify-content:center">
-            <a href="/" class="btn-m btn-p"><i class="bi bi-house" aria-hidden="true"></i> Return Home</a>
-            <a href="/calendar" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-calendar3" aria-hidden="true"></i> View Calendar</a>
+<div class="row justify-content-center py-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="empty">
+            <div class="empty-header text-primary" style="font-size:6rem;font-weight:800;line-height:1">404</div>
+            <div class="empty-icon">
+                <i class="ti ti-fish text-primary" style="font-size:3.5rem;opacity:.7"></i>
+            </div>
+            <p class="empty-title">Looks like this fish got away!</p>
+            <p class="empty-subtitle text-secondary">
+                The page you're looking for doesn't exist or has been moved.
+            </p>
+            <div class="empty-action">
+                <a href="/" class="btn btn-primary"><i class="ti ti-home me-1"></i>Return Home</a>
+                <a href="/calendar" class="btn"><i class="ti ti-calendar me-1"></i>View Calendar</a>
+            </div>
+            {% if correlation_id %}
+            <p class="text-secondary small mt-4 mb-0">Reference ID: <code>{{ correlation_id }}</code></p>
+            {% endif %}
         </div>
-        {% if correlation_id %}
-        <div style="margin-top:1.5rem;font-size:.78rem;color:var(--t4)">Reference ID: <code>{{ correlation_id }}</code></div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}

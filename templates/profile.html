@@ -1,199 +1,308 @@
 {% extends "base.html" %}
 {% from 'macros.html' import csrf_token, alert %}
+
+{% block title %}Member Profile - South Austin Bass Club{% endblock %}
+
+{% block extra_css %}
+<style>
+  .finish-tab { display: none; }
+  .finish-tab.active { display: block; }
+  .profile-medal {
+    border-radius: var(--tblr-border-radius);
+    padding: .75rem .25rem;
+    text-align: center;
+  }
+  .profile-medal-1 { background: rgba(247,201,72,.12); }
+  .profile-medal-2 { background: rgba(194,205,218,.12); }
+  .profile-medal-3 { background: rgba(208,138,79,.14); }
+  .profile-medal .medal-icon { font-size: 1.5rem; line-height: 1; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="sh"><h1 class="st"><i class="bi bi-person-circle"></i> Member Profile</h1></div>
-{{ alert('success', success) }}
-{% if request.query_params.get('welcome') == 'true' and not user.member %}
-<div class="cc" style="margin-bottom:1.25rem;border-color:rgba(6,182,212,.2)">
-    <div class="ci" style="padding:1rem">
-        <div style="font-size:.88rem;font-weight:600;color:var(--info);margin-bottom:.5rem"><i class="bi bi-info-circle me-1"></i>Welcome to South Austin Bass Club!</div>
-        <div style="font-size:.82rem;color:var(--t2);line-height:1.6">
-            Your account has been created as a <strong>guest</strong>. To become a member:
-            <ol style="margin:.5rem 0 0;padding-left:1.25rem">
-                <li>Pay the $25 annual membership fee</li>
-                <li>Contact an admin to verify your payment</li>
-                <li>Once verified, you'll gain access to polls, roster, and voting privileges</li>
-            </ol>
-        </div>
+<div class="page-header d-print-none mb-3">
+  <div class="row align-items-center">
+    <div class="col">
+      <div class="page-pretitle">South Austin Bass Club</div>
+      <h2 class="page-title"><i class="ti ti-user-circle me-2" aria-hidden="true"></i>Member Profile</h2>
     </div>
+  </div>
+</div>
+
+{{ alert('success', success) }}
+
+{% if request.query_params.get('welcome') == 'true' and not user.member %}
+<div class="card mb-3">
+  <div class="card-status-start bg-azure"></div>
+  <div class="card-body">
+    <h3 class="card-title text-azure"><i class="ti ti-info-circle me-2" aria-hidden="true"></i>Welcome to South Austin Bass Club!</h3>
+    <p class="text-secondary mb-2">Your account has been created as a <strong>guest</strong>. To become a member:</p>
+    <ol class="text-secondary mb-0">
+      <li>Pay the $25 annual membership fee</li>
+      <li>Contact an admin to verify your payment</li>
+      <li>Once verified, you'll gain access to polls, roster, and voting privileges</li>
+    </ol>
+  </div>
 </div>
 {% endif %}
 
-<div style="display:grid;grid-template-columns:3fr 2fr;gap:1.4rem">
-<!-- Left Column -->
-<div>
+<div class="row row-cards">
+  <!-- Left Column -->
+  <div class="col-lg-7">
     <!-- Account Information -->
-    <div class="cc" style="margin-bottom:1.25rem">
-        <div class="ci">
-            <div class="ct-row">
-                <div class="ct"><i class="bi bi-info-circle"></i> Account Information</div>
-                <button class="btn-m btn-g" style="padding:.35rem .75rem;font-size:.78rem" id="editBtn"><i class="bi bi-pencil" aria-hidden="true"></i> Edit</button>
-            </div>
-
-            <!-- View Mode -->
-            <div id="viewMode">
-                <table class="mt">
-                    <tbody>
-                        <tr><td style="color:var(--t3);width:35%">Name</td><td style="font-weight:600;color:var(--t1)">{{user.name}}</td></tr>
-                        <tr><td style="color:var(--t3)">Email</td><td>{{user.email or 'Not provided'}}</td></tr>
-                        <tr><td style="color:var(--t3)">Phone</td><td>{{user.phone or 'Not provided'}}</td></tr>
-                        <tr><td style="color:var(--t3)">Year Joined</td><td>{{user.year_joined or 'Not specified'}}</td></tr>
-                        <tr><td style="color:var(--t3)">Status</td><td>
-                            {% if user.member %}<span class="tg tg-s">Member</span>{% else %}<span class="tg tg-g">Guest</span>{% endif %}
-                            {% if user.is_admin %}<span class="tg tg-d" style="margin-left:.3rem">Admin</span>{% endif %}
-                        </td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Edit Mode -->
-            <div id="editMode" style="display:none">
-                <form method="POST" action="/profile/update">
-                    {{ csrf_token(request) }}
-                    <div class="fg">
-                        <label class="fl" for="profile-email">Email</label>
-                        <input class="fi" id="profile-email" type="email" name="email" value="{{user.email or ''}}" required>
-                    </div>
-                    <div class="fg">
-                        <label class="fl" for="phoneInput">Phone</label>
-                        <input class="fi" type="tel" name="phone" id="phoneInput" value="{{user.phone or ''}}" placeholder="(555) 123-4567" maxlength="14">
-                    </div>
-                    <div class="fg">
-                        <label class="fl" for="profile-year-joined">Year Joined</label>
-                        <input class="fi" id="profile-year-joined" type="number" name="year_joined" value="{{user.year_joined or 2024}}" min="1981" max="2030">
-                    </div>
-
-                    <!-- Password Change Section -->
-                    <div class="pwd-section">
-                        <div style="font-size:.88rem;font-weight:600;color:var(--brand);margin-bottom:.35rem"><i class="bi bi-key"></i> Change Password</div>
-                        <div style="font-size:.78rem;color:var(--t4);margin-bottom:1rem">Leave blank to keep your current password.</div>
-                        <div class="fg">
-                            <label class="fl" for="pw-current">Current Password</label>
-                            <input class="fi" id="pw-current" type="password" name="current_password" placeholder="Enter current password" autocomplete="current-password">
-                        </div>
-                        <div class="fg">
-                            <label class="fl" for="pw-new">New Password</label>
-                            <input class="fi" id="pw-new" type="password" name="new_password" placeholder="12+ characters" minlength="12" autocomplete="new-password">
-                            <div style="font-size:.72rem;color:var(--t4);margin-top:.3rem">Uppercase, lowercase, number, and special character required</div>
-                        </div>
-                        <div class="fg">
-                            <label class="fl" for="pw-confirm">Confirm New Password</label>
-                            <input class="fi" id="pw-confirm" type="password" name="confirm_password" placeholder="Confirm new password" autocomplete="new-password">
-                        </div>
-                    </div>
-
-                    <div style="display:flex;gap:.5rem;margin-top:1rem">
-                        <button type="submit" class="btn-m btn-p"><i class="bi bi-check-lg" aria-hidden="true"></i> Save Changes</button>
-                        <button type="button" class="btn-m btn-g" id="cancelEditBtn"><i class="bi bi-x-lg" aria-hidden="true"></i> Cancel</button>
-                    </div>
-                </form>
-
-                <!-- Danger Zone -->
-                <div class="dz" style="margin-top:1.5rem">
-                    <div class="dz-t"><i class="bi bi-exclamation-triangle"></i> Danger Zone</div>
-                    <div class="dz-d">Permanently delete your account and all data. Tournament results will be retained for record-keeping. This action cannot be undone.</div>
-                    <button type="button" class="btn-m btn-d" style="font-size:.78rem;padding:.4rem .8rem" id="startDeleteBtn"><i class="bi bi-trash" aria-hidden="true"></i> Delete Account</button>
-                </div>
-            </div>
+    <div class="card mb-3">
+      <div class="card-header">
+        <h3 class="card-title"><i class="ti ti-info-circle me-2 text-primary" aria-hidden="true"></i>Account Information</h3>
+        <div class="card-actions">
+          <button class="btn btn-sm" onclick="toggleEdit()" id="editBtn"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Edit</button>
         </div>
+      </div>
+
+      <!-- View Mode -->
+      <div id="viewMode">
+        <div class="card-body">
+          <div class="row align-items-center mb-3">
+            <div class="col-auto">
+              <span class="avatar avatar-lg rounded bg-primary-lt">{{ user.name[0]|upper }}</span>
+            </div>
+            <div class="col">
+              <div class="h2 mb-0">{{ user.name }}</div>
+              <div>
+                {% if user.member %}<span class="badge bg-green-lt">Member</span>{% else %}<span class="badge bg-secondary-lt">Guest</span>{% endif %}
+                {% if user.is_admin %}<span class="badge bg-red-lt ms-1">Admin</span>{% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-vcenter card-table">
+            <tbody>
+              <tr>
+                <td class="text-secondary" style="width:35%"><i class="ti ti-mail me-2" aria-hidden="true"></i>Email</td>
+                <td class="fw-medium">{{ user.email or 'Not provided' }}</td>
+              </tr>
+              <tr>
+                <td class="text-secondary"><i class="ti ti-phone me-2" aria-hidden="true"></i>Phone</td>
+                <td class="fw-medium">{{ user.phone or 'Not provided' }}</td>
+              </tr>
+              <tr>
+                <td class="text-secondary"><i class="ti ti-calendar me-2" aria-hidden="true"></i>Year Joined</td>
+                <td class="fw-medium">{{ user.year_joined or 'Not specified' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Edit Mode -->
+      <div id="editMode" style="display:none">
+        <div class="card-body">
+          <form method="POST" action="/profile/update">
+            {{ csrf_token(request) }}
+            <div class="mb-3">
+              <label class="form-label required" for="profile-email">Email</label>
+              <input class="form-control" id="profile-email" type="email" name="email" value="{{ user.email or '' }}" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="phoneInput">Phone</label>
+              <input class="form-control" type="tel" name="phone" id="phoneInput" value="{{ user.phone or '' }}" placeholder="(555) 123-4567" maxlength="14">
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="profile-year-joined">Year Joined</label>
+              <input class="form-control" id="profile-year-joined" type="number" name="year_joined" value="{{ user.year_joined or 2024 }}" min="1981" max="2030">
+            </div>
+
+            <!-- Password Change Section -->
+            <div class="card card-sm mb-3">
+              <div class="card-body">
+                <h4 class="card-title text-primary"><i class="ti ti-key me-2" aria-hidden="true"></i>Change Password</h4>
+                <p class="text-secondary small">Leave blank to keep your current password.</p>
+                <div class="mb-3">
+                  <label class="form-label" for="pw-current">Current Password</label>
+                  <input class="form-control" id="pw-current" type="password" name="current_password" placeholder="Enter current password" autocomplete="current-password">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label" for="pw-new">New Password</label>
+                  <input class="form-control" id="pw-new" type="password" name="new_password" placeholder="12+ characters" minlength="12" autocomplete="new-password">
+                  <div class="form-hint">Uppercase, lowercase, number, and special character required</div>
+                </div>
+                <div class="mb-0">
+                  <label class="form-label" for="pw-confirm">Confirm New Password</label>
+                  <input class="form-control" id="pw-confirm" type="password" name="confirm_password" placeholder="Confirm new password" autocomplete="new-password">
+                </div>
+              </div>
+            </div>
+
+            <div class="btn-list">
+              <button type="submit" class="btn btn-primary"><i class="ti ti-check me-1" aria-hidden="true"></i>Save Changes</button>
+              <button type="button" class="btn" onclick="cancelEdit()"><i class="ti ti-x me-1" aria-hidden="true"></i>Cancel</button>
+            </div>
+          </form>
+
+          <!-- Danger Zone -->
+          <div class="card card-sm mt-3">
+            <div class="card-status-start bg-danger"></div>
+            <div class="card-body">
+              <h4 class="card-title text-danger"><i class="ti ti-alert-triangle me-2" aria-hidden="true"></i>Danger Zone</h4>
+              <p class="text-secondary small">Permanently delete your account and all data. Tournament results will be retained for record-keeping. This action cannot be undone.</p>
+              <button type="button" class="btn btn-danger btn-sm" onclick="startDeleteProcess()"><i class="ti ti-trash me-1" aria-hidden="true"></i>Delete Account</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Weight per Tournament Chart -->
-    <div class="cc">
-        <div class="ci">
-            <div class="ct"><i class="bi bi-graph-up"></i> Weight per Tournament</div>
-            <div id="chart-data" data-monthly-data="{{ stats.monthly_data | tojson_attr }}"></div>
-            <canvas id="monthlyWeightChart" style="max-height:400px;margin-top:1rem"></canvas>
-        </div>
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="ti ti-chart-line me-2 text-primary" aria-hidden="true"></i>Weight per Tournament</h3>
+      </div>
+      <div class="card-body">
+        <div id="chart-data" data-monthly-data="{{ stats.monthly_data | tojson_attr }}"></div>
+        <canvas id="monthlyWeightChart" style="max-height:400px"></canvas>
+      </div>
     </div>
-</div>
+  </div>
 
-<!-- Right Sidebar: Angler Stats -->
-<div>
-    <div class="cc">
-        <div class="ci">
-            <div class="ct-row">
-                <div class="ct"><i class="bi bi-trophy"></i> Angler Stats</div>
-            </div>
-
-            <div style="font-size:.78rem;color:var(--brand);font-weight:600;margin-bottom:.6rem"><i class="bi bi-bar-chart"></i> Team Totals</div>
-            <div class="g3" style="margin-bottom:1.25rem">
-                <div style="text-align:center">
-                    <div style="font-size:1.3rem;font-weight:800;color:var(--brand)">{{stats.team_tournaments}}</div>
-                    <div style="font-size:.7rem;color:var(--t3)">Tournaments</div>
-                </div>
-                <div style="text-align:center">
-                    <div style="font-size:1.3rem;font-weight:800;color:var(--info)">{{stats.best_team_weight|int if stats.best_team_weight == 0 else "%.1f"|format(stats.best_team_weight)}}</div>
-                    <div style="font-size:.7rem;color:var(--t3)">Best Weight</div>
-                </div>
-                <div style="text-align:center">
-                    <div style="font-size:1.3rem;font-weight:800;color:var(--ok)">{{"%.1f"|format(stats.big_bass)}} lbs</div>
-                    <div style="font-size:.7rem;color:var(--t3)">Big Bass</div>
-                </div>
-            </div>
-
-            <div style="font-size:.78rem;color:var(--ok);font-weight:600;margin-bottom:.6rem"><i class="bi bi-people"></i> Team Finishes</div>
-
-            <!-- Year Tabs -->
-            <div class="pt" id="finishTabs">
-                {% for year in stats.year_finishes.keys()|sort(reverse=True) %}
-                <button class="ptb tab-trigger {% if loop.first %}on{% endif %}" data-tab-target="#year-{{year}}" data-tab-panes=".finish-tab">{{year}}</button>
-                {% endfor %}
-                <button class="ptb tab-trigger" data-tab-target="#all-time" data-tab-panes=".finish-tab">All</button>
-            </div>
-
-            <!-- Year Tab Content -->
-            {% for year, finishes in stats.year_finishes.items()|sort(reverse=True) %}
-            <div class="tab-pane finish-tab {% if loop.first %}active{% endif %}" id="year-{{year}}">
-                <div class="medal-row">
-                    <div class="medal m-g"><div class="medal-icon">&#129351;</div><div class="medal-v">{{finishes.first}}</div><div class="medal-l">1st</div></div>
-                    <div class="medal m-s"><div class="medal-icon">&#129352;</div><div class="medal-v">{{finishes.second}}</div><div class="medal-l">2nd</div></div>
-                    <div class="medal m-b"><div class="medal-icon">&#129353;</div><div class="medal-v">{{finishes.third}}</div><div class="medal-l">3rd</div></div>
-                </div>
-                <div style="text-align:center;margin-top:.6rem;font-size:.78rem;color:var(--t3)">Fished: <strong>{{finishes.tournaments}}</strong> tournaments</div>
-            </div>
-            {% endfor %}
-
-            <!-- All-Time Tab -->
-            <div class="tab-pane finish-tab" id="all-time">
-                <div class="medal-row">
-                    <div class="medal m-g"><div class="medal-icon">&#129351;</div><div class="medal-v">{{stats.all_time_first}}</div><div class="medal-l">1st</div></div>
-                    <div class="medal m-s"><div class="medal-icon">&#129352;</div><div class="medal-v">{{stats.all_time_second}}</div><div class="medal-l">2nd</div></div>
-                    <div class="medal m-b"><div class="medal-icon">&#129353;</div><div class="medal-v">{{stats.all_time_third}}</div><div class="medal-l">3rd</div></div>
-                </div>
-            </div>
+  <!-- Right Sidebar: Angler Stats -->
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="ti ti-trophy me-2 text-yellow" aria-hidden="true"></i>Angler Stats</h3>
+      </div>
+      <div class="card-body">
+        <div class="text-uppercase text-primary fw-bold small mb-2"><i class="ti ti-chart-bar me-1" aria-hidden="true"></i>Team Totals</div>
+        <div class="row text-center mb-4">
+          <div class="col-4">
+            <div class="h1 mb-0 text-primary">{{ stats.team_tournaments }}</div>
+            <div class="text-secondary small">Tournaments</div>
+          </div>
+          <div class="col-4">
+            <div class="h1 mb-0 text-azure">{{ stats.best_team_weight|int if stats.best_team_weight == 0 else "%.1f"|format(stats.best_team_weight) }}</div>
+            <div class="text-secondary small">Best Weight</div>
+          </div>
+          <div class="col-4">
+            <div class="h1 mb-0 text-green">{{ "%.1f"|format(stats.big_bass) }}</div>
+            <div class="text-secondary small">Big Bass (lbs)</div>
+          </div>
         </div>
+
+        <div class="text-uppercase text-green fw-bold small mb-2"><i class="ti ti-users me-1" aria-hidden="true"></i>Team Finishes</div>
+
+        <!-- Year Tabs -->
+        <ul class="nav nav-pills nav-fill mb-3" id="finishTabs">
+          {% for year in stats.year_finishes.keys()|sort(reverse=True) %}
+          <li class="nav-item">
+            <button class="nav-link {% if loop.first %}active{% endif %}" onclick="showFinishTab('year-{{ year }}', this)">{{ year }}</button>
+          </li>
+          {% endfor %}
+          <li class="nav-item">
+            <button class="nav-link" onclick="showFinishTab('all-time', this)">All</button>
+          </li>
+        </ul>
+
+        <!-- Year Tab Content -->
+        {% for year, finishes in stats.year_finishes.items()|sort(reverse=True) %}
+        <div class="finish-tab {% if loop.first %}active{% endif %}" id="year-{{ year }}">
+          <div class="row g-2">
+            <div class="col-4">
+              <div class="profile-medal profile-medal-1">
+                <div class="medal-icon">&#129351;</div>
+                <div class="h2 mb-0 text-yellow">{{ finishes.first }}</div>
+                <div class="text-yellow small">1st</div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="profile-medal profile-medal-2">
+                <div class="medal-icon">&#129352;</div>
+                <div class="h2 mb-0 text-secondary">{{ finishes.second }}</div>
+                <div class="text-secondary small">2nd</div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="profile-medal profile-medal-3">
+                <div class="medal-icon">&#129353;</div>
+                <div class="h2 mb-0 text-orange">{{ finishes.third }}</div>
+                <div class="text-orange small">3rd</div>
+              </div>
+            </div>
+          </div>
+          <div class="text-center mt-2 text-secondary small">Fished: <strong>{{ finishes.tournaments }}</strong> tournaments</div>
+        </div>
+        {% endfor %}
+
+        <!-- All-Time Tab -->
+        <div class="finish-tab" id="all-time">
+          <div class="row g-2">
+            <div class="col-4">
+              <div class="profile-medal profile-medal-1">
+                <div class="medal-icon">&#129351;</div>
+                <div class="h2 mb-0 text-yellow">{{ stats.all_time_first }}</div>
+                <div class="text-yellow small">1st</div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="profile-medal profile-medal-2">
+                <div class="medal-icon">&#129352;</div>
+                <div class="h2 mb-0 text-secondary">{{ stats.all_time_second }}</div>
+                <div class="text-secondary small">2nd</div>
+              </div>
+            </div>
+            <div class="col-4">
+              <div class="profile-medal profile-medal-3">
+                <div class="medal-icon">&#129353;</div>
+                <div class="h2 mb-0 text-orange">{{ stats.all_time_third }}</div>
+                <div class="text-orange small">3rd</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
 </div>
 
 <!-- Delete Modal -->
-<div class="modal fade" id="deleteModal">
-<div class="modal-dialog">
-<div class="modal-content">
-<div class="modal-header bg-danger text-white">
-<h5><i class="bi bi-exclamation-triangle me-2"></i>Delete Account</h5>
-<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-</div>
-<div class="modal-body">
-<div class="alert alert-danger"><strong>Warning:</strong> This will permanently delete your account.</div>
-<p><strong>You will lose:</strong> Account access to the club system</p>
-<p><strong>Tournament results will remain for record-keeping.</strong></p>
-<p><strong>Type "DELETE" to confirm:</strong></p>
-<form method="POST" action="/profile/delete" id="deleteForm">
-    {{ csrf_token(request) }}
-    <input class="fi" type="text" name="confirm" placeholder="Type DELETE to confirm" required id="deleteConfirm">
-</form>
-</div>
-<div class="modal-footer">
-<button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Cancel</button>
-<button type="submit" form="deleteForm" class="btn-m btn-d" id="deleteSubmitBtn" disabled><i class="bi bi-trash me-1"></i>Delete Account</button>
-</div>
-</div>
-</div>
+<div class="modal modal-blur fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-status bg-danger"></div>
+      <div class="modal-header">
+        <h5 class="modal-title text-danger"><i class="ti ti-alert-triangle me-2" aria-hidden="true"></i>Delete Account</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger" role="alert"><strong>Warning:</strong> This will permanently delete your account.</div>
+        <p class="text-secondary mb-1"><strong>You will lose:</strong> Account access to the club system.</p>
+        <p class="text-secondary">Tournament results will remain for record-keeping.</p>
+        <form method="POST" action="/profile/delete" id="deleteForm">
+          {{ csrf_token(request) }}
+          <label class="form-label">Type "DELETE" to confirm:</label>
+          <input class="form-control" type="text" name="confirm" placeholder="Type DELETE to confirm" required id="deleteConfirm" autocomplete="off">
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" form="deleteForm" class="btn btn-danger" id="deleteSubmitBtn" disabled>
+          <i class="ti ti-trash me-1" aria-hidden="true"></i>Delete Account
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
+<script>
+function showFinishTab(tabId, btn) {
+    document.querySelectorAll('.finish-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('#finishTabs .nav-link').forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+}
+</script>
+{% endblock %}
+
+{% block extra_js %}
 <!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="{{ url_for('static', path='/profile.js') }}?v={{ asset_v }}"></script>
+<script src="/static/profile.js"></script>
 {% endblock %}

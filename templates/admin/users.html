@@ -1,170 +1,292 @@
 {% extends "admin_base.html" %}
 {% from 'macros.html' import alert, delete_modal %}
 {% block title %}Manage Anglers - South Austin Bass Club{% endblock %}
+
 {% block admin_content %}
-<div class="sh">
-    <h1 class="st"><i class="bi bi-people"></i> Manage Anglers</h1>
-    <div style="display:flex;gap:.5rem">
-        <a href="/admin/users/merge" class="btn-m btn-w"><i class="bi bi-arrow-left-right" aria-hidden="true"></i> Merge Accounts</a>
-        <button class="btn-m btn-p" id="addUserBtn"><i class="bi bi-person-plus" aria-hidden="true"></i> Add User</button>
+<div class="page-header d-print-none mb-3">
+    <div class="row g-2 align-items-center">
+        <div class="col">
+            <h2 class="page-title"><i class="ti ti-users me-2 text-azure"></i>Manage Anglers</h2>
+            <div class="text-secondary mt-1">Members, guests, dues status and officer roles</div>
+        </div>
+        <div class="col-auto ms-auto d-print-none">
+            <div class="btn-list">
+                <a href="/admin/users/merge" class="btn btn-outline-secondary">
+                    <i class="ti ti-arrows-left-right me-1"></i>Merge Accounts
+                </a>
+                <button class="btn btn-primary" onclick="showAddUserModal()">
+                    <i class="ti ti-user-plus me-1"></i>Add User
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Stat Cards -->
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.4rem">
-    <div class="cc"><div class="ci" style="display:flex;align-items:center;gap:.75rem;padding:1rem">
-        <i class="bi bi-person-check" style="font-size:1.8rem;color:var(--ok);opacity:.7"></i>
-        <div><div style="font-size:.78rem;color:var(--t3)">Active Members</div><div style="font-size:1.5rem;font-weight:800;color:var(--t1)">{{ active_member_count }}</div></div>
-    </div></div>
-    <div class="cc"><div class="ci" style="display:flex;align-items:center;gap:.75rem;padding:1rem">
-        <i class="bi bi-exclamation-triangle" style="font-size:1.8rem;color:var(--warn);opacity:.7"></i>
-        <div><div style="font-size:.78rem;color:var(--t3)">Dues Overdue</div><div style="font-size:1.5rem;font-weight:800;color:var(--t1)">{{ overdue_member_count }}</div></div>
-    </div></div>
-    <div class="cc"><div class="ci" style="display:flex;align-items:center;gap:.75rem;padding:1rem">
-        <i class="bi bi-person" style="font-size:1.8rem;color:var(--t3);opacity:.7"></i>
-        <div><div style="font-size:.78rem;color:var(--t3)">Guests</div><div style="font-size:1.5rem;font-weight:800;color:var(--t1)">{{ guest_count }}</div></div>
-    </div></div>
-    <div class="cc"><div class="ci" style="display:flex;align-items:center;gap:.75rem;padding:1rem">
-        <i class="bi bi-people-fill" style="font-size:1.8rem;color:var(--brand);opacity:.7"></i>
-        <div><div style="font-size:.78rem;color:var(--t3)">Total</div><div style="font-size:1.5rem;font-weight:800;color:var(--t1)">{{ total_count }}</div></div>
-    </div></div>
-</div>
-
-<!-- Tab Navigation -->
-<div class="pt" style="margin-bottom:1rem" id="userTabs">
-    <button class="ptb on tab-trigger" type="button" data-tab-target="#members-pane" data-tab-scope="#userTabsContent">
-        <i class="bi bi-person-check" aria-hidden="true"></i> Members <span class="tg tg-s" style="margin-left:.3rem">{{ active_member_count + overdue_member_count }}</span>
-    </button>
-    <button class="ptb tab-trigger" type="button" data-tab-target="#guests-pane" data-tab-scope="#userTabsContent">
-        <i class="bi bi-person" aria-hidden="true"></i> Guests <span class="tg tg-g" style="margin-left:.3rem">{{ guest_count }}</span>
-    </button>
-</div>
-
-<!-- Tab Content -->
-<div class="tab-content" id="userTabsContent">
-    <!-- Members Tab -->
-    <div class="tab-pane fade show active" id="members-pane" role="tabpanel">
-        {% set members = users | selectattr('member') | list %}
-        {% if members %}
-        <div class="mt-wrap">
-        <table class="mt mt-cards">
-            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Status</th><th>Officer</th><th style="text-align:right">Actions</th></tr></thead>
-            <tbody>
-                {% for u in members %}
-                <tr>
-                    <td data-label="Name" style="font-weight:600;color:var(--t1)">{{ u.name }}</td>
-                    <td data-label="Email">{{ u.email or '-' }}</td>
-                    <td data-label="Phone">{{ u.phone or '-' }}</td>
-                    <td data-label="Status">
-                        {% if u.dues_paid_through | is_dues_current %}
-                            <span class="tg tg-s">Active</span>
-                        {% else %}
-                            <span class="tg tg-d"><i class="bi bi-exclamation-triangle"></i> Overdue</span>
-                        {% endif %}
-                        {% if u.is_admin %}<span class="tg tg-w" style="margin-left:.25rem">Admin</span>{% endif %}
-                    </td>
-                    <td data-label="Officer">
-                        {% if u.officer_positions %}
-                            {% for position in u.officer_positions.split(', ') %}
-                                <span class="tg tg-i"><i class="bi bi-star-fill"></i> {{ position }}</span>
-                            {% endfor %}
-                        {% else %}-{% endif %}
-                    </td>
-                    <td style="text-align:right">
-                        <div style="display:flex;gap:.35rem;justify-content:flex-end">
-                            <button class="btn-icon btn-icon-ghost js-edit-user" data-user-id="{{ u.id }}" aria-label="Edit user"><i class="bi bi-pencil"></i></button>
-                            <button class="btn-icon btn-icon-danger js-delete-user"
-                                    {% if u.id == user.id %}disabled{% else %}data-user-id="{{ u.id }}" data-user-name="{{ u.name|e }}"{% endif %}
-                                    aria-label="Delete user">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<div class="row row-cards mb-3">
+    <div class="col-6 col-md-3">
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <span class="bg-success text-white avatar"><i class="ti ti-user-check"></i></span>
+                    </div>
+                    <div class="col">
+                        <div class="font-weight-medium h1 mb-0">{{ active_member_count }}</div>
+                        <div class="text-secondary">Active Members</div>
+                    </div>
+                </div>
+            </div>
         </div>
-        {% else %}
-        {{ alert('info', 'No members found.') }}
-        {% endif %}
     </div>
-
-    <!-- Guests Tab -->
-    <div class="tab-pane fade" id="guests-pane" role="tabpanel">
-        {% set guests = users | rejectattr('member') | list %}
-        {% if guests %}
-        <div class="mt-wrap">
-        <table class="mt mt-cards">
-            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th style="text-align:right">Actions</th></tr></thead>
-            <tbody>
-                {% for u in guests %}
-                <tr>
-                    <td data-label="Name" style="font-weight:600;color:var(--t1)">{{ u.name }}</td>
-                    <td data-label="Email">{{ u.email or '-' }}</td>
-                    <td data-label="Phone">{{ u.phone or '-' }}</td>
-                    <td style="text-align:right">
-                        <div style="display:flex;gap:.35rem;justify-content:flex-end">
-                            <button class="btn-icon btn-icon-ghost js-edit-user" data-user-id="{{ u.id }}" aria-label="Edit user"><i class="bi bi-pencil"></i></button>
-                            <button class="btn-icon btn-icon-danger js-delete-user"
-                                    {% if u.id == user.id %}disabled{% else %}data-user-id="{{ u.id }}" data-user-name="{{ u.name|e }}"{% endif %}
-                                    aria-label="Delete user">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="col-6 col-md-3">
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <span class="bg-warning text-white avatar"><i class="ti ti-alert-triangle"></i></span>
+                    </div>
+                    <div class="col">
+                        <div class="font-weight-medium h1 mb-0">{{ overdue_member_count }}</div>
+                        <div class="text-secondary">Dues Overdue</div>
+                    </div>
+                </div>
+            </div>
         </div>
-        {% else %}
-        {{ alert('info', 'No guests found.') }}
-        {% endif %}
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <span class="bg-secondary text-white avatar"><i class="ti ti-user"></i></span>
+                    </div>
+                    <div class="col">
+                        <div class="font-weight-medium h1 mb-0">{{ guest_count }}</div>
+                        <div class="text-secondary">Guests</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card card-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <span class="bg-azure text-white avatar"><i class="ti ti-users-group"></i></span>
+                    </div>
+                    <div class="col">
+                        <div class="font-weight-medium h1 mb-0">{{ total_count }}</div>
+                        <div class="text-secondary">Total</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <ul class="nav nav-pills card-header-pills" id="userTabs">
+            <li class="nav-item">
+                <button class="nav-link on active" type="button" onclick="switchUserTab('members-pane', this)">
+                    <i class="ti ti-user-check me-1"></i>Members
+                    <span class="badge bg-success-lt ms-2">{{ active_member_count + overdue_member_count }}</span>
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" type="button" onclick="switchUserTab('guests-pane', this)">
+                    <i class="ti ti-user me-1"></i>Guests
+                    <span class="badge bg-secondary-lt ms-2">{{ guest_count }}</span>
+                </button>
+            </li>
+        </ul>
+    </div>
+    <script>
+    function switchUserTab(paneId, btn) {
+        document.querySelectorAll('#userTabsContent > .tab-pane').forEach(function(p) { p.classList.remove('show', 'active'); });
+        document.getElementById(paneId).classList.add('show', 'active');
+        document.querySelectorAll('#userTabs .nav-link').forEach(function(b) { b.classList.remove('on', 'active'); });
+        btn.classList.add('on', 'active');
+    }
+    </script>
+
+    <div class="tab-content" id="userTabsContent">
+        <!-- Members Tab -->
+        <div class="tab-pane fade show active" id="members-pane" role="tabpanel">
+            {% set members = users | selectattr('member') | list %}
+            {% if members %}
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Status</th>
+                            <th>Officer</th>
+                            <th class="w-1 text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in members %}
+                        <tr>
+                            <td>
+                                <span class="d-flex align-items-center">
+                                    <span class="avatar avatar-sm bg-azure-lt me-2">{{ u.name[0]|upper }}</span>
+                                    <span class="fw-bold">{{ u.name }}</span>
+                                </span>
+                            </td>
+                            <td class="text-secondary">{{ u.email or '-' }}</td>
+                            <td class="text-secondary">{{ u.phone or '-' }}</td>
+                            <td>
+                                {% if u.dues_paid_through | is_dues_current %}
+                                    <span class="badge bg-success-lt">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger-lt"><i class="ti ti-alert-triangle me-1"></i>Overdue</span>
+                                {% endif %}
+                                {% if u.is_admin %}<span class="badge bg-warning-lt ms-1">Admin</span>{% endif %}
+                            </td>
+                            <td>
+                                {% if u.officer_positions %}
+                                    {% for position in u.officer_positions.split(', ') %}
+                                        <span class="badge bg-azure-lt"><i class="ti ti-star-filled me-1"></i>{{ position }}</span>
+                                    {% endfor %}
+                                {% else %}<span class="text-secondary">-</span>{% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-list flex-nowrap justify-content-end">
+                                    <button class="btn btn-icon btn-sm" onclick="location='/admin/users/{{ u.id }}/edit'" aria-label="Edit user">
+                                        <i class="ti ti-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-sm btn-ghost-danger"
+                                            {% if u.id == user.id %}disabled{% else %}onclick="deleteUser({{ u.id }}, '{{ u.name|e }}')"{% endif %}
+                                            aria-label="Delete user">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty">
+                <div class="empty-icon"><i class="ti ti-users" style="font-size:2.5rem"></i></div>
+                <p class="empty-title">No members found</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Guests Tab -->
+        <div class="tab-pane fade" id="guests-pane" role="tabpanel">
+            {% set guests = users | rejectattr('member') | list %}
+            {% if guests %}
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th class="w-1 text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in guests %}
+                        <tr>
+                            <td>
+                                <span class="d-flex align-items-center">
+                                    <span class="avatar avatar-sm bg-secondary-lt me-2">{{ u.name[0]|upper }}</span>
+                                    <span class="fw-bold">{{ u.name }}</span>
+                                </span>
+                            </td>
+                            <td class="text-secondary">{{ u.email or '-' }}</td>
+                            <td class="text-secondary">{{ u.phone or '-' }}</td>
+                            <td class="text-end">
+                                <div class="btn-list flex-nowrap justify-content-end">
+                                    <button class="btn btn-icon btn-sm" onclick="location='/admin/users/{{ u.id }}/edit'" aria-label="Edit user">
+                                        <i class="ti ti-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-icon btn-sm btn-ghost-danger"
+                                            {% if u.id == user.id %}disabled{% else %}onclick="deleteUser({{ u.id }}, '{{ u.name|e }}')"{% endif %}
+                                            aria-label="Delete user">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty">
+                <div class="empty-icon"><i class="ti ti-user-off" style="font-size:2.5rem"></i></div>
+                <p class="empty-title">No guests found</p>
+            </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 
 <!-- Add User Modal -->
-<div class="modal fade" id="addUserModal" tabindex="-1">
-    <div class="modal-dialog">
+<div class="modal modal-blur fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5><i class="bi bi-person-plus me-2"></i>Add New User</h5>
+                <h5 class="modal-title"><i class="ti ti-user-plus me-2"></i>Add New User</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="addUserForm">
-                    <div class="fg">
-                        <label class="fl" for="addUserName">Name <span class="req">*</span></label>
-                        <input class="fi" type="text" id="addUserName" required placeholder="Enter full name">
+                    <div class="mb-3">
+                        <label for="addUserName" class="form-label required">Name</label>
+                        <input class="form-control" type="text" id="addUserName" required placeholder="Enter full name">
                     </div>
-                    <div class="fg">
-                        <label class="fl" for="addUserEmail">Email</label>
-                        <input class="fi" type="email" id="addUserEmail" placeholder="email@example.com (optional)">
-                        <div class="help-text">If left blank for guests, a placeholder email will be generated</div>
+                    <div class="mb-3">
+                        <label for="addUserEmail" class="form-label">Email</label>
+                        <input class="form-control" type="email" id="addUserEmail" placeholder="email@example.com (optional)">
+                        <small class="form-hint">If left blank for guests, a placeholder email will be generated</small>
                     </div>
-                    <div class="fg">
-                        <label class="fl" for="addUserPhone">Phone</label>
-                        <input class="fi" type="tel" id="addUserPhone" placeholder="(512) 555-1234 (optional)">
+                    <div class="mb-3">
+                        <label for="addUserPhone" class="form-label">Phone</label>
+                        <input class="form-control" type="tel" id="addUserPhone" placeholder="(512) 555-1234 (optional)">
                     </div>
-                    <div class="fg">
-                        <label class="fl">User Type <span class="req">*</span></label>
-                        <div style="display:flex;flex-direction:column;gap:.5rem;margin-top:.25rem">
-                            <label style="display:flex;align-items:flex-start;gap:.5rem;cursor:pointer;padding:.5rem;border-radius:var(--r-md);border:1px solid var(--b0)">
-                                <input type="radio" name="userType" id="userTypeGuest" value="guest" checked style="margin-top:3px">
-                                <div><strong>Guest</strong><br><span style="font-size:.78rem;color:var(--t3)">Can fish tournaments, cannot vote in polls</span></div>
+                    <div class="mb-1">
+                        <label class="form-label required">User Type</label>
+                        <div class="d-flex flex-column gap-2">
+                            <label class="form-selectgroup-item flex-fill">
+                                <input type="radio" name="userType" id="userTypeGuest" value="guest" checked class="form-selectgroup-input">
+                                <div class="form-selectgroup-label d-flex align-items-start p-3">
+                                    <div class="me-2"><i class="ti ti-user text-secondary"></i></div>
+                                    <div>
+                                        <strong>Guest</strong>
+                                        <div class="text-secondary small">Can fish tournaments, cannot vote in polls</div>
+                                    </div>
+                                </div>
                             </label>
-                            <label style="display:flex;align-items:flex-start;gap:.5rem;cursor:pointer;padding:.5rem;border-radius:var(--r-md);border:1px solid var(--b0)">
-                                <input type="radio" name="userType" id="userTypeMember" value="member" style="margin-top:3px">
-                                <div><strong>Member</strong><br><span style="font-size:.78rem;color:var(--t3)">Full club member with voting rights</span></div>
+                            <label class="form-selectgroup-item flex-fill">
+                                <input type="radio" name="userType" id="userTypeMember" value="member" class="form-selectgroup-input">
+                                <div class="form-selectgroup-label d-flex align-items-start p-3">
+                                    <div class="me-2"><i class="ti ti-user-check text-success"></i></div>
+                                    <div>
+                                        <strong>Member</strong>
+                                        <div class="text-secondary small">Full club member with voting rights</div>
+                                    </div>
+                                </div>
                             </label>
                         </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn-m btn-g" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn-m btn-p" id="submitAddUserBtn"><i class="bi bi-check-circle" aria-hidden="true"></i> Create User</button>
+                <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitAddUser()">
+                    <i class="ti ti-circle-check me-1"></i>Create User
+                </button>
             </div>
         </div>
     </div>
@@ -172,8 +294,10 @@
 
 <!-- Delete Confirmation Modal -->
 {% call delete_modal('deleteUserModal', 'Delete User', 'deleteUserName', 'confirmDeleteBtn', 'deleteConfirmInput') %}
-<p style="color:var(--t3)">This will remove all user data and cannot be reversed.</p>
+<p class="text-secondary">This will remove all user data and cannot be reversed.</p>
 {% endcall %}
 
-<script src="{{ url_for('static', path='/admin-users.js') }}?v={{ asset_v }}"></script>
+{% block extra_js %}
+<script src="/static/admin-users.js"></script>
+{% endblock %}
 {% endblock %}

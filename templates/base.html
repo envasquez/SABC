@@ -3,161 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}SABC{% endblock %}</title>
-    <link rel="icon" href="/favicon.ico">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Bootstrap CSS loaded BEFORE style-v2.css: during the migration the custom
-         sheet stays the override layer; sections are deleted incrementally and
-         Bootstrap fills in underneath. -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', path='/style-v2.css') }}?v={{ asset_v }}">
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <title>{% block title %}South Austin Bass Club{% endblock %}</title>
+    <link rel="icon" href="{{ url_for('static', path='/favicon.svg') }}">
+    <!-- Tabler UI 1.4.0 — built on Bootstrap 5. Vendored locally (no CDN dependency). -->
+    <link rel="stylesheet" href="{{ url_for('static', path='/vendor/tabler/tabler.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/vendor/tabler/tabler-icons.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/sabc.css') }}?v={{ asset_v }}">
+    <script src="{{ url_for('static', path='/vendor/tabler/htmx.min.js') }}"></script>
     {% block extra_css %}{% endblock %}
-    <!-- Hide previously dismissed cancelled tournament alerts immediately to prevent flash -->
     <script>
-    (function() {
+    // Hide previously dismissed cancelled-tournament alerts before paint.
+    (function () {
         try {
             var dismissed = JSON.parse(localStorage.getItem('dismissedCancelledAlerts') || '[]');
-            if (Array.isArray(dismissed) && dismissed.length > 0) {
-                var style = document.createElement('style');
+            if (Array.isArray(dismissed) && dismissed.length) {
                 var rules = [];
                 for (var i = 0; i < dismissed.length; i++) {
-                    // Validate each ID is a safe integer to prevent injection
                     var id = parseInt(dismissed[i], 10);
-                    if (!isNaN(id) && id > 0) {
-                        rules.push('#cancelled-alert-' + id + '{display:none!important}');
-                    }
+                    if (!isNaN(id) && id > 0) rules.push('#cancelled-alert-' + id + '{display:none!important}');
                 }
-                if (rules.length > 0) {
-                    style.textContent = rules.join('');
-                    document.head.appendChild(style);
+                if (rules.length) {
+                    var s = document.createElement('style');
+                    s.textContent = rules.join('');
+                    document.head.appendChild(s);
                 }
             }
-        } catch(e) {
-            // Silently ignore malformed localStorage data
-        }
+        } catch (e) { /* ignore malformed localStorage */ }
     })();
     </script>
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
-                <img src="/static/sabc_logo.png" alt="SABC" width="32" height="32" style="border-radius:var(--r-sm);object-fit:contain">
-                <span>South Austin Bass Club</span>
-            </a>
-            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav" aria-label="Toggle navigation">
+<div class="page">
+    {# ===== Header / top navigation ===== #}
+    <header class="navbar navbar-expand-md navbar-overlap d-print-none sticky-top">
+        <div class="container-xl">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="nav">
-                <!-- Left side navigation -->
-                <ul class="navbar-nav me-auto">
-                    {% for p in ['about','bylaws','calendar','awards'] %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/{{p}}">{{p|title}}</a>
-                    </li>
-                    {% endfor %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/data">Club Data</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/photos">Photos</a>
-                    </li>
-                    {% if user and user.member %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/polls">Polls</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/roster">Roster</a>
-                    </li>
-                    {% endif %}
-                </ul>
+            <a href="/" class="navbar-brand navbar-brand-autodark d-flex align-items-center gap-2 pe-0 pe-md-3">
+                <img src="{{ url_for('static', path='/sabc_logo.png') }}" alt="SABC" width="36" height="36" class="rounded">
+                <span class="fw-bold">South Austin Bass Club</span>
+            </a>
 
-                <!-- Right side navigation -->
-                <ul class="navbar-nav">
-                    {% if user %}
-                    <li class="nav-item d-flex align-items-center">
-                        <div class="dropdown">
-                            <a class="sn-user" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span class="sn-av">{{user.name[0]|upper}}</span>
-                                <span>{{user.name}}</span>
-                                <i class="bi bi-chevron-down" style="font-size:.65rem;color:var(--t3)"></i>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item" href="/profile">
-                                        <i class="bi bi-person me-2" aria-hidden="true"></i>Profile
-                                    </a>
-                                </li>
-                                {% if user.is_admin %}
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <h6 class="dropdown-header" style="color:var(--warn)">
-                                        <i class="bi bi-shield-lock me-1" aria-hidden="true"></i>Admin
-                                    </h6>
-                                </li>
-                                {% for a,n in [('events','Events'),('users','Anglers'),('lakes','Lakes'),('news','News'),('polls/create','New Poll')] %}
-                                <li>
-                                    <a class="dropdown-item" href="/admin/{{a}}">
-                                        <i class="bi bi-{% if 'create' in a %}plus-circle{% elif 'news' in a %}newspaper{% elif 'events' in a %}calendar3{% elif 'lakes' in a %}water{% else %}people{% endif %} me-2"></i>{{n}}
-                                    </a>
-                                </li>
-                                {% endfor %}
-                                {% endif %}
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <form method="post" action="/logout" class="d-inline">
-                                        <input type="hidden" name="csrf_token" value="{{ get_csrf_token(request) }}">
-                                        <button type="submit" class="dropdown-item">
-                                            <i class="bi bi-box-arrow-right me-2" aria-hidden="true"></i>Logout
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
+            <div class="navbar-nav flex-row order-md-last">
+                {% if user %}
+                <div class="nav-item dropdown">
+                    <a href="#" class="nav-link d-flex lh-1 p-0 px-2" data-bs-toggle="dropdown" aria-label="Open user menu">
+                        <span class="avatar avatar-sm rounded bg-primary-lt">{{ user.name[0]|upper }}</span>
+                        <div class="d-none d-xl-block ps-2">
+                            <div>{{ user.name }}</div>
+                            <div class="mt-1 small text-secondary">{% if user.is_admin %}Admin{% elif user.member %}Member{% else %}Guest{% endif %}</div>
                         </div>
-                    </li>
-                    {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/register"><i class="bi bi-person-plus me-1" aria-hidden="true"></i>Register</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="btn-m btn-p" href="/login" style="padding:.4rem .9rem;font-size:.82rem"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Login</a>
-                    </li>
-                    {% endif %}
-                </ul>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                        <a href="/profile" class="dropdown-item"><i class="ti ti-user me-2"></i>Profile</a>
+                        {% if user.is_admin %}
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-header">Admin</div>
+                        <a href="/admin/events" class="dropdown-item"><i class="ti ti-calendar-event me-2"></i>Events</a>
+                        <a href="/admin/users" class="dropdown-item"><i class="ti ti-users me-2"></i>Anglers</a>
+                        <a href="/admin/lakes" class="dropdown-item"><i class="ti ti-droplet me-2"></i>Lakes</a>
+                        <a href="/admin/news" class="dropdown-item"><i class="ti ti-news me-2"></i>News</a>
+                        <a href="/admin/polls/create" class="dropdown-item"><i class="ti ti-circle-plus me-2"></i>New Poll</a>
+                        {% endif %}
+                        <div class="dropdown-divider"></div>
+                        <form method="post" action="/logout">
+                            <input type="hidden" name="csrf_token" value="{{ get_csrf_token(request) }}">
+                            <button type="submit" class="dropdown-item"><i class="ti ti-logout me-2"></i>Log out</button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <a href="/register" class="btn btn-ghost-secondary"><i class="ti ti-user-plus me-1"></i>Register</a>
+                <a href="/login" class="btn btn-primary ms-2"><i class="ti ti-login-2 me-1"></i>Log in</a>
+                {% endif %}
+            </div>
+
+            <div class="collapse navbar-collapse" id="navbar-menu">
+                <div class="d-flex flex-column flex-md-row flex-fill align-items-stretch align-items-md-center">
+                    <ul class="navbar-nav">
+                        {% set nav = [
+                            ('/', 'Home', 'ti-home'),
+                            ('/about', 'About', 'ti-info-circle'),
+                            ('/calendar', 'Calendar', 'ti-calendar'),
+                            ('/awards', 'Awards', 'ti-award'),
+                            ('/data', 'Club Data', 'ti-chart-bar'),
+                            ('/photos', 'Photos', 'ti-photo'),
+                        ] %}
+                        {% for href, label, icon in nav %}
+                        <li class="nav-item{% if request.url.path == href %} active{% endif %}">
+                            <a class="nav-link" href="{{ href }}">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti {{ icon }}"></i></span>
+                                <span class="nav-link-title">{{ label }}</span>
+                            </a>
+                        </li>
+                        {% endfor %}
+                        {% if user and user.member %}
+                        <li class="nav-item{% if request.url.path == '/polls' %} active{% endif %}">
+                            <a class="nav-link" href="/polls">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-checkbox"></i></span>
+                                <span class="nav-link-title">Polls</span>
+                            </a>
+                        </li>
+                        <li class="nav-item{% if request.url.path == '/roster' %} active{% endif %}">
+                            <a class="nav-link" href="/roster">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-users-group"></i></span>
+                                <span class="nav-link-title">Roster</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% if user and user.is_admin %}
+                        <li class="nav-item{% if '/admin' in request.url.path %} active{% endif %}">
+                            <a class="nav-link" href="/admin">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-shield-lock"></i></span>
+                                <span class="nav-link-title">Admin</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
             </div>
         </div>
-    </nav>
+    </header>
 
-    <!-- Main Content -->
-    <main class="container my-4 anim">
-        {% if error %}
-        <div class="alert alert-danger alert-dismissible fade show">
-            {{error}}
-            <button class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    {# ===== Page body ===== #}
+    <div class="page-wrapper">
+        <div class="page-body">
+            <div class="container-xl">
+                {% if error %}
+                <div class="alert alert-danger alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-alert-circle me-2"></i></div>
+                        <div>{{ error }}</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+                {% endif %}
+                {% if success %}
+                <div class="alert alert-success alert-dismissible" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-circle-check me-2"></i></div>
+                        <div>{{ success }}</div>
+                    </div>
+                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                </div>
+                {% endif %}
+                {% block content %}{% endblock %}
+            </div>
         </div>
-        {% endif %}
-        {% if success %}
-        <div class="alert alert-success alert-dismissible fade show">
-            {{success}}
-            <button class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        {% endif %}
-        {% block content %}{% endblock %}
-    </main>
 
-    <!-- Footer -->
-    <footer style="background:var(--bg-surface);border-top:1px solid var(--b0);text-align:center;padding:1.25rem;margin-top:3rem">
-        <small style="color:var(--t4)">
-            South Austin Bass Club &copy;2025 | <a href="/bylaws" style="color:var(--t3);text-decoration:none">Bylaws</a>
-        </small>
-    </footer>
+        {# ===== Footer ===== #}
+        <footer class="footer footer-transparent d-print-none">
+            <div class="container-xl">
+                <div class="row text-center align-items-center flex-row-reverse">
+                    <div class="col-lg-auto ms-lg-auto">
+                        <ul class="list-inline list-inline-dots mb-0">
+                            <li class="list-inline-item"><a href="/bylaws" class="link-secondary">Bylaws</a></li>
+                            <li class="list-inline-item"><a href="/about" class="link-secondary">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-12 col-lg-auto mt-3 mt-lg-0">
+                        <span class="text-secondary">&copy; 2026 South Austin Bass Club</span>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+</div>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', path='/utils.js') }}?v={{ asset_v }}"></script>
-    {% block extra_js %}{% endblock %}
+<!-- Tabler JS first (no defer) so the bootstrap alias below is ready before page scripts run. -->
+<script src="{{ url_for('static', path='/vendor/tabler/tabler.min.js') }}"></script>
+<script>
+  // Tabler bundles Bootstrap's JS and exposes it on the `tabler` UMD global.
+  // Page scripts (modals, toasts, tabs) use the bare global `bootstrap`, so
+  // alias it here before utils.js / page JS load.
+  window.bootstrap = (window.tabler && (window.tabler.bootstrap || window.tabler)) || window.bootstrap;
+</script>
+<script src="{{ url_for('static', path='/utils.js') }}?v={{ asset_v }}"></script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -3,190 +3,233 @@
 
 {% block title %}Create Poll - South Austin Bass Club{% endblock %}
 
+{% block extra_css %}
+<style>
+/* Legacy classes injected by poll-management.js addOption() — map onto Tabler. */
+.poll-option-row .fi {
+    display: block; width: 100%;
+    padding: .4375rem .75rem; font-size: .875rem; line-height: 1.4285714;
+    color: var(--tblr-body-color);
+    background-color: var(--tblr-bg-forms);
+    border: 1px solid var(--tblr-border-color);
+    border-radius: var(--tblr-border-radius);
+}
+.poll-option-row .fi:focus {
+    border-color: var(--tblr-primary);
+    box-shadow: 0 0 0 .25rem rgba(var(--tblr-primary-rgb), .25);
+    outline: 0;
+}
+.poll-option-row .btn-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 2.25rem; height: 2.25rem; padding: 0; flex: 0 0 auto;
+    border-radius: var(--tblr-border-radius);
+    border: 1px solid var(--tblr-border-color);
+    background: transparent; color: var(--tblr-secondary); cursor: pointer;
+}
+.poll-option-row .btn-icon-danger { color: var(--tblr-danger); }
+.poll-option-row .btn-icon:hover:not(:disabled) {
+    background: var(--tblr-bg-surface-secondary);
+}
+.poll-option-row .btn-icon:disabled { opacity: .4; cursor: not-allowed; }
+</style>
+{% endblock %}
+
 {% block admin_content %}
 
 <!-- Data passed to JavaScript -->
 <div id="poll-data" data-event-date="{{ selected_event[1] if selected_event else '' }}"></div>
 
-<div style="margin-bottom:1.4rem">
-    <div class="sh"><h1 class="st"><i class="bi bi-plus-circle"></i> Create a New Poll</h1></div>
-    {% if selected_event %}
-    <p style="font-size:1rem;color:var(--t3)">Create a new poll for {% if selected_event[2] %}{{ selected_event[2] }}{% else %}tournament event{% endif %}</p>
-    <div style="font-size:.85rem;color:var(--t3)">
-        <i class="bi bi-calendar3" style="margin-right:.25rem"></i>{{ selected_event[1] | date_format }}
-        {% if selected_event[3] == 'sabc_tournament' %}
-            <span class="tg tg-p" style="margin-left:.5rem">SABC Tournament</span>
-        {% elif selected_event[3] == 'other_tournament' %}
-            <span class="tg tg-g" style="margin-left:.5rem">Other Tournament</span>
-        {% elif selected_event[3] == 'generic_event' %}
-            <span class="tg tg-i" style="margin-left:.5rem">Generic Event</span>
-        {% endif %}
+<div class="page-header mb-3">
+    <div class="row align-items-center">
+        <div class="col">
+            <div class="page-pretitle">Voting</div>
+            <h2 class="page-title"><i class="ti ti-circle-plus me-2 text-primary"></i>Create a New Poll</h2>
+        </div>
     </div>
-    {% else %}
-    <p style="font-size:1rem;color:var(--t3)">Select an event below to create a poll</p>
-    {% endif %}
 </div>
 
-<div class="cc">
-    <div class="ci">
-        {{ alert('danger', request.query_params.get('error')) }}
-        {{ alert('success', request.query_params.get('success')) }}
-        {{ alert('danger', error) }}
+{{ alert('danger', request.query_params.get('error')) }}
+{{ alert('success', request.query_params.get('success')) }}
+{{ alert('danger', error) }}
 
-        <!-- Poll Type Tabs -->
-        <div class="pt" style="margin-bottom:1rem" id="pollTypeTabs" role="tablist">
-            <button class="ptb active" id="tournament-tab" data-bs-toggle="tab" data-bs-target="#tournament-poll" type="button" role="tab" aria-controls="tournament-poll" aria-selected="true">
-                <i class="bi bi-geo-alt" style="margin-right:.4rem"></i>Team Tournament Poll
-            </button>
-            <button class="ptb" id="generic-tab" data-bs-toggle="tab" data-bs-target="#generic-poll" type="button" role="tab" aria-controls="generic-poll" aria-selected="false">
-                <i class="bi bi-card-checklist" style="margin-right:.4rem"></i>Generic Poll
-            </button>
-        </div>
+{% if selected_event %}
+<div class="card card-sm mb-3">
+    <div class="card-body d-flex flex-wrap align-items-center gap-2">
+        <span class="text-secondary">Creating a poll for</span>
+        <strong>{% if selected_event[2] %}{{ selected_event[2] }}{% else %}tournament event{% endif %}</strong>
+        <span class="text-secondary"><i class="ti ti-calendar-event me-1"></i>{{ selected_event[1] | date_format }}</span>
+        {% if selected_event[3] == 'sabc_tournament' %}
+            <span class="badge bg-primary-lt">SABC Tournament</span>
+        {% elif selected_event[3] == 'other_tournament' %}
+            <span class="badge bg-green-lt">Other Tournament</span>
+        {% elif selected_event[3] == 'generic_event' %}
+            <span class="badge bg-azure-lt">Generic Event</span>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info" role="alert">
+    <div class="d-flex">
+        <div><i class="ti ti-info-circle icon alert-icon"></i></div>
+        <div>Select an event to create a poll for it.</div>
+    </div>
+</div>
+{% endif %}
 
-        <div class="tab-content" id="pollTypeTabContent">
-            <!-- Tournament Poll Tab -->
-            <div class="tab-pane fade show active" id="tournament-poll" role="tabpanel" aria-labelledby="tournament-tab">
-                <form method="POST" action="/admin/polls/create" id="tournament-form">
+<div class="card">
+    <!-- Poll Type Tabs -->
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" id="pollTypeTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tournament-tab" data-bs-toggle="tab" data-bs-target="#tournament-poll" type="button" role="tab" aria-controls="tournament-poll" aria-selected="true">
+                    <i class="ti ti-map-pin me-2"></i>Team Tournament Poll
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="generic-tab" data-bs-toggle="tab" data-bs-target="#generic-poll" type="button" role="tab" aria-controls="generic-poll" aria-selected="false">
+                    <i class="ti ti-list-check me-2"></i>Generic Poll
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="tab-content" id="pollTypeTabContent">
+        <!-- Tournament Poll Tab -->
+        <div class="tab-pane fade show active" id="tournament-poll" role="tabpanel" aria-labelledby="tournament-tab">
+            <form method="POST" action="/admin/polls/create" id="tournament-form">
+                <div class="card-body">
                     {{ csrf_token(request) }}
                     {% if selected_event %}
                     <input type="hidden" name="event_id" value="{{ selected_event[0] }}">
                     {% endif %}
                     <input type="hidden" name="poll_type" value="tournament_location">
 
-                    <div class="fg">
-                        <label class="fl" for="title">Poll Title</label>
-                        <input type="text" class="fi" id="title" name="title"
+                    <div class="mb-3">
+                        <label class="form-label required" for="title">Poll Title</label>
+                        <input type="text" class="form-control" id="title" name="title"
                                value="{% if selected_event[2] %}{{ selected_event[2] }} Lake Selection Poll{% else %}Tournament Event #{{ selected_event[1] | month_number }} Lake Selection Poll{% endif %}" required>
                     </div>
 
-                    <div class="fg">
-                        <label class="fl" for="description">Description</label>
-                        <textarea class="fi" id="description" name="description" rows="2">Vote for the location for the {% if selected_event[2] %}{{ selected_event[2] }}{% else %}tournament on {{ selected_event[1] }}{% endif %}. Select your preferred lake, ramp, and fishing times.</textarea>
+                    <div class="mb-3">
+                        <label class="form-label" for="description">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="2">Vote for the location for the {% if selected_event[2] %}{{ selected_event[2] }}{% else %}tournament on {{ selected_event[1] }}{% endif %}. Select your preferred lake, ramp, and fishing times.</textarea>
                     </div>
 
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-                        <div class="fg">
-                            <label class="fl" for="starts_at">
-                                <i class="bi bi-play-circle" style="margin-right:.25rem;color:var(--ok)"></i>Poll Starts
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="starts_at">
+                                <i class="ti ti-player-play me-1 text-green"></i>Poll Starts
                             </label>
-                            <input type="datetime-local" class="fi" id="starts_at" name="starts_at">
-                            <div class="help-text">When members can start voting (auto-calculated based on tournament date)</div>
+                            <input type="datetime-local" class="form-control" id="starts_at" name="starts_at">
+                            <small class="form-hint">When members can start voting (auto-calculated based on tournament date)</small>
                         </div>
-                        <div class="fg">
-                            <label class="fl" for="closes_at">
-                                <i class="bi bi-stop-circle" style="margin-right:.25rem;color:var(--warn)"></i>Poll Closes <span class="req">*</span>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label required" for="closes_at">
+                                <i class="ti ti-player-stop me-1 text-orange"></i>Poll Closes
                             </label>
-                            <input type="datetime-local" class="fi" id="closes_at" name="closes_at" required>
-                            <div class="help-text">Deadline for voting (allows time for planning and preparation)</div>
+                            <input type="datetime-local" class="form-control" id="closes_at" name="closes_at" required>
+                            <small class="form-hint">Deadline for voting (allows time for planning and preparation)</small>
                         </div>
                     </div>
 
-                    <div style="margin-bottom:1.2rem">
-                        <label class="fl" style="font-weight:600">
-                            <i class="bi bi-geo-alt" style="margin-right:.4rem;color:var(--brand)"></i>Select Lakes to Include in Poll
+                    <div class="mb-2">
+                        <label class="form-label">
+                            <i class="ti ti-map-pin me-1 text-primary"></i>Select Lakes to Include in Poll
                         </label>
-                        <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem;margin-bottom:.75rem">Choose which lakes members can vote for. Members will be able to specify ramp and time preferences when voting.</div>
-
-                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem">
+                        <small class="form-hint d-block mb-2">Choose which lakes members can vote for. Members will be able to specify ramp and time preferences when voting.</small>
+                        <div class="row g-2">
                             {% for lake in lakes %}
-                            <div style="margin-bottom:.35rem">
-                                <div style="display:flex;align-items:center;gap:.5rem">
-                                    <input type="checkbox"
-                                           name="lake_ids" value="{{ lake.id }}"
-                                           id="lake_{{ lake.id }}" checked>
-                                    <label for="lake_{{ lake.id }}">
-                                        <strong style="color:var(--t1)">{{ lake.display_name }}</strong>
-                                    </label>
-                                </div>
+                            <div class="col-sm-6 col-md-4">
+                                <label class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="lake_ids" value="{{ lake.id }}" id="lake_{{ lake.id }}" checked>
+                                    <span class="form-check-label fw-bold">{{ lake.display_name }}</span>
+                                </label>
                             </div>
                             {% endfor %}
                         </div>
-
-                        <div style="margin-top:.75rem;display:flex;gap:.5rem">
-                            <button type="button" class="btn-m btn-g js-select-all" style="font-size:.8rem">
-                                <i class="bi bi-check-all" style="margin-right:.25rem"></i>Select All
+                        <div class="btn-list mt-2">
+                            <button type="button" class="btn btn-sm" onclick="selectAll()">
+                                <i class="ti ti-checks me-1"></i>Select All
                             </button>
-                            <button type="button" class="btn-m btn-g js-select-none" style="font-size:.8rem">
-                                <i class="bi bi-x-square" style="margin-right:.25rem"></i>Select None
+                            <button type="button" class="btn btn-sm" onclick="selectNone()">
+                                <i class="ti ti-square-x me-1"></i>Select None
                             </button>
                         </div>
                     </div>
+                </div>
+                <div class="card-footer d-flex justify-content-end gap-2">
+                    <a href="/admin/events" class="btn">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ti ti-circle-plus me-1"></i>Create Tournament Poll
+                    </button>
+                </div>
+            </form>
+        </div>
 
-                    <hr style="border-color:var(--b0);margin:1.4rem 0">
-
-                    <div style="display:flex;justify-content:flex-end;gap:.5rem">
-                        <a href="/admin/events" class="btn-m btn-g">Cancel</a>
-                        <button type="submit" class="btn-m btn-p">
-                            <i class="bi bi-plus-circle" style="margin-right:.25rem"></i>Create Tournament Poll
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Generic Poll Tab -->
-            <div class="tab-pane fade" id="generic-poll" role="tabpanel" aria-labelledby="generic-tab">
-                <form method="POST" action="/admin/polls/create" id="generic-form">
+        <!-- Generic Poll Tab -->
+        <div class="tab-pane fade" id="generic-poll" role="tabpanel" aria-labelledby="generic-tab">
+            <form method="POST" action="/admin/polls/create" id="generic-form">
+                <div class="card-body">
                     {{ csrf_token(request) }}
                     <input type="hidden" name="event_id" value="{{ selected_event[0] }}">
                     <input type="hidden" name="poll_type" value="generic">
 
-                    <div class="fg">
-                        <label class="fl" for="generic_title">Poll Title</label>
-                        <input type="text" class="fi" id="generic_title" name="title"
-                               placeholder="Enter poll title" required>
+                    <div class="mb-3">
+                        <label class="form-label required" for="generic_title">Poll Title</label>
+                        <input type="text" class="form-control" id="generic_title" name="title" placeholder="Enter poll title" required>
                     </div>
 
-                    <div class="fg">
-                        <label class="fl" for="generic_description">Description</label>
-                        <textarea class="fi" id="generic_description" name="description" rows="2"
-                                  placeholder="Additional information about this poll"></textarea>
+                    <div class="mb-3">
+                        <label class="form-label" for="generic_description">Description</label>
+                        <textarea class="form-control" id="generic_description" name="description" rows="2" placeholder="Additional information about this poll"></textarea>
                     </div>
 
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-                        <div class="fg">
-                            <label class="fl" for="generic_starts_at">Poll Starts</label>
-                            <input type="datetime-local" class="fi" id="generic_starts_at" name="starts_at">
-                            <div class="help-text">When members can start voting</div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="generic_starts_at">
+                                <i class="ti ti-player-play me-1 text-green"></i>Poll Starts
+                            </label>
+                            <input type="datetime-local" class="form-control" id="generic_starts_at" name="starts_at">
+                            <small class="form-hint">When members can start voting</small>
                         </div>
-                        <div class="fg">
-                            <label class="fl" for="generic_closes_at">Poll Closes <span class="req">*</span></label>
-                            <input type="datetime-local" class="fi" id="generic_closes_at" name="closes_at" required>
-                            <div class="help-text">When voting will end</div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label required" for="generic_closes_at">
+                                <i class="ti ti-player-stop me-1 text-orange"></i>Poll Closes
+                            </label>
+                            <input type="datetime-local" class="form-control" id="generic_closes_at" name="closes_at" required>
+                            <small class="form-hint">When voting will end</small>
                         </div>
                     </div>
 
-                    <div style="margin-bottom:1.2rem">
-                        <label class="fl" style="font-weight:600">
-                            <i class="bi bi-list-ul" style="margin-right:.4rem;color:var(--brand)"></i>Poll Options
+                    <div class="mb-2">
+                        <label class="form-label">
+                            <i class="ti ti-list-numbers me-1 text-primary"></i>Poll Options
                         </label>
-                        <div style="font-size:.72rem;color:var(--t4);margin-top:.2rem;margin-bottom:.75rem">Add the options that members can vote for. You need at least 2 options.</div>
+                        <small class="form-hint d-block mb-2">Add the options that members can vote for. You need at least 2 options.</small>
 
                         <div id="poll-options-container">
-                            <div class="poll-option-row" style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem">
+                            <div class="poll-option-row d-flex gap-2 align-items-center mb-2">
                                 <input type="text" class="fi" name="poll_options[]" placeholder="Option 1" style="flex:1" required>
-                                <button class="btn-icon btn-icon-danger js-remove-option" type="button" disabled aria-label="Remove option"><i class="bi bi-x"></i></button>
+                                <button class="btn-icon btn-icon-danger" type="button" onclick="removeOption(this)" disabled aria-label="Remove option"><i class="ti ti-x"></i></button>
                             </div>
-                            <div class="poll-option-row" style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem">
+                            <div class="poll-option-row d-flex gap-2 align-items-center mb-2">
                                 <input type="text" class="fi" name="poll_options[]" placeholder="Option 2" style="flex:1" required>
-                                <button class="btn-icon btn-icon-danger js-remove-option" type="button" disabled aria-label="Remove option"><i class="bi bi-x"></i></button>
+                                <button class="btn-icon btn-icon-danger" type="button" onclick="removeOption(this)" disabled aria-label="Remove option"><i class="ti ti-x"></i></button>
                             </div>
                         </div>
 
-                        <button type="button" class="btn-m btn-s js-add-option" style="font-size:.8rem">
-                            <i class="bi bi-plus-circle" style="margin-right:.25rem" aria-hidden="true"></i>Add Option
+                        <button type="button" class="btn btn-sm" onclick="addOption()">
+                            <i class="ti ti-circle-plus me-1"></i>Add Option
                         </button>
                     </div>
-
-                    <hr style="border-color:var(--b0);margin:1.4rem 0">
-
-                    <div style="display:flex;justify-content:flex-end;gap:.5rem">
-                        <a href="/admin/events" class="btn-m btn-g">Cancel</a>
-                        <button type="submit" class="btn-m btn-p">
-                            <i class="bi bi-plus-circle" style="margin-right:.25rem" aria-hidden="true"></i>Create Generic Poll
-                        </button>
-                    </div>
-                </form>
-            </div>
+                </div>
+                <div class="card-footer d-flex justify-content-end gap-2">
+                    <a href="/admin/events" class="btn">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ti ti-circle-plus me-1"></i>Create Generic Poll
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

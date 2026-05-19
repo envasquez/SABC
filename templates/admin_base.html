@@ -1,39 +1,40 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="al">
-    <aside class="as">
-        <div class="as-s">
-            <div class="as-l">Overview</div>
-            <a href="/admin" class="as-a {% if request.url.path == '/admin' %}on{% endif %}">
-                <i class="bi bi-grid-1x2" aria-hidden="true"></i> Dashboard
-            </a>
+{# Admin section shell — a Tabler page-header + section nav, then the page body. #}
+<div class="page-header d-print-none mb-3">
+    <div class="row align-items-center">
+        <div class="col">
+            <div class="page-pretitle">South Austin Bass Club</div>
+            <h2 class="page-title">
+                <i class="ti ti-shield-lock me-2 text-primary"></i>Admin
+            </h2>
         </div>
-        <div class="as-s">
-            <div class="as-l">Manage</div>
-            <a href="/admin/events" class="as-a {% if request.url.path.startswith('/admin/events') %}on{% endif %}">
-                <i class="bi bi-calendar3" aria-hidden="true"></i> Events
-                {% if admin_counts is defined and admin_counts.events %}<span class="cnt">{{ admin_counts.events }}</span>{% endif %}
-            </a>
-            <a href="/admin/users" class="as-a {% if request.url.path.startswith('/admin/users') %}on{% endif %}">
-                <i class="bi bi-people" aria-hidden="true"></i> Anglers
-                {% if admin_counts is defined and admin_counts.anglers %}<span class="cnt">{{ admin_counts.anglers }}</span>{% endif %}
-            </a>
-            <a href="/admin/polls/create" class="as-a {% if request.url.path.startswith('/admin/polls') %}on{% endif %}">
-                <i class="bi bi-hand-index" aria-hidden="true"></i> Polls
-                {% if admin_counts is defined and admin_counts.polls %}<span class="cnt">{{ admin_counts.polls }}</span>{% endif %}
-            </a>
-            <a href="/admin/lakes" class="as-a {% if request.url.path.startswith('/admin/lakes') %}on{% endif %}">
-                <i class="bi bi-water" aria-hidden="true"></i> Lakes
-                {% if admin_counts is defined and admin_counts.lakes %}<span class="cnt">{{ admin_counts.lakes }}</span>{% endif %}
-            </a>
-            <a href="/admin/news" class="as-a {% if request.url.path.startswith('/admin/news') %}on{% endif %}">
-                <i class="bi bi-newspaper" aria-hidden="true"></i> News
-                {% if admin_counts is defined and admin_counts.news %}<span class="cnt">{{ admin_counts.news }}</span>{% endif %}
-            </a>
-        </div>
-    </aside>
-    <div class="am anim">
-        {% block admin_content %}{% endblock %}
     </div>
 </div>
+
+{% set admin_nav = [
+    ('/admin/events', 'Events', 'ti-calendar-event', 'events'),
+    ('/admin/users', 'Anglers', 'ti-users', 'anglers'),
+    ('/admin/polls/create', 'Polls', 'ti-checkbox', 'polls'),
+    ('/admin/lakes', 'Lakes', 'ti-droplet', 'lakes'),
+    ('/admin/news', 'News', 'ti-news', 'news'),
+] %}
+<div class="card mb-3">
+    <ul class="nav nav-tabs nav-fill">
+        {% for href, label, icon, key in admin_nav %}
+        {% set is_on = (href == '/admin/polls/create' and '/polls' in request.url.path and '/admin' in request.url.path)
+                       or (href != '/admin/polls/create' and request.url.path.startswith(href)) %}
+        <li class="nav-item">
+            <a href="{{ href }}" class="nav-link{% if is_on %} active{% endif %}">
+                <i class="ti {{ icon }} me-2"></i>{{ label }}
+                {% if admin_counts is defined and admin_counts[key] %}
+                <span class="badge bg-secondary-lt ms-2">{{ admin_counts[key] }}</span>
+                {% endif %}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+
+{% block admin_content %}{% endblock %}
 {% endblock %}

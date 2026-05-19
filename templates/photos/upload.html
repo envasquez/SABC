@@ -4,79 +4,123 @@
 {% block title %}Upload Photo - SABC{% endblock %}
 
 {% block content %}
-<div class="sh">
-    <h1 class="st"><i class="bi bi-upload"></i> Upload Photo</h1>
-    <a href="/photos" class="btn-m btn-g" style="text-decoration:none"><i class="bi bi-arrow-left"></i> Back to Gallery</a>
+<div class="page-header d-print-none mb-3">
+  <div class="row align-items-center">
+    <div class="col">
+      <div class="page-pretitle">Photo Gallery</div>
+      <h2 class="page-title"><i class="ti ti-upload me-2" aria-hidden="true"></i>Upload Photo</h2>
+    </div>
+    <div class="col-auto ms-auto">
+      <a href="/photos" class="btn"><i class="ti ti-arrow-left me-1" aria-hidden="true"></i>Back to Gallery</a>
+    </div>
+  </div>
 </div>
 
 {{ alert('success', request.query_params.get('success')) }}
 {{ alert('danger', request.query_params.get('error')) }}
 
-<div style="max-width:600px">
-<div class="cc">
-    <div class="ci">
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="ti ti-camera me-2 text-primary" aria-hidden="true"></i>Share Your Catch</h3>
+      </div>
+      <div class="card-body">
         <form method="post" action="/photos/upload" enctype="multipart/form-data" id="uploadForm">
-            {{ csrf_token(request) }}
+          {{ csrf_token(request) }}
 
-            <div class="fg">
-                <label class="fl" for="photo">Photo <span class="req">*</span></label>
-                <input type="file" class="fi" id="photo" name="photo"
-                       accept=".jpg,.jpeg,.png,.gif,.webp" required>
-                <div class="help-text">Max 10MB. Formats: JPG, PNG, GIF, WebP</div>
-            </div>
+          <div class="mb-3">
+            <label class="form-label required" for="photo">Photo</label>
+            <input type="file" class="form-control" id="photo" name="photo"
+                   accept=".jpg,.jpeg,.png,.gif,.webp" required>
+            <div class="form-hint">Max 10MB. Formats: JPG, PNG, GIF, WebP</div>
+          </div>
 
-            <div class="fg">
-                <label class="fl">Preview</label>
-                <div id="previewContainer" style="border:1px solid var(--b0);border-radius:var(--r-md);padding:.75rem;text-align:center;background:var(--bg-base);min-height:150px;display:flex;align-items:center;justify-content:center">
-                    <img id="preview" src="" alt="Image preview" style="max-height:300px;max-width:100%;display:none;border-radius:var(--r-sm)">
-                    <span id="previewPlaceholder" style="color:var(--t4)">
-                        <i class="bi bi-image" style="font-size:2.5rem;opacity:.4"></i>
-                        <div style="margin-top:.25rem;font-size:.82rem">Select a photo to preview</div>
-                    </span>
-                </div>
+          <div class="mb-3">
+            <label class="form-label">Preview</label>
+            <div id="previewContainer" class="border rounded p-3 text-center bg-dark-lt d-flex align-items-center justify-content-center" style="min-height:200px">
+              <img id="preview" src="" alt="" style="max-height:300px;max-width:100%;display:none;border-radius:var(--tblr-border-radius)">
+              <span id="previewPlaceholder" class="text-secondary">
+                <i class="ti ti-photo" style="font-size:2.75rem;opacity:.5"></i>
+                <div class="mt-1">Select a photo to preview</div>
+              </span>
             </div>
+          </div>
 
-            <div class="fg">
-                <label class="fl" for="tournament_id">Tournament</label>
-                <select class="fi" id="tournament_id" name="tournament_id">
-                    <option value="">No tournament (general photo)</option>
-                    {% for t in tournament_options %}
-                    <option value="{{ t.id }}">{{ t.name }}</option>
-                    {% endfor %}
-                </select>
-                {% if not user.is_admin %}
-                <div class="help-text">You can upload up to 2 photos per tournament.</div>
-                {% endif %}
-            </div>
+          <div class="mb-3">
+            <label class="form-label" for="tournament_id">Tournament</label>
+            <select class="form-select" id="tournament_id" name="tournament_id">
+              <option value="">No tournament (general photo)</option>
+              {% for t in tournament_options %}
+              <option value="{{ t.id }}">{{ t.name }}</option>
+              {% endfor %}
+            </select>
+            {% if not user.is_admin %}
+            <div class="form-hint">You can upload up to 2 photos per tournament.</div>
+            {% endif %}
+          </div>
 
-            <div class="fg">
-                <label class="fl" for="caption">Caption</label>
-                <input type="text" class="fi" id="caption" name="caption"
-                       maxlength="200" placeholder="Describe your catch...">
-                <div class="help-text">Optional, max 200 characters</div>
-            </div>
+          <div class="mb-3">
+            <label class="form-label" for="caption">Caption</label>
+            <input type="text" class="form-control" id="caption" name="caption"
+                   maxlength="200" placeholder="Describe your catch...">
+            <div class="form-hint">Optional, max 200 characters</div>
+          </div>
 
-            <div style="margin-bottom:1rem">
-                <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.88rem;color:var(--t2)">
-                    <input type="checkbox" id="is_big_bass" name="is_big_bass" value="true" style="accent-color:var(--warn);width:16px;height:16px">
-                    <i class="bi bi-trophy-fill" style="color:var(--warn)"></i> This is a Big Bass catch
-                </label>
-            </div>
+          <div class="mb-3">
+            <label class="form-check form-switch">
+              <input type="checkbox" class="form-check-input" id="is_big_bass" name="is_big_bass" value="true">
+              <span class="form-check-label"><i class="ti ti-trophy text-yellow me-1" aria-hidden="true"></i>This is a Big Bass catch</span>
+            </label>
+          </div>
 
-            <div style="display:flex;gap:.5rem">
-                <button type="submit" class="btn-m btn-p" id="submitBtn">
-                    <i class="bi bi-upload"></i> Upload Photo
-                </button>
-                <a href="/photos" class="btn-m btn-g" style="text-decoration:none">
-                    <i class="bi bi-arrow-left"></i> Back to Gallery
-                </a>
-            </div>
+          <div class="btn-list">
+            <button type="submit" class="btn btn-primary" id="submitBtn">
+              <i class="ti ti-upload me-1" aria-hidden="true"></i>Upload Photo
+            </button>
+            <a href="/photos" class="btn"><i class="ti ti-arrow-left me-1" aria-hidden="true"></i>Back to Gallery</a>
+          </div>
         </form>
+      </div>
     </div>
+  </div>
 </div>
-</div>
-
 {% endblock %}
+
 {% block extra_js %}
-<script src="{{ url_for('static', path='/photos-upload.js') }}?v={{ asset_v }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const photoInput = document.getElementById('photo');
+    const preview = document.getElementById('preview');
+    const previewPlaceholder = document.getElementById('previewPlaceholder');
+    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('uploadForm');
+
+    photoInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File is too large. Maximum size is 10MB.');
+                this.value = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                previewPlaceholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            preview.style.display = 'none';
+            previewPlaceholder.style.display = 'block';
+        }
+    });
+
+    form.addEventListener('submit', function() {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Uploading...';
+    });
+});
+</script>
 {% endblock %}

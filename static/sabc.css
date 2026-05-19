@@ -1,0 +1,73 @@
+/* ==========================================================================
+   SABC — minimal brand layer on top of Tabler UI.
+   Tabler does the heavy lifting; this file only carries the brand accent and
+   a couple of helpers Tabler has no component for. Keep it small.
+   ========================================================================== */
+
+:root,
+[data-bs-theme="dark"] {
+  /* SABC brand blue */
+  --tblr-primary: #3b82f6;
+  --tblr-primary-rgb: 59, 130, 246;
+  --tblr-primary-fg: #ffffff;
+}
+
+/* Brand-tinted link hovers in the navbar */
+.navbar .nav-item.active .nav-link {
+  color: var(--tblr-primary);
+}
+
+/* The base layout's `navbar-overlap` header paints a tall 9rem decorative
+   band below the navbar. Because the sticky navbar owns a high stacking
+   context, that band renders *over* page content and clips the top of every
+   page. We don't use the overlap visual, so suppress the band entirely. */
+.navbar-overlap::after {
+  display: none !important;
+}
+
+/* Hero banner — a soft branded gradient used on the home page header.
+   Tabler has no "hero", so this is the one genuinely custom component. */
+.sabc-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--tblr-border-radius-lg);
+  background:
+    radial-gradient(1200px 400px at 15% -20%, rgba(59, 130, 246, 0.35), transparent 60%),
+    radial-gradient(900px 380px at 100% 0%, rgba(6, 182, 212, 0.22), transparent 55%),
+    linear-gradient(180deg, #1a2433, #11161f);
+  border: 1px solid var(--tblr-border-color);
+}
+
+.sabc-hero-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+/* Podium — 1st/2nd/3rd standings, a SABC signature element Tabler lacks. */
+.sabc-podium {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1fr;
+  gap: 0.75rem;
+  align-items: end;
+}
+.sabc-podium-step {
+  border-radius: var(--tblr-border-radius);
+  padding: 1rem 0.75rem;
+  text-align: center;
+  background: var(--tblr-bg-surface-secondary);
+  border: 1px solid var(--tblr-border-color);
+}
+.sabc-podium-1 { border-top: 3px solid #f7c948; }
+.sabc-podium-2 { border-top: 3px solid #c2cdda; }
+.sabc-podium-3 { border-top: 3px solid #d08a4f; }
+
+@media (max-width: 575.98px) {
+  .sabc-podium { grid-template-columns: 1fr; }
+}
+
+/* Make embedded lake maps fill their card cleanly. */
+.sabc-map-embed iframe {
+  display: block;
+  width: 100%;
+  border: 0;
+}

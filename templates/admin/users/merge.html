@@ -2,77 +2,91 @@
 {% from 'macros.html' import alert, csrf_token %}
 {% block title %}Merge Duplicate Accounts - South Austin Bass Club{% endblock %}
 {% block admin_content %}
-<div style="margin-bottom:1.4rem">
-    <div class="sh">
-        <h1 class="st"><i class="bi bi-arrow-left-right"></i> Merge Duplicate Accounts</h1>
-        <a href="/admin/users" class="btn-m btn-g"><i class="bi bi-arrow-left"></i> Back to Users</a>
+<div class="page-header mb-3">
+    <div class="row align-items-center">
+        <div class="col">
+            <div class="page-pretitle">Anglers</div>
+            <h2 class="page-title"><i class="ti ti-arrows-join me-2 text-primary"></i>Merge Duplicate Accounts</h2>
+        </div>
+        <div class="col-auto">
+            <a href="/admin/users" class="btn"><i class="ti ti-arrow-left me-1"></i>Back to Users</a>
+        </div>
     </div>
+</div>
 
-    <!-- Warning Banner -->
-    <div style="padding:1rem;border-radius:var(--r-md);background:var(--warn-m);color:var(--warn);font-size:.85rem;margin-bottom:1.4rem;border:1px solid color-mix(in srgb,var(--warn) 25%,transparent)">
-        <div style="font-weight:700;margin-bottom:.5rem"><i class="bi bi-exclamation-triangle-fill"></i> Important Information</div>
-        <p style="margin-bottom:.35rem">This tool merges duplicate accounts by:</p>
-        <ul style="margin-bottom:.35rem;padding-left:1.25rem">
-            <li>Moving all tournament results, poll votes, and officer positions from the source account to the target account</li>
-            <li>Updating all created content (polls, news, tournaments) to show the target account as creator</li>
-            <li>Deleting duplicate poll votes (where both accounts voted on the same poll)</li>
-            <li>Keeping the source account for audit purposes (can be manually deleted after merge)</li>
-        </ul>
-        <p style="margin:0"><strong>This action cannot be easily undone. Review the preview carefully before proceeding.</strong></p>
+<!-- Warning Banner -->
+<div class="alert alert-warning" role="alert">
+    <div class="d-flex">
+        <div><i class="ti ti-alert-triangle icon alert-icon"></i></div>
+        <div>
+            <h4 class="alert-title">Important Information</h4>
+            <p class="mb-1">This tool merges duplicate accounts by:</p>
+            <ul class="mb-1">
+                <li>Moving all tournament results, poll votes, and officer positions from the source account to the target account</li>
+                <li>Updating all created content (polls, news, tournaments) to show the target account as creator</li>
+                <li>Deleting duplicate poll votes (where both accounts voted on the same poll)</li>
+                <li>Keeping the source account for audit purposes (can be manually deleted after merge)</li>
+            </ul>
+            <p class="mb-0"><strong>This action cannot be easily undone. Review the preview carefully before proceeding.</strong></p>
+        </div>
     </div>
 </div>
 
 <!-- Account Selection -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.4rem;margin-bottom:1.4rem">
-    <div class="cc" style="border-color:color-mix(in srgb,var(--err) 40%,transparent)">
-        <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0);background:var(--err-m)">
-            <div style="font-weight:700;color:var(--err)"><i class="bi bi-person-x"></i> Source Account (Old)</div>
-            <div style="font-size:.75rem;color:var(--err)">Data will be moved FROM this account</div>
-        </div>
-        <div class="ci">
-            <div class="fg">
-                <label class="fl" for="source_id">Select Account to Merge From</label>
-                <select class="fi" id="source_id" name="source_id">
-                    <option value="">-- Select Source Account --</option>
-                    {% for angler in anglers %}
-                    <option value="{{ angler.id }}">
-                        {{ angler.name }}
-                        {% if angler.email %}({{ angler.email }}){% endif %}
-                        - ID: {{ angler.id }}
-                    </option>
-                    {% endfor %}
-                </select>
+<div class="row row-cards mb-3">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-status-start bg-danger"></div>
+            <div class="card-header">
+                <div>
+                    <h3 class="card-title text-danger mb-0"><i class="ti ti-user-x me-2"></i>Source Account (Old)</h3>
+                    <div class="text-secondary small">Data will be moved FROM this account</div>
+                </div>
             </div>
-            <div id="source_details" style="display:none">
-                <div style="border-top:1px solid var(--b0);padding-top:.75rem;margin-top:.75rem">
-                    <div style="font-weight:600;font-size:.88rem;color:var(--t1);margin-bottom:.5rem">Account Details</div>
+            <div class="card-body">
+                <div class="mb-0">
+                    <label class="form-label" for="source_id">Select Account to Merge From</label>
+                    <select class="form-select" id="source_id" name="source_id">
+                        <option value="">-- Select Source Account --</option>
+                        {% for angler in anglers %}
+                        <option value="{{ angler.id }}">
+                            {{ angler.name }}{% if angler.email %} ({{ angler.email }}){% endif %} - ID: {{ angler.id }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div id="source_details" style="display:none">
+                    <hr>
+                    <div class="fw-bold mb-2">Account Details</div>
                     <div id="source_info"></div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="cc" style="border-color:color-mix(in srgb,var(--ok) 40%,transparent)">
-        <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0);background:var(--ok-m)">
-            <div style="font-weight:700;color:var(--ok)"><i class="bi bi-person-check"></i> Target Account (New)</div>
-            <div style="font-size:.75rem;color:var(--ok)">Data will be moved TO this account</div>
-        </div>
-        <div class="ci">
-            <div class="fg">
-                <label class="fl" for="target_id">Select Account to Merge To</label>
-                <select class="fi" id="target_id" name="target_id">
-                    <option value="">-- Select Target Account --</option>
-                    {% for angler in anglers %}
-                    <option value="{{ angler.id }}">
-                        {{ angler.name }}
-                        {% if angler.email %}({{ angler.email }}){% endif %}
-                        - ID: {{ angler.id }}
-                    </option>
-                    {% endfor %}
-                </select>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-status-start bg-success"></div>
+            <div class="card-header">
+                <div>
+                    <h3 class="card-title text-green mb-0"><i class="ti ti-user-check me-2"></i>Target Account (New)</h3>
+                    <div class="text-secondary small">Data will be moved TO this account</div>
+                </div>
             </div>
-            <div id="target_details" style="display:none">
-                <div style="border-top:1px solid var(--b0);padding-top:.75rem;margin-top:.75rem">
-                    <div style="font-weight:600;font-size:.88rem;color:var(--t1);margin-bottom:.5rem">Account Details</div>
+            <div class="card-body">
+                <div class="mb-0">
+                    <label class="form-label" for="target_id">Select Account to Merge To</label>
+                    <select class="form-select" id="target_id" name="target_id">
+                        <option value="">-- Select Target Account --</option>
+                        {% for angler in anglers %}
+                        <option value="{{ angler.id }}">
+                            {{ angler.name }}{% if angler.email %} ({{ angler.email }}){% endif %} - ID: {{ angler.id }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div id="target_details" style="display:none">
+                    <hr>
+                    <div class="fw-bold mb-2">Account Details</div>
                     <div id="target_info"></div>
                 </div>
             </div>
@@ -80,49 +94,54 @@
     </div>
 </div>
 
-<!-- Preview Section (shown via HTMX) -->
+<!-- Preview Section (shown via JS) -->
 <div id="preview_section" style="display:none">
-    <div class="cc" style="border-color:color-mix(in srgb,var(--brand) 40%,transparent);margin-bottom:1.4rem">
-        <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0);background:var(--brand-m)">
-            <div style="font-weight:700;color:var(--brand)"><i class="bi bi-eye"></i> Merge Preview</div>
+    <div class="card mb-3">
+        <div class="card-status-start bg-primary"></div>
+        <div class="card-header">
+            <h3 class="card-title text-primary"><i class="ti ti-eye me-2"></i>Merge Preview</h3>
         </div>
-        <div class="ci">
+        <div class="card-body">
             <div id="preview_content">
-                <div style="text-align:center;padding:2.5rem 0">
-                    <div class="spinner-border" style="color:var(--brand)" role="status">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading preview...</span>
                     </div>
-                    <p style="margin-top:.75rem;color:var(--t3)">Loading preview...</p>
+                    <p class="mt-2 text-secondary">Loading preview...</p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Confirmation Section -->
-    <div class="cc" style="border-color:color-mix(in srgb,var(--warn) 40%,transparent)">
-        <div style="padding:.8rem 1.2rem;border-bottom:1px solid var(--b0);background:var(--warn-m)">
-            <div style="font-weight:700;color:var(--warn)"><i class="bi bi-shield-exclamation"></i> Confirm Merge</div>
+    <div class="card">
+        <div class="card-status-start bg-warning"></div>
+        <div class="card-header">
+            <h3 class="card-title text-warning"><i class="ti ti-shield-exclamation me-2"></i>Confirm Merge</h3>
         </div>
-        <div class="ci">
+        <div class="card-body">
             <form method="POST" action="/admin/users/merge/execute" id="merge_form">
                 {{ csrf_token(request) }}
                 <input type="hidden" name="source_id" id="form_source_id">
                 <input type="hidden" name="target_id" id="form_target_id">
 
-                <div style="padding:1rem;border-radius:var(--r-md);background:var(--err-m);color:var(--err);font-size:.85rem;margin-bottom:1rem;border:1px solid color-mix(in srgb,var(--err) 25%,transparent)">
-                    <div style="font-weight:700;margin-bottom:.35rem"><i class="bi bi-exclamation-octagon-fill"></i> Final Warning</div>
-                    <p style="margin:0">You are about to merge these accounts. This will permanently move all data from the source account to the target account. Duplicate poll votes will be deleted.</p>
+                <div class="alert alert-danger" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-alert-octagon icon alert-icon"></i></div>
+                        <div>
+                            <h4 class="alert-title">Final Warning</h4>
+                            <p class="mb-0">You are about to merge these accounts. This will permanently move all data from the source account to the target account. Duplicate poll votes will be deleted.</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem">
-                    <input type="checkbox" id="confirm_checkbox" name="confirm" value="true" style="accent-color:var(--brand);width:1.1rem;height:1.1rem">
-                    <label for="confirm_checkbox" style="font-size:.88rem;color:var(--t1);cursor:pointer">
-                        <strong>I understand this action cannot be undone and I have reviewed the preview above.</strong>
-                    </label>
-                </div>
+                <label class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="confirm_checkbox" name="confirm" value="true">
+                    <span class="form-check-label"><strong>I understand this action cannot be undone and I have reviewed the preview above.</strong></span>
+                </label>
 
-                <button type="submit" class="btn-m btn-d" id="execute_button" disabled style="width:100%;font-size:1rem;padding:.75rem">
-                    <i class="bi bi-arrow-left-right"></i> Execute Merge
+                <button type="submit" class="btn btn-danger w-100" id="execute_button" disabled>
+                    <i class="ti ti-arrows-join me-1"></i>Execute Merge
                 </button>
             </form>
         </div>

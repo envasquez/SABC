@@ -1,44 +1,50 @@
 {% extends "base.html" %}
 {% from 'macros.html' import alert, csrf_token %}
+{% block title %}Create Account - South Austin Bass Club{% endblock %}
 {% block content %}
-<div class="auth-wrap">
-    <div class="auth-card" style="max-width:440px">
-        <div class="auth-logo">
-            <img src="/static/sabc_logo.png" alt="SABC" width="64" height="64">
+<div class="row justify-content-center py-4">
+    <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
+        <div class="text-center mb-4">
+            <img src="/static/sabc_logo.png" alt="SABC" width="72" height="72" class="mb-2">
+            <h1 class="h2 mb-0">Create Account</h1>
+            <p class="text-secondary">Join the South Austin Bass Club</p>
         </div>
-        <div class="auth-title">Create Account</div>
-        <div class="auth-sub">Join the South Austin Bass Club</div>
-        {{ alert('danger', error) }}
-        {{ alert('success', success) }}
-        <form method="post" action="/register">
-            {{ csrf_token(request) }}
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
-                <div class="fg">
-                    <label class="fl" for="first_name">First Name</label>
-                    <input class="fi" type="text" id="first_name" name="first_name" placeholder="First name" value="{{ first_name or '' }}" required>
-                </div>
-                <div class="fg">
-                    <label class="fl" for="last_name">Last Name</label>
-                    <input class="fi" type="text" id="last_name" name="last_name" placeholder="Last name" value="{{ last_name or '' }}" required>
-                </div>
+        <div class="card card-md">
+            <div class="card-body">
+                <h2 class="h3 text-center mb-4">Sign up for a free account</h2>
+                {{ alert('danger', error) }}
+                {{ alert('success', success) }}
+                <form method="post" action="/register" autocomplete="off">
+                    {{ csrf_token(request) }}
+                    <div class="row">
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label" for="first_name">First Name</label>
+                            <input class="form-control" type="text" id="first_name" name="first_name" placeholder="First name" value="{{ first_name or '' }}" required>
+                        </div>
+                        <div class="col-sm-6 mb-3">
+                            <label class="form-label" for="last_name">Last Name</label>
+                            <input class="form-control" type="text" id="last_name" name="last_name" placeholder="Last name" value="{{ last_name or '' }}" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="email">Email address</label>
+                        <input class="form-control" type="email" id="email" name="email" placeholder="your@email.com" value="{{ email or '' }}" autocomplete="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="password">Password</label>
+                        <input class="form-control" type="password" id="password" name="password" placeholder="Create a password" minlength="12" autocomplete="new-password" required>
+                        <small class="form-hint">
+                            12+ characters with uppercase, lowercase, number, and special character (!@#$%^&amp;*)
+                        </small>
+                    </div>
+                    <div class="form-footer">
+                        <button class="btn btn-primary w-100" type="submit"><i class="ti ti-user-plus me-1"></i>Create Account</button>
+                    </div>
+                </form>
             </div>
-            <div class="fg">
-                <label class="fl" for="email">Email</label>
-                <input class="fi" type="email" id="email" name="email" placeholder="your@email.com" value="{{ email or '' }}" autocomplete="email" required>
-            </div>
-            <div class="fg">
-                <label class="fl" for="password">Password</label>
-                <input class="fi" type="password" id="password" name="password" placeholder="Create a password" minlength="12" autocomplete="new-password" required>
-                <div style="font-size:.75rem;color:var(--t4);margin-top:.25rem;line-height:1.5">
-                    12+ characters with uppercase, lowercase, number, and special character (!@#$%^&*)
-                </div>
-            </div>
-            <button class="btn-m btn-p" type="submit" style="width:100%;justify-content:center;padding:.7rem">
-                Create Account
-            </button>
-        </form>
-        <div class="auth-links">
-            <p style="margin:.5rem 0">Already have an account? <a href="/login">Sign in</a></p>
+        </div>
+        <div class="text-center text-secondary mt-3">
+            Already have an account? <a href="/login" tabindex="-1">Sign in</a>
         </div>
     </div>
 </div>

@@ -634,14 +634,20 @@ def seed_data() -> None:
             session.add(poll)
             session.flush()
 
-            # 3-5 lake options per poll
+            # 3-5 lake options per poll. Each option gets one of a few realistic
+            # start/end time slots so the results-time-slots table has data to
+            # aggregate (different options can carry different time windows).
             poll_lakes = random.sample(lakes, min(random.randint(3, 5), len(lakes)))
+            time_slots = [("06:00", "15:00"), ("06:30", "15:30"), ("07:00", "16:00")]
             poll_options: list[PollOption] = []
             for opt_idx, opt_lake in enumerate(poll_lakes):
+                start, end = random.choice(time_slots)
                 option = PollOption(
                     poll_id=poll.id,
                     option_text=opt_lake.display_name,
-                    option_data=json.dumps({"lake_id": opt_lake.id}),
+                    option_data=json.dumps(
+                        {"lake_id": opt_lake.id, "start_time": start, "end_time": end}
+                    ),
                     display_order=opt_idx,
                 )
                 session.add(option)

@@ -4,82 +4,119 @@
 {% block title %}Manage Lakes - Admin{% endblock %}
 
 {% block admin_content %}
-<div class="sh"><h1 class="st"><i class="bi bi-water"></i> Manage Lakes</h1></div>
+<div class="page-header d-print-none mb-3">
+    <div class="row g-2 align-items-center">
+        <div class="col">
+            <h2 class="page-title"><i class="ti ti-droplet me-2 text-azure"></i>Manage Lakes</h2>
+            <div class="text-secondary mt-1">Lakes and ramps available for tournament scheduling</div>
+        </div>
+    </div>
+</div>
 
 {{ alert('success', request.query_params.get('success')) }}
 {{ alert('danger', request.query_params.get('error')) }}
 
-<div style="display:grid;grid-template-columns:1fr 2fr;gap:1.4rem">
+<div class="row row-cards">
     <!-- Create New Lake Form -->
-    <div class="cc">
-        <div class="ci">
-            <div class="ct" style="margin-bottom:1rem"><i class="bi bi-plus-circle"></i> Add Lake</div>
+    <div class="col-12 col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="ti ti-circle-plus me-2 text-primary"></i>Add Lake</h3>
+            </div>
             <form method="POST" action="/admin/lakes/create">
-                {{ csrf_token(request) }}
-                <div class="fg">
-                    <label class="fl" for="display_name">Display Name</label>
-                    <input class="fi" type="text" id="display_name" name="display_name" required maxlength="100" placeholder="Lake Travis">
+                <div class="card-body">
+                    {{ csrf_token(request) }}
+                    <div class="mb-3">
+                        <label for="display_name" class="form-label required">Display Name</label>
+                        <input class="form-control" type="text" id="display_name" name="display_name" required maxlength="100" placeholder="Lake Travis">
+                    </div>
+                    <div class="mb-1">
+                        <label for="name" class="form-label required">Database Name</label>
+                        <input class="form-control" type="text" id="name" name="name" required maxlength="50" placeholder="travis">
+                        <small class="form-hint">Lowercase, no spaces (e.g., "travis", "lake_austin")</small>
+                    </div>
                 </div>
-                <div class="fg">
-                    <label class="fl" for="name">Database Name</label>
-                    <input class="fi" type="text" id="name" name="name" required maxlength="50" placeholder="travis">
-                    <div style="font-size:.72rem;color:var(--t4);margin-top:.25rem">Lowercase, no spaces (e.g., "travis", "lake_austin")</div>
+                <div class="card-footer">
+                    <button class="btn btn-primary w-100" type="submit"><i class="ti ti-circle-plus me-1"></i>Add Lake</button>
                 </div>
-                <button class="btn-m btn-p" type="submit" style="width:100%;justify-content:center"><i class="bi bi-plus-circle" aria-hidden="true"></i> Add Lake</button>
             </form>
         </div>
     </div>
 
     <!-- Existing Lakes List -->
-    <div class="cc">
-        <div class="ci" style="padding-bottom:0">
-            <div class="ct" style="margin-bottom:1rem"><i class="bi bi-list-ul"></i> Existing Lakes {% if lakes %}({{ lakes|length }}){% endif %}</div>
+    <div class="col-12 col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="ti ti-list me-2 text-azure"></i>Existing Lakes</h3>
+                {% if lakes %}
+                <div class="card-actions">
+                    <span class="badge bg-azure-lt">{{ lakes|length }} total</span>
+                </div>
+                {% endif %}
+            </div>
+            {% if lakes %}
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-hover">
+                    <thead>
+                        <tr>
+                            <th class="w-1">#</th>
+                            <th>Display Name</th>
+                            <th>Database Name</th>
+                            <th class="w-1 text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lake in lakes %}
+                        <tr>
+                            <td class="text-secondary">{{ loop.index }}</td>
+                            <td>
+                                <span class="d-flex align-items-center">
+                                    <span class="avatar avatar-sm bg-azure-lt me-2"><i class="ti ti-droplet"></i></span>
+                                    <span class="fw-bold">{{ lake.display_name }}</span>
+                                </span>
+                            </td>
+                            <td><code>{{ lake.yaml_key }}</code></td>
+                            <td class="text-end">
+                                <div class="btn-list flex-nowrap justify-content-end">
+                                    <a href="/admin/lakes/{{ lake.id }}/edit" class="btn btn-icon btn-sm" aria-label="Edit lake">
+                                        <i class="ti ti-pencil"></i>
+                                    </a>
+                                    <button class="btn btn-icon btn-sm btn-ghost-danger delete-btn"
+                                            data-id="{{ lake.id }}"
+                                            data-display-name="{{ lake.display_name }}"
+                                            aria-label="Delete lake">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty">
+                <div class="empty-icon"><i class="ti ti-droplet-off" style="font-size:2.5rem"></i></div>
+                <p class="empty-title">No lakes yet</p>
+                <p class="empty-subtitle text-secondary">Add your first lake using the form on the left.</p>
+            </div>
+            {% endif %}
         </div>
-        {% if lakes %}
-        <div class="mt-wrap">
-        <table class="mt mt-cards">
-            <thead><tr><th style="width:50px">#</th><th>Display Name</th><th>Database Name</th><th style="text-align:right">Actions</th></tr></thead>
-            <tbody>
-                {% for lake in lakes %}
-                <tr>
-                    <td data-label="#" style="color:var(--t4)">{{ loop.index }}</td>
-                    <td data-label="Display Name" style="font-weight:600;color:var(--t1)">{{ lake.display_name }}</td>
-                    <td data-label="Database Name"><code style="color:var(--brand);background:var(--brand-m);padding:.1rem .4rem;border-radius:var(--r-sm);font-size:.78rem">{{ lake.yaml_key }}</code></td>
-                    <td style="text-align:right">
-                        <div style="display:flex;gap:.35rem;justify-content:flex-end">
-                            <a href="/admin/lakes/{{ lake.id }}/edit" class="btn-icon btn-icon-ghost" style="text-decoration:none" aria-label="Edit lake"><i class="bi bi-pencil"></i></a>
-                            <button class="btn-icon btn-icon-danger delete-btn"
-                                    data-id="{{ lake.id }}"
-                                    data-display-name="{{ lake.display_name }}"
-                                    aria-label="Delete lake">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        </div>
-        {% else %}
-        <div style="text-align:center;padding:2.5rem 1rem;color:var(--t3)">
-            <i class="bi bi-water" style="font-size:2.5rem;opacity:.3"></i>
-            <div style="margin-top:.5rem">No lakes yet. Add your first lake!</div>
-        </div>
-        {% endif %}
     </div>
 </div>
 
 <!-- Delete Confirmation Modal -->
 {% call delete_modal('deleteLakeModal', 'Delete Lake', 'delete-lake-name', 'confirmDeleteLakeBtn', 'delete-confirmation') %}
 <input type="hidden" id="delete-lake-id">
-<p><strong>This action will permanently delete:</strong></p>
-<ul>
+<p class="text-secondary mb-1">This will permanently delete:</p>
+<ul class="text-secondary">
     <li>The lake record</li>
     <li>All associated ramps</li>
     <li>Lake references in tournaments</li>
 </ul>
 {% endcall %}
 
-<script src="{{ url_for('static', path='/admin-lakes.js') }}?v={{ asset_v }}"></script>
+{% block extra_js %}
+<script src="/static/admin-lakes.js"></script>
+{% endblock %}
 {% endblock %}

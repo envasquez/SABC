@@ -24,5 +24,10 @@
   "license": "MIT",
   "devDependencies": {
     "@playwright/test": "^1.40.0"
+  },
+  "dependencies": {
+    "@tabler/core": "^1.4.0",
+    "@tabler/icons-webfont": "^3.44.0",
+    "htmx.org": "^1.9.10"
   }
 }
