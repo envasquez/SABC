@@ -5,7 +5,10 @@
  * on the home page using stacked bar charts showing lakes with ramp breakdown.
  */
 
-// Global state for home page poll renderer
+(function() {
+    'use strict';
+
+// State for home page poll renderer
 let homeResultsRenderer;
 
 /**
@@ -56,5 +59,6 @@ function handleTabSwitching() {
     }
 }
 
-// Export functions to global scope for onclick handlers
+// Export function consumed cross-file by home-init.js
 window.initializeHomePolls = initializeHomePolls;
+})();

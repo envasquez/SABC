@@ -55,7 +55,7 @@ def _cleanup_user_references(session: Session, user_id: int) -> None:
 
 
 @router.delete("/admin/users/{user_id}")
-async def delete_user(request: Request, user_id: int) -> Response:
+def delete_user(request: Request, user_id: int) -> Response:
     """Delete a user account (cannot delete yourself or users with tournament history)."""
     return delete_entity(
         request,

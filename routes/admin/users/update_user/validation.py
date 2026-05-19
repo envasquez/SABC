@@ -1,5 +1,7 @@
 from typing import Optional
 
+from sqlalchemy.orm import Session
+
 from core.db_schema import OfficerPosition
 from core.helpers.logging import get_logger
 
@@ -29,7 +31,7 @@ def validate_and_prepare_email(email: str, name: str, member: bool, user_id: int
 
 
 def update_officer_positions(
-    session, user_id: int, officer_positions: list[str], current_year: int
+    session: Session, user_id: int, officer_positions: list[str], current_year: int
 ) -> None:
     """Update officer positions for a user within an existing session transaction.
 

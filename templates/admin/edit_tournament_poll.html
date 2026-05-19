@@ -153,6 +153,6 @@
     </div>
 </div>
 
-<script src="/static/admin.js"></script>
+<script src="{{ url_for('static', path='/admin.js') }}?v={{ asset_v }}"></script>
 
 {% endblock %}

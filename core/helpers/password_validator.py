@@ -3,13 +3,58 @@
 import re
 from typing import Tuple
 
+# Well-known weak passwords. The complexity rules require upper+lower+digit+
+# special, so this list focuses on realistic weak passwords that still satisfy
+# those rules, plus generic entries. All entries are lowercase.
+COMMON_PASSWORDS = [
+    # Existing entries
+    "password123",
+    "admin123456",
+    "letmein12345",
+    "welcome12345",
+    "qwerty123456",
+    "password1234",
+    "abc123456789",
+    "123456789abc",
+    # Realistic weak passwords with complexity characters
+    "password123!",
+    "password1234!",
+    "passw0rd123!",
+    "p@ssword1234",
+    "p@ssw0rd1234",
+    "admin@1234567",
+    "admin123456!",
+    "qwerty123!@#",
+    "qwerty12345!",
+    "welcome@123456",
+    "welcome123!@#",
+    "letmein123!@#",
+    "letmein@123456",
+    "iloveyou123!",
+    "monkey123!@#",
+    "dragon123!@#",
+    "sunshine123!",
+    "football123!",
+    "baseball123!",
+    "superman123!",
+    "trustno1@123",
+    "master123!@#",
+    "shadow123!@#",
+    "michael123!@#",
+    "abc123456789!",
+    "changeme123!",
+    "default123!@#",
+    "secret123!@#",
+    "test1234567!",
+]
+
 
 def validate_password_strength(password: str) -> Tuple[bool, str]:
     """
     Validate password meets security requirements.
 
     Requirements:
-    - Minimum 8 characters
+    - Minimum 12 characters
     - At least one uppercase letter
     - At least one lowercase letter
     - At least one number
@@ -22,8 +67,8 @@ def validate_password_strength(password: str) -> Tuple[bool, str]:
     Returns:
         Tuple of (is_valid, error_message)
     """
-    if len(password) < 8:
-        return False, "Password must be at least 8 characters long"
+    if len(password) < 12:
+        return False, "Password must be at least 12 characters long"
 
     if not re.search(r"[A-Z]", password):
         return False, "Password must contain at least one uppercase letter"
@@ -38,29 +83,12 @@ def validate_password_strength(password: str) -> Tuple[bool, str]:
         return False, "Password must contain at least one special character"
 
     # Check against common weak passwords
-    common_passwords = [
-        "password123",
-        "admin123456",
-        "letmein12345",
-        "welcome12345",
-        "qwerty123456",
-        "password1234",
-        "abc123456789",
-        "123456789abc",
-    ]
-
-    if password.lower() in common_passwords:
+    if password.lower() in COMMON_PASSWORDS:
         return False, "Password is too common. Please choose a stronger password"
 
-    # Check for sequential characters (like "123" or "abc")
+    # Check for sequential numbers (like "123")
     if re.search(r"(012|123|234|345|456|567|678|789|890)", password):
         return False, "Password contains sequential numbers"
-
-    if re.search(
-        r"(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)",
-        password.lower(),
-    ):
-        return False, "Password contains sequential letters"
 
     return True, ""
 
@@ -68,7 +96,7 @@ def validate_password_strength(password: str) -> Tuple[bool, str]:
 def get_password_requirements_text() -> str:
     """Get human-readable password requirements for display."""
     return """Password must:
-• Be at least 8 characters long
+• Be at least 12 characters long
 • Include uppercase and lowercase letters
 • Include at least one number
 • Include at least one special character (!@#$%^&* etc.)

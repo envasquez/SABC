@@ -3,6 +3,9 @@
  * Common utilities used across admin pages
  */
 
+(function() {
+    'use strict';
+
 /**
  * Delete a poll vote by ID
  * @param {number} voteId - The ID of the vote to delete
@@ -44,3 +47,27 @@ function selectNone(checkboxName = 'lake_ids') {
         checkbox.checked = false;
     });
 }
+
+// Delegated handlers for select-all / select-none checkbox controls and
+// vote-delete buttons. Buttons may carry data-checkbox-name (default 'lake_ids');
+// vote-delete buttons carry data-vote-id and data-voter-name.
+document.addEventListener('click', function(e) {
+    const allBtn = e.target.closest('.js-select-all');
+    if (allBtn) {
+        selectAll(allBtn.dataset.checkboxName || 'lake_ids');
+        return;
+    }
+    const noneBtn = e.target.closest('.js-select-none');
+    if (noneBtn) {
+        selectNone(noneBtn.dataset.checkboxName || 'lake_ids');
+        return;
+    }
+    const voteBtn = e.target.closest('.js-delete-vote');
+    if (voteBtn) {
+        const voterName = voteBtn.dataset.voterName || '';
+        if (confirm('Delete vote by ' + voterName + '?')) {
+            deleteVote(voteBtn.dataset.voteId);
+        }
+    }
+});
+})();

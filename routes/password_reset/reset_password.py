@@ -2,12 +2,13 @@ from urllib.parse import quote
 
 import bcrypt
 from fastapi import APIRouter, Form, Query, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Angler, get_session
 from core.email import use_reset_token, verify_reset_token
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
+from core.helpers.passwords import bcrypt_gensalt
 from core.helpers.response import error_redirect
 from routes.dependencies import templates
 from routes.password_reset.reset_validation import (
@@ -21,9 +22,9 @@ logger = get_logger("password_reset")
 
 
 @router.get("/reset-password")
-async def reset_password_form(
+def reset_password_form(
     request: Request, token: str = Query(..., description="Password reset token")
-):
+) -> Response:
     try:
         token_data = verify_reset_token(token)
 
@@ -55,12 +56,12 @@ async def reset_password_form(
 
 
 @router.post("/reset-password")
-async def process_password_reset(
+def process_password_reset(
     request: Request,
     token: str = Form(..., description="Password reset token"),
-    password: str = Form(..., min_length=8, description="New password"),
+    password: str = Form(..., min_length=12, description="New password"),
     password_confirm: str = Form(..., description="Confirm new password"),
-):
+) -> RedirectResponse:
     try:
         error_msg = validate_password_reset(password, password_confirm)
         if error_msg:
@@ -73,7 +74,7 @@ async def process_password_reset(
         if not token_data:
             return error_redirect("/forgot-password", ERROR_INVALID_TOKEN)
 
-        password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt_gensalt()).decode("utf-8")
 
         with get_session() as session:
             angler = session.query(Angler).filter(Angler.id == token_data["user_id"]).first()

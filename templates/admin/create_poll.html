@@ -235,8 +235,8 @@
 </div>
 
 {% block extra_js %}
-<script src="/static/admin.js"></script>
-<script src="/static/poll-management.js"></script>
-<script src="/static/admin-create-poll.js"></script>
+<script src="{{ url_for('static', path='/admin.js') }}?v={{ asset_v }}"></script>
+<script src="{{ url_for('static', path='/poll-management.js') }}?v={{ asset_v }}"></script>
+<script src="{{ url_for('static', path='/admin-create-poll.js') }}?v={{ asset_v }}"></script>
 {% endblock extra_js %}
 {% endblock %}

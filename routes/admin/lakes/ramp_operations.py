@@ -11,12 +11,12 @@ router = APIRouter()
 
 
 @router.post("/admin/lakes/{lake_id}/ramps")
-async def create_ramp(
+def create_ramp(
     request: Request,
     lake_id: int,
     name: str = Form(...),
     google_maps_iframe: str = Form(""),
-):
+) -> RedirectResponse:
     _user = require_admin(request)
     try:
         with get_session() as session:
@@ -34,12 +34,12 @@ async def create_ramp(
 
 
 @router.post("/admin/ramps/{ramp_id}/update")
-async def update_ramp(
+def update_ramp(
     request: Request,
     ramp_id: int,
     name: str = Form(...),
     google_maps_iframe: str = Form(""),
-):
+) -> RedirectResponse:
     _user = require_admin(request)
     lake_id: int | None = None
     try:

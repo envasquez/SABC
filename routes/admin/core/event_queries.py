@@ -2,8 +2,61 @@ from typing import Any, Dict, List, Literal
 
 from sqlalchemy import Date, cast, exists, func, select
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.elements import ColumnElement
 
 from core.db_schema import Event, Poll, Result, Tournament, get_session
+
+
+def _has_poll_column() -> ColumnElement[bool]:
+    """Correlated EXISTS column: does the event have any poll?"""
+    return exists(select(1).where(Poll.event_id == Event.id).correlate_except(Poll)).label(
+        "has_poll"
+    )
+
+
+def _has_tournament_column() -> ColumnElement[bool]:
+    """Correlated EXISTS column: does the event have any tournament?"""
+    return exists(
+        select(1).where(Tournament.event_id == Event.id).correlate_except(Tournament)
+    ).label("has_tournament")
+
+
+def _poll_active_column() -> ColumnElement[bool]:
+    """Correlated EXISTS column: does the event have an open (not closed) poll?"""
+    return exists(
+        select(1)
+        .where((Poll.event_id == Event.id) & (Poll.closed.is_(False)))
+        .correlate_except(Poll)
+    ).label("poll_active")
+
+
+def _has_results_column() -> ColumnElement[bool]:
+    """Correlated EXISTS column: does the event's tournament have any results?"""
+    return exists(
+        select(1).where(Result.tournament_id == Tournament.id).correlate_except(Result)
+    ).label("has_results")
+
+
+def _tournament_complete_column() -> ColumnElement[bool]:
+    """Coalesced column: is the joined tournament marked complete?"""
+    return func.coalesce(Tournament.complete, False).label("tournament_complete")
+
+
+def _event_existence_columns() -> List[Any]:
+    """Shared existence/aggregate columns used by every event listing query.
+
+    Returns the column block (has_poll, has_tournament, tournament_complete)
+    that was previously copy-pasted across the three event query builders.
+    Time-specific columns (poll_active / has_results) are appended by callers.
+
+    Returns:
+        List of SQLAlchemy column expressions.
+    """
+    return [
+        _has_poll_column(),
+        _has_tournament_column(),
+        _tournament_complete_column(),
+    ]
 
 
 def _build_sabc_tournament_query(
@@ -31,28 +84,14 @@ def _build_sabc_tournament_query(
         Event.start_time,
         Event.weigh_in_time,
         Event.holiday_name,
-        exists(select(1).where(Poll.event_id == Event.id).correlate_except(Poll)).label("has_poll"),
-        exists(select(1).where(Tournament.event_id == Event.id).correlate_except(Tournament)).label(
-            "has_tournament"
-        ),
-        func.coalesce(Tournament.complete, False).label("tournament_complete"),
+        *_event_existence_columns(),
     ]
 
     # Add time-specific column
     if time_filter == "past":
-        base_columns.append(
-            exists(
-                select(1).where(Result.tournament_id == Tournament.id).correlate_except(Result)
-            ).label("has_results")
-        )
+        base_columns.append(_has_results_column())
     else:
-        base_columns.append(
-            exists(
-                select(1)
-                .where((Poll.event_id == Event.id) & (Poll.closed.is_(False)))
-                .correlate_except(Poll)
-            ).label("poll_active")
-        )
+        base_columns.append(_poll_active_column())
 
     # Build query with appropriate filter and order
     query = session.query(*base_columns).outerjoin(Tournament, Event.id == Tournament.event_id)
@@ -70,7 +109,10 @@ def _build_sabc_tournament_query(
 
     results = query.all()
 
-    # Convert to dictionaries
+    # Convert to dictionaries.
+    # Rows are unpacked positionally (e[0]..e[13]); the index order matches
+    # base_columns above exactly. Left positional rather than switched to
+    # label-keyed access to avoid any behavior change in this refactor.
     tournaments = []
     for e in results:
         tournament_dict: Dict[str, Any] = {
@@ -135,24 +177,18 @@ def get_upcoming_events_data(page: int, per_page: int) -> tuple[List[Dict[str, A
                 Event.event_type,
                 Event.year,
                 func.extract("dow", Event.date).label("day_num"),
-                exists(select(1).where(Poll.event_id == Event.id).correlate_except(Poll)).label(
-                    "has_poll"
-                ),
-                exists(
-                    select(1).where(Tournament.event_id == Event.id).correlate_except(Tournament)
-                ).label("has_tournament"),
-                exists(
-                    select(1)
-                    .where((Poll.event_id == Event.id) & (Poll.closed.is_(False)))
-                    .correlate_except(Poll)
-                ).label("poll_active"),
+                # Column order is preserved exactly: the dict comprehension
+                # below unpacks rows positionally (e[7]..e[16]).
+                _has_poll_column(),
+                _has_tournament_column(),
+                _poll_active_column(),
                 Event.start_time,
                 Event.weigh_in_time,
                 Event.entry_fee,
                 Event.lake_name,
                 Event.ramp_name,
                 Event.holiday_name,
-                func.coalesce(Tournament.complete, False).label("tournament_complete"),
+                _tournament_complete_column(),
             )
             .outerjoin(Tournament, Event.id == Tournament.event_id)
             .filter(Event.date >= cast(func.current_date(), Date))
@@ -215,16 +251,10 @@ def get_past_events_data(page: int, per_page: int) -> tuple[List[Dict[str, Any]]
                 Event.start_time,
                 Event.weigh_in_time,
                 Event.holiday_name,
-                exists(select(1).where(Poll.event_id == Event.id).correlate_except(Poll)).label(
-                    "has_poll"
-                ),
-                exists(
-                    select(1).where(Tournament.event_id == Event.id).correlate_except(Tournament)
-                ).label("has_tournament"),
-                func.coalesce(Tournament.complete, False).label("tournament_complete"),
-                exists(
-                    select(1).where(Result.tournament_id == Tournament.id).correlate_except(Result)
-                ).label("has_results"),
+                # Column order is preserved exactly: the dict comprehension
+                # below unpacks rows positionally (e[10]..e[13]).
+                *_event_existence_columns(),
+                _has_results_column(),
             )
             .outerjoin(Tournament, Event.id == Tournament.event_id)
             .filter(

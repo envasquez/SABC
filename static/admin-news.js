@@ -3,6 +3,9 @@
  * Handles news CRUD operations, edit modal, and delete confirmation
  */
 
+(function() {
+    'use strict';
+
 // Initialize delete confirmation manager
 let newsDeleteManager;
 
@@ -17,6 +20,12 @@ document.addEventListener('DOMContentLoaded', function() {
         onSuccess: () => location.reload(),
         onError: (error) => showToast(`Error deleting news: ${error}`, 'error')
     });
+
+    // Send Test Email button (previously inline onclick)
+    const sendTestEmailBtn = document.getElementById('sendTestEmailBtn');
+    if (sendTestEmailBtn) {
+        sendTestEmailBtn.addEventListener('click', sendTestEmail);
+    }
 
     // Edit button event listeners
     document.querySelectorAll('.edit-btn').forEach(button => {
@@ -109,31 +118,41 @@ function populateNewsConfirm(mode, title, content, priority, archive) {
     const titleEl = document.getElementById('newsConfirmTitle');
     const summary = document.getElementById('newsConfirmSummary');
 
-    heading.textContent = mode === 'edit' ? 'Confirm Update' : 'Confirm Publish';
-    btnText.textContent = mode === 'edit' ? 'Save Changes' : 'Publish';
+    if (heading) {
+        heading.textContent = mode === 'edit' ? 'Confirm Update' : 'Confirm Publish';
+    }
+    if (btnText) {
+        btnText.textContent = mode === 'edit' ? 'Save Changes' : 'Publish';
+    }
 
-    if (mode === 'create') {
-        note.style.display = '';
-        note.innerHTML = '<i class="bi bi-envelope" style="margin-right:.35rem"></i>All members will be emailed when this is published.';
-    } else {
-        note.style.display = 'none';
+    if (note) {
+        if (mode === 'create') {
+            note.style.display = '';
+            note.innerHTML = '<i class="bi bi-envelope" style="margin-right:.35rem"></i>All members will be emailed when this is published.';
+        } else {
+            note.style.display = 'none';
+        }
     }
 
     const priorityLabel = {'0': 'Normal', '1': 'High', '2': 'Urgent'}[priority] || 'Normal';
 
-    titleEl.textContent = title;
-
-    let html = '<dl class="row mb-0" style="margin:0">';
-    html += '<dt class="col-sm-3"><i class="bi bi-card-text me-1"></i>Content</dt>';
-    html += '<dd class="col-sm-9" style="white-space:pre-wrap;word-break:break-word">' + escapeHtml(content) + '</dd>';
-    html += '<dt class="col-sm-3"><i class="bi bi-flag me-1"></i>Priority</dt>';
-    html += '<dd class="col-sm-9 fw-bold">' + escapeHtml(priorityLabel) + '</dd>';
-    if (archive) {
-        html += '<dt class="col-sm-3"><i class="bi bi-archive me-1"></i>Auto Archive</dt>';
-        html += '<dd class="col-sm-9">' + escapeHtml(archive) + '</dd>';
+    if (titleEl) {
+        titleEl.textContent = title;
     }
-    html += '</dl>';
-    summary.innerHTML = html;
+
+    if (summary) {
+        let html = '<dl class="row mb-0" style="margin:0">';
+        html += '<dt class="col-sm-3"><i class="bi bi-card-text me-1"></i>Content</dt>';
+        html += '<dd class="col-sm-9" style="white-space:pre-wrap;word-break:break-word">' + escapeHtml(content) + '</dd>';
+        html += '<dt class="col-sm-3"><i class="bi bi-flag me-1"></i>Priority</dt>';
+        html += '<dd class="col-sm-9 fw-bold">' + escapeHtml(priorityLabel) + '</dd>';
+        if (archive) {
+            html += '<dt class="col-sm-3"><i class="bi bi-archive me-1"></i>Auto Archive</dt>';
+            html += '<dd class="col-sm-9">' + escapeHtml(archive) + '</dd>';
+        }
+        html += '</dl>';
+        summary.innerHTML = html;
+    }
 }
 
 function sendTestEmail() {
@@ -194,3 +213,4 @@ function editNews(id, title, content, priority, autoArchiveAt) {
 function deleteNews(id, title) {
     newsDeleteManager.confirm(id, title);
 }
+})();

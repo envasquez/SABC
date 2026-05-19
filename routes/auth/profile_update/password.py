@@ -5,6 +5,7 @@ from typing import Optional, Tuple
 from core.db_schema import Angler, get_session
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
 from core.helpers.password_validator import validate_password_strength
+from core.helpers.passwords import bcrypt_gensalt
 from core.types import UserDict
 from routes.dependencies import bcrypt
 
@@ -48,7 +49,7 @@ def handle_password_change(
         ):
             return False, "Current password is incorrect", None
 
-        new_password_hash = bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt()).decode(
+        new_password_hash = bcrypt.hashpw(new_password.encode("utf-8"), bcrypt_gensalt()).decode(
             "utf-8"
         )
 

@@ -3,6 +3,9 @@
  * Handles user merge preview and confirmation
  */
 
+(function() {
+    'use strict';
+
 document.addEventListener('DOMContentLoaded', function() {
     // Enable/disable execute button based on checkbox
     const confirmCheckbox = document.getElementById('confirm_checkbox');
@@ -67,6 +70,7 @@ function loadPreview() {
 
     fetch('/admin/users/merge/preview', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: {
             'x-csrf-token': csrfToken
         },
@@ -185,3 +189,4 @@ function renderPreview(preview) {
 
     document.getElementById('preview_content').innerHTML = html;
 }
+})();

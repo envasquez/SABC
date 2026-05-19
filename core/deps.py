@@ -3,13 +3,14 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any, Generator
 
+from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from markupsafe import Markup
 from sqlalchemy import Connection
 
 from core.db_schema import engine
 from core.helpers.logging import get_logger
-from core.helpers.timezone import now_local, to_local
+from core.helpers.timezone import to_local
 from core.query_service import QueryService
 
 _filter_logger = get_logger(__name__)
@@ -31,36 +32,6 @@ def from_json_filter(value: Any) -> Any:
         except (json.JSONDecodeError, TypeError):
             return {}
     return value
-
-
-def safe_json_filter(value: Any) -> Markup:
-    """Safely convert value to JSON and mark as safe for templates.
-
-    This uses JSON encoding plus explicit escaping of HTML special characters
-    (<, >, &) to prevent XSS attacks when embedded in HTML.
-
-    Security Note: Python's json.dumps() doesn't escape <, >, & by default.
-    We explicitly escape these characters after JSON encoding to prevent XSS.
-    The result is safe for embedding in HTML <script> tags.
-
-    Example:
-        Input: {"name": "<script>alert('xss')</script>"}
-        Output: {"name": "\\u003cscript\\u003ealert('xss')\\u003c\\/script\\u003e"}
-
-    Use this instead of |tojson|safe in templates.
-    """
-    # First, convert to JSON
-    json_str = json.dumps(value, cls=CustomJSONEncoder, ensure_ascii=True)
-
-    # Then escape HTML special characters to prevent XSS
-    # Replace < with \u003c, > with \u003e, & with \u0026
-    json_str = json_str.replace("<", "\\u003c")
-    json_str = json_str.replace(">", "\\u003e")
-    json_str = json_str.replace("&", "\\u0026")
-
-    # nosec B704: We explicitly escape all dangerous HTML characters (<, >, &)
-    # This prevents XSS by ensuring <script>, </script>, etc. cannot appear in output
-    return Markup(json_str)  # nosec
 
 
 def tojson_attr_filter(value: Any) -> Markup:
@@ -212,13 +183,33 @@ def nl2br_filter(value: Any) -> Markup:
     return Markup(str(escaped).replace("\n", "<br>\n"))
 
 
-templates = Jinja2Templates(directory="templates")
-templates.env.filters["time_format"] = time_format_filter
-templates.env.filters["tojson_attr"] = tojson_attr_filter
-templates.env.filters["from_json"] = from_json_filter
+def _flash_messages(request: Request) -> dict[str, Any]:
+    """Surface ?error= / ?success= query params as template variables.
 
-# Add now_local as a global function for templates
-templates.env.globals["now_local"] = now_local
+    base.html renders {% if error %} / {% if success %} alert blocks, but only
+    if those names are in the template context. Routes do a POST-redirect-GET
+    with ?error=/?success=, but almost no destination route forwarded those
+    params into the context — so the messages were silently dropped. Injecting
+    them here makes them render on every page.
+
+    Only keys whose query param is actually present are returned. Starlette
+    merges context processors *over* the explicitly-passed context, so
+    returning error=None unconditionally would clobber a route that set its
+    own error (e.g. a form re-rendered inline with a validation message).
+    """
+    flash: dict[str, Any] = {}
+    error = request.query_params.get("error")
+    if error is not None:
+        flash["error"] = error
+    success = request.query_params.get("success")
+    if success is not None:
+        flash["success"] = success
+    return flash
+
+
+# The Jinja environment is created here, but ALL filter/global registration
+# lives in app_setup.create_app() so there is a single source of truth.
+templates = Jinja2Templates(directory="templates", context_processors=[_flash_messages])
 
 
 def get_db() -> Generator[Connection, None, None]:

@@ -3,18 +3,14 @@
  * Initializes edit poll form functionality
  */
 
-// Save reference to original addOption function (from poll-management.js)
-let originalAddOption;
+(function() {
+    'use strict';
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Save original addOption reference
-    originalAddOption = window.addOption;
-
-    // Override addOption to include hidden option_ids field for edit mode
-    window.addOption = function() {
-        originalAddOption('poll-options-container', true);
-    };
-
-    // Initialize remove button states
-    updateRemoveButtons();
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize remove button states.
+        // Add-option behavior (including the hidden option_ids[] field for edit mode)
+        // is driven by the .js-add-option button's data-include-hidden-id attribute,
+        // handled by the delegated listener in poll-management.js.
+        updateRemoveButtons();
+    });
+})();

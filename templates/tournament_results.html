@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ tournament[5] | title if tournament[5] else (tournament[4] | title if tournament[4] else "Tournament") }} {{ tournament[2] | date_format }} Results{% endblock %}
+{% block title %}{{ tournament.lake_name | title if tournament.lake_name else (tournament.event_name | title if tournament.event_name else "Tournament") }} {{ tournament.event_date | date_format }} Results{% endblock %}
 
 {% block content %}
 <div class="page-header">

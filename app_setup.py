@@ -1,3 +1,5 @@
+import html as _html
+import json
 import os
 from typing import Any, Dict, List, Sequence, Union
 
@@ -5,6 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from markupsafe import Markup as _Markup
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
@@ -21,20 +24,33 @@ from core.deps import (
     is_dues_current_filter,
     month_number_filter,
     nl2br_filter,
-    safe_json_filter,
     templates,
     time_format_filter,
     to_local_datetime_filter,
+    tojson_attr_filter,
 )
 from core.helpers.logging import configure_logging, get_logger
+from core.helpers.sanitize import sanitize_iframe as _sanitize_iframe
+from core.helpers.timezone import now_local
 from core.monitoring import init_sentry
 from core.monitoring.middleware import MetricsMiddleware
 from core.security_middleware import SecurityHeadersMiddleware
 
+# Asset version string for cache-busting static assets in templates.
+# Bump this whenever bundled CSS/JS changes so browsers fetch the new files.
+ASSET_VERSION = "18"
+
 
 def get_csrf_token(request: Request) -> str:
-    """Extract CSRF token from request cookies."""
-    return request.cookies.get("csrf_token", "")
+    """Return the CSRF token to embed in a form's hidden field.
+
+    Normally this is the value of the csrf_token cookie. On a cookie-less
+    first request the cookie does not exist yet, so we fall back to the token
+    the CSRF middleware stashed on the request scope (see
+    core/csrf_middleware.py) — that same token is set as the cookie on the
+    response, so the rendered form and the cookie stay in agreement.
+    """
+    return request.cookies.get("csrf_token", "") or request.scope.get("sabc_csrf_token", "")
 
 
 _DEV_SECRET_FALLBACK_ENVS = {"development", "test"}
@@ -72,8 +88,6 @@ def create_app() -> FastAPI:
 
     class CustomJSONResponse(JSONResponse):
         def render(self, content: Any) -> bytes:
-            import json
-
             return json.dumps(content, cls=CustomJSONEncoder, ensure_ascii=False).encode("utf-8")
 
     app.default_response_class = CustomJSONResponse  # type: ignore[attr-defined]
@@ -134,23 +148,20 @@ def create_app() -> FastAPI:
     os.makedirs("uploads/photos", exist_ok=True)
     app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
+    # Single source of truth for Jinja filter/global registration. The Jinja
+    # environment itself is created in core.deps; everything is registered onto
+    # it here in create_app().
     templates.env.filters["from_json"] = from_json_filter
+    templates.env.filters["tojson_attr"] = tojson_attr_filter
     templates.env.filters["date_format"] = date_format_filter
     templates.env.filters["time_format"] = time_format_filter
     templates.env.filters["date_format_dd_mm_yyyy"] = lambda d: date_format_filter(d, "dd-mm-yyyy")
     templates.env.filters["month_number"] = month_number_filter
-    templates.env.filters["safe_json"] = safe_json_filter
     templates.env.filters["nl2br"] = nl2br_filter
     templates.env.filters["to_local"] = to_local_datetime_filter
     templates.env.filters["is_dues_current"] = is_dues_current_filter
 
     # Sanitize iframe filter — applies sanitize_iframe at render time for defense-in-depth
-    import html as _html
-
-    from markupsafe import Markup as _Markup
-
-    from core.helpers.sanitize import sanitize_iframe as _sanitize_iframe
-
     def _sanitize_iframe_filter(value: Any) -> _Markup:
         if not value:
             return _Markup("")
@@ -163,6 +174,12 @@ def create_app() -> FastAPI:
 
     # Add CSRF token to global template context
     templates.env.globals["get_csrf_token"] = get_csrf_token
+
+    # Expose now_local() to templates for current-time rendering.
+    templates.env.globals["now_local"] = now_local
+
+    # Expose the asset cache-bust version to every template render as {{ asset_v }}.
+    templates.env.globals["asset_v"] = ASSET_VERSION
 
     # Logger for exception handlers
     error_logger = get_logger("exception_handler")

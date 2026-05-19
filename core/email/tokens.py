@@ -42,7 +42,7 @@ def verify_reset_token(token: str) -> Optional[dict]:
     try:
         result = fetch_token_data(token)
         if not result:
-            logger.warning(f"Invalid password reset token: {token[:10]}...")
+            logger.warning("Invalid password reset token")
             return None
 
         user_id, expires_at, used, email, name = result
@@ -76,10 +76,10 @@ def use_reset_token(token: str) -> bool:
         rowcount = mark_token_used(token)
 
         if rowcount > 0:
-            logger.info(f"Marked reset token as used: {token[:10]}...")
+            logger.info("Marked reset token as used")
             return True
         else:
-            logger.warning(f"Failed to mark token as used: {token[:10]}...")
+            logger.warning("Failed to mark token as used (token not found or already used)")
             return False
     except Exception as e:
         logger.error(f"Error marking token as used: {e}")

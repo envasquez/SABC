@@ -55,6 +55,9 @@ pyvenv.cfg
 # Environment variables - NEVER commit these files
 .env
 .env.*
+# Catch-all: any file ending in .env (e.g. db_vars.env, django_vars.env).
+# Past leaks came from *_vars.env files that the .env / .env.* patterns missed.
+*.env
 !.env.example
 !.env.production.example
 !.env.local-test.example

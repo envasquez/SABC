@@ -204,19 +204,21 @@ class TestHandlePasswordChange:
 
     @patch("routes.auth.profile_update.password.get_session")
     @patch("routes.auth.profile_update.password.log_security_event")
+    @patch("routes.auth.profile_update.password.bcrypt_gensalt")
     @patch("routes.auth.profile_update.password.bcrypt")
     @patch("routes.auth.profile_update.password.validate_password_strength")
     def test_updates_password_hash_in_database(
         self,
         mock_validate: Mock,
         mock_bcrypt: Mock,
+        mock_gensalt: Mock,
         mock_log: Mock,
         mock_get_session: Mock,
     ):
         """Test updates user's password hash in database."""
         mock_validate.return_value = (True, None)
         mock_bcrypt.checkpw.return_value = True
-        mock_bcrypt.gensalt.return_value = b"$2b$12$fakesalt"
+        mock_gensalt.return_value = b"$2b$04$fakesalt"
         new_hash = b"$2b$12$newhash"
         mock_bcrypt.hashpw.return_value = new_hash
 
@@ -236,4 +238,4 @@ class TestHandlePasswordChange:
         # Verify new hash was set
         assert mock_user.password_hash == new_hash.decode("utf-8")
         # Verify bcrypt was called with new password
-        mock_bcrypt.hashpw.assert_called_once_with(b"NewPass123!", mock_bcrypt.gensalt.return_value)
+        mock_bcrypt.hashpw.assert_called_once_with(b"NewPass123!", mock_gensalt.return_value)

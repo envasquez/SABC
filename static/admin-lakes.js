@@ -3,6 +3,9 @@
  * Handles lake CRUD operations and delete confirmation
  */
 
+(function() {
+    'use strict';
+
 // Initialize delete confirmation manager
 let lakeDeleteManager;
 
@@ -45,3 +48,4 @@ document.addEventListener('DOMContentLoaded', function() {
 function deleteLake(id, displayName) {
     lakeDeleteManager.confirm(id, displayName);
 }
+})();

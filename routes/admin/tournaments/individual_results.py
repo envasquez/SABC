@@ -1,25 +1,28 @@
 from decimal import Decimal
+from typing import Union
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import Connection
 from sqlalchemy.exc import SQLAlchemyError
+from starlette.concurrency import run_in_threadpool
 
 from core.deps import get_db
 from core.helpers.auth import require_admin
 from core.helpers.forms import get_form_bool, get_form_float, get_form_int
 from core.query_service import QueryService
+from core.types import UserDict
 
 router = APIRouter()
 
 
-@router.post("/admin/tournaments/{tournament_id}/results")
+@router.post("/admin/tournaments/{tournament_id}/results", response_model=None)
 async def save_result(
     tournament_id: int,
     request: Request,
-    user=Depends(require_admin),
+    user: UserDict = Depends(require_admin),
     conn: Connection = Depends(get_db),
-):
+) -> Union[JSONResponse, RedirectResponse]:
     """Save or update individual tournament result."""
     form_data = await request.form()
     qs = QueryService(conn)
@@ -42,13 +45,15 @@ async def save_result(
         was_member = get_form_bool(form_data, "was_member")
 
         # Check if result already exists
-        existing = qs.fetch_one(
+        existing = await run_in_threadpool(
+            qs.fetch_one,
             "SELECT id FROM results WHERE tournament_id = :tid AND angler_id = :aid",
             {"tid": tournament_id, "aid": angler_id},
         )
 
         if existing:
-            qs.execute(
+            await run_in_threadpool(
+                qs.execute,
                 """UPDATE results
                    SET num_fish = :num_fish,
                        total_weight = :total_weight,
@@ -68,7 +73,8 @@ async def save_result(
                 },
             )
         else:
-            qs.execute(
+            await run_in_threadpool(
+                qs.execute,
                 """INSERT INTO results
                    (tournament_id, angler_id, num_fish, total_weight, big_bass_weight,
                     disqualified, buy_in, was_member)
@@ -88,7 +94,8 @@ async def save_result(
 
         # Auto-create/update team result if this completes a team pairing
         # Check if this angler has a teammate in this tournament
-        teammate_result = qs.fetch_one(
+        teammate_result = await run_in_threadpool(
+            qs.fetch_one,
             """SELECT r.angler_id,
                       r.total_weight as net_weight,
                       tr.id as team_result_id
@@ -109,14 +116,15 @@ async def save_result(
             team_total_weight = total_weight + Decimal(str(teammate_net_weight))
 
             # Update existing team result
-            qs.execute(
+            await run_in_threadpool(
+                qs.execute,
                 """UPDATE team_results
                    SET total_weight = :weight
                    WHERE id = :team_id""",
                 {"weight": team_total_weight, "team_id": teammate_result["team_result_id"]},
             )
 
-        conn.commit()
+        await run_in_threadpool(conn.commit)
 
         # Check if this is an AJAX request
         if request.headers.get(
@@ -138,14 +146,14 @@ async def save_result(
         raise
 
 
-@router.post("/admin/tournaments/{tournament_id}/delete-result/{result_id}")
-async def delete_result(
+@router.post("/admin/tournaments/{tournament_id}/delete-result/{result_id}", response_model=None)
+def delete_result(
     tournament_id: int,
     result_id: int,
     request: Request,
-    user=Depends(require_admin),
+    user: UserDict = Depends(require_admin),
     conn: Connection = Depends(get_db),
-):
+) -> Union[JSONResponse, RedirectResponse]:
     """Delete an individual tournament result."""
     qs = QueryService(conn)
 

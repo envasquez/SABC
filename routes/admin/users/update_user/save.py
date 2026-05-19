@@ -5,7 +5,7 @@ from typing import Optional
 
 from fastapi import Form, Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from core.db_schema import Angler, get_session
 from core.helpers.auth import require_admin
@@ -107,14 +107,12 @@ async def update_user(
                 "/admin/users?error=Update failed - no changes saved", status_code=303
             )
 
+    except IntegrityError as e:
+        # The anglers table has exactly one unique constraint (anglers_email_key),
+        # so an IntegrityError while updating a user means a duplicate email.
+        # IntegrityError is raised on both SQLite and PostgreSQL.
+        log_update_exception(user, user_id, e, update_params if "update_params" in locals() else {})
+        return error_redirect("/admin/users", "This email address is already in use.")
     except (SQLAlchemyError, ValueError) as e:
         log_update_exception(user, user_id, e, update_params if "update_params" in locals() else {})
-        error_str = str(e)
-        if (
-            "UNIQUE constraint failed: anglers.email" in error_str
-            or "unique constraint" in error_str.lower()
-        ):
-            error_msg = "This email address is already in use."
-        else:
-            error_msg = "Failed to update user"
-        return error_redirect("/admin/users", error_msg)
+        return error_redirect("/admin/users", "Failed to update user")

@@ -1,9 +1,12 @@
-from .config import CLUB_NAME, WEBSITE_URL
+from markupsafe import escape
+
+from .config import CLUB_NAME, TOKEN_EXPIRY_MINUTES, WEBSITE_URL
 
 
 def generate_reset_email_content(name: str, token: str) -> tuple[str, str, str]:
     subject = f"{CLUB_NAME} - Reset Your Password"
     reset_url = f"{WEBSITE_URL}/reset-password?token={token}"
+    expiry_text = f"{TOKEN_EXPIRY_MINUTES} minutes"
 
     text_body = f"""
 Hello {name},
@@ -13,7 +16,7 @@ You recently requested to reset your password for your {CLUB_NAME} account.
 To reset your password, click the link below:
 {reset_url}
 
-This link will expire in 24 hours.
+This link will expire in {expiry_text}.
 
 If you did not request a password reset, please ignore this email.
 
@@ -21,14 +24,18 @@ Thanks,
 The {CLUB_NAME} Team
 """
 
+    # HTML-escape the user-controlled name to prevent injection into the
+    # HTML email body.
+    name_html = escape(name)
+
     html_body = f"""
 <html>
 <body>
-<p>Hello {name},</p>
+<p>Hello {name_html},</p>
 <p>You recently requested to reset your password for your {CLUB_NAME} account.</p>
 <p>To reset your password, click the link below:</p>
 <p><a href="{reset_url}">Reset Your Password</a></p>
-<p>This link will expire in 24 hours.</p>
+<p>This link will expire in {expiry_text}.</p>
 <p>If you did not request a password reset, please ignore this email.</p>
 <p>Thanks,<br>The {CLUB_NAME} Team</p>
 </body>
@@ -133,9 +140,15 @@ This message was sent via the {CLUB_NAME} website contact form.
 You can reply directly to {sender_email}.
 """
 
-    # Convert message line breaks to HTML
+    # HTML-escape all user-controlled values before interpolating into the
+    # HTML email body to prevent HTML/script injection.
+    sender_name_html = escape(sender_name)
+    sender_email_html = escape(sender_email)
+    subject_line_html = escape(subject_line)
+
+    # Convert message line breaks to HTML (escape each line first)
     html_message = "".join(
-        f"<p>{line}</p>" if line.strip() else "<br>" for line in message.split("\n")
+        f"<p>{escape(line)}</p>" if line.strip() else "<br>" for line in message.split("\n")
     )
 
     html_body = f"""
@@ -143,8 +156,8 @@ You can reply directly to {sender_email}.
 <body>
 <p>New contact form submission from <a href="{WEBSITE_URL}">{CLUB_NAME}</a>:</p>
 <table style="border-collapse: collapse; margin: 16px 0;">
-<tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">From:</td><td>{sender_name} ({sender_email})</td></tr>
-<tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">Subject:</td><td>{subject_line}</td></tr>
+<tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">From:</td><td>{sender_name_html} ({sender_email_html})</td></tr>
+<tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">Subject:</td><td>{subject_line_html}</td></tr>
 </table>
 <div style="padding: 12px; background-color: #f5f5f5; border-left: 4px solid #0d6efd; margin: 16px 0;">
 {html_message}
@@ -152,7 +165,7 @@ You can reply directly to {sender_email}.
 <hr>
 <p style="color: #6c757d; font-size: 0.875em;">
 This message was sent via the {CLUB_NAME} website contact form.
-You can reply directly to <a href="mailto:{sender_email}">{sender_email}</a>.
+You can reply directly to <a href="mailto:{sender_email_html}">{sender_email_html}</a>.
 </p>
 </body>
 </html>

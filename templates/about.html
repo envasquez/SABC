@@ -171,3 +171,6 @@
     </div>
 </div>
 {% endblock %}
+{% block extra_js %}
+<script src="{{ url_for('static', path='/about.js') }}?v={{ asset_v }}"></script>
+{% endblock %}

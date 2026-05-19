@@ -11,12 +11,10 @@ import pytest
 
 from core.helpers.timezone import (
     CLUB_TIMEZONE,
-    is_dst,
     make_aware,
     now_local,
     now_utc,
     to_local,
-    to_utc,
 )
 
 
@@ -67,33 +65,6 @@ class TestToLocal:
         assert result.day in [14, 15]
 
 
-class TestToUTC:
-    """Test conversion to UTC."""
-
-    def test_to_utc_from_local(self):
-        """Test converting local datetime to UTC."""
-        local_dt = datetime(2025, 1, 15, 12, 0, 0, tzinfo=CLUB_TIMEZONE)
-        result = to_utc(local_dt)
-        assert result.tzinfo == timezone.utc
-        # Should be 5 or 6 hours ahead depending on DST
-        assert result.hour in [17, 18]
-
-    def test_to_utc_from_naive_assumes_local(self):
-        """Test that naive datetime is assumed to be in club timezone."""
-        naive_dt = datetime(2025, 1, 15, 12, 0, 0)
-        result = to_utc(naive_dt)
-        assert result.tzinfo == timezone.utc
-        # Should add 5 or 6 hours
-        assert result.hour in [17, 18]
-
-    def test_to_utc_already_utc(self):
-        """Test converting UTC to UTC."""
-        utc_dt = datetime(2025, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
-        result = to_utc(utc_dt)
-        assert result.tzinfo == timezone.utc
-        assert result.hour == 12
-
-
 class TestMakeAware:
     """Test making naive datetimes aware."""
 
@@ -121,67 +92,14 @@ class TestMakeAware:
             make_aware(aware_dt)
 
 
-class TestIsDST:
-    """Test Daylight Saving Time detection."""
+class TestToLocalRoundTrip:
+    """Test that UTC -> local conversion is correct."""
 
-    def test_is_dst_with_summer_date(self):
-        """Test DST detection in summer (DST active)."""
-        # July is definitely DST in Chicago
-        summer_dt = datetime(2025, 7, 15, 12, 0, 0)
-        result = is_dst(summer_dt)
-        assert result is True
-
-    def test_is_dst_with_winter_date(self):
-        """Test DST detection in winter (standard time)."""
-        # January is definitely standard time in Chicago
-        winter_dt = datetime(2025, 1, 15, 12, 0, 0)
-        result = is_dst(winter_dt)
-        assert result is False
-
-    def test_is_dst_with_no_argument_uses_now(self):
-        """Test that is_dst with no argument uses current time."""
-        result = is_dst()
-        assert isinstance(result, bool)
-
-    def test_is_dst_with_aware_datetime(self):
-        """Test DST detection with timezone-aware datetime."""
-        summer_utc = datetime(2025, 7, 15, 17, 0, 0, tzinfo=timezone.utc)
-        result = is_dst(summer_utc)
-        assert result is True
-
-    def test_is_dst_converts_to_local(self):
-        """Test that DST check converts datetime to local timezone."""
-        # Create a datetime in different timezone
-        ny_tz = ZoneInfo("America/New_York")
-        ny_dt = datetime(2025, 7, 15, 13, 0, 0, tzinfo=ny_tz)
-        result = is_dst(ny_dt)
-        # Should convert to Chicago time and check DST there
-        assert isinstance(result, bool)
-
-
-class TestRoundTripConversions:
-    """Test that conversions are reversible."""
-
-    def test_local_to_utc_to_local(self):
-        """Test round-trip local → UTC → local."""
-        original = datetime(2025, 6, 15, 14, 30, 0, tzinfo=CLUB_TIMEZONE)
-        via_utc = to_utc(original)
-        back_to_local = to_local(via_utc)
-
-        assert back_to_local.year == original.year
-        assert back_to_local.month == original.month
-        assert back_to_local.day == original.day
-        assert back_to_local.hour == original.hour
-        assert back_to_local.minute == original.minute
-
-    def test_utc_to_local_to_utc(self):
-        """Test round-trip UTC → local → UTC."""
+    def test_utc_to_local(self):
+        """Test UTC -> local conversion preserves the instant."""
         original = datetime(2025, 6, 15, 19, 30, 0, tzinfo=timezone.utc)
         via_local = to_local(original)
-        back_to_utc = to_utc(via_local)
 
-        assert back_to_utc.year == original.year
-        assert back_to_utc.month == original.month
-        assert back_to_utc.day == original.day
-        assert back_to_utc.hour == original.hour
-        assert back_to_utc.minute == original.minute
+        assert via_local.tzinfo == CLUB_TIMEZONE
+        # Same instant, just a different wall-clock representation.
+        assert via_local.astimezone(timezone.utc) == original

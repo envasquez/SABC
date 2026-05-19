@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 
 from routes.admin.polls.create_poll.form import create_poll_form
 from routes.admin.polls.create_poll.handler import create_poll
@@ -8,8 +8,8 @@ router = APIRouter()
 
 
 @router.get("/admin/polls/create")
-async def get_create_poll_form(request: Request, event_id: int = Query(None)):
-    return await create_poll_form(request, event_id)
+def get_create_poll_form(request: Request, event_id: int = Query(None)) -> Response:
+    return create_poll_form(request, event_id)
 
 
 @router.post("/admin/polls/create")

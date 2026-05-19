@@ -150,21 +150,18 @@ def require_member(request: Request) -> UserDict:
     return user
 
 
-def get_user_optional(request: Request) -> Optional[UserDict]:
-    """
-    Get current user if authenticated, None otherwise.
-
-    Args:
-        request: FastAPI Request object
-
-    Returns:
-        User dictionary if authenticated, None otherwise
-    """
-    return get_current_user(request)
+# Backwards-compatible alias of `get_current_user`.
+#
+# The audit flagged `get_user_optional` as an identity wrapper. The
+# `OptionalUser` dependency below is repointed directly at `get_current_user`,
+# but the wrapper symbol is kept as an alias because several route modules
+# (routes/pages/{home,awards,calendar,roster,data}.py) still import and call
+# `get_user_optional` directly. Removing the name would break those imports.
+get_user_optional = get_current_user
 
 
 # Type aliases for FastAPI dependency injection
 AdminUser = Annotated[UserDict, Depends(require_admin)]
 AuthUser = Annotated[UserDict, Depends(require_auth)]
 MemberUser = Annotated[UserDict, Depends(require_member)]
-OptionalUser = Annotated[Optional[UserDict], Depends(get_user_optional)]
+OptionalUser = Annotated[Optional[UserDict], Depends(get_current_user)]

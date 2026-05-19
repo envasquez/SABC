@@ -178,6 +178,30 @@ def execute_merge(
 
     with get_session() as session:
         try:
+            # Re-detect duplicate poll votes INSIDE the write transaction.
+            # The list returned by preview_merge() above was computed in a
+            # separate, earlier session and is only used for the response
+            # summary — relying on it to drive the DELETE would be a TOCTOU
+            # bug (a vote could have been cast or removed in between). This
+            # query sees the same snapshot as the UPDATE/DELETE statements
+            # that follow, so the dedup decision is consistent.
+            duplicate_votes = (
+                session.query(PollVote.poll_id, Poll.title)
+                .join(Poll, PollVote.poll_id == Poll.id)
+                .filter(PollVote.angler_id == source_angler_id)
+                .filter(
+                    PollVote.poll_id.in_(
+                        session.query(PollVote.poll_id).filter(
+                            PollVote.angler_id == target_angler_id
+                        )
+                    )
+                )
+                .all()
+            )
+            duplicate_poll_votes = [
+                {"poll_id": poll_id, "poll_title": title} for poll_id, title in duplicate_votes
+            ]
+
             # Update results
             session.execute(
                 update(Result)
@@ -201,8 +225,8 @@ def execute_merge(
 
             # Handle poll votes with duplicates
             # First, delete duplicate votes (where both accounts voted on same poll)
-            if preview["duplicate_poll_votes"]:
-                duplicate_poll_ids = [dv["poll_id"] for dv in preview["duplicate_poll_votes"]]
+            if duplicate_poll_votes:
+                duplicate_poll_ids = [dv["poll_id"] for dv in duplicate_poll_votes]
                 deleted_votes = (
                     session.query(PollVote)
                     .filter(
@@ -275,15 +299,14 @@ def execute_merge(
                     "results": preview["results_count"],
                     "team_results": preview["team_results_angler1_count"]
                     + preview["team_results_angler2_count"],
-                    "poll_votes": preview["poll_votes_count"]
-                    - len(preview["duplicate_poll_votes"]),
+                    "poll_votes": preview["poll_votes_count"] - len(duplicate_poll_votes),
                     "officer_positions": preview["officer_positions_count"],
                     "polls_created": preview["polls_created_count"],
                     "news_authored": preview["news_authored_count"],
                     "tournaments_created": preview["tournaments_created_count"],
                     "proxy_votes_cast": preview["proxy_votes_cast_count"],
                 },
-                "deleted_duplicate_votes": len(preview["duplicate_poll_votes"]),
+                "deleted_duplicate_votes": len(duplicate_poll_votes),
                 "deleted_password_tokens": deleted_tokens,
             }
 

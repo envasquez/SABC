@@ -1,7 +1,7 @@
 import os
 
 from fastapi import APIRouter, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy import func
@@ -27,15 +27,15 @@ limiter = Limiter(key_func=get_remote_address, enabled=not is_test_env)
 
 
 @router.get("/forgot-password")
-async def forgot_password_form(request: Request):
+def forgot_password_form(request: Request) -> Response:
     return templates.TemplateResponse(request, "auth/forgot_password.html", {})
 
 
 @router.post("/forgot-password")
 @limiter.limit("5/hour")
-async def request_password_reset(
+def request_password_reset(
     request: Request, email: str = Form(default="", description="Your email address")
-):
+) -> RedirectResponse:
     try:
         email = normalize_email(email)
         if not email:
@@ -78,5 +78,5 @@ async def request_password_reset(
 
 
 @router.get("/reset-password/help")
-async def password_reset_help(request: Request):
+def password_reset_help(request: Request) -> Response:
     return templates.TemplateResponse(request, "auth/password_reset_help.html", {})

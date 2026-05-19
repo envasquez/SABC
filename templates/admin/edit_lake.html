@@ -193,5 +193,5 @@
     </div>
 </div>
 
-<script src="/static/admin-edit-lake.js"></script>
+<script src="{{ url_for('static', path='/admin-edit-lake.js') }}?v={{ asset_v }}"></script>
 {% endblock %}

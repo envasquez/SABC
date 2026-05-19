@@ -1,6 +1,8 @@
 import json
 from typing import Optional, Tuple
 
+from sqlalchemy.orm import Session
+
 from core.db_schema import Angler, PollOption, PollVote, get_session
 from routes.dependencies import (
     find_lake_by_id,
@@ -44,7 +46,7 @@ def validate_tournament_location_vote(vote_data: dict) -> Tuple[Optional[str], O
 
 
 def get_or_create_option_id(
-    poll_id: int, option_text: str, vote_data: dict, session=None
+    poll_id: int, option_text: str, vote_data: dict, session: Optional[Session] = None
 ) -> Optional[int]:
     """Get or create a poll option, handling race conditions with database constraint.
 
@@ -60,7 +62,7 @@ def get_or_create_option_id(
     from sqlalchemy import text
     from sqlalchemy.exc import IntegrityError
 
-    def _execute(sess):
+    def _execute(sess: Session) -> Optional[int]:
         """Inner function to execute the query with provided session."""
         try:
             # Try to insert new option using ON CONFLICT to handle race condition
@@ -115,7 +117,7 @@ def get_or_create_option_id(
 
 
 def validate_proxy_vote(
-    admin_id: int, target_angler_id: int, poll_id: int, session
+    admin_id: int, target_angler_id: int, poll_id: int, session: Session
 ) -> Tuple[Optional[str], Optional[str]]:
     """Validate that an admin can cast a proxy vote for a target angler.
 

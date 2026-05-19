@@ -3,6 +3,9 @@
  * Initializes poll voting handler, chart renderers, and delete confirmation manager
  */
 
+(function() {
+    'use strict';
+
 /**
  * Global state for poll page
  * @type {DeleteConfirmationManager|undefined}
@@ -76,41 +79,15 @@ function renderClubPollChart(dataElement) {
     const backgroundColors = filteredData.map((_, i) => CHART_COLORS.get(i).base);
     const hoverColors = filteredData.map((_, i) => CHART_COLORS.get(i).light);
 
-    // Helper function to wrap long labels into multiple lines
-    function wrapLabel(label, maxChars) {
-        if (!label || label.length <= maxChars) return label;
-        const words = label.split(' ');
-        const lines = [];
-        let currentLine = '';
-        for (const word of words) {
-            if ((currentLine + ' ' + word).trim().length <= maxChars) {
-                currentLine = (currentLine + ' ' + word).trim();
-            } else {
-                if (currentLine) lines.push(currentLine);
-                currentLine = word;
-            }
-        }
-        if (currentLine) lines.push(currentLine);
-        return lines;
-    }
-
-    // Determine responsive wrap limit based on screen width
-    // On narrow mobile screens, wrap at shorter lengths to prevent cutoff
-    const screenWidth = window.innerWidth;
-    let wrapLimit = 35; // Default for larger screens
-    if (screenWidth < 400) {
-        wrapLimit = 18; // Very small phones (iPhone SE, etc.)
-    } else if (screenWidth < 576) {
-        wrapLimit = 22; // Small phones
-    } else if (screenWidth < 768) {
-        wrapLimit = 28; // Larger phones / small tablets
-    }
+    // Determine responsive wrap limit based on screen width using shared helper.
+    // On narrow mobile screens, wrap at shorter lengths to prevent cutoff.
+    const wrapLimit = getChartWrapLimit({ xs: 18, sm: 22, md: 28, lg: 35 });
 
     // Create the chart with beautiful styling
     clubPollCharts[pollId] = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: filteredData.map(d => wrapLabel(d.label, wrapLimit)),
+            labels: filteredData.map(d => wrapChartLabel(d.label, wrapLimit)),
             datasets: [{
                 data: filteredData.map(d => d.votes),
                 backgroundColor: backgroundColors,
@@ -334,3 +311,8 @@ document.addEventListener('DOMContentLoaded', function() {
 function deletePoll(pollId, pollTitle) {
     pollDeleteManager.confirm(pollId, pollTitle);
 }
+
+// Export function referenced by the delegated .js-delete-poll handler.
+// deletePoll is invoked from the click listener above and may be used by inline handlers.
+window.deletePoll = deletePoll;
+})();

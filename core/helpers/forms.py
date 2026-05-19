@@ -1,9 +1,26 @@
 """Form data helper utilities for type-safe extraction."""
 
+import re
 from typing import Optional, Union
 
 from fastapi import UploadFile
 from starlette.datastructures import FormData
+
+# Pragmatic email shape check. Not RFC-exhaustive; its job is to reject
+# malformed input and anything carrying control characters (CR/LF) that
+# could be used for email-header injection when the value is placed in a
+# Reply-To header.
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def is_valid_email(email: Optional[str]) -> bool:
+    """Return True if the value looks like a safe, well-formed email address."""
+    if not email:
+        return False
+    candidate = email.strip()
+    if len(candidate) > 254 or any(c in candidate for c in "\r\n\t"):
+        return False
+    return bool(_EMAIL_RE.match(candidate))
 
 
 def normalize_email(email: Optional[str]) -> str:

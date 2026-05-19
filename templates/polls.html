@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert, badge, csrf_token, delete_modal, time_select_options, seasonal_history_card, poll_sunrise_strip %}
+{% from 'macros.html' import alert, badge, csrf_token, delete_modal, time_select_options, seasonal_history_card, poll_sunrise_strip, vote_form %}
 
 {% block title %}Polls - South Austin Bass Club{% endblock %}
 
@@ -647,8 +647,8 @@
 {% block extra_js %}
 <!-- Chart.js for stacked bar charts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="/static/utils.js"></script>
-<script src="/static/polls.js"></script>
-<script src="/static/admin.js"></script>
-<script src="/static/polls-page.js"></script>
+<script src="{{ url_for('static', path='/utils.js') }}?v={{ asset_v }}"></script>
+<script src="{{ url_for('static', path='/polls.js') }}?v={{ asset_v }}"></script>
+<script src="{{ url_for('static', path='/admin.js') }}?v={{ asset_v }}"></script>
+<script src="{{ url_for('static', path='/polls-page.js') }}?v={{ asset_v }}"></script>
 {% endblock %}

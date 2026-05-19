@@ -13,6 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from core.db_schema import Angler, get_session
 from core.helpers.forms import normalize_email
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
+from core.helpers.passwords import bcrypt_gensalt
 from core.helpers.response import get_client_ip, get_safe_redirect_url, set_user_session
 from routes.dependencies import bcrypt, get_current_user, templates
 
@@ -23,6 +24,18 @@ is_test_env = os.environ.get("ENVIRONMENT") == "test"
 limiter = Limiter(key_func=get_remote_address, enabled=not is_test_env)
 
 # --- Account lockout (defense-in-depth alongside rate limiting) ---
+#
+# DEPLOYMENT CONSTRAINT: this lockout state — and slowapi's per-IP rate-limit
+# state — lives in-process. It is correct ONLY because production runs a
+# single uvicorn worker per container (see core/db_schema/engine.py, which
+# sizes the connection pool on that same assumption). With N workers the
+# effective lockout threshold becomes N * _MAX_FAILED_ATTEMPTS and a restart
+# clears all counters.
+#
+# If this app is ever scaled to multiple workers/containers, this state MUST
+# move to a shared store (Redis, or a small failed_login_attempts table) and
+# slowapi must be given a matching storage backend. Until then, keep the
+# single-worker deployment invariant.
 _MAX_FAILED_ATTEMPTS = 10
 _LOCKOUT_SECONDS = 900  # 15 minutes
 # Cap total number of tracked emails to bound memory growth from attackers
@@ -81,7 +94,7 @@ def _clear_failed_attempts(email: str) -> None:
 
 
 @router.get("/login")
-async def login_page(request: Request) -> Response:
+def login_page(request: Request) -> Response:
     if get_current_user(request):
         return RedirectResponse("/")
 
@@ -103,7 +116,7 @@ async def login_page(request: Request) -> Response:
 
 @router.post("/login")
 @limiter.limit("5/minute")
-async def login(
+def login(
     request: Request,
     email: str = Form(...),
     password: str = Form(...),
@@ -145,7 +158,7 @@ async def login(
                 user_session_version = angler.session_version
             else:
                 # User doesn't exist - perform dummy hash to prevent timing attack
-                stored_hash = bcrypt.hashpw(b"dummy_password", bcrypt.gensalt())
+                stored_hash = bcrypt.hashpw(b"dummy_password", bcrypt_gensalt())
                 user_id = None
                 user_name = None
                 user_session_version = 1
@@ -218,7 +231,7 @@ async def login(
 
 
 @router.post("/logout")
-async def logout(request: Request) -> RedirectResponse:
+def logout(request: Request) -> RedirectResponse:
     user_id = request.session.get("user_id")
     ip_address = get_client_ip(request)
 

@@ -148,5 +148,5 @@
     </div>
 </div>
 
-<script src="/static/admin-merge-users.js"></script>
+<script src="{{ url_for('static', path='/admin-merge-users.js') }}?v={{ asset_v }}"></script>
 {% endblock %}

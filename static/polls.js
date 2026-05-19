@@ -3,6 +3,9 @@
  * Centralized voting logic for all poll types
  */
 
+(function() {
+    'use strict';
+
 /**
  * PollVotingHandler - Manages poll voting interactions
  * Eliminates per-poll generated JavaScript by using data attributes and generic handlers
@@ -283,8 +286,9 @@ class PollVotingHandler {
 
         const lakeName = lakeSelect?.selectedOptions[0]?.text || 'Unknown';
         const rampName = rampSelect?.selectedOptions[0]?.text || 'Unknown';
-        const startTime = this.formatTime(startTimeSelect?.value);
-        const endTime = this.formatTime(endTimeSelect?.value);
+        // Shared formatter from utils.js; fall back to 'Unknown' for empty values
+        const startTime = startTimeSelect?.value ? formatTime12Hour(startTimeSelect.value) : 'Unknown';
+        const endTime = endTimeSelect?.value ? formatTime12Hour(endTimeSelect.value) : 'Unknown';
 
         let summary = '<dl class="row mb-0">';
         summary += '<dt class="col-sm-4"><i class="bi bi-geo-alt me-1"></i>Lake</dt>';
@@ -330,21 +334,6 @@ class PollVotingHandler {
         summary += '</div>';
 
         return summary;
-    }
-
-    /**
-     * Format 24h time string to 12h format
-     * @param {string} time24 - Time in HH:MM format
-     * @returns {string} Formatted time
-     * @private
-     */
-    formatTime(time24) {
-        if (!time24) return 'Unknown';
-        const [hours, minutes] = time24.split(':');
-        const h = parseInt(hours);
-        const ampm = h >= 12 ? 'PM' : 'AM';
-        const h12 = h % 12 || 12;
-        return h12 + ':' + minutes + ' ' + ampm;
     }
 
     /**
@@ -515,7 +504,11 @@ class PollVotingHandler {
     }
 }
 
-// Export for use in templates
+// Export PollVotingHandler globally — consumed by polls-page.js
+window.PollVotingHandler = PollVotingHandler;
+
+// Also export for CommonJS environments (e.g. tests)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = PollVotingHandler;
 }
+})();

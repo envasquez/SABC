@@ -381,5 +381,5 @@ function switchGuestTab(paneId, btn) {
 {% block extra_js %}
 <!-- Chart.js Library -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="/static/roster.js?v=2"></script>
+<script src="{{ url_for('static', path='/roster.js') }}?v={{ asset_v }}"></script>
 {% endblock %}

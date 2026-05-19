@@ -10,6 +10,7 @@ from core.db_schema import Angler, get_session
 from core.helpers.forms import normalize_email
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
 from core.helpers.password_validator import validate_password_strength
+from core.helpers.passwords import bcrypt_gensalt
 from core.helpers.response import set_user_session
 from routes.dependencies import bcrypt, get_current_user, templates
 
@@ -21,7 +22,7 @@ limiter = Limiter(key_func=get_remote_address, enabled=not is_test_env)
 
 
 @router.get("/register")
-async def register_page(request: Request) -> Response:
+def register_page(request: Request) -> Response:
     return (
         RedirectResponse("/")
         if get_current_user(request)
@@ -30,7 +31,7 @@ async def register_page(request: Request) -> Response:
 
 
 @router.get("/auth/register")
-async def register_page_auth(request: Request) -> Response:
+def register_page_auth(request: Request) -> Response:
     """Alternative route for /auth/register."""
     return (
         RedirectResponse("/")
@@ -41,7 +42,7 @@ async def register_page_auth(request: Request) -> Response:
 
 @router.post("/register")
 @limiter.limit("3/hour")
-async def register(
+def register(
     request: Request,
     first_name: str = Form(...),
     last_name: str = Form(...),
@@ -89,7 +90,7 @@ async def register(
                 )
 
             # Create new angler
-            password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+            password_hash = bcrypt.hashpw(password.encode(), bcrypt_gensalt()).decode()
             new_angler = Angler(
                 name=name,
                 email=email,

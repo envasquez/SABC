@@ -1,7 +1,7 @@
 """Routes for merging duplicate user accounts."""
 
 from fastapi import APIRouter, Form, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 from sqlalchemy.exc import SQLAlchemyError
 
 from core.helpers.auth import AdminUser
@@ -18,7 +18,7 @@ router = APIRouter()
 
 
 @router.get("/admin/users/merge")
-async def merge_accounts_page(request: Request, user: AdminUser):
+def merge_accounts_page(request: Request, user: AdminUser) -> Response:
     """Display the account merge interface."""
     anglers = get_admin_anglers_list()
     # Sort by name for easier selection
@@ -32,7 +32,7 @@ async def merge_accounts_page(request: Request, user: AdminUser):
 
 
 @router.post("/admin/users/merge/preview")
-async def merge_preview(
+def merge_preview(
     request: Request, user: AdminUser, source_id: int = Form(...), target_id: int = Form(...)
 ) -> JSONResponse:
     """Preview the merge operation (AJAX endpoint).
@@ -52,13 +52,13 @@ async def merge_preview(
 
 
 @router.post("/admin/users/merge/execute")
-async def merge_execute(
+def merge_execute(
     request: Request,
     user: AdminUser,
     source_id: int = Form(...),
     target_id: int = Form(...),
     confirm: bool = Form(False),
-):
+) -> Response:
     """Execute the account merge operation."""
     if not confirm:
         return error_redirect("/admin/users/merge", "You must confirm the merge operation")
@@ -91,7 +91,7 @@ async def merge_execute(
 
 
 @router.post("/admin/users/merge/delete")
-async def merge_delete_account(
+def merge_delete_account(
     request: Request, user: AdminUser, angler_id: int = Form(...)
 ) -> RedirectResponse:
     """Delete the old account after successful merge."""

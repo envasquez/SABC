@@ -52,6 +52,7 @@
           # Testing
           pytest
           pytest-cov
+          pytest-xdist  # Parallel test execution (-n auto)
           httpx  # Required by FastAPI TestClient
 
           # Development tools
@@ -161,40 +162,25 @@ print('Database reset complete!')
           echo "=========================="
           echo ""
 
-          # Set test database URL
-          export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/sabc_test"
-
-          # Check if PostgreSQL container is running
-          if ! docker ps | grep -q sabc-postgres; then
-              echo "⚠️  PostgreSQL container not running. Starting it..."
-              docker compose -f docker-compose.dev.yml up -d postgres
-              echo "Waiting for PostgreSQL to be ready..."
-              until docker compose -f docker-compose.dev.yml exec postgres pg_isready -U postgres; do
-                sleep 1
-              done
-              echo "✓ PostgreSQL is ready!"
-          fi
-
-          # Create test database using Docker exec
-          echo "📦 Setting up test database..."
-          docker exec sabc-postgres psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'sabc_test'" | grep -q 1 || \
-              docker exec sabc-postgres psql -U postgres -c "CREATE DATABASE sabc_test"
-
-          echo "✅ Test database ready"
-          echo ""
+          # Tests use file-based SQLite, configured in tests/conftest.py — no
+          # external PostgreSQL is required. Clear any stale per-worker DB files
+          # left behind by a previous (possibly interrupted) parallel run.
+          rm -f test_sabc*.db test_sabc*.db-journal test_sabc*.db-wal test_sabc*.db-shm
 
           # Run pytest with any arguments passed
           if [ "$1" == "--coverage" ]; then
+              shift
               echo "📊 Running tests with coverage..."
-              pytest tests/ --cov=core --cov=routes --cov-report=html --cov-report=term
+              pytest tests/ --cov=core --cov=routes --cov-report=html --cov-report=term --cov-report=xml --cov-fail-under=70 "$@"
               echo ""
               echo "📄 Coverage report saved to: htmlcov/index.html"
           elif [ "$1" == "--smoke" ]; then
+              shift
               echo "💨 Running smoke tests only..."
-              pytest tests/test_routes_smoke.py -v "$@"
+              pytest tests/test_routes_smoke.py "$@"
           else
               echo "🧪 Running tests..."
-              pytest tests/ -v "$@"
+              pytest tests/ "$@"
           fi
 
           echo ""
@@ -216,8 +202,25 @@ print('Database reset complete!')
           ];
 
           shellHook = ''
-            # Note: slowapi, starlette-csrf, and astral should be installed manually to .nix-python-packages
-            # Run: python3.12 -m pip install --target .nix-python-packages starlette-csrf==3.0.0 slowapi==0.1.9 astral==3.2
+            # A few packages (slowapi, starlette-csrf, astral) are not reliably
+            # available as nixpkgs attrs, so they are vendored into
+            # .nix-python-packages (which is on PYTHONPATH below). This step
+            # bootstraps them automatically and is idempotent: if the marker
+            # file matches the current pin set, it is skipped on subsequent
+            # `nix develop` invocations. Delete .nix-python-packages/.pip-marker
+            # (or the whole dir) to force a reinstall.
+            EXTRA_PIP_PKGS="starlette-csrf==3.0.0 slowapi==0.1.9 astral==3.2"
+            PIP_MARKER=".nix-python-packages/.pip-marker"
+            if [ "$(cat "$PIP_MARKER" 2>/dev/null)" != "$EXTRA_PIP_PKGS" ]; then
+              echo "📦 Installing vendored pip packages into .nix-python-packages ..."
+              if python3.12 -m pip install --quiet --target .nix-python-packages $EXTRA_PIP_PKGS; then
+                echo "$EXTRA_PIP_PKGS" > "$PIP_MARKER"
+                echo "✓ Vendored packages ready."
+              else
+                echo "⚠️  pip install failed — run manually:"
+                echo "   python3.12 -m pip install --target .nix-python-packages $EXTRA_PIP_PKGS"
+              fi
+            fi
 
             echo "🎣 SABC FastAPI Development Environment"
             echo "======================================"

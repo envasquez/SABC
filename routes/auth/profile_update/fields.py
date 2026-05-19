@@ -14,7 +14,7 @@ from routes.dependencies import get_current_user
 logger = get_logger("auth.profile_update.fields")
 
 
-async def update_profile_fields(
+def update_profile_fields(
     request: Request,
     email: str,
     phone: str,

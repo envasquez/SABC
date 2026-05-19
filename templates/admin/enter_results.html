@@ -210,7 +210,7 @@
 </div>
 
 <!-- External JavaScript -->
-<script src="{{ url_for('static', path='/utils.js') }}"></script>
-<script src="{{ url_for('static', path='/enter-results.js') }}"></script>
-<script src="{{ url_for('static', path='/enter-results-init.js') }}"></script>
+<script src="{{ url_for('static', path='/utils.js') }}?v={{ asset_v }}"></script>
+<script src="{{ url_for('static', path='/enter-results.js') }}?v={{ asset_v }}"></script>
+<script src="{{ url_for('static', path='/enter-results-init.js') }}?v={{ asset_v }}"></script>
 {% endblock %}

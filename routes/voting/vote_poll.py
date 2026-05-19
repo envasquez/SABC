@@ -22,7 +22,7 @@ logger = get_logger("voting")
 
 
 @router.post("/polls/{poll_id}/vote")
-async def vote_in_poll(
+def vote_in_poll(
     request: Request,
     poll_id: int,
     option_id: str = Form(),
@@ -265,7 +265,7 @@ async def vote_in_poll(
 
 
 @router.post("/dismiss-dues-banner")
-async def dismiss_dues_banner(
+def dismiss_dues_banner(
     request: Request,
     user: UserDict = Depends(require_auth),
 ) -> RedirectResponse:

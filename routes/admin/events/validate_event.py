@@ -8,7 +8,7 @@ router = APIRouter()
 
 
 @router.post("/admin/events/validate")
-async def validate_event(request: Request):
+async def validate_event(request: Request) -> JSONResponse:
     _user = require_admin(request)
     try:
         data = await request.json()

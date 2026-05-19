@@ -1,7 +1,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, Form, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, Response
 from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Event, get_session
@@ -87,7 +87,7 @@ def _do_event_update(
 
 
 @router.get("/admin/events/{event_id}/edit")
-async def get_edit_event(request: Request, event_id: int):
+def get_edit_event(request: Request, event_id: int) -> Response:
     """GET endpoint for editing an event - returns the edit form."""
     user = require_admin(request)
 
@@ -110,7 +110,7 @@ async def get_edit_event(request: Request, event_id: int):
 
 
 @router.post("/admin/events/{event_id}/update")
-async def update_event_by_id(
+def update_event_by_id(
     request: Request,
     event_id: int,
     date: str = Form(default=""),
@@ -126,7 +126,7 @@ async def update_event_by_id(
     aoy_points: str = Form(default="true"),
     poll_closes_date: str = Form(default=""),
     is_cancelled: str = Form(default=""),
-):
+) -> RedirectResponse:
     """POST endpoint for updating an event by ID."""
     _user = require_admin(request)
     try:
@@ -151,7 +151,7 @@ async def update_event_by_id(
 
 
 @router.post("/admin/events/edit")
-async def edit_event(
+def edit_event(
     request: Request,
     event_id: int = Form(),
     date: str = Form(default=""),
@@ -168,7 +168,7 @@ async def edit_event(
     poll_closes_date: str = Form(default=""),
     poll_id: str = Form(default=""),
     is_cancelled: str = Form(default=""),
-):
+) -> RedirectResponse:
     """POST endpoint for updating an event via form submission."""
     _user = require_admin(request)
     try:

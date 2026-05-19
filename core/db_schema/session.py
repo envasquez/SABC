@@ -30,20 +30,12 @@ def get_session() -> Generator[Session, None, None]:
         session.close()
 
 
-def get_db_session() -> Generator[Session, None, None]:
-    """Get a database session (use with dependency injection).
-
-    Usage in FastAPI:
-        @router.get("/")
-        def route(session: Session = Depends(get_db_session)):
-            ...
-    """
-    session = SessionLocal()
-    try:
-        yield session
-        session.commit()
-    except Exception:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+# Backwards-compatible alias of `get_session`.
+#
+# The audit flagged this as a verbatim duplicate of `get_session` with no
+# production callers — but it is NOT dead code: tests/conftest.py monkeypatches
+# `core.db_schema.session.get_db_session` and `core.db_schema.get_db_session`,
+# and `monkeypatch.setattr` requires the attribute to already exist. Deleting
+# the symbol would break the test fixture, so it is kept as a thin alias
+# instead of a copy-pasted body.
+get_db_session = get_session
