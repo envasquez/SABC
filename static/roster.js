@@ -204,13 +204,5 @@
         }
     }
 
-    // Delegated handler for expanding/collapsing a member's stats row
-    document.addEventListener('DOMContentLoaded', function() {
-        document.addEventListener('click', function(e) {
-            const row = e.target.closest('.member-row');
-            if (row && row.dataset.memberId) {
-                toggleChartRow(row.dataset.memberId);
-            }
-        });
-    });
+    window.toggleChartRow = toggleChartRow;
 })();
