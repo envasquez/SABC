@@ -203,24 +203,19 @@ def get_member_monthly_weights(
     year_col = year_extract("e.date", dialect_name)
     month_col = month_extract("e.date", dialect_name)
 
+    # Weight source priority (the chart sits under "Team Stats", so it should
+    # reflect team performance, not the individual catch):
+    #   1. team_results.total_weight when the angler was in a team for that
+    #      tournament (works whether they were angler1 or angler2 - this also
+    #      fixes the prior asymmetry where angler2 was always credited 0).
+    #   2. results.total_weight when no team_results row exists for that
+    #      angler+tournament (solo/individual-only events).
+    # Buy-in flag comes from the individual results row when present.
     if dialect_name == "sqlite":
         in_sql, in_params = safe_in_clause(member_ids, "mids", dialect_name)
         monthly_query = f"""
             WITH all_weights AS (
-                -- Individual results (primary source)
-                SELECT r.angler_id,
-                       {year_col} as year,
-                       {month_col} as month,
-                       r.total_weight as weight,
-                       r.buy_in
-                FROM results r
-                JOIN tournaments t ON r.tournament_id = t.id
-                JOIN events e ON t.event_id = e.id
-                WHERE r.angler_id {in_sql}
-                  AND r.disqualified = FALSE
-                  AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
-                UNION ALL
-                -- Team results angler1 (only for tournaments without individual data)
+                -- Team results: angler1 side (use the team's total weight)
                 SELECT tr.angler1_id as angler_id,
                        {year_col} as year,
                        {month_col} as month,
@@ -231,13 +226,12 @@ def get_member_monthly_weights(
                 JOIN events e ON t.event_id = e.id
                 WHERE tr.angler1_id {in_sql}
                   AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
-                  AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
                 UNION ALL
-                -- Team results angler2 (only for tournaments without individual data, 0 weight)
+                -- Team results: angler2 side (also credit the team's total weight)
                 SELECT tr.angler2_id as angler_id,
                        {year_col} as year,
                        {month_col} as month,
-                       0 as weight,
+                       tr.total_weight as weight,
                        0 as buy_in
                 FROM team_results tr
                 JOIN tournaments t ON tr.tournament_id = t.id
@@ -245,7 +239,25 @@ def get_member_monthly_weights(
                 WHERE tr.angler2_id {in_sql}
                   AND tr.angler2_id IS NOT NULL
                   AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
-                  AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
+                UNION ALL
+                -- Individual results: provide buy_in flag, and weight only when
+                -- the angler has no team_results row for this tournament.
+                SELECT r.angler_id,
+                       {year_col} as year,
+                       {month_col} as month,
+                       CASE WHEN EXISTS (
+                           SELECT 1 FROM team_results tr
+                           WHERE tr.tournament_id = r.tournament_id
+                             AND (tr.angler1_id = r.angler_id
+                                  OR tr.angler2_id = r.angler_id)
+                       ) THEN 0 ELSE r.total_weight END as weight,
+                       r.buy_in
+                FROM results r
+                JOIN tournaments t ON r.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                WHERE r.angler_id {in_sql}
+                  AND r.disqualified = FALSE
+                  AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
             )
             SELECT angler_id,
                    year,
@@ -261,20 +273,7 @@ def get_member_monthly_weights(
         # PostgreSQL version using ANY for array (more efficient)
         monthly_query = f"""
             WITH all_weights AS (
-                -- Individual results (primary source)
-                SELECT r.angler_id,
-                       {year_col} as year,
-                       {month_col} as month,
-                       r.total_weight as weight,
-                       r.buy_in
-                FROM results r
-                JOIN tournaments t ON r.tournament_id = t.id
-                JOIN events e ON t.event_id = e.id
-                WHERE r.angler_id = ANY(:member_ids)
-                  AND r.disqualified = FALSE
-                  AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
-                UNION ALL
-                -- Team results angler1 (only for tournaments without individual data)
+                -- Team results: angler1 side (use the team's total weight)
                 SELECT tr.angler1_id as angler_id,
                        {year_col} as year,
                        {month_col} as month,
@@ -285,13 +284,12 @@ def get_member_monthly_weights(
                 JOIN events e ON t.event_id = e.id
                 WHERE tr.angler1_id = ANY(:member_ids)
                   AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
-                  AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
                 UNION ALL
-                -- Team results angler2 (only for tournaments without individual data, 0 weight)
+                -- Team results: angler2 side (also credit the team's total weight)
                 SELECT tr.angler2_id as angler_id,
                        {year_col} as year,
                        {month_col} as month,
-                       0 as weight,
+                       tr.total_weight as weight,
                        false as buy_in
                 FROM team_results tr
                 JOIN tournaments t ON tr.tournament_id = t.id
@@ -299,7 +297,25 @@ def get_member_monthly_weights(
                 WHERE tr.angler2_id = ANY(:member_ids)
                   AND tr.angler2_id IS NOT NULL
                   AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
-                  AND NOT EXISTS (SELECT 1 FROM results r WHERE r.tournament_id = t.id)
+                UNION ALL
+                -- Individual results: provide buy_in flag, and weight only when
+                -- the angler has no team_results row for this tournament.
+                SELECT r.angler_id,
+                       {year_col} as year,
+                       {month_col} as month,
+                       CASE WHEN EXISTS (
+                           SELECT 1 FROM team_results tr
+                           WHERE tr.tournament_id = r.tournament_id
+                             AND (tr.angler1_id = r.angler_id
+                                  OR tr.angler2_id = r.angler_id)
+                       ) THEN 0 ELSE r.total_weight END as weight,
+                       r.buy_in
+                FROM results r
+                JOIN tournaments t ON r.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                WHERE r.angler_id = ANY(:member_ids)
+                  AND r.disqualified = FALSE
+                  AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
             )
             SELECT angler_id,
                    year,
