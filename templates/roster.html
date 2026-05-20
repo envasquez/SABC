@@ -138,11 +138,11 @@
                           <div class="text-secondary small">Tournaments</div>
                         </div>
                         <div class="col-4">
-                          <div class="h2 mb-0 text-azure">{{ "%.1f"|format(stats.get('best_team_weight', 0)) if stats.get('best_team_weight', 0) > 0 else "0" }}</div>
+                          <div class="h2 mb-0 text-azure">{{ "%.1f"|format(stats.get('best_team_weight', 0)) if stats.get('best_team_weight', 0) > 0 else "0" }} <span class="text-secondary fs-5">lbs</span></div>
                           <div class="text-secondary small">Best Weight</div>
                         </div>
                         <div class="col-4">
-                          <div class="h2 mb-0 text-green">{{ "%.1f"|format(stats.get('big_bass', 0)) }}</div>
+                          <div class="h2 mb-0 text-green">{{ "%.1f"|format(stats.get('big_bass', 0)) }} <span class="text-secondary fs-5">lbs</span></div>
                           <div class="text-secondary small">Big Bass</div>
                         </div>
                       </div>
