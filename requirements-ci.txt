@@ -2,9 +2,9 @@ annotated-types==0.7.0
 anyio==4.13.0
 astral==3.2
 attrs==25.3.0
-bcrypt==4.2.1
+bcrypt==5.0.0
 beautifulsoup4==4.14.3
-certifi==2025.8.3
+certifi==2026.5.20
 cffi==2.0.0
 charset-normalizer==3.4.7
 click==8.4.0
@@ -83,4 +83,4 @@ uvicorn==0.47.0
 uvloop==0.22.1
 watchfiles==1.2.0
 websockets==15.0.1
-wrapt==1.17.3
+wrapt==2.2.1
