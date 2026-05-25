@@ -4,7 +4,7 @@ astral==3.2
 attrs==25.3.0
 bcrypt==4.2.1
 beautifulsoup4==4.14.3
-certifi==2025.8.3
+certifi==2026.5.20
 cffi==2.0.0
 charset-normalizer==3.4.7
 click==8.4.0
