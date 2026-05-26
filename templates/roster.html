@@ -91,7 +91,7 @@
       <tbody>
         {% for member in members %}
           {% if member['member'] %}
-          <tr class="roster-member-row" onclick="toggleChartRow('{{ member['id'] }}')" title="Click to view stats">
+          <tr class="roster-member-row js-toggle-chart-row" data-member-id="{{ member['id'] }}" title="Click to view stats">
             <td>
               <div class="d-flex align-items-center gap-2">
                 <i class="bi bi-bar-chart-line expand-icon text-primary" aria-hidden="true"></i>
@@ -153,14 +153,14 @@
                       <ul class="nav nav-pills nav-fill mb-2" id="finishes-tabs-{{ member['id'] }}">
                         {% for year in stats.get('year_finishes', {}).keys()|sort(reverse=True) %}
                         <li class="nav-item">
-                          <button class="nav-link py-1 px-2 {% if loop.first %}active{% endif %}"
-                                  onclick="switchFinishesTab('finishes-{{ member['id'] }}-{{ year }}', this)"
+                          <button class="nav-link py-1 px-2 js-finishes-tab {% if loop.first %}active{% endif %}"
+                                  data-finishes-pane="finishes-{{ member['id'] }}-{{ year }}"
                                   type="button">{{ year }}</button>
                         </li>
                         {% endfor %}
                         <li class="nav-item">
-                          <button class="nav-link py-1 px-2"
-                                  onclick="switchFinishesTab('finishes-{{ member['id'] }}-alltime', this)"
+                          <button class="nav-link py-1 px-2 js-finishes-tab"
+                                  data-finishes-pane="finishes-{{ member['id'] }}-alltime"
                                   type="button">All</button>
                         </li>
                       </ul>
@@ -281,14 +281,14 @@
       <ul class="nav nav-pills mb-3" id="guestTabs">
         {% for year in sorted_years %}
         <li class="nav-item">
-          <button class="nav-link {% if loop.first %}active{% endif %}" onclick="switchGuestTab('year-{{ year }}', this)">
+          <button type="button" class="nav-link js-guest-tab {% if loop.first %}active{% endif %}" data-guest-pane="year-{{ year }}">
             {{ year }} <span class="badge bg-secondary-lt ms-1">{{ years_dict[year]|length }}</span>
           </button>
         </li>
         {% endfor %}
         {% if no_date_guests|length > 0 %}
         <li class="nav-item">
-          <button class="nav-link {% if sorted_years|length == 0 %}active{% endif %}" onclick="switchGuestTab('no-date', this)">
+          <button type="button" class="nav-link js-guest-tab {% if sorted_years|length == 0 %}active{% endif %}" data-guest-pane="no-date">
             Older <span class="badge bg-secondary-lt ms-1">{{ no_date_guests|length }}</span>
           </button>
         </li>
@@ -361,21 +361,6 @@
   </div>
 </div>
 
-<script>
-function switchFinishesTab(paneId, btn) {
-    var container = btn.closest('.card-body');
-    container.querySelectorAll('.finishes-pane').forEach(function(p) { p.classList.remove('active'); });
-    document.getElementById(paneId).classList.add('active');
-    btn.closest('.nav').querySelectorAll('.nav-link').forEach(function(b) { b.classList.remove('active'); });
-    btn.classList.add('active');
-}
-function switchGuestTab(paneId, btn) {
-    document.querySelectorAll('.guest-tab').forEach(function(p) { p.classList.remove('active'); });
-    document.getElementById(paneId).classList.add('active');
-    document.querySelectorAll('#guestTabs .nav-link').forEach(function(b) { b.classList.remove('active'); });
-    btn.classList.add('active');
-}
-</script>
 {% endblock %}
 
 {% block extra_js %}

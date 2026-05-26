@@ -57,6 +57,18 @@
         const startDeleteBtn = document.getElementById('startDeleteBtn');
         if (startDeleteBtn) startDeleteBtn.addEventListener('click', startDeleteProcess);
 
+        // Delegated handler for the "year finishes" tab buttons.
+        // Toggles which .finish-tab is visible and which nav-link is active.
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.js-finish-tab');
+            if (!btn || !btn.dataset.finishTab) return;
+            document.querySelectorAll('.finish-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('#finishTabs .nav-link').forEach(b => b.classList.remove('active'));
+            const target = document.getElementById(btn.dataset.finishTab);
+            if (target) target.classList.add('active');
+            btn.classList.add('active');
+        });
+
         // Delete confirmation input handler
         const deleteConfirm = document.getElementById('deleteConfirm');
         if (deleteConfirm) {

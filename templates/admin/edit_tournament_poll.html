@@ -65,10 +65,10 @@
                 All lakes are selected by default.
             </p>
             <div class="btn-list mb-3">
-                <button type="button" class="btn btn-sm" onclick="selectAll('lake_ids')">
+                <button type="button" class="btn btn-sm js-select-all">
                     <i class="ti ti-checks me-1"></i>Select All
                 </button>
-                <button type="button" class="btn btn-sm" onclick="selectNone('lake_ids')">
+                <button type="button" class="btn btn-sm js-select-none">
                     <i class="ti ti-square-x me-1"></i>Deselect All
                 </button>
             </div>
@@ -126,8 +126,9 @@
                                 </span>
                             </div>
                         </div>
-                        <button class="btn btn-icon btn-ghost-danger"
-                                onclick="if(confirm('Delete vote by {{ vote.voter_name }}?')) deleteVote({{ vote.vote_id }})"
+                        <button type="button" class="btn btn-icon btn-ghost-danger js-delete-vote"
+                                data-vote-id="{{ vote.vote_id }}"
+                                data-voter-name="{{ vote.voter_name }}"
                                 title="Delete this vote" aria-label="Delete vote">
                             <i class="ti ti-trash"></i>
                         </button>

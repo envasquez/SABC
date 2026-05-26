@@ -97,6 +97,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const delBtn = e.target.closest('.js-delete-user');
         if (delBtn && delBtn.dataset.userId) {
             deleteUser(delBtn.dataset.userId, delBtn.dataset.userName);
+            return;
+        }
+        const tabBtn = e.target.closest('.js-user-tab');
+        if (tabBtn && tabBtn.dataset.tabTarget) {
+            document.querySelectorAll('#userTabsContent > .tab-pane')
+                .forEach(p => p.classList.remove('show', 'active'));
+            const target = document.getElementById(tabBtn.dataset.tabTarget);
+            if (target) target.classList.add('show', 'active');
+            document.querySelectorAll('#userTabs .nav-link')
+                .forEach(b => b.classList.remove('on', 'active'));
+            tabBtn.classList.add('on', 'active');
         }
     });
 });

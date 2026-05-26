@@ -92,7 +92,7 @@
                     <div class="poll-option-row d-flex gap-2 align-items-center mb-2" data-option-id="{{ option.id }}">
                         <input type="text" class="fi" name="poll_options[]" value="{{ option.text }}" placeholder="Option {{ loop.index }}" style="flex:1" required>
                         <input type="hidden" name="option_ids[]" value="{{ option.id }}">
-                        <button class="btn-icon btn-icon-danger" type="button" onclick="removeOption(this)" aria-label="Remove option">
+                        <button class="btn-icon btn-icon-danger js-remove-option" type="button" aria-label="Remove option">
                             <i class="ti ti-x"></i>
                         </button>
                         {% if option.votes %}
@@ -104,7 +104,7 @@
                     {% endfor %}
                 </div>
 
-                <button type="button" class="btn btn-sm" onclick="addOption()">
+                <button type="button" class="btn btn-sm js-add-option">
                     <i class="ti ti-circle-plus me-1"></i>Add Option
                 </button>
             </div>
@@ -151,8 +151,9 @@
                                 </span>
                             </div>
                         </div>
-                        <button class="btn btn-icon btn-ghost-danger"
-                                onclick="if(confirm('Delete vote by {{ vote.voter_name }}?')) deleteVote({{ vote.vote_id }})"
+                        <button type="button" class="btn btn-icon btn-ghost-danger js-delete-vote"
+                                data-vote-id="{{ vote.vote_id }}"
+                                data-voter-name="{{ vote.voter_name }}"
                                 title="Delete this vote" aria-label="Delete vote">
                             <i class="ti ti-trash"></i>
                         </button>

@@ -204,5 +204,38 @@
         }
     }
 
-    window.toggleChartRow = toggleChartRow;
+    // Delegated listeners — replaces inline onclick handlers in roster.html.
+    // Toggle chart row when a member row is clicked.
+    document.addEventListener('click', function(e) {
+        const memberRow = e.target.closest('.js-toggle-chart-row');
+        if (memberRow && memberRow.dataset.memberId) {
+            toggleChartRow(memberRow.dataset.memberId);
+            return;
+        }
+        const finishesTab = e.target.closest('.js-finishes-tab');
+        if (finishesTab && finishesTab.dataset.finishesPane) {
+            const container = finishesTab.closest('.card-body');
+            if (container) {
+                container.querySelectorAll('.finishes-pane')
+                    .forEach(p => p.classList.remove('active'));
+            }
+            const target = document.getElementById(finishesTab.dataset.finishesPane);
+            if (target) target.classList.add('active');
+            const nav = finishesTab.closest('.nav');
+            if (nav) {
+                nav.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+            }
+            finishesTab.classList.add('active');
+            return;
+        }
+        const guestTab = e.target.closest('.js-guest-tab');
+        if (guestTab && guestTab.dataset.guestPane) {
+            document.querySelectorAll('.guest-tab').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById(guestTab.dataset.guestPane);
+            if (target) target.classList.add('active');
+            document.querySelectorAll('#guestTabs .nav-link')
+                .forEach(b => b.classList.remove('active'));
+            guestTab.classList.add('active');
+        }
+    });
 })();

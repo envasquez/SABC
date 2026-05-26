@@ -148,10 +148,10 @@
                             {% endfor %}
                         </div>
                         <div class="btn-list mt-2">
-                            <button type="button" class="btn btn-sm" onclick="selectAll()">
+                            <button type="button" class="btn btn-sm js-select-all">
                                 <i class="ti ti-checks me-1"></i>Select All
                             </button>
-                            <button type="button" class="btn btn-sm" onclick="selectNone()">
+                            <button type="button" class="btn btn-sm js-select-none">
                                 <i class="ti ti-square-x me-1"></i>Select None
                             </button>
                         </div>
@@ -210,15 +210,15 @@
                         <div id="poll-options-container">
                             <div class="poll-option-row d-flex gap-2 align-items-center mb-2">
                                 <input type="text" class="fi" name="poll_options[]" placeholder="Option 1" style="flex:1" required>
-                                <button class="btn-icon btn-icon-danger" type="button" onclick="removeOption(this)" disabled aria-label="Remove option"><i class="ti ti-x"></i></button>
+                                <button class="btn-icon btn-icon-danger js-remove-option" type="button" disabled aria-label="Remove option"><i class="ti ti-x"></i></button>
                             </div>
                             <div class="poll-option-row d-flex gap-2 align-items-center mb-2">
                                 <input type="text" class="fi" name="poll_options[]" placeholder="Option 2" style="flex:1" required>
-                                <button class="btn-icon btn-icon-danger" type="button" onclick="removeOption(this)" disabled aria-label="Remove option"><i class="ti ti-x"></i></button>
+                                <button class="btn-icon btn-icon-danger js-remove-option" type="button" disabled aria-label="Remove option"><i class="ti ti-x"></i></button>
                             </div>
                         </div>
 
-                        <button type="button" class="btn btn-sm" onclick="addOption()">
+                        <button type="button" class="btn btn-sm js-add-option">
                             <i class="ti ti-circle-plus me-1"></i>Add Option
                         </button>
                     </div>

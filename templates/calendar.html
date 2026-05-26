@@ -47,10 +47,10 @@
         <div class="col-auto">
             <ul class="nav nav-pills" id="yearTabs">
                 <li class="nav-item">
-                    <button class="nav-link active" onclick="switchCalTab('current-year', this)">{{ current_year }}</button>
+                    <button type="button" class="nav-link active js-cal-tab" data-cal-pane="current-year">{{ current_year }}</button>
                 </li>
                 <li class="nav-item">
-                    <button class="nav-link" onclick="switchCalTab('next-year', this)">{{ next_year }}</button>
+                    <button type="button" class="nav-link js-cal-tab" data-cal-pane="next-year">{{ next_year }}</button>
                 </li>
             </ul>
         </div>
@@ -99,7 +99,6 @@
                                     data-year="{{ current_year }}"
                                     data-month="{{ month_num }}"
                                     data-day="{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}"
-                                    onclick="showEventDetails(this)"
                                     {% endif %}>
                                     {% if d %}{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}{% endif %}
                                 </td>
@@ -138,7 +137,6 @@
                                     data-year="{{ next_year }}"
                                     data-month="{{ month_num }}"
                                     data-day="{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}"
-                                    onclick="showEventDetails(this)"
                                     {% endif %}>
                                     {% if d %}{{ d.replace('†','').replace('§','').replace('‡','').replace('*','') }}{% endif %}
                                 </td>
@@ -173,13 +171,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-function switchCalTab(paneId, btn) {
-    document.querySelectorAll('.cal-tab').forEach(function(p) { p.classList.remove('active'); });
-    document.getElementById(paneId).classList.add('active');
-    document.querySelectorAll('#yearTabs .nav-link').forEach(function(b) { b.classList.remove('active'); });
-    btn.classList.add('active');
-}
-</script>
 <script src="/static/calendar.js"></script>
 {% endblock %}

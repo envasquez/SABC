@@ -34,9 +34,22 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Delegated handler for clicking an event day in the calendar grid
+    // and for year-tab switches (current vs next year).
     document.addEventListener('click', function(e) {
         const cell = e.target.closest('.cal-event-day');
-        if (cell) showEventDetails(cell);
+        if (cell) {
+            showEventDetails(cell);
+            return;
+        }
+        const tabBtn = e.target.closest('.js-cal-tab');
+        if (tabBtn && tabBtn.dataset.calPane) {
+            document.querySelectorAll('.cal-tab').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById(tabBtn.dataset.calPane);
+            if (target) target.classList.add('active');
+            document.querySelectorAll('#yearTabs .nav-link')
+                .forEach(b => b.classList.remove('active'));
+            tabBtn.classList.add('active');
+        }
     });
 });
 

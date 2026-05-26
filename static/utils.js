@@ -277,6 +277,16 @@ if (document.readyState === 'loading') {
     checkBrowserCompatibility();
 }
 
+// Generic confirm-before-submit helper. Forms carrying `data-confirm="<msg>"`
+// prompt before submitting; cancel aborts the submit. Replaces inline
+// `onsubmit="return confirm(...)"` usages so CSP can drop unsafe-inline.
+document.addEventListener('submit', function(e) {
+    const form = e.target.closest('form[data-confirm]');
+    if (form && !window.confirm(form.dataset.confirm)) {
+        e.preventDefault();
+    }
+}, true);
+
 /**
  * Escape HTML to prevent XSS attacks
  * Converts special characters to HTML entities

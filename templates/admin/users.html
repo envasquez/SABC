@@ -14,7 +14,7 @@
                 <a href="/admin/users/merge" class="btn btn-outline-secondary">
                     <i class="ti ti-arrows-left-right me-1"></i>Merge Accounts
                 </a>
-                <button class="btn btn-primary" onclick="showAddUserModal()">
+                <button type="button" class="btn btn-primary" id="addUserBtn">
                     <i class="ti ti-user-plus me-1"></i>Add User
                 </button>
             </div>
@@ -90,27 +90,19 @@
     <div class="card-header">
         <ul class="nav nav-pills card-header-pills" id="userTabs">
             <li class="nav-item">
-                <button class="nav-link on active" type="button" onclick="switchUserTab('members-pane', this)">
+                <button class="nav-link on active js-user-tab" type="button" data-tab-target="members-pane">
                     <i class="ti ti-user-check me-1"></i>Members
                     <span class="badge bg-success-lt ms-2">{{ active_member_count + overdue_member_count }}</span>
                 </button>
             </li>
             <li class="nav-item">
-                <button class="nav-link" type="button" onclick="switchUserTab('guests-pane', this)">
+                <button class="nav-link js-user-tab" type="button" data-tab-target="guests-pane">
                     <i class="ti ti-user me-1"></i>Guests
                     <span class="badge bg-secondary-lt ms-2">{{ guest_count }}</span>
                 </button>
             </li>
         </ul>
     </div>
-    <script>
-    function switchUserTab(paneId, btn) {
-        document.querySelectorAll('#userTabsContent > .tab-pane').forEach(function(p) { p.classList.remove('show', 'active'); });
-        document.getElementById(paneId).classList.add('show', 'active');
-        document.querySelectorAll('#userTabs .nav-link').forEach(function(b) { b.classList.remove('on', 'active'); });
-        btn.classList.add('on', 'active');
-    }
-    </script>
 
     <div class="tab-content" id="userTabsContent">
         <!-- Members Tab -->
@@ -157,11 +149,12 @@
                             </td>
                             <td class="text-end">
                                 <div class="btn-list flex-nowrap justify-content-end">
-                                    <button class="btn btn-icon btn-sm" onclick="location='/admin/users/{{ u.id }}/edit'" aria-label="Edit user">
+                                    <button type="button" class="btn btn-icon btn-sm js-edit-user" data-user-id="{{ u.id }}" aria-label="Edit user">
                                         <i class="ti ti-pencil"></i>
                                     </button>
-                                    <button class="btn btn-icon btn-sm btn-ghost-danger"
-                                            {% if u.id == user.id %}disabled{% else %}onclick="deleteUser({{ u.id }}, '{{ u.name|e }}')"{% endif %}
+                                    <button type="button" class="btn btn-icon btn-sm btn-ghost-danger js-delete-user"
+                                            data-user-id="{{ u.id }}" data-user-name="{{ u.name|e }}"
+                                            {% if u.id == user.id %}disabled{% endif %}
                                             aria-label="Delete user">
                                         <i class="ti ti-trash"></i>
                                     </button>
@@ -207,11 +200,12 @@
                             <td class="text-secondary">{{ u.phone or '-' }}</td>
                             <td class="text-end">
                                 <div class="btn-list flex-nowrap justify-content-end">
-                                    <button class="btn btn-icon btn-sm" onclick="location='/admin/users/{{ u.id }}/edit'" aria-label="Edit user">
+                                    <button type="button" class="btn btn-icon btn-sm js-edit-user" data-user-id="{{ u.id }}" aria-label="Edit user">
                                         <i class="ti ti-pencil"></i>
                                     </button>
-                                    <button class="btn btn-icon btn-sm btn-ghost-danger"
-                                            {% if u.id == user.id %}disabled{% else %}onclick="deleteUser({{ u.id }}, '{{ u.name|e }}')"{% endif %}
+                                    <button type="button" class="btn btn-icon btn-sm btn-ghost-danger js-delete-user"
+                                            data-user-id="{{ u.id }}" data-user-name="{{ u.name|e }}"
+                                            {% if u.id == user.id %}disabled{% endif %}
                                             aria-label="Delete user">
                                         <i class="ti ti-trash"></i>
                                     </button>
@@ -284,7 +278,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitAddUser()">
+                <button type="button" class="btn btn-primary" id="submitAddUserBtn">
                     <i class="ti ti-circle-check me-1"></i>Create User
                 </button>
             </div>

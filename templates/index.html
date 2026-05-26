@@ -19,7 +19,7 @@
             {% if cancelled.description %}<span class="text-secondary">({{ cancelled.name }})</span>{% endif %}
         </div>
     </div>
-    <a class="btn-close" data-bs-dismiss="alert" aria-label="Close" onclick="dismissCancelledAlert({{ cancelled.id }})"></a>
+    <a href="#" class="btn-close js-dismiss-cancelled-alert" data-bs-dismiss="alert" data-event-id="{{ cancelled.id }}" aria-label="Close"></a>
 </div>
 {% endfor %}
 {% endif %}

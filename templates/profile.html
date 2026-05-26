@@ -54,7 +54,7 @@
       <div class="card-header">
         <h3 class="card-title"><i class="ti ti-info-circle me-2 text-primary" aria-hidden="true"></i>Account Information</h3>
         <div class="card-actions">
-          <button class="btn btn-sm" onclick="toggleEdit()" id="editBtn"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Edit</button>
+          <button type="button" class="btn btn-sm" id="editBtn"><i class="bi bi-pencil me-1" aria-hidden="true"></i>Edit</button>
         </div>
       </div>
 
@@ -135,7 +135,7 @@
 
             <div class="btn-list">
               <button type="submit" class="btn btn-primary"><i class="ti ti-check me-1" aria-hidden="true"></i>Save Changes</button>
-              <button type="button" class="btn" onclick="cancelEdit()"><i class="ti ti-x me-1" aria-hidden="true"></i>Cancel</button>
+              <button type="button" class="btn" id="cancelEditBtn"><i class="ti ti-x me-1" aria-hidden="true"></i>Cancel</button>
             </div>
           </form>
 
@@ -145,7 +145,7 @@
             <div class="card-body">
               <h4 class="card-title text-danger"><i class="ti ti-alert-triangle me-2" aria-hidden="true"></i>Danger Zone</h4>
               <p class="text-secondary small">Permanently delete your account and all data. Tournament results will be retained for record-keeping. This action cannot be undone.</p>
-              <button type="button" class="btn btn-danger btn-sm" onclick="startDeleteProcess()"><i class="ti ti-trash me-1" aria-hidden="true"></i>Delete Account</button>
+              <button type="button" class="btn btn-danger btn-sm" id="startDeleteBtn"><i class="ti ti-trash me-1" aria-hidden="true"></i>Delete Account</button>
             </div>
           </div>
         </div>
@@ -193,11 +193,11 @@
         <ul class="nav nav-pills nav-fill mb-3" id="finishTabs">
           {% for year in stats.year_finishes.keys()|sort(reverse=True) %}
           <li class="nav-item">
-            <button class="nav-link {% if loop.first %}active{% endif %}" onclick="showFinishTab('year-{{ year }}', this)">{{ year }}</button>
+            <button type="button" class="nav-link js-finish-tab {% if loop.first %}active{% endif %}" data-finish-tab="year-{{ year }}">{{ year }}</button>
           </li>
           {% endfor %}
           <li class="nav-item">
-            <button class="nav-link" onclick="showFinishTab('all-time', this)">All</button>
+            <button type="button" class="nav-link js-finish-tab" data-finish-tab="all-time">All</button>
           </li>
         </ul>
 
@@ -291,14 +291,6 @@
   </div>
 </div>
 
-<script>
-function showFinishTab(tabId, btn) {
-    document.querySelectorAll('.finish-tab').forEach(function(t) { t.classList.remove('active'); });
-    document.querySelectorAll('#finishTabs .nav-link').forEach(function(b) { b.classList.remove('active'); });
-    document.getElementById(tabId).classList.add('active');
-    btn.classList.add('active');
-}
-</script>
 {% endblock %}
 
 {% block extra_js %}
