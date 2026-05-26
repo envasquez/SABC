@@ -348,12 +348,12 @@ class TestPasswordResetCompletion:
         assert response.status_code in [302, 303]
         assert "forgot-password" in response.headers.get("location", "")
 
-    @patch("routes.password_reset.reset_password.use_reset_token")
+    @patch("routes.password_reset.reset_password.mark_token_used_in_session")
     @patch("routes.password_reset.reset_password.verify_reset_token")
     def test_reset_password_successfully(
         self,
         mock_verify: MagicMock,
-        mock_use: MagicMock,
+        mock_mark: MagicMock,
         client: TestClient,
         member_user: Angler,
         db_session: Session,
@@ -365,6 +365,8 @@ class TestPasswordResetCompletion:
             "name": member_user.name,
             "expires_at": now_local() + timedelta(hours=1),
         }
+        # Token mark must report 1 row updated for the route to proceed.
+        mock_mark.return_value = 1
 
         new_password = "NewSecureP@ssw0rd!"  # Avoid sequential numbers
 
@@ -388,8 +390,9 @@ class TestPasswordResetCompletion:
         assert member_user.password_hash is not None
         assert bcrypt.checkpw(new_password.encode(), member_user.password_hash.encode())
 
-        # Verify token was marked as used
-        mock_use.assert_called_once_with("valid-token")
+        # Verify token was marked as used (called with session + token).
+        assert mock_mark.call_count == 1
+        assert mock_mark.call_args.args[1] == "valid-token"
 
     @patch("routes.password_reset.reset_password.verify_reset_token")
     def test_reset_password_fails_with_mismatched_passwords(

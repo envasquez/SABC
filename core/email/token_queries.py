@@ -4,6 +4,8 @@ import hashlib
 from datetime import datetime
 from typing import Optional
 
+from sqlalchemy.orm import Session
+
 from core.db_schema import Angler, PasswordResetToken, get_session
 from core.helpers.timezone import now_utc
 
@@ -76,21 +78,31 @@ def fetch_token_data(token: str) -> Optional[tuple]:
         return None
 
 
+def mark_token_used_in_session(session: Session, token: str) -> int:
+    """Mark token used within an existing session. Returns rowcount.
+
+    Use this when the caller pairs token consumption with another write
+    (e.g. password update) in a single transaction so that either both
+    land or neither does, preventing a token from outliving its password
+    change if a downstream step fails.
+    """
+    from sqlalchemy import false
+
+    token_hash = _hash_token(token)
+    return (
+        session.query(PasswordResetToken)
+        .filter(
+            PasswordResetToken.token == token_hash,
+            PasswordResetToken.used.is_(false()),
+        )
+        .update({"used": True, "used_at": now_utc()})
+    )
+
+
 def mark_token_used(token: str) -> int:
     try:
-        token_hash = _hash_token(token)
         with get_session() as session:
-            from sqlalchemy import false
-
-            rowcount = (
-                session.query(PasswordResetToken)
-                .filter(
-                    PasswordResetToken.token == token_hash,
-                    PasswordResetToken.used.is_(false()),
-                )
-                .update({"used": True, "used_at": now_utc()})
-            )
-            return rowcount
+            return mark_token_used_in_session(session, token)
     except Exception as e:
         logger.error(f"Error marking token as used: {e}")
         return 0

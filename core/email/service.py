@@ -19,6 +19,17 @@ from .templates import (
 )
 
 
+def _safe_header(value: str) -> str:
+    """Strip CR/LF from a value before it is placed in an email header.
+
+    Header injection (e.g. embedding ``\\r\\nBcc: attacker@example.com``) lets
+    an attacker turn a public form into an open relay or rewrite envelope
+    recipients. Headers cannot legitimately contain CR or LF, so strip them.
+    Use only for header values; message bodies may legitimately contain CRLF.
+    """
+    return value.replace("\r", "").replace("\n", "")
+
+
 def send_password_reset_email(email: str, name: str, token: str) -> bool:
     if not SMTP_USERNAME or not SMTP_PASSWORD:
         logger.warning("SMTP credentials not configured - cannot send email")
@@ -34,8 +45,8 @@ def send_password_reset_email(email: str, name: str, token: str) -> bool:
 
         msg = MIMEMultipart("alternative")
         msg["From"] = FROM_EMAIL
-        msg["To"] = recipient
-        msg["Subject"] = subject
+        msg["To"] = _safe_header(recipient)
+        msg["Subject"] = _safe_header(subject)
 
         msg.attach(MIMEText(text_body, "plain"))
         msg.attach(MIMEText(html_body, "html"))
@@ -88,7 +99,7 @@ def send_news_notification(
 
         msg = MIMEMultipart("alternative")
         msg["From"] = FROM_EMAIL
-        msg["Subject"] = subject
+        msg["Subject"] = _safe_header(subject)
 
         msg.attach(MIMEText(text_body, "plain"))
         msg.attach(MIMEText(html_body, "html"))
@@ -99,7 +110,7 @@ def send_news_notification(
 
             # Send to all members (BCC so recipients don't see the roster)
             msg["To"] = FROM_EMAIL  # Send to self
-            msg["Bcc"] = ", ".join(emails)
+            msg["Bcc"] = ", ".join(_safe_header(e) for e in emails)
             server.send_message(msg)
 
         logger.info(f"News notification sent to {len(emails)} members: {title}")
@@ -152,9 +163,9 @@ def send_contact_email(
 
         msg = MIMEMultipart("alternative")
         msg["From"] = FROM_EMAIL
-        msg["To"] = ", ".join(admin_emails)
-        msg["Reply-To"] = sender_email
-        msg["Subject"] = subject
+        msg["To"] = ", ".join(_safe_header(e) for e in admin_emails)
+        msg["Reply-To"] = _safe_header(sender_email)
+        msg["Subject"] = _safe_header(subject)
 
         msg.attach(MIMEText(text_body, "plain"))
         msg.attach(MIMEText(html_body, "html"))

@@ -765,6 +765,13 @@ async def contact_form(request: Request) -> RedirectResponse:
     if not is_valid_email(sender_email):
         return error_redirect("/about", "Please enter a valid email address.")
 
+    # Reject CR/LF in fields that flow into headers — header injection turns
+    # the contact form into an open relay. Defense-in-depth alongside the
+    # service-layer _safe_header strip.
+    if any("\r" in v or "\n" in v for v in (sender_name, subject_line)):
+        logger.warning(f"Contact form rejected: CR/LF in header field (from {sender_email})")
+        return error_redirect("/about", "Please remove special characters from name and subject.")
+
     # Spam protection checks
     honeypot = str(form.get("website", "")).strip()
     honeypot_alt = str(form.get("phone", "")).strip()

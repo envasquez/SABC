@@ -6,7 +6,8 @@ from fastapi.responses import RedirectResponse, Response
 from sqlalchemy.exc import SQLAlchemyError
 
 from core.db_schema import Angler, get_session
-from core.email import use_reset_token, verify_reset_token
+from core.email import verify_reset_token
+from core.email.token_queries import mark_token_used_in_session
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
 from core.helpers.passwords import bcrypt_gensalt
 from core.helpers.response import error_redirect
@@ -76,17 +77,23 @@ def process_password_reset(
 
         password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt_gensalt()).decode("utf-8")
 
+        # Mark the token used and update the password in a single transaction.
+        # Either both land or neither does — a token cannot outlive its
+        # password change, and concurrent requests with the same token cannot
+        # both succeed (the second mark_token_used_in_session returns 0).
         with get_session() as session:
-            angler = session.query(Angler).filter(Angler.id == token_data["user_id"]).first()
-            if angler:
-                angler.password_hash = password_hash
-                # Bump session_version so any sessions issued before the
-                # reset (e.g. an attacker's session, which is why the user
-                # is resetting) are invalidated on their next request.
-                angler.session_version = (angler.session_version or 1) + 1
-                session.commit()  # CRITICAL: Must commit to save password change!
+            rowcount = mark_token_used_in_session(session, token)
+            if rowcount == 0:
+                return error_redirect("/forgot-password", ERROR_INVALID_TOKEN)
 
-        use_reset_token(token)
+            angler = session.query(Angler).filter(Angler.id == token_data["user_id"]).first()
+            if not angler:
+                return error_redirect("/forgot-password", ERROR_INVALID_TOKEN)
+            angler.password_hash = password_hash
+            # Bump session_version so any sessions issued before the reset
+            # (e.g. an attacker's session, which is why the user is resetting)
+            # are invalidated on their next request.
+            angler.session_version = (angler.session_version or 1) + 1
 
         logger.info(
             f"Password successfully reset for user {token_data['user_id']} ({token_data['email']})",

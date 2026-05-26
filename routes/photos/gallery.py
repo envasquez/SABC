@@ -3,6 +3,7 @@
 import io
 import os
 import uuid
+import warnings
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, File, Form, Request, UploadFile
@@ -20,6 +21,12 @@ from core.helpers.logging import get_logger
 from core.helpers.response import error_redirect, success_redirect
 from core.types import UserDict
 from routes.dependencies import templates
+
+# Cap decoded pixel count to defeat decompression-bomb DoS. 50 MP covers any
+# reasonable phone/camera while a 10 MB malicious PNG that decodes to multi-GB
+# pixel buffers will exceed this and raise instead of OOMing the worker.
+Image.MAX_IMAGE_PIXELS = 50_000_000
+warnings.simplefilter("error", Image.DecompressionBombWarning)
 
 router = APIRouter()
 logger = get_logger(__name__)
@@ -97,7 +104,7 @@ def generate_placeholder(contents: bytes, filename: str) -> Optional[str]:
         logger.debug(f"Placeholder generated: {placeholder_filename}")
 
         return placeholder_filename
-    except (OSError, ValueError) as e:
+    except (OSError, ValueError, Image.DecompressionBombError) as e:
         logger.error(f"Failed to generate placeholder: {e}")
         return None
 
@@ -145,7 +152,7 @@ def generate_thumbnail(contents: bytes, filename: str) -> tuple[Optional[str], O
         # Generate blur placeholder
         placeholder_filename = generate_placeholder(contents, filename)
 
-    except (OSError, ValueError) as e:
+    except (OSError, ValueError, Image.DecompressionBombError) as e:
         logger.error(f"Failed to generate thumbnail: {e}")
 
     return thumb_filename, placeholder_filename
@@ -442,6 +449,12 @@ async def upload_photo(
     try:
         with Image.open(io.BytesIO(contents)) as probe:
             probe.verify()
+    except Image.DecompressionBombError as e:
+        logger.warning(f"Photo upload rejected: decompression bomb: {e}")
+        return error_redirect(
+            "/photos/upload",
+            "Image is too large to process. Please upload a smaller image.",
+        )
     except (OSError, ValueError, SyntaxError) as e:
         logger.warning(f"Photo upload rejected: not a valid image: {e}")
         return error_redirect(
