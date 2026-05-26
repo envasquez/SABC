@@ -45,7 +45,7 @@ from routes.admin import users as admin_users
 
 # Asset version string for cache-busting static assets in templates.
 # Bump this whenever bundled CSS/JS changes so browsers fetch the new files.
-ASSET_VERSION = "32"
+ASSET_VERSION = "33"
 
 
 def get_csrf_token(request: Request) -> str:

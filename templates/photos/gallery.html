@@ -113,20 +113,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const modal = new bootstrap.Modal(document.getElementById('lightboxModal'));
-    const lightboxImage = document.getElementById('lightboxImage');
-    const lightboxCaption = document.getElementById('lightboxCaption');
-
-    document.addEventListener('click', function(e) {
-        const link = e.target.closest('.gallery-link');
-        if (!link) return;
-        e.preventDefault();
-        lightboxImage.src = link.href;
-        lightboxCaption.textContent = link.dataset.caption || '';
-        modal.show();
-    });
-});
-</script>
+<script src="{{ url_for('static', path='/photos-gallery.js') }}?v={{ asset_v }}"></script>
 {% endblock %}

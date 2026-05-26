@@ -1,6 +1,8 @@
 /**
- * Photo gallery page JavaScript functionality
- * Handles the lightbox modal and photo-delete confirmation.
+ * Photo gallery page JavaScript.
+ *
+ * Opens the lightbox modal when a photo thumbnail is clicked. Delete
+ * confirmation is handled by the generic data-confirm helper in utils.js.
  * Uses event delegation so HTMX-inserted photo cards are covered too.
  */
 
@@ -12,25 +14,15 @@
         const lightboxImage = document.getElementById('lightboxImage');
         const lightboxCaption = document.getElementById('lightboxCaption');
         const modal = lightboxEl ? new bootstrap.Modal(lightboxEl) : null;
+        if (!modal) return;
 
-        // Delegated click handler for opening the lightbox
         document.addEventListener('click', function(e) {
             const link = e.target.closest('.gallery-link');
-            if (link && modal) {
+            if (link) {
                 e.preventDefault();
                 lightboxImage.src = link.href;
                 lightboxCaption.textContent = link.dataset.caption || '';
                 modal.show();
-            }
-        });
-
-        // Delegated submit handler: confirm before deleting a photo
-        document.addEventListener('submit', function(e) {
-            const form = e.target;
-            if (form.matches('.js-photo-delete-form')) {
-                if (!confirm('Are you sure you want to delete this photo?')) {
-                    e.preventDefault();
-                }
             }
         });
     });
