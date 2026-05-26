@@ -12,6 +12,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy import case, func
 from sqlalchemy.orm import Query, Session, aliased
+from starlette.concurrency import run_in_threadpool
 
 from core.db_schema import (
     Angler,
@@ -601,8 +602,13 @@ async def home_paginated(request: Request, page: int = 1) -> Response:
 
         now = now_local() if poll_ids else None
 
+        # Card assembly is synchronous and includes a (cached) NWS forecast
+        # fetch via httpx.Client. Offload to the threadpool so the event loop
+        # is never blocked on a network call — and so the rest of the page
+        # render stays responsive even on a cold cache.
         tournaments_with_results: List[Dict[str, Any]] = [
-            _assemble_tournament_card(
+            await run_in_threadpool(
+                _assemble_tournament_card,
                 tournament,
                 user,
                 top_results_by_tid,
@@ -812,7 +818,10 @@ async def contact_form(request: Request) -> RedirectResponse:
         logger.warning("No admin emails found for contact form submission")
         return error_redirect("/about", "Unable to send message. Please try again later.")
 
-    success = send_contact_email(
+    # send_contact_email opens a synchronous smtplib.SMTP connection; run on
+    # the threadpool so the event loop is not blocked on TLS + SMTP I/O.
+    success = await run_in_threadpool(
+        send_contact_email,
         admin_emails=admin_emails,
         sender_name=sender_name,
         sender_email=sender_email,

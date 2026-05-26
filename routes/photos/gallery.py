@@ -14,6 +14,7 @@ from slowapi.util import get_remote_address
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Query, Session
+from starlette.concurrency import run_in_threadpool
 
 from core.db_schema import Angler, Event, Photo, TeamResult, Tournament, get_session
 from core.helpers.auth import get_current_user, require_member
@@ -445,10 +446,14 @@ async def upload_photo(
         )
 
     # Verify the bytes are a genuine image before writing anything to disk.
-    # Extension/Content-Type are client-controlled and easily spoofed.
-    try:
+    # Extension/Content-Type are client-controlled and easily spoofed. The
+    # decode is CPU-bound and must not block the event loop.
+    def _verify_bytes() -> None:
         with Image.open(io.BytesIO(contents)) as probe:
             probe.verify()
+
+    try:
+        await run_in_threadpool(_verify_bytes)
     except Image.DecompressionBombError as e:
         logger.warning(f"Photo upload rejected: decompression bomb: {e}")
         return error_redirect(
@@ -467,11 +472,15 @@ async def upload_photo(
     ensure_upload_dir()
     filepath = os.path.join(UPLOAD_DIR, filename)
 
-    # Save file
+    # Save file (synchronous disk I/O — offload from event loop)
     logger.info(f"Photo upload: saving to {filepath}...")
-    try:
+
+    def _write_bytes() -> None:
         with open(filepath, "wb") as f:
             f.write(contents)
+
+    try:
+        await run_in_threadpool(_write_bytes)
         logger.info("Photo upload: file saved successfully")
     except OSError as e:
         logger.error(f"Failed to save photo: {e}")
@@ -479,9 +488,12 @@ async def upload_photo(
 
     # Generate thumbnail and blur placeholder. A failure here means the image
     # could not be processed, so abort the upload rather than leaving an
-    # orphaned original on disk with no thumbnail.
+    # orphaned original on disk with no thumbnail. PIL decode + WEBP encode
+    # are CPU-bound — offload to threadpool.
     logger.info("Photo upload: generating thumbnail and placeholder...")
-    thumbnail_filename, placeholder_filename = generate_thumbnail(contents, filename)
+    thumbnail_filename, placeholder_filename = await run_in_threadpool(
+        generate_thumbnail, contents, filename
+    )
     if not thumbnail_filename:
         logger.error("Photo upload: thumbnail generation failed; aborting upload")
         if os.path.exists(filepath):
