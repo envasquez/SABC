@@ -9,7 +9,7 @@ and following the request flow required opening 5 tabs.
 """
 
 from datetime import date
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, TypedDict
 
 from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
@@ -23,6 +23,23 @@ from core.helpers.response import error_redirect
 from core.helpers.timezone import now_local
 from routes.admin.users.email_helpers import generate_guest_email
 from routes.auth.validation import validate_phone_number
+
+
+class UpdateParams(TypedDict):
+    """Shape of the dict produced by :func:`_prepare_update_data`.
+
+    Typed so mypy catches key-name typos at the call sites that read
+    ``update_params["..."]``. Replaces the previous ``Dict[str, Any]``
+    return that punted type-checking to runtime.
+    """
+
+    id: int
+    name: str
+    email: Optional[str]
+    phone: Optional[str]
+    member: bool
+    is_admin: bool
+
 
 router = APIRouter()
 logger = get_logger("admin.users.update")
@@ -76,7 +93,7 @@ def update_officer_positions(
 
 def _prepare_update_data(
     user_id: int, name: str, email: str, phone: str, member: bool, is_admin: bool
-) -> Dict[str, Any]:
+) -> UpdateParams:
     """Normalize form fields into a single dict and resolve the final email."""
     return {
         "id": user_id,
@@ -109,7 +126,9 @@ async def update_user(
 ) -> RedirectResponse:
     """Handle user update form submission."""
     admin_user = require_admin(request)
-    update_params: Dict[str, Any] = {}
+    # Holds the normalized form payload once _prepare_update_data succeeds.
+    # Optional[] because the except handlers may fire before assignment.
+    update_params: Optional[UpdateParams] = None
     try:
         with get_session() as session:
             angler = session.query(Angler).filter(Angler.id == user_id).first()

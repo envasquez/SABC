@@ -238,7 +238,18 @@ templates = Jinja2Templates(directory="templates", context_processors=[_flash_me
 
 
 def get_db() -> Generator[Connection, None, None]:
-    """Get database connection as a dependency."""
+    """FastAPI dependency yielding a raw SQLAlchemy Connection.
+
+    Reserved for the tournament-results admin routes (routes/admin/tournaments/*)
+    that drive raw ``text()`` SQL through :class:`core.query_service.QueryService`.
+    Everywhere else in the codebase uses ``with get_session() as session:`` for
+    ORM access — see core/db_schema/session.py.
+
+    The split is intentional: tournament-results routes accept user-entered
+    decimals, perform per-row UPDATE/INSERT, and benefit from the FastAPI
+    dep-override testing pattern more than the ORM routes do. Don't migrate
+    those routes to ``get_session`` without also reworking QueryService.
+    """
     with engine.connect() as conn:
         yield conn
 
