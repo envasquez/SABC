@@ -12,9 +12,9 @@
         <img src="{{ photo.placeholder_url }}" alt=""
              style="height:200px;width:100%;object-fit:cover;filter:blur(10px);transform:scale(1.1);position:absolute;top:0;left:0">
         <img src="{{ photo.thumbnail_url }}" alt="{{ photo.caption or 'Photo' }}"
+             class="js-fade-in"
              style="height:200px;width:100%;object-fit:cover;position:absolute;top:0;left:0;opacity:0;transition:opacity .3s ease-in-out"
-             loading="lazy"
-             onload="this.style.opacity='1'; this.previousElementSibling.style.display='none';">
+             loading="lazy">
         {% else %}
         <img src="{{ photo.thumbnail_url }}" alt="{{ photo.caption or 'Photo' }}"
              style="height:200px;width:100%;object-fit:cover;display:block" loading="lazy">

@@ -287,6 +287,29 @@ document.addEventListener('submit', function(e) {
     }
 }, true);
 
+// Delegated reload-page handler. Replaces inline onclick="location.reload()"
+// (used on the 500 error page). Buttons opt in via class="js-reload-page".
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.js-reload-page')) {
+        e.preventDefault();
+        location.reload();
+    }
+});
+
+// Delegated image fade-in handler for the photo gallery thumbnails.
+// The HTML is a stacked pair: a blurred placeholder behind, the real
+// thumbnail in front at opacity:0. When the real thumb loads we set it
+// opaque and hide the placeholder. <img>'s `load` event doesn't bubble,
+// so we listen in the capture phase to make delegation work, including
+// for HTMX-inserted cards from infinite scroll.
+document.addEventListener('load', function(e) {
+    const img = e.target;
+    if (!(img instanceof HTMLImageElement) || !img.classList.contains('js-fade-in')) return;
+    img.style.opacity = '1';
+    const placeholder = img.previousElementSibling;
+    if (placeholder) placeholder.style.display = 'none';
+}, true);
+
 /**
  * Escape HTML to prevent XSS attacks
  * Converts special characters to HTML entities

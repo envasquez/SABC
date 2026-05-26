@@ -20,14 +20,17 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         if is_https:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
-        # CSP uses 'unsafe-inline' for script-src because the codebase relies heavily
-        # on inline event handlers (onclick=, onchange=, etc.) across templates.
-        # A nonce-based approach would require migrating all inline handlers to
-        # addEventListener() first — otherwise CSP3 browsers silently ignore
-        # 'unsafe-inline' when a nonce is present, breaking all onclick handlers.
+        # script-src omits 'unsafe-inline': every inline on*= handler and
+        # inline <script> block has been migrated to addEventListener and
+        # external files (Phase 4+5+6 of the audit). This closes the single
+        # biggest XSS amplifier — any future escape gap is now blocked by
+        # the browser rather than fully exploitable.
+        # style-src still allows 'unsafe-inline' because templates carry
+        # inline style="" attributes (Tabler card layouts, photo-grid
+        # positioning, etc.). Migrating those to classes is a follow-up.
         csp = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' "
+            "script-src 'self' "
             "https://cdn.jsdelivr.net https://unpkg.com https://challenges.cloudflare.com; "
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
             "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; "
