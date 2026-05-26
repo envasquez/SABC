@@ -15,7 +15,7 @@
     <div class="row align-items-center">
         <div class="col">
             <div class="page-pretitle"><i class="ti ti-calendar me-1"></i>{{ tournament.event_date | date_format }}</div>
-            <h2 class="page-title"><i class="ti ti-fish me-2"></i>{{ tournament.lake_name | title if tournament.lake_name else "Tournament" }} &mdash; Results</h2>
+            <h1 class="page-title"><i class="ti ti-fish me-2"></i>{{ tournament.lake_name | title if tournament.lake_name else "Tournament" }} &mdash; Results</h1>
         </div>
         {% if user and user.is_admin %}
         <div class="col-auto">
@@ -50,7 +50,7 @@
             </div>
             <div class="datagrid-item">
                 <div class="datagrid-title">Time</div>
-                <div class="datagrid-content">{% if tournament.start_time and tournament.end_time %}{{ tournament.start_time.strftime('%-I:%M %p') }} &ndash; {{ tournament.end_time.strftime('%-I:%M %p') }}{% elif tournament.start_time %}{{ tournament.start_time.strftime('%-I:%M %p') }}{% else %}&mdash;{% endif %}</div>
+                <div class="datagrid-content">{% if tournament.start_time and tournament.end_time %}{{ tournament.start_time | datetime_format('%-I:%M %p') }} &ndash; {{ tournament.end_time | datetime_format('%-I:%M %p') }}{% elif tournament.start_time %}{{ tournament.start_time | datetime_format('%-I:%M %p') }}{% else %}&mdash;{% endif %}</div>
             </div>
             <div class="datagrid-item">
                 <div class="datagrid-title">Location</div>

@@ -42,7 +42,7 @@
   <div class="row align-items-center">
     <div class="col">
       <div class="page-pretitle">South Austin Bass Club</div>
-      <h2 class="page-title"><i class="ti ti-checkbox me-2" aria-hidden="true"></i>Polls</h2>
+      <h1 class="page-title"><i class="ti ti-checkbox me-2" aria-hidden="true"></i>Polls</h1>
     </div>
     {% if user and user.is_admin %}
     <div class="col-auto ms-auto">
@@ -110,9 +110,9 @@
           {% endif %}
         </h3>
         <div class="text-secondary small mt-1">
-          <i class="ti ti-clock-play me-1" aria-hidden="true"></i>Opens {{ (poll.starts_at | to_local).strftime('%m-%d-%Y at %H:%M') }}
+          <i class="ti ti-clock-play me-1" aria-hidden="true"></i>Opens {{ poll.starts_at | datetime_format('%m-%d-%Y at %H:%M') }}
           <span class="mx-1">·</span>
-          <i class="ti ti-clock-stop me-1" aria-hidden="true"></i>Closes {{ (poll.closes_at | to_local).strftime('%m-%d-%Y at %H:%M') }}
+          <i class="ti ti-clock-stop me-1" aria-hidden="true"></i>Closes {{ poll.closes_at | datetime_format('%m-%d-%Y at %H:%M') }}
         </div>
       </div>
 
@@ -166,9 +166,7 @@
           <!-- Your Vote Tab -->
           <div class="tab-pane fade show active" id="vote-pane-{{ poll.id }}" role="tabpanel" aria-labelledby="vote-tab-{{ poll.id }}">
             {% if poll.user_has_voted %}
-              <div class="alert alert-success" role="alert">
-                <i class="ti ti-circle-check me-2" aria-hidden="true"></i>You have already voted in this poll.
-              </div>
+              {{ alert('success', 'You have already voted in this poll.', dismissible=False) }}
             {% else %}
             <!-- Regular Voting Interface -->
             <form method="POST" action="/polls/{{ poll.id }}/vote" data-poll-vote="true" data-poll-id="{{ poll.id }}" data-poll-type="{{ poll.poll_type }}" data-context="admin_own">
@@ -436,13 +434,11 @@
             </button>
           </form>
         {% elif poll.status == 'active' and not user.member %}
-          <div class="alert alert-warning" role="alert">
-            <i class="ti ti-alert-triangle me-2" aria-hidden="true"></i>Only club members can vote in polls.
-          </div>
+          {{ alert('warning', 'Only club members can vote in polls.', dismissible=False) }}
         {% elif poll.status == 'upcoming' %}
           <div class="alert alert-info" role="alert">
             <i class="ti ti-clock me-2" aria-hidden="true"></i>
-            This poll will open for voting on {{ (poll.starts_at | to_local).strftime('%Y-%m-%d') }} at {{ (poll.starts_at | to_local).strftime('%H:%M') }}.
+            This poll will open for voting on {{ poll.starts_at | datetime_format('%Y-%m-%d') }} at {{ poll.starts_at | datetime_format('%H:%M') }}.
           </div>
 
           {% if poll.poll_type != 'tournament_location' and poll.options %}
@@ -546,9 +542,7 @@
           </div>
         {% endif %}
       {% else %}
-        <div class="alert alert-warning" role="alert">
-          <i class="ti ti-alert-triangle me-2" aria-hidden="true"></i>This poll has no voting options yet.
-        </div>
+        {{ alert('warning', 'This poll has no voting options yet.', dismissible=False) }}
       {% endif %}
     </div>
   </div>

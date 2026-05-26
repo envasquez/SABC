@@ -28,7 +28,7 @@
     <div class="row align-items-center">
         <div class="col">
             <div class="page-pretitle">Analytics</div>
-            <h2 class="page-title"><i class="ti ti-chart-histogram me-2"></i>Club Data Dashboard</h2>
+            <h1 class="page-title"><i class="ti ti-chart-histogram me-2"></i>Club Data Dashboard</h1>
         </div>
     </div>
 </div>
@@ -232,7 +232,7 @@
                 <tr>
                     <td class="fw-bold">{{ lake.lake_name }}</td>
                     <td class="text-center">{{ lake.times_fished }}</td>
-                    <td class="text-center text-secondary">{{ lake.last_fished.strftime('%b %Y') if lake.last_fished else 'N/A' }}</td>
+                    <td class="text-center text-secondary">{{ lake.last_fished | datetime_format('%b %Y') if lake.last_fished else 'N/A' }}</td>
                     <td class="text-center">{{ "%.2f"|format(lake.avg_weight_per_angler) }} lbs</td>
                     <td class="text-center"><span class="badge bg-green-lt">{{ lake.total_limits }}</span></td>
                     <td class="text-center"><span class="badge bg-red-lt">{{ lake.total_zeros }}</span></td>
@@ -270,7 +270,7 @@
                     <td class="fw-bold">{{ bass.angler_name }}</td>
                     <td><span class="badge bg-azure-lt">{{ "%.2f"|format(bass.big_bass_weight) }} lbs</span></td>
                     <td>{{ bass.lake_name }}</td>
-                    <td class="text-secondary">{{ bass.tournament_date.strftime('%b %d, %Y') if bass.tournament_date else 'N/A' }}</td>
+                    <td class="text-secondary">{{ bass.tournament_date | datetime_format('%b %d, %Y') if bass.tournament_date else 'N/A' }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

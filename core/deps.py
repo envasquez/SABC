@@ -124,6 +124,31 @@ def to_local_datetime_filter(dt: Any) -> Any:
     return to_local(dt)
 
 
+def datetime_format_filter(value: Any, fmt: str) -> str:
+    """Format a datetime/date/time with the given strftime format.
+
+    Replaces the inline ``(value | to_local).strftime('...')`` chain that
+    appeared in templates. Datetimes are converted to club-local time first
+    so ``%H:%M`` etc. render in Central Time; date and time objects pass
+    through to strftime as-is. Returns the empty string for ``None`` so
+    templates don't need ``{% if value %}`` wrappers.
+    """
+    if value is None:
+        return ""
+    if isinstance(value, datetime):
+        value = to_local(value)
+    if not hasattr(value, "strftime"):
+        return str(value)
+    try:
+        return value.strftime(fmt)
+    except (ValueError, AttributeError, TypeError) as exc:
+        _filter_logger.warning(
+            "datetime_format_filter failed",
+            extra={"input": repr(value), "fmt": fmt, "error": str(exc)},
+        )
+        return str(value)
+
+
 def is_dues_current_filter(dues_paid_through: Any) -> bool:
     """Check if member dues are current (paid through today or later).
 

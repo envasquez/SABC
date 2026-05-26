@@ -197,7 +197,7 @@
 {% macro poll_sunrise_strip(day_info) %}
 {% if day_info and day_info.sunrise %}
 <div class="d-flex align-items-center text-secondary small" title="Sunrise for the tournament date in Austin, TX">
-    <span>Expected Sunrise <i class="ti ti-sunrise text-warning mx-1" aria-hidden="true"></i><strong>{{ day_info.sunrise.strftime('%-I:%M %p') }}</strong></span>
+    <span>Expected Sunrise <i class="ti ti-sunrise text-warning mx-1" aria-hidden="true"></i><strong>{{ day_info.sunrise | datetime_format('%-I:%M %p') }}</strong></span>
 </div>
 {% endif %}
 {% endmacro %}
@@ -207,7 +207,7 @@
 {% if day_info and (day_info.sunrise or day_info.weather) %}
 <div class="d-flex flex-wrap align-items-center gap-2 text-secondary small" title="Conditions for the tournament date in Austin, TX">
     {% if day_info.sunrise %}
-    <span><i class="ti ti-sunrise text-warning me-1" aria-hidden="true"></i>Sunrise <strong>{{ day_info.sunrise.strftime('%-I:%M %p') }}</strong></span>
+    <span><i class="ti ti-sunrise text-warning me-1" aria-hidden="true"></i>Sunrise <strong>{{ day_info.sunrise | datetime_format('%-I:%M %p') }}</strong></span>
     {% endif %}
     {% if day_info.weather %}
     {% if day_info.sunrise %}<span class="text-secondary">·</span>{% endif %}
@@ -238,7 +238,7 @@
                         <div class="fw-bold mb-2">
                             <a href="/tournaments/{{ hist.tournament_id }}" class="text-azure text-decoration-none">
                                 {{ hist.month_name }} {{ hist.year }}
-                                <span class="text-secondary small">({{ hist.date.strftime('%m/%d') }})</span>
+                                <span class="text-secondary small">({{ hist.date | datetime_format('%m/%d') }})</span>
                                 <i class="ti ti-external-link" aria-hidden="true"></i>
                             </a>
                         </div>

@@ -24,7 +24,7 @@
   <div class="row align-items-center">
     <div class="col">
       <div class="page-pretitle">South Austin Bass Club</div>
-      <h2 class="page-title"><i class="ti ti-user-circle me-2" aria-hidden="true"></i>Member Profile</h2>
+      <h1 class="page-title"><i class="ti ti-user-circle me-2" aria-hidden="true"></i>Member Profile</h1>
     </div>
   </div>
 </div>
@@ -272,7 +272,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <div class="alert alert-danger" role="alert"><strong>Warning:</strong> This will permanently delete your account.</div>
+        {{ alert('danger', 'Warning: This will permanently delete your account.', dismissible=False) }}
         <p class="text-secondary mb-1"><strong>You will lose:</strong> Account access to the club system.</p>
         <p class="text-secondary">Tournament results will remain for record-keeping.</p>
         <form method="POST" action="/profile/delete" id="deleteForm">

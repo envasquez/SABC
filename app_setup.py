@@ -21,6 +21,7 @@ from core.csrf_middleware import CSRFMiddleware
 from core.deps import (
     CustomJSONEncoder,
     date_format_filter,
+    datetime_format_filter,
     from_json_filter,
     is_dues_current_filter,
     month_number_filter,
@@ -218,6 +219,7 @@ def create_app() -> FastAPI:
     templates.env.filters["month_number"] = month_number_filter
     templates.env.filters["nl2br"] = nl2br_filter
     templates.env.filters["to_local"] = to_local_datetime_filter
+    templates.env.filters["datetime_format"] = datetime_format_filter
     templates.env.filters["is_dues_current"] = is_dues_current_filter
 
     # Sanitize iframe filter — applies sanitize_iframe at render time for defense-in-depth

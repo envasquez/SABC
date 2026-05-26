@@ -68,7 +68,7 @@
                         <i class="ti ti-player-play me-1 text-green"></i>Poll Starts
                     </label>
                     <input type="datetime-local" class="form-control" id="starts_at" name="starts_at"
-                           value="{{ (poll[4] | to_local).strftime('%Y-%m-%dT%H:%M') if poll[4] else '' }}">
+                           value="{{ poll[4] | datetime_format('%Y-%m-%dT%H:%M') }}">
                     <small class="form-hint">When members can start voting</small>
                 </div>
                 <div class="col-md-6 mb-3">
@@ -76,7 +76,7 @@
                         <i class="ti ti-player-stop me-1 text-orange"></i>Poll Closes
                     </label>
                     <input type="datetime-local" class="form-control" id="closes_at" name="closes_at"
-                           value="{{ (poll[2] | to_local).strftime('%Y-%m-%dT%H:%M') }}" required>
+                           value="{{ poll[2] | datetime_format('%Y-%m-%dT%H:%M') }}" required>
                     <small class="form-hint">When voting will end</small>
                 </div>
             </div>

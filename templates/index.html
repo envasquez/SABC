@@ -70,7 +70,7 @@
                     <div class="ms-auto"><span class="text-primary"><i class="ti ti-calendar-event icon-lg"></i></span></div>
                 </div>
                 {% if next_tournament %}
-                <div class="h1 mb-1">{{ next_tournament.date.strftime('%b %d') }}</div>
+                <div class="h1 mb-1">{{ next_tournament.date | datetime_format('%b %d') }}</div>
                 <div class="text-secondary small"><i class="ti ti-map-pin me-1"></i>{{ next_tournament.lake_name|default('TBD', true) }}{% if next_tournament.ramp_name %} &mdash; {{ next_tournament.ramp_name }}{% endif %}</div>
                 <div class="d-flex align-items-center gap-2 mt-1 small">
                     <span class="text-secondary">${{ "%.0f"|format(next_tournament.entry_fee) }}/boat</span>
@@ -133,7 +133,7 @@
     <div class="card mb-3 border-primary">
         <div class="card-header">
             <span class="avatar bg-primary-lt me-3 flex-column" style="height:3rem;width:3rem">
-                <span class="text-uppercase small fw-bold lh-1">{{ tournament.date.strftime('%b') }}</span>
+                <span class="text-uppercase small fw-bold lh-1">{{ tournament.date | datetime_format('%b') }}</span>
                 <span class="h2 mb-0 lh-1">{{ tournament.date.day }}</span>
             </span>
             <div class="flex-fill">
@@ -175,7 +175,7 @@
             <div class="card{% if tournament.is_cancelled %} card-inactive{% endif %}">
                 <div class="card-header">
                     <span class="avatar {% if tournament.is_cancelled %}bg-secondary-lt{% else %}bg-green-lt{% endif %} me-3 flex-column" style="height:3rem;width:3rem">
-                        <span class="text-uppercase small fw-bold lh-1">{{ tournament.date.strftime('%b') }}</span>
+                        <span class="text-uppercase small fw-bold lh-1">{{ tournament.date | datetime_format('%b') }}</span>
                         <span class="h2 mb-0 lh-1">{{ tournament.date.day }}</span>
                     </span>
                     <div class="flex-fill">
@@ -314,7 +314,7 @@
             <div class="text-secondary small mb-2" style="line-height:1.5">{{ news_item[2] | nl2br }}</div>
             <div class="text-secondary small">
                 {% set display_date = news_item[4] if news_item[8] else news_item[3] %}
-                <i class="ti ti-clock me-1"></i>{{ display_date.strftime('%b %d') if display_date else '' }}
+                <i class="ti ti-clock me-1"></i>{{ display_date | datetime_format('%b %d') }}
                 {% if news_item[8] %}
                     {% set editor_parts = news_item[8].split() %}
                     &middot; {{ editor_parts[0][0] }}.{{ editor_parts[-1] if editor_parts|length >= 2 else news_item[8] }}

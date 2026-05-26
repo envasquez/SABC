@@ -111,8 +111,8 @@
                         {% elif item[5] == 1 %}<span class="badge bg-warning-lt">High</span>
                         {% else %}<span class="badge bg-azure-lt">Normal</span>{% endif %}
                     </td>
-                    <td class="text-secondary">{{ item[3].strftime('%Y-%m-%d') if item[3] else '' }}</td>
-                    <td class="text-secondary">{{ item[9].strftime('%Y-%m-%d') if item[9] else '-' }}</td>
+                    <td class="text-secondary">{{ item[3] | datetime_format('%Y-%m-%d') }}</td>
+                    <td class="text-secondary">{{ (item[9] | datetime_format('%Y-%m-%d')) or '-' }}</td>
                     <td class="text-end">
                         <div class="btn-list flex-nowrap justify-content-end">
                             {% if not show_archived %}
@@ -121,7 +121,7 @@
                                     data-title="{{ item[1] }}"
                                     data-content="{{ item[2] }}"
                                     data-priority="{{ item[5] }}"
-                                    data-auto-archive-at="{{ item[9].strftime('%Y-%m-%d') if item[9] else '' }}"
+                                    data-auto-archive-at="{{ item[9] | datetime_format('%Y-%m-%d') }}"
                                     aria-label="Edit news item">
                                 <i class="ti ti-pencil"></i>
                             </button>

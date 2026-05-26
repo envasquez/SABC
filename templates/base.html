@@ -1,3 +1,4 @@
+{% from 'macros.html' import alert %}
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
 <head>
@@ -114,24 +115,8 @@
     <div class="page-wrapper">
         <div class="page-body">
             <div class="container-xl">
-                {% if error %}
-                <div class="alert alert-danger alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-alert-circle me-2"></i></div>
-                        <div>{{ error }}</div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
-                {% endif %}
-                {% if success %}
-                <div class="alert alert-success alert-dismissible" role="alert">
-                    <div class="d-flex">
-                        <div><i class="ti ti-circle-check me-2"></i></div>
-                        <div>{{ success }}</div>
-                    </div>
-                    <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-                </div>
-                {% endif %}
+                {{ alert('danger', error) }}
+                {{ alert('success', success) }}
                 {% block content %}{% endblock %}
             </div>
         </div>

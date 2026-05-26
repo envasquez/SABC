@@ -527,7 +527,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-danger" role="alert"><strong>Warning:</strong> This action cannot be undone.</div>
+                {{ alert('danger', 'Warning: This action cannot be undone.', dismissible=False) }}
                 <p class="text-secondary mb-1">Event:</p>
                 <p><strong id="delete-current-event-name" class="text-body"></strong></p>
                 <p id="delete-current-dependencies-warning" class="text-warning" style="display:none">
@@ -558,7 +558,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-danger" role="alert"><strong>Warning:</strong> This action cannot be undone.</div>
+                {{ alert('danger', 'Warning: This action cannot be undone.', dismissible=False) }}
                 <p class="text-secondary mb-1">Event:</p>
                 <p><strong id="delete-event-name" class="text-body"></strong></p>
                 <p id="delete-dependencies-warning" class="text-warning" style="display:none">
