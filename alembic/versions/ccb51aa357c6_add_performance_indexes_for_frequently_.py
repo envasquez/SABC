@@ -15,7 +15,6 @@ Create Date: 2025-10-12 21:33:16.050277
 from typing import Sequence, Union
 
 import sqlalchemy as sa
-
 from alembic import op  # type: ignore[attr-defined]
 
 # revision identifiers, used by Alembic.

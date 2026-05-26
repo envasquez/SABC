@@ -25,7 +25,6 @@ DDL fail mid-flight. Pairs with scripts/audit_db_integrity.py.
 from typing import List, Sequence, Tuple, Union
 
 import sqlalchemy as sa
-
 from alembic import op
 
 # revision identifiers, used by Alembic.

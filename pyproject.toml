@@ -14,6 +14,13 @@ ignore = [
 "app.py" = ["E402"]  # Module level imports after setup - correct pattern for FastAPI
 "routes/pages/home.py" = ["N806"]  # SQLAlchemy aliased tables (Angler1, Angler2, Author, Editor) - correct pattern
 
+[tool.ruff.lint.isort]
+# `alembic/` is a local migrations directory, so ruff's auto-classifier
+# (ruff >= 0.15.14) would otherwise treat `from alembic import command` as
+# first-party while leaving `from alembic.config import Config` as third-party,
+# which split-groups the imports and trips I001. Pin alembic as third-party.
+known-third-party = ["alembic"]
+
 [tool.mypy]
 ignore_missing_imports = true
 warn_return_any = false
