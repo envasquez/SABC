@@ -1,8 +1,11 @@
 import json
+import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from core.db_schema import Angler, Poll, PollOption, PollVote, get_session
@@ -19,9 +22,12 @@ from routes.voting.vote_validation import (
 
 router = APIRouter()
 logger = get_logger("voting")
+_is_test_env = os.environ.get("ENVIRONMENT") == "test"
+limiter = Limiter(key_func=get_remote_address, enabled=not _is_test_env)
 
 
 @router.post("/polls/{poll_id}/vote")
+@limiter.limit("30/minute")
 def vote_in_poll(
     request: Request,
     poll_id: int,

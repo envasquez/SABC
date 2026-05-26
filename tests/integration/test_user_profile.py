@@ -711,7 +711,7 @@ class TestAccountDeletion:
         response = post_with_csrf(
             client,
             "/profile/delete",
-            data={"confirm": "DELETE"},
+            data={"confirm": "DELETE", "current_password": "anything"},
             follow_redirects=False,
         )
         assert response.status_code in [302, 303, 307]
@@ -734,7 +734,7 @@ class TestAccountDeletion:
         response = post_with_csrf(
             client,
             "/profile/delete",
-            data={"confirm": "delete"},  # lowercase, should fail
+            data={"confirm": "delete", "current_password": test_password},  # lowercase, should fail
             follow_redirects=False,
         )
 
@@ -742,6 +742,30 @@ class TestAccountDeletion:
         location = response.headers.get("location", "")
         assert "error" in location.lower()
         assert "delete" in location.lower()
+
+    def test_account_deletion_requires_correct_password(
+        self, client: TestClient, member_user: Angler, test_password: str
+    ):
+        """Account deletion rejects a wrong current_password even with confirm=DELETE."""
+        csrf_token = get_csrf_token(client, "/login")
+        member_email = member_user.email or "member@example.com"
+        client.post(
+            "/login",
+            data={"email": member_email, "password": test_password, "csrf_token": csrf_token},
+            follow_redirects=False,
+        )
+
+        response = post_with_csrf(
+            client,
+            "/profile/delete",
+            data={"confirm": "DELETE", "current_password": "this-is-wrong"},
+            follow_redirects=False,
+        )
+
+        assert response.status_code in [302, 303]
+        location = response.headers.get("location", "")
+        assert "error" in location.lower()
+        assert "password" in location.lower()
 
     def test_account_deletion_successful_for_user_without_data(
         self, client: TestClient, member_user: Angler, test_password: str, db_session: Session
@@ -761,7 +785,7 @@ class TestAccountDeletion:
         response = post_with_csrf(
             client,
             "/profile/delete",
-            data={"confirm": "DELETE"},
+            data={"confirm": "DELETE", "current_password": test_password},
             follow_redirects=False,
         )
 
@@ -807,7 +831,7 @@ class TestAccountDeletion:
         response = post_with_csrf(
             client,
             "/profile/delete",
-            data={"confirm": "DELETE"},
+            data={"confirm": "DELETE", "current_password": test_password},
             follow_redirects=False,
         )
 
@@ -839,7 +863,7 @@ class TestAccountDeletion:
         response = post_with_csrf(
             client,
             "/profile/delete",
-            data={"confirm": "DELETE"},
+            data={"confirm": "DELETE", "current_password": test_password},
             follow_redirects=False,
         )
 
@@ -864,7 +888,7 @@ class TestAccountDeletion:
         response = post_with_csrf(
             client,
             "/profile/delete",
-            data={"confirm": "DELETE"},
+            data={"confirm": "DELETE", "current_password": test_password},
             follow_redirects=False,
         )
 

@@ -697,10 +697,14 @@ async def _verify_turnstile(token: str, remote_ip: str | None = None) -> bool:
             result = resp.json()
             return bool(result.get("success", False))
     except httpx.HTTPError as e:
-        # Genuine connectivity error (Cloudflare unreachable) — fail open so
-        # legitimate users aren't blocked by an outage outside our control.
+        # Cloudflare unreachable — fail closed. Previous behavior failed
+        # open, letting bots in during any outbound DNS/connectivity blip
+        # (which a determined attacker can sustain). The form already shows
+        # "CAPTCHA verification failed. Please try again." and the rate
+        # limit on /about/contact is 5/hour, so a transient outage is a
+        # minor UX hit rather than an unbounded spam window.
         logger.error(f"Turnstile verification failed (connectivity): {e}")
-        return True
+        return False
     except (ValueError, KeyError) as e:
         # Malformed/unparseable response derived from attacker-controlled
         # input — fail closed so a forged token can't bypass CAPTCHA.

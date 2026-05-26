@@ -1,6 +1,7 @@
 import html as _html
 import json
 import os
+import sys
 from typing import Any, Dict, List, Sequence, Union
 
 from fastapi import FastAPI, Request
@@ -63,6 +64,53 @@ def get_csrf_token(request: Request) -> str:
 _DEV_SECRET_FALLBACK_ENVS = {"development", "test"}
 
 
+def _assert_single_worker() -> None:
+    """Refuse to start if launched with more than one worker.
+
+    The login lockout counters, slowapi rate-limit state, and the SQLAlchemy
+    connection-pool budget all assume a single worker per container (see
+    routes/auth/login.py and core/db_schema/engine.py). With N workers the
+    effective lockout becomes N x _MAX_FAILED_ATTEMPTS, rate limits multiply,
+    and the DB pool over-provisions. Detect the two common multi-worker
+    spawners (uvicorn --workers, gunicorn WEB_CONCURRENCY) and fail fast so a
+    misconfiguration never silently weakens those defenses.
+
+    The dev/test envs short-circuit because uvicorn --reload spawns a child
+    worker that wouldn't see the original argv, and pytest never touches the
+    CLI path at all.
+    """
+    if os.environ.get("ENVIRONMENT", "development") in _DEV_SECRET_FALLBACK_ENVS:
+        return
+    if os.environ.get("SABC_ALLOW_MULTIPLE_WORKERS") == "1":
+        return  # Operator escape hatch — assumes they've moved state to Redis.
+
+    web_concurrency = os.environ.get("WEB_CONCURRENCY")
+    if web_concurrency and web_concurrency.isdigit() and int(web_concurrency) > 1:
+        raise RuntimeError(
+            f"WEB_CONCURRENCY={web_concurrency} is incompatible with the "
+            f"in-process state (login lockout, slowapi limits, DB pool). "
+            f"Set SABC_ALLOW_MULTIPLE_WORKERS=1 only after migrating these "
+            f"to a shared store."
+        )
+
+    argv = sys.argv
+    for i, token in enumerate(argv):
+        if token == "--workers" and i + 1 < len(argv):
+            value = argv[i + 1]
+            if value.isdigit() and int(value) > 1:
+                raise RuntimeError(
+                    f"uvicorn --workers {value} is incompatible with the "
+                    f"in-process state. See SABC_ALLOW_MULTIPLE_WORKERS."
+                )
+        elif token.startswith("--workers="):
+            value = token.split("=", 1)[1]
+            if value.isdigit() and int(value) > 1:
+                raise RuntimeError(
+                    f"uvicorn --workers={value} is incompatible with the "
+                    f"in-process state. See SABC_ALLOW_MULTIPLE_WORKERS."
+                )
+
+
 def _get_secret_key() -> str:
     """Get the secret key.
 
@@ -84,6 +132,10 @@ def _get_secret_key() -> str:
 
 
 def create_app() -> FastAPI:
+    # Refuse multi-worker launches that would break the in-process state
+    # backing login lockout, slowapi limits, and the DB connection pool.
+    _assert_single_worker()
+
     # Initialize monitoring before anything else
     init_sentry()
     configure_logging(log_level=os.environ.get("LOG_LEVEL", "INFO"))

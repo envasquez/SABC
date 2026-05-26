@@ -277,8 +277,14 @@
         <p class="text-secondary">Tournament results will remain for record-keeping.</p>
         <form method="POST" action="/profile/delete" id="deleteForm">
           {{ csrf_token(request) }}
-          <label class="form-label">Type "DELETE" to confirm:</label>
-          <input class="form-control" type="text" name="confirm" placeholder="Type DELETE to confirm" required id="deleteConfirm" autocomplete="off">
+          <div class="mb-3">
+            <label class="form-label">Type "DELETE" to confirm:</label>
+            <input class="form-control" type="text" name="confirm" placeholder="Type DELETE to confirm" required id="deleteConfirm" autocomplete="off">
+          </div>
+          <div class="mb-1">
+            <label class="form-label">Current password:</label>
+            <input class="form-control" type="password" name="current_password" required autocomplete="current-password">
+          </div>
         </form>
       </div>
       <div class="modal-footer">

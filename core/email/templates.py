@@ -75,10 +75,17 @@ def generate_news_email_content(
     # Format author signature
     formatted_author = _format_author_name(author_name)
     author_line = f"\n- {formatted_author}" if formatted_author else ""
-    author_html = f"<br>- {formatted_author}" if formatted_author else ""
+
+    # Defense-in-depth: HTML-escape every user-controlled value before
+    # interpolating into the HTML email body. Callers are expected to have
+    # already sanitized at write time (see routes/admin/core/news.py), but
+    # this guarantees a future caller (or a value persisted before the
+    # sanitizer existed) cannot inject markup into recipient inboxes.
+    title_html = escape(title)
+    author_html_safe = f"<br>- {escape(formatted_author)}" if formatted_author else ""
 
     # Convert content to HTML paragraphs (preserve line breaks)
-    html_content = "".join(f"<p>{line}</p>" for line in content.split("\n") if line.strip())
+    html_content = "".join(f"<p>{escape(line)}</p>" for line in content.split("\n") if line.strip())
 
     text_body = f"""
 Hello,
@@ -100,10 +107,10 @@ The {CLUB_NAME} Team{author_line}
 <body>
 <p>Hello,</p>
 <p>{CLUB_NAME} has posted a new update:</p>
-<h2>{title}</h2>
+<h2>{title_html}</h2>
 {html_content}
 <p><a href="{news_url}">View this post on our website</a></p>
-<p>Thanks,<br>The {CLUB_NAME} Team{author_html}</p>
+<p>Thanks,<br>The {CLUB_NAME} Team{author_html_safe}</p>
 </body>
 </html>
 """
