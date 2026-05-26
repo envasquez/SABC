@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from 'macros.html' import stat_card %}
 {% block title %}{{ tournament.lake_name | title if tournament.lake_name else (tournament.event_name | title if tournament.event_name else "Tournament") }} {{ tournament.event_date | date_format }} Results{% endblock %}
 
 {% block extra_css %}
@@ -65,67 +66,18 @@
     <div class="card-header"><h3 class="card-title"><i class="ti ti-chart-bar me-2 text-primary"></i>Tournament Statistics</h3></div>
     <div class="card-body">
         <div class="row row-cards g-2 stats-grid">
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card card-sm"><div class="card-body text-center py-3">
-                    <i class="ti ti-users icon text-secondary mb-1"></i>
-                    <div class="h2 mb-0">{{ tournament_stats[0] }}</div>
-                    <div class="text-secondary small">Anglers</div>
-                </div></div>
-            </div>
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card card-sm"><div class="card-body text-center py-3">
-                    <i class="ti ti-fish icon text-azure mb-1"></i>
-                    <div class="h2 mb-0">{{ tournament_stats[1] }}</div>
-                    <div class="text-secondary small">Total Fish</div>
-                </div></div>
-            </div>
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card card-sm"><div class="card-body text-center py-3">
-                    <i class="ti ti-scale icon text-green mb-1"></i>
-                    <div class="h2 mb-0">{{ "%.2f"|format(tournament_stats[2] or 0) }}<span class="fs-5 text-secondary"> lbs</span></div>
-                    <div class="text-secondary small">Total Weight</div>
-                </div></div>
-            </div>
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card card-sm"><div class="card-body text-center py-3">
-                    <i class="ti ti-checks icon text-green mb-1"></i>
-                    <div class="h2 mb-0">{{ tournament_stats[3] }}</div>
-                    <div class="text-secondary small">Limits</div>
-                </div></div>
-            </div>
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card card-sm"><div class="card-body text-center py-3">
-                    <i class="ti ti-circle-x icon text-red mb-1"></i>
-                    <div class="h2 mb-0">{{ tournament_stats[4] }}</div>
-                    <div class="text-secondary small">Zeros</div>
-                </div></div>
-            </div>
+            <div class="col-6 col-sm-4 col-lg-3">{{ stat_card('ti-users', 'secondary', tournament_stats[0], 'Anglers') }}</div>
+            <div class="col-6 col-sm-4 col-lg-3">{{ stat_card('ti-fish', 'azure', tournament_stats[1], 'Total Fish') }}</div>
+            <div class="col-6 col-sm-4 col-lg-3">{{ stat_card('ti-scale', 'green', '%.2f'|format(tournament_stats[2] or 0), 'Total Weight', suffix=' lbs') }}</div>
+            <div class="col-6 col-sm-4 col-lg-3">{{ stat_card('ti-checks', 'green', tournament_stats[3], 'Limits') }}</div>
+            <div class="col-6 col-sm-4 col-lg-3">{{ stat_card('ti-circle-x', 'red', tournament_stats[4], 'Zeros') }}</div>
             {% if tournament.event_date and tournament.event_date.year < 2026 %}
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card card-sm"><div class="card-body text-center py-3">
-                    <i class="ti ti-coin icon text-yellow mb-1"></i>
-                    <div class="h2 mb-0">{{ tournament_stats[5] }}</div>
-                    <div class="text-secondary small">Buy-ins</div>
-                </div></div>
-            </div>
+            <div class="col-6 col-sm-4 col-lg-3">{{ stat_card('ti-coin', 'yellow', tournament_stats[5], 'Buy-ins') }}</div>
             {% endif %}
             <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card card-sm"><div class="card-body text-center py-3">
-                    <i class="ti ti-star-filled icon text-yellow mb-1"></i>
-                    <div class="h2 mb-0">{{ "%.2f"|format(tournament_stats[6] or 0) }}<span class="fs-5 text-secondary"> lbs</span></div>
-                    <div class="text-secondary small">
-                        Big Bass
-                        {% if payouts.big_bass_caught_by_guest %}<span class="badge bg-azure-lt ms-1">Guest</span>{% endif %}
-                    </div>
-                </div></div>
+                {{ stat_card('ti-star-filled', 'yellow', '%.2f'|format(tournament_stats[6] or 0), 'Big Bass', suffix=' lbs', tag_text=('Guest' if payouts.big_bass_caught_by_guest else ''), tag_color='azure') }}
             </div>
-            <div class="col-6 col-sm-4 col-lg-3">
-                <div class="card card-sm"><div class="card-body text-center py-3">
-                    <i class="ti ti-trophy icon text-orange mb-1"></i>
-                    <div class="h2 mb-0">{{ "%.2f"|format(tournament_stats[7] or 0) }}<span class="fs-5 text-secondary"> lbs</span></div>
-                    <div class="text-secondary small">Heavy Stringer</div>
-                </div></div>
-            </div>
+            <div class="col-6 col-sm-4 col-lg-3">{{ stat_card('ti-trophy', 'orange', '%.2f'|format(tournament_stats[7] or 0), 'Heavy Stringer', suffix=' lbs') }}</div>
         </div>
     </div>
 </div>

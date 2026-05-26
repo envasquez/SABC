@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert, csrf_token %}
+{% from 'macros.html' import alert, csrf_token, form_field %}
 {% block title %}Sign In - South Austin Bass Club{% endblock %}
 {% block content %}
 <div class="row justify-content-center py-4">
@@ -17,10 +17,7 @@
                 <form method="post" action="/login" autocomplete="off">
                     {{ csrf_token(request) }}
                     <input type="hidden" name="next_url" value="{{ next_url }}">
-                    <div class="mb-3">
-                        <label class="form-label" for="email">Email address</label>
-                        <input class="form-control" type="email" id="email" name="email" placeholder="your@email.com" autocomplete="email" required>
-                    </div>
+                    {{ form_field('Email address', 'email', type='email', placeholder='your@email.com', autocomplete='email', required=True) }}
                     <div class="mb-2">
                         <label class="form-label">
                             Password

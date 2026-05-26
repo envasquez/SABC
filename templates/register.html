@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import alert, csrf_token %}
+{% from 'macros.html' import alert, csrf_token, form_field %}
 {% block title %}Create Account - South Austin Bass Club{% endblock %}
 {% block content %}
 <div class="row justify-content-center py-4">
@@ -17,26 +17,15 @@
                 <form method="post" action="/register" autocomplete="off">
                     {{ csrf_token(request) }}
                     <div class="row">
-                        <div class="col-sm-6 mb-3">
-                            <label class="form-label" for="first_name">First Name</label>
-                            <input class="form-control" type="text" id="first_name" name="first_name" placeholder="First name" value="{{ first_name or '' }}" required>
+                        <div class="col-sm-6">
+                            {{ form_field('First Name', 'first_name', placeholder='First name', value=(first_name or ''), required=True) }}
                         </div>
-                        <div class="col-sm-6 mb-3">
-                            <label class="form-label" for="last_name">Last Name</label>
-                            <input class="form-control" type="text" id="last_name" name="last_name" placeholder="Last name" value="{{ last_name or '' }}" required>
+                        <div class="col-sm-6">
+                            {{ form_field('Last Name', 'last_name', placeholder='Last name', value=(last_name or ''), required=True) }}
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label" for="email">Email address</label>
-                        <input class="form-control" type="email" id="email" name="email" placeholder="your@email.com" value="{{ email or '' }}" autocomplete="email" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label" for="password">Password</label>
-                        <input class="form-control" type="password" id="password" name="password" placeholder="Create a password" minlength="12" autocomplete="new-password" required>
-                        <small class="form-hint">
-                            12+ characters with uppercase, lowercase, number, and special character (!@#$%^&amp;*)
-                        </small>
-                    </div>
+                    {{ form_field('Email address', 'email', type='email', placeholder='your@email.com', value=(email or ''), autocomplete='email', required=True) }}
+                    {{ form_field('Password', 'password', type='password', placeholder='Create a password', minlength='12', autocomplete='new-password', required=True, help_text='12+ characters with uppercase, lowercase, number, and special character (!@#$%^&*)') }}
                     <div class="form-footer">
                         <button class="btn btn-primary w-100" type="submit"><i class="ti ti-user-plus me-1"></i>Create Account</button>
                     </div>

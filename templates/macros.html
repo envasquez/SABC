@@ -110,6 +110,18 @@
 </div>
 {% endmacro %}
 
+{# Compact icon-centered stat card. Used on tournament_results.html and
+   anywhere we want a uniform symmetric stat tile. ``suffix`` renders as a
+   smaller secondary unit (e.g. " lbs"). When ``tag_text`` is provided a
+   small Tabler badge is appended to the label, colored by ``tag_color``. #}
+{% macro stat_card(icon, color, value, label, suffix='', tag_text='', tag_color='secondary') %}
+<div class="card card-sm"><div class="card-body text-center py-3">
+    <i class="ti {{ icon }} icon text-{{ color }} mb-1" aria-hidden="true"></i>
+    <div class="h2 mb-0">{{ value }}{% if suffix %}<span class="fs-5 text-secondary">{{ suffix }}</span>{% endif %}</div>
+    <div class="text-secondary small">{{ label }}{% if tag_text %} <span class="badge bg-{{ tag_color }}-lt ms-1">{{ tag_text }}</span>{% endif %}</div>
+</div></div>
+{% endmacro %}
+
 {# Time select options macro - generates time options for dropdowns #}
 {% macro time_select_options(start_hour=5, end_hour=20, interval_minutes=30, selected_time='') %}
 {% for hour in range(start_hour, end_hour + 1) %}
