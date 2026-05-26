@@ -160,9 +160,35 @@ After all readers are migrated, delete:
 - Per-site Admin User filter (`a.name != 'Admin User'`) sprinkled across
   `tournament_queries.py`, `awards_helpers.py`, `data.py`, `roster.py`, `home.py`
   — the views handle this now.
-- The two reconciliation flags: keep `Tournament.aoy_points` (it controls
-  AOY points awarding, which still matters) but consider dropping `is_team`
-  if no reader is left consulting it.
+
+## What NOT to clean up (reversibility)
+
+The club was **individual + AOY pre-2026** (10-fish limit, per-angler
+ranking, season-long AOY points), then switched to **team + no-AOY in
+2026** (5-fish limit, boat ranking). They want the option to switch back
+to the individual format. The codebase already supports this — every
+"team-format" code path is gated by per-tournament flags, not a global
+toggle — so **keep** all of the following even after Phase 11-15 land:
+
+- `Tournament.aoy_points` (per-tournament discriminator: True = individual
+  format that awards AOY, False = 2026+ team format).
+- `Tournament.is_team` (currently always True on insert; reserving it
+  here in case the team-format flag eventually decouples from
+  AOY-awarding). Don't drop.
+- `Tournament.fish_limit` (per-tournament — pre-2026 rows store 10,
+  2026+ store 5). Don't normalize away.
+- AOY computation code at `routes/auth/profile.py:252-349`. Still runs
+  against pre-2026 tournaments today; would run against any future
+  individual tournament with no changes.
+- Format-branching in `routes/tournaments/data.py:190,262` (after Phase 13
+  these become view queries, but the `aoy_points`-aware presentation logic
+  — different headers/awards for individual vs team — stays).
+- The `was_member` flag on Result (used by AOY-style queries to gate
+  whether non-members count toward season standings).
+
+The view-based readers (Phase 11+) work for **both** formats because the
+views project from whichever table has data — flipping a new tournament
+back to `aoy_points=True` and entering per-angler results will just work.
 
 ## Mutators (stay on raw tables)
 
