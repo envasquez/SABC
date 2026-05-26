@@ -126,8 +126,9 @@ class TestEventUpdateErrors:
         # Try to update second event to test_event's date
         response = post_with_csrf(
             admin_client,
-            f"/admin/events/{second_event.id}/update",
+            "/admin/events/edit",
             data={
+                "event_id": str(second_event.id),
                 "date": str(test_event.date),
                 "name": "Updated Event",
                 "event_type": "sabc_tournament",
@@ -153,8 +154,9 @@ class TestEventUpdateErrors:
         """
         response = post_with_csrf(
             admin_client,
-            f"/admin/events/{test_event.id}/update",
+            "/admin/events/edit",
             data={
+                "event_id": str(test_event.id),
                 "date": str(test_event.date),
                 "name": "",  # Empty name should fail
                 "event_type": "sabc_tournament",
@@ -174,8 +176,9 @@ class TestEventUpdateErrors:
         """Test that updating with invalid lake/ramp fails with proper error."""
         response = post_with_csrf(
             admin_client,
-            f"/admin/events/{test_event.id}/update",
+            "/admin/events/edit",
             data={
+                "event_id": str(test_event.id),
                 "date": str(test_event.date),
                 "name": "Updated Event",
                 "event_type": "sabc_tournament",

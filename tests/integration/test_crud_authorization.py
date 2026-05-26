@@ -37,15 +37,14 @@ class TestAdminOnlyEventOperations:
     def test_non_admin_cannot_update_event(self, member_client: TestClient, test_event: Event):
         """Test that non-admin users cannot update events."""
         form_data = {
+            "event_id": str(test_event.id),
             "name": "Updated Event Name",
             "date": test_event.date.isoformat(),
             "event_type": test_event.event_type,
             "year": str(test_event.year),
         }
 
-        response = post_with_csrf(
-            member_client, f"/admin/events/{test_event.id}/update", data=form_data
-        )
+        response = post_with_csrf(member_client, "/admin/events/edit", data=form_data)
 
         # Should be rejected
         assert response.status_code in [200, 302, 303, 403]

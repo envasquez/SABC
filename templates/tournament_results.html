@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 {% block title %}{{ tournament.lake_name | title if tournament.lake_name else (tournament.event_name | title if tournament.event_name else "Tournament") }} {{ tournament.event_date | date_format }} Results{% endblock %}
 
+{% block extra_css %}
+<style>
+  /* Belt-and-braces: force every stat card to the same height regardless of
+     content (number-only vs number+unit vs em-dash) so the grid is symmetric. */
+  .stats-grid .card-body { min-height: 116px; }
+  .stats-grid .h2 { min-height: 2.25rem; line-height: 2.25rem; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="page-header">
     <div class="row align-items-center">
@@ -52,14 +61,6 @@
 </div>
 
 {# ===== Tournament Statistics ===== #}
-{% block extra_css %}
-<style>
-  /* Belt-and-braces: force every stat card to the same height regardless of
-     content (number-only vs number+unit vs em-dash) so the grid is symmetric. */
-  .stats-grid .card-body { min-height: 116px; }
-  .stats-grid .h2 { min-height: 2.25rem; line-height: 2.25rem; }
-</style>
-{% endblock %}
 <div class="card mb-3">
     <div class="card-header"><h3 class="card-title"><i class="ti ti-chart-bar me-2 text-primary"></i>Tournament Statistics</h3></div>
     <div class="card-body">

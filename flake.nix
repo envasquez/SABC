@@ -123,27 +123,21 @@
         setupDb = pkgs.writeShellScriptBin "setup-db" ''
           echo "🗄️  Setting up SABC PostgreSQL Database"
           echo "===================================="
-
-          python -c "
-from core.db_schema import create_all_tables
-print('Creating PostgreSQL database schema...')
-create_all_tables()
-print('Database setup complete!')
-"
+          # Schema is owned by Alembic — see docs/DATABASE_MIGRATIONS.md.
+          alembic upgrade head
+          echo "Database setup complete!"
         '';
 
         resetDb = pkgs.writeShellScriptBin "reset-db" ''
           echo "🔄 Resetting SABC PostgreSQL Database"
           echo "==================================="
-
-          python -c "
-from core.db_schema import drop_all_tables, create_all_tables
-print('Dropping all tables...')
-drop_all_tables()
-print('Creating PostgreSQL database schema...')
-create_all_tables()
-print('Database reset complete!')
-"
+          # Tear the schema down and rebuild it from Alembic migrations.
+          # `alembic downgrade base` reverses every migration; `upgrade head`
+          # reapplies them, giving the same end state as the original
+          # drop-all/create-all without any non-migration code path.
+          alembic downgrade base
+          alembic upgrade head
+          echo "Database reset complete!"
         '';
 
         deployApp = pkgs.writeShellScriptBin "deploy-app" ''

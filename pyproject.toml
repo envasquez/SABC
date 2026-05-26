@@ -1,6 +1,5 @@
 [tool.ruff]
 line-length = 100
-exclude = ["app_routes.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N"]

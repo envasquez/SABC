@@ -41,21 +41,6 @@ def _delete_event_cascade(session: Session, event_id: int) -> None:
     bulk_delete(session, Tournament, [Tournament.event_id == event_id])
 
 
-@router.post("/admin/events/{event_id}/delete")
-def delete_event_post(request: Request, event_id: int) -> Response:
-    """Delete an event via POST (for form submissions)."""
-    return delete_entity(
-        request,
-        event_id,
-        Event,
-        redirect_url="/admin/events",
-        success_message="Event deleted successfully",
-        error_message="Failed to delete event",
-        validation_check=_check_event_has_results,
-        pre_delete_hook=_delete_event_cascade,
-    )
-
-
 @router.delete("/admin/events/{event_id}")
 def delete_event(request: Request, event_id: int) -> Response:
     """Delete an event and its associated data."""

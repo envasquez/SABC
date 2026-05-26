@@ -109,47 +109,6 @@ def get_edit_event(request: Request, event_id: int) -> Response:
     )
 
 
-@router.post("/admin/events/{event_id}/update")
-def update_event_by_id(
-    request: Request,
-    event_id: int,
-    date: str = Form(default=""),
-    name: str = Form(default=""),
-    event_type: str = Form(default=""),
-    description: str = Form(default=""),
-    start_time: str = Form(default=""),
-    weigh_in_time: str = Form(default=""),
-    lake_name: str = Form(default=""),
-    ramp_name: str = Form(default=""),
-    entry_fee: float = Form(default=50.00),
-    fish_limit: int = Form(default=5),
-    aoy_points: str = Form(default="true"),
-    poll_closes_date: str = Form(default=""),
-    is_cancelled: str = Form(default=""),
-) -> RedirectResponse:
-    """POST endpoint for updating an event by ID."""
-    _user = require_admin(request)
-    try:
-        return _do_event_update(
-            event_id,
-            date,
-            name,
-            event_type,
-            description,
-            start_time,
-            weigh_in_time,
-            lake_name,
-            ramp_name,
-            entry_fee,
-            fish_limit,
-            aoy_points,
-            poll_closes_date,
-            is_cancelled,
-        )
-    except (SQLAlchemyError, ValueError) as e:
-        return handle_event_error(e, date)
-
-
 @router.post("/admin/events/edit")
 def edit_event(
     request: Request,

@@ -1,10 +1,8 @@
 import uvicorn
 
-from app_routes import register_routes
 from app_setup import create_app
 
 app = create_app()
-register_routes(app)
 
 
 if __name__ == "__main__":

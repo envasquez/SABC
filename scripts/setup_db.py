@@ -1,55 +1,34 @@
-import argparse
+"""Initialize the SABC database via Alembic migrations.
+
+Schema is owned by Alembic — see docs/DATABASE_MIGRATIONS.md. This script is
+a thin wrapper that runs `alembic upgrade head` against the configured
+DATABASE_URL so first-time setup is a single command. Iterative schema
+changes still go through alembic revision/upgrade.
+"""
+
+import logging
+import os
 import sys
 
-from common import ensure_database_url, setup_logging
-from sqlalchemy.exc import SQLAlchemyError
-
-from core.db_schema import create_all_tables, create_views, init_db
-
-
-def setup_database(method: str = "full") -> int:
-    logger = setup_logging()
-    database_url = ensure_database_url()
-
-    logger.info(f"Setting up database at: {database_url}")
-
-    try:
-        if method == "full":
-            logger.info("Creating database schema...")
-            init_db()
-            logger.info("Database schema created successfully")
-
-            logger.info("Creating database views...")
-            create_views()
-            logger.info("Database views created successfully")
-
-        elif method == "tables":
-            logger.info("Creating database tables and views...")
-            create_all_tables()
-
-        else:
-            logger.error(f"Unknown method: {method}")
-            return 1
-
-        logger.info("Database setup complete!")
-        return 0
-
-    except SQLAlchemyError as e:
-        logger.error(f"Database setup failed: {e}")
-        return 1
+from alembic import command
+from alembic.config import Config
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Setup SABC database")
-    parser.add_argument(
-        "--method",
-        choices=["full", "tables"],
-        default="full",
-        help="Setup method: 'full' (default) or 'tables'",
-    )
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logger = logging.getLogger("setup_db")
 
-    args = parser.parse_args()
-    return setup_database(args.method)
+    if not os.environ.get("DATABASE_URL"):
+        logger.error("DATABASE_URL is not set — refusing to run.")
+        return 1
+
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    alembic_cfg = Config(os.path.join(repo_root, "alembic.ini"))
+
+    logger.info("Running alembic upgrade head…")
+    command.upgrade(alembic_cfg, "head")
+    logger.info("Database setup complete.")
+    return 0
 
 
 if __name__ == "__main__":

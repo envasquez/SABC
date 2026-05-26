@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from core.db_schema import Event
-from tests.conftest import post_with_csrf
+from tests.conftest import delete_with_csrf, post_with_csrf
 
 
 class TestAdminEvents:
@@ -72,8 +72,9 @@ class TestAdminEvents:
 
         response = post_with_csrf(
             admin_client,
-            f"/admin/events/{event.id}/update",
+            "/admin/events/edit",
             data={
+                "event_id": event.id,
                 "name": "Updated Event",
                 "date": event.date.isoformat(),
                 "event_type": "social",
@@ -93,9 +94,8 @@ class TestAdminEvents:
         db_session.add(event)
         db_session.commit()
 
-        response = post_with_csrf(
+        response = delete_with_csrf(
             admin_client,
-            f"/admin/events/{event.id}/delete",
-            data={},
+            f"/admin/events/{event.id}",
         )
         assert response.status_code in [200, 303]

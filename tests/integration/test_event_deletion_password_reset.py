@@ -138,38 +138,6 @@ class TestEventDeletion:
         )
         assert deleted_tournament is None
 
-    def test_delete_event_post_method(
-        self,
-        admin_client: TestClient,
-        db_session: Session,
-    ):
-        """Test event deletion via POST (for form submissions)."""
-        future_date = now_local().date() + timedelta(days=70)
-        event = Event(
-            date=future_date,
-            name="Delete via POST",
-            event_type="holiday",
-            year=future_date.year,
-        )
-        db_session.add(event)
-        db_session.commit()
-        db_session.refresh(event)
-        event_id = event.id
-
-        response = post_with_csrf(
-            admin_client,
-            f"/admin/events/{event_id}/delete",
-            data={},
-            follow_redirects=False,
-        )
-
-        assert response.status_code in [302, 303]
-        assert "success" in response.headers.get("location", "").lower()
-
-        # Verify deletion
-        db_session.expire_all()
-        assert db_session.query(Event).filter(Event.id == event_id).first() is None
-
     def test_delete_nonexistent_event_succeeds(
         self,
         admin_client: TestClient,

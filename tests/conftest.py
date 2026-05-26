@@ -32,7 +32,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app_routes import register_routes
 from app_setup import create_app
 from core.db_schema import Angler, Base, Event, Lake, Poll, PollOption, Ramp, Tournament
 
@@ -146,7 +145,6 @@ def client(db_session: Session, monkeypatch) -> Generator[TestClient, None, None
     monkeypatch.setattr("core.db_schema.get_db_session", mock_get_db_session)
 
     app = create_app()
-    register_routes(app)
 
     with TestClient(app) as test_client:
         yield test_client
@@ -470,3 +468,14 @@ def post_with_csrf(
 
     # Make the POST request
     return client.post(url, data=data_with_csrf, **kwargs)
+
+
+def delete_with_csrf(client: TestClient, url: str, **kwargs: Any) -> Any:
+    """Helper to issue an HTTP DELETE with the CSRF token in the header.
+
+    The browser-side JS (see ``static/utils.js`` ``deleteRequest``) sends the
+    CSRF token via the ``x-csrf-token`` request header for non-form methods.
+    """
+    csrf_token = get_csrf_token(client, url)
+    headers = {**kwargs.pop("headers", {}), "x-csrf-token": csrf_token}
+    return client.delete(url, headers=headers, **kwargs)
