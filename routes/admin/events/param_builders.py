@@ -1,7 +1,49 @@
 """Shared parameter builders for event create/update operations."""
 
-from datetime import datetime
-from typing import Any, Dict, Optional
+from datetime import datetime, time
+from typing import Any, Dict, Optional, Tuple
+
+from sqlalchemy import or_
+from sqlalchemy.orm import Session
+
+from core.db_schema import Lake, Ramp
+
+
+def resolve_lake_ramp_ids(
+    session: Session, tournament_params: Dict[str, Any]
+) -> Tuple[Optional[int], Optional[int]]:
+    """Map lake_name/ramp_name in tournament_params to (lake_id, ramp_id).
+
+    Lake matches either by yaml_key or display_name; ramp must belong to
+    the resolved lake. Returns (None, None) when neither name is provided
+    or the names don't match. Caller decides whether mismatches are an
+    error — we just return what the DB knows.
+    """
+    lake_id: Optional[int] = None
+    ramp_id: Optional[int] = None
+
+    lake_name = tournament_params.get("lake_name")
+    if lake_name:
+        lake = (
+            session.query(Lake)
+            .filter(or_(Lake.yaml_key == lake_name, Lake.display_name == lake_name))
+            .first()
+        )
+        if lake:
+            lake_id = lake.id
+
+    ramp_name = tournament_params.get("ramp_name")
+    if ramp_name and lake_id is not None:
+        ramp = session.query(Ramp).filter(Ramp.name == ramp_name, Ramp.lake_id == lake_id).first()
+        if ramp:
+            ramp_id = ramp.id
+
+    return lake_id, ramp_id
+
+
+def parse_hhmm(value: Optional[str]) -> Optional[time]:
+    """Parse an "HH:MM" form value into a time, or None if empty/falsy."""
+    return datetime.strptime(value, "%H:%M").time() if value else None
 
 
 def prepare_event_params(

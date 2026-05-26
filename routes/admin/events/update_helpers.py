@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from core.db_schema import Event, Poll, Tournament, get_session
 from core.helpers.logging import get_logger
 from core.helpers.timezone import make_aware
+from routes.admin.events.param_builders import parse_hhmm, resolve_lake_ramp_ids
 
 logger = get_logger(__name__)
 
@@ -40,63 +41,26 @@ def update_event_record(session: Session, event_params: Dict[str, Any]) -> int:
 
 
 def update_tournament_record(session: Session, tournament_params: Dict[str, Any]) -> int:
-    from sqlalchemy import or_
-
-    from core.db_schema import Lake, Ramp
-
     tournament = (
         session.query(Tournament)
         .filter(Tournament.event_id == tournament_params["event_id"])
         .first()
     )
-    if tournament:
-        # Look up lake_id and ramp_id from lake_name and ramp_name
-        lake_id = None
-        ramp_id = None
+    if not tournament:
+        return 0
 
-        if tournament_params.get("lake_name"):
-            lake = (
-                session.query(Lake)
-                .filter(
-                    or_(
-                        Lake.yaml_key == tournament_params["lake_name"],
-                        Lake.display_name == tournament_params["lake_name"],
-                    )
-                )
-                .first()
-            )
-            if lake:
-                lake_id = lake.id
-
-        if tournament_params.get("ramp_name") and lake_id:
-            ramp = (
-                session.query(Ramp)
-                .filter(Ramp.name == tournament_params["ramp_name"], Ramp.lake_id == lake_id)
-                .first()
-            )
-            if ramp:
-                ramp_id = ramp.id
-
-        tournament.name = tournament_params["name"]
-        tournament.lake_id = lake_id
-        tournament.ramp_id = ramp_id
-        tournament.lake_name = tournament_params["lake_name"]
-        tournament.ramp_name = tournament_params["ramp_name"]
-        tournament.start_time = (
-            datetime.strptime(tournament_params["start_time"], "%H:%M").time()
-            if tournament_params["start_time"]
-            else None
-        )
-        tournament.end_time = (
-            datetime.strptime(tournament_params["end_time"], "%H:%M").time()
-            if tournament_params["end_time"]
-            else None
-        )
-        tournament.fish_limit = tournament_params["fish_limit"]
-        tournament.entry_fee = tournament_params["entry_fee"]
-        tournament.aoy_points = tournament_params["aoy_points"]
-        return 1
-    return 0
+    lake_id, ramp_id = resolve_lake_ramp_ids(session, tournament_params)
+    tournament.name = tournament_params["name"]
+    tournament.lake_id = lake_id
+    tournament.ramp_id = ramp_id
+    tournament.lake_name = tournament_params["lake_name"]
+    tournament.ramp_name = tournament_params["ramp_name"]
+    tournament.start_time = parse_hhmm(tournament_params["start_time"])
+    tournament.end_time = parse_hhmm(tournament_params["end_time"])
+    tournament.fish_limit = tournament_params["fish_limit"]
+    tournament.entry_fee = tournament_params["entry_fee"]
+    tournament.aoy_points = tournament_params["aoy_points"]
+    return 1
 
 
 def update_poll_closing_date(event_id: int, poll_closes_date: str) -> None:

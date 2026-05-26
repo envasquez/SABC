@@ -1,6 +1,8 @@
 """Result-related Pydantic models."""
 
-from core.models.base import BaseModel, Decimal
+from decimal import Decimal
+
+from pydantic import BaseModel
 
 
 class TournamentStats(BaseModel):

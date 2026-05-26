@@ -3,7 +3,6 @@
 import re
 from typing import Optional, Union
 
-from fastapi import UploadFile
 from starlette.datastructures import FormData
 
 # Pragmatic email shape check. Not RFC-exhaustive; its job is to reject
@@ -107,23 +106,6 @@ def get_form_float(
         except (ValueError, AttributeError):
             return default
     return default
-
-
-def get_form_file(form_data: Union[FormData, dict], key: str) -> Optional[UploadFile]:
-    """
-    Safely extract UploadFile from form data.
-
-    Args:
-        form_data: Form data from request.form() or dict
-        key: Key to extract
-
-    Returns:
-        UploadFile or None
-    """
-    value = form_data.get(key)
-    if isinstance(value, UploadFile):
-        return value
-    return None
 
 
 def get_form_bool(form_data: Union[FormData, dict], key: str, default: bool = False) -> bool:

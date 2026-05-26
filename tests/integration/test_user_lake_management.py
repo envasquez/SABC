@@ -467,7 +467,7 @@ class TestUserUpdateValidation:
 
     def test_email_validation_strips_whitespace(self):
         """Test that email validation strips whitespace."""
-        from routes.admin.users.update_user.validation import validate_and_prepare_email
+        from routes.admin.users.update_user import validate_and_prepare_email
 
         result = validate_and_prepare_email("  test@EXAMPLE.com  ", "Test User", True, 1)
 
@@ -475,7 +475,7 @@ class TestUserUpdateValidation:
 
     def test_email_validation_lowercases(self):
         """Test that email validation converts to lowercase."""
-        from routes.admin.users.update_user.validation import validate_and_prepare_email
+        from routes.admin.users.update_user import validate_and_prepare_email
 
         result = validate_and_prepare_email("TEST@EXAMPLE.COM", "Test User", True, 1)
 
@@ -483,7 +483,7 @@ class TestUserUpdateValidation:
 
     def test_empty_email_for_guest_generates_email(self, db_session: Session):
         """Test that empty email for guest generates guest email."""
-        from routes.admin.users.update_user.validation import validate_and_prepare_email
+        from routes.admin.users.update_user import validate_and_prepare_email
 
         result = validate_and_prepare_email("", "Test User", False, 123)
 
@@ -494,7 +494,7 @@ class TestUserUpdateValidation:
 
     def test_empty_email_for_member_returns_none(self):
         """Test that empty email for member returns None."""
-        from routes.admin.users.update_user.validation import validate_and_prepare_email
+        from routes.admin.users.update_user import validate_and_prepare_email
 
         result = validate_and_prepare_email("", "Test User", True, 1)
 
@@ -502,7 +502,7 @@ class TestUserUpdateValidation:
 
     def test_update_officer_positions(self, db_session: Session, member_user: Angler):
         """Test updating officer positions for a user."""
-        from routes.admin.users.update_user.validation import update_officer_positions
+        from routes.admin.users.update_user import update_officer_positions
 
         current_year = now_local().year
 
@@ -542,7 +542,7 @@ class TestUserUpdateValidation:
 
     def test_update_officer_positions_clears_all(self, db_session: Session, member_user: Angler):
         """Test that passing empty list clears all officer positions."""
-        from routes.admin.users.update_user.validation import update_officer_positions
+        from routes.admin.users.update_user import update_officer_positions
 
         current_year = now_local().year
 
@@ -575,7 +575,7 @@ class TestUserUpdateValidation:
         self, db_session: Session, member_user: Angler
     ):
         """Test that officer position updates strip whitespace."""
-        from routes.admin.users.update_user.validation import update_officer_positions
+        from routes.admin.users.update_user import update_officer_positions
 
         current_year = now_local().year
 

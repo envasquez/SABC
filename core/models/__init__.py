@@ -1,9 +1,7 @@
 from core.models.result import TournamentStats
-from core.models.tournament import Tournament, TournamentBase, TournamentWithEvent
+from core.models.tournament import TournamentWithEvent
 
 __all__ = [
-    "TournamentBase",
-    "Tournament",
     "TournamentWithEvent",
     "TournamentStats",
 ]

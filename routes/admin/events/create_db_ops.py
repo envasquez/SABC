@@ -2,10 +2,10 @@ import json
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from core.db_schema import Event, Lake, Poll, PollOption, Ramp, Tournament, get_session
+from core.db_schema import Event, Lake, Poll, PollOption, Tournament, get_session
+from routes.admin.events.param_builders import parse_hhmm, resolve_lake_ramp_ids
 
 
 def create_event_record(event_params: Dict[str, Any], session: Optional[Session] = None) -> int:
@@ -69,32 +69,7 @@ def create_tournament_record(
     """
 
     def _create(sess: Session) -> None:
-        lake_id = None
-        ramp_id = None
-
-        if tournament_params.get("lake_name"):
-            lake = (
-                sess.query(Lake)
-                .filter(
-                    or_(
-                        Lake.yaml_key == tournament_params["lake_name"],
-                        Lake.display_name == tournament_params["lake_name"],
-                    )
-                )
-                .first()
-            )
-            if lake:
-                lake_id = lake.id
-
-        if tournament_params.get("ramp_name") and lake_id:
-            ramp = (
-                sess.query(Ramp)
-                .filter(Ramp.name == tournament_params["ramp_name"], Ramp.lake_id == lake_id)
-                .first()
-            )
-            if ramp:
-                ramp_id = ramp.id
-
+        lake_id, ramp_id = resolve_lake_ramp_ids(sess, tournament_params)
         tournament = Tournament(
             event_id=event_id,
             name=tournament_params["name"],
@@ -102,16 +77,8 @@ def create_tournament_record(
             ramp_id=ramp_id,
             lake_name=tournament_params["lake_name"],
             ramp_name=tournament_params["ramp_name"],
-            start_time=(
-                datetime.strptime(tournament_params["start_time"], "%H:%M").time()
-                if tournament_params["start_time"]
-                else None
-            ),
-            end_time=(
-                datetime.strptime(tournament_params["end_time"], "%H:%M").time()
-                if tournament_params["end_time"]
-                else None
-            ),
+            start_time=parse_hhmm(tournament_params["start_time"]),
+            end_time=parse_hhmm(tournament_params["end_time"]),
             fish_limit=tournament_params["fish_limit"],
             entry_fee=tournament_params["entry_fee"],
             aoy_points=tournament_params["aoy_points"],

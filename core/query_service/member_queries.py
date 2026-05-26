@@ -9,15 +9,6 @@ from core.query_service.base import QueryServiceBase
 class MemberQueries(QueryServiceBase):
     """Query service for member/angler database operations."""
 
-    def get_all_members(self) -> List[Dict[str, Any]]:
-        """
-        Get all club members.
-
-        Returns:
-            List of member dictionaries ordered by name
-        """
-        return self.fetch_all("SELECT * FROM anglers WHERE member = TRUE ORDER BY name")
-
     def get_all_anglers(self) -> List[Dict[str, Any]]:
         """
         Get all anglers (members and non-members).
