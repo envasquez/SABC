@@ -104,6 +104,20 @@ def db_session() -> Generator[Session, None, None]:
     # Create tables
     Base.metadata.create_all(bind=test_engine)
 
+    # Materialize the SQL views in SQLite. Production uses Alembic
+    # (which runs the same DDL via migration k8l9m0n1o2p3); tests skip
+    # Alembic and go straight to Base.metadata.create_all, so the views
+    # have to be created here. Source of truth: core/db_schema/views.py.
+    from sqlalchemy import text
+
+    from core.db_schema.views import ALL_VIEW_DROP_SQL, ALL_VIEWS_SQL
+
+    with test_engine.begin() as conn:
+        for drop_sql in ALL_VIEW_DROP_SQL:
+            conn.execute(text(drop_sql))
+        for create_sql in ALL_VIEWS_SQL:
+            conn.execute(text(create_sql))
+
     # Create session
     session = TestSessionLocal()
 
@@ -111,7 +125,11 @@ def db_session() -> Generator[Session, None, None]:
         yield session
     finally:
         session.close()
-        # Drop all tables for clean slate
+        # Drop views before tables — SQLite errors if the underlying
+        # table is dropped first while a view referencing it exists.
+        with test_engine.begin() as conn:
+            for drop_sql in ALL_VIEW_DROP_SQL:
+                conn.execute(text(drop_sql))
         Base.metadata.drop_all(bind=test_engine)
 
 
@@ -292,6 +310,58 @@ def test_tournament(
         complete=False,
         aoy_points=True,
         limit_type="angler",
+    )
+    db_session.add(tournament)
+    db_session.commit()
+    db_session.refresh(tournament)
+    return tournament
+
+
+@pytest.fixture
+def test_team_format_tournament(
+    db_session: Session, test_event: Event, test_lake: Lake, test_ramp: Ramp
+) -> Tournament:
+    """Create a team-format tournament (aoy_points=False — the 2026+ flow).
+
+    The code uses ``Tournament.aoy_points`` as the de-facto team-format
+    discriminator: when False, results live primarily in ``team_results``
+    and per-angler ``results`` rows may be absent. Reader code that
+    branches on format gets exercised against the False branch by tests
+    that depend on this fixture — historically zero coverage existed for
+    it (see Phase 10 audit findings).
+    """
+    from datetime import date, time
+
+    # Build a distinct event so the unique constraints don't conflict
+    # with the regular test_tournament fixture if both are requested.
+    future_date = date.today().replace(day=1) + timedelta(days=120)
+    event = Event(
+        date=future_date,
+        name="Team-Format Test Tournament",
+        event_type="sabc_tournament",
+        year=future_date.year,
+    )
+    db_session.add(event)
+    db_session.commit()
+    db_session.refresh(event)
+
+    tournament = Tournament(
+        event_id=event.id,
+        name=event.name,
+        lake_id=test_lake.id,
+        ramp_id=test_ramp.id,
+        lake_name=test_lake.display_name,
+        ramp_name=test_ramp.name,
+        start_time=time(6, 0),
+        end_time=time(15, 0),
+        fish_limit=5,
+        entry_fee=50.00,
+        is_team=True,
+        is_paper=False,
+        big_bass_carryover=0.0,
+        complete=False,
+        aoy_points=False,  # team-format discriminator
+        limit_type="boat",
     )
     db_session.add(tournament)
     db_session.commit()
