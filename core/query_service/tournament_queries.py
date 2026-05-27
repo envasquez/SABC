@@ -107,51 +107,41 @@ class TournamentQueries(QueryServiceBase):
         """
         Get team results for a tournament with combined weights.
 
-        For team format tournaments (no individual results), uses stored values
-        from team_results. For standard format, calculates from individual results.
-
-        Args:
-            tournament_id: Tournament ID to fetch team results for
-
-        Returns:
-            List of team result dictionaries ordered by total weight descending
+        Sourced from v_team_tournament_results filtered to ``source =
+        'team_results'`` to preserve the original behavior (only return
+        rows for tournaments that actually have team_results entries — the
+        view also yields synthetic boats-of-one from individual results,
+        which we do NOT want here). Joins team_results back for the row id
+        used by the admin edit-team-result UI link. The was_member flags
+        come from the per-angler results rows when available, defaulting
+        to TRUE for the team-format case where no individual row exists.
         """
         query = """
-            SELECT tr.id, tr.tournament_id, tr.angler1_id, tr.angler2_id, tr.place_finish,
+            SELECT tr.id, vttr.tournament_id, vttr.angler1_id, vttr.angler2_id,
+                   vttr.place_finish,
                    a1.name as angler1_name, a1.member as angler1_member,
                    a2.name as angler2_name, a2.member as angler2_member,
-                   CASE
-                       WHEN r1.id IS NULL AND r2.id IS NULL THEN COALESCE(tr.num_fish, 0)
-                       ELSE COALESCE(r1.num_fish, 0) + COALESCE(r2.num_fish, 0)
-                   END as total_fish,
-                   CASE
-                       WHEN r1.id IS NULL AND r2.id IS NULL THEN COALESCE(tr.total_weight, 0)
-                       ELSE COALESCE(r1.total_weight, 0) + COALESCE(r2.total_weight, 0)
-                   END as total_weight,
-                   CASE
-                       WHEN r1.id IS NULL AND r2.id IS NULL THEN COALESCE(tr.big_bass_weight, 0)
-                       WHEN COALESCE(r1.big_bass_weight, 0) > COALESCE(r2.big_bass_weight, 0)
-                           THEN COALESCE(r1.big_bass_weight, 0)
-                       ELSE COALESCE(r2.big_bass_weight, 0)
-                   END as big_bass_weight,
+                   vttr.num_fish as total_fish,
+                   vttr.total_weight,
+                   vttr.big_bass_weight,
                    COALESCE(r1.was_member, TRUE) as angler1_was_member,
                    COALESCE(r2.was_member, TRUE) as angler2_was_member
-            FROM team_results tr
-            JOIN anglers a1 ON tr.angler1_id = a1.id
-            LEFT JOIN anglers a2 ON tr.angler2_id = a2.id
-            LEFT JOIN results r1 ON tr.angler1_id = r1.angler_id
-                AND tr.tournament_id = r1.tournament_id
-            LEFT JOIN results r2 ON tr.angler2_id = r2.angler_id
-                AND tr.tournament_id = r2.tournament_id
-            WHERE tr.tournament_id = :tournament_id
-            AND a1.name != 'Admin User'
-            AND (a2.name != 'Admin User' OR a2.name IS NULL)
-            AND COALESCE(r1.buy_in, FALSE) = FALSE
-            AND COALESCE(r2.buy_in, FALSE) = FALSE
-            ORDER BY CASE
-                WHEN r1.id IS NULL AND r2.id IS NULL THEN COALESCE(tr.total_weight, 0)
-                ELSE COALESCE(r1.total_weight, 0) + COALESCE(r2.total_weight, 0)
-            END DESC
+            FROM v_team_tournament_results vttr
+            JOIN team_results tr ON tr.tournament_id = vttr.tournament_id
+                AND tr.angler1_id = vttr.angler1_id
+                AND ((tr.angler2_id IS NULL AND vttr.angler2_id IS NULL)
+                     OR tr.angler2_id = vttr.angler2_id)
+            JOIN anglers a1 ON vttr.angler1_id = a1.id
+            LEFT JOIN anglers a2 ON vttr.angler2_id = a2.id
+            LEFT JOIN results r1 ON vttr.angler1_id = r1.angler_id
+                AND vttr.tournament_id = r1.tournament_id
+            LEFT JOIN results r2 ON vttr.angler2_id = r2.angler_id
+                AND vttr.tournament_id = r2.tournament_id
+            WHERE vttr.tournament_id = :tournament_id
+              AND vttr.source = 'team_results'
+              AND COALESCE(r1.buy_in, FALSE) = FALSE
+              AND COALESCE(r2.buy_in, FALSE) = FALSE
+            ORDER BY vttr.total_weight DESC
         """
         return self.fetch_all(query, {"tournament_id": tournament_id})
 

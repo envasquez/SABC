@@ -47,30 +47,34 @@ def calculate_big_bass_carryover(qs: QueryService, tournament_id: int, event_dat
     Returns:
         The accumulated carryover amount from previous tournaments
     """
-    # Get all previous tournaments that have been fished (have results or team_results)
-    # Exclude Admin User entries from both individual and team results
-    # Include year for determining which bylaws apply
+    # Get previous tournaments with angler + boat counts and a "member won
+    # big bass" flag. Pre-Phase-13 this LEFT JOIN'd BOTH raw tables to the
+    # same tournament which created a Cartesian fanout — the CASE-WHEN
+    # cascade hid it but boat_count / angler_count were inflated. The
+    # unified views give us clean per-angler and per-boat aggregates.
     previous_tournaments = qs.fetch_all(
         """SELECT t.id, e.date, e.year,
-                  COUNT(DISTINCT CASE WHEN a.name != 'Admin User' THEN r.angler_id END) as angler_count,
-                  COUNT(DISTINCT CASE WHEN a1.name != 'Admin User' THEN tr.id END) as boat_count,
-                  MAX(CASE
-                      WHEN r.was_member = TRUE AND r.big_bass_weight > :min_weight
-                           AND r.disqualified = FALSE AND a.name != 'Admin User' THEN 1
-                      WHEN tr.big_bass_weight > :min_weight
-                           AND a1.name != 'Admin User' THEN 1
-                      ELSE 0
-                  END) as member_won_big_bass
+                  (SELECT COUNT(DISTINCT vatr.angler_id)
+                   FROM v_angler_tournament_results vatr
+                   WHERE vatr.tournament_id = t.id) as angler_count,
+                  (SELECT COUNT(*)
+                   FROM v_team_tournament_results vttr
+                   WHERE vttr.tournament_id = t.id) as boat_count,
+                  COALESCE(
+                      (SELECT MAX(CASE WHEN vatr.was_member = TRUE
+                                            AND vatr.big_bass_weight > :min_weight
+                                            AND vatr.disqualified = FALSE THEN 1 ELSE 0 END)
+                       FROM v_angler_tournament_results vatr
+                       WHERE vatr.tournament_id = t.id),
+                      0
+                  ) as member_won_big_bass
            FROM tournaments t
            JOIN events e ON t.event_id = e.id
-           LEFT JOIN results r ON r.tournament_id = t.id
-           LEFT JOIN anglers a ON r.angler_id = a.id
-           LEFT JOIN team_results tr ON tr.tournament_id = t.id
-           LEFT JOIN anglers a1 ON tr.angler1_id = a1.id
            WHERE e.date < :event_date
-           GROUP BY t.id, e.date, e.year
-           HAVING COUNT(CASE WHEN a.name != 'Admin User' THEN r.id END) > 0
-               OR COUNT(CASE WHEN a1.name != 'Admin User' THEN tr.id END) > 0
+             AND (
+                 EXISTS (SELECT 1 FROM v_angler_tournament_results vatr WHERE vatr.tournament_id = t.id)
+                 OR EXISTS (SELECT 1 FROM v_team_tournament_results vttr WHERE vttr.tournament_id = t.id)
+             )
            ORDER BY e.date DESC""",
         {"event_date": event_date, "min_weight": float(BIG_BASS_MINIMUM_WEIGHT)},
     )
@@ -186,51 +190,34 @@ def fetch_tournament_data(
 
     tournament = TournamentWithEvent(**tournament_data)
 
-    # Get tournament statistics - use team_results for team format, results for standard
-    if not tournament.aoy_points:
-        # Team format: calculate stats from team_results (excluding Admin User)
-        stats_data = qs.fetch_one(
-            """SELECT
-               (SELECT COUNT(DISTINCT angler_id) FROM (
-                   SELECT tr2.angler1_id as angler_id FROM team_results tr2
-                   JOIN anglers a ON tr2.angler1_id = a.id
-                   WHERE tr2.tournament_id = :id AND a.name != 'Admin User'
-                   UNION
-                   SELECT tr2.angler2_id as angler_id FROM team_results tr2
-                   JOIN anglers a ON tr2.angler2_id = a.id
-                   WHERE tr2.tournament_id = :id AND tr2.angler2_id IS NOT NULL AND a.name != 'Admin User'
-               ) anglers) as total_anglers,
-               COUNT(tr.id) as total_boats,
-               COALESCE(SUM(tr.num_fish), 0) as total_fish,
-               COALESCE(SUM(tr.total_weight), 0) as total_weight,
-               COUNT(CASE WHEN tr.num_fish = :fish_limit THEN 1 END) as limits,
-               COUNT(CASE WHEN tr.num_fish = 0 THEN 1 END) as zeros,
-               0 as buy_ins,
-               COALESCE(MAX(tr.big_bass_weight), 0) as biggest_bass,
-               COALESCE(MAX(tr.total_weight), 0) as heavy_stringer
-               FROM team_results tr
-               JOIN anglers a1 ON tr.angler1_id = a1.id
-               WHERE tr.tournament_id = :id AND a1.name != 'Admin User'""",
-            {"id": tournament_id, "fish_limit": tournament.fish_limit or 5},
-        )
-    else:
-        # Standard format: calculate stats from individual results
-        # total_boats = total_anglers for standard format (each angler pays entry)
-        stats_data = qs.fetch_one(
-            """SELECT
-               COUNT(DISTINCT CASE WHEN r.disqualified = FALSE THEN r.angler_id END) as total_anglers,
-               COUNT(DISTINCT CASE WHEN r.disqualified = FALSE THEN r.angler_id END) as total_boats,
-               COALESCE(SUM(CASE WHEN r.disqualified = FALSE THEN r.num_fish ELSE 0 END), 0) as total_fish,
-               COALESCE(SUM(CASE WHEN r.disqualified = FALSE THEN r.total_weight ELSE 0 END), 0) as total_weight,
-               COUNT(DISTINCT CASE WHEN r.disqualified = FALSE AND r.num_fish >= :fish_limit THEN r.id END) as limits,
-               COUNT(DISTINCT CASE WHEN r.disqualified = FALSE AND r.num_fish = 0 AND r.buy_in = FALSE THEN r.id END) as zeros,
-               COUNT(DISTINCT CASE WHEN r.buy_in = TRUE THEN r.id END) as buy_ins,
-               COALESCE(MAX(CASE WHEN r.disqualified = FALSE THEN r.big_bass_weight ELSE 0 END), 0) as biggest_bass,
-               COALESCE(MAX(CASE WHEN r.disqualified = FALSE THEN r.total_weight ELSE 0 END), 0) as heavy_stringer
-               FROM results r
-               WHERE r.tournament_id = :id""",
-            {"id": tournament_id, "fish_limit": tournament.fish_limit or 5},
-        )
+    # Tournament header stats — single query that works for both formats
+    # by sourcing per-angler aggregates from v_angler_tournament_results
+    # and per-boat aggregates from v_team_tournament_results. Pre-Phase-13
+    # this was a branch on tournament.aoy_points with two ~20-line queries
+    # whose differences in semantics (per-angler vs per-boat counts) made
+    # the two-branch design fragile.
+    stats_data = qs.fetch_one(
+        """SELECT
+           (SELECT COUNT(DISTINCT angler_id) FROM v_angler_tournament_results
+            WHERE tournament_id = :id AND disqualified = FALSE) as total_anglers,
+           (SELECT COUNT(*) FROM v_team_tournament_results
+            WHERE tournament_id = :id) as total_boats,
+           (SELECT COALESCE(SUM(num_fish), 0) FROM v_angler_tournament_results
+            WHERE tournament_id = :id AND disqualified = FALSE) as total_fish,
+           (SELECT COALESCE(SUM(total_weight), 0) FROM v_angler_tournament_results
+            WHERE tournament_id = :id AND disqualified = FALSE) as total_weight,
+           (SELECT COUNT(*) FROM v_team_tournament_results
+            WHERE tournament_id = :id AND num_fish >= :fish_limit) as limits,
+           (SELECT COUNT(*) FROM v_team_tournament_results
+            WHERE tournament_id = :id AND num_fish = 0) as zeros,
+           (SELECT COUNT(*) FROM v_angler_tournament_results
+            WHERE tournament_id = :id AND buy_in = TRUE) as buy_ins,
+           (SELECT COALESCE(MAX(big_bass_weight), 0) FROM v_angler_tournament_results
+            WHERE tournament_id = :id AND disqualified = FALSE) as biggest_bass,
+           (SELECT COALESCE(MAX(total_weight), 0) FROM v_angler_tournament_results
+            WHERE tournament_id = :id AND disqualified = FALSE) as heavy_stringer""",
+        {"id": tournament_id, "fish_limit": tournament.fish_limit or 5},
+    )
 
     stats = TournamentStats(**stats_data) if stats_data else TournamentStats()
 
