@@ -235,46 +235,36 @@ class DataQueries(QueryServiceBase):
         return self._fetch_all_converted(query, {})
 
     def get_lake_statistics(self) -> List[Dict[str, Any]]:
-        """Get statistics for each lake fished."""
-        # Combines both individual results and team_results
+        """Get statistics for each lake fished.
+
+        Previously UNION-ALL'd results + team_results without an EXISTS
+        guard, double-counting every team-format tournament. Now sourced
+        from v_angler_tournament_results which dedups internally — every
+        (tournament, angler) appears exactly once regardless of format.
+        """
         query = """
-            WITH all_results AS (
-                -- Individual format results
-                SELECT l.id as lake_id, l.display_name as lake_name, t.id as tournament_id,
-                       e.date, r.total_weight, r.num_fish, t.fish_limit,
-                       r.disqualified, r.big_bass_weight
-                FROM lakes l
-                JOIN tournaments t ON t.lake_id = l.id
-                JOIN events e ON t.event_id = e.id
-                JOIN results r ON r.tournament_id = t.id
-                WHERE t.complete = true
-                UNION ALL
-                -- Team format results (count per boat, not per angler)
-                SELECT l.id as lake_id, l.display_name as lake_name, t.id as tournament_id,
-                       e.date, tr.total_weight, tr.num_fish, t.fish_limit,
-                       false as disqualified, tr.big_bass_weight
-                FROM lakes l
-                JOIN tournaments t ON t.lake_id = l.id
-                JOIN events e ON t.event_id = e.id
-                JOIN team_results tr ON tr.tournament_id = t.id
-                WHERE t.complete = true
-            )
             SELECT
-                ar.lake_id,
-                ar.lake_name,
-                COUNT(DISTINCT ar.tournament_id) as times_fished,
-                MAX(ar.date) as last_fished,
-                COALESCE(SUM(ar.total_weight), 0) as total_weight,
+                l.id as lake_id,
+                l.display_name as lake_name,
+                COUNT(DISTINCT t.id) as times_fished,
+                MAX(e.date) as last_fished,
+                COALESCE(SUM(vatr.total_weight), 0) as total_weight,
                 CASE
                     WHEN COUNT(*) > 0
-                    THEN COALESCE(SUM(ar.total_weight), 0) / COUNT(*)
+                    THEN COALESCE(SUM(vatr.total_weight), 0) / COUNT(*)
                     ELSE 0
                 END as avg_weight_per_angler,
-                SUM(CASE WHEN ar.num_fish = ar.fish_limit THEN 1 ELSE 0 END) as total_limits,
-                SUM(CASE WHEN ar.num_fish = 0 AND ar.disqualified = false THEN 1 ELSE 0 END) as total_zeros,
-                MAX(ar.big_bass_weight) as biggest_bass
-            FROM all_results ar
-            GROUP BY ar.lake_id, ar.lake_name
+                SUM(CASE WHEN vatr.num_fish = t.fish_limit THEN 1 ELSE 0 END) as total_limits,
+                SUM(
+                    CASE WHEN vatr.num_fish = 0 AND vatr.disqualified = false THEN 1 ELSE 0 END
+                ) as total_zeros,
+                MAX(vatr.big_bass_weight) as biggest_bass
+            FROM lakes l
+            JOIN tournaments t ON t.lake_id = l.id
+            JOIN events e ON t.event_id = e.id
+            JOIN v_angler_tournament_results vatr ON vatr.tournament_id = t.id
+            WHERE t.complete = true
+            GROUP BY l.id, l.display_name
             ORDER BY times_fished DESC, lake_name ASC
         """
         return self._fetch_all_converted(query, {})
@@ -338,118 +328,90 @@ class DataQueries(QueryServiceBase):
         return self._fetch_all_converted(query, {"limit": limit})
 
     def get_membership_by_year(self) -> List[Dict[str, Any]]:
-        """Get member count estimates by year based on tournament participation."""
-        # This query counts unique anglers who fished as members each year
-        # Combines both individual results and team_results
+        """Get member count estimates by year based on tournament participation.
+
+        Previously three-way UNION'd results + team_results.angler1 +
+        team_results.angler2 — without an EXISTS guard the team rows
+        re-added every angler who also had a per-angler results row,
+        inflating COUNT(DISTINCT) and skewing member/guest splits. Now
+        sourced from v_angler_tournament_results which yields exactly one
+        row per (tournament, angler) and propagates was_member from the
+        primary `results` row when present.
+        """
         query = """
-            WITH all_participants AS (
-                -- Individual format results (has was_member flag)
-                SELECT e.year, r.angler_id, r.was_member
-                FROM tournaments t
-                JOIN events e ON t.event_id = e.id
-                JOIN results r ON r.tournament_id = t.id
-                WHERE t.complete = true
-                UNION ALL
-                -- Team format results (angler1) - use current member status
-                SELECT e.year, tr.angler1_id as angler_id, a.member as was_member
-                FROM tournaments t
-                JOIN events e ON t.event_id = e.id
-                JOIN team_results tr ON tr.tournament_id = t.id
-                JOIN anglers a ON tr.angler1_id = a.id
-                WHERE t.complete = true
-                UNION ALL
-                -- Team format results (angler2, when present)
-                SELECT e.year, tr.angler2_id as angler_id, a.member as was_member
-                FROM tournaments t
-                JOIN events e ON t.event_id = e.id
-                JOIN team_results tr ON tr.tournament_id = t.id
-                JOIN anglers a ON tr.angler2_id = a.id
-                WHERE t.complete = true AND tr.angler2_id IS NOT NULL
-            )
             SELECT
-                ap.year,
-                COUNT(DISTINCT CASE WHEN ap.was_member = true THEN ap.angler_id END) as member_count,
-                COUNT(DISTINCT CASE WHEN ap.was_member = false THEN ap.angler_id END) as guest_count,
-                COUNT(DISTINCT ap.angler_id) as total_anglers
-            FROM all_participants ap
-            GROUP BY ap.year
-            ORDER BY ap.year ASC
+                e.year,
+                COUNT(DISTINCT CASE WHEN vatr.was_member = true THEN vatr.angler_id END) as member_count,
+                COUNT(DISTINCT CASE WHEN vatr.was_member = false THEN vatr.angler_id END) as guest_count,
+                COUNT(DISTINCT vatr.angler_id) as total_anglers
+            FROM tournaments t
+            JOIN events e ON t.event_id = e.id
+            JOIN v_angler_tournament_results vatr ON vatr.tournament_id = t.id
+            WHERE t.complete = true
+            GROUP BY e.year
+            ORDER BY e.year ASC
         """
         return self._fetch_all_converted(query, {})
 
     def get_weight_trends_by_year(self) -> List[Dict[str, Any]]:
-        """Get average weights per tournament by year."""
-        # Combines both individual results and team_results
+        """Average weights per tournament by year.
+
+        Previously UNION-ALL'd results + team_results with no guard, so
+        for team-format tournaments each angler's catch was counted TWICE
+        (once from results, once again from team_results). avg_individual
+        was correct neither for individual nor team format. Now sourced
+        from v_angler_tournament_results so each angler shows up exactly
+        once regardless of which table actually stored the row.
+        """
         query = """
-            WITH all_results AS (
-                -- Individual format results
-                SELECT t.id as tournament_id, e.year, r.total_weight
-                FROM tournaments t
-                JOIN events e ON t.event_id = e.id
-                JOIN results r ON r.tournament_id = t.id
-                WHERE t.complete = true
-                UNION ALL
-                -- Team format results (per boat)
-                SELECT t.id as tournament_id, e.year, tr.total_weight
-                FROM tournaments t
-                JOIN events e ON t.event_id = e.id
-                JOIN team_results tr ON tr.tournament_id = t.id
-                WHERE t.complete = true
-            )
             SELECT
-                ar.year,
+                e.year,
                 CASE
                     WHEN COUNT(*) > 0
-                    THEN COALESCE(SUM(ar.total_weight), 0) / COUNT(*)
+                    THEN COALESCE(SUM(vatr.total_weight), 0) / COUNT(*)
                     ELSE 0
                 END as avg_individual_weight,
                 CASE
-                    WHEN COUNT(DISTINCT ar.tournament_id) > 0
-                    THEN COALESCE(SUM(ar.total_weight), 0) / COUNT(DISTINCT ar.tournament_id)
+                    WHEN COUNT(DISTINCT vatr.tournament_id) > 0
+                    THEN COALESCE(SUM(vatr.total_weight), 0)
+                        / COUNT(DISTINCT vatr.tournament_id)
                     ELSE 0
                 END as avg_tournament_total_weight,
-                MAX(ar.total_weight) as max_individual_weight
-            FROM all_results ar
-            GROUP BY ar.year
-            ORDER BY ar.year ASC
+                MAX(vatr.total_weight) as max_individual_weight
+            FROM tournaments t
+            JOIN events e ON t.event_id = e.id
+            JOIN v_angler_tournament_results vatr ON vatr.tournament_id = t.id
+            WHERE t.complete = true
+            GROUP BY e.year
+            ORDER BY e.year ASC
         """
         return self._fetch_all_converted(query, {})
 
     def get_winning_weights_by_year(self) -> List[Dict[str, Any]]:
-        """Get average 1st, 2nd, 3rd place weights by year."""
-        # Combines both individual results and team_results
+        """Average 1st / 2nd / 3rd place weights by year.
+
+        Previously UNION-ALL'd results + team_results without a guard,
+        so each team-format tournament contributed TWO "1st place" rows
+        (one from each table) — averaging them in halved the apparent
+        winning weight. Now sourced from v_team_tournament_results which
+        is per-boat: each tournament has exactly one 1st place row.
+        Uses team_results.place_finish when set, otherwise ranks by weight.
+        """
         query = """
             WITH ranked_results AS (
-                -- Individual format results
                 SELECT
                     e.year,
-                    t.id as tournament_id,
-                    r.total_weight,
-                    ROW_NUMBER() OVER (
-                        PARTITION BY t.id
-                        ORDER BY r.total_weight DESC
-                    ) as place
-                FROM results r
-                JOIN tournaments t ON r.tournament_id = t.id
-                JOIN events e ON t.event_id = e.id
-                WHERE t.complete = true
-                    AND r.disqualified = false
-                    AND r.total_weight > 0
-                UNION ALL
-                -- Team format results (use place_finish if available, otherwise rank by weight)
-                SELECT
-                    e.year,
-                    t.id as tournament_id,
-                    tr.total_weight,
-                    COALESCE(tr.place_finish, ROW_NUMBER() OVER (
-                        PARTITION BY t.id
-                        ORDER BY tr.total_weight DESC
+                    vttr.tournament_id,
+                    vttr.total_weight,
+                    COALESCE(vttr.place_finish, ROW_NUMBER() OVER (
+                        PARTITION BY vttr.tournament_id
+                        ORDER BY vttr.total_weight DESC
                     )) as place
-                FROM team_results tr
-                JOIN tournaments t ON tr.tournament_id = t.id
+                FROM v_team_tournament_results vttr
+                JOIN tournaments t ON vttr.tournament_id = t.id
                 JOIN events e ON t.event_id = e.id
                 WHERE t.complete = true
-                    AND tr.total_weight > 0
+                    AND vttr.total_weight > 0
             )
             SELECT
                 year,
@@ -464,42 +426,27 @@ class DataQueries(QueryServiceBase):
         return self._fetch_all_converted(query, {})
 
     def get_winning_weights_by_lake(self) -> List[Dict[str, Any]]:
-        """Get avg 1st, 2nd, 3rd place weights and tournament count per lake."""
-        # Combines both individual results and team_results
+        """Average 1st / 2nd / 3rd place weights and tournament count per lake.
+
+        Same double-count bug as get_winning_weights_by_year — fixed by
+        sourcing per-boat ranks from v_team_tournament_results.
+        """
         query = """
             WITH ranked_results AS (
-                -- Individual format results
                 SELECT
                     l.id as lake_id,
                     l.display_name as lake_name,
-                    t.id as tournament_id,
-                    r.total_weight,
-                    ROW_NUMBER() OVER (
-                        PARTITION BY t.id
-                        ORDER BY r.total_weight DESC
-                    ) as place
-                FROM results r
-                JOIN tournaments t ON r.tournament_id = t.id
-                JOIN lakes l ON t.lake_id = l.id
-                WHERE t.complete = true
-                    AND r.disqualified = false
-                    AND r.total_weight > 0
-                UNION ALL
-                -- Team format results
-                SELECT
-                    l.id as lake_id,
-                    l.display_name as lake_name,
-                    t.id as tournament_id,
-                    tr.total_weight,
-                    COALESCE(tr.place_finish, ROW_NUMBER() OVER (
-                        PARTITION BY t.id
-                        ORDER BY tr.total_weight DESC
+                    vttr.tournament_id,
+                    vttr.total_weight,
+                    COALESCE(vttr.place_finish, ROW_NUMBER() OVER (
+                        PARTITION BY vttr.tournament_id
+                        ORDER BY vttr.total_weight DESC
                     )) as place
-                FROM team_results tr
-                JOIN tournaments t ON tr.tournament_id = t.id
+                FROM v_team_tournament_results vttr
+                JOIN tournaments t ON vttr.tournament_id = t.id
                 JOIN lakes l ON t.lake_id = l.id
                 WHERE t.complete = true
-                    AND tr.total_weight > 0
+                    AND vttr.total_weight > 0
             )
             SELECT
                 lake_name,
@@ -599,44 +546,26 @@ class DataQueries(QueryServiceBase):
         return self._fetch_all_converted(query, {})
 
     def get_winning_weights_by_lake_year(self) -> List[Dict[str, Any]]:
-        """Get 1st, 2nd, 3rd place weights by lake for each year."""
-        # Combines both individual results and team_results
+        """1st / 2nd / 3rd place weights per lake per year. Same per-boat
+        ranking semantics as get_winning_weights_by_year — sourced from
+        v_team_tournament_results to eliminate the prior double-count."""
         query = """
             WITH ranked_results AS (
-                -- Individual format results
                 SELECT
                     e.year,
                     l.display_name as lake_name,
-                    t.id as tournament_id,
-                    r.total_weight,
-                    ROW_NUMBER() OVER (
-                        PARTITION BY t.id
-                        ORDER BY r.total_weight DESC
-                    ) as place
-                FROM results r
-                JOIN tournaments t ON r.tournament_id = t.id
-                JOIN events e ON t.event_id = e.id
-                JOIN lakes l ON t.lake_id = l.id
-                WHERE t.complete = true
-                    AND r.disqualified = false
-                    AND r.total_weight > 0
-                UNION ALL
-                -- Team format results
-                SELECT
-                    e.year,
-                    l.display_name as lake_name,
-                    t.id as tournament_id,
-                    tr.total_weight,
-                    COALESCE(tr.place_finish, ROW_NUMBER() OVER (
-                        PARTITION BY t.id
-                        ORDER BY tr.total_weight DESC
+                    vttr.tournament_id,
+                    vttr.total_weight,
+                    COALESCE(vttr.place_finish, ROW_NUMBER() OVER (
+                        PARTITION BY vttr.tournament_id
+                        ORDER BY vttr.total_weight DESC
                     )) as place
-                FROM team_results tr
-                JOIN tournaments t ON tr.tournament_id = t.id
+                FROM v_team_tournament_results vttr
+                JOIN tournaments t ON vttr.tournament_id = t.id
                 JOIN events e ON t.event_id = e.id
                 JOIN lakes l ON t.lake_id = l.id
                 WHERE t.complete = true
-                    AND tr.total_weight > 0
+                    AND vttr.total_weight > 0
             )
             SELECT
                 year,
