@@ -579,10 +579,15 @@
     </div>
 </div>
 
+{% endblock %}
+
+{# extra_js must be a sibling block, NOT nested inside admin_content.
+   Jinja renders nested block definitions twice — once inline in the parent,
+   once at the base-template extension point. Two copies of every listener
+   was the root cause of the 2-backdrop modal freeze (May 2026). #}
 {% block extra_js %}
 <script src="/static/admin-events-lakes.js?v={{ asset_v }}"></script>
 <script src="/static/admin-events-forms.js?v={{ asset_v }}"></script>
 <script src="/static/admin-events-filters.js?v={{ asset_v }}"></script>
 <script src="/static/admin-events.js?v={{ asset_v }}"></script>
-{% endblock %}
 {% endblock %}

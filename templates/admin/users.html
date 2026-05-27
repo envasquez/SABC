@@ -291,7 +291,10 @@
 <p class="text-secondary">This will remove all user data and cannot be reversed.</p>
 {% endcall %}
 
+{% endblock %}
+
+{# extra_js must be a sibling of admin_content, not nested — Jinja
+   double-renders nested blocks. See templates/admin/events.html note. #}
 {% block extra_js %}
 <script src="/static/admin-users.js?v={{ asset_v }}"></script>
-{% endblock %}
 {% endblock %}

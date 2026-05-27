@@ -116,7 +116,10 @@
 </ul>
 {% endcall %}
 
+{% endblock %}
+
+{# extra_js must be a sibling of admin_content, not nested — Jinja
+   double-renders nested blocks. See templates/admin/events.html note. #}
 {% block extra_js %}
 <script src="/static/admin-lakes.js?v={{ asset_v }}"></script>
-{% endblock %}
 {% endblock %}

@@ -44,6 +44,32 @@ test.describe('Admin events page clickables', () => {
     await expect(modal).toBeVisible({ timeout: 3000 });
   });
 
+  test('closing the Edit Event modal leaves the page interactive', async ({ page }) => {
+    // Regression for the May 2026 "site freezes after canceling modal" bug.
+    // Root cause was `{% block extra_js %}` defined inside `{% block admin_content %}`
+    // in 6 admin templates — Jinja double-renders nested blocks, so each
+    // admin-events*.js loaded twice, registering the click delegated listener
+    // twice. One click → editEvent fired twice → two backdrops appended to the
+    // body. Dismissing the modal removed only the topmost backdrop; the leftover
+    // intercepted every subsequent pointer event and froze the page.
+    await page.goto('/admin/events');
+    await page.locator('.js-edit-event').first().click();
+    await expect(page.locator('#editEventModal')).toHaveClass(/show/, { timeout: 3000 });
+
+    await page.locator('#editEventModal .modal-footer button[data-bs-dismiss="modal"]').click();
+    // Bootstrap's hide animation is ~150ms; wait for the transition to complete
+    // and the backdrop to be removed from the DOM.
+    await expect.poll(
+      async () => page.locator('.modal-backdrop').count(),
+      { timeout: 3000 },
+    ).toBe(0);
+
+    // Page should be interactive — a navbar click would fail if a leftover
+    // backdrop were still intercepting pointer events.
+    await page.locator('a.navbar-brand').click({ timeout: 3000 });
+    await expect(page).toHaveURL(/\/$/);
+  });
+
   test('Clear filters resets the SABC search input', async ({ page }) => {
     await page.goto('/admin/events');
 
