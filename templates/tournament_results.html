@@ -78,6 +78,11 @@
                 {{ stat_card('ti-star-filled', 'yellow', '%.2f'|format(tournament_stats[6] or 0), 'Big Bass', suffix=' lbs', tag_text=('Guest' if payouts.big_bass_caught_by_guest else ''), tag_color='azure') }}
             </div>
             <div class="col-6 col-sm-4 col-lg-3">{{ stat_card('ti-trophy', 'orange', '%.2f'|format(tournament_stats[7] or 0), 'Heavy Stringer', suffix=' lbs') }}</div>
+            {# Average stringer: total weight per angler. Pairs with Heavy
+               Stringer (typical vs. best). Guarded against 0 anglers — a
+               tournament page should never render with 0 entrants, but the
+               division would crash if it did. #}
+            <div class="col-6 col-sm-4 col-lg-3">{{ stat_card('ti-chart-line', 'teal', '%.2f'|format((tournament_stats[2] or 0) / tournament_stats[0] if tournament_stats[0] else 0), 'Avg Stringer', suffix=' lbs') }}</div>
         </div>
     </div>
 </div>
