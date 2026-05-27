@@ -580,9 +580,9 @@
 </div>
 
 {% block extra_js %}
-<script src="/static/admin-events-lakes.js"></script>
-<script src="/static/admin-events-forms.js"></script>
-<script src="/static/admin-events-filters.js"></script>
-<script src="/static/admin-events.js"></script>
+<script src="/static/admin-events-lakes.js?v={{ asset_v }}"></script>
+<script src="/static/admin-events-forms.js?v={{ asset_v }}"></script>
+<script src="/static/admin-events-filters.js?v={{ asset_v }}"></script>
+<script src="/static/admin-events.js?v={{ asset_v }}"></script>
 {% endblock %}
 {% endblock %}
