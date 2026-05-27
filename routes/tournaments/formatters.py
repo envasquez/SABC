@@ -34,6 +34,13 @@ def format_team_results(team_results_raw: List[dict]) -> List[Tuple[Any, ...]]:
 
 
 def format_individual_results(calculated_results: List[dict]) -> List[Tuple[Any, ...]]:
+    # `id` is None for team-format tournament rows: get_tournament_results
+    # LEFT JOINs `results` onto v_angler_tournament_results, and team-format
+    # anglers only have a team_results row (no individual results row), so
+    # `r.id` comes back NULL. Numeric DB fields (num_fish, total_weight,
+    # big_bass_weight) are also nullable in the schema. `r.get(k) or 0`
+    # collapses both missing-key and explicit-None to zero. calculated_*
+    # come from pandas and are guaranteed int via astype.
     regular_results = [
         r for r in calculated_results if not r.get("buy_in") and not r.get("disqualified")
     ]
@@ -41,18 +48,20 @@ def format_individual_results(calculated_results: List[dict]) -> List[Tuple[Any,
         (
             int(r["calculated_place"]),
             r["angler_name"],
-            int(r["num_fish"]),
-            float(r["total_weight"]),
-            float(r.get("big_bass_weight", 0)),
+            int(r.get("num_fish") or 0),
+            float(r.get("total_weight") or 0),
+            float(r.get("big_bass_weight") or 0),
             int(r["calculated_points"]),
             bool(r.get("was_member", True)),
-            int(r.get("id", 0)),
+            int(r.get("id") or 0),
         )
         for r in regular_results
     ]
 
 
 def format_buy_in_results(calculated_results: List[dict]) -> Tuple[int, List[Tuple[Any, ...]]]:
+    # Same None-vs-missing trap as format_individual_results: buy-in rows
+    # may originate from team-format tournaments with no `results.id`.
     buy_ins = [r for r in calculated_results if r.get("buy_in")]
     buy_in_place = int(buy_ins[0]["calculated_place"]) if buy_ins else 0
 
@@ -62,7 +71,7 @@ def format_buy_in_results(calculated_results: List[dict]) -> Tuple[int, List[Tup
             buy_in_place,
             int(buy_ins[0]["calculated_points"]) if buy_ins else 0,
             bool(r.get("was_member", True)),
-            int(r.get("id", 0)),  # Add result ID for delete functionality
+            int(r.get("id") or 0),
         )
         for r in buy_ins
     ]

@@ -129,6 +129,35 @@ class TestTournamentDataHelpers:
         assert result[0][0] == 1  # place
         assert result[0][1] == "John Doe"  # name
 
+    def test_format_individual_results_handles_null_id_from_team_format(self):
+        """Regression: prod tournament 175 (team-format) crashed with
+        `int(None)` on `r.get('id', 0)`. get_tournament_results LEFT JOINs
+        `results` onto v_angler_tournament_results; team-format anglers
+        only have a team_results row, so `r.id` comes back NULL. The
+        nullable DB numerics (num_fish, total_weight, big_bass_weight) can
+        also be NULL. All four must collapse to 0, not blow up."""
+        from routes.tournaments.formatters import format_individual_results
+
+        raw_data = [
+            {
+                "calculated_place": 1,
+                "angler_name": "Team Angler",
+                "num_fish": None,
+                "total_weight": None,
+                "big_bass_weight": None,
+                "calculated_points": 100,
+                "was_member": True,
+                "id": None,
+                "buy_in": False,
+                "disqualified": False,
+            }
+        ]
+        result = format_individual_results(raw_data)
+        assert len(result) == 1
+        place, name, fish, weight, big_bass, points, _, row_id = result[0]
+        assert (place, fish, weight, big_bass, points, row_id) == (1, 0, 0.0, 0.0, 100, 0)
+        assert name == "Team Angler"
+
     def test_format_buy_in_results(self):
         """Test buy-in results formatting."""
         from routes.tournaments.formatters import format_buy_in_results
@@ -147,6 +176,25 @@ class TestTournamentDataHelpers:
         assert place == 10
         assert len(results) == 1
         assert results[0][0] == "John Doe"
+
+    def test_format_buy_in_results_handles_null_id(self):
+        """Regression: same LEFT JOIN nullability as individual results —
+        buy-in rows from team-format tournaments can have `id = None`."""
+        from routes.tournaments.formatters import format_buy_in_results
+
+        raw_data = [
+            {
+                "calculated_place": 10,
+                "angler_name": "Team Buy-in",
+                "calculated_points": 50,
+                "was_member": True,
+                "id": None,
+                "buy_in": True,
+            }
+        ]
+        place, results = format_buy_in_results(raw_data)
+        assert place == 10
+        assert results[0][4] == 0  # row id collapses to 0 instead of raising
 
     def test_format_disqualified_results(self):
         """Test disqualified results formatting."""
