@@ -78,6 +78,34 @@ class TestTournamentDataHelpers:
         assert "John Doe / Jane Doe" in result[0][1]  # team name
         assert result[0][7] == 2  # team size
 
+    def test_format_team_results_handles_null_numeric_fields(self):
+        """Regression: prod tournament 136 crashed with `int(None)` because
+        `r.get('total_fish', 0)` returns None when the key exists with a
+        NULL value (the default kicks in only for missing keys). The
+        underlying team_results columns (num_fish, place_finish,
+        total_weight) are nullable in the schema, so the formatter must
+        tolerate None and collapse it to zero."""
+        from routes.tournaments.formatters import format_team_results
+
+        raw_data = [
+            {
+                "place_finish": None,
+                "angler1_name": "Solo Angler",
+                "angler2_name": "",
+                "angler2_id": None,
+                "total_fish": None,
+                "total_weight": None,
+                "angler1_was_member": True,
+                "angler2_was_member": True,
+                "id": None,
+            }
+        ]
+        result = format_team_results(raw_data)
+        assert len(result) == 1
+        place, team_name, fish, weight, _, _, row_id, team_size = result[0]
+        assert (place, fish, weight, row_id, team_size) == (0, 0, 0.0, 0, 1)
+        assert team_name == "Solo Angler"
+
     def test_format_individual_results(self):
         """Test individual results formatting."""
         from routes.tournaments.formatters import format_individual_results

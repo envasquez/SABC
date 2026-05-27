@@ -12,15 +12,21 @@ def format_team_results(team_results_raw: List[dict]) -> List[Tuple[Any, ...]]:
             team_name = angler1_name
         else:
             team_name = f"{angler1_name} / {angler2_name}"
+        # `r.get(k, 0)` would still return None when the key is present
+        # with a NULL DB value — team_results.num_fish, place_finish,
+        # total_weight, and big_bass_weight are all nullable in the
+        # schema, and prod hit `int(None)` on at least one tournament 136
+        # team row. `or 0` collapses both missing-key and explicit-None
+        # back to the zero default.
         formatted.append(
             (
-                int(r.get("place_finish", 0)),
+                int(r.get("place_finish") or 0),
                 team_name,
-                int(r.get("total_fish", 0)),
-                float(r.get("total_weight", 0)),
+                int(r.get("total_fish") or 0),
+                float(r.get("total_weight") or 0),
                 bool(r.get("angler1_was_member", True)),
                 bool(r.get("angler2_was_member", True)),
-                int(r.get("id", 0)),
+                int(r.get("id") or 0),
                 team_size,
             )
         )
