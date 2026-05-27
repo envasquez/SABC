@@ -36,9 +36,11 @@ def get_big_bass_query() -> str:
 
 
 def get_team_wins_query() -> str:
-    """Get teams ranked by number of 1st place finishes for the year.
+    """Teams ranked by 1st-place finishes for the year (team format).
 
-    For 2026+ team format, tracks which team combinations have the most wins.
+    Sourced from v_team_tournament_results filtered to source='team_results'
+    so synthetic boats-of-one from individual results don't show up as
+    "teams" on the team-format awards page.
     """
     return """
         SELECT
@@ -48,15 +50,15 @@ def get_team_wins_query() -> str:
                 ELSE a2.name || ' & ' || a1.name
             END as team_name,
             COUNT(*) as wins,
-            COUNT(DISTINCT tr.tournament_id) as tournaments_fished
-        FROM team_results tr
-        JOIN tournaments t ON tr.tournament_id = t.id
+            COUNT(DISTINCT vttr.tournament_id) as tournaments_fished
+        FROM v_team_tournament_results vttr
+        JOIN tournaments t ON vttr.tournament_id = t.id
         JOIN events e ON t.event_id = e.id
-        JOIN anglers a1 ON tr.angler1_id = a1.id
-        LEFT JOIN anglers a2 ON tr.angler2_id = a2.id
-        WHERE e.year = :year
-          AND tr.place_finish = 1
-          AND a1.name != 'Admin User'
+        JOIN anglers a1 ON vttr.angler1_id = a1.id
+        LEFT JOIN anglers a2 ON vttr.angler2_id = a2.id
+        WHERE vttr.source = 'team_results'
+          AND e.year = :year
+          AND vttr.place_finish = 1
         GROUP BY team_name
         ORDER BY wins DESC, team_name
         LIMIT 10
@@ -64,10 +66,7 @@ def get_team_wins_query() -> str:
 
 
 def get_team_heavy_stringer_query() -> str:
-    """Get teams ranked by heaviest single tournament weight for the year.
-
-    For 2026+ team format, returns team-based heavy stringer results.
-    """
+    """Teams ranked by heaviest single tournament weight for the year."""
     return """
         SELECT
             CASE
@@ -75,27 +74,24 @@ def get_team_heavy_stringer_query() -> str:
                 WHEN a2.name IS NULL THEN a1.name
                 ELSE a2.name || ' & ' || a1.name
             END as team_name,
-            tr.total_weight,
+            vttr.total_weight,
             e.name as tournament_name,
             e.date
-        FROM team_results tr
-        JOIN tournaments t ON tr.tournament_id = t.id
+        FROM v_team_tournament_results vttr
+        JOIN tournaments t ON vttr.tournament_id = t.id
         JOIN events e ON t.event_id = e.id
-        JOIN anglers a1 ON tr.angler1_id = a1.id
-        LEFT JOIN anglers a2 ON tr.angler2_id = a2.id
-        WHERE e.year = :year
-          AND tr.total_weight > 0
-          AND a1.name != 'Admin User'
-        ORDER BY tr.total_weight DESC
+        JOIN anglers a1 ON vttr.angler1_id = a1.id
+        LEFT JOIN anglers a2 ON vttr.angler2_id = a2.id
+        WHERE vttr.source = 'team_results'
+          AND e.year = :year
+          AND vttr.total_weight > 0
+        ORDER BY vttr.total_weight DESC
         LIMIT 10
     """
 
 
 def get_team_big_bass_query() -> str:
-    """Get teams with biggest bass for the year.
-
-    For 2026+ team format, big_bass_weight is stored directly in team_results.
-    """
+    """Teams with biggest bass for the year (team format)."""
     return """
         SELECT
             CASE
@@ -103,17 +99,17 @@ def get_team_big_bass_query() -> str:
                 WHEN a2.name IS NULL THEN a1.name
                 ELSE a2.name || ' & ' || a1.name
             END as team_name,
-            tr.big_bass_weight,
+            vttr.big_bass_weight,
             e.name as tournament_name,
             e.date
-        FROM team_results tr
-        JOIN tournaments t ON tr.tournament_id = t.id
+        FROM v_team_tournament_results vttr
+        JOIN tournaments t ON vttr.tournament_id = t.id
         JOIN events e ON t.event_id = e.id
-        JOIN anglers a1 ON tr.angler1_id = a1.id
-        LEFT JOIN anglers a2 ON tr.angler2_id = a2.id
-        WHERE e.year = :year
-          AND tr.big_bass_weight >= 5.0
-          AND a1.name != 'Admin User'
-        ORDER BY tr.big_bass_weight DESC
+        JOIN anglers a1 ON vttr.angler1_id = a1.id
+        LEFT JOIN anglers a2 ON vttr.angler2_id = a2.id
+        WHERE vttr.source = 'team_results'
+          AND e.year = :year
+          AND vttr.big_bass_weight >= 5.0
+        ORDER BY vttr.big_bass_weight DESC
         LIMIT 10
     """

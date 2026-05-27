@@ -52,21 +52,24 @@ def get_member_stats(
 
     in_sql, in_params = safe_in_clause(member_ids, "mids", dialect_name)
 
-    # Query 1: Team tournaments count and best team weight per member
+    # Query 1: Team tournaments count and best team weight per member.
+    # Sourced from v_team_tournament_results filtered to source='team_results'
+    # so synthetic boats-of-one (from individual results) don't inflate
+    # team-format counts. The view excludes Admin User.
     team_stats_query = f"""
-        SELECT tr.angler1_id as angler_id,
-               COUNT(DISTINCT tr.tournament_id) as team_tournaments,
-               MAX(tr.total_weight) as best_team_weight
-        FROM team_results tr
-        WHERE tr.angler1_id {in_sql}
-        GROUP BY tr.angler1_id
+        SELECT vttr.angler1_id as angler_id,
+               COUNT(DISTINCT vttr.tournament_id) as team_tournaments,
+               MAX(vttr.total_weight) as best_team_weight
+        FROM v_team_tournament_results vttr
+        WHERE vttr.source = 'team_results' AND vttr.angler1_id {in_sql}
+        GROUP BY vttr.angler1_id
         UNION ALL
-        SELECT tr.angler2_id as angler_id,
-               COUNT(DISTINCT tr.tournament_id) as team_tournaments,
-               MAX(tr.total_weight) as best_team_weight
-        FROM team_results tr
-        WHERE tr.angler2_id {in_sql}
-        GROUP BY tr.angler2_id
+        SELECT vttr.angler2_id as angler_id,
+               COUNT(DISTINCT vttr.tournament_id) as team_tournaments,
+               MAX(vttr.total_weight) as best_team_weight
+        FROM v_team_tournament_results vttr
+        WHERE vttr.source = 'team_results' AND vttr.angler2_id {in_sql}
+        GROUP BY vttr.angler2_id
     """
 
     team_results = qs.fetch_all(team_stats_query, in_params)
@@ -86,14 +89,17 @@ def get_member_stats(
             member_stats[aid]["team_tournaments"] = agg["tournaments"]
             member_stats[aid]["best_team_weight"] = agg["best_weight"]
 
-    # Query 2: Big bass per member
+    # Query 2: Big bass per member. Sourced from v_angler_tournament_results
+    # so team-format big bass surfaces here too (credited to angler1 of the
+    # team — the underlying team_results table doesn't record which angler
+    # caught the big bass).
     big_bass_query = f"""
-        SELECT r.angler_id,
-               MAX(r.big_bass_weight) as big_bass
-        FROM results r
-        WHERE r.angler_id {in_sql}
-          AND r.disqualified = FALSE
-        GROUP BY r.angler_id
+        SELECT vatr.angler_id,
+               MAX(vatr.big_bass_weight) as big_bass
+        FROM v_angler_tournament_results vatr
+        WHERE vatr.angler_id {in_sql}
+          AND vatr.disqualified = FALSE
+        GROUP BY vatr.angler_id
     """
     big_bass_results = qs.fetch_all(big_bass_query, in_params)
     for row in big_bass_results:
@@ -101,20 +107,23 @@ def get_member_stats(
         if aid in member_stats:
             member_stats[aid]["big_bass"] = float(row["big_bass"] or 0)
 
-    # Query 3: Team finishes by year (1st, 2nd, 3rd place finishes)
+    # Query 3: Team finishes by year (1st/2nd/3rd places). Same per-boat
+    # ranking via v_team_tournament_results, filtered to team-format only.
     year_col = year_extract("e.date", dialect_name)
     finishes_query = f"""
         WITH ranked_results AS (
-            SELECT tr.angler1_id, tr.angler2_id, tr.tournament_id, tr.total_weight,
+            SELECT vttr.angler1_id, vttr.angler2_id, vttr.tournament_id,
+                   vttr.total_weight,
                    {year_col} as year,
                    ROW_NUMBER() OVER (
-                       PARTITION BY tr.tournament_id
-                       ORDER BY tr.total_weight DESC
+                       PARTITION BY vttr.tournament_id
+                       ORDER BY vttr.total_weight DESC
                    ) as place
-            FROM team_results tr
-            JOIN tournaments t ON tr.tournament_id = t.id
+            FROM v_team_tournament_results vttr
+            JOIN tournaments t ON vttr.tournament_id = t.id
             JOIN events e ON t.event_id = e.id
-            WHERE {year_col} >= {TOURNAMENT_DATA_START_YEAR}
+            WHERE vttr.source = 'team_results'
+              AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
         )
         SELECT angler_id, year, place, COUNT(*) as cnt
         FROM (
@@ -152,24 +161,26 @@ def get_member_stats(
             elif place == 3:
                 member_stats[aid]["all_time_third"] += cnt
 
-    # Query 4: Tournaments per year count
+    # Query 4: Tournaments per year count — same source/filter as #3.
     year_tournaments_query = f"""
         SELECT angler_id, year, COUNT(DISTINCT tournament_id) as tournaments
         FROM (
-            SELECT tr.angler1_id as angler_id, tr.tournament_id,
+            SELECT vttr.angler1_id as angler_id, vttr.tournament_id,
                    {year_col} as year
-            FROM team_results tr
-            JOIN tournaments t ON tr.tournament_id = t.id
+            FROM v_team_tournament_results vttr
+            JOIN tournaments t ON vttr.tournament_id = t.id
             JOIN events e ON t.event_id = e.id
-            WHERE tr.angler1_id {in_sql}
+            WHERE vttr.source = 'team_results'
+              AND vttr.angler1_id {in_sql}
               AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
             UNION
-            SELECT tr.angler2_id as angler_id, tr.tournament_id,
+            SELECT vttr.angler2_id as angler_id, vttr.tournament_id,
                    {year_col} as year
-            FROM team_results tr
-            JOIN tournaments t ON tr.tournament_id = t.id
+            FROM v_team_tournament_results vttr
+            JOIN tournaments t ON vttr.tournament_id = t.id
             JOIN events e ON t.event_id = e.id
-            WHERE tr.angler2_id {in_sql}
+            WHERE vttr.source = 'team_results'
+              AND vttr.angler2_id {in_sql}
               AND {year_col} >= {TOURNAMENT_DATA_START_YEAR}
         ) sub
         GROUP BY angler_id, year

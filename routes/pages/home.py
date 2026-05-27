@@ -23,12 +23,11 @@ from core.db_schema import (
     PollOption,
     PollVote,
     Ramp,
-    TeamResult,
     Tournament,
     engine,
     get_session,
 )
-from core.db_schema.views import v_angler_tournament_results
+from core.db_schema.views import v_angler_tournament_results, v_team_tournament_results
 from core.deps import templates
 from core.email import send_contact_email
 from core.helpers.auth import get_user_optional
@@ -231,25 +230,34 @@ def _fetch_top_results(session: Session, tournament_ids: List[int]) -> Dict[int,
     if not tournament_ids:
         return top_results_by_tid
 
+    # Source from v_team_tournament_results so individual-format tournaments
+    # — which usually have no team_results rows — still produce a homepage
+    # podium from the per-angler synthetic boats. Order:
+    #   place_finish ASC (team_results rows), then total_weight DESC for
+    #   synthetic-boats-of-one (which have NULL place_finish).
     Angler1 = aliased(Angler)
     Angler2 = aliased(Angler)
+    vttr = v_team_tournament_results
     all_top_results = (
         session.query(
-            TeamResult.tournament_id,
-            TeamResult.place_finish,
+            vttr.c.tournament_id,
+            vttr.c.place_finish,
             Angler1.name.label("angler1_name"),
             Angler2.name.label("angler2_name"),
-            TeamResult.total_weight,
-            case((TeamResult.angler2_id.is_(None), 1), else_=2).label("team_size"),
+            vttr.c.total_weight,
+            case((vttr.c.angler2_id.is_(None), 1), else_=2).label("team_size"),
         )
-        .join(Angler1, TeamResult.angler1_id == Angler1.id)
-        .outerjoin(Angler2, TeamResult.angler2_id == Angler2.id)
-        .filter(
-            TeamResult.tournament_id.in_(tournament_ids),
-            Angler1.name != "Admin User",
-            (Angler2.name != "Admin User") | (Angler2.name.is_(None)),
+        .join(Angler1, vttr.c.angler1_id == Angler1.id)
+        .outerjoin(Angler2, vttr.c.angler2_id == Angler2.id)
+        .filter(vttr.c.tournament_id.in_(tournament_ids))
+        .order_by(
+            vttr.c.tournament_id.asc(),
+            # NULLs last: team_results rows sort by place first; synthetic
+            # rows (NULL place) come after, ordered by weight.
+            vttr.c.place_finish.is_(None).asc(),
+            vttr.c.place_finish.asc(),
+            vttr.c.total_weight.desc(),
         )
-        .order_by(TeamResult.tournament_id.asc(), TeamResult.place_finish.asc())
         .all()
     )
     for row in all_top_results:

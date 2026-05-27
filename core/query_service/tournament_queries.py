@@ -29,22 +29,25 @@ class TournamentQueries(QueryServiceBase):
         )
 
     def get_tournament_results(self, tournament_id: int) -> List[Dict[str, Any]]:
-        """
-        Get all results for a tournament with angler details.
+        """All per-angler results for a tournament with angler details.
 
-        Args:
-            tournament_id: Tournament ID to fetch results for
-
-        Returns:
-            List of result dictionaries ordered by total weight (net weight) descending
+        Sourced from v_angler_tournament_results, which projects team-format
+        rows alongside individual ones. The view bakes in the Admin User
+        exclusion. JOINs results back when present for downstream code that
+        reads dead_fish_penalty / id / etc.
         """
         return self.fetch_all(
             """
-            SELECT r.*, a.name as angler_name, a.member
-            FROM results r
-            JOIN anglers a ON r.angler_id = a.id
-            WHERE r.tournament_id = :tournament_id AND a.name != 'Admin User'
-            ORDER BY r.total_weight DESC, r.big_bass_weight DESC
+            SELECT vatr.tournament_id, vatr.angler_id, vatr.num_fish,
+                   vatr.total_weight, vatr.big_bass_weight, vatr.dead_fish_penalty,
+                   vatr.disqualified, vatr.buy_in, vatr.was_member,
+                   r.id, a.name as angler_name, a.member
+            FROM v_angler_tournament_results vatr
+            JOIN anglers a ON vatr.angler_id = a.id
+            LEFT JOIN results r ON r.tournament_id = vatr.tournament_id
+                AND r.angler_id = vatr.angler_id
+            WHERE vatr.tournament_id = :tournament_id
+            ORDER BY vatr.total_weight DESC, vatr.big_bass_weight DESC
         """,
             {"tournament_id": tournament_id},
         )

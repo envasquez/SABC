@@ -5,7 +5,8 @@ from fastapi.responses import RedirectResponse, Response
 from sqlalchemy import case, desc, func, literal, text
 from sqlalchemy.exc import SQLAlchemyError
 
-from core.db_schema import Angler, Event, Result, TeamResult, Tournament, get_session
+from core.db_schema import Angler, Event, Result, Tournament, get_session
+from core.db_schema.views import v_team_tournament_results
 from core.enums import TOURNAMENT_DATA_START_YEAR
 from core.helpers.logging import get_logger
 from core.helpers.timezone import now_local
@@ -80,21 +81,27 @@ def profile_page(request: Request) -> Response:
             or 0
         )
 
-        # Team tournaments count
+        # Team tournaments count / best team weight — sourced from
+        # v_team_tournament_results filtered to source='team_results' so
+        # synthetic boats-of-one (from individual results) don't inflate
+        # the team-format participation counts. Admin User is excluded
+        # by the view definition.
+        vttr = v_team_tournament_results
         team_tournaments_count = (
-            session.query(func.count(func.distinct(Tournament.id)))
-            .join(TeamResult, TeamResult.tournament_id == Tournament.id)
-            .join(Event, Tournament.event_id == Event.id)
-            .filter((TeamResult.angler1_id == user["id"]) | (TeamResult.angler2_id == user["id"]))
+            session.query(func.count(func.distinct(vttr.c.tournament_id)))
+            .filter(
+                vttr.c.source == "team_results",
+                (vttr.c.angler1_id == user["id"]) | (vttr.c.angler2_id == user["id"]),
+            )
             .scalar()
             or 0
         )
-
-        # Best team weight
         best_team_weight = (
-            session.query(func.coalesce(func.max(TeamResult.total_weight), 0))
-            .join(Tournament, TeamResult.tournament_id == Tournament.id)
-            .filter((TeamResult.angler1_id == user["id"]) | (TeamResult.angler2_id == user["id"]))
+            session.query(func.coalesce(func.max(vttr.c.total_weight), 0))
+            .filter(
+                vttr.c.source == "team_results",
+                (vttr.c.angler1_id == user["id"]) | (vttr.c.angler2_id == user["id"]),
+            )
             .scalar()
             or 0
         )
@@ -108,21 +115,21 @@ def profile_page(request: Request) -> Response:
 
         ranked_per_year_subq = (
             session.query(
-                TeamResult.tournament_id.label("tournament_id"),
-                TeamResult.angler1_id.label("angler1_id"),
-                TeamResult.angler2_id.label("angler2_id"),
+                vttr.c.tournament_id.label("tournament_id"),
+                vttr.c.angler1_id.label("angler1_id"),
+                vttr.c.angler2_id.label("angler2_id"),
                 Event.year.label("event_year"),
                 func.dense_rank()
                 .over(
-                    partition_by=TeamResult.tournament_id,
-                    order_by=TeamResult.total_weight.desc(),
+                    partition_by=vttr.c.tournament_id,
+                    order_by=vttr.c.total_weight.desc(),
                 )
                 .label("place"),
             )
-            .select_from(TeamResult)
-            .join(Tournament, TeamResult.tournament_id == Tournament.id)
+            .select_from(vttr)
+            .join(Tournament, vttr.c.tournament_id == Tournament.id)
             .join(Event, Tournament.event_id == Event.id)
-            .filter(Event.year >= TOURNAMENT_DATA_START_YEAR)
+            .filter(vttr.c.source == "team_results", Event.year >= TOURNAMENT_DATA_START_YEAR)
             .subquery()
         )
 
@@ -154,24 +161,24 @@ def profile_page(request: Request) -> Response:
                     "tournaments": int(row.tournaments or 0),
                 }
 
-        # All time finishes (team results since data start)
-        # First, rank ALL participants within each tournament
+        # All time finishes (team results since data start) — same view +
+        # source filter as the per-year query above.
         all_time_ranked_subquery = (
             session.query(
-                TeamResult.tournament_id,
-                TeamResult.angler1_id,
-                TeamResult.angler2_id,
+                vttr.c.tournament_id,
+                vttr.c.angler1_id,
+                vttr.c.angler2_id,
                 func.dense_rank()
                 .over(
-                    partition_by=TeamResult.tournament_id,
-                    order_by=TeamResult.total_weight.desc(),
+                    partition_by=vttr.c.tournament_id,
+                    order_by=vttr.c.total_weight.desc(),
                 )
                 .label("place"),
             )
-            .select_from(TeamResult)
-            .join(Tournament, TeamResult.tournament_id == Tournament.id)
+            .select_from(vttr)
+            .join(Tournament, vttr.c.tournament_id == Tournament.id)
             .join(Event, Tournament.event_id == Event.id)
-            .filter(Event.year >= TOURNAMENT_DATA_START_YEAR)
+            .filter(vttr.c.source == "team_results", Event.year >= TOURNAMENT_DATA_START_YEAR)
             .subquery()
         )
 
