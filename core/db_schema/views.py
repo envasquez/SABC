@@ -7,7 +7,13 @@ the DDL in one place avoids drift between the two environments.
 
 See the migration's docstring for the design rationale (why two views, what
 each one masks, what is intentionally out of scope).
+
+Also exposes lightweight SQLAlchemy ``table()`` constructs for the two views
+so ORM-style queries (with .join, .filter, .group_by) can target them like
+any other table. Not full Declarative models — these are read-only.
 """
+
+from sqlalchemy import Boolean, Integer, Numeric, String, column, table
 
 # Cross-dialect DDL: ``CAST(0 AS NUMERIC)`` works in both Postgres and SQLite,
 # unlike the PG-only ``0::numeric`` shortcut.
@@ -129,4 +135,34 @@ ALL_VIEWS_SQL = (
 ALL_VIEW_DROP_SQL = (
     "DROP VIEW IF EXISTS v_team_tournament_results",
     "DROP VIEW IF EXISTS v_angler_tournament_results",
+)
+
+
+# ORM-table constructs for SELECT-side use. These are NOT registered with
+# Base.metadata (no CREATE/DROP from them); they exist so existing ORM-style
+# queries can join/filter the views without resorting to raw text() strings.
+v_angler_tournament_results = table(
+    "v_angler_tournament_results",
+    column("tournament_id", Integer),
+    column("angler_id", Integer),
+    column("num_fish", Integer),
+    column("total_weight", Numeric),
+    column("big_bass_weight", Numeric),
+    column("dead_fish_penalty", Numeric),
+    column("disqualified", Boolean),
+    column("buy_in", Boolean),
+    column("was_member", Boolean),
+    column("source", String),
+)
+
+v_team_tournament_results = table(
+    "v_team_tournament_results",
+    column("tournament_id", Integer),
+    column("angler1_id", Integer),
+    column("angler2_id", Integer),
+    column("num_fish", Integer),
+    column("total_weight", Numeric),
+    column("big_bass_weight", Numeric),
+    column("place_finish", Integer),
+    column("source", String),
 )

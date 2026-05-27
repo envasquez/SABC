@@ -23,12 +23,12 @@ from core.db_schema import (
     PollOption,
     PollVote,
     Ramp,
-    Result,
     TeamResult,
     Tournament,
     engine,
     get_session,
 )
+from core.db_schema.views import v_angler_tournament_results
 from core.deps import templates
 from core.email import send_contact_email
 from core.helpers.auth import get_user_optional
@@ -107,6 +107,12 @@ def build_tournament_query(
     Returns:
         A SQLAlchemy ``Query`` ready for additional filtering/ordering.
     """
+    # Aggregate per-tournament stats from the unified view so team-format
+    # (aoy_points=False) tournaments contribute to the homepage tile counts.
+    # Prior to this the join went straight to `results`, missing any
+    # tournament whose data lives only in `team_results`. The view also
+    # bakes in the Admin User exclusion that used to be a separate join.
+    vatr = v_angler_tournament_results
     query = (
         session.query(
             Tournament.id,
@@ -127,9 +133,9 @@ def build_tournament_query(
             Tournament.is_paper,
             Tournament.complete,
             Tournament.poll_id,
-            func.count(func.distinct(Result.angler_id)).label("total_anglers"),
-            func.sum(Result.num_fish).label("total_fish"),
-            func.sum(Result.total_weight).label("total_weight"),
+            func.count(func.distinct(vatr.c.angler_id)).label("total_anglers"),
+            func.sum(vatr.c.num_fish).label("total_fish"),
+            func.sum(vatr.c.total_weight).label("total_weight"),
             Tournament.aoy_points,
             Event.event_type,
             Event.is_cancelled,
@@ -138,12 +144,8 @@ def build_tournament_query(
         .outerjoin(Lake, Tournament.lake_id == Lake.id)
         .outerjoin(Ramp, Tournament.ramp_id == Ramp.id)
         .outerjoin(
-            Result,
-            (Tournament.id == Result.tournament_id) & (Result.disqualified.is_(False)),
-        )
-        .outerjoin(
-            Angler,
-            (Result.angler_id == Angler.id) & (Angler.name != "Admin User"),
+            vatr,
+            (Tournament.id == vatr.c.tournament_id) & (vatr.c.disqualified.is_(False)),
         )
         .group_by(
             Tournament.id,

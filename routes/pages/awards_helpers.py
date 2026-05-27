@@ -3,29 +3,36 @@ def get_years_query() -> str:
 
 
 def get_stats_query() -> str:
-    return """SELECT COUNT(DISTINCT t.id) as total_tournaments, COUNT(DISTINCT a.id) as unique_anglers,
-       SUM(r.num_fish) as total_fish, SUM(r.total_weight) as total_weight, AVG(r.total_weight) as avg_weight
-       FROM tournaments t JOIN events e ON t.event_id = e.id JOIN results r ON t.id = r.tournament_id
-       JOIN anglers a ON r.angler_id = a.id WHERE e.year = :year AND a.name != 'Admin User'"""
+    """Yearly aggregates over the unified per-angler view, so team-format
+    (aoy_points=False) tournaments contribute to the year's stats. The
+    Admin User exclusion lives in the view definition."""
+    return """SELECT COUNT(DISTINCT t.id) as total_tournaments, COUNT(DISTINCT vatr.angler_id) as unique_anglers,
+       SUM(vatr.num_fish) as total_fish, SUM(vatr.total_weight) as total_weight, AVG(vatr.total_weight) as avg_weight
+       FROM tournaments t JOIN events e ON t.event_id = e.id
+       JOIN v_angler_tournament_results vatr ON t.id = vatr.tournament_id
+       WHERE e.year = :year"""
 
 
 def get_tournament_results_query() -> str:
-    return """SELECT t.id as tournament_id, a.id as angler_id, a.name as angler_name, r.total_weight, r.num_fish,
-       r.big_bass_weight, r.buy_in, r.disqualified, r.was_member
-       FROM results r JOIN anglers a ON r.angler_id = a.id JOIN tournaments t ON r.tournament_id = t.id
-       JOIN events e ON t.event_id = e.id WHERE e.year = :year AND a.name != 'Admin User' ORDER BY t.id, r.total_weight DESC"""
+    return """SELECT t.id as tournament_id, a.id as angler_id, a.name as angler_name, vatr.total_weight, vatr.num_fish,
+       vatr.big_bass_weight, vatr.buy_in, vatr.disqualified, vatr.was_member
+       FROM v_angler_tournament_results vatr JOIN anglers a ON vatr.angler_id = a.id
+       JOIN tournaments t ON vatr.tournament_id = t.id
+       JOIN events e ON t.event_id = e.id WHERE e.year = :year ORDER BY t.id, vatr.total_weight DESC"""
 
 
 def get_heavy_stringer_query() -> str:
-    return """SELECT a.name, r.total_weight, r.num_fish, e.name as tournament_name, e.date FROM results r
-       JOIN anglers a ON r.angler_id = a.id JOIN tournaments t ON r.tournament_id = t.id JOIN events e ON t.event_id = e.id
-       WHERE e.year = :year AND r.total_weight > 0 AND a.name != 'Admin User' ORDER BY r.total_weight DESC LIMIT 10"""
+    return """SELECT a.name, vatr.total_weight, vatr.num_fish, e.name as tournament_name, e.date
+       FROM v_angler_tournament_results vatr JOIN anglers a ON vatr.angler_id = a.id
+       JOIN tournaments t ON vatr.tournament_id = t.id JOIN events e ON t.event_id = e.id
+       WHERE e.year = :year AND vatr.total_weight > 0 ORDER BY vatr.total_weight DESC LIMIT 10"""
 
 
 def get_big_bass_query() -> str:
-    return """SELECT a.name, r.big_bass_weight, e.name as tournament_name, e.date FROM results r
-       JOIN anglers a ON r.angler_id = a.id JOIN tournaments t ON r.tournament_id = t.id JOIN events e ON t.event_id = e.id
-       WHERE e.year = :year AND r.big_bass_weight >= 5.0 AND a.name != 'Admin User' ORDER BY r.big_bass_weight DESC LIMIT 10"""
+    return """SELECT a.name, vatr.big_bass_weight, e.name as tournament_name, e.date
+       FROM v_angler_tournament_results vatr JOIN anglers a ON vatr.angler_id = a.id
+       JOIN tournaments t ON vatr.tournament_id = t.id JOIN events e ON t.event_id = e.id
+       WHERE e.year = :year AND vatr.big_bass_weight >= 5.0 ORDER BY vatr.big_bass_weight DESC LIMIT 10"""
 
 
 def get_team_wins_query() -> str:

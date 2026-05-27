@@ -4,7 +4,8 @@ from sqlalchemy import Date, cast, exists, func, select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import ColumnElement
 
-from core.db_schema import Event, Poll, Result, Tournament, get_session
+from core.db_schema import Event, Poll, Tournament, get_session
+from core.db_schema.views import v_angler_tournament_results
 
 
 def _has_poll_column() -> ColumnElement[bool]:
@@ -31,9 +32,13 @@ def _poll_active_column() -> ColumnElement[bool]:
 
 
 def _has_results_column() -> ColumnElement[bool]:
-    """Correlated EXISTS column: does the event's tournament have any results?"""
+    """Correlated EXISTS: does the event's tournament have any results
+    in either format? Uses v_angler_tournament_results so team-format
+    (aoy_points=False) tournaments correctly show the "has results" badge
+    on the admin past-events listing."""
+    vatr = v_angler_tournament_results
     return exists(
-        select(1).where(Result.tournament_id == Tournament.id).correlate_except(Result)
+        select(1).where(vatr.c.tournament_id == Tournament.id).correlate_except(vatr)
     ).label("has_results")
 
 

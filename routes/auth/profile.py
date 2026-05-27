@@ -40,31 +40,43 @@ def profile_page(request: Request) -> Response:
 
         current_year = now_local().year
 
-        # Tournaments count
+        # Tournaments count / best weight / big bass — sourced from the
+        # unified v_angler_tournament_results view so team-format
+        # (aoy_points=False) participations are counted. Prior to this the
+        # queries went straight to `results` and silently missed team-only
+        # tournaments — see docs/TOURNAMENT_RESULT_VIEWS.md.
+        view_params = {"user_id": user["id"]}
         tournaments_count = (
-            session.query(func.count(func.distinct(Tournament.id)))
-            .join(Result, Result.tournament_id == Tournament.id)
-            .join(Event, Tournament.event_id == Event.id)
-            .filter(Result.angler_id == user["id"], Result.disqualified.is_(False))
-            .scalar()
+            session.execute(
+                text(
+                    "SELECT COUNT(DISTINCT tournament_id) "
+                    "FROM v_angler_tournament_results "
+                    "WHERE angler_id = :user_id AND disqualified = FALSE"
+                ),
+                view_params,
+            ).scalar()
             or 0
         )
-
-        # Best weight
         best_weight = (
-            session.query(func.coalesce(func.max(Result.total_weight), 0))
-            .join(Tournament, Result.tournament_id == Tournament.id)
-            .filter(Result.angler_id == user["id"], Result.disqualified.is_(False))
-            .scalar()
+            session.execute(
+                text(
+                    "SELECT COALESCE(MAX(total_weight), 0) "
+                    "FROM v_angler_tournament_results "
+                    "WHERE angler_id = :user_id AND disqualified = FALSE"
+                ),
+                view_params,
+            ).scalar()
             or 0
         )
-
-        # Big bass
         big_bass = (
-            session.query(func.coalesce(func.max(Result.big_bass_weight), 0))
-            .join(Tournament, Result.tournament_id == Tournament.id)
-            .filter(Result.angler_id == user["id"], Result.disqualified.is_(False))
-            .scalar()
+            session.execute(
+                text(
+                    "SELECT COALESCE(MAX(big_bass_weight), 0) "
+                    "FROM v_angler_tournament_results "
+                    "WHERE angler_id = :user_id AND disqualified = FALSE"
+                ),
+                view_params,
+            ).scalar()
             or 0
         )
 

@@ -312,23 +312,27 @@ class DataQueries(QueryServiceBase):
         return self._fetch_all_converted(query, {})
 
     def get_big_bass_records(self, limit: int = 10) -> List[Dict[str, Any]]:
-        """Get top big bass catches of all time."""
+        """Top big bass catches of all time, including team-format catches.
+
+        Sourced from v_angler_tournament_results so team_results entries
+        (2026+ team format) surface alongside per-angler results.
+        """
         query = """
             SELECT
                 a.name as angler_name,
-                r.big_bass_weight,
+                vatr.big_bass_weight,
                 l.display_name as lake_name,
                 e.date as tournament_date,
                 e.year
-            FROM results r
-            JOIN tournaments t ON r.tournament_id = t.id
+            FROM v_angler_tournament_results vatr
+            JOIN tournaments t ON vatr.tournament_id = t.id
             JOIN events e ON t.event_id = e.id
             JOIN lakes l ON t.lake_id = l.id
-            JOIN anglers a ON r.angler_id = a.id
+            JOIN anglers a ON vatr.angler_id = a.id
             WHERE t.complete = true
-                AND r.big_bass_weight IS NOT NULL
-                AND r.big_bass_weight > 0
-            ORDER BY r.big_bass_weight DESC
+                AND vatr.big_bass_weight IS NOT NULL
+                AND vatr.big_bass_weight > 0
+            ORDER BY vatr.big_bass_weight DESC
             LIMIT :limit
         """
         return self._fetch_all_converted(query, {"limit": limit})

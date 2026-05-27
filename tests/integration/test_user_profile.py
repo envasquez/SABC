@@ -124,6 +124,53 @@ class TestProfilePage:
         # Team stats should appear
         assert "25.8" in content or "25.80" in content
 
+    def test_profile_counts_team_format_tournament_participation(
+        self,
+        client: TestClient,
+        member_user: Angler,
+        admin_user: Angler,
+        test_password: str,
+        db_session: Session,
+        test_team_format_tournament: Tournament,
+    ):
+        """Profile tournaments-count must include team-format (aoy_points=False)
+        tournaments where the only data lives in team_results. Before the
+        Phase 11 view migration this returned 0 — a real bug for any member
+        whose tournaments were all team-format. Locks in the fix."""
+        # Team-format participation: a team_results row, NO individual results row.
+        # Weights chosen to render unambiguously through the template's
+        # %.1f formatting (17.5 → "17.5", 6.7 → "6.7").
+        db_session.add(
+            TeamResult(
+                tournament_id=test_team_format_tournament.id,
+                angler1_id=member_user.id,
+                angler2_id=admin_user.id,
+                total_weight=17.5,
+                big_bass_weight=6.7,
+                num_fish=5,
+            )
+        )
+        db_session.commit()
+
+        csrf_token = get_csrf_token(client, "/login")
+        client.post(
+            "/login",
+            data={
+                "email": member_user.email or "member@example.com",
+                "password": test_password,
+                "csrf_token": csrf_token,
+            },
+            follow_redirects=False,
+        )
+
+        response = client.get("/profile")
+        assert response.status_code == 200
+        # 17.5 lb team win and 6.7 lb big bass should both surface in the
+        # individual stat cards (sourced from v_angler_tournament_results)
+        # because the view projects team_results.angler1 with full credit.
+        assert "17.5" in response.text
+        assert "6.7" in response.text
+
     def test_profile_page_shows_success_message(
         self, client: TestClient, member_user: Angler, test_password: str
     ):

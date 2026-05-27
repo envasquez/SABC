@@ -14,11 +14,11 @@ from core.db_schema import (
     PollOption,
     PollVote,
     Ramp,
-    Result,
     Tournament,
     engine,
     get_session,
 )
+from core.db_schema.views import v_angler_tournament_results
 from core.helpers.logging import get_logger
 from core.helpers.timezone import now_local
 from core.query_service import QueryService
@@ -90,7 +90,11 @@ def get_seasonal_tournament_history(
     # 1) One query: tournament-level rollup for each (month=target_month, year in past_years).
     #    Aggregates num_anglers, num_zeros, num_limits (filtered count). The fish_limit
     #    threshold is applied as a CASE WHEN so we don't need a second pass.
+    #    Sourced from v_angler_tournament_results so team-format tournaments
+    #    appear in the seasonal history (the view falls back to team_results
+    #    when individual results rows are absent).
     fish_limit_threshold = func.coalesce(Tournament.fish_limit, 5)
+    vatr = v_angler_tournament_results
     tournament_rows = (
         session.query(
             Tournament.id.label("tournament_id"),
@@ -101,13 +105,13 @@ def get_seasonal_tournament_history(
             extract("year", Event.date).label("event_year"),
             Lake.display_name.label("lake_name"),
             Ramp.name.label("ramp_name"),
-            func.count(distinct(Result.angler_id)).label("num_anglers"),
-            func.sum(case((Result.total_weight == 0, 1), else_=0)).label("num_zeros"),
+            func.count(distinct(vatr.c.angler_id)).label("num_anglers"),
+            func.sum(case((vatr.c.total_weight == 0, 1), else_=0)).label("num_zeros"),
             func.sum(
                 case(
                     (
-                        (Result.num_fish >= fish_limit_threshold)
-                        & (Result.disqualified.is_(False)),
+                        (vatr.c.num_fish >= fish_limit_threshold)
+                        & (vatr.c.disqualified.is_(False)),
                         1,
                     ),
                     else_=0,
@@ -117,7 +121,7 @@ def get_seasonal_tournament_history(
         .join(Event, Tournament.event_id == Event.id)
         .outerjoin(Lake, Tournament.lake_id == Lake.id)
         .outerjoin(Ramp, Tournament.ramp_id == Ramp.id)
-        .outerjoin(Result, Tournament.id == Result.tournament_id)
+        .outerjoin(vatr, Tournament.id == vatr.c.tournament_id)
         .filter(
             Tournament.complete.is_(True),
             extract("month", Event.date) == target_month,
@@ -149,25 +153,26 @@ def get_seasonal_tournament_history(
     tournament_ids = [row.tournament_id for row in tournament_by_year.values()]
 
     # 2) One query: top-3 weights per tournament using ROW_NUMBER(). Group client-side.
+    #    Same view-based source as part (1) so team-format weights surface.
     top_weights_by_tid: Dict[int, List[float]] = {tid: [] for tid in tournament_ids}
     if tournament_ids:
         row_num = (
             func.row_number()
             .over(
-                partition_by=Result.tournament_id,
-                order_by=Result.total_weight.desc(),
+                partition_by=vatr.c.tournament_id,
+                order_by=vatr.c.total_weight.desc(),
             )
             .label("rn")
         )
         ranked_subq = (
             session.query(
-                Result.tournament_id.label("tournament_id"),
-                Result.total_weight.label("total_weight"),
+                vatr.c.tournament_id.label("tournament_id"),
+                vatr.c.total_weight.label("total_weight"),
                 row_num,
             )
             .filter(
-                Result.tournament_id.in_(tournament_ids),
-                Result.disqualified.is_(False),
+                vatr.c.tournament_id.in_(tournament_ids),
+                vatr.c.disqualified.is_(False),
             )
             .subquery()
         )
