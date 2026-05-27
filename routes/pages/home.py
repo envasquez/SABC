@@ -213,10 +213,12 @@ def _fetch_homepage_tournaments(session: Session, offset: int) -> tuple[List[Any
 def _fetch_top_results(session: Session, tournament_ids: List[int]) -> Dict[int, List[Any]]:
     """Fetch the top-3 team results for each tournament.
 
-    Sorts by ``(tournament_id, place_finish)`` and slices to 3 per tournament
-    in Python — cheaper than N LIMIT-3 round trips, and order is preserved.
-    The "Admin User" filter (default admin who should never appear on the
-    homepage podium) is preserved verbatim.
+    Sourced from v_team_tournament_results so individual-format tournaments
+    (which usually lack team_results rows) still get a homepage podium from
+    the per-angler synthetic boats-of-one. Sorts by ``(tournament_id,
+    place_finish, total_weight DESC)`` (NULLs LAST on place) and slices to 3
+    per tournament in Python — cheaper than N LIMIT-3 round trips. The view
+    excludes the seed Admin User automatically.
 
     Args:
         session: Active database session.

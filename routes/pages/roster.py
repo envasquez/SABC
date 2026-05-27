@@ -415,19 +415,11 @@ def roster(request: Request) -> Any:
                ) as member,
                a.is_admin, a.password_hash, a.year_joined, a.phone, a.created_at,
                {officer_positions_sql} as officer_positions,
-               (SELECT MAX(tournament_date) FROM (
-                    SELECT e.date as tournament_date
-                    FROM results r
-                    JOIN tournaments t ON r.tournament_id = t.id
-                    JOIN events e ON t.event_id = e.id
-                    WHERE r.angler_id = a.id
-                    UNION ALL
-                    SELECT e.date as tournament_date
-                    FROM team_results tr
-                    JOIN tournaments t ON tr.tournament_id = t.id
-                    JOIN events e ON t.event_id = e.id
-                    WHERE tr.angler1_id = a.id OR tr.angler2_id = a.id
-               ) all_dates) as last_tournament_date,
+               (SELECT MAX(e.date) as last_tournament_date
+                FROM v_angler_tournament_results vatr
+                JOIN tournaments t ON vatr.tournament_id = t.id
+                JOIN events e ON t.event_id = e.id
+                WHERE vatr.angler_id = a.id) as last_tournament_date,
                (SELECT MIN({position_rank_case})
                 FROM officer_positions
                 WHERE angler_id = a.id AND year = :year) as position_rank
