@@ -234,61 +234,62 @@
 {% endif %}
 {% endmacro %}
 
-{# Seasonal tournament history card macro - detailed version — Tabler cards #}
+{# Seasonal tournament history — collapsed by default, one row per year.
+   The earlier card-grid version added ~150px per year, which would have
+   crowded the poll over a few seasons. <details> keeps it one line until
+   a voter wants the context, then expands to a scannable table. #}
 {% macro seasonal_history_card(seasonal_history) %}
 {% if seasonal_history and seasonal_history|length > 0 %}
 <div class="card mt-3">
-    <div class="card-header">
-        <h3 class="card-title"><i class="ti ti-calendar me-2 text-azure" aria-hidden="true"></i>{{ seasonal_history[0].month_name }} Tournament History</h3>
-    </div>
-    <div class="card-body">
-        <div class="row row-cards">
-            {% for hist in seasonal_history %}
-            <div class="col-md-6">
-                <div class="card card-sm">
-                    <div class="card-body">
-                        <div class="fw-bold mb-2">
+    <details>
+        <summary class="card-header py-2 d-flex align-items-center" style="cursor:pointer; list-style:none">
+            <i class="ti ti-calendar me-2 text-azure" aria-hidden="true"></i>
+            <span class="fw-medium">{{ seasonal_history[0].month_name }} Tournament History</span>
+            <span class="badge bg-secondary-lt ms-2">{{ seasonal_history|length }} year{{ 's' if seasonal_history|length != 1 else '' }}</span>
+            <i class="ti ti-chevron-down ms-auto text-secondary" aria-hidden="true"></i>
+        </summary>
+        <div class="table-responsive">
+            <table class="table table-sm table-vcenter mb-0">
+                <thead>
+                    <tr>
+                        <th>Year</th>
+                        <th>Lake</th>
+                        <th class="text-end">Anglers</th>
+                        <th class="text-end">Limits</th>
+                        <th class="text-end">Zeros</th>
+                        <th>Top 3 (lbs)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for hist in seasonal_history %}
+                    <tr>
+                        <td>
                             <a href="/tournaments/{{ hist.tournament_id }}" class="text-azure text-decoration-none">
-                                {{ hist.month_name }} {{ hist.year }}
-                                <span class="text-secondary small">({{ hist.date | datetime_format('%m/%d') }})</span>
-                                <i class="ti ti-external-link" aria-hidden="true"></i>
+                                {{ hist.year }} <span class="text-secondary small">{{ hist.date | datetime_format('%m/%d') }}</span>
                             </a>
-                        </div>
-                        <div class="small mb-2">
-                            <i class="ti ti-map-pin text-green" aria-hidden="true"></i>
-                            <strong>{{ hist.lake_name }}</strong>
-                            {% if hist.ramp_name != 'TBD' %}
-                                <br><span class="text-secondary ms-3">{{ hist.ramp_name }}</span>
+                        </td>
+                        <td>
+                            {{ hist.lake_name }}
+                            {% if hist.ramp_name and hist.ramp_name != 'TBD' %}
+                            <span class="text-secondary small">· {{ hist.ramp_name }}</span>
                             {% endif %}
-                            {% if hist.start_time and hist.end_time %}
-                                <br><span class="text-secondary ms-3">
-                                    <i class="ti ti-clock" aria-hidden="true"></i>
-                                    {{ hist.start_time | time_format }} - {{ hist.end_time | time_format }}
-                                </span>
-                            {% endif %}
-                        </div>
-                        <div class="row g-1 small">
-                            <div class="col-4"><i class="ti ti-users text-primary" aria-hidden="true"></i> {{ hist.num_anglers }} anglers</div>
-                            <div class="col-4"><i class="ti ti-trophy text-warning" aria-hidden="true"></i> {{ hist.num_limits }} limits</div>
-                            <div class="col-4 {% if hist.num_zeros > 0 %}text-danger{% else %}text-secondary{% endif %}"><i class="ti ti-circle-x" aria-hidden="true"></i> {{ hist.num_zeros }} zero{{ 's' if hist.num_zeros != 1 else '' }}</div>
-                        </div>
-                        <div class="small mt-1">
-                            <i class="ti ti-trending-up text-green" aria-hidden="true"></i>
-                            <strong>Top 3:</strong>
+                        </td>
+                        <td class="text-end">{{ hist.num_anglers }}</td>
+                        <td class="text-end">{{ hist.num_limits }}</td>
+                        <td class="text-end {% if hist.num_zeros > 0 %}text-danger{% endif %}">{{ hist.num_zeros }}</td>
+                        <td>
                             {% if hist.top_3_weights|length > 0 %}
-                                {% for weight in hist.top_3_weights %}
-                                    {{ "%.1f"|format(weight) }}{% if not loop.last %}, {% endif %}
-                                {% endfor %} lbs
+                            {% for weight in hist.top_3_weights %}{{ "%.1f"|format(weight) }}{% if not loop.last %}, {% endif %}{% endfor %}
                             {% else %}
-                                N/A
+                            <span class="text-secondary">—</span>
                             {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-    </div>
+    </details>
 </div>
 {% endif %}
 {% endmacro %}

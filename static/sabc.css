@@ -71,3 +71,10 @@
   width: 100%;
   border: 0;
 }
+
+/* <details> collapsible cards (e.g. seasonal_history_card on /polls).
+   Removes the browser-default disclosure triangle so we can use a Tabler
+   chevron icon, and rotates that chevron 180° when the panel is open. */
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+details[open] > summary .ti-chevron-down { transform: rotate(180deg); }
