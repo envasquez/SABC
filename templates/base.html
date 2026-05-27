@@ -140,14 +140,11 @@
     </div>
 </div>
 
-<!-- Tabler JS first (no defer) so the bootstrap alias below is ready before page scripts run. -->
+<!-- Tabler JS first (no defer) so bootstrap-alias.js can bridge its
+     bundled Bootstrap onto the bare `bootstrap` global before utils.js
+     and any page-specific extra_js block load. -->
 <script src="{{ url_for('static', path='/vendor/tabler/tabler.min.js') }}"></script>
-<script>
-  // Tabler bundles Bootstrap's JS and exposes it on the `tabler` UMD global.
-  // Page scripts (modals, toasts, tabs) use the bare global `bootstrap`, so
-  // alias it here before utils.js / page JS load.
-  window.bootstrap = (window.tabler && (window.tabler.bootstrap || window.tabler)) || window.bootstrap;
-</script>
+<script src="{{ url_for('static', path='/bootstrap-alias.js') }}?v={{ asset_v }}"></script>
 <script src="{{ url_for('static', path='/utils.js') }}?v={{ asset_v }}"></script>
 {% block extra_js %}{% endblock %}
 </body>

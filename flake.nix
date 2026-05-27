@@ -165,16 +165,38 @@
           if [ "$1" == "--coverage" ]; then
               shift
               echo "📊 Running tests with coverage..."
-              pytest tests/ --cov=core --cov=routes --cov-report=html --cov-report=term --cov-report=xml --cov-fail-under=70 "$@"
+              pytest tests/ --ignore=tests/e2e --cov=core --cov=routes --cov-report=html --cov-report=term --cov-report=xml --cov-fail-under=70 "$@"
               echo ""
               echo "📄 Coverage report saved to: htmlcov/index.html"
           elif [ "$1" == "--smoke" ]; then
               shift
               echo "💨 Running smoke tests only..."
               pytest tests/test_routes_smoke.py "$@"
+          elif [ "$1" == "--e2e" ]; then
+              shift
+              echo "🌐 Running Playwright end-to-end tests..."
+              echo "   Requires the dev server running at http://localhost:8000."
+              if ! curl -s -o /dev/null -w "" --max-time 2 http://localhost:8000/login; then
+                  echo "❌ Dev server is not reachable at http://localhost:8000."
+                  echo "   Start it in another terminal:  nix develop -c start-app"
+                  exit 1
+              fi
+              npx playwright test "$@"
+          elif [ "$1" == "--all" ]; then
+              shift
+              echo "🧪 Running Python tests..."
+              pytest tests/ --ignore=tests/e2e "$@"
+              echo ""
+              echo "🌐 Running Playwright end-to-end tests..."
+              if ! curl -s -o /dev/null -w "" --max-time 2 http://localhost:8000/login; then
+                  echo "❌ Dev server is not reachable at http://localhost:8000."
+                  echo "   Start it in another terminal:  nix develop -c start-app"
+                  exit 1
+              fi
+              npx playwright test
           else
               echo "🧪 Running tests..."
-              pytest tests/ "$@"
+              pytest tests/ --ignore=tests/e2e "$@"
           fi
 
           echo ""

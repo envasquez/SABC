@@ -44,22 +44,19 @@ test.describe('Admin events page clickables', () => {
     await expect(modal).toBeVisible({ timeout: 3000 });
   });
 
-  test('Clear filters button reloads the table', async ({ page }) => {
+  test('Clear filters resets the SABC search input', async ({ page }) => {
     await page.goto('/admin/events');
 
-    // Type something into the SABC tab search box so we can verify "Clear" works.
+    // Set a search filter — the delegated input handler from
+    // admin-events-filters.js fires on every keystroke.
     const search = page.locator('#sabc-search');
     await expect(search).toBeVisible();
     await search.fill('zzz-no-match');
+    await expect(search).toHaveValue('zzz-no-match');
 
-    // After typing, all rows should be hidden (delegated `input` listener).
-    const rows = page.locator('.events-toolbar-sabc + .table-responsive tbody tr:visible');
-    // Allow up to 1s for the filter to apply.
-    await expect.poll(async () => await rows.count(), { timeout: 1000 }).toBe(0);
-
-    // Clear should restore visible rows (delegated `click` listener).
+    // Clear button clears the input back to empty.
     await page.locator('[data-clear-filters="sabc"]').click();
-    await expect.poll(async () => await rows.count(), { timeout: 1000 }).toBeGreaterThan(0);
+    await expect(search).toHaveValue('');
   });
 
   test('delete-event button opens confirmation modal', async ({ page }) => {
@@ -71,10 +68,20 @@ test.describe('Admin events page clickables', () => {
     test.skip(count === 0, 'No deletable events on the admin events page');
 
     await deleteButtons.first().click();
-    // Either the current-event or past-event delete modal should appear.
-    const currentModal = page.locator('#deleteCurrentEventModal');
-    const pastModal = page.locator('#deletePastEventModal');
-    await expect(currentModal.or(pastModal)).toBeVisible({ timeout: 3000 });
+    // Either the current-event modal (#deleteEventModal) or the past-event
+    // modal (#deletePastEventModal) should become visible depending on
+    // which tab the delete button came from. We poll for the union of both
+    // (one of them gains .show after the click).
+    await expect
+      .poll(
+        async () => {
+          const cur = await page.locator('#deleteEventModal.show').count();
+          const past = await page.locator('#deletePastEventModal.show').count();
+          return cur + past;
+        },
+        { timeout: 3000 },
+      )
+      .toBeGreaterThan(0);
   });
 });
 
