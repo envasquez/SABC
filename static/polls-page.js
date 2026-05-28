@@ -31,8 +31,8 @@ let clubPollCharts = {};
  */
 function renderClubPollChart(dataElement) {
     const pollId = dataElement.dataset.pollId;
-    const options = JSON.parse(dataElement.dataset.options || '[]');
-    const votes = JSON.parse(dataElement.dataset.votes || '[]');
+    const options = safeParseJSON(dataElement.dataset.options, []);
+    const votes = safeParseJSON(dataElement.dataset.votes, []);
     const totalVotes = parseInt(dataElement.dataset.totalVotes) || 0;
 
     const chartContainer = document.getElementById('clubPollChart-' + pollId);
@@ -206,15 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Get lakes data from data attribute
     const lakesDataElement = document.getElementById('lakes-data');
-    let lakesData = [];
-    if (lakesDataElement) {
-        try {
-            lakesData = JSON.parse(lakesDataElement.dataset.lakes || '[]');
-        } catch (e) {
-            console.warn('Failed to parse lakes data:', e);
-            lakesData = [];
-        }
-    }
+    const lakesData = lakesDataElement ? safeParseJSON(lakesDataElement.dataset.lakes, []) : [];
 
     // Initialize poll voting handler
     const pollVotingHandler = new PollVotingHandler(lakesData);

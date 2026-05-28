@@ -324,14 +324,14 @@
         if (!dataEl) return;
 
         originalData = {
-            weightTrends:              JSON.parse(dataEl.dataset.weightTrends              || '[]'),
-            membershipByYear:          JSON.parse(dataEl.dataset.membershipByYear          || '[]'),
-            limitsZerosByYear:         JSON.parse(dataEl.dataset.limitsZerosByYear         || '[]'),
-            winningWeightsByYear:      JSON.parse(dataEl.dataset.winningWeightsByYear      || '[]'),
-            winningWeightsByLake:      JSON.parse(dataEl.dataset.winningWeightsByLake      || '[]'),
-            winningWeightsByLakeYear:  JSON.parse(dataEl.dataset.winningWeightsByLakeYear  || '[]'),
-            tournamentParticipation:   JSON.parse(dataEl.dataset.tournamentParticipation   || '[]'),
-            ytdTrends:                 JSON.parse(dataEl.dataset.ytdTrends                 || '[]')
+            weightTrends:              safeParseJSON(dataEl.dataset.weightTrends,             []),
+            membershipByYear:          safeParseJSON(dataEl.dataset.membershipByYear,         []),
+            limitsZerosByYear:         safeParseJSON(dataEl.dataset.limitsZerosByYear,        []),
+            winningWeightsByYear:      safeParseJSON(dataEl.dataset.winningWeightsByYear,     []),
+            winningWeightsByLake:      safeParseJSON(dataEl.dataset.winningWeightsByLake,     []),
+            winningWeightsByLakeYear:  safeParseJSON(dataEl.dataset.winningWeightsByLakeYear, []),
+            tournamentParticipation:   safeParseJSON(dataEl.dataset.tournamentParticipation,  []),
+            ytdTrends:                 safeParseJSON(dataEl.dataset.ytdTrends,                [])
         };
 
         initCharts(originalData);

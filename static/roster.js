@@ -60,7 +60,7 @@
         const dataElement = chartRow.querySelector('.chart-data');
         if (!dataElement) return;
 
-        const monthlyData = JSON.parse(dataElement.dataset.monthlyData || '{}');
+        const monthlyData = safeParseJSON(dataElement.dataset.monthlyData, {});
 
         // Check if there's any data - handle both old format (numbers) and new format (objects)
         const hasData = Object.values(monthlyData).some(yearData =>

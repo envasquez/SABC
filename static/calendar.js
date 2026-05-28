@@ -28,8 +28,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Get calendar data from data attribute
     const calendarDataElement = document.getElementById('calendar-data');
     if (calendarDataElement) {
-        currentEventDetails = JSON.parse(calendarDataElement.dataset.currentEvents || '{}');
-        nextEventDetails = JSON.parse(calendarDataElement.dataset.nextEvents || '{}');
+        currentEventDetails = safeParseJSON(calendarDataElement.dataset.currentEvents, {});
+        nextEventDetails = safeParseJSON(calendarDataElement.dataset.nextEvents, {});
         currentYear = calendarDataElement.dataset.currentYear || '';
     }
 
@@ -139,23 +139,28 @@ function showEventDetails(element) {
             }
 
             // Add poll and tournament links if available
+            // isValidUrl() only gates the URL scheme; escapeHtml() then guards
+            // against attribute-breaking characters (`"`, `<`, `>`) so a URL like
+            // `/poll/1" onmouseover="…` can't escape the href context.
             if (event.poll_id) {
+                const pollHref = escapeHtml(isValidUrl(event.poll_link) ? event.poll_link : '#');
                 if (event.poll_status === 'active') {
                     modalContent += '<div class="mt-2">';
-                    modalContent += '<a href="' + (isValidUrl(event.poll_link) ? event.poll_link : '#') + '" class="btn-m btn-s" style="text-decoration:none;font-size:.82rem">';
+                    modalContent += '<a href="' + pollHref + '" class="btn-m btn-s" style="text-decoration:none;font-size:.82rem">';
                     modalContent += '<i class="bi bi-hand-thumbs-up"></i> Vote in Poll</a>';
                     modalContent += '</div>';
                 } else if (event.poll_status === 'closed' || event.poll_status === 'results') {
                     modalContent += '<div class="mt-2">';
-                    modalContent += '<a href="' + (isValidUrl(event.poll_link) ? event.poll_link : '#') + '" class="btn-m btn-g" style="text-decoration:none;font-size:.82rem">';
+                    modalContent += '<a href="' + pollHref + '" class="btn-m btn-g" style="text-decoration:none;font-size:.82rem">';
                     modalContent += '<i class="bi bi-bar-chart"></i> View Poll Results</a>';
                     modalContent += '</div>';
                 }
             }
 
             if (event.tournament_link) {
+                const tournamentHref = escapeHtml(isValidUrl(event.tournament_link) ? event.tournament_link : '#');
                 modalContent += '<div class="mt-2">';
-                modalContent += '<a href="' + (isValidUrl(event.tournament_link) ? event.tournament_link : '#') + '" class="btn-m btn-p" style="text-decoration:none;font-size:.82rem">';
+                modalContent += '<a href="' + tournamentHref + '" class="btn-m btn-p" style="text-decoration:none;font-size:.82rem">';
                 modalContent += '<i class="bi bi-trophy"></i> View Results</a>';
                 modalContent += '</div>';
             }

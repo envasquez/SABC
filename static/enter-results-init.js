@@ -14,12 +14,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    const anglers = JSON.parse(resultsDataElement.dataset.anglers || '[]');
-    const existingAnglerIds = JSON.parse(resultsDataElement.dataset.existingAnglerIds || '[]');
-    const editData = resultsDataElement.dataset.editData ?
-        JSON.parse(resultsDataElement.dataset.editData) : null;
-    const editTeamResultData = resultsDataElement.dataset.editTeamResultData ?
-        JSON.parse(resultsDataElement.dataset.editTeamResultData) : null;
+    const anglers = safeParseJSON(resultsDataElement.dataset.anglers, []);
+    const existingAnglerIds = safeParseJSON(resultsDataElement.dataset.existingAnglerIds, []);
+    const editData = safeParseJSON(resultsDataElement.dataset.editData, null);
+    const editTeamResultData = safeParseJSON(resultsDataElement.dataset.editTeamResultData, null);
     const tournamentId = parseInt(resultsDataElement.dataset.tournamentId, 10);
     const isTeamFormat = resultsDataElement.dataset.isTeamFormat === 'true';
 

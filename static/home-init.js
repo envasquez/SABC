@@ -10,7 +10,7 @@
  * Record that a cancelled-tournament alert was dismissed.
  */
 function dismissCancelledAlert(eventId) {
-    const dismissed = JSON.parse(localStorage.getItem('dismissedCancelledAlerts') || '[]');
+    const dismissed = safeParseJSON(localStorage.getItem('dismissedCancelledAlerts'), []);
     if (dismissed.indexOf(eventId) === -1) {
         dismissed.push(eventId);
         localStorage.setItem('dismissedCancelledAlerts', JSON.stringify(dismissed));
@@ -49,7 +49,7 @@ function initNewsPagination() {
 document.addEventListener('DOMContentLoaded', function() {
     // Get lakes data from data attribute
     const homeDataElement = document.getElementById('home-data');
-    const lakesData = homeDataElement ? JSON.parse(homeDataElement.dataset.lakes || '[]') : [];
+    const lakesData = homeDataElement ? safeParseJSON(homeDataElement.dataset.lakes, []) : [];
 
     // Initialize home polls with the data
     initializeHomePolls({

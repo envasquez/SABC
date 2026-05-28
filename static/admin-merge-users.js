@@ -134,6 +134,12 @@ function renderPreview(preview) {
         </div>
     ` : '';
 
+    // Coerce server-returned counts to integers before rendering. The endpoint
+    // is admin-only and returns ints from SQL aggregates, but if a future bug
+    // ever made one of these a string, |0 forces it to a safe numeric value
+    // before it lands in innerHTML.
+    const n = v => (Number.isFinite(+v) ? (+v | 0) : 0);
+
     const html = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
             <div style="padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
@@ -153,35 +159,35 @@ function renderPreview(preview) {
         <div style="font-weight:600;font-size:.88rem;color:var(--t1);margin-top:1.25rem;margin-bottom:.75rem"><i class="bi bi-list-check"></i> Data to be Migrated</div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem">
             <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.5rem;font-weight:700;color:var(--brand);margin-bottom:.15rem">${preview.results_count}</div>
+                <div style="font-size:1.5rem;font-weight:700;color:var(--brand);margin-bottom:.15rem">${n(preview.results_count)}</div>
                 <div style="font-size:.75rem;color:var(--t3)">Tournament Results</div>
             </div>
             <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.5rem;font-weight:700;color:var(--brand);margin-bottom:.15rem">${preview.team_results_angler1_count + preview.team_results_angler2_count}</div>
+                <div style="font-size:1.5rem;font-weight:700;color:var(--brand);margin-bottom:.15rem">${n(preview.team_results_angler1_count) + n(preview.team_results_angler2_count)}</div>
                 <div style="font-size:.75rem;color:var(--t3)">Team Results</div>
             </div>
             <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.5rem;font-weight:700;color:var(--brand);margin-bottom:.15rem">${preview.poll_votes_count}</div>
+                <div style="font-size:1.5rem;font-weight:700;color:var(--brand);margin-bottom:.15rem">${n(preview.poll_votes_count)}</div>
                 <div style="font-size:.75rem;color:var(--t3)">Poll Votes</div>
             </div>
             <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.5rem;font-weight:700;color:var(--brand);margin-bottom:.15rem">${preview.officer_positions_count}</div>
+                <div style="font-size:1.5rem;font-weight:700;color:var(--brand);margin-bottom:.15rem">${n(preview.officer_positions_count)}</div>
                 <div style="font-size:.75rem;color:var(--t3)">Officer Positions</div>
             </div>
             <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">${preview.polls_created_count}</div>
+                <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">${n(preview.polls_created_count)}</div>
                 <div style="font-size:.75rem;color:var(--t3)">Polls Created</div>
             </div>
             <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">${preview.news_authored_count}</div>
+                <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">${n(preview.news_authored_count)}</div>
                 <div style="font-size:.75rem;color:var(--t3)">News Articles</div>
             </div>
             <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">${preview.tournaments_created_count}</div>
+                <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">${n(preview.tournaments_created_count)}</div>
                 <div style="font-size:.75rem;color:var(--t3)">Tournaments Created</div>
             </div>
             <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">${preview.proxy_votes_cast_count}</div>
+                <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">${n(preview.proxy_votes_cast_count)}</div>
                 <div style="font-size:.75rem;color:var(--t3)">Proxy Votes Cast</div>
             </div>
         </div>

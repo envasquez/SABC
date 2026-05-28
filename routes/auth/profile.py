@@ -211,8 +211,17 @@ def profile_page(request: Request) -> Response:
         year_col = year_extract("e.date", dialect_name)
         month_col = month_extract("e.date", dialect_name)
 
-        # Query individual weights, falling back to team_results when needed
-        # For team-only tournaments, attribute team weight to angler1
+        # Query individual weights, falling back to team_results when needed.
+        # For team-only tournaments, attribute team weight to angler1.
+        #
+        # SQL-injection safety contract (read before adding interpolations):
+        # The only f-string-interpolated values are `year_col`/`month_col` (dialect-
+        # picked constants from year_extract/month_extract in core/db_schema) and
+        # `TOURNAMENT_DATA_START_YEAR` (a hardcoded int from core/enums). None of
+        # these touch request input. The only user-controlled value (`user_id`)
+        # flows through the `:user_id` named bind below. If you ever need to add
+        # another interpolation, it MUST be either a literal constant or run
+        # through a named bind — never request data directly.
         monthly_weights_query = text(f"""
             WITH all_weights AS (
                 -- Individual results (primary source)

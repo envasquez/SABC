@@ -135,7 +135,7 @@
         const dataElement = document.getElementById('chart-data');
         if (!dataElement) return;
 
-        const monthlyData = JSON.parse(dataElement.dataset.monthlyData || '{}');
+        const monthlyData = safeParseJSON(dataElement.dataset.monthlyData, {});
 
         // Generate dynamic datasets for each year using shared color palette
         const datasets = [];

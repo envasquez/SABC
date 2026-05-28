@@ -329,6 +329,26 @@ function escapeHtml(text) {
 }
 
 /**
+ * Parse JSON safely. Returns the fallback on any parse failure rather than
+ * throwing — server data embedded in data-* attributes can be malformed if a
+ * Jinja filter regresses, and an uncaught SyntaxError silently kills the page.
+ *
+ * @param {string} value - The JSON string to parse (may be null/undefined)
+ * @param {*} fallback - Value to return if parsing fails (default: null)
+ * @returns {*} Parsed value or fallback
+ */
+function safeParseJSON(value, fallback) {
+    if (fallback === undefined) fallback = null;
+    if (!value) return fallback;
+    try {
+        return JSON.parse(value);
+    } catch (e) {
+        console.error('[SABC] safeParseJSON failed:', e);
+        return fallback;
+    }
+}
+
+/**
  * Format a date for datetime-local input fields
  * Converts a Date object or date string to the format required by HTML datetime-local inputs
  *
@@ -1082,12 +1102,7 @@ class PollResultsRenderer {
         const times = {};
 
         optionElements.forEach(el => {
-            let optionData = {};
-            try {
-                optionData = el.dataset.optionData ? JSON.parse(el.dataset.optionData) : {};
-            } catch (e) {
-                console.error('[SABC] Error parsing option data:', e);
-            }
+            const optionData = safeParseJSON(el.dataset.optionData, {});
             const voteCount = parseInt(el.dataset.voteCount) || 0;
 
             if (voteCount === 0) return;
@@ -1635,6 +1650,7 @@ window.CHART_COLORS = CHART_COLORS;
 window.CHART_LINE_COLORS = CHART_LINE_COLORS;
 window.CHART_CONFIG = CHART_CONFIG;
 window.escapeHtml = escapeHtml;
+window.safeParseJSON = safeParseJSON;
 window.formatDateTimeLocal = formatDateTimeLocal;
 window.getCsrfToken = getCsrfToken;
 window.showToast = showToast;
