@@ -29,7 +29,7 @@ git reflog | head -5
 # Example: HEAD@{1}: pull: Fast-forward
 # Note the commit hash on the line BEFORE the pull, e.g. c294153
 
-# 3. Stop the broken containers (don't `down` — we want postgres running for the restore)
+# 3. Stop the broken web container (postgres + nginx stay up for the restore)
 docker compose -f docker-compose.prod.yml stop web
 
 # 4. Restore the database
@@ -39,14 +39,31 @@ gunzip -c ~/backups/sabc_YYYYMMDD_HHMMSS.sql.gz | \
 # 5. Roll the code back to the previous revision
 git reset --hard <PREVIOUS_COMMIT_HASH>
 
-# 6. Rebuild and start
-docker compose -f docker-compose.prod.yml build --no-cache web
-docker compose -f docker-compose.prod.yml up -d
+# 6. Rebuild and start only the web container (nginx + postgres stay up)
+docker compose -f docker-compose.prod.yml build web
+docker compose -f docker-compose.prod.yml up -d --no-deps web
 
 # 7. Verify
 curl -fsS https://saustinbc.com/health
 docker compose -f docker-compose.prod.yml logs --tail=50 web
 ```
+
+### Fast rollback when only the code is bad
+
+If the new deploy passed migrations but the new web crashes / serves wrong content,
+AND the migration was additive (column adds only — no drops, renames, or NOT NULL
+adds), you can skip the DB restore and the rebuild entirely. `restart.sh` tags the
+previous image as `sabc-web:prev` before each deploy:
+
+```bash
+# Repoint :latest at the previous image and recreate just the web container
+docker tag sabc-web:prev sabc-web:latest
+docker compose -f docker-compose.prod.yml up -d --no-deps web
+curl -fsS https://saustinbc.com/health
+```
+
+If the old code can't run against the new schema (destructive migration was in this
+deploy), use the full backup-restore procedure above instead.
 
 ### If the backup restore fails
 
