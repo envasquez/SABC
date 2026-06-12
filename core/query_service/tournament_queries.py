@@ -148,63 +148,84 @@ class TournamentQueries(QueryServiceBase):
         """
         return self.fetch_all(query, {"tournament_id": tournament_id})
 
-    def get_next_tournament_id(self, tournament_id: int, current_date: Any) -> Optional[int]:
-        """
-        Get the ID of the next tournament chronologically.
+    # A tournament is reachable via Prev/Next navigation only if the homepage
+    # links a "View Results" button for it. That set (see routes/pages/home.py)
+    # is: SABC tournaments, not cancelled, that are either complete OR still
+    # upcoming (date >= today). This deliberately EXCLUDES past tournaments that
+    # were never completed (no results entered) -- those have no homepage link
+    # and must not be navigable. :today is passed in to match the homepage's
+    # date.today() boundary exactly (avoids any DB-timezone drift).
+    _NAVIGABLE_PREDICATE = """
+        e.event_type = 'sabc_tournament'
+        AND e.is_cancelled IS NOT TRUE
+        AND (t.complete IS TRUE OR e.date >= :today)
+    """
 
-        Navigation is ordered by event date (with id as a tie-breaker), NOT by
-        the raw tournament id, since ids are insertion order and do not track
-        the event calendar. Cancelled events are skipped.
+    def get_next_tournament_id(
+        self, tournament_id: int, current_date: Any, today: Any
+    ) -> Optional[int]:
+        """
+        Get the ID of the next navigable tournament chronologically.
+
+        Ordered by event date (id as tie-breaker), NOT by the raw tournament id,
+        since ids are insertion order and do not track the event calendar. Only
+        tournaments the homepage links (see ``_NAVIGABLE_PREDICATE``) are
+        considered: SABC, not cancelled, complete-or-upcoming.
 
         Args:
             tournament_id: Current tournament ID
             current_date: Current tournament's event date
+            today: Today's date, matching the homepage past/upcoming boundary
 
         Returns:
             Next tournament ID, or None if this is the last tournament
         """
         result = self.fetch_one(
-            """
+            f"""
             SELECT t.id
             FROM tournaments t
             JOIN events e ON t.event_id = e.id
-            WHERE e.is_cancelled IS NOT TRUE
+            WHERE {self._NAVIGABLE_PREDICATE}
               AND (e.date > :current_date
                    OR (e.date = :current_date AND t.id > :tournament_id))
             ORDER BY e.date ASC, t.id ASC
             LIMIT 1
         """,
-            {"tournament_id": tournament_id, "current_date": current_date},
+            {"tournament_id": tournament_id, "current_date": current_date, "today": today},
         )
         return result["id"] if result else None
 
-    def get_previous_tournament_id(self, tournament_id: int, current_date: Any) -> Optional[int]:
+    def get_previous_tournament_id(
+        self, tournament_id: int, current_date: Any, today: Any
+    ) -> Optional[int]:
         """
-        Get the ID of the previous tournament chronologically.
+        Get the ID of the previous navigable tournament chronologically.
 
-        Navigation is ordered by event date (with id as a tie-breaker), NOT by
-        the raw tournament id, since ids are insertion order and do not track
-        the event calendar. Cancelled events are skipped.
+        Ordered by event date (id as tie-breaker), NOT by the raw tournament id,
+        since ids are insertion order and do not track the event calendar. Only
+        tournaments the homepage links (see ``_NAVIGABLE_PREDICATE``) are
+        considered: SABC, not cancelled, complete-or-upcoming.
 
         Args:
             tournament_id: Current tournament ID
             current_date: Current tournament's event date
+            today: Today's date, matching the homepage past/upcoming boundary
 
         Returns:
             Previous tournament ID, or None if this is the first tournament
         """
         result = self.fetch_one(
-            """
+            f"""
             SELECT t.id
             FROM tournaments t
             JOIN events e ON t.event_id = e.id
-            WHERE e.is_cancelled IS NOT TRUE
+            WHERE {self._NAVIGABLE_PREDICATE}
               AND (e.date < :current_date
                    OR (e.date = :current_date AND t.id < :tournament_id))
             ORDER BY e.date DESC, t.id DESC
             LIMIT 1
         """,
-            {"tournament_id": tournament_id, "current_date": current_date},
+            {"tournament_id": tournament_id, "current_date": current_date, "today": today},
         )
         return result["id"] if result else None
 
