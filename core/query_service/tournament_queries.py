@@ -148,12 +148,17 @@ class TournamentQueries(QueryServiceBase):
         """
         return self.fetch_all(query, {"tournament_id": tournament_id})
 
-    def get_next_tournament_id(self, tournament_id: int) -> Optional[int]:
+    def get_next_tournament_id(self, tournament_id: int, current_date: Any) -> Optional[int]:
         """
         Get the ID of the next tournament chronologically.
 
+        Navigation is ordered by event date (with id as a tie-breaker), NOT by
+        the raw tournament id, since ids are insertion order and do not track
+        the event calendar. Cancelled events are skipped.
+
         Args:
             tournament_id: Current tournament ID
+            current_date: Current tournament's event date
 
         Returns:
             Next tournament ID, or None if this is the last tournament
@@ -163,20 +168,27 @@ class TournamentQueries(QueryServiceBase):
             SELECT t.id
             FROM tournaments t
             JOIN events e ON t.event_id = e.id
-            WHERE t.id > :tournament_id
+            WHERE e.is_cancelled IS NOT TRUE
+              AND (e.date > :current_date
+                   OR (e.date = :current_date AND t.id > :tournament_id))
             ORDER BY e.date ASC, t.id ASC
             LIMIT 1
         """,
-            {"tournament_id": tournament_id},
+            {"tournament_id": tournament_id, "current_date": current_date},
         )
         return result["id"] if result else None
 
-    def get_previous_tournament_id(self, tournament_id: int) -> Optional[int]:
+    def get_previous_tournament_id(self, tournament_id: int, current_date: Any) -> Optional[int]:
         """
         Get the ID of the previous tournament chronologically.
 
+        Navigation is ordered by event date (with id as a tie-breaker), NOT by
+        the raw tournament id, since ids are insertion order and do not track
+        the event calendar. Cancelled events are skipped.
+
         Args:
             tournament_id: Current tournament ID
+            current_date: Current tournament's event date
 
         Returns:
             Previous tournament ID, or None if this is the first tournament
@@ -186,11 +198,13 @@ class TournamentQueries(QueryServiceBase):
             SELECT t.id
             FROM tournaments t
             JOIN events e ON t.event_id = e.id
-            WHERE t.id < :tournament_id
+            WHERE e.is_cancelled IS NOT TRUE
+              AND (e.date < :current_date
+                   OR (e.date = :current_date AND t.id < :tournament_id))
             ORDER BY e.date DESC, t.id DESC
             LIMIT 1
         """,
-            {"tournament_id": tournament_id},
+            {"tournament_id": tournament_id, "current_date": current_date},
         )
         return result["id"] if result else None
 

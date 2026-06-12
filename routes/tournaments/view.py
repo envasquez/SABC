@@ -70,8 +70,8 @@ def tournament_results(
                 float(stats.biggest_bass),
                 float(stats.heavy_stringer),
             )
-            next_tournament_id = qs.get_next_tournament_id(tournament_id)
-            prev_tournament_id = qs.get_previous_tournament_id(tournament_id)
+            next_tournament_id = qs.get_next_tournament_id(tournament_id, tournament.event_date)
+            prev_tournament_id = qs.get_previous_tournament_id(tournament_id, tournament.event_date)
             year_links = qs.get_tournament_years_with_first_id(4)
             return templates.TemplateResponse(
                 request,
