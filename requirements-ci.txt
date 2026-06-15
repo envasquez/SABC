@@ -29,7 +29,7 @@ Jinja2==3.1.6
 limits==5.8.0
 MarkupSafe==3.0.3
 mirakuru==3.0.2
-mypy==1.18.2
+mypy==2.1.0
 mypy_extensions==1.1.0
 numpy==2.4.6
 packaging==26.2
