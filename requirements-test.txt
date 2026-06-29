@@ -9,7 +9,7 @@ pytest-xdist==3.8.0  # Parallel test execution
 
 # Test data factories
 factory-boy==3.3.3
-faker==37.6.0
+faker==40.23.0
 
 # HTTP testing
 httpx==0.28.1

@@ -15,7 +15,7 @@ dnspython==2.8.0
 email_validator==2.3.0
 execnet==2.1.2
 factory_boy==3.3.3
-Faker==37.6.0
+Faker==40.23.0
 fastapi==0.138.1
 greenlet==3.5.3
 h11==0.16.0
