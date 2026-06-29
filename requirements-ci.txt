@@ -33,7 +33,7 @@ mypy==2.1.0
 mypy_extensions==1.1.0
 numpy==2.5.0
 packaging==26.2
-pandas==3.0.3
+pandas==3.0.4
 pathspec==1.1.1
 Pillow==12.2.0
 pluggy==1.6.0
