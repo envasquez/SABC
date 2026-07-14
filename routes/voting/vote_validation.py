@@ -27,9 +27,9 @@ def validate_tournament_location_vote(vote_data: dict) -> Tuple[Optional[str], O
         if end_time <= start_time:
             return None, "End time must be after start time"
 
-        # Validate reasonable tournament hours (4 AM to 11 PM)
-        if start_time.hour < 4 or end_time.hour > 23:
-            return None, "Tournament times must be between 4:00 AM and 11:00 PM"
+        # Any hour of the day is allowed so night / early-morning tournaments
+        # (e.g. a 12:01 AM start) can be scheduled. The HH:MM parse above
+        # already constrains values to a valid 00:00-23:59 range.
 
     except ValueError:
         return None, "Invalid time format. Use HH:MM"

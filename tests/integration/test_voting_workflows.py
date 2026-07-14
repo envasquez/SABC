@@ -70,8 +70,8 @@ class TestTournamentLocationValidation:
         assert error is not None
         assert "End time must be after start time" in error
 
-    def test_validate_unreasonable_hours(self, db_session: Session):
-        """Test validation with unreasonable tournament hours."""
+    def test_validate_night_tournament_hours(self, db_session: Session):
+        """Early-morning / night starts (e.g. 12:01 AM, 3:00 AM) are allowed."""
         lake = Lake(yaml_key="test", display_name="Test Lake")
         db_session.add(lake)
         db_session.commit()
@@ -80,17 +80,37 @@ class TestTournamentLocationValidation:
         db_session.add(ramp)
         db_session.commit()
 
-        # Start too early
+        for start_time in ("00:01", "01:00", "03:00", "04:00"):
+            vote_data = {
+                "lake_id": str(lake.id),
+                "ramp_id": str(ramp.id),
+                "start_time": start_time,
+                "end_time": "12:00",
+            }
+            option_text, error = validate_tournament_location_vote(vote_data)
+            assert error is None, f"{start_time} should be valid, got: {error}"
+            assert option_text is not None
+
+    def test_validate_rejects_end_before_start(self, db_session: Session):
+        """End time must still be after start time."""
+        lake = Lake(yaml_key="test", display_name="Test Lake")
+        db_session.add(lake)
+        db_session.commit()
+
+        ramp = Ramp(lake_id=lake.id, name="Test Ramp")
+        db_session.add(ramp)
+        db_session.commit()
+
         vote_data = {
             "lake_id": str(lake.id),
             "ramp_id": str(ramp.id),
-            "start_time": "03:00",
-            "end_time": "12:00",
+            "start_time": "12:00",
+            "end_time": "06:00",
         }
         option_text, error = validate_tournament_location_vote(vote_data)
         assert option_text is None
         assert error is not None
-        assert "between 4:00 AM and 11:00 PM" in error
+        assert "End time must be after start time" in error
 
     def test_validate_valid_tournament_location(self, db_session: Session):
         """Test validation with valid tournament location data."""
