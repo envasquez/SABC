@@ -122,8 +122,10 @@
 </div></div>
 {% endmacro %}
 
-{# Time select options macro - generates time options for dropdowns #}
-{% macro time_select_options(start_hour=5, end_hour=20, interval_minutes=30, selected_time='') %}
+{# Time select options macro - generates time options for dropdowns.
+   Starts at midnight so night / early-morning tournaments are selectable, and
+   includes a dedicated 12:01 AM (00:01) start option immediately after 12:00 AM. #}
+{% macro time_select_options(start_hour=0, end_hour=20, interval_minutes=30, selected_time='') %}
 {% for hour in range(start_hour, end_hour + 1) %}
     {% for minute in [0, interval_minutes] if minute < 60 %}
         {% set time_24 = "%02d:%02d"|format(hour, minute) %}
@@ -132,6 +134,9 @@
         {% set ampm = 'AM' if hour < 12 else 'PM' %}
         {% set time_display = "%d:%02d %s"|format(hour_12, minute, ampm) %}
         <option value="{{ time_24 }}" {% if time_24 == selected_time %}selected{% endif %}>{{ time_display }}</option>
+        {% if hour == 0 and minute == 0 %}
+        <option value="00:01" {% if selected_time == '00:01' %}selected{% endif %}>12:01 AM</option>
+        {% endif %}
     {% endfor %}
 {% endfor %}
 {% endmacro %}
