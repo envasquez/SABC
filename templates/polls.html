@@ -485,6 +485,31 @@
         {{ alert('warning', 'This poll has no voting options yet.', dismissible=False) }}
       {% endif %}
     </div>
+    <!-- Poll Discussion (lazy-loaded via HTMX) -->
+    <div class="card-footer">
+      <details class="poll-discussion">
+        <summary class="d-flex align-items-center" style="cursor:pointer; list-style:none"
+                 hx-get="/polls/{{ poll.id }}/discussion"
+                 hx-target="#discussion-body-{{ poll.id }}"
+                 hx-swap="innerHTML"
+                 hx-trigger="click once">
+          <i class="ti ti-messages me-2 text-primary" aria-hidden="true"></i>
+          <span class="fw-medium">Discussion</span>
+          {% if poll.comment_count %}
+          <span class="badge bg-primary-lt ms-2">{{ poll.comment_count }}</span>
+          {% endif %}
+          <i class="ti ti-chevron-down ms-auto text-secondary" aria-hidden="true"></i>
+        </summary>
+        <div id="discussion-body-{{ poll.id }}" class="pt-3"
+             hx-headers='{"x-csrf-token": "{{ get_csrf_token(request) }}"}'
+             hx-target="#discussion-body-{{ poll.id }}"
+             hx-swap="innerHTML">
+          <div class="text-center text-secondary py-3">
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Loading discussion…
+          </div>
+        </div>
+      </details>
+    </div>
   </div>
   </div>
   {% endfor %}

@@ -33,7 +33,17 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app_setup import create_app
-from core.db_schema import Angler, Base, Event, Lake, Poll, PollOption, Ramp, Tournament
+from core.db_schema import (
+    Angler,
+    Base,
+    Event,
+    Lake,
+    Poll,
+    PollComment,
+    PollOption,
+    Ramp,
+    Tournament,
+)
 
 # Create test engine with in-memory SQLite
 test_engine = create_engine(
@@ -74,6 +84,17 @@ def _restore_poll_tz_on_load(target: Poll, _context: Any) -> None:
         target.starts_at = target.starts_at.replace(tzinfo=CLUB_TIMEZONE)
     if target.closes_at is not None and target.closes_at.tzinfo is None:
         target.closes_at = target.closes_at.replace(tzinfo=CLUB_TIMEZONE)
+
+
+@event.listens_for(PollComment, "load")
+def _restore_comment_tz_on_load(target: PollComment, _context: Any) -> None:
+    # SQLite strips tzinfo (see note above); Postgres keeps it. The discussion
+    # routes do aware-datetime math on created_at (duplicate-window check), so
+    # re-attach the club timezone on load to mirror production.
+    if target.created_at is not None and target.created_at.tzinfo is None:
+        target.created_at = target.created_at.replace(tzinfo=CLUB_TIMEZONE)
+    if target.updated_at is not None and target.updated_at.tzinfo is None:
+        target.updated_at = target.updated_at.replace(tzinfo=CLUB_TIMEZONE)
 
 
 TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
