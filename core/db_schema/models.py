@@ -162,6 +162,51 @@ class PollVote(Base):
     )
 
 
+class PollComment(Base):
+    """Discussion comment attached to a poll.
+
+    Supports one level of threading via ``parent_comment_id`` (replies point at
+    a top-level comment). ``updated_at`` is NULL until the author edits the
+    comment, at which point templates show an "edited" marker.
+    """
+
+    __tablename__ = "poll_comments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    poll_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("polls.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    angler_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("anglers.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    parent_comment_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("poll_comments.id", ondelete="CASCADE"), index=True
+    )
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+
+
+class PollCommentReaction(Base):
+    """A 👍 ("agree") reaction by an angler on a poll comment.
+
+    One reaction per angler per comment (toggle on/off); enforced by the
+    unique constraint on ``(comment_id, angler_id)``.
+    """
+
+    __tablename__ = "poll_comment_reactions"
+    __table_args__ = (UniqueConstraint("comment_id", "angler_id", name="uq_poll_comment_reaction"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    comment_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("poll_comments.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    angler_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("anglers.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
 class News(Base):
     """News model."""
 

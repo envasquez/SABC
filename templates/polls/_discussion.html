@@ -1,0 +1,145 @@
+{#
+  Poll discussion thread — rendered into #discussion-body-{poll_id}.
+
+  This partial emits the INNER content of that container only (comment list +
+  new-comment form). The container element lives in polls.html and carries the
+  shared hx-headers (CSRF), hx-target and hx-swap that every control below
+  inherits, so each button/form only needs its own hx-post/hx-get URL.
+
+  Rendered both on first lazy-load (GET /polls/{id}/discussion) and after every
+  mutating action (post, reply, edit, delete, react), which all return this
+  same partial for a single consistent swap.
+
+  Anti-mash: every mutating control carries hx-disabled-elt (disable while the
+  request is in flight — kills button-mashing on slow links) and
+  hx-sync="this:drop" (drop a second request if one is already running). The
+  current page size travels with each request via hx-vals so a re-render keeps
+  the same "show earlier" window.
+#}
+
+{% macro render_comment(c, poll_id, poll_open, max_len, shown_limit, is_reply=False) %}
+<div class="poll-comment {% if is_reply %}poll-comment-reply ps-3 border-start{% else %}mb-2{% endif %}" id="comment-{{ c.id }}">
+  <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+    <span class="avatar avatar-xs bg-azure-lt">{{ c.author_name[:2] | upper }}</span>
+    <strong class="text-body">{{ c.author_name }}</strong>
+    <span class="text-secondary small">{{ c.created_at | datetime_format('%b %-d, %-I:%M %p') }}</span>
+    {% if c.edited %}<span class="text-secondary small fst-italic">· edited</span>{% endif %}
+  </div>
+
+  {% if c.is_editing %}
+  <form hx-post="/polls/{{ poll_id }}/comments/{{ c.id }}/edit"
+        hx-vals='{"limit": {{ shown_limit }}}'
+        hx-disabled-elt="find button" hx-sync="this:drop">
+    <textarea name="body" class="form-control mb-2" rows="3" maxlength="{{ max_len }}"
+              required autofocus>{{ c.body }}</textarea>
+    <div class="btn-list">
+      <button type="submit" class="btn btn-sm btn-primary"><i class="ti ti-check me-1" aria-hidden="true"></i>Save</button>
+      <button type="button" class="btn btn-sm btn-ghost-secondary"
+              hx-get="/polls/{{ poll_id }}/discussion" hx-vals='{"limit": {{ shown_limit }}}'
+              hx-disabled-elt="this" hx-sync="this:drop">Cancel</button>
+    </div>
+  </form>
+  {% else %}
+  <div class="text-body">{{ c.body | nl2br }}</div>
+  {% if not is_reply and poll_open %}
+  {# Hidden checkbox toggles the reply form below via CSS, keeping the Reply
+     button inline with the actions while the form drops full-width. #}
+  <input type="checkbox" class="poll-reply-check d-none" id="reply-{{ poll_id }}-{{ c.id }}" autocomplete="off">
+  {% endif %}
+  <div class="d-flex align-items-center flex-wrap gap-1 mt-1">
+    <button class="btn btn-sm {% if c.liked_by_me %}btn-primary{% else %}btn-ghost-secondary{% endif %}"
+            hx-post="/polls/{{ poll_id }}/comments/{{ c.id }}/react"
+            hx-vals='{"limit": {{ shown_limit }}}'
+            hx-disabled-elt="this" hx-sync="this:drop"
+            {% if not poll_open %}disabled{% endif %}
+            {% if c.liked_by %}title="{{ c.liked_by | join(', ') }}"{% elif not poll_open %}title="Discussion closed"{% endif %}
+            aria-label="Agree">
+      <i class="ti ti-thumb-up me-1" aria-hidden="true"></i>{{ c.like_count }}
+    </button>
+
+    {% if not is_reply and poll_open %}
+    <label class="btn btn-sm btn-ghost-secondary mb-0" for="reply-{{ poll_id }}-{{ c.id }}">
+      <i class="ti ti-arrow-back-up me-1" aria-hidden="true"></i>Reply
+    </label>
+    {% endif %}
+
+    {% if c.can_edit %}
+    <button class="btn btn-sm btn-ghost-secondary"
+            hx-get="/polls/{{ poll_id }}/comments/{{ c.id }}/edit"
+            hx-vals='{"limit": {{ shown_limit }}}'
+            hx-disabled-elt="this" hx-sync="this:drop">
+      <i class="ti ti-pencil me-1" aria-hidden="true"></i>Edit
+    </button>
+    {% endif %}
+
+    {% if c.can_delete %}
+    <button class="btn btn-sm btn-ghost-danger"
+            hx-post="/polls/{{ poll_id }}/comments/{{ c.id }}/delete"
+            hx-vals='{"limit": {{ shown_limit }}}'
+            hx-disabled-elt="this" hx-sync="this:drop"
+            hx-confirm="Delete this comment{% if c.replies %} and its replies{% endif %}?">
+      <i class="ti ti-trash me-1" aria-hidden="true"></i>Delete
+    </button>
+    {% endif %}
+  </div>
+
+  {% if not is_reply and poll_open %}
+  <form class="poll-reply-form mt-2 mb-1" hx-post="/polls/{{ poll_id }}/comments"
+        hx-vals='{"limit": {{ shown_limit }}}'
+        hx-disabled-elt="find button" hx-sync="this:drop">
+    <input type="hidden" name="parent_id" value="{{ c.id }}">
+    <textarea name="body" class="form-control mb-2" rows="2" maxlength="{{ max_len }}"
+              placeholder="Reply to {{ c.author_name }}…" required></textarea>
+    <button type="submit" class="btn btn-sm btn-primary"><i class="ti ti-send me-1" aria-hidden="true"></i>Reply</button>
+  </form>
+  {% endif %}
+  {% endif %}
+
+  {% if c.replies %}
+  <div class="poll-comment-replies mt-2">
+    {% for reply in c.replies %}
+      {{ render_comment(reply, poll_id, poll_open, max_len, shown_limit, is_reply=True) }}
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+<div class="poll-discussion-thread">
+  {% if has_earlier %}
+  <div class="text-center mb-3">
+    <button class="btn btn-sm btn-ghost-secondary"
+            hx-get="/polls/{{ poll_id }}/discussion?limit={{ next_limit }}"
+            hx-disabled-elt="this" hx-sync="this:drop">
+      <i class="ti ti-chevron-up me-1" aria-hidden="true"></i>Show earlier comments
+    </button>
+  </div>
+  {% endif %}
+
+  {% if comments %}
+    {% for c in comments %}
+      {{ render_comment(c, poll_id, poll_open, max_comment_length, shown_limit) }}
+      {% if not loop.last %}<hr class="my-2">{% endif %}
+    {% endfor %}
+  {% else %}
+    <p class="text-secondary small mb-3">
+      <i class="ti ti-message-off me-1" aria-hidden="true"></i>No comments yet — start the discussion.
+    </p>
+  {% endif %}
+
+  {% if poll_open %}
+  <form hx-post="/polls/{{ poll_id }}/comments" class="mt-3"
+        hx-vals='{"limit": {{ shown_limit }}}'
+        hx-disabled-elt="find button" hx-sync="this:drop">
+    <textarea name="body" class="form-control mb-2" rows="2" maxlength="{{ max_comment_length }}"
+              placeholder="Share your thoughts on lakes, ramps, times…" required></textarea>
+    <button type="submit" class="btn btn-sm btn-primary">
+      <i class="ti ti-send me-1" aria-hidden="true"></i>Post Comment
+    </button>
+  </form>
+  {% else %}
+  <div class="text-secondary small mt-3">
+    <i class="ti ti-lock me-1" aria-hidden="true"></i>Discussion is closed — this poll has ended.
+  </div>
+  {% endif %}
+</div>

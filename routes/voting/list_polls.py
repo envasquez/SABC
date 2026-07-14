@@ -4,7 +4,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from fastapi.responses import RedirectResponse, Response
 from sqlalchemy import case, exists, false, func, select, true
 
-from core.db_schema import Angler, Event, Poll, PollVote, engine, get_session
+from core.db_schema import Angler, Event, Poll, PollComment, PollVote, engine, get_session
 from core.deps import templates
 from core.helpers.auth import is_dues_current, require_auth
 from core.helpers.logging import get_logger
@@ -196,6 +196,15 @@ def polls(
         vote_counts_data = session.execute(vote_counts_query).all()
         vote_counts = {row[0]: row[1] for row in vote_counts_data}
 
+        # Batch-fetch discussion comment counts for the visible polls so the
+        # discussion badge renders without a per-poll query.
+        comment_counts_data = session.execute(
+            select(PollComment.poll_id, func.count(PollComment.id).label("count"))
+            .where(PollComment.poll_id.in_(poll_ids))
+            .group_by(PollComment.poll_id)
+        ).all()
+        comment_counts = {row[0]: row[1] for row in comment_counts_data}
+
         # Batch-fetch the Events referenced by these polls so we don't issue a
         # per-poll Event lookup inside the loop. Poll metadata is already in
         # poll_row, so the redundant per-poll `session.query(Poll)...first()`
@@ -265,6 +274,7 @@ def polls(
                     "options": get_poll_options(poll_row.id, is_admin_flag, session=session),
                     "member_count": member_count,
                     "unique_voters": unique_voters,
+                    "comment_count": comment_counts.get(poll_row.id, 0),
                     "participation_percent": round(
                         (unique_voters / member_count * 100) if member_count > 0 else 0, 1
                     ),
