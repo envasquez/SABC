@@ -57,6 +57,12 @@ omit = [
     "env/*",
     "test_*.py",
     "*_test.py",
+    # Jinja2 compiles templates to code objects whose filename is the template
+    # path, so coverage traces them. They are not Python — coverage 7.15+ runs
+    # ast.parse() on reported files for its HTML report and crashes on template
+    # markup (INTERNALERROR: invalid syntax). Exclude templates from coverage.
+    "templates/*",
+    "*.html",
 ]
 
 [tool.coverage.report]
