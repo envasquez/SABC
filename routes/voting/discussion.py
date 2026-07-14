@@ -65,7 +65,7 @@ def _serialize_comment(
     author_name: str,
     user: UserDict,
     poll_open: bool,
-    like_count: int,
+    liked_by: List[str],
     liked_by_me: bool,
     editing_id: Optional[int],
 ) -> Dict[str, Any]:
@@ -83,7 +83,9 @@ def _serialize_comment(
         "can_edit": is_author and poll_open,
         # Authors can always tidy up their own posts; admins can moderate any.
         "can_delete": is_author or is_admin,
-        "like_count": like_count,
+        # Names of everyone who reacted, for the count and the hover tooltip.
+        "like_count": len(liked_by),
+        "liked_by": liked_by,
         "liked_by_me": liked_by_me,
         "is_editing": editing_id is not None and comment.id == editing_id,
         "replies": [],
@@ -151,29 +153,25 @@ def build_discussion_context(
 
     comment_ids = [row[0].id for row in rows]
 
-    # Reaction counts per comment, plus which ones the current user reacted to.
-    like_counts: Dict[int, int] = {}
+    # Who reacted to each comment (names, alphabetized for the tooltip) plus
+    # which comments the current user reacted to — one join covers both.
+    reactor_names: Dict[int, List[str]] = {}
     liked_by_me: set[int] = set()
     if comment_ids:
-        for comment_id, count in (
+        for comment_id, angler_id, angler_name in (
             session.query(
                 PollCommentReaction.comment_id,
-                func.count(PollCommentReaction.id),
+                PollCommentReaction.angler_id,
+                Angler.name,
             )
+            .join(Angler, PollCommentReaction.angler_id == Angler.id)
             .filter(PollCommentReaction.comment_id.in_(comment_ids))
-            .group_by(PollCommentReaction.comment_id)
+            .order_by(Angler.name.asc())
             .all()
         ):
-            like_counts[comment_id] = count
-        liked_by_me = {
-            r[0]
-            for r in session.query(PollCommentReaction.comment_id)
-            .filter(
-                PollCommentReaction.comment_id.in_(comment_ids),
-                PollCommentReaction.angler_id == user["id"],
-            )
-            .all()
-        }
+            reactor_names.setdefault(comment_id, []).append(angler_name)
+            if angler_id == user["id"]:
+                liked_by_me.add(comment_id)
 
     # First pass: serialize every comment keyed by id.
     serialized: Dict[int, Dict[str, Any]] = {}
@@ -183,7 +181,7 @@ def build_discussion_context(
             author_name,
             user,
             poll_open,
-            like_counts.get(comment.id, 0),
+            reactor_names.get(comment.id, []),
             comment.id in liked_by_me,
             editing_id,
         )

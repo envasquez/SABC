@@ -478,6 +478,29 @@ class TestReactions:
         # The reacting member's button renders in the "liked" (btn-primary) state.
         assert "btn btn-sm btn-primary" in resp.text
 
+    def test_reactor_names_in_tooltip(
+        self,
+        member_client: TestClient,
+        db_session: Session,
+        member_user: Angler,
+        admin_user: Angler,
+        open_poll: Poll,
+    ):
+        comment = _add_comment(db_session, open_poll.id, member_user.id, "popular")
+        _post(member_client, f"/polls/{open_poll.id}/comments/{comment.id}/react")
+        db_session.add(PollCommentReaction(comment_id=comment.id, angler_id=admin_user.id))
+        db_session.commit()
+        resp = member_client.get(f"/polls/{open_poll.id}/discussion")
+        # Full names of everyone who agreed, alphabetized, in the hover tooltip.
+        assert 'title="Agreed: Test Admin, Test Member"' in resp.text
+
+    def test_no_tooltip_without_reactions(
+        self, member_client: TestClient, db_session: Session, member_user: Angler, open_poll: Poll
+    ):
+        _add_comment(db_session, open_poll.id, member_user.id, "unreacted")
+        resp = member_client.get(f"/polls/{open_poll.id}/discussion")
+        assert "Agreed:" not in resp.text
+
 
 # ---------------------------------------------------------------------------
 # Pagination / "show earlier"
