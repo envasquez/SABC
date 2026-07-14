@@ -47,7 +47,7 @@
             hx-vals='{"limit": {{ shown_limit }}}'
             hx-disabled-elt="this" hx-sync="this:drop"
             {% if not poll_open %}disabled{% endif %}
-            {% if c.liked_by %}title="Agreed: {{ c.liked_by | join(', ') }}"{% elif not poll_open %}title="Discussion closed"{% endif %}
+            {% if c.liked_by %}title="{{ c.liked_by | join(', ') }}"{% elif not poll_open %}title="Discussion closed"{% endif %}
             aria-label="Agree">
       <i class="ti ti-thumb-up me-1" aria-hidden="true"></i>{{ c.like_count }}
     </button>

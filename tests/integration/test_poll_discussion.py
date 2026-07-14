@@ -492,14 +492,15 @@ class TestReactions:
         db_session.commit()
         resp = member_client.get(f"/polls/{open_poll.id}/discussion")
         # Full names of everyone who agreed, alphabetized, in the hover tooltip.
-        assert 'title="Agreed: Test Admin, Test Member"' in resp.text
+        assert 'title="Test Admin, Test Member"' in resp.text
 
     def test_no_tooltip_without_reactions(
         self, member_client: TestClient, db_session: Session, member_user: Angler, open_poll: Poll
     ):
         _add_comment(db_session, open_poll.id, member_user.id, "unreacted")
         resp = member_client.get(f"/polls/{open_poll.id}/discussion")
-        assert "Agreed:" not in resp.text
+        # No name tooltip on an unreacted, open-poll comment.
+        assert 'title="Test Member"' not in resp.text
 
 
 # ---------------------------------------------------------------------------
