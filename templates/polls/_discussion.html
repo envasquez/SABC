@@ -52,22 +52,6 @@
       <i class="ti ti-thumb-up me-1" aria-hidden="true"></i>{{ c.like_count }}
     </button>
 
-    {% if not is_reply and poll_open %}
-    <details class="poll-reply-toggle d-inline-block">
-      <summary class="btn btn-sm btn-ghost-secondary" style="list-style:none">
-        <i class="ti ti-arrow-back-up me-1" aria-hidden="true"></i>Reply
-      </summary>
-      <form hx-post="/polls/{{ poll_id }}/comments" class="mt-2 mb-1"
-            hx-vals='{"limit": {{ shown_limit }}}'
-            hx-disabled-elt="find button" hx-sync="this:drop">
-        <input type="hidden" name="parent_id" value="{{ c.id }}">
-        <textarea name="body" class="form-control mb-2" rows="2" maxlength="{{ max_len }}"
-                  placeholder="Reply to {{ c.author_name }}…" required></textarea>
-        <button type="submit" class="btn btn-sm btn-primary"><i class="ti ti-send me-1" aria-hidden="true"></i>Reply</button>
-      </form>
-    </details>
-    {% endif %}
-
     {% if c.can_edit %}
     <button class="btn btn-sm btn-ghost-secondary"
             hx-get="/polls/{{ poll_id }}/comments/{{ c.id }}/edit"
@@ -87,6 +71,22 @@
     </button>
     {% endif %}
   </div>
+
+  {% if not is_reply and poll_open %}
+  <details class="poll-reply-toggle mt-1">
+    <summary class="btn btn-sm btn-ghost-secondary" style="list-style:none">
+      <i class="ti ti-arrow-back-up me-1" aria-hidden="true"></i>Reply
+    </summary>
+    <form hx-post="/polls/{{ poll_id }}/comments" class="mt-2 mb-1"
+          hx-vals='{"limit": {{ shown_limit }}}'
+          hx-disabled-elt="find button" hx-sync="this:drop">
+      <input type="hidden" name="parent_id" value="{{ c.id }}">
+      <textarea name="body" class="form-control mb-2" rows="2" maxlength="{{ max_len }}"
+                placeholder="Reply to {{ c.author_name }}…" required></textarea>
+      <button type="submit" class="btn btn-sm btn-primary"><i class="ti ti-send me-1" aria-hidden="true"></i>Reply</button>
+    </form>
+  </details>
+  {% endif %}
   {% endif %}
 
   {% if c.replies %}
