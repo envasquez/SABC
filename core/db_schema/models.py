@@ -88,7 +88,7 @@ class Event(Base):
     weigh_in_time: Mapped[Optional[time]] = mapped_column(Time)
     lake_name: Mapped[Optional[str]] = mapped_column(Text)
     ramp_name: Mapped[Optional[str]] = mapped_column(Text)
-    entry_fee: Mapped[Optional[Decimal]] = mapped_column(Numeric, default=25.00)
+    entry_fee: Mapped[Optional[Decimal]] = mapped_column(Numeric, default=50.00)
     is_cancelled: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
     holiday_name: Mapped[Optional[str]] = mapped_column(Text)
 
@@ -234,7 +234,7 @@ class Tournament(Base):
     start_time: Mapped[Optional[time]] = mapped_column(Time)
     end_time: Mapped[Optional[time]] = mapped_column(Time)
     fish_limit: Mapped[Optional[int]] = mapped_column(Integer, default=5)
-    entry_fee: Mapped[Optional[Decimal]] = mapped_column(Numeric, default=25.00)
+    entry_fee: Mapped[Optional[Decimal]] = mapped_column(Numeric, default=50.00)
     is_team: Mapped[Optional[bool]] = mapped_column(Boolean, default=True)
     is_paper: Mapped[Optional[bool]] = mapped_column(Boolean, default=False)
     big_bass_carryover: Mapped[Optional[Decimal]] = mapped_column(Numeric, default=0.0)
