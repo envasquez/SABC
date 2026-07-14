@@ -34,6 +34,10 @@
     box-shadow: 0 0 0 2px var(--tblr-primary);
     transition: box-shadow .3s;
   }
+  /* Reply toggle: a hidden checkbox lets the Reply button stay inline with the
+     comment actions while its form drops full-width below (no JS). */
+  .poll-reply-form { display: none; }
+  .poll-reply-check:checked ~ .poll-reply-form { display: block; }
 </style>
 {% endblock %}
 
