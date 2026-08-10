@@ -233,16 +233,14 @@ git push origin feature/your-feature-name
 # ✅ Correct
 from typing import Optional, List, Dict, Any
 
-def get_tournament_results(
-    tournament_id: int,
-    include_teams: bool = False
-) -> List[Dict[str, Any]]:
+
+def get_tournament_results(tournament_id: int, include_teams: bool = False) -> List[Dict[str, Any]]:
     """Get tournament results."""
     ...
 
+
 # ❌ Incorrect - no type annotations
-def get_tournament_results(tournament_id, include_teams=False):
-    ...
+def get_tournament_results(tournament_id, include_teams=False): ...
 ```
 
 ### Import Standards
@@ -264,19 +262,15 @@ from typing import Union
 from fastapi import Request
 from fastapi.responses import RedirectResponse, TemplateResponse
 
+
 @router.get("/example")
-async def example_route(
-    request: Request
-) -> Union[RedirectResponse, TemplateResponse]:
+async def example_route(request: Request) -> Union[RedirectResponse, TemplateResponse]:
     """Route with proper return type."""
     user = get_current_user(request)
     if not user:
         return RedirectResponse("/login")
 
-    return templates.TemplateResponse("example.html", {
-        "request": request,
-        "user": user
-    })
+    return templates.TemplateResponse("example.html", {"request": request, "user": user})
 ```
 
 ### Error Handling
@@ -286,6 +280,7 @@ from core.helpers.response import error_redirect
 from core.helpers.logging import get_logger
 
 logger = get_logger(__name__)
+
 
 @router.post("/action")
 async def action_route(request: Request) -> RedirectResponse:
@@ -496,8 +491,7 @@ def test_protected_route_requires_auth(client):
 def test_member_can_vote(authenticated_client, test_poll):
     """Test that members can vote in polls."""
     response = authenticated_client.post(
-        f"/polls/{test_poll.id}/vote",
-        data={"option_id": test_poll.options[0].id}
+        f"/polls/{test_poll.id}/vote", data={"option_id": test_poll.options[0].id}
     )
 
     assert response.status_code == 302
@@ -514,6 +508,7 @@ from core.helpers.logging import get_logger
 
 logger = get_logger(__name__)
 
+
 def some_function():
     logger.debug("Entering function")
     logger.info("Processing data")
@@ -528,7 +523,9 @@ def some_function():
 breakpoint()  # Python 3.7+
 
 # Or
-import pdb; pdb.set_trace()
+import pdb
+
+pdb.set_trace()
 ```
 
 ### Database Debugging
@@ -573,11 +570,10 @@ async def debug_route(request: Request):
 
    router = APIRouter()
 
+
    @router.get("/new-page")
    async def new_page(request: Request) -> TemplateResponse:
-       return templates.TemplateResponse("new_page.html", {
-           "request": request
-       })
+       return templates.TemplateResponse("new_page.html", {"request": request})
    ```
 
 2. Register in parent router or `app.py`
@@ -609,6 +605,7 @@ async def debug_route(request: Request):
    ```python
    # core/helpers/new_helper.py
    from typing import Optional
+
 
    def new_helper_function(param: str) -> Optional[str]:
        """

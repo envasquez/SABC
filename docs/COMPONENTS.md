@@ -352,14 +352,18 @@ All backend helpers are in [`core/helpers/`](../core/helpers/).
 def get_current_user(request: Request) -> Optional[Dict[str, Any]]:
     """Get current user from session (None if not authenticated)"""
 
+
 def require_auth(request: Request) -> Dict[str, Any]:
     """Require authenticated user (raises HTTPException if not)"""
+
 
 def require_member(request: Request) -> Dict[str, Any]:
     """Require verified member (raises HTTPException if not)"""
 
+
 def require_admin(request: Request) -> Dict[str, Any]:
     """Require admin user (raises HTTPException if not)"""
+
 
 def is_admin(request: Request) -> bool:
     """Check if current user is admin (returns boolean)"""
@@ -369,14 +373,13 @@ def is_admin(request: Request) -> bool:
 ```python
 from core.helpers.auth import require_admin, get_current_user
 
+
 @router.get("/admin/dashboard")
 async def admin_dashboard(request: Request):
     user = require_admin(request)  # Raises 403 if not admin
     # Admin logic here
-    return templates.TemplateResponse("admin/dashboard.html", {
-        "request": request,
-        "user": user
-    })
+    return templates.TemplateResponse("admin/dashboard.html", {"request": request, "user": user})
+
 
 @router.get("/profile")
 async def profile(request: Request):
@@ -402,24 +405,28 @@ async def profile(request: Request):
 def error_redirect(path: str, message: str, status_code: int = 303) -> RedirectResponse:
     """Redirect with error message"""
 
+
 def success_redirect(path: str, message: str, status_code: int = 303) -> RedirectResponse:
     """Redirect with success message"""
+
 
 def json_error(message: str, status_code: int = 400) -> JSONResponse:
     """Return JSON error response"""
 
+
 def json_success(
-    data: Optional[Dict[str, Any]] = None,
-    message: Optional[str] = None,
-    status_code: int = 200
+    data: Optional[Dict[str, Any]] = None, message: Optional[str] = None, status_code: int = 200
 ) -> JSONResponse:
     """Return JSON success response"""
+
 
 def sanitize_error_message(error: Exception, generic_message: str) -> str:
     """Sanitize error for user display (logs full error)"""
 
+
 def get_client_ip(request: Request) -> str:
     """Extract client IP address"""
+
 
 def set_user_session(request: Request, user_id: int) -> None:
     """Set user session (prevents session fixation)"""
@@ -453,11 +460,10 @@ async def create_event(request: Request, ...):
 def get_form_data(request: Request) -> Dict[str, Any]:
     """Extract form data from request"""
 
-def validate_required_fields(
-    data: Dict[str, Any],
-    required: List[str]
-) -> Optional[str]:
+
+def validate_required_fields(data: Dict[str, Any], required: List[str]) -> Optional[str]:
     """Check if required fields are present (returns error message or None)"""
+
 
 def clean_phone_number(phone: str) -> str:
     """Normalize phone number format"""
@@ -467,11 +473,12 @@ def clean_phone_number(phone: str) -> str:
 ```python
 from core.helpers.forms import get_form_data, validate_required_fields
 
+
 @router.post("/admin/users")
 async def create_user(request: Request):
     data = await get_form_data(request)
 
-    error = validate_required_fields(data, ['name', 'email'])
+    error = validate_required_fields(data, ["name", "email"])
     if error:
         return error_redirect("/admin/users/new", error)
 
@@ -487,8 +494,10 @@ async def create_user(request: Request):
 def sanitize_text(text: str, max_length: int = 1000) -> str:
     """Sanitize user input text"""
 
+
 def sanitize_email(email: str) -> str:
     """Validate and normalize email address"""
+
 
 def sanitize_url(url: str) -> str:
     """Validate and sanitize URLs"""
@@ -505,8 +514,10 @@ def sanitize_url(url: str) -> str:
 def validate_password(password: str) -> Tuple[bool, List[str]]:
     """Validate password strength (returns valid, errors)"""
 
+
 def hash_password(password: str) -> str:
     """Hash password with bcrypt"""
+
 
 def verify_password(password: str, hashed: str) -> bool:
     """Verify password against hash"""
@@ -537,8 +548,7 @@ hashed = hash_password(password)
 **Key Functions**:
 ```python
 def calculate_tournament_points(
-    results: List[Result],
-    point_system: str = 'standard'
+    results: List[Result], point_system: str = "standard"
 ) -> List[Dict[str, Any]]:
     """Calculate tournament points based on placement"""
 ```
@@ -553,13 +563,15 @@ def calculate_tournament_points(
 
 **Key Functions**:
 ```python
-def to_local_time(dt: datetime, timezone: str = 'US/Central') -> datetime:
+def to_local_time(dt: datetime, timezone: str = "US/Central") -> datetime:
     """Convert UTC to local timezone"""
 
-def to_utc_time(dt: datetime, timezone: str = 'US/Central') -> datetime:
+
+def to_utc_time(dt: datetime, timezone: str = "US/Central") -> datetime:
     """Convert local timezone to UTC"""
 
-def format_datetime(dt: datetime, format: str = '%Y-%m-%d %H:%M') -> str:
+
+def format_datetime(dt: datetime, format: str = "%Y-%m-%d %H:%M") -> str:
     """Format datetime for display"""
 ```
 
@@ -569,7 +581,7 @@ from core.helpers.timezone import to_local_time, format_datetime
 
 # Convert UTC from database to local for display
 event_time_local = to_local_time(event.date)
-formatted = format_datetime(event_time_local, '%B %d, %Y at %I:%M %p')
+formatted = format_datetime(event_time_local, "%B %d, %Y at %I:%M %p")
 ```
 
 ---
@@ -617,15 +629,19 @@ def delete_entity(
 from core.helpers.crud import delete_entity
 from core.db_schema import Angler
 
+
 def _check_self_delete(user: Dict[str, Any], user_id: int) -> bool:
     """Check if user is trying to delete themselves."""
     return user.get("id") == user_id
+
 
 @router.delete("/admin/users/{user_id}")
 async def delete_user(request: Request, user_id: int) -> Response:
     """Delete a user account (cannot delete yourself)."""
     return delete_entity(
-        request, user_id, Angler,
+        request,
+        user_id,
+        Angler,
         success_message="User deleted successfully",
         error_message="Failed to delete user",
         self_delete_check=_check_self_delete,
@@ -637,18 +653,25 @@ async def delete_user(request: Request, user_id: int) -> Response:
 from core.helpers.crud import delete_entity, check_foreign_key_usage
 from core.db_schema import Ramp, Tournament
 
+
 def _check_ramp_usage(session: Session, ramp_id: int) -> Optional[str]:
     """Check if ramp is referenced by tournaments."""
     return check_foreign_key_usage(
-        session, Tournament, Tournament.ramp_id, ramp_id,
+        session,
+        Tournament,
+        Tournament.ramp_id,
+        ramp_id,
         "Cannot delete ramp that is referenced by tournaments",
     )
+
 
 @router.delete("/admin/ramps/{ramp_id}")
 async def delete_ramp(request: Request, ramp_id: int) -> Response:
     """Delete a ramp (cannot delete if referenced by tournaments)."""
     return delete_entity(
-        request, ramp_id, Ramp,
+        request,
+        ramp_id,
+        Ramp,
         success_message="Ramp deleted successfully",
         error_message="Failed to delete ramp",
         validation_check=_check_ramp_usage,
@@ -660,16 +683,20 @@ async def delete_ramp(request: Request, ramp_id: int) -> Response:
 from core.helpers.crud import delete_entity, bulk_delete
 from core.db_schema import Poll, PollVote, PollOption
 
+
 def _delete_poll_cascade(session: Session, poll_id: int) -> None:
     """Delete poll votes and options before deleting poll."""
     bulk_delete(session, PollVote, [PollVote.poll_id == poll_id])
     bulk_delete(session, PollOption, [PollOption.poll_id == poll_id])
 
+
 @router.delete("/admin/polls/{poll_id}")
 async def delete_poll(request: Request, poll_id: int) -> Response:
     """Delete a poll and all associated votes and options."""
     return delete_entity(
-        request, poll_id, Poll,
+        request,
+        poll_id,
+        Poll,
         success_message="Poll deleted successfully",
         error_message="Failed to delete poll",
         pre_delete_hook=_delete_poll_cascade,
@@ -682,17 +709,22 @@ async def delete_poll(request: Request, poll_id: int) -> Response:
 async def delete_news_post(request: Request, news_id: int) -> Response:
     """POST endpoint for deleting news (for form submissions)."""
     return delete_entity(
-        request, news_id, News,
+        request,
+        news_id,
+        News,
         redirect_url="/admin/news",  # Causes redirect
         success_message="News deleted successfully",
         error_message="Failed to delete news",
     )
 
+
 @router.delete("/admin/news/{news_id}")
 async def delete_news(request: Request, news_id: int) -> Response:
     """DELETE endpoint for deleting news (for AJAX requests)."""
     return delete_entity(
-        request, news_id, News,
+        request,
+        news_id,
+        News,
         # No redirect_url = returns JSON
         success_message="News deleted successfully",
         error_message="Failed to delete news",
@@ -725,13 +757,14 @@ def check_foreign_key_usage(
 from core.helpers.crud import check_foreign_key_usage
 from core.db_schema import Tournament, Ramp
 
+
 def _check_ramp_usage(session: Session, ramp_id: int) -> Optional[str]:
     return check_foreign_key_usage(
         session,
-        Tournament,              # Model that references the entity
-        Tournament.ramp_id,      # FK field
-        ramp_id,                 # Entity ID to check
-        "Cannot delete ramp that is referenced by tournaments"
+        Tournament,  # Model that references the entity
+        Tournament.ramp_id,  # FK field
+        ramp_id,  # Entity ID to check
+        "Cannot delete ramp that is referenced by tournaments",
     )
 ```
 
@@ -785,19 +818,20 @@ from core.helpers.response import error_redirect, success_redirect
 from core.helpers.sanitize import sanitize_text, sanitize_email
 from core.db_schema import Angler, get_session
 
+
 @router.post("/admin/users")
 async def create_user(request: Request):
     user = require_admin(request)
     data = await get_form_data(request)
 
     # Validate
-    error = validate_required_fields(data, ['name', 'email'])
+    error = validate_required_fields(data, ["name", "email"])
     if error:
         return error_redirect("/admin/users/new", error)
 
     # Sanitize
-    name = sanitize_text(data['name'], max_length=100)
-    email = sanitize_email(data['email'])
+    name = sanitize_text(data["name"], max_length=100)
+    email = sanitize_email(data["email"])
 
     # Create
     try:
@@ -829,25 +863,26 @@ from core.helpers.auth import require_admin
 from core.helpers.response import json_error, json_success
 from core.db_schema import Tournament, get_session
 
+
 @router.get("/api/tournaments/{tournament_id}")
 async def get_tournament(request: Request, tournament_id: int):
     user = require_admin(request)
 
     try:
         with get_session() as session:
-            tournament = session.query(Tournament).filter(
-                Tournament.id == tournament_id
-            ).first()
+            tournament = session.query(Tournament).filter(Tournament.id == tournament_id).first()
 
             if not tournament:
                 return json_error("Tournament not found", status_code=404)
 
-            return json_success(data={
-                "id": tournament.id,
-                "event_id": tournament.event_id,
-                "lake_id": tournament.lake_id,
-                "complete": tournament.complete
-            })
+            return json_success(
+                data={
+                    "id": tournament.id,
+                    "event_id": tournament.event_id,
+                    "lake_id": tournament.lake_id,
+                    "complete": tournament.complete,
+                }
+            )
     except Exception as e:
         logger.error(f"Failed to fetch tournament: {e}")
         return json_error("Failed to fetch tournament", status_code=500)
@@ -869,6 +904,7 @@ async def get_tournament(request: Request, tournament_id: int):
 from core.helpers.auth import get_current_user
 from core.db_schema import Tournament, get_session
 
+
 @router.get("/tournaments")
 async def tournaments_page(request: Request):
     user = get_current_user(request)
@@ -878,16 +914,14 @@ async def tournaments_page(request: Request):
         query = session.query(Tournament).filter(Tournament.complete == True)
 
         # Only admins see incomplete tournaments
-        if not user or not user.get('is_admin'):
+        if not user or not user.get("is_admin"):
             query = query.filter(Tournament.complete == True)
 
         tournaments = query.all()
 
-    return templates.TemplateResponse("tournaments.html", {
-        "request": request,
-        "user": user,
-        "tournaments": tournaments
-    })
+    return templates.TemplateResponse(
+        "tournaments.html", {"request": request, "user": user, "tournaments": tournaments}
+    )
 ```
 
 ---
@@ -906,21 +940,27 @@ async def tournaments_page(request: Request):
 from core.helpers.crud import delete_entity
 from core.db_schema import News
 
+
 @router.post("/admin/news/{news_id}/delete")
 async def delete_news_post(request: Request, news_id: int) -> Response:
     """Form submission endpoint"""
     return delete_entity(
-        request, news_id, News,
+        request,
+        news_id,
+        News,
         redirect_url="/admin/news",  # Redirects after delete
         success_message="News deleted successfully",
         error_message="Failed to delete news",
     )
 
+
 @router.delete("/admin/news/{news_id}")
 async def delete_news(request: Request, news_id: int) -> Response:
     """AJAX endpoint"""
     return delete_entity(
-        request, news_id, News,
+        request,
+        news_id,
+        News,
         # No redirect_url = returns JSON
         success_message="News deleted successfully",
         error_message="Failed to delete news",
@@ -1090,14 +1130,14 @@ from core.helpers.forms import validate_required_fields
 from core.helpers.sanitize import sanitize_text
 
 data = await get_form_data(request)
-error = validate_required_fields(data, ['name', 'email'])
+error = validate_required_fields(data, ["name", "email"])
 if error:
     return error_redirect("/form", error)
 
-name = sanitize_text(data['name'], max_length=100)
+name = sanitize_text(data["name"], max_length=100)
 
 # ❌ WRONG - Direct database insertion
-name = data['name']  # No validation or sanitization
+name = data["name"]  # No validation or sanitization
 ```
 
 ---
@@ -1120,6 +1160,7 @@ async def delete_user(request: Request, user_id: int):
         return json_success(message="User deleted")
     except Exception as e:
         return json_error("Failed to delete user")
+
 
 # In delete_event.py - EXACT SAME CODE
 @router.delete("/admin/events/{event_id}")
@@ -1146,10 +1187,10 @@ async def delete_event(request: Request, event_id: int):
 @router.post("/admin/events")
 async def create_event(request: Request):
     # Auth
-    if 'user_id' not in request.session:
+    if "user_id" not in request.session:
         raise HTTPException(403)
-    user = get_user(request.session['user_id'])
-    if not user['is_admin']:
+    user = get_user(request.session["user_id"])
+    if not user["is_admin"]:
         raise HTTPException(403)
 
     # Form extraction
@@ -1157,11 +1198,11 @@ async def create_event(request: Request):
     data = dict(form)
 
     # Validation
-    if not data.get('name'):
+    if not data.get("name"):
         return error_redirect("/form", "Name required")
 
     # Sanitization
-    name = data['name'].strip()[:100]
+    name = data["name"].strip()[:100]
 
     # Business logic
     # ...
@@ -1173,10 +1214,10 @@ async def create_event(request: Request):
 async def create_event(request: Request):
     user = require_admin(request)  # Auth
     data = await get_form_data(request)  # Form extraction
-    error = validate_required_fields(data, ['name'])  # Validation
+    error = validate_required_fields(data, ["name"])  # Validation
     if error:
         return error_redirect("/form", error)
-    name = sanitize_text(data['name'], max_length=100)  # Sanitization
+    name = sanitize_text(data["name"], max_length=100)  # Sanitization
     # Business logic
 ```
 

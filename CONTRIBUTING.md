@@ -111,9 +111,9 @@ git push origin feature/your-feature-name
 # ✅ REQUIRED - Proper type annotations
 from typing import Any, Dict, List, Optional, Union
 
+
 def process_tournament_results(
-    tournament_id: int,
-    results: List[Dict[str, Any]]
+    tournament_id: int, results: List[Dict[str, Any]]
 ) -> Optional[Dict[str, Union[int, float]]]:
     """Process tournament results with complete type safety."""
     if not results:
@@ -123,8 +123,9 @@ def process_tournament_results(
     return {
         "tournament_id": tournament_id,
         "total_participants": len(results),
-        "total_weight": total_weight
+        "total_weight": total_weight,
     }
+
 
 # ❌ FORBIDDEN - No type annotations
 def process_tournament_results(tournament_id, results):
@@ -158,6 +159,7 @@ from typing import *
 from core.db_schema import Result, Angler, get_session
 from typing import List, Dict, Any
 
+
 def get_tournament_standings(tournament_id: int) -> List[Dict[str, Any]]:
     """Get tournament standings with proper typing."""
     with get_session() as session:
@@ -173,10 +175,11 @@ def get_tournament_standings(tournament_id: int) -> List[Dict[str, Any]]:
                 "name": angler.name,
                 "total_weight": result.total_weight,
                 "points": result.points,
-                "place": result.place
+                "place": result.place,
             }
             for result, angler in results
         ]
+
 
 # ❌ AVOID - Untyped or unsafe queries
 def get_standings(id):
@@ -194,10 +197,10 @@ from fastapi import Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import TemplateResponse
 
+
 @router.get("/tournaments/{tournament_id}")
 async def view_tournament(
-    request: Request,
-    tournament_id: int
+    request: Request, tournament_id: int
 ) -> Union[RedirectResponse, TemplateResponse]:
     """View tournament details with proper type safety."""
     user = get_current_user(request)
@@ -208,11 +211,9 @@ async def view_tournament(
     if not tournament:
         raise HTTPException(status_code=404, detail="Tournament not found")
 
-    return templates.TemplateResponse("tournament.html", {
-        "request": request,
-        "user": user,
-        "tournament": tournament
-    })
+    return templates.TemplateResponse(
+        "tournament.html", {"request": request, "user": user, "tournament": tournament}
+    )
 ```
 
 ### Error Handling
@@ -226,6 +227,7 @@ from core.helpers.logging_config import get_logger
 
 logger = get_logger(__name__)
 
+
 @router.post("/admin/tournaments/create")
 async def create_tournament(request: Request, data: TournamentCreateForm) -> RedirectResponse:
     """Create tournament with proper error handling."""
@@ -237,7 +239,7 @@ async def create_tournament(request: Request, data: TournamentCreateForm) -> Red
                 event_id=data.event_id,
                 lake_id=data.lake_id,
                 ramp_id=data.ramp_id,
-                entry_fee=data.entry_fee
+                entry_fee=data.entry_fee,
             )
             session.add(tournament)
             session.commit()
@@ -248,7 +250,9 @@ async def create_tournament(request: Request, data: TournamentCreateForm) -> Red
 
     except Exception as e:
         logger.error(f"Failed to create tournament: {e}", exc_info=True)
-        return error_redirect("/admin/tournaments", "Failed to create tournament. Please try again.")
+        return error_redirect(
+            "/admin/tournaments", "Failed to create tournament. Please try again."
+        )
 ```
 
 ## 🧪 Testing Requirements
@@ -271,24 +275,23 @@ def test_calculate_tournament_points():
     results = [
         {"place": 1, "total_weight": 15.5},
         {"place": 2, "total_weight": 14.2},
-        {"place": 3, "total_weight": 13.8}
+        {"place": 3, "total_weight": 13.8},
     ]
 
     points = calculate_points(results)
 
     assert points[0]["points"] == 100  # 1st place
-    assert points[1]["points"] == 99   # 2nd place
-    assert points[2]["points"] == 98   # 3rd place
+    assert points[1]["points"] == 99  # 2nd place
+    assert points[2]["points"] == 98  # 3rd place
+
 
 # Route test example
 def test_tournament_creation_requires_admin(client, test_user):
     """Test that tournament creation requires admin privileges."""
-    response = client.post("/admin/tournaments/create", json={
-        "event_id": 1,
-        "lake_id": 1,
-        "ramp_id": 1,
-        "entry_fee": 25.00
-    })
+    response = client.post(
+        "/admin/tournaments/create",
+        json={"event_id": 1, "lake_id": 1, "ramp_id": 1, "entry_fee": 25.00},
+    )
 
     assert response.status_code == 403
 ```
@@ -504,43 +507,57 @@ user = require_admin(request)
 ```python
 from core.helpers.crud import delete_entity, check_foreign_key_usage, bulk_delete
 
+
 # Simple delete
 @router.delete("/admin/users/{user_id}")
 async def delete_user(request: Request, user_id: int) -> Response:
     return delete_entity(
-        request, user_id, Angler,
+        request,
+        user_id,
+        Angler,
         success_message="User deleted successfully",
-        error_message="Failed to delete user"
+        error_message="Failed to delete user",
     )
+
 
 # Delete with FK validation
 def _check_ramp_usage(session: Session, ramp_id: int) -> Optional[str]:
     return check_foreign_key_usage(
-        session, Tournament, Tournament.ramp_id, ramp_id,
-        "Cannot delete ramp that is referenced by tournaments"
+        session,
+        Tournament,
+        Tournament.ramp_id,
+        ramp_id,
+        "Cannot delete ramp that is referenced by tournaments",
     )
+
 
 @router.delete("/admin/ramps/{ramp_id}")
 async def delete_ramp(request: Request, ramp_id: int) -> Response:
     return delete_entity(
-        request, ramp_id, Ramp,
+        request,
+        ramp_id,
+        Ramp,
         success_message="Ramp deleted successfully",
         error_message="Failed to delete ramp",
-        validation_check=_check_ramp_usage
+        validation_check=_check_ramp_usage,
     )
+
 
 # Delete with cascade
 def _delete_poll_cascade(session: Session, poll_id: int) -> None:
     bulk_delete(session, PollVote, [PollVote.poll_id == poll_id])
     bulk_delete(session, PollOption, [PollOption.poll_id == poll_id])
 
+
 @router.delete("/admin/polls/{poll_id}")
 async def delete_poll(request: Request, poll_id: int) -> Response:
     return delete_entity(
-        request, poll_id, Poll,
+        request,
+        poll_id,
+        Poll,
         success_message="Poll deleted successfully",
         error_message="Failed to delete poll",
-        pre_delete_hook=_delete_poll_cascade
+        pre_delete_hook=_delete_poll_cascade,
     )
 ```
 
@@ -566,7 +583,7 @@ return json_error("Invalid input", status_code=400)
 from core.helpers.forms import get_form_data, validate_required_fields
 
 data = await get_form_data(request)
-error = validate_required_fields(data, ['name', 'email'])
+error = validate_required_fields(data, ["name", "email"])
 if error:
     return error_redirect("/form", error)
 ```
@@ -578,8 +595,8 @@ from core.helpers.sanitize import sanitize_text, sanitize_email
 from core.helpers.password_validator import validate_password, hash_password
 
 # Sanitize user input
-name = sanitize_text(data['name'], max_length=100)
-email = sanitize_email(data['email'])
+name = sanitize_text(data["name"], max_length=100)
+email = sanitize_email(data["email"])
 
 # Password validation and hashing
 valid, errors = validate_password(password)
@@ -615,17 +632,14 @@ hashed = hash_password(password)
 from core.db_schema import Tournament, get_session
 
 with get_session() as session:
-    results = (
-        session.query(Tournament)
-        .filter(Tournament.year == 2024)
-        .all()
-    )
+    results = session.query(Tournament).filter(Tournament.year == 2024).all()
 ```
 
 #### Authentication
 ```python
 # Use typed auth helpers
 from core.helpers.auth import require_admin, require_member
+
 
 @router.post("/admin/action")
 async def admin_action(request: Request) -> RedirectResponse:
