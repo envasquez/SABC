@@ -184,10 +184,12 @@ hashed = hash_password(user_password)
 ```python
 from core.helpers.auth import require_member, require_admin
 
+
 @router.get("/member-only")
 async def member_route(request: Request):
     user = require_member(request)  # Raises 403 if not member
     # ...
+
 
 @router.post("/admin/action")
 async def admin_route(request: Request):
@@ -228,6 +230,7 @@ All input data is validated using Pydantic models with strict type checking.
 
 ```python
 from pydantic import BaseModel, EmailStr, constr
+
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -274,7 +277,7 @@ session.execute(f"SELECT * FROM anglers WHERE email = '{user_email}'")
 **Sentry Integration**:
 ```python
 # Automatic filtering of sensitive data
-before_send=filter_sensitive_data
+before_send = filter_sensitive_data
 ```
 
 ---

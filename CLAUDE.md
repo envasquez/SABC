@@ -101,11 +101,13 @@ git push
 # ✅ ALWAYS DO THIS
 from typing import Any, Dict, List, Optional, Union
 
+
 def process_data(items: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     """Process data with proper type hints."""
     if not items:
         return None
     return {"processed": len(items)}
+
 
 # ❌ NEVER DO THIS
 def process_data(items):
@@ -134,6 +136,7 @@ from typing import Any, Dict, Optional
 # ❌ ABSOLUTELY FORBIDDEN
 try:
     from some_module import feature
+
     HAS_FEATURE = True
 except ImportError:
     HAS_FEATURE = False
@@ -142,6 +145,7 @@ exec(open("routes.py").read())
 
 # ✅ PROPER FASTAPI ARCHITECTURE
 from routes import auth, admin, public
+
 app.include_router(auth.router)
 app.include_router(admin.router)
 app.include_router(public.router)
@@ -275,6 +279,7 @@ async def example_route(request: Request) -> Union[RedirectResponse, TemplateRes
 # Type-safe auth helpers
 from core.helpers.auth import require_admin, require_member
 
+
 @router.post("/admin/action")
 async def admin_action(request: Request) -> RedirectResponse:
     user = require_admin(request)  # Raises HTTPException if not admin
@@ -287,12 +292,7 @@ async def admin_action(request: Request) -> RedirectResponse:
 ### Poll Types & Data Structure
 ```python
 # Tournament location polls - structured data
-option_data = {
-    "lake_id": 1,
-    "ramp_id": 3,
-    "start_time": "06:00",
-    "end_time": "15:00"
-}
+option_data = {"lake_id": 1, "ramp_id": 3, "start_time": "06:00", "end_time": "15:00"}
 
 # Simple polls - no structured data
 option_data = {}  # Uses option_text only
@@ -381,6 +381,7 @@ PORT=8000
 from core.db_schema import Result, Angler, get_session
 from typing import List, Dict, Any
 
+
 def get_tournament_results(tournament_id: int) -> List[Dict[str, Any]]:
     with get_session() as session:
         results = (
@@ -391,11 +392,7 @@ def get_tournament_results(tournament_id: int) -> List[Dict[str, Any]]:
             .all()
         )
         return [
-            {
-                "name": angler.name,
-                "total_weight": result.total_weight,
-                "points": result.points
-            }
+            {"name": angler.name, "total_weight": result.total_weight, "points": result.points}
             for result, angler in results
         ]
 ```
@@ -410,11 +407,7 @@ logger = get_logger(__name__)
 
 try:
     with get_session() as session:
-        tournament = Tournament(
-            event_id=event_id,
-            lake_id=lake_id,
-            ramp_id=ramp_id
-        )
+        tournament = Tournament(event_id=event_id, lake_id=lake_id, ramp_id=ramp_id)
         session.add(tournament)
         session.commit()
     return RedirectResponse("/success")

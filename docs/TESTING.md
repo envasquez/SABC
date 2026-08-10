@@ -168,6 +168,7 @@ def test_something(db_session):
 def test_member_access(member_user):
     assert member_user.member is True
 
+
 def test_admin_access(admin_user):
     assert admin_user.is_admin is True
 ```
@@ -179,6 +180,7 @@ def test_admin_access(admin_user):
 def test_protected_route(authenticated_client):
     response = authenticated_client.get("/profile")
     assert response.status_code == 200
+
 
 def test_admin_route(admin_client):
     response = admin_client.get("/admin")
@@ -205,11 +207,14 @@ def test_tournament(test_tournament, test_lake, test_ramp):
 def test_login_with_valid_credentials():
     pass
 
+
 def test_login_fails_with_invalid_password():
     pass
 
+
 def test_member_can_vote_in_poll():
     pass
+
 
 def test_non_member_cannot_vote_in_poll():
     pass
@@ -224,12 +229,15 @@ def test_user_registration():
     password = "SecurePassword123!"
 
     # Act - Perform the action
-    response = client.post("/register", data={
-        "first_name": "New",
-        "last_name": "User",
-        "email": email,
-        "password": password,
-    })
+    response = client.post(
+        "/register",
+        data={
+            "first_name": "New",
+            "last_name": "User",
+            "email": email,
+            "password": password,
+        },
+    )
 
     # Assert - Verify the result
     assert response.status_code == 302
@@ -243,25 +251,31 @@ def test_user_registration():
 ```python
 import pytest
 
+
 @pytest.mark.unit
 def test_password_validation():
     pass
+
 
 @pytest.mark.integration
 def test_database_query():
     pass
 
+
 @pytest.mark.routes
 def test_login_endpoint():
     pass
+
 
 @pytest.mark.security
 def test_csrf_protection():
     pass
 
+
 @pytest.mark.slow
 def test_large_dataset_processing():
     pass
+
 
 # Skip in CI environment
 @pytest.mark.skip_ci
@@ -449,6 +463,7 @@ def test_protected_route_requires_auth(client):
     assert response.status_code in [302, 303]
     assert "/login" in response.headers["location"]
 
+
 def test_protected_route_with_auth(authenticated_client):
     response = authenticated_client.get("/profile")
     assert response.status_code == 200
@@ -458,10 +473,13 @@ def test_protected_route_with_auth(authenticated_client):
 
 ```python
 def test_form_submission(client, db_session):
-    response = client.post("/submit", data={
-        "field1": "value1",
-        "field2": "value2",
-    })
+    response = client.post(
+        "/submit",
+        data={
+            "field1": "value1",
+            "field2": "value2",
+        },
+    )
     assert response.status_code == 302
 
     # Verify database was updated
@@ -473,18 +491,25 @@ def test_form_submission(client, db_session):
 
 ```python
 def test_csrf_token_required(client):
-    response = client.post("/submit", data={
-        "field": "value"
-        # Missing CSRF token
-    })
+    response = client.post(
+        "/submit",
+        data={
+            "field": "value"
+            # Missing CSRF token
+        },
+    )
     assert response.status_code == 403
+
 
 def test_csrf_token_valid(client):
     csrf_token = get_csrf_token(client)
-    response = client.post("/submit", data={
-        "field": "value",
-        "csrf_token": csrf_token,
-    })
+    response = client.post(
+        "/submit",
+        data={
+            "field": "value",
+            "csrf_token": csrf_token,
+        },
+    )
     assert response.status_code in [200, 302]
 ```
 

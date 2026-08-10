@@ -100,11 +100,14 @@ Auto-generated migrations may need manual adjustments:
 ```python
 def upgrade() -> None:
     # Add the column with a default value
-    op.add_column('anglers', sa.Column('phone_verified', sa.Boolean(), nullable=False, server_default='false'))
+    op.add_column(
+        "anglers", sa.Column("phone_verified", sa.Boolean(), nullable=False, server_default="false")
+    )
+
 
 def downgrade() -> None:
     # Remove the column
-    op.drop_column('anglers', 'phone_verified')
+    op.drop_column("anglers", "phone_verified")
 ```
 
 ### 5. Apply the Migration
@@ -141,29 +144,35 @@ nix develop -c alembic upgrade head
 
 ```python
 def upgrade() -> None:
-    op.add_column('anglers',
-        sa.Column('phone_verified', sa.Boolean(), nullable=False, server_default='false')
+    op.add_column(
+        "anglers", sa.Column("phone_verified", sa.Boolean(), nullable=False, server_default="false")
     )
 
+
 def downgrade() -> None:
-    op.drop_column('anglers', 'phone_verified')
+    op.drop_column("anglers", "phone_verified")
 ```
 
 ### Modifying a Column
 
 ```python
 def upgrade() -> None:
-    op.alter_column('anglers', 'email',
+    op.alter_column(
+        "anglers",
+        "email",
         existing_type=sa.String(length=255),
         type_=sa.String(length=320),  # New max email length
-        nullable=False
+        nullable=False,
     )
 
+
 def downgrade() -> None:
-    op.alter_column('anglers', 'email',
+    op.alter_column(
+        "anglers",
+        "email",
         existing_type=sa.String(length=320),
         type_=sa.String(length=255),
-        nullable=False
+        nullable=False,
     )
 ```
 
@@ -171,10 +180,11 @@ def downgrade() -> None:
 
 ```python
 def upgrade() -> None:
-    op.create_index('ix_anglers_email', 'anglers', ['email'])
+    op.create_index("ix_anglers_email", "anglers", ["email"])
+
 
 def downgrade() -> None:
-    op.drop_index('ix_anglers_email', 'anglers')
+    op.drop_index("ix_anglers_email", "anglers")
 ```
 
 ### Data Migration Example
@@ -184,34 +194,29 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.sql import table, column
 
+
 def upgrade() -> None:
     # Add the column
-    op.add_column('anglers', sa.Column('status', sa.String(20), nullable=True))
+    op.add_column("anglers", sa.Column("status", sa.String(20), nullable=True))
 
     # Populate data for existing rows
-    anglers = table('anglers',
-        column('id', sa.Integer),
-        column('member', sa.Boolean),
-        column('status', sa.String)
+    anglers = table(
+        "anglers",
+        column("id", sa.Integer),
+        column("member", sa.Boolean),
+        column("status", sa.String),
     )
 
-    op.execute(
-        anglers.update()
-        .where(anglers.c.member == True)
-        .values(status='active')
-    )
+    op.execute(anglers.update().where(anglers.c.member == True).values(status="active"))
 
-    op.execute(
-        anglers.update()
-        .where(anglers.c.member == False)
-        .values(status='inactive')
-    )
+    op.execute(anglers.update().where(anglers.c.member == False).values(status="inactive"))
 
     # Make column non-nullable
-    op.alter_column('anglers', 'status', nullable=False)
+    op.alter_column("anglers", "status", nullable=False)
+
 
 def downgrade() -> None:
-    op.drop_column('anglers', 'status')
+    op.drop_column("anglers", "status")
 ```
 
 ## Testing Migrations
