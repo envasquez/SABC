@@ -24,6 +24,20 @@
     <form method="POST" action="/admin/news/create" data-news-confirm="create">
         <div class="card-body">
             {{ csrf_token(request) }}
+            {% if news_reply_to %}
+            <div class="alert alert-info" role="alert">
+                <i class="ti ti-mail-forward me-1" aria-hidden="true"></i>
+                Publishing emails all current members. Replies via <strong>Reply All</strong>
+                go to the discussion list (<code>{{ news_reply_to }}</code>) and reach everyone;
+                a plain Reply goes only to the club inbox.
+            </div>
+            {% else %}
+            <div class="alert alert-warning" role="alert">
+                <i class="ti ti-alert-triangle me-1" aria-hidden="true"></i>
+                Publishing emails all current members, but reply-all discussion isn't set up
+                (no <code>NEWS_REPLY_TO</code> configured) — replies go only to the club inbox.
+            </div>
+            {% endif %}
             <div class="row g-3">
                 <div class="col-12 col-md-6">
                     <label for="title" class="form-label required">Title</label>

@@ -190,10 +190,10 @@ class TestNewsEmailReplyInvite:
 
     def test_invite_present_with_reply_to(self):
         _subject, text, html = generate_news_email_content("T", "Body", reply_to="d@x.com")
-        assert "reply to this email" in text.lower()
-        assert "reply to this email" in html.lower()
+        assert "reply all" in text.lower()
+        assert "reply all" in html.lower()
 
     def test_invite_absent_without_reply_to(self):
         _subject, text, html = generate_news_email_content("T", "Body")
-        assert "reply to this email" not in text.lower()
-        assert "reply to this email" not in html.lower()
+        assert "reply all" not in text.lower()
+        assert "reply all" not in html.lower()

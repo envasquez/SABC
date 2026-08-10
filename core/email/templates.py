@@ -81,14 +81,17 @@ def generate_news_email_content(
 
     # Invitation to reply-all discuss, only when a discussion list is configured.
     reply_invite_text = (
-        "\n\n💬 Want to discuss? Just reply to this email — your reply goes to all members.\n"
+        "\n\n💬 Want to discuss? Hit Reply All — your message goes to every club "
+        "member. (Plain Reply goes only to the club inbox.)\n"
         if reply_to
         else ""
     )
     reply_invite_html = (
         '<p style="padding: 10px 12px; background-color: #f5f5f5; '
         'border-left: 4px solid #0d6efd;">💬 <strong>Want to discuss?</strong> '
-        "Just reply to this email — your reply goes to all members.</p>"
+        "Hit <strong>Reply All</strong> and your message goes to every club "
+        'member. <span style="color: #6c757d;">(A plain Reply goes only to the '
+        "club inbox.)</span></p>"
         if reply_to
         else ""
     )

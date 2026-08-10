@@ -46,6 +46,8 @@ def admin_news(request: Request, show_archived: bool = False) -> Response:
         news_query = news_query.order_by(News.priority.desc(), News.created_at.desc())
         news_items = news_query.all()
 
+    from core.email.config import NEWS_REPLY_TO
+
     return templates.TemplateResponse(
         request,
         "admin/news.html",
@@ -53,6 +55,7 @@ def admin_news(request: Request, show_archived: bool = False) -> Response:
             "user": user,
             "news_items": news_items,
             "show_archived": show_archived,
+            "news_reply_to": NEWS_REPLY_TO,
         },
     )
 
