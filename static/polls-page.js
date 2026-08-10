@@ -293,6 +293,23 @@ document.addEventListener('DOMContentLoaded', function() {
             deletePoll(btn.dataset.pollId, btn.dataset.pollTitle);
         });
     });
+
+    // Reply composer focus: when a reply toggle opens, move focus to that
+    // comment's reply textarea and scroll it into view, so members type into
+    // the reply box rather than the "Start a new topic" box below. Delegated on
+    // document so it also works for discussion content swapped in by HTMX.
+    document.addEventListener('change', function(e) {
+        var cb = e.target;
+        if (!cb || !cb.classList || !cb.classList.contains('poll-reply-check') || !cb.checked) {
+            return;
+        }
+        var comment = cb.closest('.poll-comment');
+        var textarea = comment ? comment.querySelector(':scope > .poll-reply-form textarea') : null;
+        if (textarea) {
+            textarea.focus();
+            textarea.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+    });
 });
 
 /**

@@ -54,6 +54,18 @@ class Angler(Base):
     session_version: Mapped[int] = mapped_column(
         Integer, nullable=False, default=1, server_default="1"
     )
+    # Email notification preferences. ``email_opt_in`` is the master switch:
+    # when False the member receives no notification emails at all, regardless
+    # of the per-category flags below.
+    email_opt_in: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default="true"
+    )
+    notify_news: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default="true"
+    )
+    notify_replies: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default="true"
+    )
 
 
 class PasswordResetToken(Base):
@@ -181,6 +193,12 @@ class PollComment(Base):
     )
     parent_comment_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("poll_comments.id", ondelete="CASCADE"), index=True
+    )
+    # The specific comment this one replied to (may be another reply). Kept flat:
+    # ``parent_comment_id`` still points at the thread root, so display stays one
+    # level deep; this only drives the "Replying to <name>" label + notification.
+    reply_to_comment_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("poll_comments.id", ondelete="SET NULL"), index=True
     )
     body: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=utc_now)

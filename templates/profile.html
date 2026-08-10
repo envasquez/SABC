@@ -16,6 +16,9 @@
   .profile-medal-2 { background: rgba(194,205,218,.12); }
   .profile-medal-3 { background: rgba(208,138,79,.14); }
   .profile-medal .medal-icon { font-size: 1.5rem; line-height: 1; }
+  /* Sub-toggles forced off and greyed while the master switch is off.
+     pointer-events:none blocks interaction; profile.js unchecks them. */
+  .notif-subtoggles.notif-disabled { opacity: .45; pointer-events: none; }
 </style>
 {% endblock %}
 
@@ -88,6 +91,31 @@
               <tr>
                 <td class="text-secondary"><i class="ti ti-calendar me-2" aria-hidden="true"></i>Year Joined</td>
                 <td class="fw-medium">{{ user.year_joined or 'Not specified' }}</td>
+              </tr>
+              <tr>
+                <td class="text-secondary align-top"><i class="ti ti-bell me-2" aria-hidden="true"></i>Email Notifications</td>
+                <td>
+                  {# Toggles save instantly (HTMX) — no need to enter Edit mode. #}
+                  <form hx-post="/profile/notifications" hx-trigger="change"
+                        hx-target="#notif-status" hx-swap="innerHTML">
+                    {{ csrf_token(request) }}
+                    <label class="form-check form-switch mb-1">
+                      <input class="form-check-input" id="notifMaster" type="checkbox" name="email_opt_in" value="1" {% if user.email_opt_in %}checked{% endif %}>
+                      <span class="form-check-label"><strong>Receive emails</strong></span>
+                    </label>
+                    <div class="notif-subtoggles ms-4 ps-2 border-start">
+                      <label class="form-check form-switch mb-1">
+                        <input class="form-check-input" type="checkbox" name="notify_news" value="1" {% if user.notify_news %}checked{% endif %}>
+                        <span class="form-check-label">News — when the club posts an update</span>
+                      </label>
+                      <label class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" name="notify_replies" value="1" {% if user.notify_replies %}checked{% endif %}>
+                        <span class="form-check-label">Discussion — when someone replies to your comment</span>
+                      </label>
+                    </div>
+                    <div id="notif-status" class="mt-1" style="min-height:1.25rem"></div>
+                  </form>
+                </td>
               </tr>
             </tbody>
           </table>

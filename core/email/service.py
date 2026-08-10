@@ -5,6 +5,7 @@ from typing import List
 
 from .config import (
     FROM_EMAIL,
+    NEWS_REPLY_TO,
     SMTP_PASSWORD,
     SMTP_PORT,
     SMTP_SERVER,
@@ -15,6 +16,7 @@ from .config import (
 from .templates import (
     generate_contact_email_content,
     generate_news_email_content,
+    generate_reply_email_content,
     generate_reset_email_content,
 )
 
@@ -95,11 +97,17 @@ def send_news_notification(
         )
 
     try:
-        subject, text_body, html_body = generate_news_email_content(title, content, author_name)
+        subject, text_body, html_body = generate_news_email_content(
+            title, content, author_name, reply_to=NEWS_REPLY_TO
+        )
 
         msg = MIMEMultipart("alternative")
         msg["From"] = FROM_EMAIL
         msg["Subject"] = _safe_header(subject)
+        # When a discussion list is configured, point replies (and reply-all)
+        # at it so members can discuss the update over email.
+        if NEWS_REPLY_TO:
+            msg["Reply-To"] = _safe_header(NEWS_REPLY_TO)
 
         msg.attach(MIMEText(text_body, "plain"))
         msg.attach(MIMEText(html_body, "html"))
@@ -118,6 +126,61 @@ def send_news_notification(
 
     except Exception as e:
         logger.error(f"Failed to send news notification '{title}': {e}")
+        return False
+
+
+def send_reply_notification(
+    email: str,
+    recipient_name: str,
+    replier_name: str,
+    poll_title: str,
+    reply_body: str,
+    poll_url: str,
+) -> bool:
+    """Notify a member that someone replied to their poll comment.
+
+    Args:
+        email: Recipient's email address
+        recipient_name: Recipient's display name
+        replier_name: Name of the member who replied
+        poll_title: Title of the poll the discussion belongs to
+        reply_body: Full text of the reply
+        poll_url: Link back to the poll discussion
+
+    Returns:
+        True if the email was sent, False otherwise.
+    """
+    if not SMTP_USERNAME or not SMTP_PASSWORD:
+        logger.warning("SMTP credentials not configured - cannot send email")
+        return False
+
+    recipient = TEST_EMAIL_OVERRIDE if TEST_EMAIL_OVERRIDE else email
+    if TEST_EMAIL_OVERRIDE:
+        logger.info(f"TEST MODE: Redirecting reply notification from {email} to {recipient}")
+
+    try:
+        subject, text_body, html_body = generate_reply_email_content(
+            recipient_name, replier_name, poll_title, reply_body, poll_url
+        )
+
+        msg = MIMEMultipart("alternative")
+        msg["From"] = FROM_EMAIL
+        msg["To"] = _safe_header(recipient)
+        msg["Subject"] = _safe_header(subject)
+
+        msg.attach(MIMEText(text_body, "plain"))
+        msg.attach(MIMEText(html_body, "html"))
+
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.send_message(msg)
+
+        logger.info(f"Reply notification sent to {recipient}")
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to send reply notification to {recipient}: {e}")
         return False
 
 

@@ -115,7 +115,12 @@ def create_news(
                 member_emails: List[str] = [
                     email
                     for (email,) in session.query(Angler.email)
-                    .filter(Angler.member == True, Angler.email.isnot(None))  # noqa: E712
+                    .filter(
+                        Angler.member == True,  # noqa: E712
+                        Angler.email.isnot(None),
+                        Angler.email_opt_in.is_(True),
+                        Angler.notify_news.is_(True),
+                    )
                     .all()
                     if email
                     and not email.lower().endswith("@sabc.com")
