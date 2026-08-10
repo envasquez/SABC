@@ -1,6 +1,6 @@
 # BYLAWS OF South Austin Bass Club
 
-**Established 1981**
+**Established 1982**
 
 *Last Update December 2024*
 
