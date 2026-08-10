@@ -72,7 +72,9 @@
 ### Database Migration
 ```python
 op.add_column("anglers", sa.Column("dues_paid_through", sa.Date(), nullable=True))
-op.add_column("anglers", sa.Column("dues_banner_dismissed_at", sa.DateTime(timezone=True), nullable=True))
+op.add_column(
+    "anglers", sa.Column("dues_banner_dismissed_at", sa.DateTime(timezone=True), nullable=True)
+)
 ```
 
 ### Model Fields
@@ -99,17 +101,14 @@ def is_dues_current(user: UserDict) -> bool:
 if not user.get("is_admin") and not is_dues_current(user):
     return RedirectResponse(
         "/polls?error=Your dues have expired. Please pay your annual dues, in order to vote.",
-        status_code=303
+        status_code=303,
     )
 ```
 
 ### Banner Logic
 ```python
 show_dues_banner = False
-if (user and user.get("member")
-    and not user.get("is_admin")
-    and not is_dues_current(user)):
-
+if user and user.get("member") and not user.get("is_admin") and not is_dues_current(user):
     dismissed_at = user.get("dues_banner_dismissed_at")
     latest_poll_created = qs.get_latest_poll_created_at()
 
