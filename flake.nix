@@ -56,8 +56,11 @@
           httpx  # Required by FastAPI TestClient
 
           # Development tools
-          ruff
-          mypy
+          pip   # bootstraps the vendored pip packages in shellHook
+          ruff  # linter + formatter (Markdown formatting is disabled in
+                # pyproject.toml so this older nixpkgs ruff matches CI's newer one)
+          mypy  # fallback; the CI-pinned mypy is vendored in shellHook and
+                # loaded ahead of this via PYTHONPATH
         ]);
 
         devPackages = with pkgs; [
@@ -225,7 +228,18 @@
             # file matches the current pin set, it is skipped on subsequent
             # `nix develop` invocations. Delete .nix-python-packages/.pip-marker
             # (or the whole dir) to force a reinstall.
-            EXTRA_PIP_PKGS="starlette-csrf==3.0.0 slowapi==0.1.9 astral==3.2"
+            #
+            # mypy is ALSO vendored here, pinned to the exact version in
+            # requirements-ci.txt (the same source CI uses). The nixpkgs mypy
+            # launcher imports mypy from PYTHONPATH, and .nix-python-packages is
+            # first there, so `mypy` runs the CI-pinned version and local type
+            # checks match CI. When Dependabot bumps mypy the pin string changes,
+            # the marker no longer matches, and it is reinstalled automatically.
+            # (ruff is not pinned this way: `pip --target` can't place ruff's
+            # bundled binary, so it stays on nixpkgs; its only CI-divergent
+            # behavior — Markdown formatting — is turned off in pyproject.toml.)
+            MYPY_PIN="$(grep -iE '^mypy==' requirements-ci.txt || echo mypy)"
+            EXTRA_PIP_PKGS="starlette-csrf==3.0.0 slowapi==0.1.9 astral==3.2 $MYPY_PIN"
             PIP_MARKER=".nix-python-packages/.pip-marker"
             if [ "$(cat "$PIP_MARKER" 2>/dev/null)" != "$EXTRA_PIP_PKGS" ]; then
               echo "📦 Installing vendored pip packages into .nix-python-packages ..."
