@@ -1,5 +1,11 @@
 [tool.ruff]
 line-length = 100
+# Don't format Markdown. ruff >= 0.16 formats Python code blocks embedded in
+# .md by default; the older ruff pinned in the Nix dev shell does not. Excluding
+# Markdown keeps `format-code` (local) and `ruff format --check` (CI) in
+# agreement regardless of the ruff version gap. Drop this once the dev shell's
+# ruff is on 0.16+.
+extend-exclude = ["*.md"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N"]
