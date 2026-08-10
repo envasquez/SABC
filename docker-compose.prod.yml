@@ -13,6 +13,10 @@ services:
       SMTP_USERNAME: ${SMTP_USERNAME}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       FROM_EMAIL: ${FROM_EMAIL}
+      # Optional discussion-list address for news reply-all. Must be a mailing
+      # list / Google Group with members subscribed — a plain inbox won't
+      # re-broadcast replies. Empty by default (replies go to FROM_EMAIL).
+      NEWS_REPLY_TO: ${NEWS_REPLY_TO:-}
       WEBSITE_URL: ${WEBSITE_URL:-https://saustinbc.com}
       ENVIRONMENT: ${ENVIRONMENT:-production}
       SENTRY_DSN: ${SENTRY_DSN:-}
