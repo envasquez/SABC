@@ -26,6 +26,12 @@
     {% if c.edited %}<span class="text-secondary small fst-italic">· edited</span>{% endif %}
   </div>
 
+  {% if c.reply_to_name %}
+  <div class="text-secondary small mb-1">
+    <i class="ti ti-arrow-back-up me-1" aria-hidden="true"></i>Replying to <strong>{{ c.reply_to_name }}</strong>
+  </div>
+  {% endif %}
+
   {% if c.is_editing %}
   <form hx-post="/polls/{{ poll_id }}/comments/{{ c.id }}/edit"
         hx-vals='{"limit": {{ shown_limit }}}'
@@ -41,9 +47,10 @@
   </form>
   {% else %}
   <div class="text-body">{{ c.body | nl2br }}</div>
-  {% if not is_reply and poll_open %}
+  {% if poll_open %}
   {# Hidden checkbox toggles the reply form below via CSS, keeping the Reply
-     button inline with the actions while the form drops full-width. #}
+     button inline with the actions while the form drops full-width. Shown on
+     every comment (Camp A): you can reply to a reply, and it stays flat. #}
   <input type="checkbox" class="poll-reply-check d-none" id="reply-{{ poll_id }}-{{ c.id }}" autocomplete="off">
   {% endif %}
   <div class="d-flex align-items-center flex-wrap gap-1 mt-1">
@@ -57,7 +64,7 @@
       <i class="ti ti-thumb-up me-1" aria-hidden="true"></i>{{ c.like_count }}
     </button>
 
-    {% if not is_reply and poll_open %}
+    {% if poll_open %}
     <label class="btn btn-sm btn-ghost-secondary mb-0" for="reply-{{ poll_id }}-{{ c.id }}">
       <i class="ti ti-arrow-back-up me-1" aria-hidden="true"></i>Reply
     </label>
@@ -83,15 +90,26 @@
     {% endif %}
   </div>
 
-  {% if not is_reply and poll_open %}
-  <form class="poll-reply-form mt-2 mb-1" hx-post="/polls/{{ poll_id }}/comments"
-        hx-vals='{"limit": {{ shown_limit }}}'
-        hx-disabled-elt="find button" hx-sync="this:drop">
-    <input type="hidden" name="parent_id" value="{{ c.id }}">
-    <textarea name="body" class="form-control mb-2" rows="2" maxlength="{{ max_len }}"
-              placeholder="Reply to {{ c.author_name }}…" required></textarea>
-    <button type="submit" class="btn btn-sm btn-primary"><i class="ti ti-send me-1" aria-hidden="true"></i>Reply</button>
-  </form>
+  {% if poll_open %}
+  <div class="poll-reply-form ms-4 ps-3 py-2 mt-2 mb-1 border-start border-primary border-2">
+    <form hx-post="/polls/{{ poll_id }}/comments"
+          hx-vals='{"limit": {{ shown_limit }}}'
+          hx-disabled-elt="find button" hx-sync="this:drop">
+      <input type="hidden" name="parent_id" value="{{ c.id }}">
+      <div class="d-flex align-items-center justify-content-between mb-1">
+        <span class="text-primary small fw-medium">
+          <i class="ti ti-arrow-back-up me-1" aria-hidden="true"></i>Replying to {{ c.author_name }}
+        </span>
+        <label class="btn btn-sm btn-ghost-secondary py-0 px-1 mb-0" for="reply-{{ poll_id }}-{{ c.id }}"
+               title="Cancel reply" aria-label="Cancel reply">
+          <i class="ti ti-x" aria-hidden="true"></i>
+        </label>
+      </div>
+      <textarea name="body" class="form-control mb-2" rows="2" maxlength="{{ max_len }}"
+                placeholder="Write your reply to {{ c.author_name }}…" required></textarea>
+      <button type="submit" class="btn btn-sm btn-primary"><i class="ti ti-send me-1" aria-hidden="true"></i>Post Reply</button>
+    </form>
+  </div>
   {% endif %}
   {% endif %}
 
@@ -118,8 +136,13 @@
 
   {% if comments %}
     {% for c in comments %}
-      {{ render_comment(c, poll_id, poll_open, max_comment_length, shown_limit) }}
-      {% if not loop.last %}<hr class="my-2">{% endif %}
+    {# Each top-level comment and all its replies are grouped in one outlined
+       card so it's clear where one thread ends and the next begins. #}
+    <div class="card card-sm mb-3">
+      <div class="card-body py-2">
+        {{ render_comment(c, poll_id, poll_open, max_comment_length, shown_limit) }}
+      </div>
+    </div>
     {% endfor %}
   {% else %}
     <p class="text-secondary small mb-3">
@@ -128,15 +151,22 @@
   {% endif %}
 
   {% if poll_open %}
-  <form hx-post="/polls/{{ poll_id }}/comments" class="mt-3"
-        hx-vals='{"limit": {{ shown_limit }}}'
-        hx-disabled-elt="find button" hx-sync="this:drop">
-    <textarea name="body" class="form-control mb-2" rows="2" maxlength="{{ max_comment_length }}"
-              placeholder="Share your thoughts on lakes, ramps, times…" required></textarea>
-    <button type="submit" class="btn btn-sm btn-primary">
-      <i class="ti ti-send me-1" aria-hidden="true"></i>Post Comment
-    </button>
-  </form>
+  <div class="card card-sm mt-3">
+    <div class="card-body">
+      <div class="d-flex align-items-center text-secondary small fw-medium mb-2">
+        <i class="ti ti-message-plus me-1" aria-hidden="true"></i>Start a new topic
+      </div>
+      <form hx-post="/polls/{{ poll_id }}/comments"
+            hx-vals='{"limit": {{ shown_limit }}}'
+            hx-disabled-elt="find button" hx-sync="this:drop">
+        <textarea name="body" class="form-control mb-2" rows="2" maxlength="{{ max_comment_length }}"
+                  placeholder="Start a new discussion topic — to respond to someone, use the Reply button on their comment." required></textarea>
+        <button type="submit" class="btn btn-sm btn-primary">
+          <i class="ti ti-send me-1" aria-hidden="true"></i>Post Comment
+        </button>
+      </form>
+    </div>
+  </div>
   {% else %}
   <div class="text-secondary small mt-3">
     <i class="ti ti-lock me-1" aria-hidden="true"></i>Discussion is closed — this poll has ended.

@@ -37,6 +37,9 @@ def profile_page(request: Request) -> Response:
             "phone": angler.phone,
             "year_joined": angler.year_joined,
             "created_at": angler.created_at,
+            "email_opt_in": bool(angler.email_opt_in),
+            "notify_news": bool(angler.notify_news),
+            "notify_replies": bool(angler.notify_replies),
         }
 
         current_year = now_local().year

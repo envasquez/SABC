@@ -10,14 +10,14 @@ Everything runs against the shared in-memory SQLite session via TestClient, so
 the suite stays fast (no sleeps, tiny fixtures).
 """
 
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import Any, Optional
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from core.db_schema import Angler, Poll, PollComment, PollCommentReaction
+from core.db_schema import Angler, Event, Poll, PollComment, PollCommentReaction
 from core.helpers.timezone import now_local
 
 # ---------------------------------------------------------------------------
@@ -86,6 +86,35 @@ def _add_comment(
     return comment
 
 
+def _make_tournament_poll(
+    db_session: Session, event_date: date, *, voting_closed: bool = True
+) -> Poll:
+    """A tournament_location poll (voting closed by default) tied to an event on
+    ``event_date`` — used to exercise the tournament discussion window."""
+    now = now_local()
+    event = Event(
+        date=event_date,
+        year=event_date.year,
+        name="Tournament",
+        event_type="sabc_tournament",
+    )
+    db_session.add(event)
+    db_session.commit()
+    db_session.refresh(event)
+    poll = Poll(
+        title="Location Vote",
+        poll_type="tournament_location",
+        event_id=event.id,
+        starts_at=now - timedelta(days=14),
+        closes_at=(now - timedelta(days=3)) if voting_closed else (now + timedelta(days=3)),
+        closed=voting_closed,
+    )
+    db_session.add(poll)
+    db_session.commit()
+    db_session.refresh(poll)
+    return poll
+
+
 @pytest.fixture
 def open_poll(db_session: Session) -> Poll:
     return _make_poll(db_session, open_now=True)
@@ -127,6 +156,17 @@ class TestDiscussionAccess:
     def test_discussion_on_missing_poll_404(self, member_client: TestClient):
         resp = member_client.get("/polls/999999/discussion")
         assert resp.status_code == 404
+
+    def test_reply_and_new_topic_are_labeled_distinctly(
+        self, member_client: TestClient, db_session: Session, member_user: Angler, open_poll: Poll
+    ):
+        # The reply box and the new-thread composer must read differently so
+        # members don't post a new thread thinking they're replying.
+        _add_comment(db_session, open_poll.id, member_user.id, "root")
+        resp = member_client.get(f"/polls/{open_poll.id}/discussion")
+        assert "Replying to Test Member" in resp.text  # labeled, attributed reply box
+        assert "Post Reply" in resp.text
+        assert "Start a new topic" in resp.text  # clearly-labeled new-thread composer
 
 
 # ---------------------------------------------------------------------------
@@ -203,7 +243,7 @@ class TestReplies:
         reply = db_session.query(PollComment).filter(PollComment.body == "a reply").one()
         assert reply.parent_comment_id == parent.id
 
-    def test_reply_to_reply_is_clamped_to_root(
+    def test_reply_to_reply_is_flat_with_attribution(
         self, member_client: TestClient, db_session: Session, member_user: Angler, open_poll: Poll
     ):
         root = _add_comment(db_session, open_poll.id, member_user.id, "root")
@@ -215,8 +255,49 @@ class TestReplies:
         )
         db_session.expire_all()
         grandchild = db_session.query(PollComment).filter(PollComment.body == "grandchild").one()
-        # Clamped to the top-level root, not nested under the reply.
+        # Stored flat under the root (display stays one level deep)...
         assert grandchild.parent_comment_id == root.id
+        # ...but records the actual reply target for the "Replying to X" label.
+        assert grandchild.reply_to_comment_id == child.id
+
+    def test_first_level_reply_has_no_reply_target_label(
+        self, member_client: TestClient, db_session: Session, member_user: Angler, open_poll: Poll
+    ):
+        root = _add_comment(db_session, open_poll.id, member_user.id, "root")
+        _post(
+            member_client,
+            f"/polls/{open_poll.id}/comments",
+            {"body": "direct reply", "parent_id": root.id},
+        )
+        db_session.expire_all()
+        reply = db_session.query(PollComment).filter(PollComment.body == "direct reply").one()
+        # reply_to == parent (root), so the UI won't show a redundant label.
+        assert reply.reply_to_comment_id == root.id
+        assert reply.parent_comment_id == root.id
+
+    def test_replies_are_replyable_with_attribution_rendered(
+        self,
+        member_client: TestClient,
+        db_session: Session,
+        member_user: Angler,
+        admin_user: Angler,
+        open_poll: Poll,
+    ):
+        root = _add_comment(db_session, open_poll.id, member_user.id, "root")
+        # A reply authored by admin, which member will reply to.
+        reply = _add_comment(
+            db_session, open_poll.id, admin_user.id, "admin reply", parent_id=root.id
+        )
+        _post(
+            member_client,
+            f"/polls/{open_poll.id}/comments",
+            {"body": "reply to the reply", "parent_id": reply.id},
+        )
+        resp = member_client.get(f"/polls/{open_poll.id}/discussion")
+        # Every comment carries a Reply toggle now (id="reply-{poll}-{comment}").
+        assert f'id="reply-{open_poll.id}-{reply.id}"' in resp.text
+        # And the reply-to-a-reply shows attribution to the admin.
+        assert "Replying to <strong>Test Admin</strong>" in resp.text
 
     def test_reply_parent_from_other_poll_becomes_top_level(
         self, member_client: TestClient, db_session: Session, member_user: Angler, open_poll: Poll
@@ -565,6 +646,188 @@ class TestPagination:
         assert "Show earlier comments" not in resp.text
         assert resp.text.count('class="poll-comment mb-2"') == 3  # 3 roots
         assert resp.text.count("poll-comment-reply") == 12  # 3 * 4 replies
+
+
+# ---------------------------------------------------------------------------
+# Tournament discussion window (open until 1 day after the tournament date)
+# ---------------------------------------------------------------------------
+
+
+class TestTournamentDiscussionWindow:
+    def test_open_when_voting_closed_but_before_event(
+        self, member_client: TestClient, db_session: Session
+    ):
+        # Tournament is today and voting already closed -> discussion still open.
+        poll = _make_tournament_poll(db_session, now_local().date())
+        resp = _post(member_client, f"/polls/{poll.id}/comments", {"body": "still talking"})
+        assert resp.status_code == 200
+        db_session.expire_all()
+        assert db_session.query(PollComment).filter(PollComment.poll_id == poll.id).count() == 1
+
+    def test_closed_day_after_event(self, member_client: TestClient, db_session: Session):
+        # Discussion closes at midnight ending tournament day, so the day after
+        # (tournament was yesterday) is read-only.
+        poll = _make_tournament_poll(db_session, now_local().date() - timedelta(days=1))
+        resp = _post(member_client, f"/polls/{poll.id}/comments", {"body": "too late"})
+        assert resp.status_code == 403
+
+    def test_closed_tournament_renders_read_only(
+        self, member_client: TestClient, db_session: Session
+    ):
+        poll = _make_tournament_poll(db_session, now_local().date() - timedelta(days=5))
+        resp = member_client.get(f"/polls/{poll.id}/discussion")
+        assert resp.status_code == 200
+        assert "Discussion is closed" in resp.text
+
+    def test_open_tournament_shows_post_form(self, member_client: TestClient, db_session: Session):
+        poll = _make_tournament_poll(db_session, now_local().date())
+        resp = member_client.get(f"/polls/{poll.id}/discussion")
+        assert "Post Comment" in resp.text
+
+    def test_upcoming_poll_not_yet_open(self, member_client: TestClient, db_session: Session):
+        # Poll hasn't started yet -> discussion is not open.
+        now = now_local()
+        event = Event(
+            date=(now + timedelta(days=10)).date(),
+            year=(now + timedelta(days=10)).year,
+            name="Future Tournament",
+            event_type="sabc_tournament",
+        )
+        db_session.add(event)
+        db_session.commit()
+        db_session.refresh(event)
+        poll = Poll(
+            title="Upcoming",
+            poll_type="tournament_location",
+            event_id=event.id,
+            starts_at=now + timedelta(days=1),
+            closes_at=now + timedelta(days=8),
+            closed=False,
+        )
+        db_session.add(poll)
+        db_session.commit()
+        db_session.refresh(poll)
+        resp = _post(member_client, f"/polls/{poll.id}/comments", {"body": "too early"})
+        assert resp.status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# Reply email notifications
+# ---------------------------------------------------------------------------
+
+
+class TestReplyNotifications:
+    def _capture(self, monkeypatch):
+        calls: list = []
+        monkeypatch.setattr(
+            "routes.voting.discussion.send_reply_notification",
+            lambda *args, **kwargs: calls.append(args) or True,
+        )
+        return calls
+
+    def test_reply_notifies_parent_author(
+        self,
+        member_client: TestClient,
+        db_session: Session,
+        member_user: Angler,
+        admin_user: Angler,
+        open_poll: Poll,
+        monkeypatch,
+    ):
+        calls = self._capture(monkeypatch)
+        parent = _add_comment(db_session, open_poll.id, admin_user.id, "root by admin")
+        _post(
+            member_client,
+            f"/polls/{open_poll.id}/comments",
+            {"body": "my reply text", "parent_id": parent.id},
+        )
+        assert len(calls) == 1
+        email, _recipient, replier, _title, reply_body, _url = calls[0]
+        assert email == admin_user.email
+        assert reply_body == "my reply text"
+        assert replier == member_user.name
+
+    def test_reply_to_reply_notifies_the_reply_author(
+        self,
+        member_client: TestClient,
+        db_session: Session,
+        member_user: Angler,
+        admin_user: Angler,
+        open_poll: Poll,
+        monkeypatch,
+    ):
+        # member starts a thread; admin replies; member replies to admin's
+        # reply -> the admin (the targeted reply's author) is notified.
+        calls = self._capture(monkeypatch)
+        root = _add_comment(db_session, open_poll.id, member_user.id, "root by member")
+        reply = _add_comment(
+            db_session, open_poll.id, admin_user.id, "reply by admin", parent_id=root.id
+        )
+        _post(
+            member_client,
+            f"/polls/{open_poll.id}/comments",
+            {"body": "answering admin", "parent_id": reply.id},
+        )
+        assert len(calls) == 1
+        assert calls[0][0] == admin_user.email
+
+    def test_no_notification_on_self_reply(
+        self,
+        member_client: TestClient,
+        db_session: Session,
+        member_user: Angler,
+        open_poll: Poll,
+        monkeypatch,
+    ):
+        calls = self._capture(monkeypatch)
+        parent = _add_comment(db_session, open_poll.id, member_user.id, "my own comment")
+        _post(
+            member_client,
+            f"/polls/{open_poll.id}/comments",
+            {"body": "replying to myself", "parent_id": parent.id},
+        )
+        assert calls == []
+
+    def test_no_notification_when_master_off(
+        self,
+        member_client: TestClient,
+        db_session: Session,
+        admin_user: Angler,
+        open_poll: Poll,
+        monkeypatch,
+    ):
+        calls = self._capture(monkeypatch)
+        admin_user.email_opt_in = False
+        db_session.commit()
+        parent = _add_comment(db_session, open_poll.id, admin_user.id, "root")
+        _post(
+            member_client, f"/polls/{open_poll.id}/comments", {"body": "hi", "parent_id": parent.id}
+        )
+        assert calls == []
+
+    def test_no_notification_when_replies_disabled(
+        self,
+        member_client: TestClient,
+        db_session: Session,
+        admin_user: Angler,
+        open_poll: Poll,
+        monkeypatch,
+    ):
+        calls = self._capture(monkeypatch)
+        admin_user.notify_replies = False
+        db_session.commit()
+        parent = _add_comment(db_session, open_poll.id, admin_user.id, "root")
+        _post(
+            member_client, f"/polls/{open_poll.id}/comments", {"body": "hi", "parent_id": parent.id}
+        )
+        assert calls == []
+
+    def test_top_level_comment_sends_nothing(
+        self, member_client: TestClient, db_session: Session, open_poll: Poll, monkeypatch
+    ):
+        calls = self._capture(monkeypatch)
+        _post(member_client, f"/polls/{open_poll.id}/comments", {"body": "a top-level comment"})
+        assert calls == []
 
 
 # ---------------------------------------------------------------------------

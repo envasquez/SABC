@@ -3,7 +3,8 @@
 import smtplib
 from unittest.mock import MagicMock, Mock, patch
 
-from core.email.service import send_password_reset_email
+from core.email.service import send_news_notification, send_password_reset_email
+from core.email.templates import generate_news_email_content
 
 
 class TestSendPasswordResetEmail:
@@ -147,3 +148,52 @@ class TestSendPasswordResetEmail:
         # Verify context manager was used (enter and exit called)
         mock_smtp_context.__enter__.assert_called_once()
         mock_smtp_context.__exit__.assert_called_once()
+
+
+class TestNewsNotificationReplyTo:
+    """News email carries a Reply-To when a discussion list is configured."""
+
+    @patch("core.email.service.TEST_EMAIL_OVERRIDE", None)
+    @patch("core.email.service.NEWS_REPLY_TO", "discuss@saustinbc.com")
+    @patch("core.email.service.SMTP_USERNAME", "u@example.com")
+    @patch("core.email.service.SMTP_PASSWORD", "pw")
+    @patch("core.email.service.smtplib.SMTP")
+    def test_reply_to_set_when_list_configured(self, mock_smtp_class: Mock):
+        mock_smtp = MagicMock()
+        mock_smtp_class.return_value.__enter__.return_value = mock_smtp
+
+        ok = send_news_notification(["a@example.com", "b@example.com"], "Title", "Body")
+
+        assert ok is True
+        sent = mock_smtp.send_message.call_args[0][0]
+        assert sent["Reply-To"] == "discuss@saustinbc.com"
+        # Roster stays hidden via BCC even with a reply-to list.
+        assert "a@example.com" in sent["Bcc"]
+
+    @patch("core.email.service.TEST_EMAIL_OVERRIDE", None)
+    @patch("core.email.service.NEWS_REPLY_TO", None)
+    @patch("core.email.service.SMTP_USERNAME", "u@example.com")
+    @patch("core.email.service.SMTP_PASSWORD", "pw")
+    @patch("core.email.service.smtplib.SMTP")
+    def test_no_reply_to_when_list_unset(self, mock_smtp_class: Mock):
+        mock_smtp = MagicMock()
+        mock_smtp_class.return_value.__enter__.return_value = mock_smtp
+
+        send_news_notification(["a@example.com"], "Title", "Body")
+
+        sent = mock_smtp.send_message.call_args[0][0]
+        assert sent["Reply-To"] is None
+
+
+class TestNewsEmailReplyInvite:
+    """The 'reply to discuss' invite appears only when a list is configured."""
+
+    def test_invite_present_with_reply_to(self):
+        _subject, text, html = generate_news_email_content("T", "Body", reply_to="d@x.com")
+        assert "reply to this email" in text.lower()
+        assert "reply to this email" in html.lower()
+
+    def test_invite_absent_without_reply_to(self):
+        _subject, text, html = generate_news_email_content("T", "Body")
+        assert "reply to this email" not in text.lower()
+        assert "reply to this email" not in html.lower()

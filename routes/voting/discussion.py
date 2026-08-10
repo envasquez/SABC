@@ -3,14 +3,17 @@
 All views render the same ``polls/_discussion.html`` partial into the
 ``#discussion-body-{poll_id}`` container, so every action (post, reply, edit,
 delete, react) is a single HTMX swap. Reading is open to any member; posting,
-editing and reacting are only allowed while the poll is open (its voting
-window is active). Deleting is allowed for the author or an admin at any time.
+editing and reacting are only allowed while the discussion is open. For most
+polls that means the voting window; for tournament-location polls it runs until
+midnight ending the tournament day (see ``_discussion_is_open``). Deleting is
+allowed for the author or an admin at any time.
 """
 
 import os
+from datetime import timedelta
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, Request
 from fastapi.responses import Response
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -20,12 +23,15 @@ from sqlalchemy.orm import Session
 
 from core.db_schema import (
     Angler,
+    Event,
     Poll,
     PollComment,
     PollCommentReaction,
     get_session,
 )
 from core.deps import templates
+from core.email import send_reply_notification
+from core.email.config import WEBSITE_URL
 from core.helpers.auth import require_member
 from core.helpers.logging import get_logger
 from core.helpers.timezone import now_local
@@ -53,11 +59,31 @@ MAX_LIMIT = 500
 # the rate limiter and the client-side button disabling).
 DUPLICATE_WINDOW_SECONDS = 30
 
+# Tournament discussions stay open through the end of the day this many days
+# after the tournament (event) date — even after voting has closed. At 0 the
+# discussion closes at midnight ending the tournament day (open all through the
+# event day, read-only the next). Raise it to keep post-tournament talk open.
+TOURNAMENT_DISCUSSION_GRACE_DAYS = 0
 
-def _poll_is_open(poll: Poll) -> bool:
-    """A poll accepts discussion posts only while its voting window is active."""
+
+def _discussion_is_open(session: Session, poll: Poll) -> bool:
+    """Whether the poll currently accepts discussion posts / edits / reactions.
+
+    For tournament-location polls the window is driven by the tournament date:
+    it opens with the poll and stays open through the end of the tournament day
+    (plus ``TOURNAMENT_DISCUSSION_GRACE_DAYS`` extra days, 0 by default),
+    regardless of when voting closed. Every other poll type follows its voting
+    window.
+    """
     now = now_local()
-    return bool(poll.starts_at <= now <= poll.closes_at and not poll.closed)
+    if now < poll.starts_at:
+        return False
+    if poll.poll_type == "tournament_location" and poll.event_id is not None:
+        event = session.query(Event).filter(Event.id == poll.event_id).first()
+        if event is not None and event.date is not None:
+            cutoff = event.date + timedelta(days=TOURNAMENT_DISCUSSION_GRACE_DAYS)
+            return now.date() <= cutoff
+    return bool(now <= poll.closes_at and not poll.closed)
 
 
 def _serialize_comment(
@@ -68,6 +94,7 @@ def _serialize_comment(
     liked_by: List[str],
     liked_by_me: bool,
     editing_id: Optional[int],
+    reply_to_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     is_author = comment.angler_id == user.get("id")
     is_admin = bool(user.get("is_admin"))
@@ -75,6 +102,10 @@ def _serialize_comment(
         "id": comment.id,
         "author_id": comment.angler_id,
         "author_name": author_name,
+        # Name of the comment this one replied to, shown as "Replying to X".
+        # Only set when it targets a *different* comment than the thread root
+        # (i.e. a reply-to-a-reply), so plain first-level replies aren't labeled.
+        "reply_to_name": reply_to_name,
         "body": comment.body,
         "created_at": comment.created_at,
         "updated_at": comment.updated_at,
@@ -105,7 +136,7 @@ def build_discussion_context(
     along); older threads stay behind a "Show earlier comments" control. This
     bounds both page height and the per-action re-render cost.
     """
-    poll_open = _poll_is_open(poll)
+    poll_open = _discussion_is_open(session, poll)
     limit = min(max(PAGE_SIZE, limit), MAX_LIMIT)
 
     # Total top-level threads, so we know whether older ones remain hidden.
@@ -173,9 +204,21 @@ def build_discussion_context(
             if angler_id == user["id"]:
                 liked_by_me.add(comment_id)
 
+    # Author name by comment id, to resolve "Replying to <name>" attribution.
+    name_by_id = {comment.id: author_name for comment, author_name in rows}
+
     # First pass: serialize every comment keyed by id.
     serialized: Dict[int, Dict[str, Any]] = {}
     for comment, author_name in rows:
+        # Show "Replying to X" only for a reply-to-a-reply: the target differs
+        # from the thread root (a plain first-level reply targets its root, so
+        # it's obvious and stays unlabeled).
+        reply_to_name = None
+        if (
+            comment.reply_to_comment_id is not None
+            and comment.reply_to_comment_id != comment.parent_comment_id
+        ):
+            reply_to_name = name_by_id.get(comment.reply_to_comment_id)
         serialized[comment.id] = _serialize_comment(
             comment,
             author_name,
@@ -184,6 +227,7 @@ def build_discussion_context(
             reactor_names.get(comment.id, []),
             comment.id in liked_by_me,
             editing_id,
+            reply_to_name=reply_to_name,
         )
 
     # Second pass: nest replies under their top-level parent (one level deep).
@@ -250,6 +294,7 @@ def get_discussion(
 @limiter.limit("20/minute")
 def create_comment(
     request: Request,
+    background_tasks: BackgroundTasks,
     poll_id: int,
     body: str = Form(),
     parent_id: Optional[int] = Form(None),
@@ -260,7 +305,7 @@ def create_comment(
     text = (body or "").strip()
     with get_session() as session:
         poll = _load_poll(session, poll_id)
-        if not _poll_is_open(poll):
+        if not _discussion_is_open(session, poll):
             raise HTTPException(status_code=403, detail="Discussion is closed for this poll")
         if not text:
             return _render_thread(request, session, poll, user, limit=limit)
@@ -289,9 +334,13 @@ def create_comment(
                 )
                 return _render_thread(request, session, poll, user, limit=limit)
 
-        # Clamp threading to a single level: if replying to a reply, attach to
-        # the reply's top-level parent instead.
+        # Flat threading (Camp A): a reply may target any comment, including
+        # another reply, but it's stored under the thread root so the display
+        # stays one level deep. reply_to_id records the actual target for the
+        # "Replying to <name>" label and the notification.
         resolved_parent_id: Optional[int] = None
+        reply_to_id: Optional[int] = None
+        reply_notice: Optional[Dict[str, str]] = None
         if parent_id is not None:
             parent = (
                 session.query(PollComment)
@@ -300,17 +349,45 @@ def create_comment(
             )
             if parent is not None:
                 resolved_parent_id = parent.parent_comment_id or parent.id
+                reply_to_id = parent.id
+                # Notify the author of the comment being replied to — never
+                # yourself, and only if they still accept reply emails.
+                if parent.angler_id != user["id"]:
+                    author = session.query(Angler).filter(Angler.id == parent.angler_id).first()
+                    if (
+                        author is not None
+                        and author.email
+                        and author.email_opt_in
+                        and author.notify_replies
+                        and not author.email.lower().endswith(("@sabc.com", "@saustinbc.com"))
+                    ):
+                        reply_notice = {"email": author.email, "name": author.name}
 
         session.add(
             PollComment(
                 poll_id=poll_id,
                 angler_id=user["id"],
                 parent_comment_id=resolved_parent_id,
+                reply_to_comment_id=reply_to_id,
                 body=text,
                 created_at=now_local(),
             )
         )
         session.flush()
+
+        # Fire the reply email after the response (SMTP is slow). Values are
+        # captured as plain strings so the task has no session dependency.
+        if reply_notice is not None:
+            background_tasks.add_task(
+                send_reply_notification,
+                reply_notice["email"],
+                reply_notice["name"],
+                str(user.get("name") or "A club member"),
+                poll.title,
+                text,
+                f"{WEBSITE_URL}/polls#poll-{poll_id}",
+            )
+
         logger.info(
             "Poll comment posted",
             extra={
@@ -341,7 +418,7 @@ def edit_comment_form(
         if comment is None:
             raise HTTPException(status_code=404, detail="Comment not found")
         # Only the author may open the edit form, and only while the poll is open.
-        if comment.angler_id != user.get("id") or not _poll_is_open(poll):
+        if comment.angler_id != user.get("id") or not _discussion_is_open(session, poll):
             raise HTTPException(status_code=403, detail="Cannot edit this comment")
         return _render_thread(request, session, poll, user, editing_id=comment_id, limit=limit)
 
@@ -367,7 +444,7 @@ def edit_comment_save(
         )
         if comment is None:
             raise HTTPException(status_code=404, detail="Comment not found")
-        if comment.angler_id != user.get("id") or not _poll_is_open(poll):
+        if comment.angler_id != user.get("id") or not _discussion_is_open(session, poll):
             raise HTTPException(status_code=403, detail="Cannot edit this comment")
         if text:
             comment.body = text[:MAX_COMMENT_LENGTH]
@@ -426,7 +503,7 @@ def toggle_reaction(
     """Toggle the current member's 👍 on a comment (poll must be open)."""
     with get_session() as session:
         poll = _load_poll(session, poll_id)
-        if not _poll_is_open(poll):
+        if not _discussion_is_open(session, poll):
             raise HTTPException(status_code=403, detail="Discussion is closed for this poll")
         comment = (
             session.query(PollComment)

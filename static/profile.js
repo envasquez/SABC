@@ -57,6 +57,33 @@
         const startDeleteBtn = document.getElementById('startDeleteBtn');
         if (startDeleteBtn) startDeleteBtn.addEventListener('click', startDeleteProcess);
 
+        // Notification sub-toggles follow the master "Receive emails" switch:
+        // turning it on switches News + Discussion on together; turning it off
+        // switches them off and greys them out. The change listener sits on the
+        // master input (target phase), so it updates the sub-toggles before the
+        // form's HTMX save (bubble phase) — so the new states are persisted.
+        // On load we only force the off state (so an emails-off profile shows
+        // the sub-toggles off); when emails are already on we leave each
+        // sub-toggle at its saved value.
+        const notifMaster = document.getElementById('notifMaster');
+        const notifSub = document.querySelector('.notif-subtoggles');
+        if (notifMaster && notifSub) {
+            const setSubChecked = function(val) {
+                notifSub.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
+                    cb.checked = val;
+                });
+            };
+            const setGrey = function() {
+                notifSub.classList.toggle('notif-disabled', !notifMaster.checked);
+            };
+            if (!notifMaster.checked) setSubChecked(false);
+            setGrey();
+            notifMaster.addEventListener('change', function() {
+                setSubChecked(notifMaster.checked);
+                setGrey();
+            });
+        }
+
         // Delegated handler for the "year finishes" tab buttons.
         // Toggles which .finish-tab is visible and which nav-link is active.
         document.addEventListener('click', function(e) {

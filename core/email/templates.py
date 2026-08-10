@@ -56,7 +56,7 @@ def _format_author_name(author_name: str | None) -> str:
 
 
 def generate_news_email_content(
-    title: str, content: str, author_name: str | None = None
+    title: str, content: str, author_name: str | None = None, reply_to: str | None = None
 ) -> tuple[str, str, str]:
     """Generate email content for news notifications.
 
@@ -64,6 +64,9 @@ def generate_news_email_content(
         title: News post title
         content: Full news content
         author_name: Optional name of the author who posted the news
+        reply_to: Optional discussion-list address. When set, the email invites
+            members to reply to discuss with the club (their reply goes to the
+            list and is re-broadcast to everyone).
 
     Returns:
         Tuple of (subject, text_body, html_body)
@@ -75,6 +78,20 @@ def generate_news_email_content(
     # Format author signature
     formatted_author = _format_author_name(author_name)
     author_line = f"\n- {formatted_author}" if formatted_author else ""
+
+    # Invitation to reply-all discuss, only when a discussion list is configured.
+    reply_invite_text = (
+        "\n\n💬 Want to discuss? Just reply to this email — your reply goes to all members.\n"
+        if reply_to
+        else ""
+    )
+    reply_invite_html = (
+        '<p style="padding: 10px 12px; background-color: #f5f5f5; '
+        'border-left: 4px solid #0d6efd;">💬 <strong>Want to discuss?</strong> '
+        "Just reply to this email — your reply goes to all members.</p>"
+        if reply_to
+        else ""
+    )
 
     # Defense-in-depth: HTML-escape every user-controlled value before
     # interpolating into the HTML email body. Callers are expected to have
@@ -96,7 +113,7 @@ Hello,
 
 {content}
 
-View this post on our website: {news_url}
+View this post on our website: {news_url}{reply_invite_text}
 
 Thanks,
 The {CLUB_NAME} Team{author_line}
@@ -110,7 +127,74 @@ The {CLUB_NAME} Team{author_line}
 <h2>{title_html}</h2>
 {html_content}
 <p><a href="{news_url}">View this post on our website</a></p>
+{reply_invite_html}
 <p>Thanks,<br>The {CLUB_NAME} Team{author_html_safe}</p>
+</body>
+</html>
+"""
+
+    return subject, text_body, html_body
+
+
+def generate_reply_email_content(
+    recipient_name: str,
+    replier_name: str,
+    poll_title: str,
+    reply_body: str,
+    poll_url: str,
+) -> tuple[str, str, str]:
+    """Generate email content notifying a member that someone replied to them.
+
+    Args:
+        recipient_name: Name of the comment author being notified
+        replier_name: Name of the member who posted the reply
+        poll_title: Title of the poll the discussion belongs to
+        reply_body: The full text of the reply (so it can be read in-inbox)
+        poll_url: Link back to the poll's discussion
+
+    Returns:
+        Tuple of (subject, text_body, html_body)
+    """
+    subject = f"{CLUB_NAME} - {replier_name} replied to your comment"
+
+    text_body = f"""
+Hello {recipient_name},
+
+{replier_name} replied to your comment on "{poll_title}":
+
+{reply_body}
+
+Read and respond on the discussion board: {poll_url}
+
+You're receiving this because reply notifications are on. You can turn them
+off any time from your profile on the {CLUB_NAME} website.
+
+Thanks,
+The {CLUB_NAME} Team
+"""
+
+    # HTML-escape every user-controlled value before interpolating into the
+    # HTML body to prevent markup/script injection into recipient inboxes.
+    recipient_html = escape(recipient_name)
+    replier_html = escape(replier_name)
+    title_html = escape(poll_title)
+    body_html = "".join(f"<p>{escape(line)}</p>" for line in reply_body.split("\n") if line.strip())
+
+    html_body = f"""
+<html>
+<body>
+<p>Hello {recipient_html},</p>
+<p><strong>{replier_html}</strong> replied to your comment on "{title_html}":</p>
+<div style="padding: 12px; background-color: #f5f5f5; border-left: 4px solid #0d6efd; margin: 16px 0;">
+{body_html}
+</div>
+<p><a href="{poll_url}">Read and respond on the discussion board</a></p>
+<hr>
+<p style="color: #6c757d; font-size: 0.875em;">
+You're receiving this because reply notifications are on. You can turn them off
+any time from your profile on the {CLUB_NAME} website.
+</p>
+<p>Thanks,<br>The {CLUB_NAME} Team</p>
 </body>
 </html>
 """
