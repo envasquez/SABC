@@ -1,5 +1,5 @@
 fastapi==0.141.1
-uvicorn[standard]==0.52.0
+uvicorn[standard]==0.52.1
 psycopg2-binary==2.9.12
 bcrypt==5.0.0
 itsdangerous==2.2.0
@@ -15,8 +15,8 @@ starlette-csrf==3.0.0
 slowapi==0.1.10
 sentry-sdk[fastapi]==2.66.1
 prometheus-client==0.26.0
-alembic==1.18.5
-starlette==1.3.1
+alembic==1.19.0
+starlette==1.4.1
 markdown==3.10.3
 urllib3==2.7.0
 requests==2.34.2
@@ -24,4 +24,4 @@ cryptography==49.0.0
 Pillow==12.3.0
 astral==3.2
 python-dotenv==1.2.2
-Mako==1.3.12
+Mako==1.4.1
