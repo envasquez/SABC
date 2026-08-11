@@ -14,6 +14,23 @@
                 <h2 class="h3 text-center mb-4">Sign up for a free account</h2>
                 {{ alert('danger', error) }}
                 {{ alert('success', success) }}
+                {# Rendered as markup rather than passed through alert() so it can
+                   carry a link — alert() autoescapes its message, and adding a
+                   |safe there would put raw HTML on a path that echoes user input. #}
+                {% if account_exists %}
+                <div class="alert alert-warning" role="alert">
+                    <div class="d-flex">
+                        <div><i class="ti ti-alert-triangle icon alert-icon" aria-hidden="true"></i></div>
+                        <div>
+                            <strong>That email address is already registered.</strong>
+                            <div class="mt-1">
+                                <a href="/login">Sign in to your account</a> instead. If you don't
+                                remember your password, you can reset it from the sign-in page.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
                 <form method="post" action="/register" autocomplete="off">
                     {{ csrf_token(request) }}
                     <div class="row">
@@ -37,4 +54,8 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', path='/register.js') }}?v={{ asset_v }}"></script>
 {% endblock %}

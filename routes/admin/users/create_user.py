@@ -2,10 +2,11 @@ import json
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from core.db_schema import Angler, get_session
 from core.helpers.auth import require_admin
+from core.helpers.db_errors import is_duplicate_email_error
 from core.helpers.logging import get_logger
 from routes.admin.users.email_helpers import generate_guest_email
 from routes.auth.validation import validate_phone_number
@@ -77,6 +78,33 @@ async def create_user(request: Request) -> JSONResponse:
 
     except json.JSONDecodeError:
         return JSONResponse({"success": False, "message": "Invalid JSON data"}, status_code=400)
+    except IntegrityError as e:
+        # A duplicate email is admin input error, not a server fault: report it
+        # as a 409 with an actionable message instead of a generic 500.
+        if is_duplicate_email_error(e):
+            logger.warning(
+                "User creation rejected: email already in use",
+                extra={
+                    "admin_user_id": user.get("id"),
+                    "new_user_email": final_email,
+                },
+            )
+            return JSONResponse(
+                {
+                    "success": False,
+                    "message": "That email address is already assigned to another angler.",
+                },
+                status_code=409,
+            )
+        logger.error(
+            "User creation failed",
+            extra={"admin_user_id": user.get("id"), "error": str(e)},
+            exc_info=True,
+        )
+        return JSONResponse(
+            {"success": False, "message": "Failed to create user. Please try again."},
+            status_code=500,
+        )
     except (SQLAlchemyError, ValueError) as e:
         logger.error(
             "User creation failed",

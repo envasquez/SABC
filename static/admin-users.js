@@ -47,8 +47,11 @@ async function submitAddUser() {
             })
         });
 
-        if (!response.ok) throw new Error('Server error');
-        const data = await response.json();
+        // Error responses carry an actionable {success, message} body (duplicate
+        // email, missing name, bad phone). Parse before deciding the status is
+        // fatal, otherwise those all collapse into a generic "Server error".
+        const data = await response.json().catch(() => null);
+        if (!data) throw new Error('Server error');
 
         if (data.success) {
             // Close modal

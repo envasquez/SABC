@@ -4,9 +4,10 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse, Response
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from core.db_schema import Angler, get_session
+from core.helpers.db_errors import is_duplicate_email_error
 from core.helpers.forms import normalize_email
 from core.helpers.logging import SecurityEvent, get_logger, log_security_event
 from core.helpers.password_validator import validate_password_strength
@@ -27,6 +28,40 @@ def register_page(request: Request) -> Response:
         RedirectResponse("/")
         if get_current_user(request)
         else templates.TemplateResponse(request, "register.html", {})
+    )
+
+
+def _account_exists_response(request: Request, first_name: str, last_name: str) -> Response:
+    """Re-render the signup form explaining that the address is already in use.
+
+    The email is deliberately not echoed back into the form — it is the one
+    field we are declining, so pre-filling it just invites an identical resubmit
+    that burns another of the three hourly attempts.
+    """
+    return templates.TemplateResponse(
+        request,
+        "register.html",
+        {
+            "account_exists": True,
+            "first_name": first_name,
+            "last_name": last_name,
+        },
+    )
+
+
+def _registration_failed_response(
+    request: Request, first_name: str, last_name: str, email: str
+) -> Response:
+    """Re-render the signup form after an unexpected failure, preserving input."""
+    return templates.TemplateResponse(
+        request,
+        "register.html",
+        {
+            "error": "Registration failed. Please try again.",
+            "first_name": first_name,
+            "last_name": last_name,
+            "email": email,
+        },
     )
 
 
@@ -69,28 +104,30 @@ def register(
             },
         )
 
+    # Hash before opening the transaction. bcrypt is deliberately slow (~300ms),
+    # and doing it mid-transaction had three costs: it held a pooled connection
+    # idle, it stretched the window between the duplicate-email check and the
+    # INSERT wide enough for concurrent submits to race through, and it made the
+    # "email already taken" path measurably faster to respond than the "email is
+    # new" path — a timing oracle for probing which addresses are registered.
+    # Hashing up front closes all three.
+    password_hash = bcrypt.hashpw(password.encode(), bcrypt_gensalt()).decode()
+
     try:
         with get_session() as session:
-            # Check if email already exists
+            # Check if email already exists. This is the fast path for the
+            # common case; it is NOT the safety net. The unique constraint is,
+            # and the IntegrityError handler below covers the gap between this
+            # SELECT and the INSERT.
             existing = session.query(Angler).filter(Angler.email == email).first()
             if existing:
                 logger.warning(
                     "Registration attempt with existing email",
                     extra={"user_email": email, "ip_address": ip_address},
                 )
-                return templates.TemplateResponse(
-                    request,
-                    "register.html",
-                    {
-                        "error": "Email already exists",
-                        "first_name": first_name,
-                        "last_name": last_name,
-                        # Don't pre-fill email when it's the error
-                    },
-                )
+                return _account_exists_response(request, first_name, last_name)
 
             # Create new angler
-            password_hash = bcrypt.hashpw(password.encode(), bcrypt_gensalt()).decode()
             new_angler = Angler(
                 name=name,
                 email=email,
@@ -124,6 +161,30 @@ def register(
             },
         )
         return RedirectResponse("/", status_code=303)
+    except IntegrityError as e:
+        # Two submits for the same address can both clear the SELECT above and
+        # then collide on the unique index — a double-clicked submit button is
+        # enough, since only the INSERT actually serialises them. That is a
+        # duplicate registration, not a server fault, so it gets the same
+        # friendly response as the checked path rather than a 500-shaped error.
+        if is_duplicate_email_error(e):
+            logger.warning(
+                "Registration attempt with existing email (concurrent submit)",
+                extra={"user_email": email, "ip_address": ip_address},
+            )
+            return _account_exists_response(request, first_name, last_name)
+        # Any other integrity failure is a real defect — surface it to Sentry.
+        logger.error(
+            "Registration error",
+            extra={
+                "user_name": name,
+                "user_email": email,
+                "ip_address": ip_address,
+                "error": str(e),
+            },
+            exc_info=True,
+        )
+        return _registration_failed_response(request, first_name, last_name, email)
     except (SQLAlchemyError, ValueError) as e:
         logger.error(
             "Registration error",
@@ -135,13 +196,4 @@ def register(
             },
             exc_info=True,
         )
-        return templates.TemplateResponse(
-            request,
-            "register.html",
-            {
-                "error": "Registration failed",
-                "first_name": first_name,
-                "last_name": last_name,
-                "email": email,
-            },
-        )
+        return _registration_failed_response(request, first_name, last_name, email)

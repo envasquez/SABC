@@ -59,7 +59,10 @@ class TestRegistrationWorkflow:
         )
 
         assert response.status_code == 200
-        assert "Email already exists" in response.text or "already exists" in response.text.lower()
+        # The form explains the address is taken and routes the user to sign-in
+        # rather than leaving them at a dead end.
+        assert "already registered" in response.text
+        assert 'href="/login"' in response.text
 
     def test_registration_with_weak_password_fails(self, client: TestClient):
         """Test that registration with a weak password is rejected."""

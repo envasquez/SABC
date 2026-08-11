@@ -116,12 +116,13 @@ class TestUserValidation:
             },
         )
 
-        # anglers_email_key enforces uniqueness at the DB level; the route
-        # catches the IntegrityError and returns a generic 500. We just
-        # assert the duplicate was NOT persisted.
-        assert response.status_code in (400, 409, 500)
+        # anglers_email_key enforces uniqueness at the DB level. The route
+        # recognises that specific constraint and reports it as a 409 with an
+        # actionable message, rather than a generic 500.
+        assert response.status_code == 409
         body = response.json()
         assert body.get("success") is False
+        assert "already assigned" in body.get("message", "")
         # Confirm only the original row exists.
         same_email_count = (
             db_session.query(Angler).filter(Angler.email == "duplicate@test.com").count()
