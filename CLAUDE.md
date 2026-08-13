@@ -17,7 +17,7 @@ South Austin Bass Club (SABC) tournament management system - modern FastAPI appl
 - **Database**: PostgreSQL 17+ with SQLAlchemy ORM
 - **Frontend**: Jinja2 templates with HTMX for interactivity
 - **Development**: Nix development environment
-- **Deployment**: Digital Ocean App Platform
+- **Deployment**: Digital Ocean Droplet, Docker Compose, manual via `./restart.sh`
 
 ## CRITICAL DEVELOPMENT RULES
 
@@ -164,7 +164,7 @@ setup-db         # Initialize PostgreSQL database
 reset-db         # Reset database (destructive)
 check-code       # Run type checking and linting
 format-code      # Auto-format with ruff
-deploy-app       # Full deployment checks
+deploy-app       # Pre-deploy quality gate (wraps check-code; does NOT deploy)
 ```
 
 ### Mandatory Code Quality Process
@@ -355,11 +355,35 @@ DEBUG=false
 PORT=8000
 ```
 
-### Digital Ocean App Platform
-- Uses `.do/app.yaml` for configuration (not in git)
-- Managed PostgreSQL database with auto-injected credentials
-- Automatic HTTPS and domain management
-- Health checks at `/health` endpoint
+### Digital Ocean Droplet (Docker Compose)
+Production runs on a Droplet via `docker-compose.prod.yml` (web, PostgreSQL,
+Nginx, Certbot). SSL is Let's Encrypt via Certbot. Health checks at `/health`.
+
+**Deployment is MANUAL — pushing to `master` does not deploy anything.**
+CI (`.github/workflows/ci.yml`) lints, tests and builds an artifact, but has no
+deploy job. To actually ship:
+
+```bash
+ssh root@<production-ip>
+cd /opt/sabc
+./restart.sh
+```
+
+`restart.sh` pulls, takes a gzipped `pg_dump` backup into `~/backups/` before
+anything destructive, rebuilds, runs `alembic upgrade head`, restarts, and runs
+internal + external health checks. It tags the previous image `sabc-web:prev`
+so a rollback does not require a rebuild.
+
+Rollback procedure: [docs/RUNBOOK.md](docs/RUNBOOK.md). Full guide:
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+Verify a deploy landed by checking that a changed asset is being served, e.g.:
+```bash
+curl -s https://saustinbc.com/register | grep -o 'register\.js?v=[0-9]*'
+```
+
+App Platform is documented as an *alternative* in docs/DEPLOYMENT.md; it is not
+what production uses.
 
 ## Performance Requirements
 - **Page load time**: < 200ms average
