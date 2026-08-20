@@ -191,6 +191,9 @@ def profile_page(request: Request) -> Response:
                 func.sum(case((all_time_ranked_subquery.c.place == 1, 1), else_=0)).label("first"),
                 func.sum(case((all_time_ranked_subquery.c.place == 2, 1), else_=0)).label("second"),
                 func.sum(case((all_time_ranked_subquery.c.place == 3, 1), else_=0)).label("third"),
+                func.count(func.distinct(all_time_ranked_subquery.c.tournament_id)).label(
+                    "tournaments"
+                ),
             )
             .filter(
                 (all_time_ranked_subquery.c.angler1_id == user["id"])
@@ -202,6 +205,11 @@ def profile_page(request: Request) -> Response:
         all_time_first = all_time_finishes[0] or 0 if all_time_finishes else 0
         all_time_second = all_time_finishes[1] or 0 if all_time_finishes else 0
         all_time_third = all_time_finishes[2] or 0 if all_time_finishes else 0
+        # Counted from the same subquery as the per-year finishes (same
+        # source/year filters), so the "All" tab total always equals the sum of
+        # the year tabs. team_tournaments_count is deliberately not reused here
+        # — it has no TOURNAMENT_DATA_START_YEAR floor and would disagree.
+        all_time_tournaments = all_time_finishes[3] or 0 if all_time_finishes else 0
 
         # Monthly weight aggregation for chart (since data start through current year)
         # Uses individual results as primary source
@@ -390,6 +398,7 @@ def profile_page(request: Request) -> Response:
             "all_time_first": all_time_first,
             "all_time_second": all_time_second,
             "all_time_third": all_time_third,
+            "all_time_tournaments": all_time_tournaments,
             "aoy_position": aoy_position,
             "monthly_data": monthly_data,
         }

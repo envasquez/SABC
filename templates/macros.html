@@ -246,7 +246,10 @@
 {% macro seasonal_history_card(seasonal_history) %}
 {% if seasonal_history and seasonal_history|length > 0 %}
 <div class="card mt-3">
-    <details>
+    <!-- open by default: the history is the whole point of the card, and
+         making members click to reveal it hid the most useful context on the
+         page. Still a <details> so it can be collapsed. -->
+    <details open>
         <summary class="card-header py-2 d-flex align-items-center" style="cursor:pointer; list-style:none">
             <i class="ti ti-calendar me-2 text-azure" aria-hidden="true"></i>
             <span class="fw-medium">{{ seasonal_history[0].month_name }} Tournament History</span>

@@ -9,6 +9,7 @@ Coverage focus:
 - routes/auth/profile_update/fields.py (20.5% → target 85%+)
 """
 
+import re
 from datetime import datetime, timezone
 from unittest.mock import patch
 
@@ -170,6 +171,50 @@ class TestProfilePage:
         # because the view projects team_results.angler1 with full credit.
         assert "17.5" in response.text
         assert "6.7" in response.text
+
+    def test_profile_all_time_tab_shows_tournaments_fished(
+        self,
+        client: TestClient,
+        member_user: Angler,
+        admin_user: Angler,
+        test_password: str,
+        db_session: Session,
+        test_team_format_tournament: Tournament,
+    ):
+        """The Team Finishes "All" tab must show the Fished total, like the
+        per-year tabs do. It previously rendered only the three medal counts,
+        so selecting All made the tournament count disappear."""
+        db_session.add(
+            TeamResult(
+                tournament_id=test_team_format_tournament.id,
+                angler1_id=member_user.id,
+                angler2_id=admin_user.id,
+                total_weight=17.5,
+                big_bass_weight=6.7,
+                num_fish=5,
+            )
+        )
+        db_session.commit()
+
+        csrf_token = get_csrf_token(client, "/login")
+        client.post(
+            "/login",
+            data={
+                "email": member_user.email or "member@example.com",
+                "password": test_password,
+                "csrf_token": csrf_token,
+            },
+            follow_redirects=False,
+        )
+
+        response = client.get("/profile")
+        assert response.status_code == 200
+
+        all_time = response.text[response.text.index('id="all-time"') :]
+        assert "Fished:" in all_time, "All-time tab is missing the tournaments-fished total"
+        # The All total must agree with the year tabs rather than being sourced
+        # from a differently-filtered count.
+        assert re.search(r"Fished: <strong>1</strong>", all_time)
 
     def test_profile_page_shows_success_message(
         self, client: TestClient, member_user: Angler, test_password: str
