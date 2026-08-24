@@ -1,5 +1,5 @@
 fastapi==0.141.1
-uvicorn[standard]==0.52.3
+uvicorn[standard]==0.52.4
 psycopg2-binary==2.9.12
 bcrypt==5.0.0
 itsdangerous==2.2.0
@@ -23,5 +23,5 @@ requests==2.34.2
 cryptography==50.0.0
 Pillow==12.3.0
 astral==3.2
-python-dotenv==1.2.2
+python-dotenv==1.2.3
 Mako==1.4.1
