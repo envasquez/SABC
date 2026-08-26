@@ -24,20 +24,6 @@
     <form method="POST" action="/admin/news/create" data-news-confirm="create">
         <div class="card-body">
             {{ csrf_token(request) }}
-            {% if news_reply_to %}
-            <div class="alert alert-info" role="alert">
-                <i class="ti ti-mail-forward me-1" aria-hidden="true"></i>
-                Publishing emails all current members. Replies via <strong>Reply All</strong>
-                go to the discussion list (<code>{{ news_reply_to }}</code>) and reach everyone;
-                a plain Reply goes only to the club inbox.
-            </div>
-            {% else %}
-            <div class="alert alert-warning" role="alert">
-                <i class="ti ti-alert-triangle me-1" aria-hidden="true"></i>
-                Publishing emails all current members, but reply-all discussion isn't set up
-                (no <code>NEWS_REPLY_TO</code> configured) — replies go only to the club inbox.
-            </div>
-            {% endif %}
             <div class="row g-3">
                 <div class="col-12 col-md-6">
                     <label for="title" class="form-label required">Title</label>
@@ -59,6 +45,33 @@
                     <label for="content" class="form-label required">Content</label>
                     <textarea class="form-control" id="content" name="content" required maxlength="1000" rows="4" style="resize:vertical" placeholder="Write the announcement..."></textarea>
                     <small class="form-hint">Maximum 1000 characters</small>
+                </div>
+                <div class="col-12">
+                    <label for="news_reply_to" class="form-label">Email Replies</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="ti {% if news_reply_to %}ti-mail-forward{% else %}ti-mail-off{% endif %}" aria-hidden="true"></i>
+                        </span>
+                        <input class="form-control" type="text" id="news_reply_to" readonly
+                               value="{% if news_reply_to %}{{ news_reply_to }}{% else %}Not configured{% endif %}">
+                        <span class="input-group-text">
+                            {% if news_reply_to %}
+                            <span class="badge bg-green-lt">Reply All on</span>
+                            {% else %}
+                            <span class="badge bg-yellow-lt">Reply All off</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <small class="form-hint">
+                        Publishing emails all current members.
+                        {% if news_reply_to %}
+                        <strong>Reply All</strong> goes to this discussion list and reaches everyone;
+                        a plain <strong>Reply</strong> goes only to the club inbox.
+                        {% else %}
+                        Replies go only to the club inbox — set <code>NEWS_REPLY_TO</code> to enable
+                        reply-all discussion.
+                        {% endif %}
+                    </small>
                 </div>
             </div>
         </div>
