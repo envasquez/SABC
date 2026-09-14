@@ -1,5 +1,5 @@
 annotated-types==0.8.0
-anyio==4.15.0
+anyio==4.15.1
 astral==3.2
 attrs==26.1.0
 bcrypt==5.0.0
@@ -31,15 +31,15 @@ MarkupSafe==3.0.3
 mirakuru==3.0.3
 mypy==2.3.1
 mypy_extensions==1.1.0
-numpy==2.5.2
+numpy==2.5.3
 packaging==26.3
 pandas==3.0.5
 pathspec==1.1.1
 Pillow==12.3.0
 pluggy==1.6.0
-port-for==1.0.0
+port-for==1.1.0
 psutil==7.2.2
-psycopg2-binary==2.9.12
+psycopg2-binary==2.9.13
 py-cpuinfo==9.0.0
 pycparser==3.0
 pydantic==2.13.5
@@ -54,7 +54,7 @@ pytest-cov==7.1.0
 pytest-html==4.2.0
 pytest-metadata==3.1.1
 pytest-mock==3.15.1
-pytest-postgresql==9.0.0
+pytest-postgresql==9.1.0
 pytest-xdist==3.8.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.3
@@ -62,10 +62,10 @@ python-multipart==0.0.32
 pytz==2026.3.post1
 PyYAML==6.0.3
 requests==2.34.2
-ruff==0.16.6
-sentry-sdk[fastapi]==2.68.1
+ruff==0.16.7
+sentry-sdk[fastapi]==2.69.1
 prometheus-client==0.26.0
-alembic==1.19.1
+alembic==1.19.2
 Mako==1.4.1
 setuptools==84.0.0
 six==1.17.0
@@ -85,4 +85,4 @@ uvicorn==0.52.4
 uvloop==0.22.1
 watchfiles==1.2.0
 websockets==17.1
-wrapt==2.4.0
+wrapt==2.4.1
