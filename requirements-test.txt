@@ -24,4 +24,4 @@ bandit==1.9.4  # Already used for security scanning
 
 # Coverage reporting
 coverage[toml]==7.16.0
-locust==2.46.4
+locust==2.46.5
