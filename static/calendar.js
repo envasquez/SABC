@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Delegated handler for clicking an event day in the calendar grid
     // and for year-tab switches (current vs next year).
     document.addEventListener('click', function(e) {
-        const cell = e.target.closest('.cal-event-day');
+        const cell = e.target.closest('.cal-month-table td.ev');
         if (cell) {
             showEventDetails(cell);
             return;
@@ -84,25 +84,25 @@ function showEventDetails(element) {
             let eventTypeClass = '';
 
             if (event.type === 'holiday') {
-                eventTypeIcon = '<i class="bi bi-calendar-x me-2"></i>';
+                eventTypeIcon = '<i class="ti ti-calendar-x me-1"></i>';
                 eventTypeName = 'Federal Holiday';
-                eventTypeClass = 'bg-danger';
+                eventTypeClass = 'bg-red-lt';
             } else if (event.type === 'sabc_tournament') {
-                eventTypeIcon = '<i class="bi bi-trophy me-2"></i>';
+                eventTypeIcon = '<i class="ti ti-trophy me-1"></i>';
                 eventTypeName = 'SABC Tournament';
-                eventTypeClass = 'bg-primary';
+                eventTypeClass = 'bg-primary-lt';
             } else if (event.type === 'other_tournament') {
-                eventTypeIcon = '<i class="bi bi-calendar-event me-2"></i>';
+                eventTypeIcon = '<i class="ti ti-calendar-event me-1"></i>';
                 eventTypeName = 'Other Tournament';
-                eventTypeClass = 'bg-warning text-dark';
+                eventTypeClass = 'bg-yellow-lt';
             } else if (event.type === 'club_event') {
-                eventTypeIcon = '<i class="bi bi-people me-2"></i>';
+                eventTypeIcon = '<i class="ti ti-users me-1"></i>';
                 eventTypeName = 'Club Event';
-                eventTypeClass = 'bg-success';
+                eventTypeClass = 'bg-green-lt';
             } else if (event.type === 'generic_event') {
-                eventTypeIcon = '<i class="bi bi-calendar me-2"></i>';
+                eventTypeIcon = '<i class="ti ti-calendar me-1"></i>';
                 eventTypeName = 'Event';
-                eventTypeClass = 'bg-secondary';
+                eventTypeClass = 'bg-secondary-lt';
             }
 
             modalContent += '<div class="mb-3">';
@@ -120,19 +120,19 @@ function showEventDetails(element) {
             if (event.type === 'sabc_tournament' || event.type === 'other_tournament') {
                 const showTimes = event.type === 'other_tournament' || !event.poll_id;
                 if (event.lake_name || (showTimes && (event.start_time || event.end_time))) {
-                    modalContent += '<div class="mt-2 small text-muted">';
+                    modalContent += '<div class="mt-2 small text-secondary">';
                     if (event.lake_name) {
-                        modalContent += '<div><i class="bi bi-geo-alt me-1" aria-hidden="true"></i><strong>Lake:</strong> ' + escapeHtml(event.lake_name);
+                        modalContent += '<div><i class="ti ti-map-pin me-1" aria-hidden="true"></i><strong>Lake:</strong> ' + escapeHtml(event.lake_name);
                         if (event.ramp_name) {
                             modalContent += ' - ' + escapeHtml(event.ramp_name);
                         }
                         modalContent += '</div>';
                     }
                     if (showTimes && event.start_time) {
-                        modalContent += '<div><i class="bi bi-clock me-1" aria-hidden="true"></i><strong>Start:</strong> ' + escapeHtml(event.start_time) + '</div>';
+                        modalContent += '<div><i class="ti ti-clock me-1" aria-hidden="true"></i><strong>Start:</strong> ' + escapeHtml(event.start_time) + '</div>';
                     }
                     if (showTimes && event.end_time) {
-                        modalContent += '<div><i class="bi bi-clock-fill me-1" aria-hidden="true"></i><strong>Weigh-in:</strong> ' + escapeHtml(event.end_time) + '</div>';
+                        modalContent += '<div><i class="ti ti-clock-check me-1" aria-hidden="true"></i><strong>Weigh-in:</strong> ' + escapeHtml(event.end_time) + '</div>';
                     }
                     modalContent += '</div>';
                 }
@@ -146,13 +146,13 @@ function showEventDetails(element) {
                 const pollHref = escapeHtml(isValidUrl(event.poll_link) ? event.poll_link : '#');
                 if (event.poll_status === 'active') {
                     modalContent += '<div class="mt-2">';
-                    modalContent += '<a href="' + pollHref + '" class="btn-m btn-s" style="text-decoration:none;font-size:.82rem">';
-                    modalContent += '<i class="bi bi-hand-thumbs-up"></i> Vote in Poll</a>';
+                    modalContent += '<a href="' + pollHref + '" class="btn btn-primary btn-sm">';
+                    modalContent += '<i class="ti ti-thumb-up me-1"></i>Vote in Poll</a>';
                     modalContent += '</div>';
                 } else if (event.poll_status === 'closed' || event.poll_status === 'results') {
                     modalContent += '<div class="mt-2">';
-                    modalContent += '<a href="' + pollHref + '" class="btn-m btn-g" style="text-decoration:none;font-size:.82rem">';
-                    modalContent += '<i class="bi bi-bar-chart"></i> View Poll Results</a>';
+                    modalContent += '<a href="' + pollHref + '" class="btn btn-sm">';
+                    modalContent += '<i class="ti ti-chart-bar me-1"></i>View Poll Results</a>';
                     modalContent += '</div>';
                 }
             }
@@ -160,8 +160,8 @@ function showEventDetails(element) {
             if (event.tournament_link) {
                 const tournamentHref = escapeHtml(isValidUrl(event.tournament_link) ? event.tournament_link : '#');
                 modalContent += '<div class="mt-2">';
-                modalContent += '<a href="' + tournamentHref + '" class="btn-m btn-p" style="text-decoration:none;font-size:.82rem">';
-                modalContent += '<i class="bi bi-trophy"></i> View Results</a>';
+                modalContent += '<a href="' + tournamentHref + '" class="btn btn-sm">';
+                modalContent += '<i class="ti ti-trophy me-1"></i>View Results</a>';
                 modalContent += '</div>';
             }
 
