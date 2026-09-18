@@ -77,7 +77,7 @@
             const container = chartCanvas.parentElement;
             container.innerHTML = `
                 <div class="text-center py-4 text-muted">
-                    <i class="bi bi-inbox" style="font-size: 2rem; opacity: 0.5;"></i>
+                    <i class="ti ti-inbox" style="font-size: 2rem; opacity: 0.5;"></i>
                     <p class="mt-2 mb-0">No tournament data available</p>
                 </div>`;
             return;
@@ -187,7 +187,7 @@
             if (icon) {
                 icon.classList.remove('bi-bar-chart-line');
                 icon.classList.add('bi-bar-chart-line-fill');
-                icon.style.color = 'var(--ok)';
+                icon.style.color = 'var(--tblr-success)';
             }
             // Init chart after row is visible and laid out
             requestAnimationFrame(function() {
@@ -199,7 +199,7 @@
             if (icon) {
                 icon.classList.remove('bi-bar-chart-line-fill');
                 icon.classList.add('bi-bar-chart-line');
-                icon.style.color = 'var(--brand)';
+                icon.style.color = 'var(--tblr-primary)';
             }
         }
     }

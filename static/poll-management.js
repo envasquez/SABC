@@ -30,7 +30,7 @@
             <input type="text" class="fi" name="poll_options[]" placeholder="Option ${optionCount}" style="flex:1" required>
             ${hiddenField}
             <button class="btn-icon btn-icon-danger js-remove-option" type="button" aria-label="Remove option">
-                <i class="bi bi-x"></i>
+                <i class="ti ti-x"></i>
             </button>
         `;
 

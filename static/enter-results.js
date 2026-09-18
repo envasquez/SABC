@@ -323,16 +323,16 @@ function addTeam() {
 
     const teamHtml = `
         <div class="cc team-card" id="team-${teamCount}" style="margin-bottom:1rem">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;background:var(--bg-alt);border-bottom:1px solid var(--b1);border-radius:var(--r-md) var(--r-md) 0 0">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;background:var(--tblr-bg-surface-tertiary);border-bottom:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius) var(--tblr-border-radius) 0 0">
                 <strong style="font-size:.9rem">Team ${teamCount}</strong>
                 <button type="button" class="btn-icon btn-icon-danger js-remove-team" data-team="${teamCount}" aria-label="Remove team">
-                    <i class="bi bi-trash"></i>
+                    <i class="ti ti-trash"></i>
                 </button>
             </div>
             <div class="ci" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
                 <!-- Angler 1 -->
                 <div>
-                    <h6 style="color:var(--brand);font-size:.85rem;margin-bottom:.5rem">Boater</h6>
+                    <h6 style="color:var(--tblr-primary);font-size:.85rem;margin-bottom:.5rem">Boater</h6>
                     <div style="display:grid;gap:.5rem">
                         <div>
                             <label class="fl">Name</label>
@@ -379,10 +379,10 @@ function addTeam() {
 
                 <!-- Angler 2 -->
                 <div>
-                    <h6 style="color:var(--brand);font-size:.85rem;margin-bottom:.5rem">Non-boater</h6>
+                    <h6 style="color:var(--tblr-primary);font-size:.85rem;margin-bottom:.5rem">Non-boater</h6>
                     <div style="display:grid;gap:.5rem">
                         <div>
-                            <label class="fl">Name <span style="color:var(--t3)">(optional)</span></label>
+                            <label class="fl">Name <span style="color:var(--tblr-secondary)">(optional)</span></label>
                             <div class="autocomplete-wrapper">
                                 <input type="text"
                                        class="fi autocomplete-input angler2-input"
@@ -461,15 +461,15 @@ function addTeamFormatTeam() {
 
     const teamHtml = `
         <div class="cc team-card" id="team-${teamCount}" style="margin-bottom:1rem">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;background:var(--bg-alt);border-bottom:1px solid var(--b1);border-radius:var(--r-md) var(--r-md) 0 0">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;background:var(--tblr-bg-surface-tertiary);border-bottom:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius) var(--tblr-border-radius) 0 0">
                 <strong style="font-size:.9rem">Team ${teamCount}</strong>
                 <button type="button" class="btn-icon btn-icon-danger js-remove-team" data-team="${teamCount}" aria-label="Remove team">
-                    <i class="bi bi-trash"></i>
+                    <i class="ti ti-trash"></i>
                 </button>
             </div>
             <div class="ci" style="display:grid;grid-template-columns:3fr 3fr 1fr 2fr 2fr;gap:.75rem;align-items:end">
                 <div>
-                    <label class="fl">Boater <span style="color:var(--err)">*</span></label>
+                    <label class="fl">Boater <span style="color:var(--tblr-danger)">*</span></label>
                     <div class="autocomplete-wrapper">
                         <input type="text" class="fi autocomplete-input angler1-input"
                                data-team="${teamCount}" data-angler="1"
@@ -480,7 +480,7 @@ function addTeamFormatTeam() {
                     </div>
                 </div>
                 <div>
-                    <label class="fl">Non-boater <span style="color:var(--t3)">(optional)</span></label>
+                    <label class="fl">Non-boater <span style="color:var(--tblr-secondary)">(optional)</span></label>
                     <div class="autocomplete-wrapper">
                         <input type="text" class="fi autocomplete-input angler2-input"
                                data-team="${teamCount}" data-angler="2"
@@ -535,12 +535,12 @@ function addTeamFormatTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_
 
     const teamHtml = `
         <div class="cc team-card" id="team-${teamCount}" style="margin-bottom:1rem">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;background:var(--bg-alt);border-bottom:1px solid var(--b1);border-radius:var(--r-md) var(--r-md) 0 0">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;background:var(--tblr-bg-surface-tertiary);border-bottom:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius) var(--tblr-border-radius) 0 0">
                 <strong style="font-size:.9rem">Team ${teamCount}</strong>
             </div>
             <div class="ci" style="display:grid;grid-template-columns:3fr 3fr 1fr 2fr 2fr;gap:.75rem;align-items:end">
                 <div>
-                    <label class="fl">Boater <span style="color:var(--err)">*</span></label>
+                    <label class="fl">Boater <span style="color:var(--tblr-danger)">*</span></label>
                     <div class="autocomplete-wrapper">
                         <input type="text" class="fi autocomplete-input angler1-input angler-selected"
                                data-team="${teamCount}" data-angler="1"
@@ -552,7 +552,7 @@ function addTeamFormatTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_
                     </div>
                 </div>
                 <div>
-                    <label class="fl">Non-boater <span style="color:var(--t3)">(optional)</span></label>
+                    <label class="fl">Non-boater <span style="color:var(--tblr-secondary)">(optional)</span></label>
                     <div class="autocomplete-wrapper">
                         <input type="text" class="fi autocomplete-input angler2-input ${angler2_id ? 'angler-selected' : ''}"
                                data-team="${teamCount}" data-angler="2"
@@ -616,13 +616,13 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
 
     const teamHtml = `
         <div class="cc team-card" id="team-${teamCount}" style="margin-bottom:1rem">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;background:var(--bg-alt);border-bottom:1px solid var(--b1);border-radius:var(--r-md) var(--r-md) 0 0">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:.6rem 1rem;background:var(--tblr-bg-surface-tertiary);border-bottom:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius) var(--tblr-border-radius) 0 0">
                 <strong style="font-size:.9rem">Team ${teamCount}</strong>
             </div>
             <div class="ci" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
                 <!-- Angler 1 -->
                 <div>
-                    <h6 style="color:var(--brand);font-size:.85rem;margin-bottom:.5rem">Boater</h6>
+                    <h6 style="color:var(--tblr-primary);font-size:.85rem;margin-bottom:.5rem">Boater</h6>
                     <div style="display:grid;gap:.5rem">
                         <div>
                             <label class="fl">Name</label>
@@ -650,10 +650,10 @@ function addTeamForEdit(angler1_id, angler1_name, angler2_id, angler2_name,
                 </div>
                 <!-- Angler 2 -->
                 <div>
-                    <h6 style="color:var(--brand);font-size:.85rem;margin-bottom:.5rem">Non-boater</h6>
+                    <h6 style="color:var(--tblr-primary);font-size:.85rem;margin-bottom:.5rem">Non-boater</h6>
                     <div style="display:grid;gap:.5rem">
                         <div>
-                            <label class="fl">Name <span style="color:var(--t3)">(optional)</span></label>
+                            <label class="fl">Name <span style="color:var(--tblr-secondary)">(optional)</span></label>
                             <div class="autocomplete-wrapper">
                                 <input type="text" class="fi autocomplete-input angler2-input"
                                        data-team="${teamCount}" data-angler="2"

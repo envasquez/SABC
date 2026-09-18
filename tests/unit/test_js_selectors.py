@@ -103,3 +103,61 @@ def test_js_class_selectors_exist(js_file: Path) -> None:
         f"at runtime and fail silently:\n"
         + "\n".join(f"  L{ln}  '{sel}'  (unknown class .{cls})" for ln, sel, cls in orphans)
     )
+
+
+@pytest.mark.parametrize("js_file", _js_files(), ids=lambda p: p.name)
+def test_js_uses_tabler_icons(js_file: Path) -> None:
+    """JS-built markup must use Tabler icons, not Bootstrap Icons.
+
+    Bootstrap Icons is not vendored — the Tabler rebuild replaced it — so a
+    `bi bi-*` class renders an invisible empty element rather than an icon.
+    """
+    text = js_file.read_text()
+    offenders = [
+        (text.count("\n", 0, match.start()) + 1, match.group(0).strip("\"' "))
+        for match in re.finditer(r"""["'\s]bi bi-[\w-]+""", text)
+    ]
+
+    assert not offenders, (
+        f"{js_file.name}: Bootstrap Icons class(es) found. Bootstrap Icons is "
+        f"not loaded, so these render as blank elements — use `ti ti-*`:\n"
+        + "\n".join(f"  L{line_no}  {snippet}" for line_no, snippet in offenders)
+    )
+
+
+def _defined_css_variables() -> Set[str]:
+    names: Set[str] = set()
+    for css in CSS_FILES:
+        names.update(re.findall(r"(--[\w-]+)\s*:", css.read_text()))
+    return names
+
+
+DEFINED_CSS_VARIABLES = _defined_css_variables()
+
+_CSS_VAR_USE = re.compile(r"var\(\s*(--[\w-]+)\s*([,)])")
+
+
+@pytest.mark.parametrize("js_file", _js_files(), ids=lambda p: p.name)
+def test_js_css_variables_are_defined(js_file: Path) -> None:
+    """Inline styles in JS must reference custom properties that exist.
+
+    The pre-Tabler stylesheet defined its own tokens (`--brand`, `--err`,
+    `--t1`, `--r-md`, …). The rebuild dropped them for `--tblr-*`, leaving
+    85 `var(--brand)`-style references across three files that silently
+    resolved to nothing — an undefined custom property with no fallback
+    makes the whole declaration invalid, so those panels lost their colours
+    without any error.
+    """
+    text = js_file.read_text()
+    offenders = [
+        (text.count("\n", 0, match.start()) + 1, match.group(1))
+        for match in _CSS_VAR_USE.finditer(text)
+        # `var(--x, fallback)` degrades gracefully; only bare uses break.
+        if match.group(2) == ")" and match.group(1) not in DEFINED_CSS_VARIABLES
+    ]
+
+    assert not offenders, (
+        f"{js_file.name}: inline style(s) referencing an undefined CSS custom "
+        f"property — the declaration is dropped at runtime:\n"
+        + "\n".join(f"  L{line_no}  var({name})" for line_no, name in offenders)
+    )

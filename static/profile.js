@@ -28,7 +28,7 @@
         if (viewMode) viewMode.style.display = 'none';
         if (editMode) editMode.style.display = 'block';
         if (editBtn) {
-            editBtn.innerHTML = '<i class="bi bi-eye me-1"></i>View';
+            editBtn.innerHTML = '<i class="ti ti-eye me-1"></i>View';
         }
     }
 
@@ -39,7 +39,7 @@
         if (viewMode) viewMode.style.display = 'block';
         if (editMode) editMode.style.display = 'none';
         if (editBtn) {
-            editBtn.innerHTML = '<i class="bi bi-pencil me-1"></i>Edit';
+            editBtn.innerHTML = '<i class="ti ti-pencil me-1"></i>Edit';
         }
     }
 
