@@ -50,10 +50,10 @@ function loadPreview() {
     document.getElementById('preview_section').style.display = '';
     document.getElementById('preview_content').innerHTML = `
         <div style="text-align:center;padding:2.5rem 0">
-            <div class="spinner-border" style="color:var(--brand)" role="status">
+            <div class="spinner-border" style="color:var(--tblr-primary)" role="status">
                 <span class="visually-hidden">Loading preview...</span>
             </div>
-            <p style="margin-top:.75rem;color:var(--t3)">Loading preview...</p>
+            <p style="margin-top:.75rem;color:var(--tblr-secondary)">Loading preview...</p>
         </div>
     `;
 
@@ -85,8 +85,8 @@ function loadPreview() {
             renderPreview(data.data);
         } else {
             document.getElementById('preview_content').innerHTML = `
-                <div style="padding:1rem;border-radius:var(--r-md);background:var(--err-m);color:var(--err);font-size:.85rem;border:1px solid color-mix(in srgb,var(--err) 25%,transparent)">
-                    <div style="font-weight:700;margin-bottom:.35rem"><i class="bi bi-x-circle"></i> Error</div>
+                <div style="padding:1rem;border-radius:var(--tblr-border-radius);background:color-mix(in srgb,var(--tblr-danger) 10%,transparent);color:var(--tblr-danger);font-size:.85rem;border:1px solid color-mix(in srgb,var(--tblr-danger) 25%,transparent)">
+                    <div style="font-weight:700;margin-bottom:.35rem"><i class="ti ti-circle-x"></i> Error</div>
                     <p style="margin:0">${escapeHtml(data.error || 'Unknown error')}</p>
                 </div>
             `;
@@ -94,8 +94,8 @@ function loadPreview() {
     })
     .catch(error => {
         document.getElementById('preview_content').innerHTML = `
-            <div style="padding:1rem;border-radius:var(--r-md);background:var(--err-m);color:var(--err);font-size:.85rem;border:1px solid color-mix(in srgb,var(--err) 25%,transparent)">
-                <div style="font-weight:700;margin-bottom:.35rem"><i class="bi bi-x-circle"></i> Error</div>
+            <div style="padding:1rem;border-radius:var(--tblr-border-radius);background:color-mix(in srgb,var(--tblr-danger) 10%,transparent);color:var(--tblr-danger);font-size:.85rem;border:1px solid color-mix(in srgb,var(--tblr-danger) 25%,transparent)">
+                <div style="font-weight:700;margin-bottom:.35rem"><i class="ti ti-circle-x"></i> Error</div>
                 <p style="margin:0">Failed to load preview: ${escapeHtml(error.message || 'Unknown error')}</p>
             </div>
         `;
@@ -125,8 +125,8 @@ function loadPreview() {
  */
 function renderPreview(preview) {
     const duplicateVotesHtml = preview.duplicate_poll_votes.length > 0 ? `
-        <div style="padding:.75rem 1rem;border-radius:var(--r-md);background:var(--warn-m);color:var(--warn);font-size:.85rem;margin-top:.75rem;border:1px solid color-mix(in srgb,var(--warn) 25%,transparent)">
-            <div style="font-weight:700;margin-bottom:.35rem"><i class="bi bi-exclamation-triangle-fill"></i> Duplicate Poll Votes Detected</div>
+        <div style="padding:.75rem 1rem;border-radius:var(--tblr-border-radius);background:color-mix(in srgb,var(--tblr-warning) 10%,transparent);color:var(--tblr-warning);font-size:.85rem;margin-top:.75rem;border:1px solid color-mix(in srgb,var(--tblr-warning) 25%,transparent)">
+            <div style="font-weight:700;margin-bottom:.35rem"><i class="ti ti-alert-triangle"></i> Duplicate Poll Votes Detected</div>
             <p style="margin-bottom:.35rem">Both accounts have voted on the following polls. The source account's votes will be <strong>deleted</strong>:</p>
             <ul style="margin:0;padding-left:1.25rem">
                 ${preview.duplicate_poll_votes.map(dv => `<li>${escapeHtml(dv.poll_title || '')}</li>`).join('')}
@@ -142,53 +142,53 @@ function renderPreview(preview) {
 
     const html = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem">
-            <div style="padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-weight:600;color:var(--err);font-size:.88rem;margin-bottom:.35rem"><i class="bi bi-database-dash"></i> Data Moving FROM</div>
-                <p style="margin-bottom:.15rem;color:var(--t1)"><strong>${escapeHtml(preview.source_angler.name || '')}</strong></p>
-                <p style="color:var(--t3);font-size:.8rem;margin:0">${escapeHtml(preview.source_angler.email || 'No email')}</p>
+            <div style="padding:.75rem;background:var(--tblr-bg-surface-secondary);border-radius:var(--tblr-border-radius)">
+                <div style="font-weight:600;color:var(--tblr-danger);font-size:.88rem;margin-bottom:.35rem"><i class="ti ti-database-minus"></i> Data Moving FROM</div>
+                <p style="margin-bottom:.15rem;color:var(--tblr-body-color)"><strong>${escapeHtml(preview.source_angler.name || '')}</strong></p>
+                <p style="color:var(--tblr-secondary);font-size:.8rem;margin:0">${escapeHtml(preview.source_angler.email || 'No email')}</p>
             </div>
-            <div style="padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-weight:600;color:var(--ok);font-size:.88rem;margin-bottom:.35rem"><i class="bi bi-database-add"></i> Data Moving TO</div>
-                <p style="margin-bottom:.15rem;color:var(--t1)"><strong>${escapeHtml(preview.target_angler.name || '')}</strong></p>
-                <p style="color:var(--t3);font-size:.8rem;margin:0">${escapeHtml(preview.target_angler.email || 'No email')}</p>
+            <div style="padding:.75rem;background:var(--tblr-bg-surface-secondary);border-radius:var(--tblr-border-radius)">
+                <div style="font-weight:600;color:var(--tblr-success);font-size:.88rem;margin-bottom:.35rem"><i class="ti ti-database-plus"></i> Data Moving TO</div>
+                <p style="margin-bottom:.15rem;color:var(--tblr-body-color)"><strong>${escapeHtml(preview.target_angler.name || '')}</strong></p>
+                <p style="color:var(--tblr-secondary);font-size:.8rem;margin:0">${escapeHtml(preview.target_angler.email || 'No email')}</p>
             </div>
         </div>
 
         ${duplicateVotesHtml}
 
-        <div style="font-weight:600;font-size:.88rem;color:var(--t1);margin-top:1.25rem;margin-bottom:.75rem"><i class="bi bi-list-check"></i> Data to be Migrated</div>
+        <div style="font-weight:600;font-size:.88rem;color:var(--tblr-body-color);margin-top:1.25rem;margin-bottom:.75rem"><i class="ti ti-list-check"></i> Data to be Migrated</div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem">
-            <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.5rem;font-weight:700;color:var(--brand);margin-bottom:.15rem">${n(preview.results_count)}</div>
-                <div style="font-size:.75rem;color:var(--t3)">Tournament Results</div>
+            <div style="text-align:center;padding:.75rem;background:var(--tblr-bg-surface-secondary);border-radius:var(--tblr-border-radius)">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--tblr-primary);margin-bottom:.15rem">${n(preview.results_count)}</div>
+                <div style="font-size:.75rem;color:var(--tblr-secondary)">Tournament Results</div>
             </div>
-            <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.5rem;font-weight:700;color:var(--brand);margin-bottom:.15rem">${n(preview.team_results_angler1_count) + n(preview.team_results_angler2_count)}</div>
-                <div style="font-size:.75rem;color:var(--t3)">Team Results</div>
+            <div style="text-align:center;padding:.75rem;background:var(--tblr-bg-surface-secondary);border-radius:var(--tblr-border-radius)">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--tblr-primary);margin-bottom:.15rem">${n(preview.team_results_angler1_count) + n(preview.team_results_angler2_count)}</div>
+                <div style="font-size:.75rem;color:var(--tblr-secondary)">Team Results</div>
             </div>
-            <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.5rem;font-weight:700;color:var(--brand);margin-bottom:.15rem">${n(preview.poll_votes_count)}</div>
-                <div style="font-size:.75rem;color:var(--t3)">Poll Votes</div>
+            <div style="text-align:center;padding:.75rem;background:var(--tblr-bg-surface-secondary);border-radius:var(--tblr-border-radius)">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--tblr-primary);margin-bottom:.15rem">${n(preview.poll_votes_count)}</div>
+                <div style="font-size:.75rem;color:var(--tblr-secondary)">Poll Votes</div>
             </div>
-            <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.5rem;font-weight:700;color:var(--brand);margin-bottom:.15rem">${n(preview.officer_positions_count)}</div>
-                <div style="font-size:.75rem;color:var(--t3)">Officer Positions</div>
+            <div style="text-align:center;padding:.75rem;background:var(--tblr-bg-surface-secondary);border-radius:var(--tblr-border-radius)">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--tblr-primary);margin-bottom:.15rem">${n(preview.officer_positions_count)}</div>
+                <div style="font-size:.75rem;color:var(--tblr-secondary)">Officer Positions</div>
             </div>
-            <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">${n(preview.polls_created_count)}</div>
-                <div style="font-size:.75rem;color:var(--t3)">Polls Created</div>
+            <div style="text-align:center;padding:.75rem;background:var(--tblr-bg-surface-secondary);border-radius:var(--tblr-border-radius)">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--tblr-secondary);margin-bottom:.15rem">${n(preview.polls_created_count)}</div>
+                <div style="font-size:.75rem;color:var(--tblr-secondary)">Polls Created</div>
             </div>
-            <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">${n(preview.news_authored_count)}</div>
-                <div style="font-size:.75rem;color:var(--t3)">News Articles</div>
+            <div style="text-align:center;padding:.75rem;background:var(--tblr-bg-surface-secondary);border-radius:var(--tblr-border-radius)">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--tblr-secondary);margin-bottom:.15rem">${n(preview.news_authored_count)}</div>
+                <div style="font-size:.75rem;color:var(--tblr-secondary)">News Articles</div>
             </div>
-            <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">${n(preview.tournaments_created_count)}</div>
-                <div style="font-size:.75rem;color:var(--t3)">Tournaments Created</div>
+            <div style="text-align:center;padding:.75rem;background:var(--tblr-bg-surface-secondary);border-radius:var(--tblr-border-radius)">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--tblr-secondary);margin-bottom:.15rem">${n(preview.tournaments_created_count)}</div>
+                <div style="font-size:.75rem;color:var(--tblr-secondary)">Tournaments Created</div>
             </div>
-            <div style="text-align:center;padding:.75rem;background:var(--bg-elevated);border-radius:var(--r-md)">
-                <div style="font-size:1.5rem;font-weight:700;color:var(--t3);margin-bottom:.15rem">${n(preview.proxy_votes_cast_count)}</div>
-                <div style="font-size:.75rem;color:var(--t3)">Proxy Votes Cast</div>
+            <div style="text-align:center;padding:.75rem;background:var(--tblr-bg-surface-secondary);border-radius:var(--tblr-border-radius)">
+                <div style="font-size:1.5rem;font-weight:700;color:var(--tblr-secondary);margin-bottom:.15rem">${n(preview.proxy_votes_cast_count)}</div>
+                <div style="font-size:.75rem;color:var(--tblr-secondary)">Proxy Votes Cast</div>
             </div>
         </div>
     `;

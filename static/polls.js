@@ -291,13 +291,13 @@ class PollVotingHandler {
         const endTime = endTimeSelect?.value ? formatTime12Hour(endTimeSelect.value) : 'Unknown';
 
         let summary = '<dl class="row mb-0">';
-        summary += '<dt class="col-sm-4"><i class="bi bi-geo-alt me-1"></i>Lake</dt>';
+        summary += '<dt class="col-sm-4"><i class="ti ti-map-pin me-1"></i>Lake</dt>';
         summary += '<dd class="col-sm-8 fw-bold">' + escapeHtml(lakeName) + '</dd>';
-        summary += '<dt class="col-sm-4"><i class="bi bi-signpost me-1"></i>Ramp</dt>';
+        summary += '<dt class="col-sm-4"><i class="ti ti-road-sign me-1"></i>Ramp</dt>';
         summary += '<dd class="col-sm-8 fw-bold">' + escapeHtml(rampName) + '</dd>';
-        summary += '<dt class="col-sm-4"><i class="bi bi-clock me-1"></i>Start Time</dt>';
+        summary += '<dt class="col-sm-4"><i class="ti ti-clock me-1"></i>Start Time</dt>';
         summary += '<dd class="col-sm-8 fw-bold">' + startTime + '</dd>';
-        summary += '<dt class="col-sm-4"><i class="bi bi-clock-history me-1"></i>End Time</dt>';
+        summary += '<dt class="col-sm-4"><i class="ti ti-history me-1"></i>End Time</dt>';
         summary += '<dd class="col-sm-8 fw-bold">' + endTime + '</dd>';
         summary += '</dl>';
 
@@ -306,7 +306,7 @@ class PollVotingHandler {
             const memberSelect = document.getElementById(ids.member);
             const memberName = memberSelect?.selectedOptions[0]?.text || 'Unknown';
             summary += '<div class="mt-2 pt-2 border-top">';
-            summary += '<small class="text-warning"><i class="bi bi-person-badge me-1"></i>Voting on behalf of: <strong>' + escapeHtml(memberName) + '</strong></small>';
+            summary += '<small class="text-warning"><i class="ti ti-id-badge me-1"></i>Voting on behalf of: <strong>' + escapeHtml(memberName) + '</strong></small>';
             summary += '</div>';
         }
 
@@ -329,7 +329,7 @@ class PollVotingHandler {
         const optionText = label ? label.textContent.trim() : 'Unknown option';
 
         let summary = '<div class="d-flex align-items-center">';
-        summary += '<i class="bi bi-check-circle-fill text-success me-2" style="font-size: 1.5rem;"></i>';
+        summary += '<i class="ti ti-circle-check text-success me-2" style="font-size: 1.5rem;"></i>';
         summary += '<span class="fw-bold">' + escapeHtml(optionText) + '</span>';
         summary += '</div>';
 

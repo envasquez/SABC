@@ -263,7 +263,7 @@ function showBrowserWarning() {
     banner.className = 'alert alert-warning alert-dismissible position-fixed top-0 start-0 end-0 m-3';
     banner.style.zIndex = '9999';
     banner.innerHTML = `
-        <strong><i class="bi bi-exclamation-triangle me-2"></i>Browser Update Recommended</strong>
+        <strong><i class="ti ti-alert-triangle me-2"></i>Browser Update Recommended</strong>
         <p class="mb-0 small">Some features may not work properly. Please update your browser for the best experience.</p>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     `;
@@ -1227,7 +1227,7 @@ class PollResultsRenderer {
         if (!lakesArray || lakesArray.length === 0) {
             canvasContainer.innerHTML = `
                 <div class="text-center py-5">
-                    <i class="bi bi-inbox text-muted" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                    <i class="ti ti-inbox text-muted" style="font-size: 2.5rem; opacity: 0.5;"></i>
                     <p class="text-muted mt-2 mb-0">No votes yet</p>
                 </div>`;
             return;
@@ -1405,7 +1405,7 @@ class PollResultsRenderer {
         if (!tableBody) return;
 
         if (!timesArray || timesArray.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="3" class="text-secondary text-center py-3"><i class="bi bi-inbox me-2"></i>No votes</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="3" class="text-secondary text-center py-3"><i class="ti ti-inbox me-2"></i>No votes</td></tr>';
             return;
         }
 

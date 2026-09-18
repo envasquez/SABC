@@ -128,7 +128,7 @@ function populateNewsConfirm(mode, title, content, priority, archive) {
     if (note) {
         if (mode === 'create') {
             note.style.display = '';
-            note.innerHTML = '<i class="bi bi-envelope" style="margin-right:.35rem"></i>All members will be emailed when this is published.';
+            note.innerHTML = '<i class="ti ti-mail" style="margin-right:.35rem"></i>All members will be emailed when this is published.';
         } else {
             note.style.display = 'none';
         }
@@ -142,12 +142,12 @@ function populateNewsConfirm(mode, title, content, priority, archive) {
 
     if (summary) {
         let html = '<dl class="row mb-0" style="margin:0">';
-        html += '<dt class="col-sm-3"><i class="bi bi-card-text me-1"></i>Content</dt>';
+        html += '<dt class="col-sm-3"><i class="ti ti-file-text me-1"></i>Content</dt>';
         html += '<dd class="col-sm-9" style="white-space:pre-wrap;word-break:break-word">' + escapeHtml(content) + '</dd>';
-        html += '<dt class="col-sm-3"><i class="bi bi-flag me-1"></i>Priority</dt>';
+        html += '<dt class="col-sm-3"><i class="ti ti-flag me-1"></i>Priority</dt>';
         html += '<dd class="col-sm-9 fw-bold">' + escapeHtml(priorityLabel) + '</dd>';
         if (archive) {
-            html += '<dt class="col-sm-3"><i class="bi bi-archive me-1"></i>Auto Archive</dt>';
+            html += '<dt class="col-sm-3"><i class="ti ti-archive me-1"></i>Auto Archive</dt>';
             html += '<dd class="col-sm-9">' + escapeHtml(archive) + '</dd>';
         }
         html += '</dl>';

@@ -147,8 +147,8 @@ function manageDescriptionFields(activeFieldId) {
     const descriptionField = document.getElementById('description');
     const otherDescriptionField = document.getElementById('other_description');
 
-    const descriptionWrapper = descriptionField ? descriptionField.closest('.fg') : null;
-    const otherDescriptionWrapper = otherDescriptionField ? otherDescriptionField.closest('#other-tournament-description') || otherDescriptionField.closest('.fg') : null;
+    const descriptionWrapper = descriptionField ? descriptionField.closest('.js-description-field') : null;
+    const otherDescriptionWrapper = otherDescriptionField ? otherDescriptionField.closest('#other-tournament-description') : null;
 
     if (activeFieldId === 'other_description') {
         // Hide general description, show other_description

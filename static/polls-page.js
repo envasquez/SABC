@@ -52,7 +52,7 @@ function renderClubPollChart(dataElement) {
     if (filteredData.length === 0) {
         chartContainer.innerHTML = `
             <div class="text-center py-5">
-                <i class="bi bi-inbox text-muted" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                <i class="ti ti-inbox text-muted" style="font-size: 2.5rem; opacity: 0.5;"></i>
                 <p class="text-muted mt-2 mb-0">No votes yet</p>
             </div>`;
         return;
