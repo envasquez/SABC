@@ -74,19 +74,19 @@ def get_tournaments_data() -> List[Dict[str, Any]]:
 
         tournaments = [
             {
-                "id": t[0],
-                "event_id": t[1],
-                "date": t[2],
-                "name": t[3],
-                "lake_name": t[4],
-                "ramp_name": t[5],
-                "entry_fee": t[6],
-                "complete": bool(t[7]),
-                "fish_limit": t[8],
-                "result_count": t[9],
-                "team_result_count": t[10],
-                "total_participants": t[11] or 0,
-                "boat_count": t[12] or 0,
+                "id": t.id,
+                "event_id": t.event_id,
+                "date": t.date,
+                "name": t.name,
+                "lake_name": t.lake_name,
+                "ramp_name": t.ramp_name,
+                "entry_fee": t.entry_fee,
+                "complete": bool(t.complete),
+                "fish_limit": t.fish_limit,
+                "result_count": t.result_count,
+                "team_result_count": t.team_result_count,
+                "total_participants": t.participant_count or 0,
+                "boat_count": t.boat_count or 0,
             }
             for t in tournaments_query
         ]
