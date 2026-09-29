@@ -182,8 +182,6 @@ def get_upcoming_events_data(page: int, per_page: int) -> tuple[List[Dict[str, A
                 Event.event_type,
                 Event.year,
                 func.extract("dow", Event.date).label("day_num"),
-                # Column order is preserved exactly: the dict comprehension
-                # below unpacks rows positionally (e[7]..e[16]).
                 _has_poll_column(),
                 _has_tournament_column(),
                 _poll_active_column(),
@@ -205,22 +203,22 @@ def get_upcoming_events_data(page: int, per_page: int) -> tuple[List[Dict[str, A
 
         events = [
             {
-                "id": e[0],
-                "date": e[1],
-                "name": e[2] or "",
-                "description": e[3] or "",
-                "event_type": e[4] or "sabc_tournament",
-                "day_name": e[6],
-                "has_poll": bool(e[7]),
-                "has_tournament": bool(e[8]),
-                "poll_active": bool(e[9]),
-                "start_time": e[10],
-                "weigh_in_time": e[11],
-                "entry_fee": e[12],
-                "lake_name": e[13],
-                "ramp_name": e[14],
-                "holiday_name": e[15],
-                "tournament_complete": bool(e[16]),
+                "id": e.id,
+                "date": e.date,
+                "name": e.name or "",
+                "description": e.description or "",
+                "event_type": e.event_type or "sabc_tournament",
+                "day_name": e.day_num,
+                "has_poll": bool(e.has_poll),
+                "has_tournament": bool(e.has_tournament),
+                "poll_active": bool(e.poll_active),
+                "start_time": e.start_time,
+                "weigh_in_time": e.weigh_in_time,
+                "entry_fee": e.entry_fee,
+                "lake_name": e.lake_name,
+                "ramp_name": e.ramp_name,
+                "holiday_name": e.holiday_name,
+                "tournament_complete": bool(e.tournament_complete),
             }
             for e in events_query
         ]
@@ -256,8 +254,6 @@ def get_past_events_data(page: int, per_page: int) -> tuple[List[Dict[str, Any]]
                 Event.start_time,
                 Event.weigh_in_time,
                 Event.holiday_name,
-                # Column order is preserved exactly: the dict comprehension
-                # below unpacks rows positionally (e[10]..e[13]).
                 *_event_existence_columns(),
                 _has_results_column(),
             )
@@ -274,20 +270,20 @@ def get_past_events_data(page: int, per_page: int) -> tuple[List[Dict[str, Any]]
 
         past_events = [
             {
-                "id": e[0],
-                "date": e[1],
-                "name": e[2] or "",
-                "description": e[3] or "",
-                "event_type": e[4] or "sabc_tournament",
-                "entry_fee": e[5],
-                "lake_name": e[6],
-                "start_time": e[7],
-                "weigh_in_time": e[8],
-                "holiday_name": e[9],
-                "has_poll": bool(e[10]),
-                "has_tournament": bool(e[11]),
-                "tournament_complete": bool(e[12]),
-                "has_results": bool(e[13]),
+                "id": e.id,
+                "date": e.date,
+                "name": e.name or "",
+                "description": e.description or "",
+                "event_type": e.event_type or "sabc_tournament",
+                "entry_fee": e.entry_fee,
+                "lake_name": e.lake_name,
+                "start_time": e.start_time,
+                "weigh_in_time": e.weigh_in_time,
+                "holiday_name": e.holiday_name,
+                "has_poll": bool(e.has_poll),
+                "has_tournament": bool(e.has_tournament),
+                "tournament_complete": bool(e.tournament_complete),
+                "has_results": bool(e.has_results),
             }
             for e in past_events_query
         ]
