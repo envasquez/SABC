@@ -7,18 +7,13 @@
     <div class="ribbon ribbon-top bg-yellow" title="Big Bass"><i class="ti ti-trophy" aria-hidden="true"></i></div>
     {% endif %}
     <a href="{{ photo.url }}" class="gallery-link d-block" data-caption="{{ photo.caption or '' }}">
-      <div class="img-responsive" style="height:200px;position:relative;overflow:hidden">
-        {% if photo.placeholder_url %}
-        <img src="{{ photo.placeholder_url }}" alt=""
-             style="height:200px;width:100%;object-fit:cover;filter:blur(10px);transform:scale(1.1);position:absolute;top:0;left:0">
+      <div class="img-responsive photo-thumb">
+        <img src="{{ photo.placeholder_url or photo.thumbnail_url }}" alt=""
+             class="photo-thumb-backdrop" aria-hidden="true">
         <img src="{{ photo.thumbnail_url }}" alt="{{ photo.caption or 'Photo' }}"
-             class="js-fade-in"
-             style="height:200px;width:100%;object-fit:cover;position:absolute;top:0;left:0;opacity:0;transition:opacity .3s ease-in-out"
+             class="photo-thumb-img{% if photo.placeholder_url %} js-fade-in{% endif %}"
+             {% if photo.placeholder_url %}style="opacity:0;transition:opacity .3s ease-in-out"{% endif %}
              loading="lazy">
-        {% else %}
-        <img src="{{ photo.thumbnail_url }}" alt="{{ photo.caption or 'Photo' }}"
-             style="height:200px;width:100%;object-fit:cover;display:block" loading="lazy">
-        {% endif %}
       </div>
     </a>
     <div class="card-body p-2 flex-fill">

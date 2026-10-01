@@ -299,15 +299,15 @@ document.addEventListener('click', function(e) {
 // Delegated image fade-in handler for the photo gallery thumbnails.
 // The HTML is a stacked pair: a blurred placeholder behind, the real
 // thumbnail in front at opacity:0. When the real thumb loads we set it
-// opaque and hide the placeholder. <img>'s `load` event doesn't bubble,
-// so we listen in the capture phase to make delegation work, including
-// for HTMX-inserted cards from infinite scroll.
+// opaque. The placeholder stays visible on purpose -- the thumbnail is
+// contain-fit, so the blurred copy behind it fills the letterbox bars.
+// <img>'s `load` event doesn't bubble, so we listen in the capture phase
+// to make delegation work, including for HTMX-inserted cards from
+// infinite scroll.
 document.addEventListener('load', function(e) {
     const img = e.target;
     if (!(img instanceof HTMLImageElement) || !img.classList.contains('js-fade-in')) return;
     img.style.opacity = '1';
-    const placeholder = img.previousElementSibling;
-    if (placeholder) placeholder.style.display = 'none';
 }, true);
 
 /**
