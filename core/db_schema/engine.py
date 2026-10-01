@@ -3,12 +3,29 @@ import os
 from sqlalchemy import create_engine
 
 _env = os.environ.get("ENVIRONMENT", "development")
-DATABASE_URL = os.environ.get("DATABASE_URL")
+_url = os.environ.get("DATABASE_URL")
 
-if not DATABASE_URL:
+if not _url:
     if _env == "production":
         raise RuntimeError("DATABASE_URL must be set in production")
-    DATABASE_URL = "postgresql://postgres:dev123@localhost:5432/sabc"
+    _url = "postgresql://postgres:dev123@localhost:5432/sabc"
+
+
+def pin_psycopg2_driver(url: str) -> str:
+    """Spell out the psycopg2 DBAPI instead of relying on SQLAlchemy's default.
+
+    SQLAlchemy 2.1 changed the default driver for a bare ``postgresql://`` URL
+    from psycopg2 to psycopg (v3). We install psycopg2-binary, so a bare URL
+    raises ModuleNotFoundError on 2.1+. Naming the driver keeps the same URL
+    working on both sides of that change.
+    """
+    for prefix in ("postgresql://", "postgres://"):
+        if url.startswith(prefix):
+            return f"postgresql+psycopg2://{url[len(prefix) :]}"
+    return url
+
+
+DATABASE_URL = pin_psycopg2_driver(_url)
 
 # Per-process pool budget. Production runs a single uvicorn worker per
 # container, so total max DB connections per web container is

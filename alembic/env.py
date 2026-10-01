@@ -11,6 +11,7 @@ from sqlalchemy import engine_from_config, pool
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 # ruff: noqa: E402 - Must modify sys.path before importing SABC modules
+from core.db_schema.engine import DATABASE_URL
 from core.db_schema.models import Base
 
 # this is the Alembic Config object, which provides
@@ -26,10 +27,8 @@ if config.config_file_name is not None:
 # This enables autogenerate to detect model changes
 target_metadata = Base.metadata
 
-# Get database URL from environment variable (same as SABC app uses)
-DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:dev123@localhost:5432/sabc")
-
-# Override the sqlalchemy.url from alembic.ini with environment variable
+# Override the sqlalchemy.url from alembic.ini with the app's own URL, so
+# migrations and the app always agree on host, credentials and DBAPI driver.
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 
