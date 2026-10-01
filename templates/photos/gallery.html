@@ -13,6 +13,31 @@
   @media (max-width: 991.98px) { #photo-grid { grid-template-columns: repeat(3, 1fr); } }
   @media (max-width: 767.98px) { #photo-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 479.98px) { #photo-grid { grid-template-columns: 1fr; } }
+
+  /* Thumbnail frame: fixed height for a tidy grid, but the photo itself is
+     never cropped. A blurred, cover-fit copy fills the frame behind it so the
+     letterbox bars read as part of the image instead of dead space. */
+  .photo-thumb {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+    background: var(--tblr-bg-surface-secondary, #1a1d24);
+  }
+  .photo-thumb img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .photo-thumb-backdrop {
+    object-fit: cover;
+    filter: blur(12px);
+    transform: scale(1.15);
+  }
+  .photo-thumb-img {
+    object-fit: contain;
+  }
 </style>
 {% endblock %}
 
