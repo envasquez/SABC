@@ -1,12 +1,12 @@
 """Authentication and authorization helper functions with full type safety."""
 
-from datetime import date
 from typing import Annotated, Optional
 from urllib.parse import quote
 
 from fastapi import Depends, HTTPException, Request
 
 from core.db_schema import engine
+from core.helpers.members import is_dues_current as dues_current
 from core.query_service import QueryService
 from core.types import UserDict
 
@@ -21,13 +21,7 @@ def is_dues_current(user: UserDict) -> bool:
     Returns:
         True if dues are current (paid through today or later), False otherwise
     """
-    dues_paid_through = user.get("dues_paid_through")
-    if dues_paid_through is None:
-        return False
-    # Handle case where value comes as string from some query results
-    if isinstance(dues_paid_through, str):
-        dues_paid_through = date.fromisoformat(dues_paid_through)
-    return dues_paid_through >= date.today()
+    return dues_current(user.get("dues_paid_through"))
 
 
 def _build_login_redirect_url(request: Request) -> str:

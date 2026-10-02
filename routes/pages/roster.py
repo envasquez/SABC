@@ -6,6 +6,7 @@ from core.db_schema import engine
 from core.deps import templates
 from core.enums import TOURNAMENT_DATA_START_YEAR
 from core.helpers.auth import get_user_optional
+from core.helpers.members import EXCLUDE_SEED_ADMIN_SQL, is_dues_current
 from core.query_service import QueryService
 from core.query_service.dialect_helpers import (
     DialectName,
@@ -414,6 +415,7 @@ def roster(request: Request) -> Any:
                    a.member
                ) as member,
                a.is_admin, a.password_hash, a.year_joined, a.phone, a.created_at,
+               a.dues_paid_through,
                {officer_positions_sql} as officer_positions,
                (SELECT MAX(e.date) as last_tournament_date
                 FROM v_angler_tournament_results vatr
@@ -424,7 +426,7 @@ def roster(request: Request) -> Any:
                 FROM officer_positions
                 WHERE angler_id = a.id AND year = :year) as position_rank
                FROM anglers a
-               WHERE a.name != 'Admin User' AND a.email != 'admin@sabc.com'
+               WHERE {EXCLUDE_SEED_ADMIN_SQL}
                ORDER BY member DESC,
                         COALESCE((SELECT MIN({position_rank_case})
                             FROM officer_positions
@@ -444,6 +446,14 @@ def roster(request: Request) -> Any:
         # Fetch stats for all members
         member_stats = get_member_stats(qs, member_ids, current_year, dialect_name)
 
+    # Headline counts use the shared "active member" definition (flag + current
+    # dues), matching the home page and /admin/users. The member/guest split of
+    # the table below stays on the flag alone, so a member whose dues lapsed is
+    # still listed as a member -- just counted under "Dues Overdue".
+    flagged_members = [m for m in members if m["member"]]
+    active_member_count = sum(1 for m in flagged_members if is_dues_current(m["dues_paid_through"]))
+    overdue_member_count = len(flagged_members) - active_member_count
+
     user = get_user_optional(request)
     return templates.TemplateResponse(
         request,
@@ -453,6 +463,8 @@ def roster(request: Request) -> Any:
             "members": members,
             "member_weights": member_monthly_weights,
             "member_stats": member_stats,
+            "active_member_count": active_member_count,
+            "overdue_member_count": overdue_member_count,
             "current_year": current_year,
         },
     )

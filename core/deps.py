@@ -1,5 +1,5 @@
 import json
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Generator
 
@@ -10,6 +10,7 @@ from sqlalchemy import Connection
 
 from core.db_schema import engine
 from core.helpers.logging import get_logger
+from core.helpers.members import is_dues_current
 from core.helpers.timezone import to_local
 from core.query_service import QueryService
 
@@ -150,10 +151,7 @@ def datetime_format_filter(value: Any, fmt: str) -> str:
 
 
 def is_dues_current_filter(dues_paid_through: Any) -> bool:
-    """Check if member dues are current (paid through today or later).
-
-    This filter handles both date objects and string representations
-    of dates from database query results.
+    """Jinja filter wrapping the shared dues predicate.
 
     Args:
         dues_paid_through: Date when dues expire (date object or ISO string)
@@ -161,15 +159,7 @@ def is_dues_current_filter(dues_paid_through: Any) -> bool:
     Returns:
         True if dues are current, False otherwise
     """
-    if dues_paid_through is None:
-        return False
-    # Handle string representations from raw SQL queries
-    if isinstance(dues_paid_through, str):
-        try:
-            dues_paid_through = date.fromisoformat(dues_paid_through)
-        except ValueError:
-            return False
-    return dues_paid_through >= date.today()
+    return is_dues_current(dues_paid_through)
 
 
 def month_number_filter(date_str: Any) -> str:

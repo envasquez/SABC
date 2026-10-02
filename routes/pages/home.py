@@ -33,6 +33,7 @@ from core.email import send_contact_email
 from core.helpers.auth import get_user_optional
 from core.helpers.forms import is_valid_email
 from core.helpers.logging import get_logger
+from core.helpers.members import active_member_criteria
 from core.helpers.pagination import PaginationState
 from core.helpers.poll_day_info import get_poll_day_info
 from core.helpers.response import error_redirect, success_redirect
@@ -632,12 +633,11 @@ async def home_paginated(request: Request, page: int = 1) -> Response:
             for tournament in tournaments_query
         ]
 
-        # Get member count (only members with current dues)
+        # Get member count. Shares one definition of "active member" with the
+        # roster and /admin/users -- see core.helpers.members. This previously
+        # omitted the seed admin exclusion and so over-reported by one.
         member_count = (
-            session.query(func.count(Angler.id))
-            .filter(Angler.member.is_(True), Angler.dues_paid_through >= date.today())
-            .scalar()
-            or 0
+            session.query(func.count(Angler.id)).filter(*active_member_criteria()).scalar() or 0
         )
 
         cancelled_tournaments = _fetch_cancelled_tournaments(session)

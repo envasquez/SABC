@@ -23,7 +23,6 @@
 {% endblock %}
 
 {% block content %}
-{% set active_members = members|selectattr('member', 'equalto', true)|list %}
 {% set guest_members = members|selectattr('member', 'equalto', false)|list %}
 
 <div class="page-header d-print-none mb-3">
@@ -39,7 +38,7 @@
 
 <!-- Roster Statistics -->
 <div class="row row-cards mb-3">
-  <div class="col-6">
+  <div class="col-6 col-md-4">
     <div class="card card-sm">
       <div class="card-body">
         <div class="row align-items-center">
@@ -47,14 +46,31 @@
             <span class="bg-green text-white avatar"><i class="ti ti-user-check"></i></span>
           </div>
           <div class="col">
-            <div class="h1 mb-0">{{ active_members|length }}</div>
+            <div class="h1 mb-0">{{ active_member_count }}</div>
             <div class="text-secondary">Active Members</div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <div class="col-6">
+  {% if overdue_member_count %}
+  <div class="col-6 col-md-4">
+    <div class="card card-sm">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-auto">
+            <span class="bg-warning text-white avatar"><i class="ti ti-alert-triangle"></i></span>
+          </div>
+          <div class="col">
+            <div class="h1 mb-0">{{ overdue_member_count }}</div>
+            <div class="text-secondary">Dues Overdue</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  <div class="col-6 col-md-4">
     <div class="card card-sm">
       <div class="card-body">
         <div class="row align-items-center">
