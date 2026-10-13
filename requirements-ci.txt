@@ -76,7 +76,7 @@ SQLAlchemy==2.1.2
 starlette==1.7.0
 starlette-csrf==3.0.0
 types-PyYAML==6.0.12.20260906
-types-requests==2.33.0.20260906
+types-requests==2.33.0.20261006
 typing-inspection==0.4.4
 typing_extensions==4.16.0
 tzdata==2026.4
