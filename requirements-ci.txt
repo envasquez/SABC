@@ -47,7 +47,7 @@ pydantic==2.14.2
 # matching pydantic-core, and a standalone pin lets dependabot bump it out of
 # lockstep with pydantic, breaking resolution. Let it resolve transitively.
 pytest==9.2.0
-pytest-asyncio==1.4.1
+pytest-asyncio==1.4.1.post1
 pytest-base-url==2.1.0
 pytest-benchmark==5.3.0
 pytest-cov==7.1.0
