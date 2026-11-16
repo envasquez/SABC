@@ -38,15 +38,21 @@ def get_big_bass_query() -> str:
        WHERE e.year = :year AND vatr.big_bass_weight >= 5.0 ORDER BY vatr.big_bass_weight DESC LIMIT 10"""
 
 
+#: Display name for a boat: boater first (angler1 is always the boater, as
+#: entered on the results form), then the non-boater, or the single name for
+#: a solo boat. Expects the boater joined as ``a1`` and non-boater as ``a2``.
+TEAM_NAME_SQL = """
+            CASE
+                WHEN a2.name IS NULL THEN a1.name
+                ELSE a1.name || ' & ' || a2.name
+            END"""
+
+
 def get_team_heavy_stringer_query() -> str:
     """Teams ranked by heaviest single tournament weight for the year."""
-    return """
+    return f"""
         SELECT
-            CASE
-                WHEN a1.name < a2.name THEN a1.name || ' & ' || a2.name
-                WHEN a2.name IS NULL THEN a1.name
-                ELSE a2.name || ' & ' || a1.name
-            END as team_name,
+            {TEAM_NAME_SQL} as team_name,
             vttr.total_weight,
             e.name as tournament_name,
             e.date
@@ -65,13 +71,9 @@ def get_team_heavy_stringer_query() -> str:
 
 def get_team_big_bass_query() -> str:
     """Teams with biggest bass for the year (team format)."""
-    return """
+    return f"""
         SELECT
-            CASE
-                WHEN a1.name < a2.name THEN a1.name || ' & ' || a2.name
-                WHEN a2.name IS NULL THEN a1.name
-                ELSE a2.name || ' & ' || a1.name
-            END as team_name,
+            {TEAM_NAME_SQL} as team_name,
             vttr.big_bass_weight,
             e.name as tournament_name,
             e.date
@@ -113,15 +115,6 @@ TEAM_KEY_SQL = """
                 WHEN vttr.angler1_id < vttr.angler2_id
                     THEN CAST(vttr.angler1_id AS TEXT) || '-' || CAST(vttr.angler2_id AS TEXT)
                 ELSE CAST(vttr.angler2_id AS TEXT) || '-' || CAST(vttr.angler1_id AS TEXT)
-            END"""
-
-#: Display name for a boat pairing: both names, alphabetical, or the single
-#: name for a solo boat. Mirrors the expression used by the team queries above.
-TEAM_NAME_SQL = """
-            CASE
-                WHEN a2.name IS NULL THEN a1.name
-                WHEN a1.name < a2.name THEN a1.name || ' & ' || a2.name
-                ELSE a2.name || ' & ' || a1.name
             END"""
 
 
@@ -189,12 +182,17 @@ def get_team_season_stats_query() -> str:
 
     No ``member`` filter: a boat qualifies on having at least one member,
     and that member's guest partner should not make the boat vanish.
+
+    Grouped on the seat-independent ``team_key`` only, with the name taken
+    by ``MIN``: if the same two anglers swap boater/non-boater seats within
+    a season they stay one pairing (one row per key, which the earnings join
+    relies on) and the name is still deterministic.
     """
     a1_excluded = exclude_seed_admin_sql("a1")
     a2_excluded = exclude_seed_admin_sql("a2")
     return f"""
         SELECT {TEAM_KEY_SQL} AS team_key,
-               {TEAM_NAME_SQL} AS team_name,
+               MIN({TEAM_NAME_SQL}) AS team_name,
                COUNT(*) AS events,
                SUM(CASE WHEN vttr.place_finish = 1 THEN 1 ELSE 0 END) AS firsts,
                SUM(CASE WHEN vttr.place_finish = 2 THEN 1 ELSE 0 END) AS seconds,
@@ -213,5 +211,5 @@ def get_team_season_stats_query() -> str:
           AND e.year = :year
           AND {a1_excluded}
           AND (a2.id IS NULL OR {a2_excluded})
-        GROUP BY {TEAM_KEY_SQL}, {TEAM_NAME_SQL}
+        GROUP BY {TEAM_KEY_SQL}
     """

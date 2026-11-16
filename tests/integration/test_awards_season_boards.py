@@ -29,7 +29,7 @@ $126, Dana $96, Bob $84, Carl $72, Erin $36, Frank $36.
 
 from datetime import date
 from decimal import Decimal
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, cast
 
 import pytest
 from fastapi.testclient import TestClient
@@ -40,6 +40,8 @@ from core.query_service import QueryService
 from routes.pages.awards_boards import build_boards
 from routes.pages.awards_helpers import (
     get_angler_season_stats_query,
+    get_team_big_bass_query,
+    get_team_heavy_stringer_query,
     get_team_season_stats_query,
 )
 from routes.pages.awards_money import (
@@ -266,6 +268,87 @@ class TestTeamSeasonBoards:
         assert boards["fish"][0]["team_name"] == "Erin Angler & Frank Angler"
         assert boards["wins"][0]["team_name"] == "Alice Angler & Dana Angler"
         assert boards["wins"][0]["firsts"] == 1
+
+
+def _add_team_tournament(
+    db_session: Session, event_date: date, boats: List[Tuple[Angler, Angler, str, int]]
+) -> None:
+    """One complete 2026 team-format tournament: ``(boater, non-boater, weight, place)``."""
+    event = Event(
+        date=event_date, year=2026, name=f"Event {event_date}", event_type="sabc_tournament"
+    )
+    db_session.add(event)
+    db_session.commit()
+    tournament = Tournament(
+        event_id=event.id,
+        name=event.name,
+        fish_limit=5,
+        entry_fee=Decimal("50.00"),
+        is_team=True,
+        complete=True,
+        aoy_points=False,
+        limit_type="boat",
+    )
+    db_session.add(tournament)
+    db_session.commit()
+    for boater, non_boater, weight, place in boats:
+        db_session.add(
+            TeamResult(
+                tournament_id=tournament.id,
+                angler1_id=boater.id,
+                angler2_id=non_boater.id,
+                num_fish=5,
+                total_weight=Decimal(weight),
+                big_bass_weight=Decimal("5.50"),
+                place_finish=place,
+            )
+        )
+    db_session.commit()
+
+
+@pytest.fixture
+def zed_and_amy(db_session: Session) -> Tuple[Angler, Angler]:
+    """Two members whose names sort opposite to Zed-boats, Amy-rides."""
+    zed = Angler(name="Zed Angler", email="zed@example.com", member=True)
+    amy = Angler(name="Amy Angler", email="amy@example.com", member=True)
+    db_session.add_all([zed, amy])
+    db_session.commit()
+    return zed, amy
+
+
+def _team_standings() -> List[Dict[str, Any]]:
+    return cast(List[Dict[str, Any]], _boards("team")["standings"])
+
+
+class TestTeamNamesListBoaterFirst:
+    """A team is shown as "Boater & Non-boater", not alphabetically."""
+
+    def test_season_boards_put_boater_first(self, db_session: Session, zed_and_amy):
+        zed, amy = zed_and_amy
+        _add_team_tournament(db_session, date(2026, 3, 14), [(zed, amy, "20.00", 1)])
+        standings = _team_standings()
+        assert [row["team_name"] for row in standings] == ["Zed Angler & Amy Angler"]
+
+    def test_single_event_records_put_boater_first(self, db_session: Session, zed_and_amy):
+        zed, amy = zed_and_amy
+        _add_team_tournament(db_session, date(2026, 3, 14), [(zed, amy, "20.00", 1)])
+        with engine.connect() as conn:
+            qs = QueryService(conn)
+            stringer = qs.fetch_all(get_team_heavy_stringer_query(), {"year": 2026})
+            bass = qs.fetch_all(get_team_big_bass_query(), {"year": 2026})
+        assert stringer[0]["team_name"] == "Zed Angler & Amy Angler"
+        assert bass[0]["team_name"] == "Zed Angler & Amy Angler"
+
+    def test_swapping_seats_mid_season_stays_one_pairing(self, db_session: Session, zed_and_amy):
+        """Same two anglers, boater role swapped: still one row, so the
+        earnings join (keyed per pairing) is not duplicated."""
+        zed, amy = zed_and_amy
+        _add_team_tournament(db_session, date(2026, 3, 14), [(zed, amy, "20.00", 1)])
+        _add_team_tournament(db_session, date(2026, 4, 11), [(amy, zed, "18.00", 1)])
+        standings = _team_standings()
+        assert len(standings) == 1
+        assert standings[0]["events"] == 2
+        assert standings[0]["team_name"] in ("Zed Angler & Amy Angler", "Amy Angler & Zed Angler")
 
 
 class TestPlaceMoneyTies:
