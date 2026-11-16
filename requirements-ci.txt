@@ -54,7 +54,7 @@ pytest-cov==7.1.0
 pytest-html==4.2.0
 pytest-metadata==3.1.1
 pytest-mock==3.17.0
-pytest-postgresql==9.1.1
+pytest-postgresql==10.0.0
 pytest-xdist==3.8.0
 python-dateutil==3.0.0
 python-dotenv==1.2.4
