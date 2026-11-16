@@ -1,0 +1,193 @@
+{# Macros for the 2026+ team-format season leaderboards on /awards.
+   Every board is rendered from the same row shape (see
+   routes/pages/awards_boards.build_boards), so one set of macros serves both
+   grains: anglers and exact boat pairings. #}
+
+{# Gold / silver / bronze rank pill, matching the badge colors already used by
+   the standings tables on this page. `tied` prefixes "T-" so rows sharing a
+   rank don't imply an order the data doesn't support. #}
+{% macro rank_badge(rank, tied=False) %}
+{%- if rank == 1 %}<span class="badge bg-yellow text-dark">{% if tied %}T-{% endif %}1</span>
+{%- elif rank == 2 %}<span class="badge bg-secondary text-dark">{% if tied %}T-{% endif %}2</span>
+{%- elif rank == 3 %}<span class="badge bg-orange text-dark">{% if tied %}T-{% endif %}3</span>
+{%- else %}<span class="badge bg-secondary-lt">{% if tied %}T-{% endif %}{{ rank }}</span>{% endif %}
+{%- endmacro %}
+
+{# Pluralizes a count's noun: "1 event", "2 events". Irregular plurals pass
+   their own form -- "fish" and "finishes" don't take a bare trailing s. #}
+{% macro plural(count, word, plural_word='') %}{{ count }} {{ word if count == 1 else (plural_word or word ~ 's') }}{% endmacro %}
+
+{# Secondary line under a name on a board card. Each board shows the context
+   that its own metric doesn't already carry -- a weight board reporting
+   "0 top-3" is noise, while "12 fish, 4 events" is the shape of the season
+   behind that number. #}
+{% macro board_meta(row, kind) %}
+{%- if kind == 'firsts' %}{{ plural(row.top3, 'top-3 finish', 'top-3 finishes') }} &middot; {{ plural(row.events, 'event') }}
+{%- elif kind == 'top3' %}{{ plural(row.firsts, 'win') }} &middot; {{ plural(row.events, 'event') }}
+{%- elif kind == 'money' %}{{ plural(row.firsts, 'win') }} &middot; {{ plural(row.top3, 'top-3 finish', 'top-3 finishes') }}
+{%- elif kind == 'total_weight' %}{{ plural(row.total_fish, 'fish', 'fish') }} &middot; {{ plural(row.events, 'event') }}
+{%- elif kind == 'total_fish' %}{{ "%.2f"|format(row.total_weight) }} lbs &middot; {{ plural(row.events, 'event') }}
+{%- else %}{{ plural(row.top3, 'top-3 finish', 'top-3 finishes') }} &middot; {{ plural(row.events, 'event') }}{% endif %}
+{%- endmacro %}
+
+{# Formats one board's headline value. `kind` picks the unit presentation:
+   'count' (bare integer), 'weight' (2dp + lbs) or 'money' (2dp + $). #}
+{% macro board_value(value, kind) %}
+{%- if kind == 'money' %}${{ "%.2f"|format(value) }}
+{%- elif kind == 'weight' %}{{ "%.2f"|format(value) }} lbs
+{%- else %}{{ value }}{% endif %}
+{%- endmacro %}
+
+{# A single category leaderboard: top rows for one metric, with the headline
+   value as a badge and a secondary line of context.
+
+   rows       -- ranked rows from build_boards()['boards'][key]
+   value_key  -- row key holding the headline value
+   kind       -- 'count' | 'weight' | 'money' (see board_value)
+   label      -- singular noun for a count value, e.g. "win"
+   label_plural -- its plural when a trailing "s" is wrong ("fish", "finishes")
+   name_key   -- 'name' for anglers, 'team_name' for pairings
+   limit      -- rows to show
+   empty      -- text shown when no row has a non-zero value #}
+{% macro board_card(title, icon, color, rows, value_key, kind, label, name_key, label_plural='', limit=5, empty='Nothing recorded yet') %}
+<div class="card h-100">
+    <div class="card-header">
+        <h3 class="card-title"><i class="ti {{ icon }} me-2 text-{{ color }}" aria-hidden="true"></i>{{ title }}</h3>
+    </div>
+    {% if rows %}
+    <div class="list-group list-group-flush">
+        {% for row in rows[:limit] %}
+        <div class="list-group-item d-flex align-items-center">
+            <div class="me-2">{{ rank_badge(row.rank, row.tied) }}</div>
+            <div class="flex-fill text-truncate">
+                <div class="fw-bold text-truncate">{{ row[name_key] }}</div>
+                <div class="text-secondary small">{{ board_meta(row, value_key) }}</div>
+            </div>
+            <span class="badge bg-{{ color }}-lt ms-2">
+                {%- if kind == 'count' %}{{ plural(row[value_key], label, label_plural) }}
+                {%- else %}{{ board_value(row[value_key], kind) }}{% endif %}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card-body text-secondary small">{{ empty }}</div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# Season podium for the headline board (most 1st-place finishes). Renders
+   nothing below three rows -- a two-step podium looks broken. #}
+{% macro board_podium(title, rows, name_key) %}
+{% if rows|length >= 3 %}
+<div class="card mb-3">
+    <div class="card-header"><h3 class="card-title"><i class="ti ti-confetti me-2 text-yellow" aria-hidden="true"></i>{{ title }}</h3></div>
+    <div class="card-body">
+        <div class="sabc-podium sabc-podium-season">
+            {% for slot in [1, 0, 2] %}
+            {% set row = rows[slot] %}
+            <div class="sabc-podium-step sabc-podium-{{ slot + 1 }}">
+                <div class="podium-medal" aria-hidden="true">{% if slot == 0 %}&#129351;{% elif slot == 1 %}&#129352;{% else %}&#129353;{% endif %}</div>
+                {% if slot == 0 %}<span class="badge bg-yellow text-dark mt-1">1st</span>
+                {%- elif slot == 1 %}<span class="badge bg-secondary text-dark mt-1">2nd</span>
+                {%- else %}<span class="badge bg-orange text-dark mt-1">3rd</span>{% endif %}
+                <div class="podium-name">{{ row[name_key] }}</div>
+                <div class="podium-meta">{{ plural(row.firsts, 'win') }} &middot; {{ plural(row.top3, 'top-3 finish', 'top-3 finishes') }}</div>
+                <div class="podium-meta">${{ "%.2f"|format(row.money) }} won</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endmacro %}
+
+{# The full season standings: every metric for every row, one table. This is
+   where a row that didn't lead any single category still shows its season. #}
+{% macro standings_table(title, rows, total, name_key, name_header) %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="ti ti-list-numbers me-2" aria-hidden="true"></i>{{ title }}</h3>
+        <div class="card-subtitle">Ordered by top-3 finishes, then wins, then weight{% if total > rows|length %} &middot; showing the top {{ rows|length }} of {{ total }}{% endif %}</div>
+    </div>
+    {% if rows %}
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th class="w-1">Rank</th>
+                    <th>{{ name_header }}</th>
+                    <th class="text-center">Events</th>
+                    <th class="text-center" title="1st place finishes">1st</th>
+                    <th class="text-center" title="2nd place finishes">2nd</th>
+                    <th class="text-center" title="3rd place finishes">3rd</th>
+                    <th class="text-center">Top 3</th>
+                    <th class="text-center">Fish</th>
+                    <th class="text-end">Weight</th>
+                    <th class="text-end">Best Bag</th>
+                    <th class="text-end">Big Bass</th>
+                    <th class="text-end">Money</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    <td>{{ rank_badge(row.rank, row.tied) }}</td>
+                    <td class="fw-bold">{{ row[name_key] }}</td>
+                    <td class="text-center text-secondary">{{ row.events }}</td>
+                    <td class="text-center">{% if row.firsts %}<span class="badge bg-yellow-lt">{{ row.firsts }}</span>{% else %}<span class="text-secondary">&mdash;</span>{% endif %}</td>
+                    <td class="text-center">{% if row.seconds %}<span class="badge bg-secondary-lt">{{ row.seconds }}</span>{% else %}<span class="text-secondary">&mdash;</span>{% endif %}</td>
+                    <td class="text-center">{% if row.thirds %}<span class="badge bg-orange-lt">{{ row.thirds }}</span>{% else %}<span class="text-secondary">&mdash;</span>{% endif %}</td>
+                    <td class="text-center"><span class="badge bg-primary-lt">{{ row.top3 }}</span></td>
+                    <td class="text-center text-secondary">{{ row.total_fish }}</td>
+                    <td class="text-end">{{ "%.2f"|format(row.total_weight) }}</td>
+                    <td class="text-end text-secondary">{{ "%.2f"|format(row.best_stringer) }}</td>
+                    <td class="text-end text-secondary">{{ "%.2f"|format(row.best_bass) }}</td>
+                    <td class="text-end fw-bold">${{ "%.2f"|format(row.money) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card-body">
+        <div class="empty">
+            <div class="empty-icon"><i class="ti ti-trophy-off" aria-hidden="true"></i></div>
+            <p class="empty-title">No results yet</p>
+            <p class="empty-subtitle text-secondary">Standings appear once tournament results are entered.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# One complete tab pane: podium, the six category boards, and the full
+   standings table for a single grain. #}
+{% macro season_pane(season, name_key, name_header, podium_title, standings_title) %}
+{{ board_podium(podium_title, season.boards.wins, name_key) }}
+
+<div class="row row-cards mb-3">
+    <div class="col-12 col-md-6 col-xl-4 mb-3">
+        {{ board_card('Most Wins', 'ti-trophy', 'yellow', season.boards.wins, 'firsts', 'count', 'win', name_key) }}
+    </div>
+    <div class="col-12 col-md-6 col-xl-4 mb-3">
+        {{ board_card('Most Top-3 Finishes', 'ti-stairs-up', 'primary', season.boards.top3, 'top3', 'count', 'top-3 finish', name_key, label_plural='top-3 finishes') }}
+    </div>
+    <div class="col-12 col-md-6 col-xl-4 mb-3">
+        {{ board_card('Most Money Won', 'ti-cash', 'green', season.boards.money, 'money', 'money', '', name_key, empty='No payouts recorded yet') }}
+    </div>
+    <div class="col-12 col-md-6 col-xl-4 mb-3">
+        {{ board_card('Highest Total Weight', 'ti-scale', 'azure', season.boards.weight, 'total_weight', 'weight', '', name_key) }}
+    </div>
+    <div class="col-12 col-md-6 col-xl-4 mb-3">
+        {{ board_card('Most Fish Caught', 'ti-fish', 'cyan', season.boards.fish, 'total_fish', 'count', 'fish', name_key, label_plural='fish') }}
+    </div>
+    <div class="col-12 col-md-6 col-xl-4 mb-3">
+        {{ board_card('Most 2nd Place Finishes', 'ti-medal-2', 'secondary', season.boards.seconds, 'seconds', 'count', '2nd place', name_key, label_plural='2nd places') }}
+    </div>
+    <div class="col-12 col-md-6 col-xl-4 mb-3">
+        {{ board_card('Most 3rd Place Finishes', 'ti-medal', 'orange', season.boards.thirds, 'thirds', 'count', '3rd place', name_key, label_plural='3rd places') }}
+    </div>
+</div>
+
+{{ standings_table(standings_title, season.standings, season.standings_total, name_key, name_header) }}
+{% endmacro %}

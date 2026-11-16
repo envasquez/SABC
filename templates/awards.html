@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_awards_boards.html" import season_pane %}
 {% block title %}{{ current_year }} Awards - South Austin Bass Club{% endblock %}
 
 {% block extra_css %}
@@ -7,6 +8,13 @@
 .podium-name { font-weight: 700; font-size: 1rem; margin-top: .35rem; }
 .podium-meta { font-size: .8125rem; color: var(--tblr-secondary); }
 .sabc-podium-1 { padding-bottom: 1.6rem; }
+/* The podium's DOM order is 2nd, 1st, 3rd so the winner sits centre on a
+   three-column grid. Once it stacks to one column that reads as 2-1-3, so
+   pull the winner to the top. Scoped to the 2026+ season podium -- the
+   pre-2026 podium is deliberately left exactly as it was. */
+@media (max-width: 575.98px) {
+  .sabc-podium-season .sabc-podium-1 { order: -1; }
+}
 </style>
 {% endblock %}
 
@@ -90,86 +98,18 @@
 {% if is_team_format %}
 {# ===================== TEAM FORMAT (2026+) ===================== #}
 
-{% if team_wins and team_wins|length >= 3 %}
-<div class="card mb-3">
-    <div class="card-header"><h3 class="card-title"><i class="ti ti-confetti me-2 text-yellow"></i>Top Teams by Wins</h3></div>
-    <div class="card-body">
-        <div class="sabc-podium">
-            <div class="sabc-podium-step sabc-podium-2">
-                <div class="podium-medal">&#129352;</div>
-                <span class="badge bg-secondary mt-1">2nd</span>
-                <div class="podium-name">{{ team_wins[1]['team_name'] }}</div>
-                <div class="podium-meta">{{ team_wins[1]['wins'] }} wins &middot; {{ team_wins[1]['tournaments_fished'] }} events</div>
-            </div>
-            <div class="sabc-podium-step sabc-podium-1">
-                <div class="podium-medal">&#129351;</div>
-                <span class="badge bg-yellow text-dark mt-1">1st</span>
-                <div class="podium-name">{{ team_wins[0]['team_name'] }}</div>
-                <div class="podium-meta">{{ team_wins[0]['wins'] }} wins &middot; {{ team_wins[0]['tournaments_fished'] }} events</div>
-            </div>
-            <div class="sabc-podium-step sabc-podium-3">
-                <div class="podium-medal">&#129353;</div>
-                <span class="badge bg-orange mt-1">3rd</span>
-                <div class="podium-name">{{ team_wins[2]['team_name'] }}</div>
-                <div class="podium-meta">{{ team_wins[2]['wins'] }} wins &middot; {{ team_wins[2]['tournaments_fished'] }} events</div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-<div class="row row-cards">
-    <div class="col-12 col-lg-7">
-        <div class="card">
-            <div class="card-header"><h3 class="card-title"><i class="ti ti-trophy me-2 text-yellow"></i>Most Wins</h3></div>
-            {% if team_wins %}
-            <div class="table-responsive">
-                <table class="table table-vcenter card-table">
-                    <thead>
-                        <tr>
-                            <th class="w-1">Rank</th>
-                            <th>Team</th>
-                            <th class="text-center">Wins</th>
-                            <th class="text-center">Events</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for team in team_wins %}
-                        <tr>
-                            <td>
-                                {% if loop.index == 1 %}<span class="badge bg-yellow text-dark">{{ loop.index }}</span>
-                                {% elif loop.index == 2 %}<span class="badge bg-secondary">{{ loop.index }}</span>
-                                {% elif loop.index == 3 %}<span class="badge bg-orange">{{ loop.index }}</span>
-                                {% else %}<span class="badge bg-secondary-lt">{{ loop.index }}</span>{% endif %}
-                            </td>
-                            <td class="fw-bold">{{ team['team_name'] }}</td>
-                            <td class="text-center"><span class="badge bg-primary-lt">{{ team['wins'] }}</span></td>
-                            <td class="text-center text-secondary">{{ team['tournaments_fished'] }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="card-body">
-                <div class="empty">
-                    <div class="empty-icon"><i class="ti ti-trophy-off"></i></div>
-                    <p class="empty-title">No wins recorded yet</p>
-                    <p class="empty-subtitle text-secondary">Standings will appear once tournament results are entered.</p>
-                </div>
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <div class="col-12 col-lg-5">
-        <div class="card mb-3">
+{# ----- Season records: the two single-event trophies, plus the money the
+   season paid out. All three are club-wide, so they sit above the
+   angler/team split rather than inside it. ----- #}
+<div class="row row-cards mb-3">
+    <div class="col-12 col-lg-4 mb-3">
+        <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-2">
-                    <span class="bg-green text-white avatar me-2"><i class="ti ti-trophy"></i></span>
+                    <span class="bg-green text-white avatar me-2"><i class="ti ti-trophy" aria-hidden="true"></i></span>
                     <div>
                         <div class="fw-bold">Big Stringer of the Year</div>
-                        <div class="text-secondary small">Best single tournament weight (5-fish team limit)</div>
+                        <div class="text-secondary small">Heaviest single team bag</div>
                     </div>
                 </div>
                 {% if heavy_stringer %}
@@ -185,14 +125,16 @@
                 {% endif %}
             </div>
         </div>
+    </div>
 
-        <div class="card mb-3">
+    <div class="col-12 col-lg-4 mb-3">
+        <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-2">
-                    <span class="bg-yellow text-white avatar me-2"><i class="ti ti-star-filled"></i></span>
+                    <span class="bg-yellow text-white avatar me-2"><i class="ti ti-star-filled" aria-hidden="true"></i></span>
                     <div>
                         <div class="fw-bold">Big Bass of the Year</div>
-                        <div class="text-secondary small">Minimum 5.0 lbs required per club bylaws</div>
+                        <div class="text-secondary small">Minimum 5.0 lbs per club bylaws</div>
                     </div>
                 </div>
                 {% if big_bass %}
@@ -208,25 +150,88 @@
                 {% endif %}
             </div>
         </div>
+    </div>
 
-        <div class="card">
-            <div class="card-header"><h3 class="card-title"><i class="ti ti-info-circle me-2"></i>Award Criteria</h3></div>
+    <div class="col-12 col-lg-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="bg-azure text-white avatar me-2"><i class="ti ti-cash" aria-hidden="true"></i></span>
+                    <div>
+                        <div class="fw-bold">Season Payout</div>
+                        <div class="text-secondary small">Places and big bass pot, all events</div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-secondary small">Paid out to boats</div>
+                    <span class="badge bg-azure-lt fs-3">${{ "%.2f"|format(total_paid) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ----- Season leaderboards at two grains. Anglers lead because boat
+   partners re-pair between events: a fixed pairing usually has one event to
+   its name, while an angler accumulates a whole season. ----- #}
+<ul class="nav nav-tabs mb-3" id="awardsGrainTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="awards-anglers-tab" data-bs-toggle="tab"
+                data-bs-target="#awards-anglers" type="button" role="tab"
+                aria-controls="awards-anglers" aria-selected="true">
+            <i class="ti ti-user me-1" aria-hidden="true"></i>By Angler
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="awards-teams-tab" data-bs-toggle="tab"
+                data-bs-target="#awards-teams" type="button" role="tab"
+                aria-controls="awards-teams" aria-selected="false">
+            <i class="ti ti-users me-1" aria-hidden="true"></i>By Team
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="awardsGrainTabContent">
+    <div class="tab-pane fade show active" id="awards-anglers" role="tabpanel" aria-labelledby="awards-anglers-tab">
+        {{ season_pane(angler_season, 'name', 'Angler', 'Angler of the Year Race — Most Wins', 'Angler Season Standings') }}
+    </div>
+    <div class="tab-pane fade" id="awards-teams" role="tabpanel" aria-labelledby="awards-teams-tab">
+        {{ season_pane(team_season, 'team_name', 'Team', 'Team of the Year Race — Most Wins', 'Team Season Standings') }}
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-header"><h3 class="card-title"><i class="ti ti-info-circle me-2" aria-hidden="true"></i>How These Awards Are Scored</h3></div>
+    <div class="row g-0">
+        <div class="col-12 col-md-6">
             <div class="list-group list-group-flush">
                 <div class="list-group-item">
-                    <div class="fw-bold text-yellow">Most Wins</div>
-                    <div class="text-secondary small">Team with most 1st place finishes. At least one member required.</div>
+                    <div class="fw-bold text-yellow">Places &amp; Top 3</div>
+                    <div class="text-secondary small">Taken from each boat&rsquo;s finishing place. Every angler in a boat is credited with that boat&rsquo;s finish.</div>
                 </div>
                 <div class="list-group-item">
-                    <div class="fw-bold text-green">Big Stringer</div>
-                    <div class="text-secondary small">Heaviest 5-fish team bag from any tournament.</div>
+                    <div class="fw-bold text-green">Money Won</div>
+                    <div class="text-secondary small">$20 / $14 / $8 per boat for 1st / 2nd / 3rd, plus the big bass pot. A two-angler boat splits its winnings 50/50. Totals match each tournament&rsquo;s payout page, rollovers included.</div>
                 </div>
                 <div class="list-group-item">
-                    <div class="fw-bold text-azure">Big Bass</div>
-                    <div class="text-secondary small">Largest bass (min 5.00 lbs) during any tournament.</div>
+                    <div class="fw-bold text-cyan">Fish &amp; Total Weight</div>
+                    <div class="text-secondary small">Boat totals. A shared bag can&rsquo;t be split between partners, so both anglers are credited the full bag.</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="list-group list-group-flush">
+                <div class="list-group-item">
+                    <div class="fw-bold text-azure">Big Stringer &amp; Big Bass</div>
+                    <div class="text-secondary small">Single-event records. Big bass must clear 5.00 lbs and be boated by a team with at least one member; otherwise the pot rolls to the next tournament.</div>
                 </div>
                 <div class="list-group-item">
-                    <div class="fw-bold">Payout (per $50 boat entry)</div>
-                    <div class="text-secondary small">1st: $20 &middot; 2nd: $14 &middot; 3rd: $8 &middot; Big Bass: $8</div>
+                    <div class="fw-bold">By Angler vs. By Team</div>
+                    <div class="text-secondary small">Partners re-pair between events, so the angler boards show a full season while the team boards show how each exact pairing did together.</div>
+                </div>
+                <div class="list-group-item">
+                    <div class="fw-bold">Who Appears</div>
+                    <div class="text-secondary small">Angler boards list club members. Team boards list any boat with at least one member, guest partners included.</div>
                 </div>
             </div>
         </div>
@@ -243,7 +248,7 @@
         <div class="sabc-podium">
             <div class="sabc-podium-step sabc-podium-2">
                 <div class="podium-medal">&#129352;</div>
-                <span class="badge bg-secondary mt-1">2nd</span>
+                <span class="badge bg-secondary text-dark mt-1">2nd</span>
                 <div class="podium-name">{{ aoy_standings[1]['name'] }}</div>
                 <div class="podium-meta">{{ aoy_standings[1]['total_points'] }} pts &middot; {{ aoy_standings[1]['tournaments_fished'] }} events</div>
             </div>
@@ -255,7 +260,7 @@
             </div>
             <div class="sabc-podium-step sabc-podium-3">
                 <div class="podium-medal">&#129353;</div>
-                <span class="badge bg-orange mt-1">3rd</span>
+                <span class="badge bg-orange text-dark mt-1">3rd</span>
                 <div class="podium-name">{{ aoy_standings[2]['name'] }}</div>
                 <div class="podium-meta">{{ aoy_standings[2]['total_points'] }} pts &middot; {{ aoy_standings[2]['tournaments_fished'] }} events</div>
             </div>
@@ -286,8 +291,8 @@
                         <tr>
                             <td>
                                 {% if loop.index == 1 %}<span class="badge bg-yellow text-dark">{{ loop.index }}</span>
-                                {% elif loop.index == 2 %}<span class="badge bg-secondary">{{ loop.index }}</span>
-                                {% elif loop.index == 3 %}<span class="badge bg-orange">{{ loop.index }}</span>
+                                {% elif loop.index == 2 %}<span class="badge bg-secondary text-dark">{{ loop.index }}</span>
+                                {% elif loop.index == 3 %}<span class="badge bg-orange text-dark">{{ loop.index }}</span>
                                 {% else %}<span class="badge bg-secondary-lt">{{ loop.index }}</span>{% endif %}
                             </td>
                             <td class="{% if loop.index <= 6 %}fw-bold{% endif %}">{{ angler['name'] }}</td>

@@ -27,10 +27,24 @@ from core.db_schema import Angler
 #: pinned by ``scripts/setup_admin.py`` and carries a UNIQUE constraint.
 SEED_ADMIN_EMAIL = "admin@sabc.com"
 
-#: Portable, NULL-safe SQL predicate excluding the seed admin. ``email`` is
-#: nullable, and a bare ``email != '...'`` evaluates to NULL for those rows,
-#: which silently drops them. COALESCE works on both PostgreSQL and SQLite.
-EXCLUDE_SEED_ADMIN_SQL = f"COALESCE(LOWER(a.email), '') != '{SEED_ADMIN_EMAIL}'"
+
+def exclude_seed_admin_sql(alias: str = "a") -> str:
+    """Portable, NULL-safe SQL predicate excluding the seed admin.
+
+    ``email`` is nullable, and a bare ``email != '...'`` evaluates to NULL
+    for those rows, which silently drops them. COALESCE works on both
+    PostgreSQL and SQLite.
+
+    Args:
+        alias: Table alias the ``anglers`` row is bound to. Queries that
+            join both seats of a boat need the predicate twice, under
+            different aliases.
+    """
+    return f"COALESCE(LOWER({alias}.email), '') != '{SEED_ADMIN_EMAIL}'"
+
+
+#: The predicate for the common ``anglers a`` alias.
+EXCLUDE_SEED_ADMIN_SQL = exclude_seed_admin_sql()
 
 
 def is_dues_current(dues_paid_through: Any) -> bool:
